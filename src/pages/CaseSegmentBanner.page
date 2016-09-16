@@ -1,0 +1,7 @@
+<apex:page standardController="Case" extensions="CaseSegmentBannerExtension" >
+<table width="100%" style="background-color:{!BannerBackground}">
+    <tr>
+        <td style="text-align:center;"><b>{!Case.CustomerSegment__c}</b></td>
+    </tr>
+</table>
+</apex:page>

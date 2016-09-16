@@ -1,0 +1,55 @@
+<apex:page showHeader="false" showChat="false" sidebar="false">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400" type="text/css" />
+    <script src="https://na5.salesforce.com/resource/1393002929000/modified_salesforce" type="text/javascript"></script>
+    <script src="//www.google.com/jsapi?key=AIzaSyCZfHRnq7tigC-COeQRmoa9Cxr0vbrK6xw"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+    <script id="jqueryui" src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.10/jquery-ui.min.js" defer="" async=""></script>
+    <style type="text/css">
+    table > tbody > tr > td > div > div > svg > g > text,table > tbody > tr > td > div > div > svg > g > g > text {
+        font-size: 24px;
+    }
+    </style>
+    <script type="text/javascript">
+      google.load('visualization', '1.1', {packages: ['corechart','gauge']});
+    </script>
+    <script type="text/javascript">
+      var Leads; var Oppys; var MAT; var leads_data2; var leads_options; var leads_gauge;
+      function drawLeads() {
+        leads_data = google.visualization.arrayToDataTable([ ['Label', 'Value'], ['Leads', Leads] ]);
+        leads_data2 = google.visualization.arrayToDataTable([ ['Label', 'Value'], ['Leads', Leads+Leads] ]);   
+        leads_options = { animation: {duration: 2000, easing: 'in'}, width: 300, height: 300, redFrom: 0, redTo: 3000, yellowFrom:3000, yellowTo: 6000, greenFrom:6000, greenTo: 9000, min: 0, max:9000, majorTicks: 3, minorTicks: 3 };
+        leads_gauge = new google.visualization.Gauge(document.getElementById("leads"));
+        leads_gauge.draw(leads_data, leads_options);
+      }
+      function drawOppys() {
+        oppys_data = google.visualization.arrayToDataTable([ ['Label', 'Value'], ['Opportunities', Oppys] ]);
+        oppys_options = { width: 300, height: 300, redFrom: 0, redTo: 100, yellowFrom:100, yellowTo: 200, greenFrom:200, greenTo: 300, min: 0, max:300, majorTicks: 3, minorTicks: 3 };
+        oppys_gauge = new google.visualization.Gauge(document.getElementById("oppys"));
+        oppys_gauge.draw(oppys_data, oppys_options);
+      }
+      function drawMAT() {
+        mat_data = google.visualization.arrayToDataTable([ ['Label', 'Value'], ['MAT', MAT] ]);
+        mat_formatter = new google.visualization.NumberFormat({negativeColor: 'red', negativeParens: true, pattern: '$###,###'});
+        mat_formatter.format(mat_data, 1);
+        mat_options = { width: 300, height: 300, redFrom: 0, redTo: 1805716, yellowFrom:1805716, yellowTo: 3611432, greenFrom:3611432, greenTo: 5417149, min: 0, max:5417149, majorTicks: 3, minorTicks: 3 };
+        mat_gauge = new google.visualization.Gauge(document.getElementById("mat"));
+        mat_gauge.draw(mat_data, mat_options);
+      }
+      function LoadAllGauges() {
+          Leads = sforce.connection.query('SELECT count() from Lead WHERE CreatedDate = THIS_FISCAL_QUARTER');
+          Leads = parseInt(Leads.size);
+          drawLeads();
+          Oppys = sforce.connection.query("SELECT count() from Opportunity WHERE CreatedDate = THIS_FISCAL_QUARTER AND RecordTypeId IN ('01270000000DoVHAA0','01270000000LuOYAA0','01270000000LuOXAA0') AND Contract_Type__c IN ('New Customer','Expansion New Division','Expansion New Product')");
+          Oppys = parseInt(Oppys.size);
+          drawOppys();
+          MAT = sforce.connection.query("SELECT SUM(Total_MRC_Min__c) from Opportunity  WHERE CreatedDate = THIS_FISCAL_QUARTER AND RecordTypeId IN ('01270000000DoVHAA0','01270000000LuOYAA0','01270000000LuOXAA0') AND Contract_Type__c IN ('New Customer','Expansion New Division','Expansion New Product')");
+          MAT = parseInt(MAT.records.expr0);
+          drawMAT();
+      }
+      $(document).ready(function(){
+      sforce.connection.sessionId = '{!$Api.Session_ID}';
+      google.setOnLoadCallback(LoadAllGauges());
+      });
+    </script>
+  <div id="leads" style="float: left;"></div><div id="oppys" style="float: left;"></div><div id="mat" style="float: left;"></div>
+</apex:page>

@@ -1,0 +1,579 @@
+<apex:page standardController="BMCServiceDesk__Change_Request__c" extensions="ChangeRequestTaskExtension" standardStylesheets="false">
+	<apex:variable var="changeRequest" value="{!BMCServiceDesk__Change_Request__c}" />
+
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.core.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+        <apex:outputField value="{!changeRequest.BMCServiceDesk__FKStatus__c}" rendered="false"/>    
+        
+    <div id="responseErrors"></div>
+     <apex:sectionHeader title="CCR Tasks" subtitle="{!changeRequest.Name}" />
+     <div style="clear:both;">
+     <apex:form style="float:left;" >
+         <apex:commandLink action="{!Cancel}" value="« Return to {!changeRequest.Name}"/>
+     </apex:form>
+     <a class="k-button" style="float:right;" onclick="$('#HotKeyReference').data('kendoWindow').center().open();">Hot Key Reference</a>
+     <div style="clear:both;"></div>
+     </div>
+     <div class="info-message">
+         <b>Reminder: </b> At least one task of each Task Type (Communication, Validation, Work) is required to submit the CCR.
+     </div>
+    <div id="taskGrid" style="margin-bottom:1em;"></div>
+     <apex:form >
+         <apex:commandLink action="{!Cancel}" value="« Return to {!changeRequest.Name}"/>
+     </apex:form>
+     <apex:sectionHeader title="CCR Attachments" />
+    <div style="color:red"><apex:messages id="msg" /></div>
+    <div id="attach-form"  style="width:100%;">
+        <div id="attach-view">
+            <h1>Add Attachments</h1>
+            <apex:form id="theform" style="margin-top:10px;margin-bottom:10px;" >
+                <apex:inputFile id="fileinput" value="{!fileToUpload.body}" fileName="{!fileToUpload.Name}"></apex:inputFile> 
+                <apex:commandButton style="margin-top:1em;" value="Submit" action="{!SaveAttachment}" />
+            </apex:form>
+        </div>
+    </div>
+    <div id="attachmentContainer" style="width:100%;margin-bottom:1em;" >
+        <apex:dataTable id="attachmentGrid" value="{!attachments}"  var="a">
+            <apex:column headerValue="File Name">
+                <apex:outputLink type="{!a.ContentType}" target="_blank" value="{!URLFOR($Action.Attachment.Download,a.id)}">{!a.Name}</apex:outputLink>
+            </apex:column>
+            <apex:column headerValue="Last Modified Date" value="{!a.LastModifiedDate}" >
+            </apex:column>
+            <apex:column headerValue="Last Modified By" value="{!a.LastModifiedBy.Name}" >
+            </apex:column>
+        </apex:dataTable>
+    </div> 
+    
+     <apex:form >
+         <apex:commandLink action="{!Cancel}" value="« Return to {!changeRequest.Name}"/>
+     </apex:form>
+    <div id="HotKeyReference" data-title="Hot Key Reference" style="display:none;">
+    <table class="k-grid k-widget k-secondary" style="width:100%;border-spaceing:0;border-collapse:collapse;">
+        <thead class="k-grid-header">
+            <tr class="k-grid-header-wrap">
+                <th class="k-header">Action</th>
+                <th class="k-header">Chrome</th>
+                <th class="k-header">IE 9</th>
+                <th class="k-header">FireFox</th>
+            </tr>
+        </thead>
+        <tbody class="k-grid-content">
+            <tr>
+                <td>New Task</td>
+                <td>ALT + N </td>
+                <td>ALT + N + ENTER</td>
+                <td>SHIFT + ALT + N</td>
+            </tr>
+            <tr class="k-alt">
+                <td>Open Date/Time Picker</td>
+                <td>ALT + down arrow</td>
+                <td>ALT + down arrow</td>
+                <td>ALT + down arrow</td>
+            </tr>
+            <tr>
+                <td>Exit Date/Time Picker</td>
+                <td>ESC</td>
+                <td>ESC</td>
+                <td>ESC</td>
+            </tr>
+            <tr class="k-alt">
+                <td>Open Drop Down</td>
+                <td>ALT + down arrow</td>
+                <td>ALT + down arrow</td>
+                <td>ALT + down arrow</td>
+            </tr>
+            <tr>
+                <td>Exit Drop Down</td>
+                <td>ESC</td>
+                <td>ESC</td>
+                <td>ESC</td>
+            </tr>
+        </tbody>                
+    </table>
+    </div>
+        <style type="text/css">
+        .k-warning{background-position-x:-176px;}
+        .info-message
+        {
+            margin-top:1em;
+            margin-bottom:1em;
+            padding:15px;
+            background-color:#daecf4;
+            color:#3a87ad;
+            border:1px solid #94c0d2;
+            border-radius: 10px 10px 10px 10px;
+        }
+        .warning-message
+        {
+            margin-top:1em;
+            margin-bottom:1em;
+            padding:15px;
+            background-color:#fcf8e3;
+            color:#c09853;
+            border:1px solid #faebcc;
+            border-radius: 10px 10px 10px 10px;
+        }                #attach-form h1 {
+                    padding: 5px 0;
+                    font-weight: bold;
+                    border-bottom: 1px solid #94c0d2;
+                    color: #175067;
+                    width:100%;
+                    display:block;
+                }
+                #attach-view {
+                    border-radius: 10px 10px 10px 10px;
+                    border-style: solid;
+                    border-width: 1px;
+                    border-color: #94c0d2;
+                    overflow: hidden;
+                    padding: 10px 10px 0 10px;
+                    margin: 1em auto;
+                    background-position: 0 -255px;
+                }    
+                .k-widget.k-tooltip-validation
+                {
+                color: red;background-color:#FFF;
+                }    
+                .k-button[data-value="Cancelled"]:hover, .k-button[data-value="Failed"]:hover
+                {
+                background-color:#363940;
+                }  
+                .k-button[data-value="Approved"]:hover
+                {
+                background-color:green;
+                }      
+
+            </style>
+
+    <script type="text/javascript">
+            
+            $(document).ready(function () {  
+            console.log('1');
+            $('#HotKeyReference').kendoWindow({title: 'Hot Key Reference'});
+                setupTaskGrid();
+               $("#attachmentContainer table").kendoGrid();
+               var fileInput = document.getElementById("{!$Component.theForm.fileinput}");
+              $(fileInput).kendoUpload({
+                    multiple: false,
+                localization: {
+                    select: "Select file..."
+                }
+                });
+            });
+            
+                        
+            Visualforce.remoting.timeout = 120000; // Set timeout at page level
+            
+            var ccrId = '{!changeRequest.Id}'
+            var gridData = '';
+            
+            
+            var taskDataSource =new kendo.data.DataSource({
+                    autosync:true,
+                    sort:{field: "BMCServiceDesk__templateOrder__c", dir:"asc"},
+                  transport:{
+                      read: function(options){
+                                Visualforce.remoting.Manager.invokeAction(
+                                      '{!$RemoteAction.ChangeRequestTaskExtension.JSONTasks}',
+                                      '{!changeRequest.Id}',
+                                      function(result,event)
+                                      {
+                                      console.log('5');
+                                          if (event.status) {
+                                          	  console.log('after 5'+result);	
+                                              options.success(JSON.parse(result));
+                                            } else if (event.type === 'exception') {
+                                                document.getElementById("responseErrors").innerHTML = event.message;
+                                            } else {
+                                                document.getElementById("responseErrors").innerHTML = event.message;
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                            },
+                        update: function(options){
+                        	console.log('options Values'+JSON.stringify(options));
+                            Visualforce.remoting.Manager.invokeAction(
+                                      '{!$RemoteAction.ChangeRequestTaskExtension.JsonUpdateTask}',
+                                      JSON.stringify(options),
+                                      function(result,event)
+                                      {
+                                          console.log('6');
+                                          taskDataSource.read();
+                                          if (event.status) {
+                                                  console.log(JSON.parse(result));
+                                            } else if (event.type === 'exception') {
+                                                document.getElementById("responseErrors").innerHTML = event.message;
+                                            } else {
+                                                document.getElementById("responseErrors").innerHTML = event.message;
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                        },
+                        create: function(options){
+                            Visualforce.remoting.Manager.invokeAction(
+                                      '{!$RemoteAction.ChangeRequestTaskExtension.JsonUpdateTask}',
+                                      JSON.stringify(options),
+                                      function(result,event)
+                                      {
+                                          
+                                          taskDataSource.read();
+                                          if (event.status) {
+                                                  //console.log(JSON.stringify(options));
+                                            } else if (event.type === 'exception') {
+                                                document.getElementById("responseErrors").innerHTML = event.message;
+                                            } else {
+                                                document.getElementById("responseErrors").innerHTML = event.message;
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                        }
+                      },
+                    schema:{
+                        model: {
+                            id: "Id",
+                            fields: {
+                                "Id": {type: "string"},
+                                "BMCServiceDesk__FKChange__c": {type: "string", defaultValue:'{!changeRequest.Id}', validation: { required: true }},
+                                "RF_Task_Type__c" : {type: "string", defaultValue: 'Work Task' },
+                                "BMCServiceDesk__templateOrder__c": { type: "number"},
+                                "BMCServiceDesk__FKOpenBy__c": { type: "string",  defaultValue:'{!$User.Id}',
+                                    validation: {required:true, messages: { required: 'Assigned To is required.'}}},
+                                "BMCServiceDesk__FKOpenBy__r": {defaultValue:{Id:"", Name:""}},
+                                "BMCServiceDesk__dueDateTime__c": {type: "date", defaultValue: null}, 
+                                "BMCServiceDesk__FKStatus__c": {type: "string", defaultValue: '',  validation: { required: true }},
+                                "BMCServiceDesk__FKStatus__r": {defaultValue:{Id:"", Name:""}}, 
+                                "BMCServiceDesk__duration__c" : {
+                                    defaultValue: null,
+                                    type: "number",
+                                    validation: {    
+                                                  requireTimeOrDuration: function(input) {                                                          
+                                                          if (input.is('[name=BMCServiceDesk__duration__c]')) {
+                                                          console.log('inside requiretimeduration');
+                                                               var dataItem = taskDataSource.getByUid(input.parents('tr[data-uid]').data('uid'));
+                                                               if((input.val() === '' || parseFloat(input.val()) <= 0) && dataItem.BMCServiceDesk__dueDateTime__c === null)
+                                                               {
+                                                                   input.attr("data-requireTimeOrDuration-msg", "Duration or Task Date are required");
+                                                                   return false;
+                                                               }
+                                                           }    
+                                                             return true;
+                                                           }
+                                             }
+                                 },
+                                "BMCServiceDesk__taskDescription__c": {
+                                        type: "string", 
+                                        validation: { 
+                                            required: true,
+                                            maxlength: function(input) { 
+                                                if (input.is('[name=BMCServiceDesk__taskDescription__c]') && input.val().length > 255) {
+                                                   input.attr("data-maxlength-msg", "Max length is 255");
+                                                   return false;
+                                                }                                   
+                                                return true;
+                                            }}}
+                            }
+                        }
+                    }
+                  });
+            
+            function taskTypeEditor(container, options){
+                var taskTypeList = JSON.parse('{!TaskRecordTypes}');
+                var containingDiv = $('<div class="k-listview">');  
+                containingDiv.appendTo(container);  
+                for(var i = 0; i < taskTypeList.length; i++){
+                    var button = $('<a>')                    
+                        .attr('data-value', taskTypeList[i].value)
+                        .attr('tabindex', '0')
+                        .addClass('k-button')
+                        .html(taskTypeList[i].label)
+                        .click(function(){
+                        taskDataSource.getByUid($(this).parents('tr[data-uid]').attr('data-uid')).set("RF_Task_Type__c", $(this).data('value'));
+                        $(this).siblings().removeClass('k-state-selected');
+                        $(this).addClass('k-state-selected');});
+                    
+                    if(taskTypeList[i].value === options.model.RF_Task_Type__c)
+                        $(button).addClass('k-state-selected');
+                    
+                    button.appendTo(containingDiv);
+                }
+            }
+            
+            
+        
+            function setupTaskGrid()
+            {
+            console.log('2');
+                $("#taskGrid").kendoGrid({
+                  dataSource: taskDataSource,
+                  editable: "inline",
+                  edit: function(e) {
+                          $('img.dragHandle').hide();                          
+                        },
+                  save: function(e) {
+                            //console.log('Changed:', e.model);
+                            delete e.model.AssignedTo__c_input; // FireFox fix
+                            
+                            console.log('inside save');
+                            if(!e.model.isNew() && e.model.dirty)
+                            {
+                            console.log('8');
+                                // Eliminate issue of an order change in a seperate window causing duplicate numbers
+                                delete e.model.BMCServiceDesk__templateOrder__c;
+                                if( e.model.BMCServiceDesk__FKStatus__r.Name !== 'ON_HOLD')                                
+                                    e.model.set('BMCServiceDesk__FKStatus__c', 'OPENED');
+                            }
+                          },
+                  dataBound: function(e){
+                  if(!{!AllowEdits} && '{!changeRequest.BMCServiceDesk__FKStatus__r.Name}' !== 'READY FOR DEPLOYMENT')
+                  {
+                      $('.k-grid-toolbar').hide();
+                          $('img.dragHandle').hide();   
+                  }else{
+                  console.log('9');
+                      $('.k-grid-add').click(function(){
+                      		console.log('15');
+                          var grid = $('#taskGrid').data('kendoGrid');
+                          console.log('10'+grid);
+                          grid.columns[grid.columns.length - 1].command = [{name:"edit"}];
+                        });
+                        $('.k-grid-add').keyup(function(e){
+                          if (e.keyCode == 13){  
+                               $(".k-grid-add").click();
+                                  console.log('11');
+                                  }
+                             });
+                        }
+                  },
+                  cancel: function(e) {
+                              $('img.dragHandle').show();
+                          },
+                  columns: [
+                  			{
+                                field:"Id",
+                                filterable: false,
+                                hidden: true
+                            },
+                            {
+                                field:"BMCServiceDesk__FKChange__c",
+                                filterable: false,
+                                hidden: true
+                            },
+                            {
+                                field: "BMCServiceDesk__templateOrder__c",
+                                title: "Order",
+                                width: 60,
+                                template:'<img class="dragHandle" style="float:left;" src="{!URLFOR($Resource.CCRImages, 'icon_drag_n_drop.png')}" title="Drag Task to Re-order" /><span style="float:left;margin-left:5px;margin-top:2px;">#=BMCServiceDesk__templateOrder__c#</span><div style="clear:both;"></div>',
+                                 editor: function(container, options){if(options.model.isNew()){ options.model.BMCServiceDesk__templateOrder__c= taskDataSource.at(taskDataSource.data().length - 1).BMCServiceDesk__templateOrder__c + 1; }container.html(options.model.BMCServiceDesk__templateOrder__c);},
+                                 sortable:false
+                            },
+                            {
+                                field: "RF_Task_Type__c",
+                                title: "Task Type",
+                                //template: '#= (RF_Task_Type__c == null) ? \'\' : RF_Task_Type__c #',
+                                sortable: false,
+                                editor: taskTypeEditor
+                            },
+                            {
+                                field: "BMCServiceDesk__FKOpenBy__c",
+                                title: "Assigned To",
+                                editor: AssignedToDropDownEditor,
+                                template: '#= (BMCServiceDesk__FKOpenBy__r == null) ? \'\' : BMCServiceDesk__FKOpenBy__r.Name #',
+                                sortable: false
+                            },
+                            {
+                                field: "BMCServiceDesk__taskDescription__c",
+                                title: "Description",
+                                editor: textAreaEditor,
+                                sortable: false
+                            },
+                            {
+                                field: "BMCServiceDesk__FKStatus__c",
+                                title: "Status",
+                                editor: currentStatusEditor,
+                                template: '#= (BMCServiceDesk__FKStatus__r == null) ? \'\' : BMCServiceDesk__FKStatus__r.Name #',
+                                width: 100,
+                                sortable: false
+                                
+                            },
+                            {
+                                field: "BMCServiceDesk__dueDateTime__c",
+                                title: "Task Date",
+                                format: "{0:g}",
+                                editor: dateTimeEditor,
+                                sortable: false
+                            },
+                            {
+                                field: "BMCServiceDesk__duration__c",
+                                title: "Duration",
+                                format: "{0:n0}",
+                                width: 100,
+                                sortable: false
+                            },
+                            {
+                            field: "Action",
+                            title: "Action", 
+                            editor: function(container, options){},
+                            template: '#if (BMCServiceDesk__FKStatus__r.Name !== "ClOSED" && BMCServiceDesk__FKStatus__r.Name !== "CANCELLED" && BMCServiceDesk__FKStatus__r.Name !== "CCR FAILED") { #<a style="min-width:0;" onClick="editRow(this);" title="Edit task" class="k-button"><span class="k-icon k-i-pencil"></span></a># } #' +
+                                      '#if (BMCServiceDesk__FKStatus__r.Name === "OPENED" && {!isCCBMaster} && !{!AllowEdits} ) { #<a style="min-width:0;" onClick="statusTaskUpdate(this);" title="Approve task" data-value="Approved" class="k-button"><span class="k-icon k-i-refresh"></span></a># } #' +
+                                      '#if (BMCServiceDesk__FKStatus__r.Name === "APPROVED") { #<a style="min-width:0;" onClick="statusTaskUpdate(this);" title="Complete task" data-value="Closed" class="k-button"><span class="k-icon k-i-tick"></span></a># } #' +
+                                      '#if (BMCServiceDesk__FKStatus__r.Name === "OPENED" || BMCServiceDesk__FKStatus__r.Name === "ON_HOLD" || BMCServiceDesk__FKStatus__r.Name === "APPROVED") { #<a style="min-width:0;" onClick="statusTaskUpdate(this);" title="Cancel task" data-value="Cancelled" class="k-button"><span class="k-icon k-i-close"></span></a># } #' +
+                                      '#if (BMCServiceDesk__FKStatus__r.Name === "APPROVED") { #<a style="min-width:0;" onClick="statusTaskUpdate(this);" title="Fail task" data-value="Failed" class="k-button"><span class="k-icon k-i-note"></span></a># } #' 
+                            }
+                            
+                  ],
+  sortable: {
+    mode: "multiple"
+  },
+                  toolbar: [{name:"create",text:"Add New Task", template:'<a tabindex="0" accesskey="n" class="k-button k-button-icontext k-grid-add"><span class="k-icon k-add"></span>Add New Task</a>'}]
+                });
+                
+                var grid = $("#taskGrid").data("kendoGrid");
+                //console.log(taskDataSource);
+                var selectedClass = 'k-state-selected';
+	grid.table.kendoDraggable({
+    filter: "tbody > tr > td > img.dragHandle",
+    group: "gridGroup",
+    axis: "y",
+    hint: function (item) {
+          var helper = $('<div class="k-grid k-widget drag-helper"/>');
+          if (!item.parents('tr[data-uid]').hasClass(selectedClass)) {
+            item.parents('tr[data-uid]').addClass(selectedClass).siblings().removeClass(selectedClass);
+          }
+          var elements = item.parents('tr[data-uid]').parent().children('.'+selectedClass).clone();
+          item.data('multidrag', elements).siblings('.'+selectedClass).remove();
+          return helper.append(elements);
+        }
+});
+
+grid.table.kendoDropTarget({
+    group: "gridGroup",
+    drop: function (e) {
+
+          var draggedRow = e.draggable.hint.find("tr[data-uid]");
+          e.draggable.hint.hide();
+          var dropLocation = $(document.elementFromPoint(e.clientX, e.clientY));
+          if(dropLocation.is("th")) {
+            return;
+          }
+          
+
+          //assign new spot in the main grid to each dragged row          
+            var draggedRowUid = $(draggedRow).attr("data-uid"),
+                itemToMove = taskDataSource.getByUid(draggedRowUid);   
+            var dest = taskDataSource.getByUid(dropLocation.parents('tr[data-uid]').attr("data-uid")); 
+            
+            var originalOrderVal = itemToMove.BMCServiceDesk__templateOrder__c;   
+            itemToMove.set("BMCServiceDesk__templateOrder__c", dest.BMCServiceDesk__templateOrder__c);
+            itemToMove.set("dirty", true);
+            taskDataSource.sort([{ field: "BMCServiceDesk__templateOrder__c", dir: "asc" }, 
+            					 { field: "dirty", dir: (originalOrderVal < itemToMove.BMCServiceDesk__templateOrder__c) ? "asc" : "desc"  }]);
+            
+            var data = taskDataSource.view();
+            for(var i = 0; i < data.length; i++){
+                 var itemToUpdate = data[i];
+                 itemToUpdate = taskDataSource.getByUid(itemToUpdate.uid);
+                 delete itemToUpdate.BMCServiceDesk__duration__c;
+                 delete itemToUpdate.BMCServiceDesk__taskDescription__c;
+                 delete itemToUpdate.BMCServiceDesk__dueDateTime__c;
+                 delete itemToUpdate.BMCServiceDesk__FKOpenBy__c;
+                 delete itemToUpdate.RF_Task_Type__c;
+                 if(itemToUpdate.uid !== itemToMove.uid)
+                 {
+                     itemToUpdate.set("BMCServiceDesk__templateOrder__c", i + 1);
+                     itemToUpdate.set("dirty", true);
+                }
+             }
+            taskDataSource.sync();
+            taskDataSource.sort({ field: "BMCServiceDesk__templateOrder__c", dir: "asc" });
+                        
+          }
+      });
+            }
+            
+            
+            function editRow(currentElement){
+                var grid = $('#taskGrid').data('kendoGrid');
+                grid.columns[grid.columns.length - 1].command = [{name:"edit"}];
+                grid.editRow($(currentElement).parents('tr[data-uid]')[0]);
+            }
+            
+            function statusTaskUpdate (currentElement){
+            								console.log('current element'+currentElement);
+                                            // e.target is the DOM element representing the button
+                                              var tr = $(currentElement).parents("tr[data-uid]"); // get the current table row (tr)
+                                              console.log('tr888888'+tr);
+                                              // get the data bound to the current table row
+                                              var data = taskDataSource.getByUid($(tr).data('uid'));
+                                              console.log('data'+$(currentElement).data('value'));
+                                            data.set("BMCServiceDesk__FKStatus__r.Name",$(currentElement).data('value'));
+                                            
+                                             // Eliminate issue of an order change in a seperate window causing duplicate numbers
+                                            delete data.BMCServiceDesk__templateOrder__c;
+                                            
+                                            taskDataSource.sync();
+                                        }
+            function textAreaEditor(container, options) {
+    $('<textarea style="width:95%;" rows="3" validationMessage="Description is required" required="required" name="' + options.field + '" data-bind="value:' + options.field + '"/>')
+            .appendTo(container);
+}
+
+            
+            function dateTimeEditor(container, options) {
+    $('<input data-text-field="' + options.field + '" data-value-field="' + options.field + '" data-bind="value:' + options.field + '" data-format="' + options.format + '"/>')
+            .appendTo(container)
+            .kendoDateTimePicker({});
+}
+
+           function AssignedToDropDownEditor(container, options) {
+            $('<input required="required" validationMessage="Assigned To is required"  id="BMCServiceDesk__FKOpenBy__c" name="BMCServiceDesk__FKOpenBy__c" data-text-field="label" data-value-field="value" data-bind="value:' + options.field + '"/>')
+                .appendTo(container)
+                .kendoComboBox({
+                    placeholder: "Select User...",
+                    open: function(e){
+                    e.sender.input.select();
+                    },
+                    dataSource: {
+                        transport:{
+                      read: function(options){
+                                Visualforce.remoting.Manager.invokeAction(
+                                      '{!$RemoteAction.ChangeRequestTaskExtension.JsonTaskAssignee}',
+                                      function(result,event)
+                                      {
+                                          //console.log(JSON.parse(result));
+                                          options.success(JSON.parse(result));
+                                      },
+                                      {escape: false}
+                               );
+                            }
+                        }
+                    },
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"},
+                                label: {type: "string", editable: false, nullable: false, validation: { required: true } }
+                            }
+                        }
+                    }
+                } );
+            }
+            
+            function currentStatusEditor(container,options){
+            var statusVal = '{!currentStatusValue}';
+            console.log('statusVal'+statusVal);
+            $(container).html(statusVal);
+            }
+			
+			function displayStatus(Id){
+            	var status = '';
+            	$.each()
+            }
+</script>
+</apex:page>

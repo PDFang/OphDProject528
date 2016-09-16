@@ -1,0 +1,89 @@
+<apex:page standardStylesheets="true" standardController="Case" extensions="StandardTextExtension">
+<style type="text/css">
+ table.exceptionText td {
+                 font-size:12px;
+                 font-weight:bold;
+                 text-align:center;
+                 color:red;}
+</style>
+<apex:form id="caseForm">
+    <apex:messages layout="table" styleClass="exceptionText" />
+    <apex:inputHidden id="caseDescHidden" value="{!Case.Description}"/>
+    <apex:pageBlock mode="edit" title="Add Case Comment"  id="mainPage">
+    
+        <apex:pageBlockButtons id="theButtons">
+            <!-- commandButton to update the case description with the standard text 
+                 and redirect to Case edit page -->
+            <!-- <apex:commandButton rendered="{!IF(ButtonsRendered,True,False)}" value="Add to Description" action="{!CopyStandardText}"/> -->
+            <apex:commandButton rendered="{!IF(ButtonsRendered,True,False)}" value="Add Comment" action="{!AddStandardTextAsCaseComment}"/>
+            <apex:commandButton value="Cancel" action="{!cancel}"/>
+        </apex:pageBlockButtons>
+        
+        <apex:pageBlockSection columns="1" showHeader="false">
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Case Number" for="caseCaseNumber" />
+                <apex:outputField id="caseCaseNumber" value="{!Case.CaseNumber}"/>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Subject" for="caseSubject" />
+                <apex:outputField id="caseSubject" value="{!Case.Subject}"/>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="* Time Spent on Case (minutes)" for="timeSpent" />
+                <apex:inputText id="timeSpent" value="{!TimeSpent}"/>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Add Standard Text" for="noText" />
+                    <apex:inputCheckbox id="noText" value="{!NoText}">
+                        <apex:actionSupport event="onclick" rerender="mainPage,theButtons"/>
+                    </apex:inputCheckbox>
+            
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem Rendered="{!NoText}" >
+                <apex:outputLabel value="Record Type" for="sRtype" />
+                <apex:selectList id="sRtype" size="1" value="{!SelectedRecordTypeId}">
+                    <apex:selectOptions value="{!RecordTypeOptions}"></apex:selectOptions>
+                    <!-- rerender the dependant "sText" dropdown to update values
+                         and sTextDetail output panel to clear the Detail text -->
+                    <apex:actionSupport event="onchange" rerender="mainPage"/>
+                </apex:selectList>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem Rendered="{!NoText}" >
+                <apex:outputLabel value="Standard Text" for="sText" />
+                <apex:selectList id="sText" size="1" value="{!SelectedStandardTextId}">
+                    <apex:selectOptions value="{!StandardTextOptions}"></apex:selectOptions>
+                    <!-- rerender "sTextDetail" to update the displayed text based on the "sText" changes -->
+                    <apex:actionSupport event="onchange" rerender="mainPage,sTextDetail" />                 
+                </apex:selectList>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Public" for="public" />
+                <apex:inputCheckbox id="public" value="{!IsPublicComment}"/>
+            </apex:pageBlockSectionItem>
+           <apex:pageBlockSectionItem >
+               <apex:outputLabel value="* Detail" for="sTextDetail" />
+               <apex:outputPanel id="sTextDetail" layout="block">
+                   <apex:inputTextarea style="width:400px" rows="8" id="detailValue" value="{!SelectedStandardText}"/> 
+                   <!-- <apex:actionSupport event="onchange" rerender="mainPage"/>                   -->
+               </apex:outputPanel>
+           </apex:pageBlockSectionItem>  
+        </apex:pageBlockSection>
+        * Required Fields
+    </apex:pageBlock>
+</apex:form>
+<apex:pageBlock title="Case Comments" >
+    <apex:dataTable bgcolor="#FFFFFF" frame="below" border="1" cellpadding="4" cellspacing="1" value="{!CaseComments}" var="cc">
+     <apex:column >
+
+                        <apex:facet name="header">Public</apex:facet>
+                        <apex:outputField value="{!cc.IsPublished}"/>
+
+    </apex:column>
+    <apex:column width="900" >
+        <apex:facet name="header">Comment</apex:facet>
+        <b>Created By: {!cc.CreatedBy.Name} (<apex:outputField value="{!cc.CreatedDate}"/>)</b><br></br>
+        <apex:outputField value="{!cc.CommentBody}"/>
+    </apex:column>
+    </apex:dataTable>
+</apex:pageBlock>
+</apex:page>

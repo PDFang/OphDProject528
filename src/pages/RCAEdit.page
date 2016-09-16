@@ -1,0 +1,28 @@
+<apex:page standardController="RCA__c" tabStyle="RCA__c">
+  <apex:form >
+      <!-- apex messages for any errors -->
+      <apex:outputPanel id="editPanel">
+          <div style="color:red"><apex:messages id="msg" /></div>
+      </apex:outputPanel>
+      <apex:pageBlock title="New RCA">
+          <apex:pageBlockSection columns="1" >
+              <apex:outputField value="{!RCA__c.Event__c}"/>
+              <apex:outputField value="{!RCA__c.Status__c}"/>
+              <apex:repeat value="{!$ObjectType.RCA__c.FieldSets.EditRCA}" var="f"> 
+                  <apex:inputField style="{!IF(f.Type='textarea','width:60%;height:100px','')}" value="{!RCA__c[f]}" required="{!OR(f.required, f.dbrequired)}"/>
+              </apex:repeat>
+          </apex:pageblockSection>
+          <apex:pageBlockSection columns="1" title="Event Summary" collapsible="false">
+              <apex:repeat value="{!$ObjectType.RCA__c.FieldSets.EventSummary}" var="f"> 
+                  <apex:inputField style="{!IF(f.Type='textarea','width:60%;height:100px','')}" value="{!RCA__c[f]}" required="{!OR(f.required, f.dbrequired,RCA__c.EventSummaryCompleted__c)}"/>
+              </apex:repeat>
+          </apex:pageblockSection>
+
+
+          <apex:pageBlockButtons >
+              <apex:commandButton value="Save" action="{!Save}"/>
+              <apex:commandButton value="Cancel" action="{!Cancel}"/>
+          </apex:pageBlockButtons>
+      </apex:pageblock>
+  </apex:form>
+</apex:page>

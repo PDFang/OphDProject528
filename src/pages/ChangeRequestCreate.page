@@ -1,0 +1,302 @@
+<apex:page standardController="BMCServiceDesk__Change_Request__c" extensions="ChangeRequestCreateExtension,CcrViewExtension">
+	<apex:variable var="changeReq" value="{!BMCServiceDesk__Change_Request__c}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+    <apex:form >
+    	<apex:inputHidden value="{!BMCServiceDesk__Change_Request__c.PreAuthorizedTemplate__c}" />
+        <apex:sectionHeader title="New Change Control Request" />
+        <apex:messages styleClass="warning-message" />
+        <apex:pageBlock title="" id="tlBlock">
+            <apex:pageBlockButtons >
+                <apex:commandButton styleClass="k-button" action="{!Save}" value="Save" />
+                <apex:commandButton styleClass="k-button" action="{!Cancel}" value="Cancel" />
+            </apex:pageBlockButtons> 
+            <apex:pageBlockSection columns="1">
+                <apex:inputField required="true" style="width:85%"
+                    value="{!changeReq.RF_Summary__c}" />  
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2">
+             <apex:inputField required="true" style="width:85%"
+                    value="{!changeReq.BMCServiceDesk__FKInitiator__c}" />
+                <apex:inputField id="releaseDate" required="true"
+                    value="{!changeReq.RF_Release_Date__c}" />
+                <apex:inputField id="datepicker" required="true"
+                    value="{!changeReq.RF_CCR_Start_Time__c}" />
+
+                <apex:inputField id="ChangeReasonField" required="true" value="{!changeReq.RF_Change_Reason__c}" />
+                <apex:inputField id="Monitoring_Set_up_on_Device__c" required="true" styleClass="keep-select" value="{!changeReq.RF_Monitoring_set_up_on_device__c}" 
+                				rendered="{!UseMaintenanceWindow}" />
+                <apex:inputField id="HIGH_Profile__c" required="true" styleClass="keep-select"
+                    value="{!changeReq.HIGH_Profile__c}"/>
+                <apex:inputField id="Is_monitoring_required__c" required="false" styleClass="keep-select"
+                    value="{!changeReq.RF_Is_monitoring_required__c}" rendered="{!UseMaintenanceWindow}"/>
+                    
+                <apex:inputField id="impact" required="true"
+                    value="{!changeReq.ImpactPicklist__c}" />
+                <apex:inputField id="urgency" required="true"
+                    value="{!changeReq.UrgencyPicklist__c}" />
+                <apex:inputField id="rfcType" required="true"
+                    value="{!changeReq.BMCServiceDesk__Change_Type__c}" />
+
+                <!-- <apex:inputField value="{!changeReq.Build__c}"
+                    rendered="{!UseMaintenanceWindow}" />-->
+                <apex:inputField value="{!changeReq.RF_Cluster_s__c}" rendered="{!UseMaintenanceWindow}"/>
+                <apex:inputField id="Release" value="{!changeReq.RF_Release__c}" rendered="{!UseMaintenanceWindow}"/>
+                <apex:inputField required="true"
+                    value="{!changeReq.RF_Contingency_Owner__c}" rendered="{!UseMaintenanceWindow}"/>
+                <apex:inputField id="mwStart" required="true"
+                    value="{!changeReq.RF_Maint_Window_Start_Time__c}" rendered="{!UseMaintenanceWindow}" />
+                <apex:inputField id="conDl" required="true"
+                    value="{!changeReq.RF_Contingency_Deadline__c}" rendered="{!UseMaintenanceWindow}"/>  
+                <apex:inputField id="mwEnd" required="true"
+                    value="{!changeReq.RF_Maint_Window_End_Time__c}" rendered="{!UseMaintenanceWindow}"/>
+                <apex:inputField id="impactBill" required="true"
+                    value="{!changeReq.ImpactsBilling__c}" rendered="{!UseMaintenanceWindow}"/> 
+                <apex:inputField id="ManagementApprovedCode" 
+                    value="{!changeReq.RF_Management_Approved_Code_Reviewer__c}" rendered="{!UseMaintenanceWindow}"/>
+
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="1" collapsible="false">
+                <apex:inputField required="true" style="width:85%"
+                    value="{!changeReq.BMCServiceDesk__Change_Description__c}" />
+                <apex:inputField required="true" style="width:100%"
+                    value="{!changeReq.RF_System_Apps_Processes_Impacted__c}" /> 
+                <apex:inputField required="true" style="width:85%"
+                    value="{!changeReq.RF_Description_of_Testing__c}" />
+                <apex:inputField required="true" style="width:85%"
+                    value="{!changeReq.RF_Contingency_Plan__c}" />
+                <apex:inputField required="true" style="width:85%"
+                    value="{!changeReq.BMCServiceDesk__Reason_for_Change_Details__c}" />  
+                <apex:inputField required="true" style="width:85%"
+                    value="{!changeReq.RF_Customer_Impact_Analysis__c}" />  
+                <apex:inputField required="true" style="width:85%"
+                    value="{!changeReq.RF_Escalation_Path__c}" />
+                <apex:inputField required="true" style="width:85%"
+                    value="{!changeReq.RF_Deployment_Method__c}" />
+            </apex:pageBlockSection>
+             <apex:pageBlockSection id="RiskAssessmentFields" columns="2"
+                title="Risk Assessment" collapsible="false">
+                <apex:repeat value="{!$ObjectType.BMCServiceDesk__Change_Request__c.FieldSets.Risk_Assessment}"
+                    var="f">
+                    <apex:InputField value="{!BMCServiceDesk__Change_Request__c[f]}"
+                        required="{!f.required}" />
+                </apex:repeat>
+            </apex:pageBlockSection> 
+            
+             <apex:pageBlockSection columns="1" id="TaskSection" rendered="{!IsCloneRecord}"> 
+          	<apex:actionRegion >
+    		<apex:variable var="positioncount" value=""/>
+          		<apex:pageblockTable width="100%" value="{!CCRTaskList}" var="task" id="theTable">
+                <apex:column >
+                    <apex:commandLink action="{!DeleteRow}" rerender="TaskSection" title="Delete" oncomplete="ChangeSelectsIntoButtons(),SetupDateTimePickers()" >
+                        <apex:image value="https://images.ucn.net/salesforce/delete_icon_x.png"/>
+                        <!-- position count is used to reference the index of the collection -->
+                        <apex:param name="tlInd" value="{!LEN(positioncount)}"/>
+                    </apex:commandLink>
+                    <apex:variable var="positioncount" value="{!positioncount+'|'}"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Order</apex:facet>
+                    <apex:outputField value="{!task.BMCServiceDesk__templateOrder__c}" /> 
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Record Type</apex:facet> 
+                    <apex:inputField style="font-size:10px" value="{!task.RF_Task_Type__c}" />
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Assigned To</apex:facet>
+                    <apex:inputField style="font-size:10px" value="{!task.BMCServiceDesk__FKOpenBy__c}"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Description</apex:facet>
+                    <apex:inputTextarea style="font-size:10px" cols="40" rows="3" value="{!task.BMCServiceDesk__taskDescription__c}"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Task Date/Time</apex:facet>
+                    <apex:inputField id="datepicker" style="font-size:10px" value="{!task.BMCServiceDesk__dueDateTime__c}"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Duration (Min)</apex:facet>
+                    <apex:inputField style="font-size:10px" value="{!task.BMCServiceDesk__duration__c}"/>
+                </apex:column>
+                
+                    
+            </apex:pageBlockTable>
+      </apex:actionRegion>
+            </apex:pageBlockSection>  
+        </apex:pageBlock>
+    </apex:form>
+    <div id="ChangeReasonDefinitions" style="display:none;">
+        <table style="width:100%;border-spaceing:0;border-collapse:collapse;">
+        <!--<tr style="border-bottom:1px solid #000;"><th style="text-align:center;">Change Reason</th><th style="text-align:center;">Descriptions and Examples</th></tr>-->
+        <tr><td style="padding:.5em;font-weight:bold;text-align:right;padding-right:1em;">Addition</td><td>New Equipment, Report, Procedures, Software</td></tr>        
+        <tr class="k-alt"><td style="padding:.5em;font-weight:bold;text-align:right;padding-right:1em;">Enhancement</td><td>Modifications to existing systems or software</td></tr>
+        <tr><td style="padding:.5em;font-weight:bold;text-align:right;padding-right:1em;">Fix</td><td>Code change, patches, hot fixes</td></tr>
+        <tr class="k-alt"><td style="padding:.5em;font-weight:bold;text-align:right;padding-right:1em;">Preventative Maintenance</td><td>Vendor or system maintenance upgrade</td></tr>
+        <tr><td style="padding:.5em;font-weight:bold;text-align:right;padding-right:1em;">Reconfiguration</td><td>Alterations to an existing infrastructure or software item</td></tr>
+        <tr class="k-alt"><td style="padding:.5em;font-weight:bold;text-align:right;padding-right:1em;">Relocation</td><td>Movement of an infrastructure item</td></tr>
+        <tr><td style="padding:.5em;font-weight:bold;text-align:right;padding-right:1em;">Removal</td><td>Removal of an infrastructure item</td></tr>
+        <tr class="k-alt"><td style="padding:.5em;font-weight:bold;text-align:right;padding-right:1em;">Upgrade</td><td>Replace existing infrastructure item with a new or revised version</td></tr>        
+        </table>
+    </div>
+    <style type="text/css">
+    .pbBody a.k-state-selected,.k-state-selected, .k-secondary .k-button.k-state-selected {
+    background-image: none;
+    background-color: #0053dd;
+    border-color: #0053dd;
+    color: #FFF;
+}
+.pbBody a.k-button
+{
+    color:#fff !important;
+}
+.pbSubheader{
+background-color:#363940 !important;
+}
+.k-button{
+background-color:#363940;
+border-color:#363940;
+}
+
+.pbBody a.k-state-selected:focus:active {
+    border-color:#ff5301;
+    box-shadow:none;
+}
+
+.k-datetimepicker .k-picker-wrap .k-icon {
+    margin-top: 0.3em;
+}
+
+.k-datepicker .k-picker-wrap .k-icon {
+    margin-top: 4px;
+}
+
+span.k-widget.k-datetimepicker.k-header,span.k-widget.k-datepicker.k-header, span.k-widget.k-combobox.k-header, span.k-widget.k-dropdown.k-header
+    {
+    width: 200px;
+}
+        
+        
+                .warning-message
+                {
+                    margin-top:1em;
+                    margin-bottom:1em;
+                    padding:15px;
+                    background-color:#fcf8e3;
+                    color:#c09853;
+                    border:1px solid #faebcc;
+                    border-radius: 10px 10px 10px 10px;
+                }
+</style>
+    <script type="text/javascript">
+    function SelectButtonClick(selectButton){
+        if($(selectButton).hasClass('k-state-selected')){
+           //$(selectButton).parent().siblings('select').val('');
+            $(selectButton).parent().siblings('select').children('option[value="' + $(selectButton).data('value') + '"]').prop("selected", false); 
+            $(selectButton).removeClass('k-state-selected');
+        }
+        else
+        {
+        $(selectButton).parent().siblings('select').children('option[value="' + $(selectButton).data('value') + '"]').prop("selected", true);
+        //$(selectButton).parent().siblings('select').val($(selectButton).data('value'));
+        if($(selectButton).parent().siblings('select').attr('multiple') !== 'multiple')
+            $(selectButton).siblings().removeClass('k-state-selected');
+        $(selectButton).addClass('k-state-selected');
+        }
+    }
+    function ChangeSelectsIntoButtons()
+    {
+            $('select').each(function(selectIndex, selectElement){
+                if($(selectElement).siblings('div.k-listview').size() == 0 && !$(selectElement).hasClass('keep-select') && 
+                    (($(selectElement).children('option[value!=""]').size() < 5 && $(selectElement).siblings('input').size() == 0) ||
+                    ($(selectElement).attr('multiple') === 'multiple' && $(selectElement).is( ":hidden" ))))
+                {
+                    $(selectElement).hide();
+                    $('<div>').addClass('k-listview').prependTo($(selectElement).parent());
+                    $(selectElement).children('option[value!=""]').each(function(optionIndex, optionElement){
+                          if('{!BMCServiceDesk__Change_Request__c.PreAuthorizedTemplate__c}' == 'true' || $(optionElement).html() != 'PRE-AUTHORIZED'){
+                          console.log('filtered Values'+'{!BMCServiceDesk__Change_Request__c.PreAuthorizedTemplate__c}'+' '+$(optionElement).html());
+                            var link = $('<a>')
+                                .addClass('k-button')
+                                .attr('data-value', $(optionElement).attr('value'))
+                                .attr('href', 'javascript:void(0);')
+                                .attr('tabindex', '0')
+                                .click(function(){SelectButtonClick(this);})
+                                .html($(optionElement).html());
+                                console.log('Link value'+link);
+                            $(link).appendTo($(selectElement).siblings('div.k-listview'));
+                            if($(selectElement).parents('[id*="RiskAssessmentFields"]').size() > 0)
+                                $('<div style="clear:both;">').appendTo($(selectElement).siblings('div.k-listview'));
+                                
+                            if($(optionElement).attr('selected') === 'selected')
+                            {
+                                $(link).addClass('k-state-selected');
+                            }
+                        }
+                    });
+                }
+                else if($(selectElement).siblings('input').size() > 0)
+                {
+                    $(selectElement).hide();
+                }
+                else if($(selectElement).siblings('div.k-listview').size() == 0)
+                {
+                //$(selectElement).addClass('k-secondary').kendoDropDownList();
+                }
+            });
+            $('table.multiSelectPicklistTable').hide();  
+    }
+    function SetupDateTimePickers()
+    {
+           $('span.dateInput').each(function(){
+               $(this).addClass('k-secondary');
+               $(this).children('input').removeAttr('onfocus');
+               $(this).children('span.dateFormat').hide();
+               if($(this).hasClass('dateOnlyInput'))
+                   $(this).children('input').kendoDatePicker();
+               else
+                   $(this).children('input').kendoDateTimePicker();
+           });
+    }
+    
+       var releaseDataSource = new kendo.data.DataSource({
+                              transport: {
+                                read: function(options){
+                                    Visualforce.remoting.Manager.invokeAction(
+                                          '{!$RemoteAction.CcrViewExtension.ReleaseValueList}',
+                                          '{!changeReq.Id}',
+                                          function(result,event)
+                                          {
+                                              //console.log(JSON.parse(result));
+                                              if (event.status) {
+                                                  
+                                                  options.success(JSON.parse(result));
+                                                } 
+                                          },
+                                          {escape: false}
+                                   );
+                                }
+                              }
+                            });
+    
+    $(document).ready(function () {  
+    console.log('Inside ready function');
+        $('<a>').css('text-decoration', 'underline').css('margin-left', '1em')
+            .click(function(){$('#ChangeReasonDefinitions').data('kendoWindow').center().open();})
+            .html('Definitions').insertAfter($('select[id*="ChangeReasonField"]'));
+        $('.k-button.btn').removeClass('btn'); 
+        ChangeSelectsIntoButtons();
+        SetupDateTimePickers();
+        $('input[id*="Release"]').kendoDropDownList({
+            dataSource: releaseDataSource,
+            optionLabel: " " 
+        });
+        $("#ChangeReasonDefinitions").kendoWindow({
+            title: "Change Reason Definitions",
+            resizable: false
+        });
+    });
+    </script>
+</apex:page>

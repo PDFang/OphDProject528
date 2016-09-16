@@ -1,0 +1,51 @@
+<apex:page standardController="Project__c" extensions="PSProjectQuoteProductSelectExtension">
+<div style="color:red"><apex:messages id="msg" /></div>
+  <apex:form >
+      <apex:pageBlock >
+          <apex:pageBlockButtons >
+              <apex:commandButton value="Save" action="{!Save}"/>
+              <apex:commandButton value="Cancel" action="{!Cancel}"/>
+          </apex:pageBlockButtons>
+          <apex:pageBlockSection columns="1" >
+              <apex:outputField value="{!Project__c.Name}"/>
+              <apex:outputField value="{!Project__c.Summary__c}"/>
+              <apex:outputField value="{!Project__c.Opportunity__c}"/>
+          </apex:pageBlockSection>
+          <apex:pageBlockTable value="{!QuoteProducts}" var="q">
+              <apex:column >
+                  <apex:facet name="header">Add</apex:facet>
+                  <apex:inputCheckbox value="{!q.selected}"/>
+              </apex:column>
+              <apex:column width="40px" >
+                  <apex:facet name="header">Allocation %</apex:facet>
+                  <apex:inputText size="3" maxlength="3" value="{!q.percentAllocation}"/>
+              </apex:column>
+              <apex:column >
+                  <apex:facet name="header">Associated Projects</apex:facet>
+                  <apex:pageBlockTable value="{!q.qp.Quote_Product_Projects__r}" var="qpp">
+                      <apex:column >
+                          <apex:facet name="header">Project</apex:facet>
+                          <apex:outputField value="{!qpp.Project__c}"/>
+                      </apex:column>
+                      <apex:column >
+                          <apex:facet name="header">%</apex:facet>
+                          <apex:outputField value="{!qpp.PercentAllocation__c}"/>
+                      </apex:column>
+                  </apex:pageBlockTable>
+              </apex:column>
+              <apex:column >
+                  <apex:facet name="header">Part Number</apex:facet>
+                  <apex:outputField value="{!q.qp.Name}"/>
+              </apex:column>
+              <apex:column >
+                  <apex:facet name="header">Part Description</apex:facet>
+                  <apex:outputField value="{!q.qp.Line_Description__c}"/>
+              </apex:column>
+              <apex:column >
+                  <apex:facet name="header">Total Price</apex:facet>
+                  <apex:outputField value="{!q.qp.Total_Price__c}"/>
+              </apex:column>
+          </apex:pageBlockTable>
+      </apex:pageBlock>
+  </apex:form>
+</apex:page>

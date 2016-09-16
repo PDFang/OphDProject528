@@ -1,0 +1,60 @@
+<apex:page standardController="BigMachines_Quote__c" recordSetvar="quoteList" extensions="BigMachinesChooseQuoteToCloneExtension">
+    <script type="text/javascript">
+        function getQuote(location){
+            var all_quotes = document.getElementsByName("ids");
+            var selected_quote = "";
+            var foundQuote = false;
+            for (var i=0; i < all_quotes.length; i++) {
+                if (all_quotes[i].checked == true) {
+                    if (selected_quote == "") {
+                        selected_quote = all_quotes[i].value;
+                        foundQuote = true;
+                    } else {
+                        alert("You may only select one quote to clone.");
+                        foundQuote = false;
+                        break;
+                    }
+                }
+            }
+            if (selected_quote == "") {
+                alert("Please select one quote to clone.");
+            } else if (foundQuote == true) {
+                var paramID = "j_id0:chooseQuote" + location + ":selectedQuoteId";
+                var hiddenParam = document.getElementById(paramID);
+                hiddenParam.value = selected_quote;
+            }
+        }
+    </script>
+    <apex:sectionHeader title="Clone {!$ObjectType.BigMachines_Quote__c.Label}" subtitle="{!$ObjectType.BigMachines_Quote__c.Label} Selection"/>
+    Check a box next to a quote and click the "Clone" button to create a clone of that quote.  
+    Click the "Cancel" button to return to {!OppName}.<br /><br />
+    <apex:form id="chooseQuoteTop">
+        <table  border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+                <td style="text-align:center">
+                    <apex:commandButton action="{!cloneQuote}" value="Clone" onclick="getQuote('Top');"/>
+                    <apex:commandButton action="{!cancel}" value="Cancel"/>
+                </td>
+            </tr>
+        </table>
+        <apex:inputHidden id="selectedQuoteId" value="{!selectedQuoteId}"/>
+    </apex:form>
+    <apex:listViews type="BigMachines_Quote__c">
+        <apex:facet name="header">
+            <span class="pbTitle">
+                <h2 class="mainTitle">Select Quote to Clone [{!resultSize}]</h2>
+            </span>
+        </apex:facet>
+    </apex:listViews>
+    <apex:form id="chooseQuoteBottom">
+        <table  border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+                <td style="text-align:center">
+                    <apex:commandButton action="{!cloneQuote}" value="Clone" onclick="getQuote('Bottom');"/>
+                    <apex:commandButton action="{!cancel}" value="Cancel"/>
+                </td>
+            </tr>
+        </table>
+        <apex:inputHidden id="selectedQuoteId" value="{!selectedQuoteId}"/>
+    </apex:form>
+</apex:page>

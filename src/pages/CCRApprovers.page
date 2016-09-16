@@ -1,0 +1,32 @@
+<apex:page standardController="ChangeControlRequest__c"
+    extensions="CCRApproversExtension" action="{!Initialize}">
+    <!-- apex messages for any errors -->
+    <div style="color: red"><apex:messages /></div>
+    <apex:form >
+        <apex:inputHidden value="{!ChangeControlRequest__c.RecordTypeId}" />
+        <apex:inputHidden value="{!ChangeControlRequest__c.CCRType__c}" />
+        <apex:inputHidden value="{!ChangeControlRequest__c.NumberOfWorkTasks__c}" />
+        <apex:inputHidden value="{!ChangeControlRequest__c.NumberOfValidationTasks__c}" />
+        <apex:inputHidden value="{!ChangeControlRequest__c.NumberOfCommunicationTasks__c}" />
+        <apex:inputHidden value="{!ChangeControlRequest__c.PreAuthorizedTemplate__c}" />
+        <apex:outputText value="{!ChangeControlRequest__c.RFCType__c}"
+            rendered="false" />
+        <apex:pageBlock rendered="{!Rendered}">
+            <apex:pageBlockSection columns="1" title="CCR Approvers" collapsible="false" >
+                <apex:selectCheckboxes layout="pageDirection"
+                    value="{!SelectedApprovers}">
+                    <apex:selectOptions value="{!Approvers}" />
+                </apex:selectCheckboxes>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Save as Template?" collapsible="false">
+                <apex:pageblockSectionItem >
+                    <apex:outputLabel >Set as Pre-Authorized Template</apex:outputLabel>
+                    <apex:inputCheckbox id="template" value="{!SetTemplate}"/>
+                </apex:pageblockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        <apex:commandButton value="Approve" action="{!Save}"
+            rendered="{!Rendered}" />
+        <apex:commandButton value="Cancel" action="{!Cancel}" />
+    </apex:form>
+</apex:page>

@@ -1,0 +1,5 @@
+<apex:page controller="BigMachinesNewQuoteController" tabStyle="BigMachines_Quote__c">
+    <apex:sectionHeader title="{!$ObjectType.BigMachines_Quote__c.Label} Edit" subtitle="{!subtitle}"/>
+
+    <iframe height="390px" src="{!CreateURL}&_partnerSessionUrl={!$Api.Partner_Server_URL_90}&_partnerSessionId={!$Api.Session_ID}" id="new_quote" name="new_quote" title="Content" scrolling="yes" width="100%" frameborder="0"></iframe>
+</apex:page>

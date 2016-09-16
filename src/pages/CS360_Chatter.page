@@ -1,0 +1,7 @@
+<apex:page showHeader="false" sideBar="false" >
+
+ <style> body{padding: 15px;} </style>
+
+ <chatter:feed entityId="{!$CurrentPage.parameters.cid}"/>
+
+</apex:page>

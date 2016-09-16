@@ -1,0 +1,169 @@
+<apex:page controller="EventSidebarController" showChat="false" showHeader="false" sidebar="false" >
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:stylesheet value="{!$Resource.SupportConsoleCss}" />
+  <style type="text/css">
+        
+        .page-frame {
+            -moz-border-radius: 8px;
+            border-radius: 8px;
+            border:1px solid #000;
+        }
+        
+        ul,li
+        {
+            padding:0;
+            margin:0;
+        }
+        
+        
+        
+        li{list-style-type:disc;line-height:1.5em}
+        
+        a:visited{color:#1468b6;text-decoration:none}
+        a:hover{text-decoration:underline}
+        a:link{color:#1468b6;text-decoration:none}
+        
+        .event-header{
+            text-align:center;
+            background-color:#000;
+            color:#fff;
+            -moz-border-top-left-radius: 8px;
+            border-top-left-radius: 8px;
+            -moz-border-top-right-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+      
+      .event-text{
+      	width:80%;
+      	float:left;
+      	margin-left:2px;
+      }
+      
+      .event-marker{
+      	height:10px;
+      	width:10px;
+      	float:left;
+      	margin-top:2px;
+      }
+    </style>
+    
+    <div id="new-events">
+        
+    </div>
+    
+    <apex:includeScript value="/support/console/28.0/integration.js"/>
+    <apex:includeScript value="/soap/ajax/30.0/connection.js" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.CometD, 'cometd.js')}" /> 
+    <!-- apex:includeScript value="{!URLFOR($Resource.CometD, 'jquery-1.5.1.js ')}" /-->
+    <apex:includeScript value="{!URLFOR($Resource.CometD, 'json2.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.CometD, 'jquery.cometd.js')}" />  
+    <script type="text/javascript">
+        $(document).ready(function() {
+            //Add a push notification listener for Cases
+            //sforce.console.addPushNotificationListener(['Case'], pushEventHandler);
+            sforce.console.onCustomConsoleComponentButtonClicked(clickEventHandler);
+            CreateGrid()
+            
+            $.cometd.init({
+                url: window.location.protocol+'//'+window.location.hostname+'/cometd/30.0/',
+                requestHeaders: { Authorization: 'OAuth {!$Api.Session_ID}'}
+                });
+            // Subscribe to a topic. JSON-encoded update will be returned
+            // in the callback
+            $.cometd.subscribe('/topic/CaseActiveEvents', function(message) {
+                console.log(message); 
+                    console.log(message.data.event.type);
+                	var dataItem = dataSource.get(message.data.sobject.Id);
+                if(dataItem != undefined){
+                    console.log(dataItem);
+                    if(message.data.sobject.Status == "Closed"){
+                       dataSource.remove(dataItem);
+                    }else{
+                		dataItem.set("Status", message.data.sobject.Status);
+                    }
+                    if(message.data.sobject.Status == "Resolved"){ 
+                    	sforce.console.setCustomConsoleComponentButtonStyle('background:green;color:#fff;');
+                    }
+                }else{
+                    if(message.data.sobject.Status != "Closed"){
+                        dataSource.add({Id: message.data.sobject.Id, IsInternal__c: message.data.sobject.IsInternal__c, Subject: message.data.sobject.Subject, Status: message.data.sobject.Status,CaseNumber: message.data.sobject.CaseNumber});
+                        
+                        sforce.console.setCustomConsoleComponentButtonStyle('background:red;color:#fff;');
+                    }
+    			}            
+            });
+         });
+         
+         var dataSource = new kendo.data.DataSource({
+             	data: JSON.parse('{!JsonEvents}'),
+                    schema:{
+                        model: {
+                            id: "Id",
+                            fields: {
+                                "Id": {type: "string"},
+                                "InternalEvent__c": {type: "boolean", validation: { required: true }},
+                                "Subject" : {type: "string" },
+                                "Status": {type: "string"},
+                                "CaseNumber": {type: "string"}
+                            }
+                        }
+                    }
+             });
+    
+    	function CreateGrid()
+    	{
+            $("#new-events").kendoGrid({
+                      dataSource: dataSource,
+                      editable: false,
+                      columns: [{
+                                    field:"Id",
+                                    filterable: false,
+                                    hidden: true
+                                },
+                                {
+                                    field:"Subject",
+                                    title: "Subject",
+                                    template: "<a href=\"javascript:sforce.console.openPrimaryTab(null,'/#= Id #',true,'Event: #= CaseNumber #');\">#= InternalEvent__c ? \'\' : \'(Public)\' # #= Subject#</a>"
+                                },
+                                {
+                                    field:"Status",
+                                    title: "Status",
+                                    width:100
+                                }   
+                      ],
+                      sortable: true,
+                	  height:300
+                    });
+             };
+          
+         var pushEventHandler = function (result) {
+             console.log(result);
+             if(result.RecordTypeId == "01270000000MKciAAG"){
+                refreshEvents();
+                if(result.eventType == "created")
+                {
+                    //sforce.console.blinkCustomConsoleComponentButtonText('New Event', 500, null);
+                    sforce.console.setCustomConsoleComponentButtonStyle('background:red;color:#fff;');
+                } else if(result.Status == "Resolved"){
+                    //sforce.console.blinkCustomConsoleComponentButtonText('Event Resolved', 500, null);  
+                    sforce.console.setCustomConsoleComponentButtonStyle('background:green;color:#fff;');
+                }
+             }
+         };
+    
+    
+    
+         
+    
+        var clickEventHandler = function (result) {
+            
+            //sforce.console.blinkCustomConsoleComponentButtonText('Open Events', 100000, null);
+	        sforce.console.setCustomConsoleComponentButtonStyle('background:none;color:#000;');
+        };
+         
+    </script>
+
+</apex:page>

@@ -1,0 +1,57 @@
+<apex:page controller="TimesheetGeneratorController" tabStyle="Timesheet__c"  title="Timesheet Generator">
+    <style type="text/css"> 
+            
+        .dateFormat { display: none; }
+        .datePicker, .datePicker .dateBar ,.datePicker .calBody, .datePicker .calDays, .datePicker .buttonBar, .datePicker Select{ display:none;}
+        #ui-datepicker-div, .ui-datepicker{ font-size: 80%; }
+
+        .ui-timepicker-div .ui-widget-header { margin-bottom: 8px; }
+        .ui-timepicker-div dl { text-align: left; }
+        .ui-timepicker-div dl dt { height: 25px; margin-bottom: -25px; }
+        .ui-timepicker-div dl dd { margin: 0 10px 10px 65px; }
+        .ui-timepicker-div td { font-size: 90%; }
+        .ui-tpicker-grid-label { background: none; border: none; margin: 0; padding: 0; }
+    </style>
+    <script type="text/javascript">
+          
+       $j = jQuery.noConflict();
+        
+        function setFocusOnLoad(){}
+        
+       $j(document).ready(function()
+       {
+           addDatePicker();    
+       });
+       
+       function addDatePicker()
+       {
+            $j('[id$=datepicker]').datepicker({ampm:true}); 
+            $j('[id$=datepicker]').removeAttr('onfocus');
+       }
+    </script>
+    <apex:includeScript value="{!URLFOR($Resource.JQuery, 'jquery-1.7.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.JQuery, 'jquery-ui-1.8.17.custom.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.JQuery, 'jquery-ui-timepicker-addon.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.JQuery, 'jquery-ui.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.JQuery, 'jquery-ui-1.8.16.custom.css')}"/>
+    <apex:form >
+        <!-- apex messages for any errors -->
+        <apex:outputPanel id="editPanel">
+            <div style="color:red"><apex:messages id="msg" /></div>
+        </apex:outputPanel>
+        <apex:pageBlock title="Timesheet Generator" >
+            <apex:pageBlockSection columns="1" >
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel for="users" value="User:"/>
+                    <apex:inputField value="{!ts.OwnerId}"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel for="datepicker" value="Start Date:"/>
+                    <apex:inputField style="font-size:10px" id="datepicker" value="{!ts.StartDate__c}" />
+                </apex:pageBlockSectionItem>
+                    
+            </apex:pageBlockSection>
+            <div style="text-align:center;width:50%"><apex:commandButton action="{!Save}" value="Save"/></div>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

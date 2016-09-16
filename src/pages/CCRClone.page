@@ -1,0 +1,135 @@
+<apex:page standardController="ChangeControlRequest__c" extensions="CCRCloneExtension" >
+    <apex:messages />
+    <!-- setfocus script is so the calendar does not pop up on load for the release date field -->
+    
+    <apex:stylesheet value="{!URLFOR($Resource.JQuery, 'jquery-ui.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.JQuery, 'jquery-ui-1.8.16.custom.css')}"/>
+    
+    <style type="text/css"> 
+        
+        .dateFormat { display: none; }
+         .datePicker, .datePicker .dateBar ,.datePicker .calBody,.datePicker .prevMonth,.datePicker .nextMonth,.datePicker .calDays,.datePicker .calDays,.datePicker .weekend,.datePicker .weekday,.datePicker .calToday,.datePicker .calRow, .datePicker .buttonBar, .datePicker Select{ display:none;}
+        
+        #ui-datepicker-div, .ui-datepicker{ font-size: 80%; }
+        .ui-timepicker-div .ui-widget-header { margin-bottom: 8px; }
+        .ui-timepicker-div dl { text-align: left; }
+        .ui-timepicker-div dl dt { height: 25px; margin-bottom: -25px; }
+        .ui-timepicker-div dl dd { margin: 0 10px 10px 65px; }
+        .ui-timepicker-div td { font-size: 90%; }
+        .ui-tpicker-grid-label { background: none; border: none; margin: 0; padding: 0; }
+        
+
+    </style>
+    
+  <apex:form >
+      <apex:inputHidden value="{!ChangeControlRequest__c.CCRType__c}"/>
+      
+      <apex:pageBlock title="Clone {!ChangeControlRequest__c.Name}" id="tlBlock">
+          <apex:pageBlockButtons >
+              <apex:commandButton action="{!Save}" value="Save"/>
+              <apex:commandButton action="{!Cancel}" value="Cancel"/>
+          </apex:pageBlockButtons>
+          <apex:pageBlockSection columns="1" >
+              <apex:inputField id="releaseDate" required="true" value="{!ChangeControlRequest__c.ReleaseDate__c}"/>
+              <apex:inputField id="datepicker" required="true" value="{!ChangeControlRequest__c.CCRStartTime__c}"/>
+          </apex:pageBlockSection>
+          <apex:pageBlockSection columns="2" rendered="{!UseMaintenanceWindow}">
+              <apex:inputField required="true" value="{!ChangeControlRequest__c.ContingencyOwner__c}"/>
+              <apex:inputField id="mwStart" value="{!ChangeControlRequest__c.MaintenanceWindowStartTime__c}"/>
+              <apex:inputField id="conDl" required="true" value="{!ChangeControlRequest__c.ContingencyDeadline__c}"/>
+              <apex:inputField id="mwEnd" value="{!ChangeControlRequest__c.MaintenanceWindowEndTime__c}"/>
+              <apex:inputField value="{!ChangeControlRequest__c.Cluster__c}"/>
+              <apex:inputField value="{!ChangeControlRequest__c.Build__c}"/>
+          </apex:pageBlockSection>
+          <apex:pageBlockSection title="Details" columns="1" collapsible="false" >
+              <apex:inputField required="true" style="width:80%" value="{!ChangeControlRequest__c.Summary__c}"/>
+              <apex:inputField required="true" style="width:80%" value="{!ChangeControlRequest__c.Description__c}"/>
+              <apex:inputField required="true" style="width:80%" value="{!ChangeControlRequest__c.SystemsAppsProcessesImpacted__c}"/>
+              <apex:inputField required="true" style="width:80%" value="{!ChangeControlRequest__c.BusinessRiskAssessment__c}"/>
+              <apex:inputField required="true" value="{!ChangeControlRequest__c.RiskLevelOfCCR__c}"/>
+              <apex:inputField style="width:80%" value="{!ChangeControlRequest__c.TechnicalRiskAssessment__c}"/>
+              <apex:inputField required="true" style="width:80%" value="{!ChangeControlRequest__c.DescriptionOfTesting__c}"/>
+              <apex:inputField required="true" style="width:80%" value="{!ChangeControlRequest__c.ContingencyPlan__c}"/>
+          </apex:pageBlockSection>
+          <apex:variable var="positioncount" value=""/>
+          <apex:pageBlockSection columns="1" id="theSection">
+          <apex:actionRegion >
+          <apex:pageblockTable width="100%" value="{!CCRTaskList}" var="task" id="theTable">
+                <apex:column >
+                    <apex:commandLink action="{!DeleteRow}" rerender="tlBlock" title="Delete" oncomplete="addDatePicker(),addDateTimePicker()" >
+                        <apex:image value="https://images.ucn.net/salesforce/delete_icon_x.png"/>
+                        <!-- position count is used to reference the index of the collection -->
+                        <apex:param name="tlInd" value="{!LEN(positioncount)}"/>
+                    </apex:commandLink>
+                    <apex:variable var="positioncount" value="{!positioncount+'|'}"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Order</apex:facet>
+                    <apex:outputField value="{!task.Order__c}" />
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Record Type</apex:facet>
+                    <apex:inputField style="font-size:10px" value="{!task.RecordTypeId}" />
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Assigned To</apex:facet>
+                    <apex:selectList style="font-size:10px" size="1" value="{!task.AssignedTo__c}">
+                        <apex:selectOptions value="{!TaskAssignee}"/>
+                    </apex:selectList>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Description</apex:facet>
+                    <apex:inputTextarea style="font-size:10px" cols="40" rows="3" value="{!task.Description__c}"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Task Date/Time</apex:facet>
+                    <apex:inputField id="datepicker" style="font-size:10px" value="{!task.TaskDateTime__c}"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Duration (Min)</apex:facet>
+                    <apex:inputField style="font-size:10px" value="{!task.Duration__c}"/>
+                </apex:column>
+                
+                    
+            </apex:pageBlockTable>
+      </apex:actionRegion>
+            </apex:pageBlockSection>
+      </apex:pageBlock>
+  </apex:form>
+      <script>
+        function setFocusOnLoad(){}
+    </script>
+    
+    <script type="text/javascript">
+          
+       $j = jQuery.noConflict();
+
+       $j(document).ready(function()
+       {
+           addDateTimePicker();  
+           addDatePicker();  
+       });
+       
+       function addDateTimePicker()
+       {
+            $j('[id$=datepicker]').datetimepicker({ampm:true}); 
+            $j('[id$=mwStart]').datetimepicker({ampm:true});
+            $j('[id$=mwEnd]').datetimepicker({ampm:true});
+            $j('[id$=conDl]').datetimepicker({ampm:true});
+            $j('[id$=datepicker]').removeAttr('onfocus');
+            $j('[id$=mwStart]').removeAttr('onfocus');
+            $j('[id$=mwEnd]').removeAttr('onfocus');
+            $j('[id$=conDl]').removeAttr('onfocus');
+       }
+       
+       function addDatePicker()
+       {
+            $j('[id$=releaseDate]').datepicker({ampm:true}); 
+            $j('[id$=releaseDate]').removeAttr('onfocus');
+       }
+    </script>
+    <apex:includeScript value="{!URLFOR($Resource.JQuery, 'jquery-1.7.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.JQuery, 'jquery-ui-1.8.17.custom.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.JQuery, 'jquery-ui-timepicker-addon.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.JQuery, 'jquery-ui-sliderAccess.js')}"/>
+</apex:page>

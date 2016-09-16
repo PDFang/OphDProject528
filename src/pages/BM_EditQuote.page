@@ -1,0 +1,9 @@
+<apex:page standardcontroller="BigMachines_Quote__c" extensions="BigMachinesEditQuoteExtension">
+    <apex:sectionHeader title="{!$ObjectType.BigMachines_Quote__c.Label} Edit" subtitle="{!BigMachines_Quote__c.Name}"/>
+
+    <apex:outputText rendered="false" value="{!BigMachines_Quote__c.BigMachines_Transaction_Id__c}" />
+    <apex:outputText rendered="false" value="{!BigMachines_Quote__c.Opportunity__c}" />
+    <apex:outputText rendered="false" value="{!BigMachines_Quote__c.Opportunity__r.AccountId}" />
+
+    <iframe height="390px" src="{!EditURL}&_partnerSessionUrl={!$Api.Partner_Server_URL_90}&_partnerSessionId={!$Api.Session_ID}" id="edit_quote" name="edit_quote" title="Content" scrolling="yes" width="100%" frameborder="0"></iframe>
+</apex:page>

@@ -1,0 +1,79 @@
+<apex:page standardcontroller="Case" extensions="CaseRFOPDFExtension" renderAs="PDF">
+<apex:stylesheet value="{!URLFOR($Resource.RFOPDFStyleSheet, 'RFOPDF.css')}"/>
+
+    <!-- Hidden fields for query pull -->
+    <apex:outputText rendered="false">
+        {!Case.ParentId}
+        {!Case.CaseNumber}
+        {!Case.RFEStartDate__c}
+        {!Case.RFEEndDate__c}
+        {!Case.DescriptionOfIssue__c}
+        {!Case.RootCause__c}
+        {!Case.CorrectiveActions__c}
+        {!Case.NextSteps__c}
+        {!Case.LastModifiedBy.Name}
+        {!Case.LastModifiedBy.UserRole.Name}
+        {!Case.RFECreator__r.UserRole.Name}
+        {!Case.RFECreator__r.Name}
+    </apex:outputText>    
+       
+    <table>
+        <tr>
+            <td width="75%">
+                <apex:image value="{!$Resource.inContactLogo}"/>
+            </td>
+            <td style="font-size:18pt">
+                <b>Event Report</b>
+            </td>
+        </tr>
+    </table>
+    <br></br><br></br>
+    <b>Creator: {!CaseToUse.RFECreator__r.Name}, {!CaseToUse.RFECreator__r.UserRole.Name}</b>
+    <br></br><br></br>
+    <table class="info">
+        <tr class="info">
+            <th colspan="2" class="info">Information:</th>
+        </tr>
+        <tr>
+            <td>inContact Master Case Number:</td>
+            <td>{!CaseToUse.CaseNumber}</td>
+        </tr>
+        <tr>
+            <td>Start Date:</td>
+            <td><apex:outputField value="{!CaseToUse.RFEStartDate__c}"/></td>
+        </tr>
+        <tr>
+            <td>End Date:</td>
+            <td><apex:outputField value="{!CaseToUse.RFEEndDate__c}"/></td>
+        </tr>
+    </table>
+    <br></br><br></br>
+    <table class="info">
+        <tr>
+            <th class="info">Description of Issue:</th>
+        </tr>
+        <tr>
+            <td><apex:outputText escape="false" value="{!CaseToUse.DescriptionOfIssue__c}"/></td>
+        </tr>
+    </table>
+    <br></br><br></br>
+    <table class="info">
+        <tr>
+            <th class="info">Reason for Event:</th>
+        </tr>
+        <tr>
+            <td><apex:outputText escape="false" value="{!CaseToUse.RootCause__c}"/></td>
+        </tr>
+    </table>
+    <br></br><br></br>
+    <table class="info">
+        <tr>
+            <th class="info">Corrective Actions:</th>
+        </tr>
+        <tr>
+            <td><apex:outputText escape="false" value="{!CaseToUse.CorrectiveActions__c}"/></td>
+        </tr>
+    </table>
+
+   
+</apex:page>

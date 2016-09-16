@@ -1,0 +1,246 @@
+<apex:page standardController="Case" extensions="CaseCreateKnownIssueExtension" title="Search/Create {!recordTypeName}">
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:includeScript value="/support/console/28.0/integration.js"/>
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+    
+<style type="text/css">
+    .long{
+        width:700px;
+    }
+    .pbBody a.k-state-selected,.k-state-selected, .k-secondary .k-button.k-state-selected {
+        background-image: none;
+        background-color: #0053dd;
+        border-color: #0053dd;
+        color: #FFF;
+    }
+    .pbBody{
+        padding:5px;
+        margin:5px;
+    }
+    .pbBody a.k-button
+    {
+        color:#fff;
+    }
+    
+    .requiredLegend { color:#FFF !important; }
+    
+        .k-button{
+        background-color:#363940;
+        border-color:#363940;
+        }
+    .pbSubheader{
+        background-image:none !important;
+        background-color:#363940 !important;
+        color:#fff !important;
+    }
+    
+    table.data td.label{
+        text-align: right;
+        font-weight: bold;
+        padding: 5px;
+        font-size: 12px;
+        width:20%;
+    }
+   
+    table.data td.data{
+        text-align: left;
+        padding: 5px;
+    }
+    
+    
+    .warning-message
+    {
+        margin-top:1em;
+        margin-bottom:1em;
+        padding:15px;
+        background-color:#fcf8e3;
+        color:#c09853;
+        border:1px solid #faebcc;
+        border-radius: 10px 10px 10px 10px;
+    }
+
+</style>
+<apex:sectionHeader title="Attach/Create {!recordTypeName}" subtitle="{!Case.CaseNumber}"/>
+    <apex:form id="main"  >
+        <apex:inputHidden value="{!success}" id="success"/>
+        <!-- messages -->
+        <apex:outputPanel id="editPanel">
+            <apex:messages id="msg" styleClass="warning-message" />
+        </apex:outputPanel>
+        
+        <apex:outputField value="{!Case.Subject}" rendered="false"/>
+        <apex:outputField value="{!Case.Description}" rendered="false"/>
+        <apex:outputField value="{!Case.Steps_to_Recreate__c}" rendered="false"/>
+        <apex:outputField value="{!Case.TFSID__c}" rendered="false"/>
+        <apex:outputField value="{!Case.TfsItemState__c}" rendered="false"/>
+        <apex:outputField value="{!Case.ProductImpacted__c}" rendered="false"/>
+        <apex:outputField value="{!Case.PlatformsImpacted__c }" rendered="false"/>
+        <apex:outputField value="{!Case.FoundBy__c }" rendered="false"/>
+        <apex:outputField value="{!Case.ExistsIn__c }" rendered="false"/>
+        <apex:outputField value="{!Case.Summary__c}" rendered="false"/>
+        <apex:outputField value="{!Case.Origin}" rendered="false"/>
+        
+        <apex:pageBlock id="kiField" mode="edit">
+            <apex:actionRegion >
+                <apex:pageBlockSection columns="1" title="Attach Existing {!recordTypeName}" collapsible="false" >
+                        <apex:panelGrid columns="2" styleClass="data" columnClasses="label,data"  width="100%">
+                            <apex:outputLabel for="kiDesc" value=""/>
+                            <apex:outputText id="kiDesc" >
+                                Select an existing {!recordTypeName} to attach to the case or leave the field blank to create a new {!recordTypeName}.
+                            </apex:outputText>
+                            <apex:outputLabel for="kiData" value="">{!recordTypeName}</apex:outputLabel>
+                            <apex:outputPanel >
+                              <apex:outputField id="kiData" value="{!Case[substitute(recordTypeName, ' ', '') & '__c']}" />
+                                <apex:commandButton styleClass="k-button" oncomplete="StyleButtons()" action="{!ClearKnownIssue}" value="Clear" rendered="{!NOT(ISBLANK(Case[substitute(recordTypeName, ' ', '') & '__c']))}" reRender="kiField" immediate="true"/>
+                            </apex:outputPanel> 
+                            <apex:outputLabel for="kiLink" value=""/>
+                            <apex:outputText id="kiLink" >
+                                <a href="#" onclick="return knownIssueDialog();">Search existing {!recordTypeName}s</a>
+                            </apex:outputText>
+                        </apex:panelGrid>
+                </apex:pageBlockSection>
+            </apex:actionRegion>
+            <apex:outputPanel id="kiInfo" rendered="{!AND(ISBLANK(Case[substitute(recordTypeName, ' ', '') & '__c']),canCreateKnownIssue)}">
+            <apex:actionRegion >  
+                
+                <apex:pageBlockSection columns="1" title="Create {!recordTypeName}" collapsible="false">
+                    
+                    <apex:pageBlockSectionItem >
+                            <apex:outputLabel for="tfs">Create TFS Item</apex:outputLabel>
+                            <apex:inputCheckbox value="{!createTfsItem}">
+                                <apex:actionSupport event="onclick" reRender="tfsFields" oncomplete="StyleButtons()"/>
+                            </apex:inputCheckbox>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+            
+            </apex:actionRegion>
+                <apex:pageBlockSection columns="1" >
+                    <apex:inputField styleClass="long" value="{!relatedCase.Subject}" required="true"/>
+                    <apex:inputField styleClass="long" value="{!relatedCase.Summary__c}" required="true"/>
+                    <apex:inputField styleClass="long" value="{!relatedCase.Steps_to_Recreate__c}" required="true"/>
+                    <apex:inputField styleClass="long" value="{!relatedCase.InternalNotes__c}" required="true"/>
+                    <apex:inputField styleClass="long" value="{!relatedCase.Workaround__c}"/>
+                    <apex:inputField value="{!relatedCase.ProductImpacted__c}" required="true"/>
+                    <apex:inputField value="{!relatedCase.PlatformsImpacted__c}" required="true"/>
+                    
+                </apex:pageBlockSection>
+                <apex:outputPanel id="tfsFields">
+                <apex:pageBlockSection columns="1">
+                        <apex:pageBlockSectionItem rendered="{!NOT(createTfsItem)}">
+                            <apex:outputLabel for="bug">Existing TFS Work Item</apex:outputLabel>
+                            <apex:inputField id="bug" value="{!relatedCase.TfsWorkItem__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:inputField value="{!relatedCase.ExistsIn__c}" required="true" rendered="{!createTfsItem}"/>
+                        <apex:inputField value="{!relatedCase.FoundBy__c}" required="true" rendered="{!createTfsItem}"/>
+                </apex:pageBlockSection>
+                </apex:outputPanel>
+            </apex:outputPanel>
+            <apex:pageBlockButtons location="bottom" >
+                <apex:actionStatus id="mySaveStatus1" >
+                                    
+                   <apex:facet name="stop">
+
+                    <apex:commandButton styleClass="k-button" value="Save" action="{!SaveCase}" status="mySaveStatus1" oncomplete="onCompleteHandler()" reRender="main" />
+                         </apex:facet>
+                
+                         <apex:facet name="start">
+                
+                             <apex:outputPanel >
+                
+                                   <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                
+                                   <apex:commandButton styleClass="k-button" value="Creating {!recordTypeName}..." status="mySaveStatus1" disabled="true"/>
+                
+                               </apex:outputPanel>
+                
+                           </apex:facet>
+                
+                </apex:actionStatus>
+                <a id="cancel-button" href="#" onclick="CancelRequest()" class="k-button">Cancel</a>
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+        <!-- apex:actionFunction action="{!UpdateItem}" name="UpdateAction" / -->
+        <apex:actionFunction action="{!Cancel}" name="GoToCase"/>
+        <!-- apex:actionFunction action="{!SaveWorkItem}" name="SaveWorkItem_JS" status="mySaveStatus1" oncomplete="CreateTfsItem_JS();"/>
+        <apex:actionFunction action="{!CreateTfsItem}" name="CreateTfsItem_JS" status="mySaveStatus1" reRender="editPanel" oncomplete="onCompleteHandler()"/ -->
+    </apex:form>
+    
+    <c:CaseSearchKnownIssues id="kiComp" currentCase="{!Case}" searchRecordTypeName="{!recordTypeName}" >
+        Please select an existing {!recordTypeName}. If there is not an existing {!recordTypeName} for this customer's issue click the "Cancel" button to create a new {!recordTypeName}.
+    </c:CaseSearchKnownIssues>
+    
+   <script type="text/javascript">
+        $(document).ready(function () {
+            
+            function setFocusOnLoad(){}                  
+            StyleButtons();
+            
+            if('{!Case[substitute(recordTypeName, ' ', '') & '__c']}' == ''){
+                   knownIssueDialog();
+           }
+            
+            //var searchText = document.getElementById('{!$Component.kiComp.kiSearchPage.searchForm.searchPB.searchPBS.searchText}');
+            //$(searchText).focus();
+        });
+        
+        function onCompleteHandler() {
+          var successElement = document.getElementById('{!$Component.main.success}');
+          if($(successElement).val()=='true') {
+            CancelRequest()
+          } else {
+              
+            StyleButtons(); 
+          }
+        }
+        
+        function CancelRequest(){
+            if (sforce.console.isInConsole()){
+                doPrimaryTabRefresh();
+            } else{
+                GoToCase();
+            }            
+        }
+        
+        function checkIt(){
+            if (jQuery('.errorMsg').length > 0 || jQuery('.error-message').length > 0){
+                // Error exists
+                alert('There is an error on the page!');
+            }
+            else{
+                alert('No errors!');
+            }
+        }
+        
+        function StyleButtons(){
+                
+            $('.k-button.btn').removeClass('btn'); 
+        }
+        
+        
+        
+        
+        function CloseTab() {
+            //First find the ID of the current tab to close it
+            sforce.console.getEnclosingTabId(closeSubtab);
+        }
+        
+        var closeSubtab = function closeSubtab(result) {
+            //Now that we have the tab ID, we can close it
+            var tabId = result.id;
+            sforce.console.closeTab(tabId);
+        };
+        
+        var refreshPrimaryTab = function showTabId(result) {
+            var tabId = result.id;
+            sforce.console.refreshPrimaryTabById(tabId, true, CloseTab);
+        };
+    
+        function doPrimaryTabRefresh() {
+            sforce.console.getEnclosingPrimaryTabId(refreshPrimaryTab);            
+        }
+        
+        
+    </script>
+</apex:page>

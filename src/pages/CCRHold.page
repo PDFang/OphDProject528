@@ -1,0 +1,15 @@
+<apex:page standardController="ChangeControlRequest__c" extensions="CCRHoldExtension">
+    <div style="color:red"><apex:messages /></div>
+    <apex:form rendered="{!RenderPageInfo}">
+        <apex:inputHidden value="{!ChangeControlRequest__c.Status__c}"/>
+        <apex:inputHidden value="{!ChangeControlRequest__c.CCRType__c}"/>
+        <br></br>
+        <div>Are you sure you want to put this CCR on HOLD?</div>
+        <br></br>
+        <apex:commandButton action="{!Save}" value="Yes"/>
+        <apex:commandButton action="{!Cancel}" value=" No "/>
+    </apex:form>
+    <apex:form rendered="{!NOT(RenderPageInfo)}">
+        <apex:commandButton action="{!Cancel}" value="Cancel"/>
+    </apex:form>
+</apex:page>

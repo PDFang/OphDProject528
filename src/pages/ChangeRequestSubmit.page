@@ -1,0 +1,90 @@
+<apex:page standardController="BMCServiceDesk__Change_Request__c" action="{!ReturnToCCR}" 
+		   title="{!BMCServiceDesk__Change_Request__c.Name}" extensions="ChangeRequestSubmitButton" >
+    
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+    <apex:sectionHeader title="Change Control Request" subtitle="{!BMCServiceDesk__Change_Request__c.Name}" 
+    													description="Submit CCR"/>
+    <div style="color:red"><apex:messages /></div>
+    <apex:form id="theSubmitForm">
+        <!-- <apex:inputHidden value="{!BMCServiceDesk__Change_Request__c.BMCServiceDesk__FKStatus__c}"/>
+        <apex:inputHidden value="{!BMCServiceDesk__Change_Request__c.BMCServiceDesk__FKStatus__r.Name}"/>-->
+        <apex:inputHidden value="{!BMCServiceDesk__Change_Request__c.RecordTypeId}"/>
+        <apex:inputHidden value="{!BMCServiceDesk__Change_Request__c.OwnerId}"/>
+        <apex:inputHidden value="{!BMCServiceDesk__Change_Request__c.Name}"/>
+        <apex:inputHidden value="{!BMCServiceDesk__Change_Request__c.RF_Summary__c}"/>
+        <apex:inputHidden value="{!BMCServiceDesk__Change_Request__c.HIGH_Profile__c}"/>
+        <apex:outputText value="{!BMCServiceDesk__Change_Request__c.RF_Risk_Level__c}" rendered="false"/>
+        <apex:outputText value="{!BMCServiceDesk__Change_Request__c.BMCServiceDesk__Change_Type__c}" rendered="false"/>
+        <apex:outputText value="{!BMCServiceDesk__Change_Request__c.BMCServiceDesk__FKStatus__c}" rendered="false"/>
+        <apex:outputText value="{!BMCServiceDesk__Change_Request__c.BMCServiceDesk__FKStatus__r.Name}" rendered="false"/>
+        <apex:inputField rendered="false" value="{!BMCServiceDesk__Change_Request__c.RF_Release_Date__c}"/>
+        <apex:inputField rendered="false" value="{!BMCServiceDesk__Change_Request__c.BMCServiceDesk__Closed_Date_Time__c}"/>
+        
+        <apex:pageBlock id="planBlock" rendered="{!OR(needsTestPlan,needsInstallPlan,requirePeerReview)}" title="Upload Required Plan Files" >
+            
+            <apex:outputText value="{!BMCServiceDesk__Change_Request__c.RF_Risk_Level__c}"/>
+            <apex:outputPanel id="instalDiv" layout="block" style="border:1px solid #B8B8B8;padding:10px;margin:10px;" rendered="{!needsInstallPlan}" >
+                <apex:outputLabel style="font-weight:bold;"  >Select Install Plan</apex:outputLabel><br/>
+                <apex:inputFile id="instalFile" style="margin:5px;" value="{!installPlan.body}" fileName="{!installPlan.Name}" />
+            </apex:outputPanel>
+            <apex:outputPanel layout="block" rendered="{!needsTestPlan}" style="border:1px solid #B8B8B8;padding:10px;margin:10px;" >
+                <apex:outputLabel style="font-weight:bold">Select Test Plan</apex:outputLabel><br/>
+                <apex:inputFile id="testFile" style="margin:5px;" value="{!testPlan.Body}" fileName="{!testPlan.Name}" />
+            </apex:outputPanel>
+            <apex:outputPanel id="userListContainer" layout="block" rendered="{!requirePeerReview}" style="border:1px solid #B8B8B8;padding:10px;margin:10px;" >
+                <apex:outputLabel style="font-weight:bold" >Select Peer Reviewer(s) (choose up to 3 approvers)</apex:outputLabel><br/>
+                <apex:selectList id="userList" value="{!peerReviewUsers}" multiselect="true" size="15">
+                    <apex:selectOptions value="{!UserList}"/>
+                </apex:selectList>
+            </apex:outputPanel>
+            <apex:commandButton value="Submit" action="{!SubmitPlans}"/>
+            <apex:commandButton value="Cancel" action="{!Back}" immediate="true"/>
+        </apex:pageBlock>
+        
+        <apex:commandLink rendered="{!NOT(OR(needsTestPlan,needsInstallPlan,custImpact,requireChecklist))}" action="{!Back}" value="Back to CCR"/>
+        
+        
+        <apex:pageBlock rendered="{!custImpact}" >
+            <apex:pageBlockSection columns="1">
+                <apex:inputField value="{!BMCServiceDesk__Change_Request__c.RF_Customer_Impact__c}" required="true"/>
+                <apex:inputField value="{!BMCServiceDesk__Change_Request__c.RF_Customer_Impact_description__c}" required="true"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockButtons location="bottom" >
+                <apex:commandButton value="Close CCR" action="{!CloseCCR}"/>
+                <apex:commandButton value="Cancel" action="{!Back}" immediate="true"/>
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+    </apex:form>
+    
+    <script>
+        $(document).ready(function() {
+            // create MultiSelect from select HTML element
+            
+            var userList = document.getElementById("{!$Component.theSubmitForm.planBlock.userList}");
+            $(userList).kendoMultiSelect({
+                    maxSelectedItems: 3 //only three or less items could be selected
+            });
+            
+            var instal = document.getElementById("{!$Component.theSubmitForm.planBlock.instalFile}");
+            $(instal).kendoUpload({
+                multiple: false,
+                localization: {
+                    select: "Select Install Plan..."
+                }
+            });
+            
+            var testPlan = document.getElementById("{!$Component.theSubmitForm.planBlock.testFile}");
+            $(testPlan).kendoUpload({
+                multiple: false,
+                localization: {
+                    select: "Select Test Plan..."
+                }
+            });
+
+        });
+    </script>
+    
+</apex:page>

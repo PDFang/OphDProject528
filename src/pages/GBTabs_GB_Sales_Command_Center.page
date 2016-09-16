@@ -1,0 +1,8 @@
+<apex:page showHeader="True">
+    <GBLite:TabbedPageComponent pageAPIName="GBTabs_GB_Sales_Command_Center" >
+    <GBLite:EmbedComponent baseGridUrl="{!$Page.GBLite__Grid}" />
+        <script>
+            var pageDefinition = {"name":"GB Sales Command Center","tabs":[{"name":"Day to Day Opps","content":"{!gridPage}gname=Opportunities with Tasks&sh=0","id":1468450073246},{"name":"One on One","content":"{!gridPage}gname=Sales Rep One On One&sh=0","id":1468450115514}],"id":1468450073246,"description":"Sales Grid","globalButtons":true,"object":"0","height":"710"};
+        </script>
+    </GBLite:TabbedPageComponent>
+</apex:page>

@@ -1,0 +1,66 @@
+<apex:page controller="ConsoleBannerAlertController" showChat="false" showHeader="false" sidebar="false" >
+
+        <apex:includeScript value="/support/console/28.0/integration.js"/>
+        <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}"/>
+        <style type="text/css">
+            body{
+                background-color:#363940;
+            }
+            .banner-alert{
+                font-weight:bold;
+                font-size: 14px;
+                color:#fff;
+            }
+        </style>
+
+        <marquee style="padding:2pt 0;border-top:1px solid #FFF;"><div id="message" class="banner-alert"></div></marquee>
+
+    
+    
+    
+        <script type="text/javascript">
+            $(document).ready(function(){
+                loadMessages()
+                 //Add a push notification listener for Case and Account
+                 sforce.console.addPushNotificationListener(['BannerAlert__c'], eventHandler);
+                    
+             });
+             
+             function loadMessages(){
+                 Visualforce.remoting.Manager.invokeAction(
+                      '{!$RemoteAction.ConsoleBannerAlertController.GetAlertMessages}',
+                      function(result,event)
+                      {
+                          if (event.status) {
+                              //console.log(result);
+                              if(result != ''){
+                              	$("#message").html(result);
+                                alertNotification();
+                              }
+                            } else if (event.type === 'exception') {
+                            } else {
+                            }
+                      },
+                      {escape: false}
+               );
+             }
+             
+             var eventHandler = function (result) {
+                 //console.log(result);
+                 var currentTime = new Date();
+                 //console.log(currentTime);
+                 
+                 loadMessages();
+                 if((result.AlertStart__c == "null" || new Date(result.AlertStart__c) < currentTime) && new Date(result.Expires__c) > currentTime){
+                    alertNotification();
+                 }
+             };
+    
+    		function alertNotification(){
+                
+                     sforce.console.setCustomConsoleComponentWindowVisible(true);
+                    sforce.console.blinkCustomConsoleComponentButtonText('ALERT', 500, null);
+                }
+                 
+        </script>
+</apex:page>

@@ -1,0 +1,5 @@
+<apex:page controller="DashboardReportsController"  >
+        
+   <apex:image value="{!ReportURL}" width="{!ReportWidth}"  alt="{!ReportAltText}" />
+    
+</apex:page>

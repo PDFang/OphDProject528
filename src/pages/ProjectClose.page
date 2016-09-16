@@ -1,0 +1,18 @@
+<apex:page standardController="Project__c" extensions="ProjectCloseExtension">
+  <apex:messages />
+  <apex:form >
+      <br /><br />
+      <apex:inputHidden value="{!Project__c.ProjectStatus__c}"/>
+      <apex:outputPanel rendered="{!renderPage}">
+          Are you sure you want to close this project?
+          <br /><br />
+          <apex:commandButton action="{!Save}" value="Yes"/>
+          <apex:commandButton action="{!Cancel}" value="No"/>
+      </apex:outputPanel>
+      <apex:outputPanel rendered="{!NOT(renderPage)}">
+          {!errorMsg}
+          <br /><br />
+          <apex:commandButton action="{!Cancel}" value="Cancel"/>
+      </apex:outputPanel>
+  </apex:form>
+</apex:page>

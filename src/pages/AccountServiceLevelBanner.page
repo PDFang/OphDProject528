@@ -1,0 +1,4 @@
+<apex:page standardController="Account" extensions="AccountServiceLevelBannerExtention">
+    <div style="text-align: center; vertical-align: middle; width: 100%; height: 20px; padding: 0px; margin: 0px; background-image:url({!BannerURL}); background-repeat: repeat;">{!ServiceLevel}</div>
+    <apex:outputText rendered="false">{!Account.Customer_Priority__c}</apex:outputText>
+</apex:page>

@@ -1,0 +1,790 @@
+<apex:page standardController="ChangeControlRequest__c" extensions="CCRTaskPageExtension" standardStylesheets="false">
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.core.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+        <apex:outputField value="{!ChangeControlRequest__c.CCRType__c}" rendered="false"/>
+        <apex:outputField value="{!ChangeControlRequest__c.Status__c}" rendered="false"/>    
+    <div id="responseErrors"></div>
+     <apex:sectionHeader title="CCR Tasks" subtitle="{!ChangeControlRequest__c.Name}" />
+     <div style="clear:both;">
+     <apex:form style="float:left;" >
+         <apex:commandLink action="{!Cancel}" value="« Return to {!ChangeControlRequest__c.Name}"/>
+     </apex:form>
+     <a class="k-button" style="float:right;" onclick="$('#HotKeyReference').data('kendoWindow').center().open();">Hot Key Reference</a>
+     <div style="clear:both;"></div>
+     </div>
+     <div class="info-message">
+         <b>Reminder: </b> At least one task of each Task Type (Communication, Validation, Work) is required to submit the CCR.
+     </div>
+    <div id="taskGrid" style="margin-bottom:1em;"></div>
+     <apex:form >
+         <apex:commandLink action="{!Cancel}" value="« Return to {!ChangeControlRequest__c.Name}"/>
+     </apex:form>
+     <apex:sectionHeader title="CCR Attachments" />
+    <div style="color:red"><apex:messages id="msg" /></div>
+    <div id="attach-form"  style="width:100%;">
+        <div id="attach-view">
+            <h1>Add Attachments</h1>
+            <apex:form id="theform" style="margin-top:10px;margin-bottom:10px;" >
+                <apex:inputFile id="fileinput" value="{!fileToUpload.body}" fileName="{!fileToUpload.Name}"></apex:inputFile> 
+                <apex:commandButton style="margin-top:1em;" value="Submit" action="{!SaveAttachment}" />
+            </apex:form>
+        </div>
+    </div>
+    <div id="attachmentContainer" style="width:100%;margin-bottom:1em;" >
+        <apex:dataTable id="attachmentGrid" value="{!attachments}"  var="a">
+            <apex:column headerValue="File Name">
+                <apex:outputLink type="{!a.ContentType}" target="_blank" value="{!URLFOR($Action.Attachment.Download,a.id)}">{!a.Name}</apex:outputLink>
+            </apex:column>
+            <apex:column headerValue="Last Modified Date" value="{!a.LastModifiedDate}" >
+            </apex:column>
+            <apex:column headerValue="Last Modified By" value="{!a.LastModifiedBy.Name}" >
+            </apex:column>
+        </apex:dataTable>
+    </div> 
+    
+     <apex:form >
+         <apex:commandLink action="{!Cancel}" value="« Return to {!ChangeControlRequest__c.Name}"/>
+     </apex:form>
+    <div id="HotKeyReference" data-title="Hot Key Reference" style="display:none;">
+    <table class="k-grid k-widget k-secondary" style="width:100%;border-spaceing:0;border-collapse:collapse;">
+        <thead class="k-grid-header">
+            <tr class="k-grid-header-wrap">
+                <th class="k-header">Action</th>
+                <th class="k-header">Chrome</th>
+                <th class="k-header">IE 9</th>
+                <th class="k-header">FireFox</th>
+            </tr>
+        </thead>
+        <tbody class="k-grid-content">
+            <tr>
+                <td>New Task</td>
+                <td>ALT + N </td>
+                <td>ALT + N + ENTER</td>
+                <td>SHIFT + ALT + N</td>
+            </tr>
+            <tr class="k-alt">
+                <td>Open Date/Time Picker</td>
+                <td>ALT + down arrow</td>
+                <td>ALT + down arrow</td>
+                <td>ALT + down arrow</td>
+            </tr>
+            <tr>
+                <td>Exit Date/Time Picker</td>
+                <td>ESC</td>
+                <td>ESC</td>
+                <td>ESC</td>
+            </tr>
+            <tr class="k-alt">
+                <td>Open Drop Down</td>
+                <td>ALT + down arrow</td>
+                <td>ALT + down arrow</td>
+                <td>ALT + down arrow</td>
+            </tr>
+            <tr>
+                <td>Exit Drop Down</td>
+                <td>ESC</td>
+                <td>ESC</td>
+                <td>ESC</td>
+            </tr>
+        </tbody>                
+    </table>
+    </div>
+        <style type="text/css">
+        .k-warning{background-position-x:-176px;}
+        .info-message
+        {
+            margin-top:1em;
+            margin-bottom:1em;
+            padding:15px;
+            background-color:#daecf4;
+            color:#3a87ad;
+            border:1px solid #94c0d2;
+            border-radius: 10px 10px 10px 10px;
+        }
+        .warning-message
+        {
+            margin-top:1em;
+            margin-bottom:1em;
+            padding:15px;
+            background-color:#fcf8e3;
+            color:#c09853;
+            border:1px solid #faebcc;
+            border-radius: 10px 10px 10px 10px;
+        }                #attach-form h1 {
+                    padding: 5px 0;
+                    font-weight: bold;
+                    border-bottom: 1px solid #94c0d2;
+                    color: #175067;
+                    width:100%;
+                    display:block;
+                }
+                #attach-view {
+                    border-radius: 10px 10px 10px 10px;
+                    border-style: solid;
+                    border-width: 1px;
+                    border-color: #94c0d2;
+                    overflow: hidden;
+                    padding: 10px 10px 0 10px;
+                    margin: 1em auto;
+                    background-position: 0 -255px;
+                }    
+                .k-widget.k-tooltip-validation
+                {
+                color: red;background-color:#FFF;
+                }    
+                .k-button[data-value="Cancelled"]:hover, .k-button[data-value="Failed"]:hover
+                {
+                background-color:#363940;
+                }  
+                .k-button[data-value="Approved"]:hover
+                {
+                background-color:green;
+                }      
+
+            </style>
+
+    <script type="text/javascript">
+            
+            $(document).ready(function () {  
+            $('#HotKeyReference').kendoWindow({title: 'Hot Key Reference'});
+                setupTaskGrid();
+               $("#attachmentContainer table").kendoGrid();
+               var fileInput = document.getElementById("{!$Component.theForm.fileinput}");
+              $(fileInput).kendoUpload({
+                    multiple: false,
+                localization: {
+                    select: "Select file..."
+                }
+                });
+            });
+            
+                        
+            Visualforce.remoting.timeout = 120000; // Set timeout at page level
+            
+            var ccrId = '{!ChangeControlRequest__c.Id}'
+            var gridData = '';
+            
+            
+            var taskDataSource =new kendo.data.DataSource({
+                    autosync:true,
+                    sort:{field: "Order__c", dir:"asc"},
+                  transport:{
+                      read: function(options){
+                                Visualforce.remoting.Manager.invokeAction(
+                                      '{!$RemoteAction.CCRTaskPageExtension.JSONTasks}',
+                                      '{!ChangeControlRequest__c.Id}',
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                              //console.log(JSON.parse(result));
+                                              options.success(JSON.parse(result));
+                                            } else if (event.type === 'exception') {
+                                                document.getElementById("responseErrors").innerHTML = event.message;
+                                            } else {
+                                                document.getElementById("responseErrors").innerHTML = event.message;
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                            },
+                        update: function(options){
+                            Visualforce.remoting.Manager.invokeAction(
+                                      '{!$RemoteAction.CCRTaskPageExtension.JsonUpdateTask}',
+                                      JSON.stringify(options),
+                                      function(result,event)
+                                      {
+                                          
+                                          taskDataSource.read();
+                                          if (event.status) {
+                                                  //console.log(JSON.stringify(options.remove('AssignedTo__c_input')));
+                                            } else if (event.type === 'exception') {
+                                                document.getElementById("responseErrors").innerHTML = event.message;
+                                            } else {
+                                                document.getElementById("responseErrors").innerHTML = event.message;
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                        },
+                        create: function(options){
+                            Visualforce.remoting.Manager.invokeAction(
+                                      '{!$RemoteAction.CCRTaskPageExtension.JsonUpdateTask}',
+                                      JSON.stringify(options),
+                                      function(result,event)
+                                      {
+                                          
+                                          taskDataSource.read();
+                                          if (event.status) {
+                                                  //console.log(JSON.stringify(options));
+                                            } else if (event.type === 'exception') {
+                                                document.getElementById("responseErrors").innerHTML = event.message;
+                                            } else {
+                                                document.getElementById("responseErrors").innerHTML = event.message;
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                        }
+                      },
+                    schema:{
+                        model: {
+                            id: "Id",
+                            fields: {
+                                "Id": {type: "string"},
+                                "ChangeControlRequest__c": {type: "string", defaultValue:'{!ChangeControlRequest__c.Id}', validation: { required: true }},
+                                "RecordTypeId" : {type: "string", defaultValue: '01270000000MIOoAAO' },
+                                "Order__c": { type: "number"},
+                                "AssignedTo__c": { type: "string",  defaultValue:'{!$User.Id}',
+                                    validation: {required:true, messages: { required: 'Assigned To is required.'}}},
+                                "AssignedTo__r": {defaultValue:{Id:"", Name:""}},
+                                "RecordType": {defaultValue: {Id: "", Name:""}},
+                                "TaskDateTime__c": {type: "date", defaultValue: null}, 
+                                "Status__c": {type: "string", defaultValue: "Open",  validation: { required: true }},
+                                "Duration__c" : {
+                                    defaultValue: null,
+                                    type: "number",
+                                    validation: {    
+                                                  requireTimeOrDuration: function(input) {                                                          
+                                                          if (input.is('[name=Duration__c]')) {
+                                                               var dataItem = taskDataSource.getByUid(input.parents('tr[data-uid]').data('uid'));
+                                                               if((input.val() === '' || parseFloat(input.val()) <= 0) && dataItem.TaskDateTime__c === null)
+                                                               {
+                                                                   input.attr("data-requireTimeOrDuration-msg", "Duration or Task Date are required");
+                                                                   return false;
+                                                               }
+                                                           }    
+                                                             return true;
+                                                           }
+                                             }
+                                 },
+                                "Description__c": {
+                                        type: "string", 
+                                        validation: { 
+                                            required: true,
+                                            maxlength: function(input) { 
+                                                if (input.is('[name=Description__c]') && input.val().length > 255) {
+                                                   input.attr("data-maxlength-msg", "Max length is 255");
+                                                   return false;
+                                                }                                   
+                                                return true;
+                                            }}}
+                            }
+                        }
+                    }
+                  });
+            
+            function taskTypeEditor(container, options){
+                var taskTypeList = JSON.parse('{!TaskRecordTypes}');
+                var containingDiv = $('<div class="k-listview">');  
+                containingDiv.appendTo(container);  
+                for(var i = 0; i < taskTypeList.length; i++){
+                    var button = $('<a>')                    
+                        .attr('data-value', taskTypeList[i].value)
+                        .attr('tabindex', '0')
+                        .addClass('k-button')
+                        .html(taskTypeList[i].label)
+                        .click(function(){
+                        taskDataSource.getByUid($(this).parents('tr[data-uid]').attr('data-uid')).set("RecordTypeId", $(this).data('value'));
+                        $(this).siblings().removeClass('k-state-selected');
+                        $(this).addClass('k-state-selected');});
+                    
+                    if(taskTypeList[i].value === options.model.RecordTypeId)
+                        $(button).addClass('k-state-selected');
+                    
+                    button.appendTo(containingDiv);
+                }
+            }
+        
+            function setupTaskGrid()
+            {
+                $("#taskGrid").kendoGrid({
+                  dataSource: taskDataSource,
+                  editable: "inline",
+                  edit: function(e) {
+                          $('img.dragHandle').hide();                          
+                        },
+                  save: function(e) {
+                            //console.log('Changed:', e.model);
+                            delete e.model.AssignedTo__c_input; // FireFox fix
+                            
+                            
+                            if(!e.model.isNew() && e.model.dirty)
+                            {
+                                // Eliminate issue of an order change in a seperate window causing duplicate numbers
+                                delete e.model.Order__c;
+                                if( e.model.Status__c !== 'On Hold')                                
+                                    e.model.set('Status__c', 'Open');
+                            }
+                          },
+                  dataBound: function(e){
+                  if(!{!AllowEdits} && '{!ChangeControlRequest__c.Status__c}' !== 'Ready for Deployment')
+                  {
+                      $('.k-grid-toolbar').hide();
+                          $('img.dragHandle').hide();   
+                  }else{
+                      $('.k-grid-add').click(function(){
+                          var grid = $('#taskGrid').data('kendoGrid');
+                          grid.columns[grid.columns.length - 1].command = [{name:"edit"}];
+                        });
+                        $('.k-grid-add').keyup(function(e){
+                          if (e.keyCode == 13){  
+                               $(".k-grid-add").click();
+                                  }
+                             });
+                        }
+                  },
+                  cancel: function(e) {
+                              $('img.dragHandle').show();
+                          },
+                  columns: [{
+                                field:"Id",
+                                filterable: false,
+                                hidden: true
+                            },
+                            {
+                                field:"ChangeControlRequest__c",
+                                filterable: false,
+                                hidden: true
+                            },
+                            {
+                                field: "Order__c",
+                                title: "Order",
+                                width: 60,
+                                template:'<img class="dragHandle" style="float:left;" src="{!URLFOR($Resource.CCRImages, 'icon_drag_n_drop.png')}" title="Drag Task to Re-order" /><span style="float:left;margin-left:5px;margin-top:2px;">#= Order__c #</span><div style="clear:both;"></div>',
+                                 editor: function(container, options){if(options.model.isNew()){ options.model.Order__c= taskDataSource.at(taskDataSource.data().length - 1).Order__c + 1; }container.html(options.model.Order__c);},
+                                 sortable:false
+                            },
+                            {
+                                field: "RecordTypeId",
+                                title: "Task Type",
+                                template: '#= (RecordType == null) ? \'\' : RecordType.Name #',
+                                sortable: false,
+                                editor: taskTypeEditor
+                            },
+                            {
+                                field: "AssignedTo__c",
+                                title: "Assigned To",
+                                editor: AssignedToDropDownEditor,
+                                template: '#= (AssignedTo__r == null) ? \'\' : AssignedTo__r.Name #',
+                                sortable: false
+                            },
+                            {
+                                field: "Description__c",
+                                title: "Description",
+                                editor: textAreaEditor,
+                                sortable: false
+                            },
+                            {
+                                field: "Status__c",
+                                title: "Status",
+                                editor:function(container, options){ $(container).html(options.model.Status__c); },
+                                width: 100,
+                                sortable: false
+                                
+                            },
+                            {
+                                field: "TaskDateTime__c",
+                                title: "Task Date",
+                                format: "{0:g}",
+                                editor: dateTimeEditor,
+                                sortable: false
+                            },
+                            {
+                                field: "Duration__c",
+                                title: "Duration",
+                                format: "{0:n0}",
+                                width: 100,
+                                sortable: false
+                            },
+                            {
+                            field: "Action",
+                            title: "Action", 
+                            editor: function(container, options){},
+                            template: '#if (Status__c !== "Closed" && Status__c !== "Cancelled" && Status__c !== "Failed") { #<a style="min-width:0;" onClick="editRow(this);" title="Edit task" class="k-button"><span class="k-icon k-i-pencil"></span></a># } #' +
+                                      '#if (Status__c === "Open" && {!isCCBMaster} && !{!AllowEdits} ) { #<a style="min-width:0;" onClick="statusTaskUpdate(this);" title="Approve task" data-value="Approved" class="k-button"><span class="k-icon k-i-refresh"></span></a># } #' +
+                                      '#if (Status__c === "Approved") { #<a style="min-width:0;" onClick="statusTaskUpdate(this);" title="Complete task" data-value="Closed" class="k-button"><span class="k-icon k-i-tick"></span></a># } #' +
+                                      '#if (Status__c === "Open" || Status__c === "On Hold" || Status__c === "Approved") { #<a style="min-width:0;" onClick="statusTaskUpdate(this);" title="Cancel task" data-value="Cancelled" class="k-button"><span class="k-icon k-i-close"></span></a># } #' +
+                                      '#if (Status__c === "Approved") { #<a style="min-width:0;" onClick="statusTaskUpdate(this);" title="Fail task" data-value="Failed" class="k-button"><span class="k-icon k-i-note"></span></a># } #' 
+                            }
+                            
+                  ],
+  sortable: {
+    mode: "multiple"
+  },
+                  toolbar: [{name:"create",text:"Add New Task", template:'<a tabindex="0" accesskey="n" class="k-button k-button-icontext k-grid-add"><span class="k-icon k-add"></span>Add New Task</a>'}]
+                });
+                
+                var grid = $("#taskGrid").data("kendoGrid");
+                //console.log(taskDataSource);
+                var selectedClass = 'k-state-selected';
+grid.table.kendoDraggable({
+    filter: "tbody > tr > td > img.dragHandle",
+    group: "gridGroup",
+    axis: "y",
+    hint: function (item) {
+          var helper = $('<div class="k-grid k-widget drag-helper"/>');
+          if (!item.parents('tr[data-uid]').hasClass(selectedClass)) {
+            item.parents('tr[data-uid]').addClass(selectedClass).siblings().removeClass(selectedClass);
+          }
+          var elements = item.parents('tr[data-uid]').parent().children('.'+selectedClass).clone();
+          item.data('multidrag', elements).siblings('.'+selectedClass).remove();
+          return helper.append(elements);
+        }
+});
+
+grid.table.kendoDropTarget({
+    group: "gridGroup",
+    drop: function (e) {
+
+          var draggedRow = e.draggable.hint.find("tr[data-uid]");
+          e.draggable.hint.hide();
+          var dropLocation = $(document.elementFromPoint(e.clientX, e.clientY));
+          if(dropLocation.is("th")) {
+            return;
+          }
+          
+
+          //assign new spot in the main grid to each dragged row          
+            var draggedRowUid = $(draggedRow).attr("data-uid"),
+                itemToMove = taskDataSource.getByUid(draggedRowUid);   
+                
+            var dest = taskDataSource.getByUid(dropLocation.parents('tr[data-uid]').attr("data-uid")); 
+            //console.log(dest);
+            
+            var originalOrderVal = itemToMove.Order__c;   
+             
+            itemToMove.set("Order__c", dest.Order__c);
+            itemToMove.set("dirty", true);
+            
+            taskDataSource.sort([{ field: "Order__c", dir: "asc" }, { field: "dirty", dir: (originalOrderVal < itemToMove.Order__c) ? "asc" : "desc"  }]);
+            
+            var data = taskDataSource.view();
+            for(var i = 0; i < data.length; i++){
+                 var itemToUpdate = data[i];
+                 itemToUpdate = taskDataSource.getByUid(itemToUpdate.uid);
+                 delete itemToUpdate.Duration__c;
+                 delete itemToUpdate.Description__c;
+                 delete itemToUpdate.TaskDateTime__c;
+                 delete itemToUpdate.AssignedTo__c;
+                 delete itemToUpdate.RecordTypeID;
+                 if(itemToUpdate.uid !== itemToMove.uid)
+                 {
+                     itemToUpdate.set("Order__c", i + 1);
+                     itemToUpdate.set("dirty", true);
+                }
+             }
+            taskDataSource.sync();
+            taskDataSource.sort({ field: "Order__c", dir: "asc" });
+                        
+          }
+      });
+            }
+            
+            function editRow(currentElement){
+                var grid = $('#taskGrid').data('kendoGrid');
+                grid.columns[grid.columns.length - 1].command = [{name:"edit"}];
+                grid.editRow($(currentElement).parents('tr[data-uid]')[0]);
+            }
+            
+            function statusTaskUpdate (currentElement){
+                                            // e.target is the DOM element representing the button
+                                              var tr = $(currentElement).parents("tr[data-uid]"); // get the current table row (tr)
+                                              // get the data bound to the current table row
+                                              var data = taskDataSource.getByUid($(tr).data('uid'));
+                                            data.set("Status__c",$(currentElement).data('value'));
+                                            
+                                             // Eliminate issue of an order change in a seperate window causing duplicate numbers
+                                            delete data.Order__c;
+                                            
+                                            taskDataSource.sync();
+                                        }
+            function textAreaEditor(container, options) {
+    $('<textarea style="width:95%;" rows="3" validationMessage="Description is required" required="required" name="' + options.field + '" data-bind="value:' + options.field + '"/>')
+            .appendTo(container);
+}
+
+            
+            function dateTimeEditor(container, options) {
+    $('<input data-text-field="' + options.field + '" data-value-field="' + options.field + '" data-bind="value:' + options.field + '" data-format="' + options.format + '"/>')
+            .appendTo(container)
+            .kendoDateTimePicker({});
+}
+
+           function AssignedToDropDownEditor(container, options) {
+            $('<input required="required" validationMessage="Assigned To is required"  id="AssignedTo__c" name="AssignedTo__c" data-text-field="label" data-value-field="value" data-bind="value:' + options.field + '"/>')
+                .appendTo(container)
+                .kendoComboBox({
+                    placeholder: "Select User...",
+                    open: function(e){
+                    e.sender.input.select();
+                    },
+                    dataSource: {
+                        transport:{
+                      read: function(options){
+                                Visualforce.remoting.Manager.invokeAction(
+                                      '{!$RemoteAction.CCRTaskPageExtension.JsonTaskAssignee}',
+                                      function(result,event)
+                                      {
+                                          //console.log(JSON.parse(result));
+                                          options.success(JSON.parse(result));
+                                      },
+                                      {escape: false}
+                               );
+                            }
+                        }
+                    },
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"},
+                                label: {type: "string", editable: false, nullable: false, validation: { required: true } }
+                            }
+                        }
+                    }
+                } );
+            }
+
+</script>
+    <!--<apex:includeScript value="{!URLFOR($Resource.JQuery, 'jquery-1.7.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.JQuery, 'jquery-ui-1.8.17.custom.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.JQuery, 'jquery-ui-timepicker-addon.js')}"/> 
+    <apex:form >
+        <apex:outputPanel id="editPanel">
+    <div style="color:red"><apex:messages id="msg" /></div>
+    </apex:outputPanel>
+        <apex:inputHidden value="{!ChangeControlRequest__c.CCRType__c}"/>
+            <apex:variable var="positioncount" value=""/>
+        <apex:pageBlock title="CCR Tasks"  id="tlBlock">
+            <apex:pageBlockSection columns="1">
+                <apex:outputField value="{!ChangeControlRequest__c.Name}"/>
+                <apex:outputField value="{!ChangeControlRequest__c.Summary__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2">
+                <apex:outputField value="{!ChangeControlRequest__c.Status__c}"/>
+                <apex:outputField value="{!ChangeControlRequest__c.ReleaseDate__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2" rendered="{!UseMaintenanceWindow}">
+                <apex:outputField value="{!ChangeControlRequest__c.MaintenanceWindowStartTime__c}"/>
+                <apex:outputField value="{!ChangeControlRequest__c.MaintenanceWindowEndTime__c}"/>
+            </apex:pageBlockSection>
+            <apex:actionRegion >
+            <apex:pageblockTable id="ccrTaskListTable" width="100%" value="{!CCRTasksList}" var="task" rendered="{!AllowEdits}" >
+                <apex:column >
+                    <apex:facet name="header">Action</apex:facet>
+                    <apex:commandLink action="{!DeleteRow}" rerender="tlBlock" title="Delete" oncomplete="Setup()">
+                        <apex:image value="https://images.ucn.net/salesforce/delete_icon_x.png" rendered="{!ISBLANK(task.ccrTask.Name)}"/>
+                        
+                        <apex:param name="tlInd" value="{!LEN(positioncount)}"/>
+                    </apex:commandLink>
+                    <apex:outputLink rendered="{!NOT(ISBLANK(task.ccrTask.Name))}" value="{!URLFOR(baseURLString + '/p/attach/NoteAttach',null,[pid=task.ccrTask.id,retURL=$CurrentPage.URL])}">
+                        <apex:image title="Attach File" value="{!URLFOR($Resource.CCRImages, 'icon_attach_blue.png')}"/>
+                    </apex:outputLink>&nbsp;    
+                    <apex:commandLink action="{!CancelTask}" rendered="{!IF((task.ccrTask.Status__c = 'Open'||task.ccrTask.Status__c='On Hold') && NOT(ISBLANK(task.ccrTask.Name)),true,false)}">
+                        <apex:image title="Cancel Task" value="{!URLFOR($Resource.CCRImages, 'icon_cancel.png')}"/>
+                        <apex:param name="tlInd" value="{!LEN(positioncount)}"/>
+                    </apex:commandLink>
+                </apex:column>
+                <apex:column width="30" >
+                    <apex:facet name="header">Order</apex:facet>
+                    <apex:selectList id="orderList" styleClass="order-list" style="font-size:10px;width:60px;" size="1" value="{!task.OrderText}">
+                            <apex:selectOptions value="{!OrderList}"/>
+                            <apex:actionSupport event="onchange" action="{!ChangeOrder}" reRender="editPanel,tlBlock" oncomplete="Setup()">
+                                <apex:param name="tlInd" value="{!LEN(positioncount)}"/>
+                            </apex:actionSupport>
+                    </apex:selectList>
+                                        
+                </apex:column>
+                <apex:column style="max-width:350px;" >
+                    <apex:facet name="header">Record Type</apex:facet>
+                    <apex:inputField style="font-size:10px" value="{!task.ccrTask.RecordTypeId}"  />
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Assigned To</apex:facet>
+                    <apex:selectList style="font-size:10px;width:200px;" size="1" value="{!task.ccrTask.AssignedTo__c}">
+                        <apex:selectOptions value="{!TaskAssignee}"/>
+                    </apex:selectList>
+                    <apex:variable var="positioncount" value="{!positioncount+'|'}"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Description</apex:facet>
+                    <apex:inputTextarea style="font-size:10px" cols="40" rows="3" value="{!task.ccrTask.Description__c}"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Status</apex:facet>
+                    <apex:outputField style="font-size:10px" value="{!task.ccrTask.Status__c}"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Task Date/Time</apex:facet>
+                    <apex:inputField id="datepicker" style="font-size:10px" value="{!task.ccrTask.TaskDateTime__c}"/>
+                </apex:column>
+               <apex:column >
+                    <apex:facet name="header">Duration (Min)</apex:facet>
+                    <apex:inputField style="font-size:10px" value="{!task.ccrTask.Duration__c}"/>
+                </apex:column> 
+                <apex:column >
+                    <apex:facet name="header">Attachments</apex:facet>
+                    <apex:dataTable value="{!task.ccrTask.Attachments}" var="attachments">
+                        <apex:column >
+                            <apex:outputLink type="{!attachments.ContentType}" target="_blank" value="{!URLFOR($Action.Attachment.Download,attachments.id)}">{!attachments.Name}</apex:outputLink>
+                            
+                        </apex:column>
+                    </apex:dataTable>
+             
+                </apex:column>
+                    
+            </apex:pageBlockTable>
+  
+            <apex:pageBlockTable value="{!CCRTasksList}" var="task"  rendered="{!NOT(AllowEdits)}">
+                <apex:column >
+                    <apex:facet name="header">Order</apex:facet>
+                    <apex:selectList id="orderListApproved"  styleClass="order-list" style="font-size:10px;width:60px;" size="1" value="{!task.OrderText}" disabled="{!IF(ChangeControlRequest__c.Status__c == 'Ready for Deployment',false,true)}">
+                            <apex:selectOptions value="{!OrderList}"/>
+                            <apex:actionSupport event="onchange" action="{!ChangeOrder}" reRender="editPanel,tlBlock" oncomplete="Setup()">
+                                <apex:param name="tlInd" value="{!LEN(positioncount)}"/>
+                            </apex:actionSupport>
+                    </apex:selectList>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Action</apex:facet>
+                    <apex:outputLink rendered="{!NOT(ISBLANK(task.ccrTask.Name))}" value="{!URLFOR(baseURLString + '/p/attach/NoteAttach',null,[pid=task.ccrTask.id,retURL=$CurrentPage.URL])}">
+                        <apex:image title="Attach File" value="{!URLFOR($Resource.CCRImages, 'icon_attach_blue.png')}"/>
+                    </apex:outputLink>&nbsp;
+                    <apex:commandLink action="{!ApproveNewTask}" reRender="tlBlock" rendered="{!IF(isCCBMaster&&task.ccrTask.Status__c = 'Open',true,false)}" oncomplete="Setup()">
+                        <apex:image title="Approve Task" value="{!URLFOR($Resource.CCRImages, 'icon_pending.png')}"/>
+                        <apex:param name="tlInd" value="{!LEN(positioncount)}"/>
+                    </apex:commandLink>&nbsp;
+                    <apex:commandLink action="{!CloseTask}" rerender="tlBlock" rendered="{!IF(task.ccrTask.Status__c = 'Approved',true,false)}">
+                        <apex:image title="Task Completed" value="{!URLFOR($Resource.CCRImages, 'icon_tick.png')}"/>
+                        <apex:param name="tlInd" value="{!LEN(positioncount)}"/>
+                    </apex:commandLink>&nbsp;
+                    <apex:commandLink action="{!CancelTask}" rendered="{!IF(task.ccrTask.Status__c = 'Approved' || task.ccrTask.Status__c = 'Open',true,false)}">
+                        <apex:image title="Cancel Task" value="{!URLFOR($Resource.CCRImages, 'icon_cancel.png')}"/>
+                        <apex:param name="tlInd" value="{!LEN(positioncount)}"/>
+                    </apex:commandLink>&nbsp;
+                    <apex:commandLink action="{!FailTask}" rendered="{!IF(task.ccrTask.Status__c = 'Approved',true,false)}">
+                        <apex:image title="Task Failed" value="{!URLFOR($Resource.CCRImages, 'icon_error.png')}"/>
+                        <apex:param name="tlInd" value="{!LEN(positioncount)}"/>
+                    </apex:commandLink>&nbsp;
+                    <apex:commandLink action="{!EditExistingTask}" reRender="tlBlock,edittask" rendered="{!IF(task.ccrTask.Status__c = 'Approved' || task.ccrTask.Status__c = 'Open',true,false)}" oncomplete="Setup()">
+                        <apex:image title="Edit Task" value="{!URLFOR($Resource.CCRImages, 'icon_edit.png')}"/>
+                        <apex:param name="tlInd" value="{!LEN(positioncount)}"/>
+                    </apex:commandLink>
+      
+                    
+                </apex:column>
+                <apex:column style="font-size:10px" >
+                    <apex:facet name="header">Record Type</apex:facet>
+                    <apex:outputField value="{!task.ccrTask.RecordTypeId}" />
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Assigned To</apex:facet>
+                    <apex:outputField value="{!task.ccrTask.AssignedTo__c}"/>
+                    <apex:variable var="positioncount" value="{!positioncount+'|'}"/>
+                </apex:column>
+                <apex:column style="font-size:10px" >
+                    <apex:facet name="header">Description</apex:facet>
+                    <apex:outputField style="font-size:10px" value="{!task.ccrTask.Description__c}" />
+                </apex:column>
+                <apex:column style="font-size:10px" >
+                    <apex:facet name="header">Status</apex:facet>
+                    <apex:outputField value="{!task.ccrTask.Status__c}"/>
+                </apex:column>
+                <apex:column style="font-size:10px" >
+                    <apex:facet name="header">Task Date/Time</apex:facet>
+                    <apex:outputField value="{!task.ccrTask.TaskDateTime__c}"/>
+                </apex:column>
+                <apex:column style="font-size:10px" >
+                    <apex:facet name="header">Duration (Min)</apex:facet>
+                    <apex:outputField value="{!task.ccrTask.Duration__c}" />
+                </apex:column>
+                <apex:column style="font-size:10px" >
+                    <apex:facet name="header">Attachments</apex:facet>
+                    <apex:dataTable value="{!task.ccrTask.Attachments}" var="attachments">
+                        <apex:column >
+                            <apex:outputLink type="{!attachments.ContentType}" target="_blank" value="{!URLFOR($Action.Attachment.Download,attachments.id)}">{!attachments.Name}</apex:outputLink>
+                            
+                        </apex:column>
+                    </apex:dataTable>
+                </apex:column>
+            </apex:pageBlockTable>
+            </apex:actionRegion>
+            
+        </apex:pageBlock>
+            <apex:commandButton action="{!AddRow}" value="Add Task" rendered="{!IF(AllowEdits,true,false)}" rerender="tlBlock" oncomplete="Setup()"/>
+            <apex:commandButton action="{!AddNewTask}" value="Add New Task" rendered="{!IF(NOT(AllowEdits)&&ChangeControlRequest__c.Status__c == 'Ready for Deployment',true,false)}" rerender="newtask,tlBlock" oncomplete="Setup()"/>
+            <apex:commandButton action="{!Save}" value="Save" rendered="{!AllowEdits}"/>
+            <apex:commandButton action="{!Cancel}" value="Cancel" rendered="{!AllowEdits}"/>
+            <apex:commandButton action="{!Cancel}" value="Done" rendered="{!NOT(AllowEdits)}"/>
+    </apex:form>
+    <apex:form id="newtask">        
+        <apex:pageBlock rendered="{!RenderNewTaskForm}" >
+            <apex:pageBlockSection columns="1" >
+                <apex:outputField value="{!NewCCRTask.Status__c}"/>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel >
+                        Record Type
+                    </apex:outputLabel>
+                    <apex:inputField value="{!NewCCRTask.RecordTypeId}"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel >
+                        Assigned To
+                    </apex:outputLabel>
+                    <apex:selectList id="newtaskuser" size="1" value="{!NewCCRTask.AssignedTo__c}">
+                            <apex:selectOptions value="{!TaskAssignee}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel >
+                        Description
+                    </apex:outputLabel>
+                    <apex:inputTextarea cols="60" rows="3" value="{!NewCCRTask.Description__c}"/>
+                </apex:pageBlockSectionItem>
+                <apex:inputField id="datepicker" value="{!NewCCRTask.TaskDateTime__c}"/>
+                <apex:inputField value="{!NewCCRTask.Duration__c}"/>
+               
+            </apex:pageBlockSection>
+                 <apex:commandButton action="{!SaveNewTask}" value="Save New Task" rendered="{!RenderNewTaskForm}"/>
+                 <apex:commandButton action="{!CancelNewTask}" value="Cancel New Task" reRender="tlBlock,newtask" rendered="{!RenderNewTaskForm}"/>
+        </apex:pageBlock>
+    </apex:form>
+    <apex:form id="edittask">        
+        <apex:pageBlock rendered="{!RenderEditTaskForm}">
+            <apex:pageBlockSection columns="1" >
+                <apex:outputField value="{!EditCCRTask.Status__c}"/>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel >
+                        Record Type
+                    </apex:outputLabel>
+                    <apex:outputField value="{!EditCCRTask.RecordTypeId}"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel >
+                        Assigned To
+                    </apex:outputLabel>
+                    <apex:selectList id="newtaskuser" size="1" value="{!EditCCRTask.AssignedTo__c}">
+                            <apex:selectOptions value="{!TaskAssignee}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel >
+                        Description
+                    </apex:outputLabel>
+                    <apex:inputTextarea cols="60" rows="3" value="{!EditCCRTask.Description__c}"/>
+                </apex:pageBlockSectionItem>
+                <apex:inputField id="datepicker" value="{!EditCCRTask.TaskDateTime__c}"/>
+                <apex:inputField value="{!EditCCRTask.Duration__c}"/>
+               
+            </apex:pageBlockSection>
+                 <apex:commandButton action="{!SaveEditTask}" value="Save Changes" rendered="{!RenderEditTaskForm}"/>
+                 <apex:commandButton action="{!CancelEditTask}" value="Cancel Changes" reRender="tlBlock,edittask" rendered="{!RenderEditTaskForm}"/>
+        </apex:pageBlock>
+     
+        
+    </apex:form -->
+    
+</apex:page>

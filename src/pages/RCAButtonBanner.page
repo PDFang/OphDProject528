@@ -1,0 +1,97 @@
+<apex:page standardController="RCA__c" extensions="RCAButtonBannerExtension" tabStyle="RCA__c">
+    
+     
+    <apex:form rendered="{!renderForm}">
+        <apex:outputPanel id="editPanel">
+            <div style="color:red"><apex:messages id="msg" /></div>
+        </apex:outputPanel>
+        <apex:actionFunction action="{!OpenRCA}" name="open" oncomplete="return refreshPage();"/>
+        <apex:actionFunction action="{!Publish}" name="publish"  oncomplete="return refreshPage();"/>
+        <apex:actionFunction action="{!CloseNonEvent}" name="close"  oncomplete="return refreshPage();"/>
+         <!--pull all necessary fields -->
+        <apex:inputHidden value="{!RCA__c.RFEApproved__c}"/>
+        <apex:inputHidden value="{!RCA__c.RFECreator__c}"/>
+        <apex:inputHidden value="{!RCA__c.RFEDraftCompleted__c}"/>
+        <apex:inputHidden value="{!RCA__c.EventSummaryCompleted__c}"/>
+        <apex:inputHidden value="{!RCA__c.RFEPublished__c}"/>
+        <apex:inputHidden value="{!RCA__c.Event__c}"/>
+        <apex:inputHidden value="{!RCA__c.OwnerId}"/>
+        <apex:outputField value="{!RCA__c.Event__r.Priority}" rendered="false"/>
+        <apex:inputField rendered="false" value="{!RCA__c.CloseDate__c}"/>
+        
+        
+        <!-- block of buttons -->
+        <div style="text-align:center">
+            <apex:commandButton action="{!Blank}" value="Edit RCA" immediate="true"  oncomplete="return editRCA();" rendered="{!NOT(closed)}" disabled="{!RCA__c.Status__c = 'RFE Draft Complete'}"/>
+            <apex:commandButton action="{!Blank}" value="Submit Event Summary" immediate="true"  oncomplete="return eventSummaryPage();" rendered="{!renderEventSummaryButton}"/>
+            <apex:commandButton action="{!Blank}" value="Edit RFE" immediate="true"  oncomplete="return rfePage();" rendered="{!NOT(closed)}" disabled="{!RCA__c.Status__c = 'RFE Draft Complete'}"/>
+            <apex:commandButton action="{!Blank}" onclick="return publishRFE()" value="Publish" rendered="{!renderPublishButton}" oncomplete="return refreshPage();" />
+            <apex:commandButton action="{!Blank}" onclick="return reOpenRCA()" value="Re-Open RCA" rendered="{!closed}"  oncomplete="return refreshPage();"/>
+            <apex:commandButton action="{!Blank}" onclick="return closeNonEvent()" value="{!closeButtonText}" rendered="{!renderCloseNonEvent}" oncomplete="return refreshPage();" />
+            <apex:commandButton action="{!Submit}" value="Submit For Approval" rendered="{!renderSubmitButton}" oncomplete="return refreshPage();"/>
+        </div>
+        <apex:pageBlock >
+            <apex:pageBlockSection columns="2">
+                <apex:outputField value="{!RCA__c.Event__r.ProductImpacted__c}"/>
+                <apex:outputField value="{!RCA__c.Event__r.PlatformsImpacted__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="1">
+                <apex:outputField value="{!RCA__c.Event__r.HowProblemDetected__c}"/>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+    <script type="text/javascript" >
+          
+        function refreshPage()
+        {            
+            var currentURL =  "https://{!URLForPage}/{!RCA__c.Id}";
+            top.location.href = currentURL;
+        }
+        
+        function rfePage()
+        {            
+            var currentURL =  "https://{!URLForPage}/apex/RCARFEPage?id={!RCA__c.Id}&retURL={!RCA__c.Id}";
+            top.location.href = currentURL;
+        }
+        
+        function eventSummaryPage()
+        {            
+            var currentURL =  "https://{!URLForPage}/apex/RCALoadEventSummary?id={!RCA__c.Id}&retURL={!RCA__c.Id}";
+            top.location.href = currentURL;
+        }
+        
+        function editRCA()
+        {            
+            var currentURL =  "{!URLFOR($Action.RCA__c.Edit, RCA__c.Id,[retURL=RCA__c.Id])}";
+            top.location.href = currentURL;
+        }
+        
+        function publishRFE()
+        {
+            var r=confirm("Are you sure you want to publish this RFE?");
+            if(r==true)
+            {
+                publish();
+            }
+        }
+        
+        function closeNonEvent()
+        {
+            var r=confirm("Are you sure you want to close this RCA?");
+            if(r==true)
+            {
+                close();
+            }
+        }
+        
+        function reOpenRCA()
+        {
+            var r=confirm("Are you sure you want to re-open this RCA?");
+            if(r==true)
+            {
+                open();
+            }
+        }
+    </script>
+    
+</apex:page>

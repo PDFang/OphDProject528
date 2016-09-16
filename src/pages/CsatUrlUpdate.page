@@ -1,0 +1,77 @@
+<apex:page controller="InContactCsat">
+
+<apex:pageblock title="Update CSAT Charts">
+<apex:form >
+<apex:panelGrid columns="2" cellspacing="10" width="80%">
+
+<h1> Month To Date </h1><br/><br/>
+
+
+<apex:pageblockSection >
+Account Management: <apex:inputText size="150" value="{!AccountManagementMonthToDate}"/><br/>
+Call Center: <apex:inputText size="150" value="{!CallCenterMonthToDate}"/><br/>
+Enablement: <apex:inputText size="150" value="{!EnablementMonthToDate}"/><br/>
+Global Service Delivery: <apex:inputText size="150" value="{!GlobalServiceDeliveryMonthToDate}"/><br/>
+Implementation: <apex:inputText size="150" value="{!ImplementationMonthToDate}"/><br/>
+inContact Overall: <apex:inputText size="150" value="{!InContactOverallMonthToDate}"/><br/>
+NOC: <apex:inputText size="150" value="{!NocMonthToDate}"/><br/>
+Operations: <apex:inputText size="150" value="{!OperationsMonthToDate}"/><br/>
+Provisioning: <apex:inputText size="150" value="{!ProvisioningMonthToDate}"/><br/>
+Professional Services: <apex:inputText size="150" value="{!ProfessionalServicesMonthToDate}"/><br/>
+Service Delivery Support: <apex:inputText size="150" value="{!ServiceDeliverySupportMonthToDate}"/><br/>
+Tech Support: <apex:inputText size="150" value="{!TechSupportMonthToDate}"/><br/>
+
+
+</apex:pageblockSection>
+
+
+<h1> Quarter To Date</h1><br/><br/>
+
+<apex:pageblocksection >
+Account Management: <apex:inputText size="150" value="{!AccountManagementQuarterToDate}"/><br/>
+Call Center: <apex:inputText size="150" value="{!CallCenterQuarterToDate}"/><br/>
+Enable: <apex:inputText size="150" value="{!EnablementQuarterToDate}"/><br/>
+Global Service Delivery: <apex:inputText size="150" value="{!GlobalServiceDeliveryQuarterToDate}"/><br/>
+Implementation: <apex:inputText size="150" value="{!ImplementationQuarterToDate}"/><br/>
+inContact: <apex:inputText size="150" value="{!InContactOverallQuarterToDate}"/><br/>
+NOC: <apex:inputText size="150" value="{!NocQuarterToDate}"/><br/>
+Operations: <apex:inputText size="150" value="{!OperationsQuarterToDate}"/><br/>
+Provisioning: <apex:inputText size="150" value="{!ProvisioningQuarterToDate}"/><br/>
+Professional Services: <apex:inputText size="150" value="{!ProfessionalServicesQuarterToDate}"/><br/>
+Service Delivery Support: <apex:inputText size="150" value="{!ServiceDeliverySupportQuarterToDate}"/><br/>
+Tech Support: <apex:inputText size="150" value="{!TechSupportQuarterToDate}"/><br/>
+
+
+
+</apex:pageblocksection>
+
+<h1> Year To Date</h1><br/><br/>
+
+
+<apex:pageblocksection >
+Account Management: <apex:inputText size="150" value="{!AccountManagementYearToDate}"/><br/>
+Call Center: <apex:inputText size="150" value="{!CallCenterYearToDate}"/><br/>
+Enable: <apex:inputText size="150" value="{!EnablementYearToDate}"/><br/>
+Global Service Delivery: <apex:inputText size="150" value="{!GlobalServiceDeliveryYearToDate}"/><br/>
+Implementation: <apex:inputText size="150" value="{!ImplementationYearToDate}"/><br/>
+inContact: <apex:inputText size="150" value="{!InContactOverallYearToDate}"/><br/>
+NOC: <apex:inputText size="150" value="{!NocYearToDate}"/><br/>
+Operations: <apex:inputText size="150" value="{!OperationsYearToDate}"/><br/>
+Provisioning: <apex:inputText size="150" value="{!ProvisioningYearToDate}"/><br/>
+Professional Services: <apex:inputText size="150" value="{!ProfessionalServicesYearToDate}"/><br/>
+Service Delivery Support: <apex:inputText size="150" value="{!ServiceDeliverySupportYearToDate}"/><br/>
+Tech Support: <apex:inputText size="150" value="{!TechSupportYearToDate}"/><br/>
+
+
+
+</apex:pageblocksection>
+</apex:panelGrid>
+
+<apex:commandButton action="{!UpdateRecord}" value="Update Charts" title="Save!"/>
+</apex:form>
+<br/><br/><br/>
+<apex:form >
+<apex:commandButton action="{!InsertRecord}" value="Insert New Record"/>
+</apex:form>
+</apex:pageblock>
+</apex:page>

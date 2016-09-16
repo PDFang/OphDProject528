@@ -1,0 +1,77 @@
+<apex:page controller="CCRCalendarController" title="CCR Calendar" >
+    <apex:stylesheet value="{!URLFOR($Resource.CalendarCSS, 'calendar.css')}"/>
+    <apex:form id="calform" >
+        <apex:pageBlock title="Change Control Request Calendar" >
+            <table>
+                <tr>
+                    <td>
+                        CCR Type:&nbsp;
+                        <apex:selectList label="CCR Type" id="ccrtype" style="font-size:10px" size="1" value="{!CCRTypeSelected}">
+                            <apex:selectOptions value="{!CCRTypeSelect}"/>
+                            <apex:actionSupport event="onchange" reRender="calform" action="{!CCRTypeChange}" status="status"/>
+                        </apex:selectList>
+                    </td>
+                    <td>
+                        <table>
+                            <tr>
+                               
+                                <apex:repeat value="{!Legend}" var="l">
+                                    <td>
+                                        <apex:image value="{!l.CalendarImgUrl__c}" height="10" width="10"/>
+                                        {!l.Name}
+                                    </td>
+                                </apex:repeat>
+                               
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+                <table>
+                    <tr>
+                        <td>
+                            <table class="calendar">
+                                <tr>
+                                    <th width="75px"><apex:commandLink action="{!SubtractMonth}" rerender="calform" value="<<" /></th>
+                                    <th>{!MonthString}</th>
+                                    <th width="75px"><apex:commandLink action="{!AddMonth}" rerender="calform" value=">>" /></th>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"><apex:outputText escape="false" value="{!calendarControl}"/></td>
+                                </tr>
+                            </table>
+                        </td>
+                      </tr>
+                </table>
+                <br/>
+                <apex:outputText >My Open CCR Tasks</apex:outputText>
+                <apex:pageBlockTable width="100%" value="{!ApprovedTasks}" var="a" title="My Open CCR Tasks">
+                    <apex:column style="text-align:left" >
+                        <apex:facet name="header">CCR</apex:facet>
+                        <apex:outputField value="{!a.ChangeControlRequest__c}"/>
+                    </apex:column>
+                    <apex:column style="text-align:left" >
+                        <apex:facet name="header">CCR Start Time</apex:facet>
+                        <apex:outputField value="{!a.ChangeControlRequest__r.CCRStartTime__c}"/>
+                    </apex:column>
+                    <apex:column style="text-align:left" >
+                        <apex:facet name="header">Description</apex:facet>
+                        <apex:outputField value="{!a.Description__c}"/>
+                    </apex:column>
+                    <apex:column style="text-align:left" >
+                        <apex:facet name="header">Record Type</apex:facet>
+                        <apex:outputField value="{!a.RecordType.Name}"/>
+                    </apex:column>
+                    <apex:column style="text-align:left" >
+                        <apex:facet name="header">Task Date/Time</apex:facet>
+                        <apex:outputField value="{!a.TaskDateTime__c}"/>
+                    </apex:column>
+                    <apex:column style="text-align:left" >
+                        <apex:facet name="header">Duration</apex:facet>
+                        <apex:outputField value="{!a.Duration__c}"/>
+                    </apex:column>
+                </apex:pageBlockTable>
+        </apex:pageBlock>
+    </apex:form>
+    <apex:enhancedList type="ChangeControlRequest__c" height="400"/>
+</apex:page>

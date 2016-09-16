@@ -1,0 +1,25 @@
+<apex:page standardController="Project__c" extensions="RelatedProjectsViewExtension" id="page">
+    <apex:form >
+    <apex:dataList value="{!ParentList}" var="p" style="padding:0px;margin:0px" id="plist">
+        <a href="/{!p.ParentProject__r.Id}" target="_blank">{!p.ParentProject__r.Name}: </a>
+        ({!p.ParentProject__r.ProjectStatus__c})
+        {!p.ParentProject__r.RecordType.Name} - {!p.ParentProject__r.Summary__c} 
+        &nbsp;
+        <apex:commandLink target="_self" title="Click to remove link..." value="Remove" action="{!RemoveLink}" rerender="plist">
+            <apex:param name="lProj" value="{!p.Id}"/>
+            <apex:param name="lName" value="parent"/>
+        </apex:commandLink>  
+    </apex:dataList>    
+    <apex:dataList value="{!ChildList}" var="c" style="padding:0px;margin:0px" id="clist">
+        <a href="/{!c.ChildProject__r.Id}" target="_blank">{!c.ChildProject__r.Name}: </a>
+        ({!c.ChildProject__r.ProjectStatus__c})
+        {!c.ChildProject__r.RecordType.Name} - {!c.ChildProject__r.Summary__c} 
+        &nbsp;
+        <apex:commandLink target="_self" title="Click to remove link..." value="Remove" action="{!RemoveLink}" rerender="clist">
+            <apex:param name="lProj" value="{!c.Id}"/>
+            <apex:param name="lName" value="child"/>
+        </apex:commandLink>   
+    </apex:dataList>
+    </apex:form>
+
+</apex:page>

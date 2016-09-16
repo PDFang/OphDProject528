@@ -1,0 +1,5 @@
+<apex:page standardController="Opportunity"> 
+    <div width="100%" style="background-color: #F3F3EC; height: 15px; text-align: center;">
+        <apex:outputText style="color: red; font-weight: bold;" value="{!Opportunity.BigMachines_Message__c}" />
+    </div>
+</apex:page>

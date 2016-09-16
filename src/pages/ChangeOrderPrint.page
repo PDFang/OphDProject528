@@ -1,0 +1,239 @@
+<apex:page standardController="Change_Request__c" showHeader="false" renderAs="pdf">
+<head>
+<apex:stylesheet value="{!URLFOR($Resource.ChangeOrder_Assets, 'main.css')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.ChangeOrder_Assets, 'bo.css')}"/>
+</head>
+<body>        
+<div class="page">
+  <div id="frontPageBanner">
+    <div id="frontPageLogo" /> 
+    <div id="frontPageTitleArea">
+      <div id="frontPageTitle">
+        Change Request
+      </div>
+    </div>
+  </div>
+<!-- content -->
+<div class="sectionArea">
+    <div class="datagrid">
+      <table>
+        <colgroup>
+           <col span="1" style="width: 20%;" />
+           <col span="1" style="width: 30%;" />
+           <col span="1" style="width: 20%;" />
+           <col span="1" style="width: 30%;" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th colspan="4">Change Request Detail</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:right;font-weight:bold;">Change Request Name</td><td>{!Change_Request__c.Name}</td>
+            <td style="text-align:right;font-weight:bold;">Change ID</td><td>{!Change_Request__c.Change_ID__c}</td>
+          </tr>
+          <tr class="alt">
+            <td style="text-align:right;font-weight:bold;">Requested By</td><td>{!Change_Request__c.Requested_By__r.FirstName} {!Change_Request__c.Requested_By__r.LastName}</td>
+            <td style="text-align:right;font-weight:bold;">Project</td><td>{!Change_Request__c.Project__r.Name}</td>
+          </tr>
+          <tr>
+            <td style="text-align:right;font-weight:bold;">Request Date</td><td><apex:outputText value="{0,date,MM'/'dd'/'yyyy}"><apex:param value="{!Change_Request__c.Request_Date__c}" /></apex:outputText></td>
+            <td style="text-align:right;font-weight:bold;">Account</td><td>{!Change_Request__c.Account__r.Name}</td>
+          </tr>
+          <tr>
+            <td style="text-align:right;font-weight:bold;">Operations Approval</td><td>{!Change_Request__c.Operations_Approval__c}</td>
+            <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <br/>
+    <div class="datagrid">
+      <table>
+        <colgroup>
+           <col span="1" style="width: 20%;" />
+           <col span="1" style="width: 30%;" />
+           <col span="1" style="width: 20%;" />
+           <col span="1" style="width: 30%;" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th colspan="4">Impact</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:right;font-weight:bold;">Schedule</td><td>{!Change_Request__c.Schedule__c}</td>
+            <td style="text-align:right;font-weight:bold;">Design</td><td>{!Change_Request__c.Technical__c}</td>
+          </tr>
+          <tr class="alt">
+            <td style="text-align:right;font-weight:bold;">Cost</td><td>{!Change_Request__c.Cost__c}</td>
+            <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <br/>
+    <div class="datagrid">
+      <table>
+        <colgroup>
+           <col span="1" style="width: 20%;" />
+           <col span="1" style="width: 30%;" />
+           <col span="1" style="width: 20%;" />
+           <col span="1" style="width: 30%;" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th colspan="4">Estimated Cost of Impact</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:right;font-weight:bold;">Technical Hours</td><td>{!Change_Request__c.Technical_Hours__c}</td>
+            <td style="text-align:right;font-weight:bold;">PM Hours</td><td>{!Change_Request__c.PM_Hours__c}</td>
+          </tr>
+          <tr class="alt">
+            <td style="text-align:right;font-weight:bold;">Developer Hours</td><td>{!Change_Request__c.Developer_Hrs__c}</td>
+            <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <br/>
+    <div class="datagrid">
+      <table>
+        <colgroup>
+           <col span="1" style="width: 20%;" />
+           <col span="1" style="width: 30%;" />
+           <col span="1" style="width: 20%;" />
+           <col span="1" style="width: 30%;" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th colspan="4">Impact on Schedule</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:right;font-weight:bold;">Current Milestone (Days)</td><td>{!Change_Request__c.Current_Milestone_Days__c}</td>
+            <td style="text-align:right;font-weight:bold;">Project (Days)</td><td>{!Change_Request__c.Project_Days__c}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <br/>
+    <div class="datagrid">
+      <table>
+        <colgroup>
+           <col span="1" style="width: 20%;" />
+           <col span="1" style="width: 30%;" />
+           <col span="1" style="width: 20%;" />
+           <col span="1" style="width: 30%;" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th colspan="4">Change or Acquisition Summary</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:right;font-weight:bold;">Change Description</td>
+            <td colspan="3">{!Change_Request__c.Change_Descriptions__c}</td>
+          </tr>
+          <tr class="alt">
+            <td style="text-align:right;font-weight:bold;">Justification</td>
+            <td colspan="3">{!Change_Request__c.Justification__c}</td>
+          </tr>
+          <tr>
+            <td style="text-align:right;font-weight:bold;">Risks Considered</td>
+            <td colspan="3">{!Change_Request__c.Risks_Considered__c}</td>
+          </tr>
+          <tr class="alt">
+            <td style="text-align:right;font-weight:bold;">Back-out Procedure</td>
+            <td colspan="3">{!Change_Request__c.Back_out_Procedure__c}</td>
+          </tr>
+          <tr>
+            <td style="text-align:right;font-weight:bold;">Target Installation Schedule</td>
+            <td colspan="3">{!Change_Request__c.Target_Installation_Schedule__c}</td>
+          </tr>
+          <tr class="alt">
+            <td style="text-align:right;font-weight:bold;">Comments</td>
+            <td colspan="3">{!Change_Request__c.Comments__c}</td>
+          </tr>
+          <tr>
+            <td style="text-align:right;font-weight:bold;">Update Diagram</td>
+            <td colspan="3">{!IF(Change_Request__c.Update_Diagram__c,"Yes", "No")}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <br/>
+    <div class="datagrid">
+      <table>
+        <colgroup>
+           <col span="1" style="width: 20%;" />
+           <col span="1" style="width: 30%;" />
+           <col span="1" style="width: 20%;" />
+           <col span="1" style="width: 30%;" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th colspan="4">Approval History</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:right;font-weight:bold;">Operations Approver</td><td>{!Change_Request__c.Approval_name_op__c}</td>
+            <td style="text-align:right;font-weight:bold;">Approval Date</td><td><apex:outputText value="{0,date,MM'/'dd'/'yyyy}"><apex:param value="{!Change_Request__c.Approval_op_date__c}" /></apex:outputText></td>
+          </tr>
+          <apex:outputText rendered="{!If(Change_Request__c.Approval_status_se__c='Approved',true,false)}">
+          <tr class="alt">
+            <td style="text-align:right;font-weight:bold;">SE Approver</td><td>{!Change_Request__c.Approval_name_se__c}</td>
+            <td style="text-align:right;font-weight:bold;">Approval Date</td><td><apex:outputText value="{0,date,MM'/'dd'/'yyyy}"><apex:param value="{!Change_Request__c.Approval_se_date__c}" /></apex:outputText></td>
+          </tr>
+          </apex:outputText>
+        </tbody>
+      </table>
+    </div>
+    <br/>
+    <div class="datagrid">
+      <table>
+        <colgroup>
+           <col span="1" style="width: 20%;" />
+           <col span="1" style="width: 30%;" />
+           <col span="1" style="width: 20%;" />
+           <col span="1" style="width: 30%;" />
+        </colgroup>
+        <tbody>
+          <tr>
+            <td colspan="4">
+              The changes outlined in this document are to be considered an addendum to the previously agreed upon project scope and design.  Acknowledgment of the accuracy of the information provided  and understanding of the conditions listed above are indicated by signing below.
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align:right;font-weight:bold;">Signature:</td><td style="border-bottom: 1px solid #000;">&nbsp;</td>
+            <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="text-align:right;font-weight:bold;">Name:</td><td style="border-bottom: 1px solid #000;">&nbsp;</td>
+            <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="text-align:right;font-weight:bold;">Date:</td><td style="border-bottom: 1px solid #000;">&nbsp;</td>
+            <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+            <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+
+</div>
+<!-- /end content -->
+</div>
+</body>
+</apex:page>

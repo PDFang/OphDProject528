@@ -1,0 +1,20 @@
+<apex:page standardController="ChangeControlRequest__c" extensions="CCRCancelFailExtension">
+  <apex:form >
+      <apex:inputHidden value="{!ChangeControlRequest__c.Status__c}"/>
+      <apex:inputHidden value="{!ChangeControlRequest__c.CCRType__c}"/>
+      <apex:pageBlock >
+          <apex:pageBlockSection rendered="{!AND(custImpact,fail)}" columns="1" >
+              <apex:inputField required="true" value="{!ChangeControlRequest__c.CustomerImpact__c}"/>
+              <apex:inputField required="true" value="{!ChangeControlRequest__c.CustomerImpactDescription__c}"/>
+          
+          
+          </apex:pageBlockSection>
+          <p>{!DisplayString}</p>
+          <apex:pageBlockButtons location="bottom"  >
+              <apex:commandButton value="Yes" action="{!CloseCCR}"/>
+              <apex:commandButton value=" No " action="{!Cancel}"/>
+          </apex:pageBlockButtons>
+          
+      </apex:pageBlock>
+  </apex:form>
+</apex:page>

@@ -1,0 +1,39 @@
+<apex:page standardController="Case" extensions="CaseCloseChildCasesExtension" tabStyle="Case" >
+    <apex:messages />
+    
+    <apex:form >
+        <apex:pageBlock rendered="{!NOT(RenderPage)}">
+            <apex:outputText value="{!ErrorDisplay}"/>
+            <apex:commandLink value="Go Back" action="{!Cancel}"/>
+        </apex:pageBlock>
+        <apex:pageBlock id="mainBlock" rendered="{!RenderPage}">
+            <apex:pageBlockSection columns="1" >
+                <apex:inputHidden value="{!Case.IsClosed}"/>
+                <apex:outputField value="{!Case.Status}"/>
+                <apex:outputField value="{!Case.Reason}" rendered="{!parentClosed}"/>
+                <apex:outputField value="{!Case.Disposition__c}" rendered="{!parentClosed}"/>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Add Comment" for="noText" />
+                    <apex:inputCheckbox id="noText" value="{!CommentCaseCheck}">
+                        <apex:actionSupport event="onclick" rerender="mainBlock"/>
+                    </apex:inputCheckbox>
+                </apex:pageBlockSectionItem>
+                <apex:inputCheckbox label="Public" value="{!ispublic}" rendered="{!CommentCaseCheck}"/>
+                <apex:inputTextarea id="comm" value="{!CommentBodyText}" label="Public Comment" rows="5" cols="75" rendered="{!CommentCaseCheck}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="1" title="Child Cases" collapsible="false" >
+                <apex:pageBlockTable value="{!ChildCaseList}" var="child">
+                    <apex:column value="{!child.CaseNumber}"/>
+                    <apex:column value="{!child.Account.Name}"/>
+                    <apex:column value="{!child.Account.CostGuard_Acct__c}"/>
+                    <apex:column value="{!child.Status}"/>
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Sync Child Cases" action="{!Save}"/>
+                <apex:commandButton value="Cancel" action="{!Cancel}"/>
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+    </apex:form>
+
+</apex:page>

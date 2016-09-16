@@ -1,0 +1,253 @@
+<apex:page standardController="Account" applyBodyTag="true" extensions="ConsoleAccountHighlightPanelExtension" sidebar="false" showHeader="false" showChat="false" >
+    <apex:variable value="{!Account}" var="a"/>
+<apex:includeScript value="/support/console/28.0/integration.js"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:stylesheet value="{!$Resource.SupportConsoleCss}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+    
+    <style type="text/css">
+        section{
+            font-size:12px;
+            background-image: -ms-linear-gradient(top,#202020 0%,#58595b 100%);
+            background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0,#202020),color-stop(1,#58595b));
+            background-image: -webkit-linear-gradient(top,#202020 0%,#58595b 100%);
+            background-image: -moz-linear-gradient(top,#202020 0%,#58595b 100%);
+            background-image: linear-gradient(to bottom,#202020 0%,#58595b 100%);
+            filter: progid:DXImageTransform.Microsoft.gradient(StartColorStr='#202020',EndColorStr='#58595b');
+            -ms-filter: "progid:DXImageTransform.Microsoft.gradient(StartColorStr='#202020',EndColorStr='#58595b')";
+            color:#fff;
+        }
+        
+        a{
+            color:#fff;
+        }
+        
+        h1{
+            font-size:16px;
+        }
+        
+        .deactivated{
+            font-weight:bold;
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+            width:200px;
+            background-color:#FF0000;
+            color:#FFFFFF;
+            text-align:center;
+            padding:2px;
+        }
+        
+        .support-instructions{
+            font-weight:bold;
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+            background-color:#FF0000;
+            color:#FFFFFF;
+            padding:2px;
+        }
+        
+    </style>
+    <div class="highlights">
+    <apex:outputField value="{!a.Billing_Group__c}" rendered="false"/>
+    <div id="java-errors" style="display:none" class="warning-message"></div>
+    <section class="left-panel">
+        <div class="panel-field">
+            <div class="panel-label"> 
+                Password
+            </div>
+            <div class="panel-value">
+                {!BLANKVALUE(a.AccountPassword__c,"None")}
+            </div>
+            <div class="clear-both"></div>
+        </div>
+        <div class="panel-field">
+            <div class="panel-label"> 
+                Success Pkg
+            </div>
+            <div class="panel-value">
+                {!a.Customer_Priority__c}
+            </div>
+            <div class="clear-both"></div>
+        </div>
+        <div class="panel-field">
+            <div class="panel-label"> 
+                inContact Go Live
+            </div>
+            <div class="panel-value">
+                <apex:outputText value="{0,date,MM'/'dd'/'yyyy}">
+                                <apex:param value="{!a.inContactGoLive__c}" /> 
+                </apex:outputText>
+            </div>
+            <div class="clear-both"></div>
+        </div>
+        <div class="panel-field">
+            <div class="panel-label"> 
+                GYR Status
+            </div>
+            <div class="panel-value gyr">
+                <div class="{!GyrStatus}">
+                    {!GyrStatus}
+                </div>
+            </div>
+            <div class="clear-both"></div>
+        </div>
+        <div class="panel-field">
+            <div class="panel-label"> 
+                PS Hours
+            </div>
+            <div class="panel-value">
+                {!PsPackageHours}
+            </div>
+            <div class="clear-both"></div>
+        </div>
+        <div class="panel-field">
+            <div class="panel-label"> 
+                Open Incidents
+            </div>
+            <div class="panel-value">
+                {!NumberOfOpenIncidents}
+            </div>
+            <div class="clear-both"></div>
+        </div>
+            <div class="panel-field">
+                <div class="panel-label">
+                    TSM
+                </div>
+                <div class="panel-value">
+                    <apex:outputField value="{!a.TechnicalSuccessManagerprimary__r.Name}"/>
+                </div>
+                <div class="clear-both"></div>
+            </div>
+            <apex:outputpanel rendered="{!a.inContact_Cluster__c != null}" styleclass="panel-field" layout="block">
+                <div class="panel-label">
+                    Incontact Cluster
+                </div>
+                <div class="panel-value">
+                    {!a.inContact_Cluster__c}
+                </div>
+                <div class="clear-both"></div>
+            </apex:outputpanel>
+            <apex:outputpanel rendered="{!a.Verint_Cluster__c != null}" styleclass="panel-field" layout="block">
+                <div class="panel-label">
+                    Verint Cluster
+                </div>
+                <div class="panel-value">
+                    {!a.verint_Cluster__c}
+                </div>
+                <div class="clear-both"></div>
+            </apex:outputpanel>
+        
+        
+        
+    </section >
+    <section class="center">
+        
+        <div style="text-align:center;margin:5px;">
+            <h1>{!a.Name}({!a.CadebillAccountNo__c})</h1>
+        </div>
+        <apex:outputPanel layout="block" styleClass="partner" style="background-color:#{!GetBanner.BackgroundColor};color:#{!GetBanner.FontColor};" rendered="{!NOT(ISNULL(GetBanner))}" >
+                 {!GetBanner.DisplayText}
+        </apex:outputPanel>
+        <apex:outputPanel layout="block" styleClass="partner platinum" rendered="{!(a.SalesPartnerMasterAgent__r.PartnerLevel__c='Referral Platinum')}">
+            Platinum Partner
+        </apex:outputPanel>
+        <apex:outputPanel layout="block" styleClass="partner unsupported" rendered="{!NOT(ISBLANK(a.UnsupportedEnvironment__c))}">
+            Unsupported Environment: {!a.UnsupportedEnvironment__c}
+        </apex:outputPanel>
+        <apex:outputPanel layout="block" styleClass="partner government" rendered="{!a.GovernmentAccount__c}">
+            Government Account
+        </apex:outputPanel>
+        <apex:outputPanel layout="block" styleClass="partner hipaa" rendered="{!a.HipaaAccount__c}">
+            HIPAA Account
+        </apex:outputPanel>
+        <apex:outputPanel layout="block" styleClass="partner implementation" rendered="{!AND(a.Implementation__c,NOT(ISBLANK(a.ImplementationsCertifiedPartnerLookup__c)))}">
+            Please reference Implementation's Certified Partner Account for Authorized Contacts if needed.
+        </apex:outputPanel>
+        
+        <apex:outputPanel rendered="{!AND(NOT(BLANKVALUE(a.CG_Disconnect_Date__c,NOW()+1) < NOW()),NOT(ISBLANK(a.CustomerSegment__c)))}">
+            <div class="segment {!SUBSTITUTE(a.CustomerSegment__c,' ','')}">
+                Segment:&nbsp; <apex:outputField value="{!a.CustomerSegment__c}"/>
+            </div>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!IF(BLANKVALUE(a.CG_Disconnect_Date__c,NOW()+1) < NOW(),true,false)}">
+            <div class="deactivated">
+                THIS ACCOUNT IS NOT ACTIVE
+            </div>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!IF(ISBLANK(a.SupportInstructions__c),false,true)}">
+            <div class="support-instructions">
+                <apex:outputField value="{!a.SupportInstructions__c}"/>
+            </div>
+        </apex:outputPanel>
+        
+    </section >
+    <section class="right-panel">
+            <apex:outputPanel layout="block" id="mood-panel" style="float:left;margin:5px;">
+                <div id="current-mood" style="float:left;margin-right:10px;">   
+                        
+                </div> 
+                <div style="float:left;">
+                    Mood as of&nbsp;
+                    <apex:outputText value="{0,date,MM'/'dd'/'yyyy}">
+                        <apex:param value="{!Account.CustomerTemperatureDate__c}" /> 
+                    </apex:outputText><br/>
+                    Reported By: {!Account.CustomerMoodLastUpdatedBy__r.Name}
+                </div>
+                
+            <div class="clear-both"></div> 
+                <apex:outputPanel style="margin-top:15px;text-align:center;" layout="block">   
+                        <div>Set Mood</div>
+                        <div>
+                            <a href="#" onclick="setAccountMood('Happy');"><apex:image height="25px" title="Happy" value="{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-happy-icon.png')}"/></a>
+                            <a href="#" onclick="setAccountMood('Indifferent');"><apex:image height="25px" title="Indifferent" value="{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-indifferent-icon.png')}"/></a>
+                            <a href="#" onclick="setAccountMood('Mad');"><apex:image height="25px" title="Mad" value="{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-mad-icon.png')}" /></a>
+                        </div>
+                </apex:outputPanel>  
+            </apex:outputPanel>
+    </section>        
+       
+        
+    </div>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                if( "{!LOWER(a.CustomerTemperature__c)}" != ""){
+                    $("#current-mood").html("<img src='" + {!LOWER(a.CustomerTemperature__c)}Url + "'/>");
+                };
+            });
+           
+            
+            var happyUrl = "{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-happy-icon.png')}";
+            var indifferentUrl = "{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-indifferent-icon.png')}";
+            var madUrl = "{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-mad-icon.png')}";
+            
+            
+            function setAccountMood(mood){
+                ConsoleAccountHighlightPanelExtension.SetAccountMood(
+                      "{!a.Id}",mood,
+                      function(result,event)
+                      {
+                          
+                          if (event.status) {
+                                $("#java-errors").hide();
+                                if(mood=="Happy"){
+                                      $("#current-mood").html("<img src='" + happyUrl + "'/>");
+                                }else if(mood=="Indifferent"){
+                                      $("#current-mood").html("<img src='" + indifferentUrl + "'/>");
+                                }else if(mood=="Mad"){
+                                      $("#current-mood").html("<img src='" + madUrl + "'/>");
+                                }
+                            } else if (event.type === 'exception') {
+                                $("#java-errors").show();
+                                document.getElementById("java-errors").innerHTML = event.message;
+                            } else {
+                                $("#java-errors").show();
+                                document.getElementById("java-errors").innerHTML = event.message;
+                            }
+                      },
+                      {escape: false}
+                   );
+            }
+        </script>
+</apex:page>

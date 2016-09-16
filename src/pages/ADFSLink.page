@@ -1,0 +1,10 @@
+<apex:page standardController="Contact" extensions="ADFSLinkExtension">
+  <table style="width:90%">
+      <tr>
+          <td style="width:30%"><a href="{!ADFSUrl}" target="_blank">{!DisplayText}</a></td>
+      <!--     <td><a href="{!ImpersonateURL}" target="_blank">{!ImpersonateText}</a></td>  --> 
+      </tr>
+  </table>
+  <apex:outputText rendered="false">{!Contact.ADFSGuid__c}</apex:outputText>
+  <apex:outputText rendered="false">{!Contact.CostGuardAcct__c}</apex:outputText>
+</apex:page>

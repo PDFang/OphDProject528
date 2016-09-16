@@ -1,0 +1,475 @@
+<apex:page standardController="Buildout__c" showHeader="false" renderAs="pdf">
+<head>
+<apex:stylesheet value="{!URLFOR($Resource.quoter_assets_uptivity2, 'main.css')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.quoter_assets_bo, 'bo.css')}"/>
+</head>
+<body>          
+<div class="page">
+  <div id="frontPageBanner">
+    <div id="frontPageLogo" />
+    <div id="frontPageTitleArea">
+      <div id="frontPageTitle">
+        Pre-Sale Qualification 
+      </div>
+    </div>
+  </div>
+
+<div class="sectionArea"> 
+  <p><b>Prepared for: {!Buildout__c.opportunity__r.account.name}</b></p>
+  <br/>
+  <p>Completion of the first three sections is generally required for all sales.  For each product section following, complete the information in each as is dictated by the specific products being sold.</p>
+  <br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Discovery &amp; Requirements</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Objective 1</td><td>{!Buildout__c.Objective_1__c}</td>
+        <td style="text-align:right;font-weight:bold;">Other Requirements</td><td>{!Buildout__c.Other_Requirements__c}</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">Objective 2</td><td>{!Buildout__c.Objective_2__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Objective 3</td><td>{!Buildout__c.Objective_3__c}</td>
+        <td style="text-align:right;font-weight:bold;">Playback Requirements</td><td>{!Buildout__c.Playback_Requirements__c}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Customer Environment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Workstation Virtualization</td><td>{!IF(Buildout__c.Application_Virtualization__c,"Yes", "N/A")}</td>
+        <td style="text-align:right;font-weight:bold;">No. of Sites</td><td>{!Floor(Buildout__c.Number_of_Sites__c)}</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">Product Type(s)</td><td>{!Buildout__c.Desktop_Clients__c}</td>
+        <td style="text-align:right;font-weight:bold;">Third Party Apps</td><td>{!Buildout__c.Third_Party_Applications__c}</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Other Type</td><td>{!Buildout__c.Other_Type__c}</td>
+        <td style="text-align:right;font-weight:bold;">VPN Users</td><td>{!Buildout__c.VPN_Users__c}</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">Desktop OS</td><td>{!Buildout__c.Hardware__c}</td>
+        <td style="text-align:right;font-weight:bold;">Browsers</td><td>{!Buildout__c.Browsers__c}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Uptivity Application Environment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Server</td><td>{!Buildout__c.Virtualization__c}</td>
+        <td style="text-align:right;font-weight:bold;">Database</td><td>{!Buildout__c.Database__c}</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">HW Procurement</td><td>{!Buildout__c.Hardware_Procurement__c}</td>
+        <td style="text-align:right;font-weight:bold;">Database Version</td><td>{!Buildout__c.Database_Version__c}</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Licenses</td><td>{!Buildout__c.Channels__c}</td>
+        <td style="text-align:right;font-weight:bold;">Long Term Storage</td><td>{!Buildout__c.Long_Term_Storage__c}</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+        <td style="text-align:right;font-weight:bold;">Server OS</td><td>{!Buildout__c.Server_OS__c}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Audio Recording</th>
+      </tr>
+    </thead>
+<apex:outputText rendered="{!If(Buildout__c.Audio_Recording__c='Yes',true,false)}">
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Audio Recording</td><td>{!Buildout__c.Audio_Recording__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">PBX Model</td><td>{!Buildout__c.PBX_Model__c}</td>
+        <td style="text-align:right;font-weight:bold;">Integrations</td><td>{!Buildout__c.Integrations__c}</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">PBX Version</td><td>{!Buildout__c.PBX_Version__c}</td>
+        <td style="text-align:right;font-weight:bold;">CTI Name/Version</td><td>{!Buildout__c.CTI_name_ver__c}</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">Phone Models</td><td>{!Buildout__c.Phone_Models__c}</td>
+        <td style="text-align:right;font-weight:bold;">Add'l Licensing</td><td>{!Buildout__c.Third_Party_Licensing__c}</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Recording Method</td><td>{!Buildout__c.Recording_Method__c}</td>
+        <td style="text-align:right;font-weight:bold;">Span Port Requirement</td><td>{!Buildout__c.Span_Port_Requirement__c}</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+<apex:outputText rendered="{!If(Buildout__c.Audio_Recording__c='Yes',false,true)}">
+    <tbody>
+      <tr>
+        <td colspan="4" style="font-weight:bold;">Audio recording is not included in the scope of this engagement.</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Desktop Recording</th>
+      </tr>
+    </thead>
+<apex:outputText rendered="{!If(Buildout__c.Desktop_Recording__c='Yes',true,false)}">
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Desktop Recording?</td><td>{!Buildout__c.Desktop_Recording__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">No. of Monitors</td><td>{!Buildout__c.No_of_Monitors__c}</td>
+        <td style="text-align:right;font-weight:bold;">Screen Resolution</td><td>{!Buildout__c.Screen_Resolution__c}</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+<apex:outputText rendered="{!If(Buildout__c.Desktop_Recording__c='Yes',false,true)}">
+    <tbody>
+      <tr>
+        <td colspan="4" style="font-weight:bold;">Desktop recording is not included in the scope of this engagement.</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">WFM</th>
+      </tr>
+    </thead>
+<apex:outputText rendered="{!If(Buildout__c.Workforce_Management__c='Yes',true,false)}">
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Workforce Management?</td><td>{!Buildout__c.Workforce_Management__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">ACD Integration Type</td><td>{!Buildout__c.ACD_Type__c}</td>
+        <td style="text-align:right;font-weight:bold;">Third Party Licensing</td><td>{!Buildout__c.Third_Party_Licensing2__c}</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">No. of ACDs</td><td>{!Buildout__c.No_of_ACDs__c}</td>
+        <td style="text-align:right;font-weight:bold;">Available Historical Data</td><td>{!Buildout__c.Historical_Data_Available__c}</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">ACD Software Version</td><td>{!Buildout__c.ACD_Software_Version__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+<apex:outputText rendered="{!If(Buildout__c.Workforce_Management__c='Yes',false,true)}">
+    <tbody>
+      <tr>
+        <td colspan="4" style="font-weight:bold;">Workforce management is not included in the scope of this engagement.</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Desktop Analytics</th>
+      </tr>
+    </thead>
+<apex:outputText rendered="{!If(Buildout__c.Desktop_Analytics__c='Yes - Requires Desktop Analytics test and Executed SOW',true,false)}">    
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Desktop Analytics?</td><td>{!Buildout__c.Desktop_Analytics__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+<apex:outputText rendered="{!If(Buildout__c.Desktop_Analytics__c='Yes - Requires Desktop Analytics test and Executed SOW',false,true)}">    
+    <tbody>
+      <tr>
+        <td colspan="4" style="font-weight:bold;">Desktop analytics is not included in the scope of this engagement.</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Customer Survey</th>
+      </tr>
+    </thead>
+<apex:outputText rendered="{!If(Buildout__c.Customer_Survey__c='Yes',true,false)}">
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Customer Survey?</td><td>{!Buildout__c.Customer_Survey__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">Survey Integration</td><td>{!Buildout__c.Survey_Integration__c}</td>
+        <td style="text-align:right;font-weight:bold;">PBX Model</td><td>{!Buildout__c.PBX_Model_2__c}</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Agent Data</td><td>{!Buildout__c.Agent_Data__c}</td>
+        <td style="text-align:right;font-weight:bold;">PBX Version</td><td>{!Buildout__c.PBX_Version_2__c}</td>
+      </tr>
+    </tbody>
+</apex:outputText>    
+<apex:outputText rendered="{!If(Buildout__c.Customer_Survey__c='Yes',false,true)}">
+    <tbody>
+      <tr>
+        <td colspan="4" style="font-weight:bold;">Customer survey is not included in the scope of this engagement.</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Custom Development</th>
+      </tr>
+    </thead>
+<apex:outputText rendered="{!If(Buildout__c.Custom_Development__c='Yes - Requires SE call and Executed SOW',true,false)}">
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Custom Development?</td><td>{!Buildout__c.Custom_Development__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+<apex:outputText rendered="{!If(Buildout__c.Custom_Development__c='Yes - Requires SE call and Executed SOW',false,true)}">    
+    <tbody>
+      <tr>
+        <td colspan="4" style="font-weight:bold;">Custom development is not included in the scope of this engagement.</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Speech Analytics</th>
+      </tr>
+    </thead>
+<apex:outputText rendered="{!If(Buildout__c.Speech_Analytics__c='Yes',true,false)}">
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Speech Analytics?</td><td>{!Buildout__c.Speech_Analytics__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+<apex:outputText rendered="{!If(Buildout__c.Speech_Analytics__c='Yes',false,true)}">    
+    <tbody>
+      <tr>
+        <td colspan="4" style="font-weight:bold;">Speech analytics is not included in the scope of this engagement.</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Insight</th>
+      </tr>
+    </thead>
+<apex:outputText rendered="{!If(Buildout__c.Insight__c='Yes - Requires SE Call and Executed SOW',true,false)}">
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Insight?</td><td>{!Buildout__c.Insight__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+    </tbody>
+</apex:outputText>    
+<apex:outputText rendered="{!If(Buildout__c.Insight__c='Yes - Requires SE Call and Executed SOW',false,true)}">
+    <tbody>
+      <tr>
+        <td colspan="4" style="font-weight:bold;">Insight is not included in the scope of this engagement.</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Acknowledgment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td colspan="4">
+          Where in scope, the customer agrees to provide all hardware meeting Uptvity’s minimum specifications as defined in the post-sale, design process.<br/><br/>
+          Providing ample file storage is the responsibility of the customer.  The Uptivity National Account Manager has provided a Disk Space Estimation tool to determine the amount of storage space required for this implementation.  The results from the completion of the disk space exercise are requirements of the sale.<br/><br/>
+          The quote provided is meant for budgetary purposes and is subject to change until a completed Pre-Sale Qualification form is received and subsequent, Uptivity approval is provided.<br/><br/>
+          Third party licensing may be required to support the Uptivity product installation.   You may refer to the appropriate Uptivity product integration guide or consult your telephony vendor for details.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <tbody>
+      <tr>
+        <td colspan="4">
+          Acknowledgment of the accuracy of the information provided on this document and understanding of the conditions listed above are indicated by initialing below.
+        </td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Initials:</td><td style="border-bottom: 1px solid #000;">&nbsp;</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Name:</td><td style="border-bottom: 1px solid #000;">&nbsp;</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Date:</td><td style="border-bottom: 1px solid #000;">&nbsp;</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+</div>
+
+
+
+</div>
+</body>
+</apex:page>

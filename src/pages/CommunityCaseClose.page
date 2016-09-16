@@ -1,0 +1,21 @@
+<apex:page standardController="CaseComment" extensions="CommunityCaseCloseExtension">
+    
+    <apex:stylesheet value="{!$Resource.CommunityCss}" />
+    <apex:sectionHeader title="Close Case" subtitle="Case {!c.CaseNumber}"/>
+    <apex:form >
+          <apex:messages styleClass="warning-message" layout="block" />
+          <apex:pageBlock title="Case Close">
+              <apex:pageBlockButtons >
+                  <apex:commandButton action="{!Save}" value="CloseCase" rendered="{!NOT(c.IsClosed)}"/>
+                  <apex:commandButton action="{!Cancel}" value="Cancel"/>
+              </apex:pageBlockButtons>
+              <apex:pageBlockSection columns="1"  title="Case Detail" collapsible="false">
+                  <apex:outputField value="{!c.Subject}"/>
+                  <apex:outputField value="{!c.Description}"/>
+              </apex:pageBlockSection>
+              <apex:pageBlockSection columns="1"  title="Comment Details" collapsible="false" rendered="{!NOT(c.IsClosed)}">
+                  <apex:inputField label="Comment" value="{!CaseComment.CommentBody}" required="true" style="width:400px;height:100px"/>
+              </apex:pageBlockSection>
+          </apex:pageBlock>
+    </apex:form>
+</apex:page>

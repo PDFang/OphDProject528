@@ -1,0 +1,82 @@
+<apex:page StandardController="Case" extensions="CaseEventCloseExtension" >
+    <apex:form rendered="{!RenderClosePage}" >
+        <div style="color:red"><apex:messages id="msg" /></div>
+        <apex:pageBlock mode="edit" title="Close Event" id="mainPage">
+            <apex:inputHidden value="{!Case.Status}"/>
+            <apex:inputHidden value="{!Case.NonEvent__c}"/>
+            <apex:inputHidden value="{!Case.ProductImpacted__c}"/>
+            <apex:inputHidden value="{!Case.PlatformsImpacted__c}"/>
+            <apex:inputHidden value="{!Case.Description}"/>
+            <apex:inputHidden value="{!Case.Priority}"/>
+            <apex:actionRegion >
+            <apex:pageBlockSection columns="1">
+                <apex:outputField value="{!Case.CaseNumber}"/>         
+                <apex:outputField value="{!Case.Subject}"/> 
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel for="renCom" value="Add Comment"/>
+                    <apex:inputCheckbox id="renCom" value="{!renderComment}">
+                        <apex:actionSupport event="onchange" reRender="mainPage"/>
+                    </apex:inputCheckbox>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="1" rendered="{!renderComment}" >
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel for="pubCom" value="Public Comment?"/>
+                    <apex:inputCheckbox id="pubCom" value="{!isPublicComment}"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    
+                        <apex:outputLabel value="Add Standard Text" for="notText" />
+                        <apex:inputCheckbox id="notText" value="{!NoText}">
+                            <apex:actionSupport event="onclick" rerender="mainPage"/>
+                        </apex:inputCheckbox>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!NoText}">
+                    <apex:outputLabel value="Record Type" for="sRtype" />
+                    <apex:selectList id="sRtype" size="1" value="{!SelectedRecordTypeId}">
+                        <apex:selectOptions value="{!RecordTypeOptions}"></apex:selectOptions>
+                        <apex:actionSupport event="onchange" rerender="mainPage"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem Rendered="{!NoText}" >
+                    <apex:outputLabel value="Standard Text" for="sText" />
+                    <apex:selectList id="sText" size="1" value="{!SelectedStandardTextId}">
+                        <apex:selectOptions value="{!StandardTextOptions}"></apex:selectOptions>
+                        <apex:actionSupport event="onchange" rerender="mainPage,sTextDetail" />                 
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                    
+            </apex:pageBlockSection>   
+            </apex:actionRegion>     
+            <apex:pageBlockSection columns="1">
+                <apex:pageBlockSectionItem rendered="{!renderComment}">
+                   <apex:outputLabel value="Comment" for="sTextDetail" />
+                   <apex:outputPanel id="sTextDetail" layout="block">
+                       <apex:inputTextarea style="width:400px" rows="8" id="detailValue" value="{!SelectedStandardText}"/> 
+                   </apex:outputPanel>
+               </apex:pageBlockSectionItem> 
+                <apex:inputField value="{!Case.EventCommander__c}" required="true"/>
+            </apex:pageBlockSection>        
+            <apex:pageBlockSection title="General" collapsible="false" >
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.EventClose}" var="ec"> 
+                    <apex:inputField value="{!Case[ec]}" required="{!ec.Required}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Environment" collapsible="false" >
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.EventCloseEnvironment}" var="ece"> 
+                    <apex:inputField value="{!Case[ece]}" required="{!ece.Required}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="New RCA" collapsible="false" columns="1" rendered="{!newRCARendered}" >
+                <apex:repeat value="{!RCAFields}" var="ecr"> 
+                    <apex:inputField style="{!IF(ecr.Type='textarea','width:60%;height:100px','')}" value="{!rca[ecr.fieldPath]}" required="{!ecr.Required}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!Save}" value="Close Event"/>
+                <apex:commandButton action="{!Cancel}" value="Cancel"/>
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

@@ -1,0 +1,203 @@
+<apex:page controller="CaseOpenEventsController">
+    <!--apex:stylesheet value="C:Temp\Event.css"/-->
+         <style type="text/css">
+        
+        h1{font-size:12pt;}
+        
+        table.record{border:1px solid #69C; padding:0px; margin:0px;}
+            .record th{color:#039;border-bottom:1px solid black; padding:2px; margin:0px;}
+            .record td{border-bottom:1px dashed white; background-color:#E8EDFF; padding:10px; margin:2px;}
+            .record tr:hover td{background-color:#D0DAFD;}
+            
+        #wrapper { 
+         margin: 0 auto;
+         width: 1020px;
+         padding:0px;
+         margin:0px;
+         font-size:8pt;
+        }
+        
+        #header {
+         color: #333;
+         width: 930px;
+         padding: 10px 10px 10px 60px;
+         border: 1px solid #ccc;
+         margin: 10px 0px 10px 10px;
+         background: transparent;
+        }
+        
+        #header p{padding:5px; margin:0px;text-align:center;}
+        #header h1{color:orange;font-size:16pt}
+        #header h2{color:black;font-size:12pt}
+        
+        #right{ 
+         color: #333;
+         padding: 10px 10px 10px 10px;
+         border: 1px solid #ccc;
+         background: transparent;
+         margin: 10px 10px 0px 0px;
+         width: 480px;
+         float:right;
+         display: inline;
+         position: relative;
+        }
+        
+        #left{ 
+         display: inline;
+         color: #333;
+         padding: 10px 10px 10px 10px;
+         border: 1px solid #ccc;
+         background: transparent;
+         margin: 10px 0px 0px 10px;
+         width: 475px;
+         float:left;
+        }
+    </style>
+    <apex:outputPanel id="editPanel">
+    <div style="color:red"><apex:messages id="msg" /></div>
+    </apex:outputPanel>
+<div id="wrapper">
+    <div id="header">
+        <h1>Open Events Page</h1>
+    </div>
+    <apex:form id="main" >
+    <div id="left">
+        <apex:outputPanel rendered="{!NOT(renderChildCases)}"><h1>Open Events</h1></apex:outputPanel>
+        <apex:commandLink action="{!ShowAllOpen}" rendered="{!renderChildCases}" value="Go Back"/>
+        <apex:variable var="positioncount" value=""/>
+        <apex:dataTable title="Click to see child cases" rows="{!rows}" first="{!firstRow}" value="{!caseList}" var="c" styleClass="record">
+              <apex:actionSupport event="onRowClick" action="{!FindChildCases}" rerender="main" immediate="true" disabled="{!renderChildCases}" >
+                  <apex:param value="{!LEN(positioncount)}" name="pos"/>
+                  <apex:param value="{!c.Id}" name="eventId" assignTo="{!selectedEvent}"/>
+              </apex:actionSupport>
+            <apex:column >
+                    <apex:facet name="header">Event Number</apex:facet>
+                    <apex:outputText value="{!c.CaseNumber}"/>
+            </apex:column>
+            <apex:column >
+                    <apex:facet name="header">Subject</apex:facet>
+                    <apex:outputText value="{!c.Subject}"/>
+            </apex:column>
+            <apex:column >
+                    <apex:facet name="header">Status</apex:facet>
+                    <apex:outputText value="{!c.Status}"/>
+                    <apex:variable var="positioncount" value="{!positioncount+'|'}"/>
+            </apex:column>
+              
+        </apex:dataTable>
+        <br/>
+        <!-- EVENT LOG -->
+        <apex:outputPanel rendered="{!renderChildCases}"><h1>Event Log</h1></apex:outputPanel>
+        
+        <apex:dataTable value="{!eventLogs}" var="c" styleClass="record" rendered="{!renderChildCases}">
+            
+            <apex:column >
+                    <apex:facet name="header">Public</apex:facet>
+                    <apex:outputField value="{!c.IsPublished}"/>
+            </apex:column>
+            <apex:column >
+                    <apex:facet name="header">Comment</apex:facet>
+                    <apex:outputField value="{!c.CommentBody}"/>
+            </apex:column>
+            <apex:column >
+                    <apex:facet name="header">Created Date</apex:facet>
+                    <apex:outputField value="{!c.CreatedDate}"/>
+            </apex:column>
+        </apex:dataTable>
+        <br/>
+        <!-- CHILD CASES -->
+        <apex:outputPanel rendered="{!renderChildCases}"><h1>Child Cases</h1>
+        
+        <apex:dataTable title="Click to go to case" value="{!childCases}" var="c" styleClass="record">
+              <apex:actionSupport event="onRowClick" onsubmit="window.open('/{!c.Id}')" immediate="true" >
+                  <apex:param value="{!c.Id}" name="eventId"/>
+              </apex:actionSupport>
+            <apex:column >
+                    <apex:facet name="header">Case Number</apex:facet>
+                    <apex:outputText value="{!c.CaseNumber}"/>
+            </apex:column>
+            <apex:column >
+                    <apex:facet name="header">Account Number</apex:facet>
+                    <apex:outputText value="{!c.Account.CostGuard_Acct__c}"/>
+            </apex:column>
+            <apex:column >
+                    <apex:facet name="header">Account Name</apex:facet>
+                    <apex:outputText value="{!c.Account.Name}"/>
+            </apex:column>
+        </apex:dataTable>
+        </apex:outputPanel>
+    </div>
+    
+        <!-- Account List -->
+        <apex:outputPanel layout="block" rendered="{!renderChildCases}">
+        <div id="right" >
+            <div><h1>Add Account To Event</h1></div>
+          <apex:inputText value="{!searchString}" onkeypress="return noenter(event)" label="Search"/>
+          <apex:commandButton id="searchButton" value="Search" action="{!AccountSearch}" reRender="main"/> 
+          <div>
+              <apex:dataTable title="Click to see contacts" first="{!accountFirstRow}" rows="{!accountRows}" value="{!accounts}" var="a" styleClass="record">
+                 <apex:actionSupport event="onRowClick" action="{!FindContacts}"  rerender="main" >
+                      <apex:param name="acctId" value="{!a.Id}" assignTo="{!selectedAccount}"/>
+                      <apex:param value="{!LEN(positioncount)}" name="pos" assignTo="{!accountFirstRow}"/>
+                  </apex:actionSupport> 
+                <apex:column >
+                        <apex:facet name="header">Account Number</apex:facet>
+                        <apex:outputText value="{!a.CostGuard_Acct__c}"/>
+                </apex:column>
+                <apex:column >
+                        <apex:facet name="header">Account Name</apex:facet>
+                        <apex:outputText value="{!a.Name}"/>
+                </apex:column>
+                <apex:column >
+                        <apex:facet name="header">CSM</apex:facet>
+                        <apex:outputText value="{!a.CSM__c}"/>
+                        <apex:variable var="positioncount" value="{!positioncount+'|'}"/>
+                </apex:column>
+            </apex:dataTable>
+            <apex:variable var="positioncount" value=""/>
+            <br/>
+            <!-- CONTACT LIST -->
+            <apex:outputPanel rendered="{!AND(renderChildCases,renderContacts)}">
+            <h1>Click Contact to Create Child Case</h1>
+            <apex:dataTable title="Click create child case" value="{!contacts}" var="c" styleClass="record">
+                 <apex:actionSupport event="onRowClick" action="{!CreateChildCase}"  rerender="main" >
+                      <apex:param name="conId" value="{!c.Id}" assignTo="{!selectedContact}"/>
+                 </apex:actionSupport>   -->
+                <apex:column >
+                        <apex:facet name="header">Name</apex:facet>
+                        <apex:outputText value="{!c.Name}"/>
+                </apex:column>
+                <apex:column >
+                        <apex:facet name="header">Roles</apex:facet>
+                        <apex:outputText value="{!c.Contact_Role__c}"/>
+                </apex:column>
+            </apex:dataTable>
+            </apex:outputPanel>
+          </div> 
+      </div>
+    </apex:outputPanel>
+    
+    <!-- javascript function allows search to be done on enter key press.  Must be within form tags to work -->
+    <script type="text/javascript">          
+        function noenter(e){  
+            if(window.event){                    
+                key = window.event.keyCode;     //IE               
+            } 
+            else{                    
+                key = e.which;     //firefox               
+            }               
+            if(key == 13) {                    
+                
+                var ele = document.getElementById('{!$Component.searchButton}');
+               
+                ele.click();                     
+                return false;               
+            } else{                    
+                return true;               
+            }          
+        }     
+     </script> 
+     </apex:form>
+</div> 
+
+</apex:page>

@@ -1,0 +1,99 @@
+<apex:component controller="AccountHighlightComponentController" id="thePage" allowDML="true" >
+<apex:attribute type="String" required="true" description="Used to get accountID." name="currentId" assignTo="{!acctId}"/>
+<apex:stylesheet value="{!URLFOR($Resource.CSS, 'acctHighlights.css')}"/>
+    <apex:stylesheet value="{!$Resource.SupportConsoleCss}" />
+   
+<style type="text/css">
+    .gyr
+    { 
+        font-weight:bold;
+        background-color:{!acctWrapper.GYRStat}; 
+        {!IF(acctWrapper.DiscDate < NOW(),'background-color:red;','background-color:'&acctWrapper.GYRStat&';')}
+         {!IF(acctWrapper.GYRStat='Yellow','color:#000;','color:#fff;')}
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+    }
+        .gyr .yellow{
+            color:#000000;
+        }
+        
+    .goLive{
+         background-color:{!acctWrapper.goLiveBackground};
+         {!IF(acctWrapper.goLiveBackground='yellow','color:#000;','')}
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+    }
+    .deact
+    {
+        {!IF(acctWrapper.DiscDate < NOW(),'background-color:red;color:#FFFFFF;','')}
+    }
+</style>
+<apex:outputPanel id="acctDisp" rendered="{!NOT(ISBLANK(acctId))}">
+    			<apex:outputPanel styleClass="top-banner-strip" layout="block" style="background-color:#27027B;color:#fff;" rendered="{!NOT(ISBLANK(acctWrapper.acct.UnsupportedEnvironment__c))}" >Unsupported Environment: {!acctWrapper.acct.UnsupportedEnvironment__c}</apex:outputPanel>
+                <apex:outputPanel styleClass="verizon top-banner-strip" layout="block" rendered="{!acctWrapper.isVerizon}" >Verizon Account</apex:outputPanel>
+                <apex:outputPanel styleClass="siemens top-banner-strip" layout="block" rendered="{!acctWrapper.isSiemens}"  >Siemens Account</apex:outputPanel>
+    <apex:outputPanel styleClass="att top-banner-strip" layout="block" rendered="{!acctWrapper.acct.Billing_Group__c = 'AT&T'}"  >AT&amp;T Account</apex:outputPanel>
+                <apex:outputPanel styleClass="platPartner top-banner-strip" layout="block" rendered="{!acctWrapper.isPlatPartner}"  >Platinum Partner</apex:outputPanel>
+                <apex:outputPanel styleClass="top-banner-strip government" layout="block" rendered="{!acctWrapper.acct.GovernmentAccount__c}"  >Government Account</apex:outputPanel>
+    			<apex:outputPanel styleClass="top-banner-strip hipaa" layout="block" rendered="{!acctWrapper.acct.HipaaAccount__c}"  >HIPAA Account</apex:outputPanel>
+    			<apex:outputPanel styleClass="top-banner-strip implementation" layout="block" rendered="{!AND(acctWrapper.acct.Implementation__c,NOT(ISBLANK(acctWrapper.acct.ImplementationsCertifiedPartnerLookup__c)))}"  >
+    				Please reference Implementation's Certified Partner Account for Authorized Contacts if needed.
+    			</apex:outputPanel>
+    <apex:panelGrid id="details" cellpadding="1px" columns="4" columnClasses="panelGrid-fields, highlight-sidebar, highlight-sidebar, highlight-moodbar" styleClass="details">
+        <!-- apex:facet name="header">Account Highlights</apex:facet -->
+        <apex:panelGroup >
+            <apex:panelGrid id="acctInfoGrid" styleClass="field-highlight" columnClasses="label, value" columns="6"  >
+                <apex:outputPanel layout="block"> Active:</apex:outputPanel>
+                    <apex:outputPanel styleClass="deact" layout="block">{!IF(acctWrapper.DiscDate < NOW(),'No','Yes')}</apex:outputPanel>
+                <apex:outputPanel layout="block"> Customer Segment:</apex:outputPanel>
+                    <apex:outputPanel styleClass="{!SUBSTITUTE(acctWrapper.customerSegment,' ','')}" layout="block">{!acctWrapper.customerSegment}</apex:outputPanel>
+                <apex:outputPanel layout="block"> Account Password:</apex:outputPanel>
+                    <apex:outputPanel layout="block">{!acctWrapper.accountPassword}</apex:outputPanel>
+                <apex:outputPanel layout="block"> GYR Status:</apex:outputPanel>
+                    <apex:outputPanel styleClass="gyr {!acctWrapper.GYRStat}" layout="block">{!IF(acctWrapper.DiscDate < NOW(),'Deactivated',acctWrapper.GYRStat)}</apex:outputPanel>
+                <apex:outputPanel layout="block"> Service Package:</apex:outputPanel>
+                    <apex:outputPanel layout="block">{!acctWrapper.customerPriority}</apex:outputPanel>
+                <apex:outputPanel layout="block"> Open Incidents:</apex:outputPanel>
+                    <apex:outputPanel layout="block">{!acctWrapper.incidents}</apex:outputPanel>
+                <apex:outputPanel layout="block"> inContact Go Live:</apex:outputPanel>
+                    <apex:outputPanel layout="block" styleClass="goLive"><apex:outputText value="{0,date,MM'/'dd'/'yyyy}">
+                                <apex:param value="{!acctWrapper.acct.inContactGoLive__c}" /> 
+                            </apex:outputText></apex:outputPanel>
+                <apex:outputPanel layout="block"> PS Package Hours:</apex:outputPanel>
+                    <apex:outputPanel layout="block">{!acctWrapper.psPackageHours}</apex:outputPanel>
+                <apex:outputPanel layout="block"> TSM:</apex:outputPanel>
+                    <apex:outputPanel layout="block">{!acctWrapper.acct.TechnicalSuccessManagerprimary__r.Name}</apex:outputPanel>
+            </apex:panelGrid>
+        </apex:panelGroup>
+        <apex:panelGroup layout="block" >
+                <apex:componentBody />
+        </apex:panelGroup>
+        <apex:panelGroup layout="block" >
+            <apex:panelGrid columns="2" columnClasses="label,value" id="temp" >
+                    <apex:outputPanel layout="block">
+                       Customer's Mood <br/>
+                       as of {!acctWrapper.moodDate} <br/>
+                       Reported By: {!acctWrapper.acct.CustomerMoodLastUpdatedBy__r.Name}
+                    </apex:outputPanel>
+                    <apex:outputPanel layout="block">   
+                            <apex:image title="Happy" value="{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-happy-icon.png')}" rendered="{!IF(acctWrapper.acct.CustomerTemperature__c='Happy',true,false)}"/>
+                            <apex:image title="Indifferent" value="{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-indifferent-icon.png')}" rendered="{!IF(acctWrapper.acct.CustomerTemperature__c='Indifferent',true,false)}"/>
+                            <apex:image title="Mad" value="{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-mad-icon.png')}" rendered="{!IF(acctWrapper.acct.CustomerTemperature__c='Mad',true,false)}"/>
+                    </apex:outputPanel>   
+                        <apex:outputPanel layout="block">Record the customer's mood</apex:outputPanel>
+                <apex:form id="theForm">
+                        <apex:outputPanel layout="block">
+                            <apex:commandLink title="Happy" action="{!MakeHappy}" reRender="temp" ><apex:image height="25px" title="Happy" value="{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-happy-icon.png')}"/></apex:commandLink>
+                            &nbsp;
+                            <apex:commandLink title="Indifferent" action="{!MakeIndifferent}" reRender="temp" ><apex:image height="25px" title="Indifferent" value="{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-indifferent-icon.png')}"/></apex:commandLink>
+                            &nbsp;
+                            <apex:commandLink title="Mad" action="{!MakeMad}" reRender="temp" ><apex:image height="25px" title="Mad" value="{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-mad-icon.png')}"/></apex:commandLink>
+                        </apex:outputPanel>
+                </apex:form>
+            </apex:panelGrid>
+        </apex:panelGroup>
+    </apex:panelGrid>
+   </apex:outputPanel>
+   
+    
+</apex:component>

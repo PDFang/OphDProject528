@@ -1,0 +1,218 @@
+<apex:page standardController="Case" extensions="CaseEventAccountsExtension" tabStyle="Case">
+<!--apex:stylesheet value="C:Temp\Event.css"/-->
+         <style type="text/css">
+        
+        h1{font-size:12pt;}
+        
+        table.record{border:1px solid #69C; padding:0px; margin:0px;}
+            .record th{color:#039;border-bottom:1px solid black; padding:2px; margin:0px;}
+            .record td{border-bottom:1px dashed white; background-color:#E8EDFF; padding:10px; margin:2px;}
+            .record tr:hover td{background-color:#D0DAFD;}
+            
+        #wrapper { 
+         margin: 0 auto;
+         width: 1020px;
+         padding:0px;
+         margin:0px;
+         font-size:8pt;
+        }
+        
+        #header {
+         color: #333;
+         width: 930px;
+         padding: 10px 10px 10px 60px;
+         border: 1px solid #ccc;
+         margin: 10px 0px 10px 10px;
+         background: transparent;
+        }
+        
+        #header p{padding:5px; margin:0px;text-align:center;}
+        #header h1{color:orange;font-size:16pt}
+        #header h2{color:black;font-size:12pt}
+        
+        #right{ 
+         color: #333;
+         padding: 10px 10px 10px 10px;
+         border: 1px solid #ccc;
+         background: transparent;
+         margin: 10px 10px 0px 0px;
+         width: 480px;
+         float:right;
+         display: inline;
+         position: relative;
+        }
+        
+        #left{ 
+         display: inline;
+         color: #333;
+         padding: 10px 10px 10px 10px;
+         border: 1px solid #ccc;
+         background: transparent;
+         margin: 10px 0px 0px 10px;
+         width: 475px;
+         float:left;
+        }
+    </style>
+    
+    <apex:form id="main"  >
+    
+        <!-- messages -->
+        <apex:outputPanel id="editPanel">
+            <div style="color:red"><apex:messages id="msg" /></div>
+        </apex:outputPanel>
+        
+        <!-- wrapper -->
+        <div id="wrapper">
+        
+            <!-- header -->
+            <div id="header">   
+                <apex:commandLink action="{!Cancel}" value="< Back to {!Case.RecordType.Name}"/>
+                <apex:pageBlock >
+                    <apex:pageBlockSection columns="1">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel for="eventNum" value="{!Case.RecordType.Name} Number"/>
+                            <apex:outputField id="eventNum" value="{!Case.CaseNumber}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:outputField value="{!Case.Subject}"/>
+                        <apex:outputField value="{!Case.Description}"/>
+                        <apex:outputField value="{!Case.ProductImpacted__c}"/>
+                        <apex:outputField value="{!Case.PlatformsImpacted__c}"/>
+                    </apex:pageBlockSection>
+                </apex:pageBlock>    
+            </div>
+            
+        <apex:variable var="positioncount" value=""/>
+        
+        <!-- left grid -->
+        <div id="left">
+            <apex:pageBlock id="addBlock">
+                <apex:outputPanel rendered="{!canEdit}">
+                    <!-- SEARCH AREA -->
+                    <apex:pageBlockSection columns="1" title="Add Account to {!Case.RecordType.Name}" collapsible="false">
+                    </apex:pageBlockSection>
+                            <apex:inputText value="{!searchString}" onkeypress="return noenter(event)" label="Search" id="searchBox"/>
+                            <apex:commandButton id="searchButton" value="Search" action="{!AccountSearch}" reRender="main"/> 
+                            
+                    <!-- SEARCH TABLE --> 
+                    <apex:commandButton action="{!Beginning}" title="Beginning" value="<<" disabled="{!disablePrevious}" reRender="addBlock"/>
+                    <apex:commandButton action="{!Previous}" title="Previous" value="<" disabled="{!disablePrevious}" reRender="addBlock"/>        
+                    <apex:commandButton action="{!Next}" title="Next" value=">" disabled="{!disableNext}" reRender="addBlock"/>
+                    <apex:commandButton action="{!End}" title="End" value=">>" disabled="{!disableNext}" reRender="addBlock"/>    
+                    {!Total_size} records
+                    <apex:pageBlockTable title="Click to add" rows="{!accountRows}" value="{!accountsSearched}" var="a">
+                        <apex:column >
+                            <apex:commandLink action="{!AddAccount}" rerender="main" title="Add Account">
+                                <apex:image value="{!URLFOR($Resource.MiscImages, 'icon_add.png')}" />
+                                <!-- position count is used to reference the index of the collection -->
+                            <apex:param name="acctId" value="{!a.Id}" assignTo="{!selectedAccount}"/>
+                            </apex:commandLink> 
+                        </apex:column>
+                        <apex:column >
+                                <apex:facet name="header">Account Number</apex:facet>
+                                <apex:outputText value="{!a.CadebillAccountNo__c}"/>
+                        </apex:column>
+                        <apex:column >
+                                <apex:facet name="header">Account Name</apex:facet>
+                                <apex:outputText value="{!a.Name}"/>
+                        </apex:column>
+                        <apex:facet name="footer">Showing Page {!pageNumber} of {!totalPages}</apex:facet>
+                   </apex:pageBlockTable>
+                   
+                   <apex:variable var="positioncount" value=""/>
+                   
+                    <!-- javascript function allows search to be done on enter key press.  Must be within form tags to work -->
+                    <script type="text/javascript">          
+                    function noenter(e)
+                    {  
+                        if(window.event)
+                        {                    
+                            key = window.event.keyCode;     //IE               
+                        } 
+                        else
+                        {                    
+                            key = e.which;     //firefox               
+                        }               
+                        if(key == 13) 
+                        {  
+                            var ele = document.getElementById('{!$Component.searchButton}');
+                            ele.click();                     
+                            return false;               
+                        } 
+                        else
+                        {                    
+                            return true;               
+                        }          
+                    }     
+                    </script>
+                </apex:outputPanel>
+                
+                <!-- EXCLUDED ACCOUNT TABLE -->
+                <apex:pageBlockSection columns="1" title="Excluded Accounts" collapsible="false">
+                <apex:pageBlockTable value="{!excludedAccounts}" var="a">
+                    <apex:column rendered="{!canEdit}" >
+                        <apex:commandLink action="{!RemoveExclusion}" rerender="main" title="Add Account">
+                            <apex:image value="{!URLFOR($Resource.MiscImages, 'icon_add.png')}" />
+                            <!-- position count is used to reference the index of the collection -->
+                                  <apex:param name="acctIdExclude" value="{!a.Id}" assignTo="{!selectedExcludedAccount}"/>
+                        </apex:commandLink> 
+                    </apex:column>
+                    <apex:column >
+                        <apex:facet name="header">Account Number</apex:facet>
+                        
+                        <apex:outputLink target="_blank" value="/{!a.Id}">{!TEXT(a.CadebillAccountNo__c)}</apex:outputLink> 
+                    </apex:column>
+                    <apex:column >
+                        <apex:facet name="header">Account Name</apex:facet>
+                        <apex:outputLink target="_blank" value="/{!a.Id}"><apex:outputField value="{!a.Name}"/></apex:outputLink>    
+                        
+                    </apex:column>
+                    <apex:column headervalue="Incontact Cluster" value="{!a.inContact_Cluster__c}"/>
+                    <apex:column headervalue="Verint Cluster" value="{!a.Verint_Cluster__c}"/>
+                </apex:pageBlockTable>
+                </apex:pageBlockSection>
+              </apex:pageBlock>
+             </div>
+             
+             <!-- RIGHT GRID -->
+             <div id="right">  
+                <apex:pageBlock id="asBlock" >
+                    <apex:pageBlockSection columns="1" title="Associated Accounts" collapsible="false">
+                    </apex:pageBlockSection>
+                    <apex:commandButton action="{!AssociatedBeginning}" title="Beginning" value="<<" disabled="{!cec.disablePrevious}" reRender="asBlock"/>
+                    <apex:commandButton action="{!AssociatedPrevious}" title="Previous" value="<" disabled="{!cec.disablePrevious}" reRender="asBlock"/>        
+                    <apex:commandButton action="{!AssociatedNext}" title="Next" value=">" disabled="{!cec.disableNext}" reRender="asBlock"/>
+                    <apex:commandButton action="{!AssociatedEnd}" title="End" value=">>" disabled="{!cec.disableNext}" reRender="asBlock"/> 
+                    {!cec.Total_size} records
+                        <!-- ASSOCIATED ACCOUNTS TABLE -->
+                        <apex:pageBlockTable value="{!acctIncidents}" var="a">
+                            <apex:column rendered="{!canEdit}" >
+                                <apex:commandLink action="{!RemoveAccount}" rerender="main" title="Remove Account">
+                                    <apex:image value="https://images.ucn.net/salesforce/delete_icon_x.png" />
+                                    <!-- position count is used to reference the index of the collection -->
+                                          <apex:param name="acctIdMaster" value="{!a.acct.Id}" assignTo="{!selectedAccountFromMasterList}"/>
+                                </apex:commandLink> 
+                            </apex:column>
+                            <apex:column >
+                                <apex:facet name="header">Account Number</apex:facet>
+                                
+                                <apex:outputLink target="_blank" value="/{!a.acct.Id}">{!TEXT(a.acct.CadebillAccountNo__c)}</apex:outputLink> 
+                            </apex:column>
+                            <apex:column >
+                                <apex:facet name="header">Account Name</apex:facet>
+                                <apex:outputLink target="_blank" value="/{!a.acct.Id}"><apex:outputField value="{!a.acct.Name}"/></apex:outputLink>    
+                                
+                            </apex:column>
+                            <apex:column headervalue="Incontact Cluster" value="{!a.acct.inContact_Cluster__c}"/>
+                            <apex:column headervalue="Verint Cluster" value="{!a.acct.Verint_Cluster__c}"/>
+                          
+                            <apex:column >
+                                <apex:facet name="header">Incident</apex:facet>
+                                <apex:outputLink target="_blank" value="/{!a.childCase.Id}"><apex:outputField value="{!a.childCase.CaseNumber}"/></apex:outputLink> 
+                            </apex:column>
+                            <apex:facet name="footer">Showing Page {!cec.pageNumber} of {!cec.totalPages}</apex:facet>
+                        </apex:pageBlockTable>
+                </apex:pageBlock>
+           </div>
+       </div>
+    </apex:form>
+</apex:page>

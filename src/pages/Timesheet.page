@@ -1,0 +1,217 @@
+<apex:page standardController="Timesheet__c" extensions="TimesheetExtension" label="Timesheet">
+
+    
+    <script>
+        function confirmation() 
+        {
+            return confirm('Are you sure you want to delete this work log?');
+        }
+        function changePicklist(obj)
+        {
+           var projNum=obj.value;
+           
+           var inputText = document.getElementById("{!$Component.main.theBlock.hiddenInput}");
+           inputText.value = projNum;
+           callPickListChange();
+        }
+    </script>
+<style type="text/css">
+    td.total
+    {
+        border-top:1px solid black;
+        background:#666362;
+        color:#FFFFFF;
+        font-weight:bold;
+        text-align:right;
+    }
+    tr.d0 td {
+        background-color: #FFFFFF; color: black;
+    }
+    tr.d1 td {
+        background-color: #C9DECB; color: black;
+    }
+    table.inner 
+    {
+        border:0px solid black;
+        background:#FFFFFF;
+    }
+    
+    
+    table.inner th
+    {
+        border-bottom:1px solid black;
+        background:#E6E6E6;
+    }
+</style>
+    
+<apex:form id="main" rendered="{!renderPage}" >
+  <apex:pageBlock title="Timesheet"  >
+      <apex:pageBlockSection columns="2">
+          <apex:outputField value="{!Timesheet__c.OwnerId}"/>
+          <apex:outputField value="{!Timesheet__c.Name}"/>
+          <apex:outputField value="{!Timesheet__c.StartDate__c}"/>
+          <apex:outputField value="{!Timesheet__c.EndDate__c}"/>
+          <apex:outputField value="{!Timesheet__c.Status__c}"/>
+          <apex:outputText label="Total Time" value="{!totalTime}"/>
+      </apex:pageBlockSection>
+  </apex:pageBlock>
+  <apex:pageBlock title="Timesheet Detail" id="theBlock">
+  <apex:inputHidden value="{!projectNum}" id="hiddenInput"/>
+  <apex:inputHidden value="{!posNum}" id="hiddenInputPosition"/>
+  <span style="color:red;font-weight:bold;"><apex:messages /></span>
+  <table width="100%"><tr><td>
+  <table width="100%">
+  <apex:outputPanel rendered="{!NOT(renderLogEdit)}">
+  <apex:repeat value="{!Days}" var="t">
+          <tr>
+              <apex:variable value="{!StartValue}" var="tot"/>
+              <td>
+                  <table style="border:0px solid black;background:#CED8F6;" width="100%">
+                      <tr >
+                          <th width="10%" style="text-align:center;" colspan="3">
+                              <apex:outputText value="{0,date,E}">
+                                  <apex:param value="{!t.Date__c}"/>
+                              </apex:outputText>
+                              <br/>
+                              <apex:outputField value="{!t.Date__c}"/>
+                          </th>
+                          <td width="85%">
+                              <table class="inner" width="100%">
+                                 <thead>
+                                      <th colspan="2">Project</th>
+                                      <th width="15%">Product</th>
+                                      <th width="40%">Notes</th>
+                                      <th style="text-align:right;" width="5%">Hours</th>
+                                 </thead>
+                                 <tbody>
+                                  <apex:variable value="0" var="row"/>
+                                  <apex:repeat value="{!t.Work_Logs__r}" var="w">
+                                  <tr class="d{!row}">
+                                      <td ><apex:outputField value="{!w.Project__c}"/></td>
+                                      <td ><apex:outputField value="{!w.Project__r.Summary__c}"/></td>
+                                      <td ><apex:outputField value="{!w.LogType__c}"/>
+                                          <apex:outputField value="{!w.Asset__c}" rendered="{!w.LogType__c == NULL}"/>
+                                      </td>
+                                      
+                                      <td ><apex:outputField value="{!w.WorkNotes__c}"/></td>
+                                      <td style="text-align:right;"><apex:outputField value="{!w.Hours_Worked__c}"/></td>
+                                  </tr>
+                                      <apex:variable value="{!tot + w.Hours_Worked__c}" var="tot"/>
+                                      <apex:variable value="{!IF(row='0','1','0')}" var="row"/>
+                                  </apex:repeat>
+                                  </tbody>
+                                  <!-- <apex:outputPanel rendered="{!IF(tot=0,false,true)}">-->
+                                  <tr>
+                                      <td class="total" colspan="3"/>
+                                      <td class="total">Total Hours</td>
+                                      <td style="text-align:right;" class="total"><apex:outputText value="{!tot}"/></td>
+                                  </tr>
+                                 <!-- </apex:outputPanel>-->
+                              </table>
+                          </td>
+                          <td width="5%" style="text-align:center" colspan="3">
+                               <apex:commandButton value="Edit Date" action="{!EditDate}" reRender="main" rendered="{!NOT(renderNewWl)&&renderEdit}">                  
+                                   <apex:param name="wlDate" value="{!t.Id}"/>
+                               </apex:commandButton>
+                          </td>
+                      </tr>
+                  </table>
+              </td>
+          </tr>
+      </apex:repeat>
+      </apex:outputPanel>
+  </table>
+      </td>
+     </tr></table>
+  <table width="100%">
+      <tr>
+          <td>
+              <apex:variable var="positioncount" value=""/>
+              <apex:outputPanel rendered="{!renderLogEdit}">
+              <table width="100%">
+                  <tr>
+                      <td width="65%">
+                          <apex:outputText style="font-weight:bold" value="{0,date,MM/dd/yyyy}">
+                              <apex:param value="{!editDate}"/>
+                          </apex:outputText>
+                      </td>
+                      <td>
+                          <apex:outputText id="tHours" style="font-weight:bold" value="{!'Total Hours: ' & TEXT(hoursDate)}"/>
+                      </td>
+                  </tr>
+              </table>
+              
+              <apex:pageBlockTable id="grid" value="{!DayWorkLogList}" var="dw" width="100%">
+                   <apex:variable var="positioncount" value="{!positioncount+'|'}"/>
+                  <apex:column >
+                      <apex:facet name="header">Project</apex:facet>
+                      <apex:outputField value="{!dw.WorkLog.Project__c}" rendered="{!NOT(ISBLANK(dw.WorkLog.Project__c))}">
+                          </apex:outputField>
+                      <apex:inputField value="{!dw.WorkLog.Project__c}" rendered="{!AND(NOT(dw.locked),ISBLANK(dw.WorkLog.Project__c))}" onChange="changePicklist(this)">
+                      </apex:inputField>
+                  </apex:column>
+                  <apex:column >
+                      <apex:facet name="header">Project Summary</apex:facet>
+                      <apex:outputText value="{!dw.ProjectSummary}" />
+                      <apex:commandLink style="text-decoration:none" action="{!AddRecord}" value=" " rendered="{!NOT(ISBLANK(dw.WorkLog.Project__c))}" rerender="main">
+                          <apex:image title="Add another line for this project." height="15px" value="{!URLFOR($Resource.MiscImages, 'icon_add.png')}"/>
+                          <apex:param name="ref" value="{!LEN(positioncount)}"/>
+                          <apex:param name="recId" value="{!dw.WorkLog.Project__c}"/>
+                          <apex:param name="summ" value="{!dw.ProjectSummary}"/>
+                      </apex:commandLink>
+                     
+                  </apex:column>
+                  <apex:column >
+                      <apex:facet name="header">Product</apex:facet>
+                      <apex:selectList id="productlist" value="{!dw.selectedProduct}" multiselect="false" size="0" style="width:50%" disabled="{!dw.locked}">
+                          <apex:selectOptions value="{!dw.listProducts}"/>
+                      </apex:selectList>
+                  </apex:column>
+                  <apex:column >
+                      <apex:facet name="header">Hours</apex:facet>
+                      <apex:inputField value="{!dw.WorkLog.Hours_Worked__c}">
+                          <apex:actionSupport event="onchange" action="{!UpdateHoursDate}" rerender="tHours"/>
+                      </apex:inputField>
+                      
+                  </apex:column>
+                  <apex:column >
+                      <apex:facet name="header">Notes</apex:facet>
+						<apex:inputTextarea value="{!dw.WorkLog.WorkNotes__c}" rows="4" style="width:70%"/>
+                      
+                  </apex:column>
+                                            
+              </apex:pageBlockTable>
+              <apex:actionStatus id="mySaveStatus1">
+            
+                     <apex:facet name="stop">
+                         <apex:outputPanel >
+                         
+                          <apex:commandButton action="{!SaveLogEdit}" status="mySaveStatus1" value="Save" rerender="main"/>
+            </apex:outputPanel>
+                     </apex:facet>
+            
+                     <apex:facet name="start">
+            
+                         <apex:outputPanel >
+            
+                               <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+            
+                               <apex:commandButton value="Processing..." status="mySaveStatus1" disabled="true"/>
+            
+                           </apex:outputPanel>
+            
+                       </apex:facet>
+            
+                    </apex:actionStatus>
+              <apex:commandButton action="{!CancelLogEdit}" value="Cancel" rerender="main"/>
+              <apex:commandButton action="{!AddNewProject}" value="Add Project" rerender="main" rendered="{!hideAddProjectButton == FALSE}"/>
+              </apex:outputPanel>
+          </td>
+      </tr>
+  </table>
+  </apex:pageBlock>
+  <apex:actionFunction action="{!changePicklist}" name="callPickListChange" reRender="main"/>
+  </apex:form>
+  <apex:relatedList list="ProcessSteps"/>
+  
+</apex:page>

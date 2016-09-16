@@ -1,0 +1,178 @@
+<apex:page standardController="ChangeControlRequest__c" extensions="CcrViewExtension" title="{!ChangeControlRequest__c.Name}">
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" /> 
+	<apex:includeScript value="/support/console/30.0/integration.js"/>
+    <div class="ptBreadcrumb">
+        &nbsp;«&nbsp;<apex:outputLink value="/a1S"> Back to List: Change Control Requests</apex:outputLink>
+    </div>
+  <apex:detail inlineEdit="true"   />
+  
+    <div id="releaseFormContainer"  style="display:none;" >
+        <apex:form id="releaseForm">
+            <apex:inputField style="width:300px;" id="releaseField" value="{!ChangeControlRequest__c.Release__c}"/>
+            <apex:commandButton value="Save" action="{!save}"/>
+        </apex:form>
+    </div> 
+    <style type="text/css">
+.k-button:hover {
+    text-decoration: none
+}
+
+.k-button {
+    margin-right: .5em;
+    margin-bottom: .5em;
+}
+
+.pbBody a.k-state-selected,.k-state-selected {
+    background-image: none;
+    color: #FFF;
+}
+
+.pbBody a.k-state-selected:hover,.k-state-selecte:hover {
+    color: #005c83;
+}
+
+.k-datetimepicker .k-picker-wrap .k-icon {
+    margin-top: 0.3em;
+}
+
+.k-datepicker .k-picker-wrap .k-icon {
+    margin-top: 4px;
+}
+
+        .pbSubheader{
+        background-image:none !important;
+        background-color:#363940 !important;
+        color:#fff !important;
+        }
+        
+        .hideListButton, .showListButton{
+            background-color:#fff !important;
+        }
+
+span.k-widget.k-datetimepicker.k-header,span.k-widget.k-datepicker.k-header, span.k-widget.k-combobox.k-header
+    {
+    width: 200px;
+}
+</style>
+  <script type="text/javascript">
+  $(document).ready(function(){
+      //console.log(sfdcPage);
+      $('td.inlineEditWrite').dblclick(function(){
+      setTimeout(function(){
+              console.log(sfdcPage);
+              console.log(sfdcPage.domSuffixes[sfdcPage.currentFieldForInlineEditDialog].inlineEditData.currentField.getField());
+              ChangeSelectsIntoButtons();
+              SetupDateTimePickers();
+          }, 
+          50);
+      });
+      
+      
+        $("#releaseFormContainer").kendoWindow({
+            title: "Release",
+            resizable: false
+        });
+        
+   });
+    
+    
+            if (sforce.console.isInConsole()){
+                sforce.console.setTabTitle('{!ChangeControlRequest__c.Name}');
+            }
+   
+   var releaseDataSource = new kendo.data.DataSource({
+                              transport: {
+                                read: function(options){
+                                    Visualforce.remoting.Manager.invokeAction(
+                                          '{!$RemoteAction.CcrViewExtension.ReleaseValueList}',
+                                          '{!ChangeControlRequest__c.Id}',
+                                          function(result,event)
+                                          {
+                                              //console.log(JSON.parse(result));
+                                              if (event.status) {
+                                                  
+                                                  options.success(JSON.parse(result));
+                                                } 
+                                          },
+                                          {escape: false}
+                                   );
+                                }
+                              }
+                            });
+   
+   function OpenReleaseForm(){
+       
+        var release = document.getElementById("{!$Component.releaseForm.releaseField}");
+        $(release).kendoDropDownList({
+            dataSource: releaseDataSource ,
+            optionLabel: " "
+            
+        });
+       $('#releaseFormContainer').data('kendoWindow').center().open();
+   }
+   
+   
+   function SelectButtonClick(selectButton){
+        if($(selectButton).hasClass('k-state-selected')){
+           //$(selectButton).parent().siblings('select').val('');
+            $(selectButton).parent().siblings('select').children('option[value="' + $(selectButton).data('value') + '"]').prop("selected", false); 
+            $(selectButton).removeClass('k-state-selected');
+        }
+        else
+        {
+        $(selectButton).parent().siblings('select').children('option[value="' + $(selectButton).data('value') + '"]').prop("selected", true);
+        //$(selectButton).parent().siblings('select').val($(selectButton).data('value'));
+        if($(selectButton).parent().siblings('select').attr('multiple') !== 'multiple')
+            $(selectButton).siblings().removeClass('k-state-selected');
+        $(selectButton).addClass('k-state-selected');
+        }
+    }
+    function ChangeSelectsIntoButtons()
+    {
+            $('select').each(function(selectIndex, selectElement){
+                if($(selectElement).siblings('div.k-listview').size() == 0 && 
+                    (($(selectElement).children('option[value!=""]').size() < 5 && $(selectElement).siblings('input').size() == 0) ||
+                    ($(selectElement).attr('multiple') === 'multiple' && $(selectElement).is( ":hidden" ))))
+                {
+                    $(selectElement).hide();
+                    $('<div  style="display:block;width:200px;min-width:200px;">').addClass('k-listview').prependTo($(selectElement).parent());
+                    $(selectElement).children('option[value!=""]').each(function(optionIndex, optionElement){
+                        var link = $('<a>')
+                            .addClass('k-button')
+                            .attr('data-value', $(optionElement).attr('value'))
+                            .attr('tabindex', '0')
+                            .click(function(){SelectButtonClick(this);})
+                            .keyup(function(e){if(e.which === 13){ SelectButtonClick(this);}})
+                            .html($(optionElement).html());
+                        $(link).appendTo($(selectElement).siblings('div.k-listview'));
+                            
+                        if($(optionElement).attr('selected') === 'selected' || $(optionElement).text()  === $(selectElement).val())
+                        {
+                            $(link).addClass('k-state-selected');
+                        }
+                    });
+                }
+                else if($(selectElement).siblings('input').size() > 0)
+                {
+                    $(selectElement).hide();
+                }
+            });
+            $('table.multiSelectPicklistTable').hide();  
+    }
+    function SetupDateTimePickers()
+    {
+           $('input[onfocus]').each(function(){
+               var onfocusattr = $(this).attr('onfocus');
+               $(this).removeAttr('data-uidsfdc');
+               $(this).removeAttr('onfocus');
+               if(onfocusattr.indexOf("false") !== -1)
+                   $(this).kendoDatePicker();
+               else
+                   $(this).kendoDateTimePicker();
+           });
+    }
+  </script>
+</apex:page>

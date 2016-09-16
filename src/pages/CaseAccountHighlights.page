@@ -1,0 +1,94 @@
+<apex:page standardController="Case" extensions="CaseAccountHighlightsExtension" sidebar="false" showHeader="false" >
+
+    <apex:styleSheet value="{!URLFOR($Resource.JQuery, 'jquery-ui-themes-1.10.3/themes/black-tie/jquery-ui.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+
+<apex:stylesheet value="{!URLFOR($Resource.CSS, 'acctHighlights.css')}"/>
+    <!-- messages -->
+        <apex:outputPanel id="editPanel">
+            <div style="color:red"><apex:messages id="msg" /></div>
+        </apex:outputPanel>
+
+              <apex:form rendered="{!AND(ISBLANK(Case.TfsWorkItem__c),OR(Case.RecordType.Name = 'Known Issue',Case.RecordType.Name = 'Problem'))}" >
+                  <apex:outputField value="{!Case.Subject}" rendered="false"/>
+                  <apex:outputField value="{!Case.Summary__c}" rendered="false"/>
+                  <apex:outputField value="{!Case.Steps_to_Recreate__c}" rendered="false"/>
+                  <apex:outputField value="{!Case.InternalNotes__c}" rendered="false"/>
+                  <apex:outputField value="{!Case.CaseNumber}" rendered="false"/>
+                  <apex:outputField value="{!Case.ExistsIn__c}" rendered="false"/>
+                  <apex:outputField value="{!Case.FoundBy__c}" rendered="false"/>
+                  <apex:outputPanel styleClass="known-issue-highlight-header banner-strip" style="width:150px;" layout="block" >
+                      <apex:actionStatus id="tfsStatus" layout="block">
+                           <apex:facet name="start">
+                               <apex:image value="/img/loading32.gif" style="height: 15px;"/> (creating TFS item)...
+                           </apex:facet>
+                           <apex:facet name="stop">
+                              <apex:commandLink action="{!CreateTfsItem}" status="tfsStatus" value="Create TFS Item" oncomplete="return refreshPage()"/>
+                           </apex:facet>
+                       </apex:actionStatus>
+                  </apex:outputPanel>
+                  <apex:actionFunction action="{!save}" name="saveFunction"/>
+              </apex:form>
+              
+              <div id="support-instructions" style="display:none;"> 
+                  {!Case.Account.SupportInstructions__c}
+              </div>
+              
+  <c:AccountHighlightComponent currentId="{!Case.AccountId}">
+          <apex:panelGrid styleClass="case-component-container">
+              <apex:outputPanel styleClass="banner-strip account-number" layout="block">
+                  <apex:outputText >{!Case.Owner.Name} </apex:outputText>
+              </apex:outputPanel>
+              <apex:outputPanel styleClass="banner-strip case-status" layout="block">
+                  <apex:outputText >Case Status: {!Case.Status} </apex:outputText>
+              </apex:outputPanel>
+              <apex:outputPanel styleClass="known-issue-highlight-header banner-strip" layout="block" rendered="{!AND(ISBLANK(Case.KnownIssue__c),Case.RecordType.Name = 'Incident')}">
+                  <apex:outputLink target="_parent" value="{!URLFOR($Page.CaseCreateKnownIssue,null,[id = Case.Id,recordType = 'Known Issue',origin = Case.RecordType.Name])}">Create/Search Known Issue</apex:outputLink>
+              </apex:outputPanel>
+              <apex:outputPanel styleClass="known-issue-highlight-header banner-strip" layout="block" rendered="{!NOT(ISBLANK(Case.KnownIssue__c))}">
+                  <apex:outputText >Known Issue: </apex:outputText>&nbsp;
+                  <apex:outputLink target="_parent" value="{!URLFOR($Action.Case.View, Case.KnownIssue__c)}" >{!Case.KnownIssue__r.CaseNumber}</apex:outputLink>
+              </apex:outputPanel>
+              <apex:outputPanel styleClass="problem-highlight-header banner-strip" layout="block" rendered="{!AND(ISBLANK(Case.Problem__c),Case.RecordType.Name = 'Incident')}">
+                  <apex:outputLink target="_parent" value="{!URLFOR($Page.CaseCreateKnownIssue,null,[id = Case.Id,recordType = 'Problem',origin = Case.RecordType.Name])}">Create/Search Problem</apex:outputLink>
+              </apex:outputPanel>
+              <apex:outputPanel styleClass="problem-highlight-header banner-strip" layout="block" rendered="{!NOT(ISBLANK(Case.Problem__c))}">
+                  <apex:outputText >Problem: </apex:outputText>&nbsp;
+                  <apex:outputLink target="_parent" value="{!URLFOR($Action.Case.View, Case.Problem__c)}" >{!Case.Problem__r.CaseNumber}</apex:outputLink>
+              </apex:outputPanel>
+              <apex:outputPanel styleClass="event-highlight-header banner-strip" layout="block" rendered="{!NOT(ISBLANK(Case.ParentId))}">
+                  <apex:outputText >Event: </apex:outputText>&nbsp;
+                  <apex:outputLink target="blank" value="{!URLFOR($Action.Case.View, Case.ParentId)}" >{!Case.Parent.CaseNumber}</apex:outputLink>
+              </apex:outputPanel>
+          </apex:panelGrid>
+    </c:AccountHighlightComponent>
+
+    <script type="text/javascript" >
+        $(document).ready(function () {
+            //SetKendoGrids();
+            $('#support-instructions').kendoWindow({
+                title: 'Support Instructions',
+                resizable: false,
+                width: 800,
+                modal: true
+            });
+            
+            var priorities = '{!Case.Account.SupportMessagePriorities__c}'; 
+            
+            if(priorities.indexOf('{!Case.Priority}') != -1 && !{!Case.IsClosed} && '{!Case.RecordType.Name}' === 'Incident'){
+                $('#support-instructions').data('kendoWindow').center().open();
+            }
+        });
+          
+        function refreshPage()
+        {            
+            var currentURL =  "https://{!URLForPage}/{!Case.Id}";
+            top.location.href = currentURL;
+        }
+    </script>
+    
+<br />
+</apex:page>

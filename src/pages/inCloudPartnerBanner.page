@@ -1,0 +1,6 @@
+<apex:page standardController="Account" >
+<div style="color:#FFFFFF; font-weight:bold; text-align: center; vertical-align: middle; width: 100%; height: 30px; padding: 0px; margin: 0px; background-image:url({!URLFOR($Resource.MiscImages,'incontactHeader.png')}); background-repeat: repeat;">
+inCloud Partner Service Package - self-help only - no access to live support teams. <br></br>
+Access to online help, developer forum, inCloud support email incloudsupport@incontact.com
+</div>
+</apex:page>

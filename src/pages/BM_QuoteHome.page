@@ -1,0 +1,4 @@
+<apex:page standardController="BigMachines_Quote__c" recordSetvar="quoteList">
+    <apex:sectionHeader title="{!$ObjectType.BigMachines_Quote__c.LabelPlural}" subtitle="Home" />
+    <apex:listViews type="BigMachines_Quote__c"/>
+</apex:page>

@@ -1,0 +1,96 @@
+<apex:page standardController="Case" extensions="CaseEventBannerExtension" >
+    
+
+    
+    <apex:form rendered="{!renderForm}" >
+        <apex:outputPanel id="editPanel">
+            <div style="color:red"><apex:messages id="msg" /></div>
+        </apex:outputPanel>
+        <apex:actionFunction action="{!ChatRoomEmail}" name="chatEmailConfirm" oncomplete="return refreshPage();" immediate="true"/>
+        <apex:actionFunction action="{!SyncChildPriority}" name="syncChild" oncomplete="return refreshPage();"/>
+        <apex:inputHidden value="{!Case.RecordType.Name}"/>
+        <apex:outputField rendered="false" value="{!Case.Owner.Name}"/>
+        <apex:inputHidden value="{!Case.EventType__c}"/>
+        <apex:inputHidden value="{!Case.SendChatRoomEmail__c}"/>
+        <apex:inputHidden value="{!Case.Priority}"/>
+        <div style="text-align:center;width:83%">
+            <apex:commandButton action="{!Blank}" value="Confirm/Reject" immediate="true"  oncomplete="return confirmPage();" rendered="{!IF(Case.Status='Suspected',TRUE,FALSE)}"/>
+            <apex:commandButton action="{!Blank}" value="Change Status/Public Comment" immediate="true"  oncomplete="return statusPage();" rendered="{!IF(OR(Case.Status='Closed',Case.Status='Suspected',Case.RecordType.Name != 'Event'),FALSE,TRUE)}"/>
+            <apex:commandButton action="{!Blank}" value="Close Event" immediate="true"  oncomplete="return closePage();" rendered="{!IF(OR(Case.Status='Closed',Case.Status='Suspected',Case.RecordType.Name!='Event'),FALSE,TRUE)}"/>
+            <apex:commandButton action="{!Blank}" value="Send Notification" immediate="true"  oncomplete="return notificationPage();" rendered="{!IF(AND(Case.IsClosed=false,NOT(Case.Status='Suspected'),allowNotifications),TRUE,FALSE)}"/>
+            <apex:commandButton action="{!Blank}" value="Chat Room Email" onclick="return chatEmail();" rendered="{!IF(AND(NOT(Case.IsClosed),Case.RecordType.Name='Event'),TRUE,FALSE)}"/>
+            <apex:commandButton action="{!Blank}" value="Sync Priority" onclick="return prioritySync();" rendered="{!IF(AND(NOT(Case.IsClosed),Case.RecordType.Name='Event'),TRUE,FALSE)}"  oncomplete="return refreshPage();"/>
+            <apex:commandButton action="{!Blank}" value="Reopen Event" immediate="true"  oncomplete="return statusPage();" rendered="{!IF(AND(Case.Status='Closed',Case.RecordType.Name = 'Event'),TRUE,FALSE)}"/>
+            <apex:commandButton action="{!Blank}" value="Create/Search Problem" immediate="true"  oncomplete="return problemPage();" rendered="{!ISBLANK(Case.Problem__c)}"/>
+        </div>
+    </apex:form>
+    
+    <script type="text/javascript" >
+          
+        function refreshPage()
+        {            
+            var currentURL =  "https://{!URLForPage}/{!Case.Id}";
+            top.location.href = currentURL;
+        }
+        
+        function chatEmail()
+        {
+            var r=confirm("Are you sure you want to send the chat room email?");
+            if(r==true)
+            {
+                chatEmailConfirm();
+                var currentURL =  "https://incontact.adobeconnect.com/eventchatroom";
+                window.open(currentURL);
+            }
+        }
+        
+        function prioritySync()
+        {
+            var r=confirm("Are you sure you want to sync the child case priorities?");
+            if(r==true)
+            {
+                syncChild();
+            }
+        }
+        
+        function chatComplete()
+        {
+            var currentURL =  "https://incontact.adobeconnect.com/eventchatroom";
+            window.open(currentURL);
+            refreshPage();
+        }
+        
+                
+        function confirmPage()
+        {            
+            var currentURL =  "https://{!URLForPage}/apex/CaseConfirmEvent?id={!Case.Id}&retURL={!Case.Id}";
+            top.location.href = currentURL;
+        }
+        
+        function statusPage()
+        {            
+            var currentURL =  "https://{!URLForPage}/apex/CaseEventStatusChange?id={!Case.Id}&retURL={!Case.Id}";
+            top.location.href = currentURL;
+        }
+        
+        function closePage()
+        {            
+            var currentURL =  "https://{!URLForPage}/apex/CaseEventClose?id={!Case.Id}&retURL={!Case.Id}";
+            top.location.href = currentURL;
+        }
+        
+        function notificationPage()
+        {            
+            var currentURL =  "https://{!URLForPage}/apex/CaseEventNotification?id={!Case.Id}&retURL={!Case.Id}";
+            top.location.href = currentURL;
+        }
+        
+        function problemPage()
+        {            
+            var currentURL =  "{!URLFOR($Page.CaseCreateKnownIssue,null,[id = Case.Id,recordType = 'Problem',origin = Case.RecordType.Name])}";
+            top.location.href = currentURL;
+        }
+        
+    </script>
+
+</apex:page>

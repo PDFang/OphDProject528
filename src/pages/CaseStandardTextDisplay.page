@@ -1,0 +1,35 @@
+<apex:page standardController="Case"  extensions="CaseIncidentPage" showChat="false" >
+<style>
+    .btnHolder {
+        text-align: center;
+    }
+
+    .btn {
+        display: none;
+    }
+    
+    .datePicker {
+        top:10px !important;
+    }
+    
+    
+</style>
+    <apex:outputField value="{!Case.AccountId}" rendered="false"/>
+    <apex:outputField value="{!Case.Request_Type__c}" rendered="false"/>
+    <apex:form >
+    <apex:pageBlock mode="inlineEdit" id="form">
+         <apex:outputPanel styleClass="btnHolder" layout="block">
+             <apex:commandButton action="{!SaveInline}" id="saveButton" value="Save" />
+             <apex:commandButton action="{!CancelInline}" id="inlineEditCancel" value="Cancel"/>
+         </apex:outputPanel>
+          <apex:pageBlockSection columns="2" title="Standard Text (Double click field value to edit.)" collapsible="false" >
+              
+                          <apex:inlineEditSupport showOnEdit="saveButton, inlineEditCancel" 
+                        event="ondblclick" changedStyleClass="myBoldClass" resetFunction="resetInlineEdit()"/>
+                  <apex:repeat value="{!ActiveSet}" var="f">
+                      <apex:outputField value="{!c[f]}"/>
+                  </apex:repeat>
+          </apex:pageBlockSection>
+    </apex:pageBlock>
+    </apex:form>
+</apex:page>

@@ -1,0 +1,7 @@
+<apex:page standardController="Quote_Item__c">
+
+<apex:pageMessage summary="Quote items can not be edited or deleted once a quote is created. Please go back to the opportunity, edit the product, and create a new quote." 
+severity="error" strength="3" />
+
+
+</apex:page>

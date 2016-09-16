@@ -1,0 +1,80 @@
+<apex:component controller="QuoteSectionTemplateClass">
+  <apex:attribute name="Subtotal_Software" type="Decimal" description=""/>
+  <apex:attribute name="Subtotal_Hardware" type="Decimal" description=""/>
+  <apex:attribute name="Subtotal_Services" type="Decimal" description=""/>
+  <apex:attribute name="Subtotal_Other" type="Decimal" description=""/>
+  <apex:attribute name="Subtotal_AMC" type="Decimal" description=""/>
+  <apex:attribute name="Subtotal_Total" type="Decimal" description=""/>
+  <apex:attribute name="IsDistributorQuote" type="Boolean" description=""/>
+  <apex:attribute name="Subtotal_Software_List" type="Decimal" description=""/>
+  <apex:attribute name="Subtotal_Hardware_List" type="Decimal" description=""/>
+  <apex:attribute name="Subtotal_Services_List" type="Decimal" description=""/>
+  <apex:attribute name="Subtotal_Other_List" type="Decimal" description=""/>
+  <apex:attribute name="Subtotal_AMC_List" type="Decimal" description=""/>
+  <apex:attribute name="Subtotal_Total_List" type="Decimal" description=""/>
+
+<tr style="page-break-after:auto"><td style="border:0px" colspan="9">&nbsp;<br/></td></tr>
+
+
+
+
+         <div class="chapterArea">
+             <div class="h1Totals">
+               Totals 
+             </div>
+             <div class="sectionArea">
+                <table cellspacing="0" cellpadding="0">
+                  <tr>
+                    <th scope="col" class="itemCategory"><span class="h3">Item Category</span></th>
+                    <th scope="col" class="totalListPrice"><span class="h3">List Price</span></th>
+                    <th scope="col" class="totalTotal"><span class="h3">Total</span></th>
+                  </tr>
+                  <apex:outputText Rendered="{!NOT(ISBLANK(Subtotal_Software))}">
+                  <tr>
+                    <td class="itemCategory">Software</td>
+                    <td class="totalListPrice"><c:PriceFormattingHack Subtotal="{!Subtotal_Software_List}"/></td>
+                    <td class="totalTotal"><c:PriceFormattingHack Subtotal="{!Subtotal_Software}"/></td>
+                  </tr>
+                  </apex:outputText>
+                  <apex:outputText Rendered="{!NOT(ISBLANK(Subtotal_Services))}">
+                  <tr>
+                    <td class="itemCategory">Services</td>
+                    <td class="totalListPrice"><c:PriceFormattingHack Subtotal="{!Subtotal_Services_List}"/></td>
+                    <td class="totalTotal"><c:PriceFormattingHack Subtotal="{!Subtotal_Services}"/></td>
+                  </tr>
+                  </apex:outputText>
+                  <apex:outputText Rendered="{!NOT(ISBLANK(Subtotal_Hardware))}">
+                  <tr>
+                    <td class="itemCategory">Hardware</td>
+                    <td class="totalListPrice"><c:PriceFormattingHack Subtotal="{!Subtotal_Hardware_List}"/></td>
+                    <td class="totalTotal"><c:PriceFormattingHack Subtotal="{!Subtotal_Hardware}"/></td>
+                  </tr>
+                  </apex:outputText>
+                  <apex:outputText Rendered="{!NOT(ISBLANK(Subtotal_AMC))}">
+                  <tr>
+                    <td class="itemCategory">Annual Maintenance Contract (AMC)</td>
+                    <td class="totalListPrice"><c:PriceFormattingHack Subtotal="{!Subtotal_AMC_List}"/></td>
+                    <td class="totalTotal"><c:PriceFormattingHack Subtotal="{!Subtotal_AMC}"/></td>
+                  </tr>
+                  </apex:outputText>
+                  <apex:outputText Rendered="{!NOT(ISBLANK(Subtotal_Other))}">
+                  <tr>
+                    <td class="itemCategory">Other
+            
+                    </td>
+                    <td class="totalListPrice"><c:PriceFormattingHack Subtotal="{!NULLVALUE(Subtotal_Other_List,0)}"/></td>
+                    <td class="totalTotal"><c:PriceFormattingHack Subtotal="{!NULLVALUE(Subtotal_Other,0)}"/></td>
+                  </tr>
+                  </apex:outputText>
+                  <tr>
+                    <td class="itemCategory"><span class="h3">Total:</span></td>
+                    <td class="totalListPrice"><span class="h3"><c:PriceFormattingHack Subtotal="{!Subtotal_Total_List}"/></span></td>
+                    <td class="totalTotal"><span class="h3"><c:PriceFormattingHack Subtotal="{!Subtotal_Total}"/></span></td>
+                  </tr>
+              </table>
+            </div>
+         </div>
+         
+         
+
+</apex:component>

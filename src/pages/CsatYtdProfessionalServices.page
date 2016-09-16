@@ -1,0 +1,3 @@
+<apex:page controller="InContactCsat">
+<img src="{!ProfessionalServicesYearToDate}" width="250" height="240" alt="ProfessionalServices Surveys Year To Date" />
+</apex:page>

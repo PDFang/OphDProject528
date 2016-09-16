@@ -1,0 +1,73 @@
+<apex:page standardController="Case" tabStyle="Case" standardStylesheets="false" extensions="CaseEventAccountsExtension">
+    
+    <apex:outputPanel id="editPanel">
+        <div style="color:red"><apex:messages id="msg" /></div>
+    </apex:outputPanel>
+    <!-- hidden fields -->
+    <apex:outputField rendered="false" value="{!Case.ProductImpacted__c}"/>
+    <apex:outputField rendered="false" value="{!Case.PlatformsImpacted__c}"/>
+    <apex:form >
+        <apex:pageblock id="asBlock" rendered="{!acctIncidents.size > 0}">
+
+            <apex:commandButton action="{!AssociatedBeginning}" title="Beginning" value="<<" disabled="{!cec.disablePrevious}" reRender="asBlock"/>
+        <apex:commandButton action="{!AssociatedPrevious}" title="Previous" value="<" disabled="{!cec.disablePrevious}" reRender="asBlock"/>
+        <apex:commandButton action="{!AssociatedNext}" title="Next" value=">" disabled="{!cec.disableNext}" reRender="asBlock"/>
+        <apex:commandButton action="{!AssociatedEnd}" title="End" value=">>" disabled="{!cec.disableNext}" reRender="asBlock"/>
+
+
+        {!cec.Total_size} records
+          <!--  <apex:outputpanel id="paginationpanel">
+                <div style="position:relative; width:100% height:30px; text-align:left;" class="paginator">
+                    <div style="margin:0 auto; width:auto; text-align:center;">
+                        <div style="padding-bottom:3px;" id="spnPageNumberRate">Showing {!(firstPage/currentPageCount + 1)} Of {!lastPage} Pages</div>
+                        <apex:outputtext rendered="{!FirstPage/currentPageCount  != 0}" style="padding-bottom: 3px;">
+                            <apex:commandlink action="{!firstPageS}" status="processingImg" style="text-decoration:none;" rerender="asBlock, paginationpanel">
+                                <img src="/s.gif" class="first" />
+                            </apex:commandlink>
+                            &nbsp;
+                            <apex:commandlink action="{!previousPage}" status="processingImg" style="text-decoration:none;" rerender="asBlock, paginationpanel">
+                                <img src="/s.gif" class="prev" />
+                                Previous
+                            </apex:commandlink>
+                            &nbsp;
+                        </apex:outputtext>
+                        <apex:outputtext rendered="{!(firstPage/currentPageCount + 1) != lastPage}" style="padding-bottom: 3px;">
+                            <apex:commandlink action="{!nextPage}" status="processingImg" style="text-decoration:none;" rerender="asBlock, paginationpanel">
+                                Next
+                                <img src="/s.gif" class="next" />
+                            </apex:commandlink>
+                            <apex:commandlink action="{!lastPage}" status="processingImg" style="text-decoration:none;" rerender="asBlock, paginationpanel">
+                                <img src="/s.gif" class="last" />
+                            </apex:commandlink>
+                        </apex:outputtext>
+                    </div>
+
+                </div>
+            </apex:outputpanel> -->
+            <br />
+            <apex:pageblocktable value="{!acctIncidents}" var="a">
+                <apex:column >
+                    <apex:facet name="header">Account Number</apex:facet>
+                    <apex:outputlink target="_blank" value="/{!a.acct.Id}">{!TEXT(a.acct.CadebillAccountNo__c)}</apex:outputlink>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Account Name</apex:facet>
+                    <apex:outputlink target="_blank" value="/{!a.acct.Id}"><apex:outputfield value="{!a.acct.Name}" /></apex:outputlink>
+                </apex:column>
+                <apex:column headervalue="InContact Cluster" value="{!a.acct.inContact_Cluster__c}" />
+                <apex:column headervalue="Verint Cluster" value="{!a.acct.Verint_Cluster__c}" />
+                <apex:column >
+                    <apex:facet name="header">Incident</apex:facet>
+                    <apex:outputlink target="_blank" value="/{!a.childCase.Id}"><apex:outputfield value="{!a.childCase.CaseNumber}" /></apex:outputlink>
+                </apex:column>
+                <!--<apex:facet name="footer">Showing Page {!cec.pageNumber} of {!cec.totalPages}</apex:facet>-->
+            </apex:pageblocktable>
+
+        </apex:pageblock>
+        <apex:outputpanel rendered="{!acctIncidents.size == 0}" style="font-size:medium;padding-top:2em;">No Associated Accounts to show</apex:outputpanel>
+
+
+    </apex:form>
+
+
+</apex:page>

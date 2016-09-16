@@ -1,0 +1,20 @@
+<apex:page standardController="Project__c" extensions="ProjectReassignExtension">
+  <apex:form >
+      <apex:pageBlock >
+          <apex:pageBlockSection columns="1" >
+              <apex:outputField value="{!Project__c.Name}"/>
+              <apex:outputField value="{!Project__c.Summary__c}"/>              
+              <apex:inputField value="{!Project__c.OwnerId}">
+              <apex:commandLink action="{!AssignCurrentUser}" value="Assign to me"/>
+              </apex:inputField>
+          </apex:pageBlockSection>
+          <apex:pageBlockSection >
+              <apex:inputTextarea style="width:400px" rows="8" label="Project Comment" value="{!commentText}"/>
+          </apex:pageBlockSection>
+          <apex:pageBlockButtons >
+              <apex:commandButton action="{!Save}" value="Save"/>
+              <apex:commandButton action="{!Cancel}" value="Cancel"/>              
+          </apex:pageBlockButtons>
+      </apex:pageBlock>
+  </apex:form>
+</apex:page>

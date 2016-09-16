@@ -1,0 +1,66 @@
+<apex:component Controller="AccountStructure">
+<apex:includeScript value="/support/console/28.0/integration.js"/>
+<style type="text/css">
+    .current-node{
+        font-weight:bold;
+    {
+    .disconnect{
+        color: #999999;
+    }
+</style>
+    <apex:attribute name="accountId" description="This is the Account Id for displaying Acccount Hierarchy" type="String" required="true" assignTo="{!currentId}"/>
+             <apex:repeat value="{!ObjectStructure}" var="pos" >
+            <apex:repeat value="{!pos.levelFlag}" var="flag" first="0">
+                <apex:image url="/img/tree/empty.gif" height="16" width="20" rendered="{!IF(flag,false,true)}"/>
+                <apex:image url="/s.gif" alt="" width="3" height="16" rendered="{!IF(flag,true,false)}"/>
+                <apex:image url="/img/tree/chain.gif" height="16" width="20" rendered="{!IF(flag,true,false)}"/>
+            </apex:repeat>
+
+            <span height="16" v="top">
+
+            <apex:outputText rendered="{!IF(pos.nodeType=='start',true,false)}">
+                <apex:image id="Icon_start" url="/img/icon/custom51_100/globe16.png" width="16" height="16" rendered="{!IF(pos.currentNode,false,true)}"/>
+            </apex:outputText>
+            <apex:outputText rendered="{!IF(OR(pos.nodeType=='parent',pos.nodeType=='parent_end'),true,false)}">
+                <apex:image id="Tree_parent" url="/img/tree/minus.gif" rendered="{!IF(pos.nodeType=='parent',true,false)}" height="16" width="20" title="Click to expand/collapse nested items." onClick="TreeNodeElement.prototype.toggle(this,'{!pos.nodeId}')"/>
+                <apex:image id="Tree_parent_end" url="/img/tree/minusEnd.gif" rendered="{!IF(pos.nodeType=='parent_end',true,false)}" height="16" width="20" title="Click to expand/collapse nested items." onClick="TreeNodeElement.prototype.toggle(this,'{!pos.nodeId}')"/>                
+                <apex:image id="Icon_parent" url="/img/icon/factory16.png" width="16" height="16" rendered="{!IF(pos.currentNode,false,true)}"/>
+                <apex:image id="Icon_parent_current" url="/img/icon/star16.png" width="16" height="16" rendered="{!IF(pos.currentNode,true,false)}"/>
+            </apex:outputText>
+            <apex:outputText rendered="{!IF(OR(pos.nodeType=='child',pos.nodeType=='child_end'),true,false)}">
+                <apex:image id="Tree_child" url="/img/tree/node.gif" rendered="{!IF(pos.nodeType=='child',true,false)}" height="16" width="20" title="Click to expand/collapse nested items." onClick="TreeNodeElement.prototype.toggle(this,'{!pos.nodeId}')"/>
+                <apex:image id="Tree_child_current" url="/img/tree/nodeEnd.gif" rendered="{!IF(pos.nodeType=='child_end',true,false)}" height="16" width="20" title="Click to expand/collapse nested items." onClick="TreeNodeElement.prototype.toggle(this,'{!pos.nodeId}')"/>
+                <apex:image id="Icon_child" url="/img/account.gif" width="16" height="16" rendered="{!IF(pos.currentNode,false,true)}"/>    
+                <apex:image id="Icon_child_current" url="/img/icon/star16.png" width="16" height="16" rendered="{!IF(pos.currentNode,true,false)}"/>
+            </apex:outputText>
+            <apex:outputText rendered="{!IF(pos.nodeType=='end',true,false)}">
+                <apex:image id="Tree_end" url="/img/tree/nodeEnd.gif" height="16" width="20"/>&nbsp;
+                <apex:image id="Icon_end" url="/img/account.gif" width="16" height="16" rendered="{!IF(pos.currentNode,false,true)}"/>
+                <apex:image id="Icon_end_current" url="/img/icon/star16.png" width="16" height="16" rendered="{!IF(pos.currentNode,true,false)}"/>
+            </apex:outputText>
+<!-- Change Below -->
+            <apex:outputText styleClass="{!IF(pos.currentNode,'current-node ','')&IF(NOT(ISBLANK(pos.account.CG_Disconnect_Date__c)),'disconnect','')}" value="{!pos.account.CadebillAccountNo__c}, " rendered="{!NOT(ISBLANK(pos.account.CadebillAccountNo__c))}"/>  
+            <apex:outputPanel rendered="{!NOT(pos.CurrentNode)}" >
+                <a href="javascript:sforce.console.openPrimaryTab(null,'/{!pos.account.id}',true,'{!pos.account.name}');">{!pos.account.name}</a>
+                <!-- a href="#" onclick="srcUp('{!pos.account.id}');return false">{!pos.account.name}</a -->
+            </apex:outputPanel>
+            <apex:outputPanel styleClass="current-node {!IF(NOT(ISBLANK(pos.account.CG_Disconnect_Date__c)),'disconnect','')}" rendered="{!pos.CurrentNode}" >
+                {!pos.account.name}
+            </apex:outputPanel>
+            <apex:outputText styleClass="{!IF(pos.currentNode,'current-node ','')&IF(NOT(ISBLANK(pos.account.CG_Disconnect_Date__c)),'disconnect','')}" value=", {!pos.account.Partner_Agent_ID__c}" rendered="{!NOT(ISBLANK(pos.account.Partner_Agent_ID__c))}"/>
+            <apex:outputText styleClass="{!IF(pos.currentNode,'current-node ','')&IF(NOT(ISBLANK(pos.account.CG_Disconnect_Date__c)),'disconnect','')}" value=", {!pos.account.SubAgentName__c}" rendered="{!NOT(ISBLANK(pos.account.SubAgentName__c))}"/>
+
+<!-- Include the following if you uses sites with accounts -->
+<!--            <apex:outputText style="{!IF(pos.currentNode,'font-weight: bold;','')}" value=", {!pos.account.Site}"/>-->
+
+            
+            <apex:outputText styleClass="{!IF(pos.currentNode,'current-node ','')&IF(NOT(ISBLANK(pos.account.CG_Disconnect_Date__c)),'disconnect','')}" value=", {!pos.account.ShippingState}" rendered="{!NOT(AND(ISBLANK(pos.account.ShippingState),ISBLANK(pos.account.ShippingPostalCode)))}"/>&nbsp;
+            
+<!-- Stop -->
+            </span>
+            <div> </div>           
+
+    </apex:repeat>
+    
+    
+</apex:component>

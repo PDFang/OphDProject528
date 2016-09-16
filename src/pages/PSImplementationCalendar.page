@@ -1,0 +1,63 @@
+<apex:page controller="PSImplementationCalendarController">
+    <apex:stylesheet value="{!URLFOR($Resource.CalendarCSS, 'calendar.css')}"/>
+    <apex:form id="calform" >
+        <apex:pageBlock mode="maindetails" title="PS Implementation Calendar" >
+                Click date to see details.
+                <table>
+                    <tr>
+                        <td>
+                            <table class="calendar">
+                                <tr>
+                                    <th width="75px"><apex:commandLink action="{!SubtractMonth}" rerender="calform" value="<<" /></th>
+                                    <th>{!MonthString}</th>
+                                    <th width="75px"><apex:commandLink action="{!AddMonth}" rerender="calform" value=">>" /></th>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"><apex:outputText escape="false" value="{!calendarControl}"/></td>
+                                </tr>
+                            </table>
+                        </td>
+                      </tr>
+                </table>
+           </apex:pageBlock>    
+   </apex:form>
+   <apex:form id="detailForm">
+           <apex:pageBlock id="details" mode="maindetails" rendered="{!RenderList}">
+               <apex:pageBlockSection >
+                   <apex:outputText value="{0,date,MM/dd/yyyy}">
+                       <apex:param value="{!selectedDate}" />
+                   </apex:outputText>
+               </apex:pageBlockSection>
+               <apex:pageBlockTable value="{!selectedOpps}" var="o">
+                   <apex:column value="{!o.AccountId}"/>
+                   <apex:column headerValue="Opportunity"  >               
+                        <a id="{!o.Id}"
+                            onmouseover="LookupHoverDetail.getHover('{!o.Id}', '/{!o.Id}/m?retURL={!o.Id}&isAjaxRequest=1').show();"
+                            onmouseout="LookupHoverDetail.getHover('{!o.Id}').hide();"
+                            onfocus="LookupHoverDetail.getHover('{!o.Id}', '/{!o.Id}/m?retURL={!o.Id}&isAjaxRequest=1').show();"
+                            onblur="LookupHoverDetail.getHover('{!o.Id}').hide();"
+                            href="/{!o.Id}"> 
+                            {!o.Name}
+                        </a>           
+                    </apex:column>
+                    <apex:column headerValue="Products">
+                        <apex:panelGrid columns="1">
+                            <apex:outputText value="inContact" rendered="{!o.inContact__c = 'YES'}"/>
+                            <apex:outputText value="WFM" rendered="{!o.WFM__c = 'YES'}"/>
+                            <apex:outputText value="WFO" rendered="{!o.WFO__c = 'YES'}"/>
+                            <apex:outputText value="Quality Management" rendered="{!o.Quality_Management__c= 'YES'}"/>
+                            <apex:outputText value="Screen Recording" rendered="{!o.Screen__c= 'YES'}"/>
+                            <apex:outputText value="Virtual PBX" rendered="{!o.Virtual_PBX__c= 'YES'}"/>
+                            <apex:outputText value="ECHO" rendered="{!o.ECHO__c= 'YES'}"/>
+                            <apex:outputText value="Hiring" rendered="{!o.Hiring__c= 'YES'}"/>
+                        </apex:panelGrid>
+                    </apex:column>
+                   <apex:column value="{!o.Total_MRC_Min__c}"/>
+                   <apex:column value="{!o.PSConsultant__c}"/>
+               </apex:pageBlockTable>
+           </apex:pageBlock>
+           <apex:actionFunction name="UpdateOpps" action="{!UpdateSelectedOpps}" rerender="detailForm">
+                <apex:param name="firstParam" assignTo="{!selectedDate}" value="" />
+            </apex:actionFunction>
+    </apex:form>
+</apex:page>

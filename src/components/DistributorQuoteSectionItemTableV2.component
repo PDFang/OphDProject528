@@ -1,0 +1,102 @@
+<apex:component controller="QuoteSectionTemplateClass">
+  <apex:attribute name="HasCustomerDiscount" type="Boolean" description=""/>
+  <apex:attribute name="HasDistributorDiscount" type="Boolean" description=""/>
+  <apex:attribute name="IsDistributorQuote" type="Boolean" description=""/>
+  <apex:attribute name="SectionName" type="String" description=""/>
+  <apex:attribute name="Subtotal" type="Decimal" description=""/>
+  <apex:attribute name="SectionCategory1" type="String" description=""/>
+  <apex:attribute name="SectionCategory2" type="String" description=""/>
+  <apex:attribute name="SectionNotes" type="String" description=""/>
+  <apex:attribute name="Items" type="Quote_Item__c[]" description=""/>
+  
+  <apex:outputText Rendered="{!NOT(ISBLANK(Subtotal))}">
+  
+    <table border="0"><tr><td>
+            <div class="sectionArea">
+              <div class="h2">
+                   {!SectionName}
+              </div>              
+              <table cellspacing="0" cellpadding="0">        
+              <tr>
+                    <th scope="col" class="item"><span class="h3">Item</span></th>
+                    <th scope="col" class="item"><span class="h3">Code</span></th>
+                    <th scope="col" class="desc" width="450"><span class="h3">Description</span></th>
+                    <th scope="col" class="qty"><span class="h3">Qty</span></th>
+                    <th scope="col" class="listPrice"><span class="h3">List<br/>Price</span></th>              
+<apex:outputText rendered="{!HasDistributorDiscount}"><th scope="col" class="discount"><span class="h3">Distributor<br/>Discount</span></th></apex:outputText>
+<apex:outputText rendered="{!HasCustomerDiscount}"><th scope="col" class="discount"><span class="h3">Additional<br/>Discount</span></th></apex:outputText>
+                    <th scope="col" class="net"><span class="h3">Net Price</span></th>
+                    <th scope="col" class="total"><span class="h3">Total</span></th>
+              </tr>
+              
+              
+              <apex:variable var="rowclass" value="rwhite" />
+                <apex:repeat value="{!Items}" var="line"> 
+                 <apex:OutputText Rendered="{!OR(line.product__r.Category__c==SectionCategory1,line.product__r.Category__c==SectionCategory2)}">
+                    <apex:variable var="rowclass" value="{!IF(rowclass=='rblue', 'rwhite', 'rblue')}" />
+                  <tr class="{!rowclass}">
+                    <td class="item"><apex:outputField value="{!line.product__r.name}"/></td>
+                    <td class="item"><apex:outputField value="{!line.product__r.Product_ID__c}"/></td>
+                    <td class="desc" width="450"><apex:outputField value="{!line.Description__c}"/></td>
+                    <td class="qty"><apex:outputField value="{!line.Quantity__c}"/></td>
+                    <td class="listPrice"><apex:outputField value="{!line.Adjusted_List__c}"/></td>
+                    
+                    
+                    <apex:outputText rendered="{!OR(HasDistributorDiscount,line.Sell_At_Cost__c)}">
+                    <td class="discount">
+                      <apex:outputText rendered="{!line.Sell_At_Cost__c}">COST</apex:outputText>
+                      <apex:outputText rendered="{!HasDistributorDiscount}"><apex:outputField value="{!line.Distributor_Discount__c}"/></apex:outputText>
+                    </td>
+                    </apex:outputText>
+
+<apex:outputText rendered="{!HasCustomerDiscount}">
+  <td class="discount">
+    <apex:outputField value="{!line.Discount__c}" rendered="{!NOT(line.Sell_At_Cost__c)}"/>
+    <apex:outputText rendered="{!line.Sell_At_Cost__c}">COST</apex:outputText>
+  </td>
+</apex:outputText>
+
+
+
+                    <td class="net"><apex:outputField value="{!line.Unit_Price__c}"/></td>
+                    <td class="total"><apex:outputField value="{!line.Total_Price__c}"/></td>
+                  </tr>
+
+                 </apex:OutputText>
+                 
+                </apex:repeat>
+              </table>
+              
+              
+              <div class="subtotalBar"></div>
+              <table cellspacing="0" cellpadding="0">
+                <tr>
+                    <td class="item"><span class="h3">Subtotal:</span></td>
+                    <td class="desc">&nbsp;</td>
+                    <td class="qty">&nbsp;</td>
+                    <td class="listPrice">&nbsp;</td>
+                    <td class="discount">&nbsp;</td>
+                    <td class="net">&nbsp;</td>
+                    <td class="total">                 
+                      <apex:outputText rendered="{!HasDistributorDiscount}" ></apex:outputText>
+                      <apex:outputText rendered="{!AND(HasCustomerDiscount,NOT(HasDistributorDiscount))}" ></apex:outputText>
+                      <apex:outputText rendered="{!AND(NOT(HasCustomerDiscount),NOT(HasDistributorDiscount))}" ></apex:outputText>
+
+                      <c:PriceFormattingHack Subtotal="{!Subtotal}"/>
+
+                      <apex:outputText rendered="{!HasDistributorDiscount}"></apex:outputText>
+                      <apex:outputText rendered="{!AND(HasCustomerDiscount,NOT(HasDistributorDiscount))}"></apex:outputText>
+                      <apex:outputText rendered="{!AND(NOT(HasCustomerDiscount),NOT(HasDistributorDiscount))}"></apex:outputText>
+                    </td>
+                </tr>
+              </table>
+              
+              
+              <div class="notes">
+                <span class="h3">Notes:&nbsp;&nbsp;{!SectionNotes}</span>
+              </div>
+</div>
+</td></tr></table>
+</apex:outputText>
+
+</apex:component>

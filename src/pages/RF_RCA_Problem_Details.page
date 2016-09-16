@@ -1,0 +1,112 @@
+<apex:page sidebar="false" showHeader="false" doctype="html-5.0" controller="FetchRCAData" label="{!currentRecordId}">
+                                                                            
+<html>
+<body>
+<div style="background-color: #555D63;">
+      <a href="http://www.incontact.com">
+      <apex:image id="theImage" value="{!$Resource.RF_inContact_Header}"  height="90" width="100%" />
+      </a> 
+</div>
+</body>
+</html>
+                                            
+<script type="text/javascript">
+
+function closeWin() {
+
+         window.close();   // Closes the new window
+        
+        }
+</script>        
+
+    <apex:form >
+    <div id="mainDiv" style="border-size:1px; border-style:solid; border-color:orange;" >
+    <apex:pageBlock title=" RCA Details">
+     
+     <apex:pageMessages id="errmsg" >
+     
+    </apex:pageMessages>
+          
+    <apex:pageBlockSection columns="1" >
+ 
+    <apex:inputField label="inContact Problem Number:"   value="{!PRB.Name}"/> 
+    
+    <br/>
+    <br/>
+    <apex:outputField label="Event Start Date:"  value="{!PRB.RF_Event_Start_Date_Time__c}"/>  
+    
+    <br/>
+    <br/>
+    <apex:outputField label="Event End Date:"  value="{!PRB.RF_Event_End_Date_Time__c}"/>
+    
+    <br/>
+    <br/>
+    <apex:outputField label="Discovery Source of Problem:" value="{!PRB.RF_Discovery_Source_of_Problem__c}"/>
+    
+    <apex:outputField label="Customer Impact:" value="{!PRB.RF_Customer_Impact__c}"/> 
+    
+    <br/>
+    <br/>
+    <apex:outputField label="Incident Resolution:" value="{!PRB.RF_Incident_Resolution__c}"/> 
+    
+    <br/>
+    <br/>
+    <apex:outputField label="Risk of Re-Occurence:" value="{!PRB.RF_Risk_of_Reoccurrence__c}"/> 
+    
+    <br/>
+    <br/>
+    <apex:outputField label="Root Cause:" value="{!PRB.RF_Root_Cause__c}"/> 
+    
+    <br/>
+    <br/>
+    <apex:outputField label="Remediation:" value="{!PRB.RF_Remediation__c}"/> 
+    
+    <br/>
+    <br/>
+    <apex:outputField label="Remediation Status:" value="{!PRB.RF_Remediation_Status__c}"/> 
+    
+    <br/>
+    <br/>
+    <apex:outputField label="Status:" value="{!PRB.BMCServiceDesk__FKStatus__c}"/> 
+    
+    <br/>
+    <br/>
+    <apex:outputField label="Current User's Email Address:" value="{!currentuser.Email}" id="email" rendered="false"/>
+       
+    </apex:pageBlockSection>
+     
+    </apex:pageBlock>
+     
+    </div>
+     
+     <br/>       
+        <div align="center">
+        <apex:actionStatus id="go">
+
+ <apex:facet name="stop">                
+
+   <apex:commandButton value="Email as PDF" action="{!sendPdf}" status="go" disabled="false" rerender="go,errmsg"/>
+
+ </apex:facet>
+
+ <apex:facet name="start">
+
+    <apex:commandButton status="go" value="Sending Mail..." disabled="true" />
+
+  </apex:facet>
+
+ </apex:actionStatus> 
+ 
+ <apex:commandButton value="Close" onclick="closeWin();" style="align:center;"/> 
+        
+        </div> 
+       
+      <br/>
+      <br/> 
+      <div align="right">
+      <font size="2" color="#406150" face="Verdana, Geneva, sans-serif">&copy; {!YEAR(TODAY())} inContact, Inc. All rights reserved.</font>
+      </div>  
+ 
+ </apex:form>   
+
+</apex:page>

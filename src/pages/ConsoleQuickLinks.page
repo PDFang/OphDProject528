@@ -1,0 +1,33 @@
+<apex:page controller="ConsoleQuickLinksController" showHeader="false" sidebar="false" >
+    <div style="margin:5px">
+        <apex:repeat value="{!setCategory}" var="category">
+            <br />            
+            <apex:outputlabel style="font-size:12px;"><b>{!category}</b></apex:outputlabel> <br />
+            <apex:repeat value="{!mpquickLinkURLs[category]}" var="link">                
+                <a href="{!link.Url__c}" style="padding-left:5px;" target="_blank">{!link.name}</a><br />
+            </apex:repeat>
+        </apex:repeat>
+    </div>
+    <apex:includeScript value="/support/console/30.0/integration.js"/>
+    
+    <script type="text/javascript">
+        
+        
+        function openPrimaryTab(tabName,pageUrl) {
+            //Open a new primary tab with the salesforce.com home page in it
+            sforce.console.openPrimaryTab(null, pageUrl, true, 
+                tabName, openSuccess, tabName.replace(" ","-").toLowerCase());
+        }
+        
+        
+        var openSuccess = function openSuccess(result) {
+            //Report whether we succeeded in opening the subtab
+            if (result.success == true) {
+                //sforce.console.setTabStyle(tabStyle,result.id,null);
+            } else {
+                alert('Tab cannot be opened');
+            }
+        };
+        
+    </script>
+</apex:page>

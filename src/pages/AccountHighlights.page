@@ -1,0 +1,10 @@
+<apex:page standardController="Account" >
+
+<apex:stylesheet value="{!URLFOR($Resource.CSS, 'acctHighlights.css')}"/>
+  <c:AccountHighlightComponent currentId="{!Account.Id}">
+     <!-- <apex:panelGrid >
+          <apex:outputPanel styleClass="banner-strip account-name" layout="block">{!Account.Name}</apex:outputPanel>
+          <apex:outputPanel styleClass="banner-strip account-number" layout="block">Account Number: {!Account.CostGuard_Acct__c}</apex:outputPanel>
+      </apex:panelGrid> -->
+  </c:AccountHighlightComponent>
+</apex:page>

@@ -1,0 +1,42 @@
+<apex:page controller="EventSidebarController"  sidebar="false" showHeader="false" standardStylesheets="true">
+    <style type="text/css">
+        html, body{background-color:#CFEEF8;margin:0;padding:0;border:0;left:0px;}
+        
+        ul,li
+        {
+            padding:0;
+            margin:0;
+        }
+        
+        
+        
+        li{list-style-type:disc;line-height:1.5em}
+        
+        a:visited{color:#1468b6;text-decoration:none}
+        a:hover{text-decoration:underline}
+        a:link{color:#1468b6;text-decoration:none}
+    </style>
+   <!-- <div id="sidebarDiv" class="collapsible sidebar">
+    <div class="linksModule sidebarModule">
+    <div class="sidebarModuleBody" > -->
+    <div>
+        <div style="border:solid;border-color:#BDBDBD;border-width:0px 0px 2px 0px;padding:2px;text-align:center;">
+           <h1> 
+                <apex:image style="background-color:red;" height="10" width="10"/> Active  &nbsp;&nbsp;
+               <apex:image style="background-color:green;" height="10" width="10"/> Resolved
+            </h1>
+        </div>
+    <apex:repeat value="{!events}" var="e">
+        <div style="border:solid;border-color:#BDBDBD;border-width:0px 0px 1px 0px;padding:2px;">
+            <apex:image style="background-color:{!IF(e.Status='Resolved','green','red')};" height="10" width="10"/>&nbsp;&nbsp;
+            <apex:outputLink title="{!e.CaseNumber} - {!e.Status}" target="_blank" value="/{!e.Id}">{!IF(e.InternalEvent__c,'','(Public) ')} {!e.Subject}</apex:outputLink><br/>
+        </div>
+    </apex:repeat>
+        <apex:outputPanel layout="block" rendered="{!RenderNoEventMessage}" style="padding:4px;text-align:center;">
+            No Open Events
+        </apex:outputPanel>
+    </div>
+  <!--  </div>
+    </div>
+    </div>  -->
+</apex:page>

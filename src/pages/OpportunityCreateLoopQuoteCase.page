@@ -1,0 +1,60 @@
+<apex:page standardController="Opportunity" extensions="OpportunityCreateLoopQuoteCaseExtension" >
+    <apex:form id="theForm">
+    <font color="red"><apex:messages /></font>
+        <apex:inputField value="{!Opportunity.AccountId}" rendered="false"/>
+        <apex:inputField value="{!Opportunity.Name}" rendered="false"/>
+        <p>
+            <b>Please select a case type:</b><br></br>
+            <apex:selectList id="caseType" value="{!CaseTypeValue}" size="1"  >
+                <apex:selectOptions value="{!CaseTypes}"></apex:selectOptions>
+                <apex:actionSupport action="{!CaseTypeUpdated}" event="onchange" reRender="theForm"/>
+            </apex:selectList>
+        </p>
+        <apex:outputPanel rendered="{!renderSave}">
+        <p>
+            <b>Please select a contact from the account:</b><br></br>
+            <apex:selectList id="cont" value="{!ContactId}" size="1" >
+                <apex:selectOptions value="{!Contacts}"></apex:selectOptions>
+            </apex:selectList>
+        </p>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!renderConDesign}">
+            <p>
+                <b>Is this Connectivity Design for a new or existing customer?:</b><br></br>
+                <apex:selectRadio value="{!CustomerType}" required="true">
+                    <apex:selectOption itemValue="New" itemLabel="New"></apex:selectOption>
+                    <apex:selectOption itemValue="Existing" itemLabel="Existing"></apex:selectOption>
+                    <apex:actionSupport action="{!CustomerTypeUpdate}" event="onchange" reRender="theForm"/>
+                </apex:selectRadio>
+            </p>
+        </apex:outputPanel>
+        <apex:outputPanel id="loopq" rendered="{!renderLoopQuote}">
+            <p>
+                <div style="display:none"><!-- hide request type field -->
+                    <apex:inputField value="{!fullCase.Request_Type__c}"/>
+                </div>
+                <b>Please select the loop quote product:</b><br></br>
+                <apex:inputField value="{!fullCase.Product_or_Service__c}"/>
+            </p>
+        </apex:outputPanel>
+        <apex:outputPanel id="icbp" rendered="{!renderICBPricing}">
+            <p>
+                <div style="display:none"><!-- hide request type field -->
+                    <apex:inputField value="{!fullCase.Request_Type__c}"/>
+                </div>
+                <b>Please select the product and sub-product:</b><br></br>
+                <apex:inputField value="{!fullCase.Product_or_Service__c}"/>
+                <apex:inputField value="{!fullCase.SubProductorService__c}"/>
+            </p>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!renderSave}">
+            <p>
+                <b>Please fill out the following information:</b><br></br>
+                <apex:inputTextarea style="width:50%;height:300px" value="{!TextDescription}"  />
+            </p>
+        </apex:outputPanel>
+        <apex:commandButton action="{!Save}" value="Submit Case" rendered="{!renderSave}"/>
+        <apex:commandButton action="{!Cancel}" value="Cancel"/>
+    </apex:form>
+
+</apex:page>

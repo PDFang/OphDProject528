@@ -1,0 +1,195 @@
+<apex:page standardController="Case"
+    extensions="CaseEventNotificationExtension">
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:stylesheet value="{!$Resource.SupportConsoleCss}" />
+    <apex:includeScript value="/support/console/28.0/integration.js"/>
+    <apex:outputField value="{!case.Status}" rendered="false" />
+    <apex:outputField value="{!case.Owner.Name}" rendered="false" />
+    <apex:outputField value="{!case.InternalEvent__c}" rendered="false" />
+    <apex:outputField value="{!case.CustomersMayExperienceTheFollowing__c}" rendered="false" />
+
+
+    <apex:form id="all" rendered="{!AND(canEdit,allowNotifications)}">
+        <apex:actionFunction name="refreshPage" />
+
+        
+        <!-- messages -->
+        <apex:outputPanel id="editPanel">
+            <apex:messages id="msg" styleClass="warning-message" />
+        </apex:outputPanel>
+        <apex:pageBlock id="emailBlock" rendered="{!NOT(renderConfirm)}">
+
+            <apex:pageBlockSection collapsible="false" id="detail" title="{!Case.RecordType.Name} Detail">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel for="cNum" value="{!Case.RecordType.Name} Number" />
+                    <apex:outputField id="cNum" value="{!Case.CaseNumber}" />
+                </apex:pageBlockSectionItem>
+                <apex:outputField value="{!Case.ProductImpacted__c}" />
+                <apex:outputField value="{!Case.EventStartDateTime__c}" />
+                <apex:outputField value="{!Case.PlatformsImpacted__c}" />
+                <apex:outputField value="{!Case.EventEndDateTime__c}" />
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="1" id="longDetail">
+                <apex:outputField value="{!Case.Subject}" />
+                <apex:outputField value="{!Case.Description}" />
+            </apex:pageBlockSection>
+            <apex:actionRegion >
+                <apex:pageBlockSection id="noContactsSection" columns="1" collapsible="false"
+                    title="Notification" rendered="{!contactCount = 0}">
+                    <apex:outputText >There are no {!contactRole} contacts associated.  Please add accounts or {!contactRole} contacts to the associated accounts.</apex:outputText>
+                    <apex:pageBlockSectionItem id="missingButtons" >
+                        <apex:commandButton styleClass="k-button" value="Event Accounts"
+                            action="{!EventAccounts}" id="eventAccountsButton" />
+                        <a id="cancel-empty-button" href="#" onclick="CancelRequest()" class="k-button">Cancel</a>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                <apex:pageBlockSection id="mainPage" columns="1" collapsible="false"
+                    title="Notification" rendered="{!contactCount > 0}">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Record Type" for="sRtype" />
+                        <apex:selectList id="sRtype" size="1"
+                            value="{!SelectedRecordTypeId}" disabled="true">
+                            <apex:selectOptions value="{!RecordTypeOptions}"></apex:selectOptions>
+                            <!-- rerender the dependant "sText" dropdown to update values
+                                 and sTextDetail output panel to clear the Detail text -->
+                            <apex:actionSupport event="onchange" rerender="mainPage" />
+                        </apex:selectList>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Standard Text" for="sText" />
+                        <apex:selectList id="sText" size="1"
+                            value="{!selectedStandardTextId}">
+                            <apex:selectOptions value="{!StandardTextOptions}"></apex:selectOptions>
+                            <!-- rerender "sTextDetail" to update the displayed text based on the "sText" changes -->
+                            <apex:actionSupport action="{!UpdateStandardText}"
+                                event="onchange" rerender="mainPage" />
+                        </apex:selectList>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Subject" for="sub" />
+                        <apex:inputTextarea value="{!SubjectText}" style="width:80%;" rows="1"
+                            id="sub" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Email Body" for="bod" />
+                        <apex:inputTextarea value="{!SelectedStandardText}" style="width:80%;"
+                            rows="20" id="bod" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:actionStatus id="mySaveStatus1">
+
+                            <apex:facet name="stop">
+                                <apex:outputPanel >
+                                    <apex:commandButton styleClass="k-button" value="Send Email"
+                                        action="{!SendNotification}" status="mySaveStatus1"
+                                        reRender="mySaveStatus1,all" />
+                                    <a id="cancel-button" href="#" onclick="CancelRequest()" class="k-button">Cancel</a>
+                                </apex:outputPanel>
+                            </apex:facet>
+
+                            <apex:facet name="start">
+
+                                <apex:outputPanel >
+
+                                    <apex:image value="/img/loading32.gif" style="height: 15px;" />
+
+                                    <apex:commandButton value="Processing..."
+                                        status="mySaveStatus1" disabled="true" />
+
+                                </apex:outputPanel>
+
+                            </apex:facet>
+
+                        </apex:actionStatus>
+
+                        <!--<apex:commandButton value="Send Email" action="{!SendNotification}"/>-->
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+            </apex:actionRegion>
+            <apex:pageBlockSection columns="1"
+                title="Total {!contactRole} Contacts: {!contactCount}"
+                collapsible="false">
+
+                <!-- apex:pageBlockTable value="{!contacts}" var="ec">
+                    <apex:column >
+                        <apex:facet name="header">Contact Name</apex:facet>
+                        <apex:outputLink target="_blank" value="/{!ec.Id}">
+                            <apex:outputField value="{!ec.Name}" />
+                        </apex:outputLink>
+                    </apex:column>
+                    <apex:column >
+                        <apex:facet name="header">Email</apex:facet>
+                        <apex:outputField value="{!ec.Email}" />
+                    </apex:column>
+                    <apex:column >
+                        <apex:facet name="header">Account</apex:facet>
+                        <apex:outputField value="{!ec.AccountId}" />
+                    </apex:column>
+                </apex:pageBlockTable> 
+                Table will only show the first 1000 records. -->
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        <apex:pageBlock id="confirm" rendered="{!renderConfirm}"
+            title="Notification was succesfully sent to {!emailsSent} addresses!">
+
+
+            <apex:pageBlockSection columns="1" collapsible="false">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel for="sub" value="Subject" />
+                    <apex:outputText value="{!SubjectText}" id="sub" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel for="bod" value="Email Body" />
+                    <apex:outputText value="{!htmlString}" escape="false" id="bod" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <a id="cancel-button" href="#" onclick="CancelRequest()" class="k-button">Done</a>
+                </apex:pageBlockSectionItem>
+                </apex:pageblockSection>
+        </apex:pageBlock>
+        <apex:actionFunction action="{!Cancel}" name="GoToCase"/>
+        <apex:actionFunction action="{!RefreshPage}" name="Refresh" immediate="true"/>
+    </apex:form>
+
+    <!-- NOT ALLOWED TO SEND NOTIFICATION -->
+    <apex:pageBlock rendered="{!NOT(AND(canEdit,allowNotifications))}">
+        <apex:outputPanel rendered="{!NOT(canEdit)}">
+            You do not have the necessary permissions to send a notification for this {!Case.RecordType.Name}.
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!AND(canEdit,NOT(allowNotifications))}">
+            Notifications are not allowed for this {!Case.RecordType.Name}.
+        </apex:outputPanel>
+    </apex:pageBlock>
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+    <apex:includeScript value="{!$Resource.incontactjs}" />
+    
+    <script type="text/javascript">
+        $(document).ready(function () {
+            StyleButtons();
+            if (sforce.console.isInConsole()){
+                var detailElement= document.getElementById('{!$Component.all.emailBlock.detail}');
+                var longDetailElement= document.getElementById('{!$Component.all.emailBlock.longDetail}');
+                var eventAccountElement = document.getElementById('{!$Component.all.emailBlock.noContactsSection.missingButtons.eventAccountsButton}');
+                $(detailElement).hide();
+                $(longDetailElement).hide();   
+                $(eventAccountElement).hide(); 
+                $("#cancel-empty-button").hide();              
+            }
+        });
+        
+        function Restyle(){
+            StyleButtons();
+        }
+        
+        
+        function CancelRequest(){
+            if (sforce.console.isInConsole()){
+                Refresh();
+            } else{
+                GoToCase();
+            }            
+        }
+    </script>
+</apex:page>

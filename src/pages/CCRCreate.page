@@ -1,0 +1,298 @@
+<apex:page standardController="ChangeControlRequest__c"
+    extensions="CCRCreateExtension,CcrViewExtension">
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+    <apex:form >
+        <apex:inputHidden value="{!ChangeControlRequest__c.CCRType__c}" />
+        <apex:inputHidden value="{!ChangeControlRequest__c.PreAuthorizedTemplate__c}" />
+        <apex:sectionHeader title="New Change Control Request" />
+        <apex:messages styleClass="warning-message" />
+        <apex:pageBlock title="" id="tlBlock">
+            <apex:pageBlockButtons >
+                <apex:commandButton styleClass="k-button" action="{!Save}" value="Save" />
+                <apex:commandButton styleClass="k-button" action="{!Cancel}" value="Cancel" />
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="1">
+                <apex:inputField required="true" style="width:85%"
+                    value="{!ChangeControlRequest__c.Summary__c}"  rendered="{!NOT(ChangeControlRequest__c.PreAuthorizedTemplate__c)}" />
+                <apex:outputField style="width:85%"
+                    value="{!ChangeControlRequest__c.Summary__c}"  rendered="{!ChangeControlRequest__c.PreAuthorizedTemplate__c}" />
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2">
+                <apex:inputField id="releaseDate" required="true"
+                    value="{!ChangeControlRequest__c.ReleaseDate__c}" />
+                <apex:inputField id="datepicker" required="true"
+                    value="{!ChangeControlRequest__c.CCRStartTime__c}" />
+                <apex:inputField required="true" style="width:100%"
+                    value="{!ChangeControlRequest__c.SystemsAppsProcessesImpacted__c}" />
+
+                <apex:inputField id="ChangeReasonField" required="true"
+                    value="{!ChangeControlRequest__c.ChangeReason__c}" />
+                <apex:inputField id="Monitoring_Set_up_on_Device__c" required="true" styleClass="keep-select"
+                    value="{!ChangeControlRequest__c.Monitoring_set_up_on_device__c}" 
+                    rendered="{!UseClusterAndRelease}"/>
+                <apex:inputField id="Is_monitoring_required__c" required="false" styleClass="keep-select"
+                    value="{!ChangeControlRequest__c.Is_monitoring_required__c}" 
+                    rendered="{!UseClusterAndRelease}"/>
+                
+                <apex:inputField id="impact" required="true"
+                    value="{!ChangeControlRequest__c.Impact__c}" />
+                <apex:inputField id="urgency" required="true"
+                    value="{!ChangeControlRequest__c.Urgency__c}" />
+                <apex:inputField id="rfcType" required="true"
+                    value="{!ChangeControlRequest__c.RFCType__c}" />
+                <apex:inputField id="account" required="true"
+                     value="{!ChangeControlRequest__c.Account__c}" rendered="{!isPSCCR}"/>
+
+                <apex:inputField value="{!ChangeControlRequest__c.Build__c}"
+                    rendered="{!UseClusterAndRelease}" />
+                <apex:inputField value="{!ChangeControlRequest__c.Cluster__c}"
+                    rendered="{!UseClusterAndRelease}" />
+                <apex:inputField id="Release" value="{!ChangeControlRequest__c.Release__c}"
+                    rendered="{!UseClusterAndRelease}" />
+                <apex:outputPanel rendered="{!UseMaintenanceWindow && NOT(UseClusterAndRelease)}"></apex:outputPanel>
+                <apex:inputField required="true"
+                    value="{!ChangeControlRequest__c.ContingencyOwner__c}"
+                    rendered="{!UseMaintenanceWindow}" />
+                <apex:inputField id="mwStart" required="true"
+                    value="{!ChangeControlRequest__c.MaintenanceWindowStartTime__c}"
+                    rendered="{!UseMaintenanceWindow}" />
+                <apex:inputField id="conDl" required="true"
+                    value="{!ChangeControlRequest__c.ContingencyDeadline__c}"
+                    rendered="{!UseMaintenanceWindow}" />
+                <apex:inputField id="mwEnd" required="true"
+                    value="{!ChangeControlRequest__c.MaintenanceWindowEndTime__c}"
+                    rendered="{!UseMaintenanceWindow}" />
+
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="1" collapsible="false">
+                <apex:inputField required="true" style="width:85%"
+                    value="{!ChangeControlRequest__c.Description__c}" />
+                <apex:inputField required="true" style="width:85%"
+                    value="{!ChangeControlRequest__c.DescriptionOfTesting__c}" />
+                <apex:inputField required="true" style="width:85%"
+                    value="{!ChangeControlRequest__c.ContingencyPlan__c}" />
+            </apex:pageBlockSection>
+            <apex:pageBlockSection id="RiskAssessmentFields" columns="2"
+                title="Risk Assessment" collapsible="false">
+                <apex:repeat value="{!$ObjectType.ChangeControlRequest__c.FieldSets.RiskAssessment}"
+                    var="f">
+                    <apex:InputField value="{!ChangeControlRequest__c[f]}"
+                        required="{!f.required}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockSection columns="1" id="TaskSection" rendered="{!IsCloneRecord}">
+          <apex:actionRegion >
+    <apex:variable var="positioncount" value=""/>
+          <apex:pageblockTable width="100%" value="{!CCRTaskList}" var="task" id="theTable">
+                <apex:column >
+                    <apex:commandLink action="{!DeleteRow}" rerender="TaskSection" title="Delete" oncomplete="ChangeSelectsIntoButtons(),SetupDateTimePickers()" >
+                        <apex:image value="https://images.ucn.net/salesforce/delete_icon_x.png"/>
+                        <!-- position count is used to reference the index of the collection -->
+                        <apex:param name="tlInd" value="{!LEN(positioncount)}"/>
+                    </apex:commandLink>
+                    <apex:variable var="positioncount" value="{!positioncount+'|'}"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Order</apex:facet>
+                    <apex:outputField value="{!task.Order__c}" />
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Record Type</apex:facet>
+                    <apex:inputField style="font-size:10px" value="{!task.RecordTypeId}" />
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Assigned To</apex:facet>
+                    <apex:inputField style="font-size:10px"  value="{!task.AssignedTo__c}"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Description</apex:facet>
+                    <apex:inputTextarea style="font-size:10px" cols="40" rows="3" value="{!task.Description__c}"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Task Date/Time</apex:facet>
+                    <apex:inputField id="datepicker" style="font-size:10px" value="{!task.TaskDateTime__c}"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Duration (Min)</apex:facet>
+                    <apex:inputField style="font-size:10px" value="{!task.Duration__c}"/>
+                </apex:column>
+                
+                    
+            </apex:pageBlockTable>
+      </apex:actionRegion>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+    <div id="ChangeReasonDefinitions" style="display:none;">
+        <table style="width:100%;border-spaceing:0;border-collapse:collapse;">
+        <!--<tr style="border-bottom:1px solid #000;"><th style="text-align:center;">Change Reason</th><th style="text-align:center;">Descriptions and Examples</th></tr>-->
+        <tr><td style="padding:.5em;font-weight:bold;text-align:right;padding-right:1em;">Addition</td><td>New Equipment, Report, Procedures, Software</td></tr>        
+        <tr class="k-alt"><td style="padding:.5em;font-weight:bold;text-align:right;padding-right:1em;">Enhancement</td><td>Modifications to existing systems or software</td></tr>
+        <tr><td style="padding:.5em;font-weight:bold;text-align:right;padding-right:1em;">Fix</td><td>Code change, patches, hot fixes</td></tr>
+        <tr class="k-alt"><td style="padding:.5em;font-weight:bold;text-align:right;padding-right:1em;">Preventative Maintenance</td><td>Vendor or system maintenance upgrade</td></tr>
+        <tr><td style="padding:.5em;font-weight:bold;text-align:right;padding-right:1em;">Reconfiguration</td><td>Alterations to an existing infrastructure or software item</td></tr>
+        <tr class="k-alt"><td style="padding:.5em;font-weight:bold;text-align:right;padding-right:1em;">Relocation</td><td>Movement of an infrastructure item</td></tr>
+        <tr><td style="padding:.5em;font-weight:bold;text-align:right;padding-right:1em;">Removal</td><td>Removal of an infrastructure item</td></tr>
+        <tr class="k-alt"><td style="padding:.5em;font-weight:bold;text-align:right;padding-right:1em;">Upgrade</td><td>Replace existing infrastructure item with a new or revised version</td></tr>        
+        </table>
+    </div>
+    <style type="text/css">
+    .pbBody a.k-state-selected,.k-state-selected, .k-secondary .k-button.k-state-selected {
+    background-image: none;
+    background-color: #0053dd;
+    border-color: #0053dd;
+    color: #FFF;
+}
+.pbBody a.k-button
+{
+    color:#fff !important;
+}
+.pbSubheader{
+background-color:#363940 !important;
+}
+.k-button{
+background-color:#363940;
+border-color:#363940;
+}
+
+.pbBody a.k-state-selected:focus:active {
+    border-color:#ff5301;
+    box-shadow:none;
+}
+
+.k-datetimepicker .k-picker-wrap .k-icon {
+    margin-top: 0.3em;
+}
+
+.k-datepicker .k-picker-wrap .k-icon {
+    margin-top: 4px;
+}
+
+span.k-widget.k-datetimepicker.k-header,span.k-widget.k-datepicker.k-header, span.k-widget.k-combobox.k-header, span.k-widget.k-dropdown.k-header
+    {
+    width: 200px;
+}
+        
+        
+                .warning-message
+                {
+                    margin-top:1em;
+                    margin-bottom:1em;
+                    padding:15px;
+                    background-color:#fcf8e3;
+                    color:#c09853;
+                    border:1px solid #faebcc;
+                    border-radius: 10px 10px 10px 10px;
+                }
+</style>
+    <script type="text/javascript">
+    function SelectButtonClick(selectButton){
+        if($(selectButton).hasClass('k-state-selected')){
+           //$(selectButton).parent().siblings('select').val('');
+            $(selectButton).parent().siblings('select').children('option[value="' + $(selectButton).data('value') + '"]').prop("selected", false); 
+            $(selectButton).removeClass('k-state-selected');
+        }
+        else
+        {
+        $(selectButton).parent().siblings('select').children('option[value="' + $(selectButton).data('value') + '"]').prop("selected", true);
+        //$(selectButton).parent().siblings('select').val($(selectButton).data('value'));
+        if($(selectButton).parent().siblings('select').attr('multiple') !== 'multiple')
+            $(selectButton).siblings().removeClass('k-state-selected');
+        $(selectButton).addClass('k-state-selected');
+        }
+    }
+    function ChangeSelectsIntoButtons()
+    {
+            $('select').each(function(selectIndex, selectElement){
+                if($(selectElement).siblings('div.k-listview').size() == 0 && !$(selectElement).hasClass('keep-select') && 
+                    (($(selectElement).children('option[value!=""]').size() < 5 && $(selectElement).siblings('input').size() == 0) ||
+                    ($(selectElement).attr('multiple') === 'multiple' && $(selectElement).is( ":hidden" ))))
+                {
+                    $(selectElement).hide();
+                    $('<div>').addClass('k-listview').prependTo($(selectElement).parent());
+                    $(selectElement).children('option[value!=""]').each(function(optionIndex, optionElement){
+                        if('{!ChangeControlRequest__c.PreAuthorizedTemplate__c}' == 'true' || $(optionElement).html() != 'Pre-Authorized'){
+                            var link = $('<a>')
+                                .addClass('k-button')
+                                .attr('data-value', $(optionElement).attr('value'))
+                                .attr('href', 'javascript:void(0);')
+                                .attr('tabindex', '0')
+                                .click(function(){SelectButtonClick(this);})
+                                .html($(optionElement).html());
+                            $(link).appendTo($(selectElement).siblings('div.k-listview'));
+                            if($(selectElement).parents('[id*="RiskAssessmentFields"]').size() > 0)
+                                $('<div style="clear:both;">').appendTo($(selectElement).siblings('div.k-listview'));
+                                
+                            if($(optionElement).attr('selected') === 'selected')
+                            {
+                                $(link).addClass('k-state-selected');
+                            }
+                        }
+                    });
+                }
+                else if($(selectElement).siblings('input').size() > 0)
+                {
+                    $(selectElement).hide();
+                }
+                else if($(selectElement).siblings('div.k-listview').size() == 0)
+                {
+                //$(selectElement).addClass('k-secondary').kendoDropDownList();
+                }
+            });
+            $('table.multiSelectPicklistTable').hide();  
+    }
+    function SetupDateTimePickers()
+    {
+           $('span.dateInput').each(function(){
+               $(this).addClass('k-secondary');
+               $(this).children('input').removeAttr('onfocus');
+               $(this).children('span.dateFormat').hide();
+               if($(this).hasClass('dateOnlyInput'))
+                   $(this).children('input').kendoDatePicker();
+               else
+                   $(this).children('input').kendoDateTimePicker();
+           });
+    }
+    
+       var releaseDataSource = new kendo.data.DataSource({
+                              transport: {
+                                read: function(options){
+                                    Visualforce.remoting.Manager.invokeAction(
+                                          '{!$RemoteAction.CcrViewExtension.ReleaseValueList}',
+                                          '{!ChangeControlRequest__c.Id}',
+                                          function(result,event)
+                                          {
+                                              //console.log(JSON.parse(result));
+                                              if (event.status) {
+                                                  
+                                                  options.success(JSON.parse(result));
+                                                } 
+                                          },
+                                          {escape: false}
+                                   );
+                                }
+                              }
+                            });
+    
+    $(document).ready(function () {  
+        $('<a>').css('text-decoration', 'underline').css('margin-left', '1em')
+            .click(function(){$('#ChangeReasonDefinitions').data('kendoWindow').center().open();})
+            .html('Definitions').insertAfter($('select[id*="ChangeReasonField"]'));
+        $('.k-button.btn').removeClass('btn'); 
+        ChangeSelectsIntoButtons();
+        SetupDateTimePickers();
+        $('input[id*="Release"]').kendoDropDownList({
+            dataSource: releaseDataSource,
+            optionLabel: " " 
+        });
+        $("#ChangeReasonDefinitions").kendoWindow({
+            title: "Change Reason Definitions",
+            resizable: false
+        });
+    });
+    </script>
+</apex:page>

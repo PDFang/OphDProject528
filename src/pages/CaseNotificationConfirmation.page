@@ -1,0 +1,26 @@
+<apex:page standardController="Case" extensions="CaseEventNotificationExtension">
+    <apex:form id="all">
+        
+        <div style="color:red"><apex:messages id="msg" /></div>
+        <apex:inputHidden value="{!Case.ProductImpacted__c}"/>
+        <apex:inputHidden value="{!Case.PlatformsImpacted__c}"/>
+        <apex:inputHidden value="{!Case.CaseNumber}"/>
+        <apex:inputHidden value="{!Case.Subject}"/>
+        Notification was succesfully sent to {!emailsSent} addresses!<br/>
+        <apex:pageBlock >
+            <apex:pageBlockSection columns="1" >
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel for="sub" value="Subject"/>
+                    <apex:outputText value="{!SubjectText}" id="sub"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel for="bod" value="Email Body"/>
+                    <apex:outputText value="{!htmlString}" escape="false" id="bod"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:commandButton value="Done" action="{!Cancel}"/>
+                </apex:pageBlockSectionItem>
+            </apex:pageblockSection>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

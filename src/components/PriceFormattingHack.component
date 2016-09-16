@@ -1,0 +1,21 @@
+<apex:component controller="QuoteSectionTemplateClass">
+  <apex:attribute name="Subtotal" type="Decimal" description=""/>
+  
+<!-- Begin Subtotal Formatting Hack -->
+<!-- This long section of outputTexts's is a hack to display a Decimal in Currency Format. Infortunately Salesforce doesn't have a good -->
+<!-- way to do this with nonSObject fields -->
+  <apex:outputText value="$"/>
+  <apex:outputText value="{!floor(Subtotal/(10^6))}," rendered="{!floor(Subtotal/(10^6))>0}"/>
+  <apex:outputText value="{!floor(Subtotal/(10^5))-floor(Subtotal/(10^6))*10}" rendered="{!floor(Subtotal/(10^5))>0}"/>
+  <apex:outputText value="{!floor(Subtotal/(10^4))-(floor(Subtotal/(10^5))*10)}" rendered="{!floor(Subtotal/(10^4))>0}"/>
+  <apex:outputText value="{!floor(Subtotal/(10^3))-(floor(Subtotal/(10^4))*10)}," rendered="{!floor(Subtotal/(10^3))>0}"/>
+  <apex:outputText value="{!floor(Subtotal/(10^2))-(floor(Subtotal/(10^3))*10)}" rendered="{!floor(Subtotal/(10^2))>0}"/>
+  <apex:outputText value="{!floor(Subtotal/10)-(floor(Subtotal/(10^2))*10)}" rendered="{!floor(Subtotal/10)>0}"/>
+  <apex:outputText value="{!floor(Subtotal)-(floor(Subtotal/10)*10)}"/>
+  <apex:outputText value="."/>
+  <apex:outputText value="{!floor(Subtotal/0.1)-(floor(Subtotal)*10)}"/>
+  <apex:outputText value="{!floor(Subtotal/0.01)-(floor(Subtotal/0.1)*10)}"/>
+<!-- End Subtotal Formatting Hack -->
+
+
+</apex:component>

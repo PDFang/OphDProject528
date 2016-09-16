@@ -1,0 +1,46 @@
+<apex:page standardController="xMatters_Config__c" extensions="xMatters_ConfigController" >
+    <apex:form >
+    <apex:actionFunction name="rightArrow" action="{!selectclick}" reRender="abcd"/>
+        <apex:actionFunction name="leftArrow" action="{!unselectclick}" reRender="abcd"/>
+        
+        <apex:pageBlock title="Edit xMatters Config">
+
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!save}" value="Save"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="xMatters Integration Configuration Fields" columns="2">
+                <apex:inputField value="{!xMatters_Config__c.name}"/>
+                <apex:inputField value="{!xMatters_Config__c.xMatters_Username__c}"/>
+                <apex:inputField value="{!xMatters_Config__c.xMatters_Group_Endpoint__c}" style="width: 400px"/>
+                <apex:inputSecret value="{!xMatters_Config__c.xMatters_Password__c}" redisplay="true"/>
+                <apex:inputField value="{!xMatters_Config__c.xMatters_Individual_Endpoint__c}" style="width: 400px"/>
+                <apex:inputField value="{!xMatters_Config__c.Notifiable_Priorities__c}"/>
+                <apex:pageBlockSectionItem />
+                <apex:inputField value="{!xMatters_Config__c.Notifiable_Statuses__c}"/>
+                <apex:inputField value="{!xMatters_Config__c.Payload_Fields__c}" rendered="false"/>
+            </apex:pageBlockSection>
+
+
+            <apex:panelGrid columns="3" id="abcd">
+                <apex:selectList value="{!leftSelected}" multiselect="true" size="20" style="width:200px">
+                    <apex:selectOptions value="{!availableFields}"/>
+                </apex:selectList>
+                <apex:panelGroup >
+
+                    <br/><br/><br/><br/><br/>
+                    
+                    <a href="javascript:rightArrow();" style="text-decoration:none">
+                        <img src="/s.gif" alt="Select" class="rightArrowIcon" title="Select"/>
+                    </a><br/>
+                    <a href="javascript:leftArrow();" style="text-decoration:none">
+                        <img src="/s.gif" alt="Unselect" class="leftArrowIcon" title="Unselect"/>
+                    </a><br/>
+                    
+                </apex:panelGroup>
+                <apex:selectList value="{!rightSelected}" multiselect="true" size="20" style="width:200px">
+                    <apex:selectOptions value="{!selectedFields}"/>
+                </apex:selectList>
+            </apex:panelGrid>    
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

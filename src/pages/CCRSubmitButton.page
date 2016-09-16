@@ -1,0 +1,92 @@
+<apex:page standardController="ChangeControlRequest__c" action="{!ReturnToCCR}" title="{!ChangeControlRequest__c.Name}" extensions="CCRSubmitButtonExtension" >
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+    <apex:sectionHeader title="Change Control Request" subtitle="{!ChangeControlRequest__c.Name}" description="Submit CCR"/>
+    <div style="color:red"><apex:messages /></div>
+    <apex:form id="theSubmitForm">
+        <apex:inputHidden value="{!ChangeControlRequest__c.NumberOfWorkTasks__c}"/>
+        <apex:inputHidden value="{!ChangeControlRequest__c.NumberOfValidationTasks__c}"/>
+        <apex:inputHidden value="{!ChangeControlRequest__c.NumberOfCommunicationTasks__c}"/>
+        <apex:inputHidden value="{!ChangeControlRequest__c.Status__c}"/>
+        <apex:inputHidden value="{!ChangeControlRequest__c.CCRType__c}"/>
+        <apex:inputHidden value="{!ChangeControlRequest__c.Name}"/>
+        <apex:inputHidden value="{!ChangeControlRequest__c.Summary__c}"/>
+        <apex:outputText value="{!ChangeControlRequest__c.RiskLevel__c}" rendered="false"/>
+        <apex:outputText value="{!ChangeControlRequest__c.RFCType__c}" rendered="false"/>
+        <apex:inputField rendered="false" value="{!ChangeControlRequest__c.ReleaseDate__c}"/>
+        <apex:inputField rendered="false" value="{!ChangeControlRequest__c.ClosedDateTime__c}"/>
+        
+        <apex:pageBlock id="planBlock" rendered="{!OR(needsTestPlan,needsInstallPlan,requirePeerReview)}" title="Upload Required Plan Files" >
+            
+            <apex:outputText value="{!ChangeControlRequest__c.RiskLevel__c}"/>
+            <apex:outputPanel id="instalDiv" layout="block" style="border:1px solid #B8B8B8;padding:10px;margin:10px;" rendered="{!needsInstallPlan}" >
+                <apex:outputLabel style="font-weight:bold;"  >Select Install Plan</apex:outputLabel><br/>
+                <apex:inputFile id="instalFile" style="margin:5px;" value="{!installPlan.body}" fileName="{!installPlan.Name}" />
+            </apex:outputPanel>
+            <apex:outputPanel layout="block" rendered="{!needsTestPlan}" style="border:1px solid #B8B8B8;padding:10px;margin:10px;" >
+                <apex:outputLabel style="font-weight:bold" >Select Test Plan</apex:outputLabel><br/>
+                <apex:inputFile id="testFile" style="margin:5px;" value="{!testPlan.Body}" fileName="{!testPlan.Name}" />
+            </apex:outputPanel>
+            <apex:outputPanel id="userListContainer" layout="block" rendered="{!requirePeerReview}" style="border:1px solid #B8B8B8;padding:10px;margin:10px;" >
+                <apex:outputLabel style="font-weight:bold" >Select Peer Reviewer(s) (choose up to 3 approvers)</apex:outputLabel><br/>
+                <apex:selectList id="userList" value="{!peerReviewUsers}" multiselect="true" size="15">
+                    <apex:selectOptions value="{!UserList}"/>
+                </apex:selectList>
+            </apex:outputPanel>
+            <apex:commandButton value="Submit" action="{!SubmitPlans}"/>
+            <apex:commandButton value="Cancel" action="{!Back}" immediate="true"/>
+        </apex:pageBlock>
+        
+        <apex:pageBlock rendered="{!requireChecklist}" >
+            <apex:outputText >Add completed <a href="{!checklistUrl}" target="_blank">checklist</a> file to submit:</apex:outputText><br/>
+            <apex:inputFile value="{!attach.Body}" fileName="{!attach.Name}" /><br/>
+            <apex:commandButton value="Submit" action="{!SubmitChecklist}"/>
+            <apex:commandButton value="Cancel" action="{!Back}" immediate="true"/>
+        </apex:pageBlock><br/><br/>
+        
+        <apex:commandLink rendered="{!NOT(OR(needsTestPlan,needsInstallPlan,custImpact,requireChecklist))}" action="{!Back}" value="Back to CCR"/>
+        
+        
+        <apex:pageBlock rendered="{!custImpact}" >
+            <apex:pageBlockSection columns="1">
+                <apex:inputField value="{!ChangeControlRequest__c.CustomerImpact__c}" required="true"/>
+                <apex:inputField value="{!ChangeControlRequest__c.CustomerImpactDescription__c}" required="true"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockButtons location="bottom" >
+                <apex:commandButton value="Close CCR" action="{!CloseCCR}"/>
+                <apex:commandButton value="Cancel" action="{!Back}" immediate="true"/>
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+    </apex:form>
+    
+    <script>
+        $(document).ready(function() {
+            // create MultiSelect from select HTML element
+            
+            var userList = document.getElementById("{!$Component.theSubmitForm.planBlock.userList}");
+            $(userList).kendoMultiSelect({
+                    maxSelectedItems: 3 //only three or less items could be selected
+            });
+            
+            var instal = document.getElementById("{!$Component.theSubmitForm.planBlock.instalFile}");
+            $(instal).kendoUpload({
+                multiple: false,
+                localization: {
+                    select: "Select Install Plan..."
+                }
+            });
+            
+            var testPlan = document.getElementById("{!$Component.theSubmitForm.planBlock.testFile}");
+            $(testPlan).kendoUpload({
+                multiple: false,
+                localization: {
+                    select: "Select Test Plan..."
+                }
+            });
+
+        });
+    </script>
+    
+</apex:page>

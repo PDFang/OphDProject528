@@ -1,0 +1,133 @@
+<apex:page standardController="TfsWorkItem__c" extensions="TfsWorkItemCreateExtension" title="Create TFS Bug" >
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.SupportConsoleCss)}" />
+    <apex:includeScript value="/support/console/32.0/integration.js"/>
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+
+  <apex:form id="main" >
+      <apex:outputPanel id="result">
+      <apex:inputHidden value="{!success}" id="success"/>
+      </apex:outputPanel>
+      <apex:outputPanel id="editPanel">
+            <apex:messages id="msg" styleClass="warning-message" />
+        </apex:outputPanel>
+      <apex:outputPanel rendered="{!NOT(renderPage)}">
+          <a id="cancel-button" href="#" onclick="CancelRequest()" class="k-button">Cancel</a>
+      </apex:outputPanel>
+      <apex:pageBlock id="kiField" mode="edit" title="Create TFS Bug" rendered="{!renderPage}">
+           
+            <apex:pageBlockSection columns="1" >
+                    <apex:outputField value="{!c.CaseNumber}"/>
+                    <apex:inputField styleClass="long" value="{!workItem.Title__c}" required="true"/>
+                    <apex:inputField styleClass="long" value="{!workItem.StepsToRecreate__c}" required="true"/>
+                    
+                </apex:pageBlockSection>
+                <apex:outputPanel id="tfsFields">
+                <apex:pageBlockSection columns="1">
+                        
+                        <apex:inputField value="{!workItem.ExistsIn__c}" required="true" />
+                        <apex:inputField value="{!workItem.FoundBy__c}" required="true" />
+                </apex:pageBlockSection>
+                </apex:outputPanel>
+                
+                
+            <apex:pageBlockButtons location="bottom" >
+                <apex:actionStatus id="mySaveStatus1" startText="Creating TFS Work Item..." >
+                                    
+                   <apex:facet name="stop">
+
+                                <input name="DoAction" class="k-button" type="button" value="Save" onclick="SaveWorkItem_JS();return false;"/>
+                            
+                                <a id="cancel-button" href="#" onclick="CancelRequest()" class="k-button">Cancel</a>
+                         </apex:facet>
+                
+                         <apex:facet name="start">
+                
+                             <apex:outputPanel >
+                
+                                   <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                
+                
+                               </apex:outputPanel>
+                
+                           </apex:facet>
+                
+                </apex:actionStatus>
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+         <apex:actionFunction action="{!GoToCase}" name="GoToCase" immediate="true"/>
+            <apex:actionFunction action="{!SaveWorkItem}" name="SaveWorkItem_JS" status="mySaveStatus1" oncomplete="CreateTfsItem_JS();"/>
+            <apex:actionFunction action="{!CreateTfsItem}" name="CreateTfsItem_JS" status="mySaveStatus1" reRender="editPanel,result" oncomplete="onCompleteHandler()"/>
+  </apex:form>
+     
+     <script type="text/javascript">
+        $(document).ready(function () {
+                             
+            StyleButtons();
+            if (sforce.console.isInConsole()){
+                sforce.console.setTabTitle('Create TFS Bug');
+            }
+        });
+        
+        function onCompleteHandler() {
+          var successElement = document.getElementById('{!$Component.main.success}');
+          if($(successElement).val()=='true') {
+            CancelRequest()
+          } else {
+              
+            StyleButtons(); 
+          }
+        }
+        
+        function CancelRequest(){
+            if (sforce.console.isInConsole()){
+                doPrimaryTabRefresh();
+            } else{
+                GoToCase();
+            }            
+        }
+        
+        
+        function checkIt(){
+            if (jQuery('.errorMsg').length > 0 || jQuery('.error-message').length > 0){
+                // Error exists
+                alert('There is an error on the page!');
+            }
+            else{
+                alert('No errors!');
+            }
+        }
+        
+        function StyleButtons(){
+                
+            $('.k-button.btn').removeClass('btn'); 
+        }
+        
+        
+        
+        function CloseTab() {
+            //First find the ID of the current tab to close it
+            sforce.console.getEnclosingTabId(closeSubtab);
+        }
+        
+        var closeSubtab = function closeSubtab(result) {
+            //Now that we have the tab ID, we can close it
+            var tabId = result.id;
+            sforce.console.closeTab(tabId);
+        };
+        
+        var refreshPrimaryTab = function showTabId(result) {
+            var tabId = result.id;
+            sforce.console.refreshPrimaryTabById(tabId, true, CloseTab);
+        };
+    
+        function doPrimaryTabRefresh() {
+            sforce.console.getEnclosingPrimaryTabId(refreshPrimaryTab);            
+        }
+    
+        
+        
+    </script>
+</apex:page>

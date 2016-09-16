@@ -1,0 +1,15 @@
+<apex:page standardController="BMCServiceDesk__Change_Request__c" extensions="ChangeRequestHoldExtension">
+    <div style="color:red"><apex:messages /></div>
+    <apex:form rendered="{!RenderPageInfo}">
+        <apex:inputHidden value="{!BMCServiceDesk__Change_Request__c.RecordTypeId}"/>
+        <apex:outputText value="{!BMCServiceDesk__Change_Request__c.BMCServiceDesk__FKStatus__r.Name}" rendered="false"/>
+        <br></br>
+        <div>Are you sure you want to put this CCR on HOLD?</div>
+        <br></br>
+        <apex:commandButton action="{!Save}" value="Yes"/>
+        <apex:commandButton action="{!Cancel}" value=" No "/>
+    </apex:form>
+    <apex:form rendered="{!NOT(RenderPageInfo)}">
+        <apex:commandButton action="{!Cancel}" value="Cancel"/>
+    </apex:form>
+</apex:page>

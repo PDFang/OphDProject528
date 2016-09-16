@@ -1,0 +1,44 @@
+<apex:page standardController="Project__c" extensions="PHTimeOffDetailExtension" >
+    
+    <apex:pageBlock >
+        <apex:pageBlockSection title="Project Information" collapsible="false" columns="1">
+            <apex:outputField value="{!Project__c.Summary__c}"/>            
+            <apex:outputField value="{!Project__c.Description__c}"/>
+            <apex:outputField value="{!Project__c.ProjectType__c}"/>
+        </apex:pageBlockSection>
+    </apex:pageBlock>
+    <font color="red"><apex:messages /></font>
+    <apex:form >
+    <apex:pageBlock title="Time Off Details" id="iTOD" >
+        <apex:pageBlockButtons >
+            <apex:commandButton value="Save" action="{!Save}"/>
+            <apex:commandButton value="Cancel" action="{!Cancel}"/>
+        </apex:pageBlockButtons>
+        <apex:variable var="positioncount" value=""/>
+        <apex:pageBlockTable value="{!TimeOffDetail}" var="tod">
+
+        <apex:column >
+            <apex:commandLink value="Delete" action="{!DeleteRow}" rerender="iTOD">
+                <apex:param name="todInd" value="{!LEN(positioncount)}"/>
+            </apex:commandLink>
+            <apex:variable var="positioncount" value="{!positioncount+'|'}"/>
+        </apex:column>
+
+        <apex:column >
+            <apex:facet name="header">Date Requested</apex:facet>
+            <apex:inputField value="{!tod.DateRequested__c}"/>
+        </apex:column>
+        <apex:column >
+            <apex:facet name="header">Earning Code</apex:facet>
+            <apex:inputField value="{!tod.EarningCode__c}"/>
+        </apex:column>
+        <apex:column >
+            <apex:facet name="header">Hours</apex:facet>
+            <apex:inputField value="{!tod.Hours__c}"/>
+        </apex:column>
+        </apex:pageBlockTable>
+        <apex:commandButton action="{!AddRow}" value="Add Row" reRender="iTOD"/>
+        
+    </apex:pageBlock>
+    </apex:form>
+</apex:page>

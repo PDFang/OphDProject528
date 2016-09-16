@@ -1,0 +1,18 @@
+<apex:page standardController="Case" tabStyle="Case" >
+    <apex:form >
+        <apex:pageBlock title="RFE" >
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!Save}" value="Save"/>
+                <apex:commandButton action="{!Cancel}" value="Cancel"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="1" >
+                <apex:inputField value="{!case.RFECreator__c}"/>
+                <apex:inputField value="{!case.RFEStartDate__c}"/>
+                <apex:inputField value="{!case.RFEEndDate__c}"/>
+                <apex:inputField value="{!case.DescriptionOfIssue__c}"/>
+                <apex:inputField value="{!case.RootCause__c}"/>
+                <apex:inputField value="{!case.CorrectiveActions__c}"/>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

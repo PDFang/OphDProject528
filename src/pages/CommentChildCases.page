@@ -1,0 +1,34 @@
+<apex:page standardController="Case" extensions="CommentChildCasesExtention">
+            <apex:pageMessages />
+    <apex:form >
+        <apex:pageBlock title="Comment All Child Cases">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Save Comment" action="{!SaveComment}" rendered="{!if(ChildCaseCount<>0,True,False)}"/>
+                <apex:commandButton value="Cancel" action="{!Cancel}"/>
+            </apex:pageBlockButtons>
+
+            <apex:pageblockSection collapsible="false" columns="1" title="Parent Case Information">
+                <apex:outputField value="{!case.casenumber}"/>
+                <apex:outputField value="{!case.subject}"/>
+                <apex:outputField value="{!case.account.name}"/>
+                <apex:pageblockSectionItem >
+                    <apex:outputLabel for="caseCount" value="Number of Child Cases" />
+                    <apex:outputText id="caseCount" value="{!ChildCaseCount}"/>
+                </apex:pageblockSectionItem>
+            </apex:pageblockSection>
+            <apex:pageBlockSection collapsible="false" title="Child Case Comment" columns="1" rendered="{!if(ChildCaseCount<>0,True,False)}" >
+                <apex:pageblockSectionItem >
+                    <apex:outputLabel for="public" value="Public"/>
+                    <apex:inputCheckbox id="public" value="{!IsPublic}" selected="true" />
+                </apex:pageblockSectionItem>
+                <apex:pageblockSectionItem >
+                    <apex:outputLabel for="commentBody" value="Comment Body"/>
+                    <apex:inputTextarea tabindex="1" id="commentBody" value="{!CommentBodyText}" style="width:800px;height:500px"/>
+                </apex:pageblockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection rendered="{!if(ChildCaseCount=0,True,False)}">
+                   <b><font color="red">This case has no child cases to comment on.</font></b>                 
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

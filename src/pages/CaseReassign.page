@@ -1,0 +1,80 @@
+<apex:page standardController="Case" extensions="CaseReassignExtension"  >
+    
+  <apex:form >
+      <apex:pageBlock title="Reassign Case" id="theForm">
+              <div style="color:red"><apex:messages id="msg" /></div>
+              <apex:actionRegion >
+              <apex:pageBlockSection columns="1"  >
+                  <apex:pageBlockSectionItem >
+                  <apex:outputLabel for="searchBy">Assign By</apex:outputLabel>
+                  <apex:selectRadio id="searchBy" value="{!assignBy}" onchange="reForm()" >
+                      <apex:selectOption itemLabel="Queue" itemValue="Queue"  />
+                      <apex:selectOption itemlabel="User" itemValue="User" />
+                  </apex:selectRadio>
+                  </apex:pageBlockSectionItem>
+              </apex:pageBlockSection>
+              <apex:pageBlockSection columns="1"  rendered="{!IF(assignBy='User',TRUE,FALSE)}">
+                  <apex:pageBlockSectionItem >
+                      <apex:outputLabel for="users" >User*</apex:outputLabel>
+                      <apex:inputField id="users" value="{!Case.Assigned_To__c}" >
+                          <apex:selectOptions value="{!ActiveUsers}"/>
+                          <apex:actionSupport action="{!UpdateUsersQueue}" event="onchange" reRender="theForm" />
+                      </apex:inputField>
+                  </apex:pageBlockSectionItem>
+              </apex:pageBlockSection>
+              </apex:actionRegion>
+              <apex:pageBlockSection columns="1" >
+                  <apex:pageBlockSectionItem >
+                      <apex:outputLabel for="queue">Queue*</apex:outputLabel>
+                      <apex:selectList id="queue" size="1" value="{!selectedQueue}" >
+                          <apex:selectOptions value="{!AvailableQueues}"/>
+                          <apex:actionSupport action="{!CrtCheck}" event="onchange" reRender="theForm"/>
+                      </apex:selectList>
+                  </apex:pageBlockSectionItem>
+                  <apex:pageBlockSectionItem rendered="{!isCrt}">
+                      <apex:outputLabel for="req"></apex:outputLabel>
+                      <apex:outputText id="req" >Please fill out the CRT Request Type and Agent Accountable fields prior to reassigning to CRT.</apex:outputText>
+                  </apex:pageBlockSectionItem>
+                  <apex:inputField id="crt" value="{!Case.CrtRequestType__c}" rendered="{!isCRT}"/>
+                  <apex:inputField id="accountable" value="{!Case.AgentAccountable__c}"  rendered="{!isCRT}"/>
+                  <apex:pageBlockSectionItem rendered="{!NOT(isCRT)}">
+                      <apex:outputLabel for="publish">Public Comment</apex:outputLabel>
+                      <apex:inputCheckbox value="{!isPublicComment}"/>
+                  </apex:pageBlockSectionItem>
+                 
+                  <apex:pageblocksectionitem rendered="{!isvisibleComment}">            
+                       
+                         <apex:outputlabel for="comment">Comment*</apex:outputlabel>
+                          <apex:inputtextarea id="comment" value="{!commentBody}" cols="100" rows="6" title="Comment*"/>      
+                       
+                  </apex:pageblocksectionitem>
+                 
+                   <!--** Added All three new fields as per Project 27626 --> 
+                 
+                      <apex:pageblocksectionitem rendered="{!IF(isvisibleComment == false, true, false)}">
+                          <apex:outputlabel for="troubleshootcomment">Troubleshooting Steps Taken*</apex:outputlabel>
+                          <apex:inputtextarea style="border:1px solid #000;" id="troubleshootcomment" value="{!troubleshootingSteps}" cols="100" rows="6" />
+                      </apex:pageblocksectionitem>
+                      <apex:pageblocksectionitem rendered="{!IF(isvisibleComment == false, true, false)}">
+                          <apex:outputlabel for="reason">Reason for Case Transfer*</apex:outputlabel>
+                          <apex:inputtextarea style="border:1px solid #000;" id="reason" value="{!stReason}" cols="100" rows="6" />
+                      </apex:pageblocksectionitem>
+                      <apex:pageblocksectionitem rendered="{!IF(isvisibleComment == false, true, false)}">
+                          <apex:outputlabel for="requestedactions">Requested Action(s)*</apex:outputlabel>
+                          <apex:inputtextarea style="border:1px solid #000;" id="requestedactions" value="{!stRequestedAction}" cols="100" rows="6" />
+                      </apex:pageblocksectionitem>                  
+                      <apex:pageblocksectionitem >
+                          <apex:outputlabel for="Work">Work Duration (Min)</apex:outputlabel>
+                          <apex:inputfield id="work" value="{!Case.WorkDuration__c}" />
+                      </apex:pageblocksectionitem>
+</apex:pageBlockSection>
+          *Required Fields
+          <apex:pageBlockButtons location="bottom" >
+              <apex:commandButton action="{!Save}" value="Reassign"/>
+              <apex:commandButton action="{!Cancel}" value="Cancel"/>
+          </apex:pageBlockButtons>
+      </apex:pageBlock>
+  <apex:actionFunction name="reForm" reRender="theForm"/>
+  </apex:form>
+  <apex:detail />
+</apex:page>

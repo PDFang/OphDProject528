@@ -1,0 +1,694 @@
+<apex:page standardController="Case" extensions="ConsoleCaseControlsExtension" sidebar="false" showHeader="false" >
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:stylesheet value="{!$Resource.SupportConsoleCss}" />
+    
+    <style type="text/css">
+        html, body{
+        	font-family: 'effra', 'Open Sans', sans-serif !important;
+            font-size:12px;
+            background-image: background-image: -ms-linear-gradient(top,#202020 0%,#58595b 100%);
+        	background-image: -moz-linear-gradient(top,#202020 0%,#58595b 100%);
+        background-image: -o-linear-gradient(top,#202020 0%,#58595b 100%);
+          background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0,#202020),color-stop(1,#58595b));
+          background-image: -webkit-linear-gradient(top,#202020 0%,#58595b 100%);
+          background-image: linear-gradient(to bottom,#202020 0%,#58595b 100%);
+          filter: progid:DXImageTransform.Microsoft.gradient(StartColorStr='#202020',EndColorStr='#58595b');
+          -ms-filter: "progid:DXImageTransform.Microsoft.gradient(StartColorStr='#202020',EndColorStr='#58595b')";
+            color:#fff;
+        	background-color:#fff;
+            padding:0px;
+            margin:0px;
+            height:100%;
+        }
+        
+        a{
+            color:#fff;
+        }
+    
+        .event-dialog{
+            border:1px solid 000;
+        }
+        
+            .event-dialog a{
+                color:#000;
+            }
+        .center-detail-label{
+        Width : 68px !important;
+        }
+
+    </style>
+    <div class="wrapper">
+        <section class="left-panel">
+            <div class="panel-field">
+                <div class="panel-label">
+                    Case
+                </div>
+                <div class="panel-value">
+                    {!Case.CaseNumber}
+                </div>
+                <div class="clear-both"></div>
+            </div>
+            <apex:outputPanel rendered="{!NOT(ISBLANK(Case.ProductImpacted__c))}">
+                <div class="panel-field">
+                    <div class="panel-label">
+                        Product
+                    </div>
+                    <div class="panel-value">
+                        {!Case.ProductImpacted__c}
+                    </div>
+                    <div class="clear-both"></div>
+                </div>
+                <div class="panel-field">
+                    <div class="panel-label">
+                        Platform(s)
+                    </div>
+                    <div class="panel-value" style="width:140px;">
+                        {!SUBSTITUTE(SUBSTITUTE(Case.PlatformsImpacted__c,' - inContact',''),';',', ')}
+                    </div>
+                    <div class="clear-both"></div>
+                </div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!NOT(ISBLANK(Case.AccountId))}">
+                <div class="panel-field">
+                    <div class="panel-label">
+                        Contact
+                    </div>
+                    <div class="panel-value">
+                        <a href="#" id="contact-link" >{!Case.Contact.Name}</a>
+                    </div>
+                    <div class="clear-both"></div>
+                </div>
+                <div class="panel-field">
+                    <div class="panel-label">
+                        Account
+                    </div>
+                    <div class="panel-value">
+                        <a href="#" id="account-link" >{!Case.Account.Name}</a>
+                    </div>
+                    <div class="clear-both"></div>
+                </div>
+                <apex:outputpanel rendered="{!Case.Account.inContact_Cluster__c != null}" styleclass="panel-field" layout="block">
+                        <div class="panel-label">
+                            Incontact Cluster
+                        </div>
+                        <div class="panel-value">
+                            {!Case.Account.inContact_Cluster__c}
+                        </div>
+                        <div class="clear-both"></div>
+                    </apex:outputpanel>
+                <apex:outputpanel rendered="{!Case.Account.Verint_Cluster__c != null}" styleclass="panel-field" layout="block">
+                    <div class="panel-label">
+                        Verint Cluster
+                    </div>
+                    <div class="panel-value">
+                        {!Case.Account.verint_Cluster__c}
+                    </div>
+                    <div class="clear-both"></div>
+                </apex:outputpanel>
+                <div class="panel-field">
+                    <div class="panel-label">
+                        Segment
+                    </div>
+                    <div class="panel-value {!SUBSTITUTE(Case.Account.CustomerSegment__c,' ','')}">
+                        <apex:outputField value="{!Case.Account.CustomerSegment__c}"/>
+                    </div>
+                    <div class="clear-both"></div>
+                </div>
+            </apex:outputPanel>
+            <div class="panel-field">
+                <div class="panel-label">
+                    Opened
+                </div>
+                <div class="panel-value">
+                    <apex:outputField value="{!Case.CreatedDate}"/>
+                </div>
+                <div class="clear-both"></div>
+            </div>
+            <div class="panel-field">
+                <div class="panel-label">
+                    TSM
+                </div>
+                <div class="panel-value">
+                    <apex:outputField value="{!Case.Account.TechnicalSuccessManagerprimary__r.Name}"/>
+                </div>
+                <div class="clear-both"></div>
+            </div>
+                <apex:repeat value="{!OpenMilestones}" var="m">
+                    <div class="panel-field ">
+                        <div class="panel-label">                        
+                            {!m.MilestoneType.Name}
+                        </div>
+                        
+                        <apex:outputPanel rendered="{!NOT(m.IsViolated)}">
+                            <div class="panel-value">
+                                {!TEXT(FLOOR((m.TargetDate-NOW())*24))&" hr"} 
+                                {!TEXT(FLOOR(MOD((m.TargetDate-NOW())*24,1)*60))&" min"}
+                            </div>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel rendered="{!m.IsViolated}">
+                            <div class="panel-value violated">
+                                In Violation
+                            </div>
+                        </apex:outputPanel>
+                        <div class="clear-both"></div>
+                    </div>
+                </apex:repeat>
+        </section >
+        <section class="center" >
+            <div id="java-errors" style="display:none" class="warning-message"></div>
+            <div id="updated" class="update-warning" style="display: none;">This record has been modified by another user.</div>
+            <apex:outputPanel layout="block" styleClass="partner" style="background-color:#{!GetBanner.BackgroundColor};color:#{!GetBanner.FontColor};" rendered="{!NOT(ISNULL(GetBanner))}" >
+                 {!GetBanner.DisplayText}
+            </apex:outputPanel>
+            <apex:outputPanel layout="block" styleClass="partner platinum" rendered="{!(Case.Account.SalesPartnerMasterAgent__r.PartnerLevel__c='Referral Platinum')}">
+                Platinum Partner
+            </apex:outputPanel>
+            <apex:outputPanel layout="block" styleClass="partner unsupported" rendered="{!NOT(ISBLANK(Case.Account.UnsupportedEnvironment__c))}">
+                Unsupported Environment: {!Case.Account.UnsupportedEnvironment__c}
+            </apex:outputPanel>
+            <apex:outputPanel layout="block" styleClass="partner government" rendered="{!(Case.Account.GovernmentAccount__c)}">
+                Government Account
+            </apex:outputPanel>
+            <apex:outputPanel layout="block" styleClass="partner hipaa" rendered="{!(Case.Account.HipaaAccount__c)}">
+                HIPAA Account
+            </apex:outputPanel>
+            <div class="clear-both"></div>
+           
+            <div class="center-detail">
+                <div class="center-detail-label">
+                    Subject
+                </div>
+                <div  class="center-detail-value">
+                    {!Case.Subject}
+                </div>
+                <div class="clear-both"></div>
+            </div>
+            <div class="clear-both"></div>
+            <div class="center-detail">
+                <div class="center-detail-label">
+                    Status Details
+                </div>
+                <div class="center-detail-value">
+                    <apex:outputField value="{!Case.StatusDetails__c}" />
+                    <apex:outputPanel rendered="{!NOT(ISBLANK(Case.StatusDetailsLastModifiedDateTime__c))}"> 
+                        - &nbsp;
+                            <apex:outputField value="{!Case.StatusDetailsLastModifiedDateTime__c}" /> 
+                    </apex:outputPanel>
+                </div>
+                <div class="clear-both"></div>
+            </div>
+            <div class="clear-both"></div>
+             <apex:outputPanel rendered="{!NOT(ISBLANK(Case.Account.SupportInstructions__c))}"> 
+            <div class="center-detail">
+                <div class="center-detail-label">
+                    Support Instructions
+                </div>
+                <div class="center-detail-value">
+                    <apex:outputField value="{!Case.Account.SupportInstructions__c}" />                   
+                </div>
+                <div class="clear-both"></div>
+            </div>
+            </apex:outputPanel>
+            <div style="float:left;">
+                <div class="panel-label">
+                    Status
+                </div>
+                <div id="status-field" >
+                    {!Case.Status}
+                    
+                </div>
+            </div>
+            <apex:outputPanel layout="block" id="mood-panel" style="float:right;text-align:right;padding:2px;" rendered="{!NOT(ISBLANK(Case.AccountId))}">
+                <div style="float:left;margin-top:7px;">
+                    Mood as of&nbsp;
+                    <apex:outputText value="{0,date,MM'/'dd'/'yyyy}">
+                        <apex:param value="{!Case.Account.CustomerTemperatureDate__c}" /> 
+                    </apex:outputText><br/>
+                    Reported By: {!Case.Account.CustomerMoodLastUpdatedBy__r.Name}
+                </div>
+                <div id="current-mood" style="float:left;margin-left:5px;margin-top:7px;">   
+                        
+                </div>  
+                <div style="float:left;margin-left:8px;">   
+                        <div style="text-align:center">Set Mood</div>
+                        <div>
+                            <a href="#" onclick="setAccountMood('Happy');"><apex:image height="25px" title="Happy" value="{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-happy-icon.png')}"/></a>
+                            <a href="#" onclick="setAccountMood('Indifferent');"><apex:image height="25px" title="Indifferent" value="{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-indifferent-icon.png')}"/></a>
+                            <a href="#" onclick="setAccountMood('Mad');"><apex:image height="25px" title="Mad" value="{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-mad-icon.png')}" /></a>
+                        </div>
+                </div>  
+                
+                <div class="clear-both"></div>
+            </apex:outputPanel>
+            <div class="clear-both"></div>
+            <apex:outputPanel style="float:left;" layout="block" id="confirm-panel" rendered="{!AND(Case.RecordType.Name = 'Event',Case.Status = 'Suspected')}">
+                <a href="#" id="confirm-button" class="k-button">Confirm/Reject</a>
+            </apex:outputPanel>
+            <apex:outputPanel style="float:left;" layout="block" id="sync-panel" rendered="{!AND(Case.RecordType.Name = 'Event',NOT(Case.IsClosed))}">
+                <a href="#" id="sync-button" class="k-button">Sync Priority</a>
+            </apex:outputPanel>
+            <apex:outputPanel style="float:left;" layout="block" id="chat-panel" rendered="{!AND(Case.RecordType.Name = 'Event',NOT(Case.IsClosed))}">
+                <a href="#" id="chat-button" class="k-button">Chat Room Email</a>
+            </apex:outputPanel>
+            <div id="sync-message"></div>
+            <div id="chat-message"></div>
+        </section >
+        <section class="right-panel">
+            <div id="record-type" class="record-type-banner {!LOWER(SUBSTITUTE(Case.RecordType.Name,' ','-'))}">{!Case.RecordType.Name}</div>
+            <div class="panel-field">
+                <div class="panel-label">
+                    Owner
+                </div>
+                <div class="panel-value">
+                    {!Case.Owner.Name}
+                </div>
+                <div class="clear-both"></div>
+            </div>
+            
+            <div class="panel-field">
+                <div class="panel-label">
+                    Assigned To
+                </div>
+                <div class="panel-value">
+                    <apex:outputField value="{!Case.Assigned_To__c}"/>
+                </div>
+                <div class="clear-both"></div>
+            </div>
+            <div class="panel-field">
+                <div style="float:left;width:30%;font-weight:bold;text-align:right;padding-right:3px;">
+                    Priority
+                </div>
+                <div  style="float:left;" class="priority {!Case.Priority}">
+                    {!Case.Priority}
+                </div>
+                <div  style="float:left;width:30%;font-weight:bold;text-align:right;padding-right:3px;">
+                    Severity
+                </div>
+                <div style="float:left;" class="severity {!Case.Severity__c}">
+                    {!Case.Severity__c}
+                </div>
+                <div class="clear-both"></div>
+            </div>
+            <apex:outputPanel styleClass="related-case event" rendered="{!Case.RecordType.Name = 'Incident'}">
+                Event:
+                <apex:outputPanel rendered="{!ISBLANK(Case.ParentId)}">
+                    <a href="#" id="event-search" onclick="openEventList();">Add Event</a>
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!NOT(ISBLANK(Case.ParentId))}">
+                    <a href="#" id="event-link" >{!Case.Parent.CaseNumber}</a>
+                </apex:outputPanel>
+            </apex:outputPanel>
+                <apex:outputPanel styleClass="related-case known-issue" layout="block" rendered="{!OR(Case.RecordType.Name = 'Problem',Case.RecordType.Name = 'Event',Case.RecordType.Name = 'Incident')}">
+                    Known Issue:
+                    <apex:outputPanel rendered="{!ISBLANK(Case.KnownIssue__c)}">
+                        <a href="#" id="known-issue-search">Search/Create Known Issue</a>
+                    </apex:outputPanel>
+                    
+                    <apex:outputPanel rendered="{!NOT(ISBLANK(Case.KnownIssue__c))}">
+                        <a href="#" id="known-issue-link" >{!Case.KnownIssue__r.CaseNumber}</a>
+                    </apex:outputPanel>
+                    
+                </apex:outputPanel>
+                <apex:outputPanel layout="block" styleClass="related-case problem" rendered="{!OR(Case.RecordType.Name = 'Known Issue',Case.RecordType.Name = 'Event',Case.RecordType.Name = 'Incident')}">
+                    Problem:
+                    <apex:outputPanel rendered="{!ISBLANK(Case.Problem__c)}">
+                        <a href="#" id="problem-search">Search/Create Problem</a>
+                    </apex:outputPanel>
+                    
+                    <apex:outputPanel rendered="{!NOT(ISBLANK(Case.Problem__c))}">
+                        <a href="#" id="problem-link" >{!Case.Problem__r.CaseNumber}</a>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+        </section >
+    </div>
+    <div class="clear-both"></div>
+    <div id="event-dialog" style="display: none;">
+        Click Event Number to add...
+        <div id="event-list" style="margin:2px;"></div>
+    </div>
+    <apex:outputField value="{!Case.Account.CustomerTemperature__c}" rendered="false"/>
+    
+        <apex:includeScript value="/support/console/30.0/integration.js"/>
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+    
+    <script type="text/x-kendo-template" id="event-template">
+        <div class="event-dialog" >
+            <a href="\\#" onclick="setEvent('#:Id#')">#:CaseNumber#</a>
+            #:Subject#
+        </div>
+    </script>
+    
+    <script type="text/javascript">
+        $(document).ready(function() {
+            //ChangeSelectsIntoButtons();
+            
+            $("#problem-search").click(function(){
+                pageUrl = '{!URLFOR($Page.CaseCreateKnownIssue,null,[id = Case.Id,recordType = 'Problem',origin = Case.RecordType.Name])}';
+                tabLabel = 'Find Problem';
+                tabName = 'problem-search';
+                openSubTab();
+            });
+            
+            $("#known-issue-search").click(function(){
+                pageUrl = '{!URLFOR($Page.CaseCreateKnownIssue,null,[id = Case.Id,recordType = 'Known Issue',origin = Case.RecordType.Name])}';
+                tabLabel = 'Find Known Issue';
+                tabName = 'known-issue-search';
+                openSubTab();
+            });
+            
+            $("#account-link").click(function(){
+                pageUrl = '/{!Case.AccountId}';
+                tabLabel = "{!Case.Account.Name}";
+                tabName = 'account-subtab';
+                openSubTab();
+            });
+            
+            $("#contact-link").click(function(){
+                pageUrl = '/{!Case.ContactId}';
+                tabLabel = "{!Case.Contact.Name}";
+                tabName = 'contact-subtab';
+                openSubTab();
+            });
+            
+            $("#known-issue-link").click(function(){
+                pageUrl = '/{!Case.KnownIssue__c}';
+                tabLabel = '{!Case.KnownIssue__r.CaseNumber}';
+                tabName = 'known-issue-subtab';
+                openPrimaryTab();
+            });
+            
+            
+            
+            $("#event-link").click(function(){
+                pageUrl = '/{!Case.ParentId}';
+                tabLabel = '{!Case.Parent.CaseNumber}';
+                tabName = 'event-subtab';
+                openPrimaryTab();
+            });
+            
+            $("#problem-link").click(function(){
+                pageUrl = '/{!Case.Problem__c}';
+                tabLabel = '{!Case.Problem__r.CaseNumber}';
+                tabName = 'problem-subtab';
+                openPrimaryTab();
+            });
+            
+            $("#confirm-button").click(function(){
+                pageUrl = '{!URLFOR($Page.CaseConfirmEvent,null,[id = Case.Id])}';
+                tabLabel = 'Confirm/Reject';
+                tabName = 'confirm-subtab';
+                openSubTab();
+            });
+            
+            $("#sync-button").click(function(){
+                syncChildCases();
+            });
+            
+            $("#chat-button").click(function(){
+                sendChatRoomEmail();
+            });
+            
+            if('{!Case.CaseNumber}' != ''){
+                //sforce.console.setTabTitle('{!Case.CaseNumber}');
+                sforce.console.setTabTextStyle('color:#fff;font-weight:bold;', null);
+            }
+            
+            switch("{!Case.RecordType.Name}")
+            {
+                case "Incident":
+                    sforce.console.setTabStyle('background-image: linear-gradient(to bottom, rgb(88, 128, 179) 0%, rgb(137, 153, 174) 100%);',null,null);
+                    break;
+                case "Event":
+                    sforce.console.setTabStyle('background-color:#228b22;',null,null);
+                    break;
+                case "Work Orders":
+                    sforce.console.setTabStyle('background-color:#BA55D3;',null,null);
+                    break;
+                case "Known Issue":
+                    sforce.console.setTabStyle('background-color:#FF5300;',null,null);
+                    break;
+                case "Problem":
+                    sforce.console.setTabStyle('background-color:#0053DC;',null,null);
+                    break;
+                case "Service Request":
+                    sforce.console.setTabStyle('background-color:#923931;',null,null);
+                    break;
+                case "Maintenance Notification":
+                    sforce.console.setTabStyle('background-color:#789440;',null,null);
+                    break;
+            }
+            
+            if("{!Case.AccountId}" != "" && "{!Case.Account.CustomerTemperature__c}" != ""){
+                $("#current-mood").html("<img src='" + {!LOWER(Case.Account.CustomerTemperature__c)}Url + "'/>");
+            }
+            
+            $('#event-dialog').kendoWindow({
+                title: 'Select Event',
+                resizable: false,
+                width:700,
+                height:135,
+                modal: true,
+                position:{
+                    top:2,
+                    left:400
+                    }
+            });
+            
+            
+        });
+        
+        var tabName;
+        var tabLabel
+        var pageUrl;
+        var status = "{!Case.Status}";
+        var happyUrl = "{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-happy-icon.png')}";
+        var indifferentUrl = "{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-indifferent-icon.png')}";
+        var madUrl = "{!URLFOR($Resource.MiscImages, 'icontexto-emoticons-mad-icon.png')}";
+        
+        function recordUpdated(){
+            $("#updated").show();
+        }
+
+        var eventHandler = function (result) {
+            console.log(result);
+            if(result.Id == "{!Case.Id}")
+            {
+            
+                if('{!BLANKVALUE(Case.Problem__c,"null")}' != result.Problem__c || '{!BLANKVALUE(Case.KnownIssue__c,"null")}' != result.KnownIssue__c){
+                    location.reload();
+                }
+                
+                //run if current case's status updates 
+                if(result.Status !== undefined && result.Status != status)
+                {
+                    status = result.Status
+                    if(status == 'Confirmed' || status == 'Non-Event'){
+                        $("#confirm-button").hide();
+                    }
+                    $("#status-field").html(status);
+                    $("#status-field").addClass("updated-field");
+                    $("#status-field").addClass(status);
+                }
+                //run if current case's status updates 
+                if(result.Priority !== undefined && result.Priority != "{!Case.Priority}")
+                {
+                    $("#priority-field").html(result.Priority);
+                    $("#priority-field").addClass("updated-field");
+                    $("#priority-field").addClass(result.Priority);
+                }
+                
+                if(result.LastModifiedById != "{!$User.Id}")
+                {
+                    
+                    recordUpdated();
+                }
+            }
+         };
+         
+         function syncChildCases(){
+             ConsoleCaseControlsExtension.SyncChildPriorities('{!Case.Id}', status,function(result, event){
+                 if(event.status){
+                     document.getElementById('sync-message').innerHTML = "Child cases were successfully synced.";
+                 }else if (event.type === 'exception') {
+                    document.getElementById("sync-message").innerHTML = 
+                        event.message + "<br/>\n<pre>" + event.where + "</pre>";
+                } else {
+                    document.getElementById("sync-message").innerHTML = event.message;
+                }
+             });
+         }
+         
+         function sendChatRoomEmail(){
+             
+             var r=confirm("Are you sure you want to send the chat room email?");
+             if(r==true)
+             {
+                 ConsoleCaseControlsExtension.SyncChildPriorities('{!Case.Id}', status,function(result, event){
+                     if(event.status){
+                         window.open("https://incontact.adobeconnect.com/eventchatroom");
+                     }else if (event.type === 'exception') {
+                        document.getElementById("chat-message").innerHTML = 
+                            event.message + "<br/>\n<pre>" + event.where + "</pre>";
+                    } else {
+                        document.getElementById("chat-message").innerHTML = event.message;
+                    }
+                 });
+             }
+         }
+         
+         //Add a push notification listener for Cases
+         sforce.console.addPushNotificationListener(['Case'], eventHandler);
+         
+         function ChangeSelectsIntoButtons(){
+            $('select').each(function(selectIndex, selectElement){
+                if($(selectElement).siblings('div.k-listview').size() == 0 && 
+                    (($(selectElement).children('option[value!=""]').size() < 30 && $(selectElement).siblings('input').size() == 0) ||
+                    ($(selectElement).attr('multiple') === 'multiple' && $(selectElement).is( ":hidden" ))))
+                {
+                    $(selectElement).hide();
+                    $('<div id="status-list">').addClass('k-listview').prependTo($(selectElement).parent());
+                    $(selectElement).children('option[value!=""]').each(function(optionIndex, optionElement){
+                        var link = $('<div>')
+                            .addClass('status')
+                            .attr('data-value', $(optionElement).attr('value'))
+                            .html($(optionElement).html());
+                        $(link).appendTo($(selectElement).siblings('div.k-listview'));
+                        if($(selectElement).parents('[id*="RiskAssessmentFields"]').size() > 0)
+                            $('<div style="clear:both;">').appendTo($(selectElement).siblings('div.k-listview'));
+                            
+                        if($(optionElement).attr('selected') === 'selected')
+                        {
+                            $(link).addClass('selected');
+                        }
+                    });
+                }
+                else if($(selectElement).siblings('input').size() > 0)
+                {
+                    $(selectElement).hide();
+                }
+            });
+        }
+        
+        function openSubTab() {
+            //First find the ID of the primary tab to put the new subtab in
+            return sforce.console.getEnclosingPrimaryTabId(processSubTab );
+        }
+        
+        var processSubTab = function processSubTab (result) {
+            //Now that we have the primary tab ID, we can open a new subtab in it
+            var primaryTabId = result.id;
+            sforce.console.openSubtab(primaryTabId , pageUrl, true, 
+                tabLabel, null,openSuccess,tabName);
+        };
+        
+        function openPrimaryTab() {
+            //Open a new primary tab with the salesforce.com home page in it
+            sforce.console.openPrimaryTab(null, pageUrl, true, 
+                tabLabel, openSuccess, tabName);
+        }
+        
+        
+        var openSuccess = function openSuccess(result) {
+            //Report whether we succeeded in opening the subtab
+            if (result.success == true) {
+                //sforce.console.setTabStyle(tabStyle,result.id,null);
+            } else {
+                alert('subtab cannot be opened');
+            }
+        };
+        
+        function setEvent(eventId){
+            
+            ConsoleCaseControlsExtension.SetRelatedEvent(
+                  eventId,"{!Case.Id}",
+                  function(result,event)
+                  {
+                      
+                      if (event.status) {
+                            $("#java-errors").hide();
+                            location.reload();
+                        } else if (event.type === 'exception') {
+                            $("#java-errors").show();
+                            document.getElementById("java-errors").innerHTML = event.message;
+                        } else {
+                            $("#java-errors").show();
+                            document.getElementById("java-errors").innerHTML = event.message;
+                        }
+                  },
+                  {escape: false}
+               );
+        }
+        
+        function setAccountMood(mood){
+            ConsoleCaseControlsExtension.SetAccountMood(
+                  "{!Case.AccountId}",mood,
+                  function(result,event)
+                  {
+                      
+                      if (event.status) {
+                            $("#java-errors").hide();
+                            location.reload();
+                        } else if (event.type === 'exception') {
+                            $("#java-errors").show();
+                            document.getElementById("java-errors").innerHTML = event.message;
+                        } else {
+                            $("#java-errors").show();
+                            document.getElementById("java-errors").innerHTML = event.message;
+                        }
+                  },
+                  {escape: false}
+               );
+        }
+        
+        var eventDataSource = new kendo.data.DataSource({
+                  transport:{
+                      read: function(options){
+                                ConsoleCaseControlsExtension.JsonOpenEvents(
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                              //console.log(JSON.parse(result));
+                                              options.success(JSON.parse(result));
+                                                $("#java-errors").hide();
+                                            } else if (event.type === 'exception') {
+                                                $("#java-errors").show();
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                                console.log(articleSearchText());
+                                            } else {
+                                                $("#java-errors").show();
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                            }
+                      },
+                    schema:{
+                        model: {
+                            id: "Id",
+                            fields: {
+                                "Id": {type: "string"},
+                                "InternalEvent__c": {type: "boolean"},
+                                "Subject" : {type: "string" },
+                                "Status": {type: "string"},
+                                "CaseNumber": {type: "string", defaultValue: null}
+                            }
+                        }
+                    }
+                  });
+                  
+              function openEventList(){
+                  $("#event-list").kendoListView({
+                        dataSource: eventDataSource ,
+                        template: kendo.template($("#event-template").html())
+                    });
+                
+                 $('#event-dialog').data('kendoWindow').open();
+              }
+
+    </script>
+</apex:page>

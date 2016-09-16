@@ -1,0 +1,169 @@
+<apex:page standardController="Case" extensions="CaseReassignExtension"  showHeader="false" standardstylesheets="true" >
+   <!-- <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" /> -->
+     <apex:stylesheet value="/sCSS/sprites/1380777536000/Theme3/default/gc/CaseInteraction.css"/>
+    <!--<apex:stylesheet value="/sCSS/sprites/1380777536000/Theme3/default/gc/Common.css"/>-->
+    
+    <!--<apex:stylesheet value="/sCSS/36.0/sprites/1461274792000/Theme3/default/gc/chatterCore.css"/>-->
+    <apex:includeScript value="/canvas/sdk/js/28.0/publisher.js"/>
+    <apex:stylesheet value="{!$Resource.SupportConsoleCss}" />
+    <apex:includescript value="/support/console/28.0/integration.js" />
+
+    <style type="text/css">
+        .body{
+            margin:5px;
+        }
+        
+         .publisherField {
+             margin:10px;
+         }
+         .fieldLabelTd{
+             margin-right:5px;
+         }
+         
+         .error-message{
+            
+            background-color: #fce9e9;
+            font-size: 14px;
+            padding: 10px;
+        }
+         
+         .info-message{
+            background-color: #CCEEFF;
+            font-size: 14px;
+            padding: 10px;
+        }
+        .caseheader {
+            position: relative;
+            background-color: #f5f5f6;
+            border: 1px solid #d4dadc;
+            padding: 8px;
+            width: 96%;
+            font-weight: bold;
+        }        
+        .bPageBlock {
+            border: none !important;
+            background-color: white !important;
+        }
+        .btn {
+            background: none !important;
+            background-image: none !important;
+            background-color: #a0cb3d !important;
+            font-size : 1.1em !important;
+        }
+    </style>
+    <script>
+        function refreshFeed(){
+
+                 Sfdc.canvas.publisher.publish({name : 'publisher.refresh', payload :{feed:true, objectFields:true, objectRelatedLists:true}});
+                    if (sforce.console.isInConsole()){
+                    console.log('this is inside console');
+                    refreshPrimaryTabs();
+                    }
+                 }
+
+       function refreshPage(){
+            var currentURL = "https://{!URLForPage}/{!c.Id}";
+            top.location.href = currentURL;
+        }
+
+        function  refreshPrimaryTabs(){
+             sforce.console.getPrimaryTabIds(showTabId);
+        }
+        var showTabId = function showTabId(result) {
+           //Display the primary tab IDs
+           //console.log('Primary Tab IDs: ' + result.ids);
+           var i;
+           for(i = 0; i < result.ids.length; ++i){
+               console.log('Tab IDs indexted: ' + result.ids[i]);
+               sforce.console.refreshPrimaryTabById(result.ids[i], true);
+               }
+           };
+
+
+    </script>
+      <apex:form >          
+              <div class="caseheader">
+                  <span style="padding-left:17px;">Reassign Case</span>
+              </div>
+          <apex:pageblock id="theForm">
+              <apex:actionregion >
+                  <apex:pageblocksection columns="1">
+                      <apex:pageblocksectionitem >
+                          <apex:outputlabel for="searchBy">Assign By</apex:outputlabel>
+                          <apex:selectradio id="searchBy" value="{!assignBy}" onchange="reForm()">
+                              <apex:selectoption itemlabel="Queue" itemvalue="Queue" />
+                              <apex:selectoption itemlabel="User" itemvalue="User" />
+                          </apex:selectradio>
+                      </apex:pageblocksectionitem>
+                  </apex:pageblocksection>
+                  <apex:pageblocksection columns="1" rendered="{!IF(assignBy='User',TRUE,FALSE)}">
+                      <apex:pageblocksectionitem >
+                          <apex:outputlabel for="users">User*</apex:outputlabel>
+                          <apex:inputfield id="users" value="{!Case.Assigned_To__c}">
+                              <apex:selectoptions value="{!ActiveUsers}" />
+                              <apex:actionsupport action="{!UpdateUsersQueue}" event="onchange" rerender="theForm" />
+                          </apex:inputfield>
+                      </apex:pageblocksectionitem>
+                  </apex:pageblocksection>
+              </apex:actionregion>
+              <apex:pageblocksection columns="1">
+                  <apex:pageblocksectionitem >
+                      <apex:outputlabel for="queue">Queue*</apex:outputlabel>
+                      <apex:selectlist id="queue" size="1" value="{!selectedQueue}">
+                          <apex:selectoptions value="{!AvailableQueues}" />
+                          <apex:actionsupport action="{!CrtCheck}" event="onchange" rerender="theForm" />
+                      </apex:selectlist>
+                  </apex:pageblocksectionitem>
+                  <apex:pageblocksectionitem rendered="{!isCrt}">
+                      <apex:outputlabel for="req"></apex:outputlabel>
+                      <apex:outputtext id="req">Please fill out the CRT Request Type and Agent Accountable fields prior to reassigning to CRT.</apex:outputtext>
+                  </apex:pageblocksectionitem>
+                  <apex:inputfield id="crt" value="{!Case.CrtRequestType__c}" rendered="{!isCRT}" />
+                  <apex:inputfield id="accountable" value="{!Case.AgentAccountable__c}" rendered="{!isCRT}" />
+                  <apex:pageblocksectionitem rendered="{!NOT(isCRT)}">
+                      <apex:outputlabel for="publish">Public Comment</apex:outputlabel>
+                      <apex:inputcheckbox value="{!isPublicComment}" />
+                  </apex:pageblocksectionitem>
+                  <apex:pageblocksectionitem rendered="{!isvisibleComment}">
+                      <apex:outputlabel for="comment">Comment*</apex:outputlabel>
+                      <apex:inputtextarea id="comment" value="{!commentBody}" cols="80" rows="6" title="Comment*" style="width:100%" />
+                  </apex:pageblocksectionitem>
+                  <!--** Added All three new fields as per Project 27626 -->
+                  <apex:pageblocksectionitem rendered="{!IF(isvisibleComment == false, true, false)}">
+                      <apex:outputlabel for="troubleshootcomment">Troubleshooting Steps Taken*</apex:outputlabel>
+                      <apex:inputtextarea style="width: 100%" id="troubleshootcomment" value="{!troubleshootingSteps}" cols="100" rows="6"/>
+                  </apex:pageblocksectionitem>
+                  <apex:pageblocksectionitem rendered="{!IF(isvisibleComment == false, true, false)}">
+                      <apex:outputlabel for="reason">Reason for Case Transfer*</apex:outputlabel>
+                      <apex:inputtextarea style="width: 100%" id="reason" value="{!stReason}" cols="100" rows="6" />
+                  </apex:pageblocksectionitem>
+                  <apex:pageblocksectionitem rendered="{!IF(isvisibleComment == false, true, false)}">
+                      <apex:outputlabel for="requestedactions">Requested Action(s)*</apex:outputlabel>
+                      <apex:inputtextarea style="width: 100%" id="requestedactions" value="{!stRequestedAction}" cols="100" rows="6" />
+                  </apex:pageblocksectionitem>
+                  <apex:pageblocksectionitem >
+                      <apex:outputlabel for="Work">Work Duration (Min)</apex:outputlabel>
+                      <apex:inputfield id="work" value="{!Case.WorkDuration__c}" />
+                  </apex:pageblocksectionitem>
+              </apex:pageblocksection>
+              <div class="publisherField">
+                  *Required Fields
+              </div>
+              <apex:actionstatus id="mySaveStatus1">
+                  <apex:facet name="stop">
+                      <apex:outputpanel style="margin-left: 40%;">
+                          <apex:commandbutton styleclass="zen-btn " status="mySaveStatus1" value="Reassign" action="{!PublisherSave}" rerender="theForm" oncomplete="refreshFeed()" />
+                      </apex:outputpanel>
+                  </apex:facet>
+                  <apex:facet name="start">
+                      <apex:outputpanel style="margin-left: 40%;">
+                          <apex:image value="/img/loading32.gif" style="height: 15px;" />
+                          <apex:commandbutton styleclass="zen-btn zen-highlightBtn" value="Saving..." status="mySaveStatus1" disabled="true" oncomplete="refreshFeed()" />
+                      </apex:outputpanel>
+                  </apex:facet>
+              </apex:actionstatus>
+          </apex:pageblock>
+           <apex:actionFunction name="reForm" reRender="theForm"/>
+    </apex:form>
+</apex:page>

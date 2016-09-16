@@ -1,0 +1,406 @@
+<apex:page title="Projects" controller="WorkLogEntryController" tabStyle="Project__c" action="{!IF(NOT($UserRole.Name = 'Director Network Planning & Deployment' || $UserRole.Name = 'Data Center Management' || $UserRole.Name = 'DBA' || $UserRole.Name = 'Deployment Engineer' || $UserRole.Name = 'Network Architect' || $UserRole.Name = 'Network Engineer' || $UserRole.Name = 'Systems Architect' || $UserRole.Name = 'Voice Engineer' || $Profile.Name='IT Developers' || $Profile.Name='System Administrator-CRM' || $Profile.Name='Service Level Management'),URLFOR($Action.Project__c.Tab,$ObjectType.Project__c,[retURL=URLFOR($Action.Project__c.Tab,$ObjectType.Project__c)],true),'')}">
+
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:stylesheet value="{!$Resource.SupportConsoleCss}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.core.min.js')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.CalendarCSS, 'calendar.css')}"/>
+    <!-- setfocus script is so the calendar does not pop up on load for the work log date field -->
+    <style type="text/css">
+         
+        .k-warning{background-position-x:-176px;}
+                .k-widget.k-tooltip-validation
+                {
+                color: red;background-color:#FFF;
+                } 
+    </style>
+    <a href="{!URLFOR($Action.Project__c.Tab,$ObjectType.Project__c,[retURL=URLFOR($Action.Project__c.Tab,$ObjectType.Project__c)],true)}">Go to standard page</a>
+    <!-- apex messages for any errors -->
+    
+    <div id="tabstrip">
+        <ul>
+            <li id="project-list" class="k-state-active">Project Lists</li>
+            <li id="work-logs">Work Logs</li>
+            <li id="feature-list">Features</li>
+        </ul>
+        <!-- ********************* Open cases section ******************* -->
+        
+        <div class="k-content"> 
+            <apex:outputPanel id="projects">
+                   <apex:enhancedList type="Project__c" height="700" id="ProjectList" />
+            </apex:outputPanel>
+        </div>   
+        
+        <div class="k-content"> 
+    <!--start form -->
+        <div style="font-size:15pt;padding-top:10px;padding-bottom:10px;padding-left:10px"><b>Work Log Entry - {!$User.FirstName} {!$User.LastName}</b></div>
+        
+            
+            <!-- table for formatting -->
+            <div class="panel-field">
+                <div class="panel-label">Work Log Date: </div>
+                <div class="panel-value">
+                    <input type="text" id="setDate"/>
+                </div>  
+            </div>
+                 <div style="clear:both;"></div>          
+                <!-- outputText contains the full calendar control -->
+                <div id="calDiv" style="margin:5px;"></div>
+                 <div style="clear:both;"></div> 
+            
+        <div id="java-errors" style="display:none" class="warning-message"></div>
+            <div id="logGrid" style="margin:5px;"></div>
+       
+        
+    </div>
+    
+    
+        <div class="k-content"> 
+            <apex:outputPanel id="features">
+                   <apex:enhancedList type="Feature__c" height="700" id="FeatureList" />
+            </apex:outputPanel>
+        </div>  
+    </div>
+    <apex:form >
+        <apex:actionFunction id="refreshProjects" name="refreshProjects" reRender="projects"/>
+        <apex:actionFunction id="refreshFeatures" name="refreshFeatures" reRender="features"/>
+    </apex:form>
+    <script type="text/javascript">
+        $(document).ready(function() {
+        
+            var tabStrip = $("#tabstrip").kendoTabStrip({
+                                animation: false,
+                                select: loadData,
+                            }).data("kendoTabStrip");
+                            
+            $("#setDate").kendoDatePicker({
+                    value: new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()),
+                    change: function(){
+                        if(worklogDataSource.hasChanges() && this.value() != selectedDate){
+                            alert("Please save or discard and changes before selecting a new date")
+                            this.value(selectedDate);
+                        } else {                        
+                            selectedDate = this.value();
+                            worklogDataSource.read();
+                            PopulateCalendar();
+                        }
+                    }
+            });
+            
+            var datepicker = $("#setDate").data("kendoDatePicker");                                
+            selectedDate = datepicker.value();
+            
+            PopulateCalendar();
+            setupLogGrid();
+        });
+        
+        var selectedDate;
+        
+        function loadData(e){
+            var tabId = $(e.item)[0].id;
+            console.log(tabId);
+            
+            if(tabId === "project-list"){
+                refreshProjects();
+            } else if(tabId === "feature-list"){
+                refreshFeatures();
+            } 
+        }
+        
+            
+            function workPerformedDropDownEditor(container, options) {
+            $('<input style="width:95%" required  id="WorkPerformed__c" name="WorkPerformed__c"  data-bind="value:' + options.field + '"/>')
+                .appendTo(container)
+                .kendoDropDownList({
+                    autobind: false,
+                    dataSource: {
+                        data: {!workTypes}
+                    },
+                    value: options.model.WorkPerformed__c
+                  });  
+            }
+        
+        var worklogDataSource =new kendo.data.DataSource({
+                    autosync:true,
+                    sort:{field: "Project__c", dir:"asc"},
+                  transport:{
+                      read: function(options){
+                               WorkLogEntryController.GetWorkLogsByDate(
+                                      selectedDate,
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                              options.success(JSON.parse(result));
+                                              PopulateCalendar();
+                                            } else if (event.type === 'exception') {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                            } else {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                            },
+                        update: function(options){
+                            WorkLogEntryController.UpsertWorkLog(
+                                      JSON.stringify(options.data),
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                                worklogDataSource.read();
+                                                  PopulateCalendar();
+                                                options.success();
+                                                $("#java-errors").hide();
+                                            } else if (event.type === 'exception') {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                                $("#java-errors").show();
+                                            } else {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                                $("#java-errors").show();
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                        },
+                        create: function(options){
+                            WorkLogEntryController.UpsertWorkLog(
+                                      JSON.stringify(options.data),
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                                worklogDataSource.read();
+                                                PopulateCalendar();
+                                                options.success();
+                                                $("#java-errors").hide();
+                                            } else if (event.type === 'exception') {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                                $("#java-errors").show();
+                                            } else {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                                $("#java-errors").show();
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                        },
+                        destroy: function(options){
+                            WorkLogEntryController.DeleteWorkLog(
+                                      options.data.Id,
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                                worklogDataSource.read();
+                                                options.success();
+                                                PopulateCalendar();
+                                                $("#java-errors").hide();
+                                            } else if (event.type === 'exception') {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                                $("#java-errors").show();
+                                                
+                                            } else {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                                $("#java-errors").show();
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                        }
+                      },
+                    schema:{
+                        model: {
+                            id: "Id",
+                            fields: {
+                                "Id": {type: "string"},
+                                "Date_of_Service__c": {type: "string", defaultValue:null},
+                                "OwnerId": { type: "string",  defaultValue:'{!$User.Id}', validation: { required: true }},
+                                "WorkPerformed__c": {type: "string", defaultValue: "Development", validation: { required: true }},
+                                "Project__c": {
+                                    type: "string", 
+                                    validation: { 
+                                        required: {
+                                            value: true,
+                                            message: "Project is required"
+                                        },
+                                        startswith: function(input) { 
+                                            if (input.is('[name=Project__c]') && !input.val().match("^a0d")) {
+                                               input.attr("data-startswith-msg", "A project must be selected");
+                                               return false;
+                                            }                                   
+                                            return true;
+                                        }}
+                                    },
+                                "Project__r": { defaultValue:{Id:null,Name:null,Summary__c:null}},
+                                "Hours_Worked__c" : {
+                                    defaultValue: null,
+                                    type: "number", 
+                                    validation: {required:true, 
+                                        min: {
+                                            value: 0.1,
+                                            message: "Hours Worked must be greater than or equal to 0.1"
+                                        }
+                                    }
+                                },
+                                "WorkNotes__c" : {type: "string"}
+                            
+                        }
+                    }
+                  }
+              });
+              
+              function setupLogGrid(){
+                $("#logGrid").kendoGrid({
+                  dataSource: worklogDataSource,
+                  editable: "inline",
+                  scrollable: true,
+                  height: 600,
+                  toolbar: ["create"],
+                  edit: function(e) {
+                          if (e.model.isNew()) {
+                                //set field
+                                e.model.set("Date_of_Service__c", kendo.toString(selectedDate, "yyyy-MM-dd")); 
+                            }
+                    },
+                  columns: [{
+                                field:"Id",
+                                filterable: false,
+                                hidden: true
+                            },
+                            {
+                                hidden: true,
+                                field: "OwnerId"
+                            },
+                            {
+                                field: "Date_of_Service__c",
+                                hidden: true
+                            },
+                            {
+                                field:"Project__c",
+                                title:"Project",
+                                editor: projectSearchDropDownEditor,
+                                template: "#= Project__r.Name # - #= Project__r.Summary__c #"
+                            },
+                            {
+                                field: "WorkPerformed__c",
+                                title: "Work Performed",
+                                editor: workPerformedDropDownEditor,
+                                width:250
+                            },
+                            {
+                                field: "Hours_Worked__c",
+                                title: "Hours Worked",
+                                format: "{0:n2}",
+                                width: 100
+                            },
+                            {
+                                field: "WorkNotes__c",
+                                title: "Work Notes"
+                            },
+                            {command: ["edit","destroy"]}
+                            
+                  ],
+                    dataBound: function () {
+                        SetMessagesOnKendoGrid("#logGrid", "No Work Logs Found");
+                    }
+                    });
+              }
+              
+              function projectSearchDropDownEditor(container, options) {
+            $('<input style="width:95%"  id="Project__c" name="Project__c" data-text-field="label" data-value-field="value" data-bind="value:' + options.field + '"/>')
+                .appendTo(container)
+                .kendoComboBox({
+                    autobind: false,
+                    dataTextField: "label",
+                    dataValueField: "value",
+                    placeholder: "Select Project...",
+                    minLength: 2,
+                    filter:"contains",
+                    dataSource: {
+                        serverFiltering:true,
+                        transport:{
+                      read: function(e){
+                                WorkLogEntryController.SearchOpenProjects(
+                                      $("#Project__c").data("kendoComboBox").text(),options.model.Project__c,
+                                      function(result,event)
+                                      {
+                                          
+                                          if (event.status) {
+                                              e.success(JSON.parse(result));
+                                            } else if (event.type === 'exception') {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                            } else {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                            }
+                        },
+                    
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"},
+                                label: {type: "string", editable: false, nullable: false, validation: { required: true } }
+                            }
+                        }
+                    }
+                    }
+                } );
+                $('<span class="k-invalid-msg" data-for="Project__c"></span>').appendTo(container);
+            }
+            
+            function setFormDate(e){
+                
+                if(worklogDataSource.hasChanges() && e != selectedDate){
+                    alert("Please save or discard and changes before selecting a new date")
+                } else {
+                    $("#setDate").data("kendoDatePicker").value(e); 
+                    var datepicker = $("#setDate").data("kendoDatePicker");                                
+                    selectedDate = datepicker.value();
+                    PopulateCalendar();
+                    worklogDataSource.read();
+                }
+            }
+            
+            function PopulateCalendar(){
+                   WorkLogEntryController.calendarControl(
+                          kendo.toString(selectedDate, "yyyy-MM-dd"),
+                          function(result,event)
+                          {
+                              if (event.status) {
+                                  document.getElementById("calDiv").innerHTML = result;
+                                } else if (event.type === 'exception') {
+                                    document.getElementById("java-errors").innerHTML = event.message;
+                                } else {
+                                    document.getElementById("java-errors").innerHTML = event.message;
+                                }
+                          },
+                          {escape: false}
+                   );
+                }
+            
+            function SetMessagesOnKendoGrid(gridId, noRecordsMessage, largeRecordsMessage, largeRecordsLimit) {
+
+                var grid = $(gridId).data('kendoGrid');
+            
+                var dataMessageId = $(gridId).attr('id') + '-dataMessage';
+            
+                if (grid.dataSource.total() === 0) {
+                    var colCount = grid.columns.length;
+                    grid.tbody.append('<tr class="kendo-data-row"><td colspan="' + colCount + '" style="text-align:center"><b>' + noRecordsMessage + '</b></td></tr>');
+                    $('#' + dataMessageId).remove();
+                }
+                else if (largeRecordsLimit !== undefined && grid.dataSource.total() >= largeRecordsLimit) {
+                    hideFooter(gridId);
+                    if($('#' + dataMessageId).size() === 0)
+                        $(gridId).parent().before('<div class="info-message clear-both" style="margin-top:.5em;" id="' + dataMessageId + '">' + largeRecordsMessage + '</div>');
+                }
+                else {
+                    $('#' + dataMessageId).remove();
+                }
+            }
+    </script>
+</apex:page>

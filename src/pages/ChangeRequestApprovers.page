@@ -1,0 +1,28 @@
+<apex:page standardController="BMCServiceDesk__Change_Request__c"
+    extensions="ChangeRequestApproversExtensions" action="{!Initialize}">
+    <!-- apex messages for any errors -->
+    <div style="color: red"><apex:messages /></div>
+    <apex:form >
+    	<apex:inputHidden value="{!BMCServiceDesk__Change_Request__c.PreAuthorizedTemplate__c}" />
+    	<apex:inputHidden value="{!BMCServiceDesk__Change_Request__c.RecordTypeId}" />
+        <apex:outputText value="{!BMCServiceDesk__Change_Request__c.BMCServiceDesk__Change_Type__c}"
+            rendered="false" />
+        <apex:pageBlock rendered="{!Rendered}">
+            <apex:pageBlockSection columns="1" title="CCR Approvers" collapsible="false" >
+                <apex:selectCheckboxes layout="pageDirection"
+                    value="{!SelectedApprovers}"> 
+                    <apex:selectOptions value="{!Approvers}" />
+                </apex:selectCheckboxes>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Save as Template?" collapsible="false">
+                <apex:pageblockSectionItem >
+                    <apex:outputLabel >Set as Pre-Authorized Template</apex:outputLabel>
+                    <apex:inputCheckbox id="template" value="{!SetTemplate}"/>
+                </apex:pageblockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        <apex:commandButton value="Approve" action="{!Save}"
+            rendered="{!Rendered}" />
+        <apex:commandButton value="Cancel" action="{!Cancel}" />
+    </apex:form>
+</apex:page>

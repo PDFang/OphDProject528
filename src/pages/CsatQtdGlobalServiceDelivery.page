@@ -1,0 +1,3 @@
+<apex:page controller="InContactCsat">
+<img src="{!GlobalServiceDeliveryQuarterToDate}" width="250" height="240" alt="GlobalServiceDelivery Surveys Quarter To Date" />
+</apex:page>

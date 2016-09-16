@@ -1,0 +1,86 @@
+<apex:page tabStyle="Case" standardStylesheets="true" controller="CaseWatchedCasesController">
+<apex:form >
+  <apex:pageBlock id="watchList">
+      <apex:pageBlockTable id="table" rules="rows" border="2" cellpadding="6" value="{!WatchedCases}" var="case" width="100%">
+          <apex:column >
+              <apex:commandLink action="{!unwatchCase}" reRender="watchList">
+                  <apex:image value="https://images.ucn.net/salesforce/delete_icon_x.png"/>
+                  <apex:param name="caseId" value="{!case.id}"/>
+              </apex:commandLink>
+          </apex:column>
+          <apex:column >
+             <apex:facet name="header">
+                <apex:commandLink value="{!$ObjectType.Case.Fields.CaseNumber.Label}" action="{!doSort}" rerender="table">
+                   <apex:param name="sortField" value="CaseNumber" assignTo="{!sortField}"/>
+                </apex:commandLink>
+             </apex:facet>
+             <apex:outputText ><a href="/{!case.id}">{!case.CaseNumber}</a></apex:outputText>
+          </apex:column>
+          <apex:column >
+             <apex:facet name="header">
+                <apex:commandLink value="{!$ObjectType.Account.Fields.Name.Label}" action="{!doSort}" rerender="table">
+                   <apex:param name="sortField" value="AccountId" assignTo="{!sortField}"/>
+                </apex:commandLink>
+             </apex:facet>
+             <apex:outputText ><a href="/{!case.Account.id}">{!case.account.name}</a></apex:outputText>
+          </apex:column>     
+          <apex:column >
+             <apex:facet name="header">
+                <apex:commandLink value="{!$ObjectType.Case.Fields.CostGuardAccountNumber__c.Label}" action="{!doSort}" rerender="table">
+                   <apex:param name="sortField" value="CostGuardAccountNumber__c" assignTo="{!sortField}"/>
+                </apex:commandLink>
+             </apex:facet>
+             <apex:outputText >{!case.CostGuardAccountNumber__c}</apex:outputText>
+          </apex:column>                     
+          <apex:column >
+             <apex:facet name="header">
+                <apex:commandLink value="{!$ObjectType.Case.Fields.Subject.Label}" action="{!doSort}" rerender="table">
+                   <apex:param name="sortField" value="Subject" assignTo="{!sortField}"/>
+                </apex:commandLink>
+             </apex:facet>
+             <apex:outputText ><a href="/{!case.id}">{!case.Subject}</a></apex:outputText>
+          </apex:column> 
+          <apex:column >
+             <apex:facet name="header">
+                <apex:commandLink value="Case Owner" action="{!doSort}" rerender="table">
+                   <apex:param name="sortField" value="OwnerId" assignTo="{!sortField}"/>
+                </apex:commandLink>
+             </apex:facet>
+             <apex:outputText >{!case.Owner.Name}</apex:outputText>
+          </apex:column>
+          <apex:column >
+             <apex:facet name="header">
+                <apex:commandLink value="{!$ObjectType.Case.Fields.CreatedDate.Label}" action="{!doSort}" rerender="table">
+                   <apex:param name="sortField" value="CreatedDate" assignTo="{!sortField}"/>
+                </apex:commandLink>
+             </apex:facet>
+             <apex:inputField value="{!case.CreatedDate}"/>
+          </apex:column>
+          <apex:column >
+             <apex:facet name="header">
+                <apex:commandLink value="Case Record Type" action="{!doSort}" rerender="table">
+                   <apex:param name="sortField" value="RecordTypeId" assignTo="{!sortField}"/>
+                </apex:commandLink>
+             </apex:facet>
+             <apex:outputText value="{!case.RecordType.Name}"/>
+          </apex:column>
+          <apex:column >
+             <apex:facet name="header">
+                <apex:commandLink value="{!$ObjectType.Case.Fields.Status.Label}" action="{!doSort}" rerender="table">
+                   <apex:param name="sortField" value="Status" assignTo="{!sortField}"/>
+                </apex:commandLink>
+             </apex:facet>
+             <apex:outputText value="{!case.Status}"/>
+          </apex:column>
+          <apex:column >
+             <apex:facet name="header">
+                <apex:commandLink value="{!$ObjectType.Case.Fields.Priority.Label}" action="{!doSort}" rerender="table">
+                   <apex:param name="sortField" value="Priority" assignTo="{!sortField}"/>
+                </apex:commandLink>
+             </apex:facet>
+             <apex:outputText value="{!case.Priority}"/>
+          </apex:column>                
+      </apex:pageBlockTable>
+  </apex:pageBlock>
+</apex:form>
+</apex:page>

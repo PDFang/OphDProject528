@@ -1,0 +1,236 @@
+<apex:page standardController="Case" extensions="CaseAttachmentExtension" >
+      <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:stylesheet value="{!$Resource.SupportConsoleCss}" />
+    <apex:sectionHeader title="Case" subtitle="{!Case.CaseNumber}"/>
+    <div id="java-errors" style="display:none" class="warning-message"></div>
+        <!-- messages -->
+        <apex:outputPanel id="editPanel">
+            <apex:messages id="msg" styleClass="warning-message" />
+        </apex:outputPanel>
+            <apex:form id="theForm" >
+                <div id="panel-form"  style="width:100%;">
+                    <div id="panel-view">
+                        <h1>Add Attachments</h1>
+                            <!-- div  id="file-container">
+                                <input type="file" name="fileButton" id="fileButton" /> 
+                            </div>
+                            <div style="margin:5px;padding:5px;">Internal Only &nbsp;<input type="checkbox" id="internalCheck" /></div>
+                            <div>
+                            <a href="#" class="k-button" id="uploadFile">Submit</a>
+                            </div -->
+                            <div  id="file-container">
+                                <apex:inputFile value="{!fileToUpload.body}" fileName="{!fileToUpload.Name}" id="fileButton" /> 
+                            </div>
+                            <div style="margin:5px;padding:5px;">Internal Only &nbsp;<apex:inputCheckbox id="internalCheck" value="{!isFileInternal}" /></div>
+                            <div>
+                                <apex:commandLink value="Submit" action="{!CreateAttachment}" styleClass="k-button" ></apex:commandLink>
+                            </div>
+                    </div>
+                </div>
+                <apex:actionFunction action="{!Cancel}" name="GoToCase"/>
+            </apex:form>
+            <div id="attachGrid" style="margin-bottom:1em;"></div>
+            <a href="#" class="k-button" onclick="GoToCase()">Done</a>
+            <div class="clear-both"></div>
+    
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+        <script type="text/javascript">
+                $(document).ready(function() {
+                    
+                    setupKendoUpload();
+                    setupAttachmentGrid();
+                
+                });
+                function setupKendoUpload(){
+                  var fileButton = document.getElementById("{!$Component.theForm.fileButton}");
+                  $(fileButton).kendoUpload({
+                        multiple: false,
+                        localization: {
+                            select: "Select file..."
+                        }
+                    });
+                }
+                
+                function refreshAttachGrid(){
+                    attachmentDataSource.read();
+                }
+                
+                var attachmentDataSource = new kendo.data.DataSource({
+                    sort:{field: "LastModifiedDate", dir:"desc"},
+                  transport:{
+                      read: function(options){
+                                CaseAttachmentExtension.JsonSelectCaseAttachments(
+                                      '{!Case.Id}',
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                              //console.log(JSON.parse(result));
+                                              options.success(JSON.parse(result));
+                                                $("#java-errors").hide();
+                                            } else if (event.type === 'exception') {
+                                                $("#java-errors").show();
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                            } else {
+                                                $("#java-errors").show();
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                            }
+                                      },{escape:false});
+                            }
+                      },
+                    schema:{
+                        model: {
+                            id: "AttachmentId",
+                            fields: {
+                                "AttachmentId": {type: "string"},
+                                "IsPublic": {type: "boolean", validation: { required: true }},
+                                "FileName" : {type: "string" },
+                                "Description": {type: "string"},
+                                "LastModifiedDate": {type: "date", defaultValue: null},
+                                "LastModifiedBy": {type: "string"},
+                                "Attach": {defaultValue:{Id:"", url:"",Name:""}}
+                            }
+                        }
+                    }
+                  });
+                  
+              function setupAttachmentGrid(){
+                $("#attachGrid").kendoGrid({
+                  dataSource: attachmentDataSource,
+                  editable: false,
+                  columns: [{
+                                field:"AttachmentId",
+                                filterable: false,
+                                hidden: true
+                            },
+                            {
+                                field:"IsPublic",
+                                title: "Visibility",
+                                width: 70,
+                                template: '#= (IsPublic) ? \'Public\' : \'Internal\' #'
+                            },
+                            {
+                                field:"FileName",
+                                title: "File Name",
+                                template: '<a href="/servlet/servlet.FileDownload?file=#= AttachmentId #" target="_blank" title="#= FileName #" >#= FileName #</a>'
+                                
+                            },
+                            {
+                                field: "Description",
+                                title: "Description",
+                                hidden: true
+                            },
+                            {
+                                field: "LastModifiedDate",
+                                title: "Last Modified Date",
+                                format: "{0:g}"
+                            },
+                            {
+                                field: "LastModifiedBy",
+                                title: "Last Modified By"
+                            },
+                            {
+                                field: "Action",
+                                title: "Action", 
+                                editor: function(container, options){},
+                                template: '#{#<a style="min-width:0;" onClick="deleteAttachment(this);" data-value="Delete" title="Delete Attachment" class="k-button"><span class="k-icon k-i-close"></span></a># } #' +
+                                      '#if (IsPublic ) { #<a style="min-width:0;" onClick="changeVisibility(this);" data-value="Private" title="Make Internal" class="k-button"><span class="k-icon k-i-tick"></span></a># } #' +
+                                      '#if (!IsPublic) { #<a style="min-width:0;" onClick="changeVisibility(this);" data-value="Public" title="Make Public" class="k-button"><span class="k-icon k-i-note"></span></a># } #'
+                            }
+                            
+                  ],
+                    dataBound: function () {
+                        SetMessagesOnKendoGrid("#attachGrid", "No Attachments Found");
+                    },
+                  sortable: {
+                    mode: "multiple"
+                  }
+                });
+            }
+            
+            
+             function changeVisibility(e){
+                 var r = confirm("Are you sure you want to change the visibility of this record?")
+                 if(r==true){
+                     // e.target is the DOM element representing the button
+                      var tr = $(e).parents("tr[data-uid]"); // get the current table row (tr)
+                      // get the data bound to the current table row
+                      var data = attachmentDataSource.getByUid($(tr).data('uid'));
+                 
+                     CaseAttachmentExtension.UpdateVisibility(
+                          data.AttachmentId, !data.IsPublic, "{!Case.Id}",
+                          function(result,event)
+                          {
+                              
+                              if (event.status) {
+                                       attachmentDataSource.read();
+                                        $("#java-errors").hide();
+                                } else if (event.type === 'exception') {
+                                    $("#java-errors").show();
+                                    document.getElementById("java-errors").innerHTML = event.message;
+                                } else {
+                                    $("#java-errors").show();
+                                    document.getElementById("java-errors").innerHTML = event.message;
+                                }
+                          },
+                          {escape: false}
+                       );
+                   }
+             }
+             
+             function deleteAttachment(e){
+                 
+                 var r = confirm("Are you sure you want to delete this record?")
+                 if(r==true){
+                 
+                     // e.target is the DOM element representing the button
+                      var tr = $(e).parents("tr[data-uid]"); // get the current table row (tr)
+                      // get the data bound to the current table row
+                      var data = attachmentDataSource.getByUid($(tr).data('uid'));
+                 
+                     CaseAttachmentExtension.DeleteAttachment(
+                          data.AttachmentId,
+                          function(result,event)
+                          {
+                              
+                              if (event.status) {
+                                       attachmentDataSource.read();
+                                        $("#java-errors").hide();
+                                } else if (event.type === 'exception') {
+                                    $("#java-errors").show();
+                                    document.getElementById("java-errors").innerHTML = event.message;
+                                } else {
+                                    $("#java-errors").show();
+                                    document.getElementById("java-errors").innerHTML = event.message;
+                                }
+                          },
+                          {escape: false}
+                       );
+                   }
+             }
+            
+            function SetMessagesOnKendoGrid(gridId, noRecordsMessage, largeRecordsMessage, largeRecordsLimit) {
+
+                var grid = $(gridId).data('kendoGrid');
+            
+                var dataMessageId = $(gridId).attr('id') + '-dataMessage';
+            
+                if (grid.dataSource.total() === 0) {
+                    var colCount = grid.columns.length;
+                    grid.tbody.append('<tr class="kendo-data-row"><td colspan="' + colCount + '" style="text-align:center"><b>' + noRecordsMessage + '</b></td></tr>');
+                    $('#' + dataMessageId).remove();
+                }
+                else if (largeRecordsLimit !== undefined && grid.dataSource.total() >= largeRecordsLimit) {
+                    hideFooter(gridId);
+                    if($('#' + dataMessageId).size() === 0)
+                        $(gridId).parent().before('<div class="info-message clear-both" style="margin-top:.5em;" id="' + dataMessageId + '">' + largeRecordsMessage + '</div>');
+                }
+                else {
+                    $('#' + dataMessageId).remove();
+                }
+            }
+            </script>
+            
+              
+</apex:page>

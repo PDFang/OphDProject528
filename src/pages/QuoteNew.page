@@ -1,0 +1,37 @@
+<apex:page standardController="WfoPremiseQuote__c" extensions="quoteExt">
+<apex:pageMessages />
+    <apex:sectionHeader title="Edit Quote" Subtitle="New Quote" rendered="{!WfoPremiseQuote__c.Opportunity__c != null}"/>
+  <apex:form rendered="{!q.Opportunity__c != null}">
+      <apex:inputHidden value="{!WfoPremiseQuote__c.Opportunity__c}"/>
+      <apex:pageBlock title="Quote Information" mode="edit">
+          <apex:pageBlockButtons >
+              <apex:commandButton value="Save" action="{!save}"/>
+              <apex:commandButton value="Cancel" action="{!cancel}"/>
+          </apex:pageBlockButtons>
+          <apex:pageBlockSection title="Information" columns="1">
+              <apex:inputField value="{!WfoPremiseQuote__c.Opportunity__c}"/>
+              <apex:inputField value="{!WfoPremiseQuote__c.Contact__c}"/>
+              <apex:inputField value="{!WfoPremiseQuote__c.Description__c}"/>
+              <apex:inputField value="{!WfoPremiseQuote__c.Expiration__c}"/>
+      
+          </apex:pageBlockSection>
+          <apex:pageBlockSection title="Address Information" columns="1">
+              <apex:outputField value="{!WfoPremiseQuote__c.opportunity__r.account.name}"/>
+              <apex:inputField value="{!WfoPremiseQuote__c.Street__c}"/>
+              <apex:inputField value="{!WfoPremiseQuote__c.City__c}"/>
+              <apex:inputField value="{!WfoPremiseQuote__c.State__c}"/>
+              <apex:inputField value="{!WfoPremiseQuote__c.Zip_Code__c}"/>
+          </apex:pageBlockSection>
+          
+          <apex:pageBlockSection title="Notes" columns="1">
+
+              <apex:inputField value="{!WfoPremiseQuote__c.Quote_General_Notes__c}"/>
+              <apex:inputField value="{!WfoPremiseQuote__c.Quote_Software_Notes__c}"/>
+              <apex:inputField value="{!WfoPremiseQuote__c.Quote_Services_Notes__c}"/>
+              <apex:inputField value="{!WfoPremiseQuote__c.Quote_Hardware_Notes__c}"/>
+              <apex:inputField value="{!WfoPremiseQuote__c.Quote_AMC_Notes__c}"/>
+
+          </apex:pageBlockSection>
+      </apex:pageBlock>
+  </apex:form>
+</apex:page>

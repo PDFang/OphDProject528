@@ -1,0 +1,119 @@
+<apex:page standardController="Case" extensions="StandardTextExtension" showHeader="false">
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:stylesheet value="/sCSS/sprites/1380777536000/Theme3/default/gc/CaseInteraction.css"/>
+    <apex:includeScript value="/canvas/sdk/js/28.0/publisher.js"/>
+    <style type="text/css">
+     table.exceptionText td {
+                 font-size:12px;
+                 font-weight:bold;
+                 text-align:center;
+                 color:red;}
+     
+     .publisherField {
+         margin:10px;
+     }
+     .publisherLabel {
+         margin-right:5px;
+     }
+</style>
+
+<apex:form id="caseForm">
+    <apex:actionFunction action="{!PublisherSave}" name="addComment" rerender="infoBlock"  oncomplete="Sfdc.canvas.publisher.publish({name : 'publisher.refresh',  payload : {feed: true, objectRelatedLists: {}}});"/> 
+
+
+    <div class="casePublisher">
+        <div class="casePublisherHeader" style="width:100%;min-width: 400px;">
+            <span class="casePublisherHeaderLabel caseSwitchPublisherMinkButton casePublisherSpanHeaderLabel ">Comment Case</span>
+        </div>
+        <apex:messages layout="table" styleClass="exceptionText" />
+        <apex:inputHidden id="caseDescHidden" value="{!Case.Description}"/>
+        <apex:inputHidden value="{!Case.CaseNumber}"/>
+            <div class="casePublisher zen">
+                <apex:outputPanel layout="block" styleClass="detailContent" id="infoBlock" style="margin-bottom:5px;">
+                
+                    <div class="casePublisherDetailBox casePublisherBox">
+                    <div class="publisherField">
+                        <apex:outputLabel styleClass="publisherLabel " style="float:left;" value="Time Spent on Case (minutes)" for="timeSpent" />
+                        <div style="float:left;">
+                            <apex:inputText id="timeSpent" value="{!TimeSpent}"/>
+                        </div>
+                    </div>
+                    <div style="clear:both;"></div>
+                    <div class="publisherField">
+                            <apex:outputLabel styleClass="publisherLabel " value="Add Standard Text" for="noText" />
+                            <apex:inputCheckbox id="noText" value="{!NoText}">
+                                <apex:actionSupport event="onclick" rerender="caseForm"/>
+                            </apex:inputCheckbox>
+                    </div>
+                    <div style="clear:both;"></div>
+                    <apex:outputPanel layout="block" Rendered="{!NoText}" styleClass="publisherField " >
+                        <apex:outputLabel styleClass="publisherLabel " value="Record Type" for="sRtype" />
+                        <apex:selectList id="sRtype" size="1" value="{!SelectedRecordTypeId}">
+                            <apex:selectOptions value="{!RecordTypeOptions}"></apex:selectOptions>
+                            <!-- rerender the dependant "sText" dropdown to update values
+                                 and sTextDetail output panel to clear the Detail text -->
+                            <apex:actionSupport event="onchange" rerender="standardText"/>
+                        </apex:selectList>
+                    </apex:outputPanel>
+                    <apex:outputPanel layout="block" id="standardText" Rendered="{!NoText}" styleClass="publisherField " >
+                        <apex:outputLabel styleClass="publisherLabel " value="Standard Text" for="sText" />
+                        <apex:selectList id="sText" size="1" value="{!SelectedStandardTextId}">
+                            <apex:selectOptions value="{!StandardTextOptions}"></apex:selectOptions>
+                            <!-- rerender "sTextDetail" to update the displayed text based on the "sText" changes -->
+                            <apex:actionSupport event="onchange" rerender="caseForm,sTextDetail" />                 
+                        </apex:selectList>
+                    </apex:outputPanel>
+                    <div class="publisherField">
+                        <apex:outputLabel styleClass="publisherLabel " value="Public" for="public" />
+                        <apex:inputCheckbox id="public" value="{!IsPublicComment}"/>
+                    </div>
+                    <div class="publisherField">
+                        <apex:outputLabel styleClass="publisherLabel " value="Add to Status Detail" for="status" />
+                        <apex:inputCheckbox id="status" value="{!statusDetail}"/>
+                    </div>
+                    <div class="" >
+                       <!-- apex:outputLabel value="* Detail" for="sTextDetail" / -->
+                       <apex:outputPanel id="sTextDetail" layout="block">
+                           
+                           <apex:inputTextarea style="width:90%;"  rows="10" id="detailValue"  value="{!SelectedStandardText}"/> 
+                               
+                           <!-- <apex:actionSupport event="onchange" rerender="mainPage"/>                   -->
+                       </apex:outputPanel>
+                    </div>
+                    </div>
+                    <div style="clear:both;margin-bottom:5px;"></div>
+                </apex:outputPanel> 
+                    <button type="button" onclick="addComment();" class="casePublisherButton" id="cpbutton" >Add Comment
+                    </button>
+                <!-- apex:actionStatus id="mySaveStatus1" >
+                                    
+                   <apex:facet name="stop">
+
+                    <apex:outputPanel styleClass="publisherField">
+                        <apex:commandButton styleClass="casePublisherButton zen-btn zen-highlightBtn" rendered="{!IF(ButtonsRendered,True,False)}" status="mySaveStatus1" value="Add Comment" action="{!PublisherSave}" reRender="infoBlock" oncomplete="Sfdc.canvas.publisher.publish({name : 'publisher.refresh', payload:{feed: true, objectRelatedLists: {}}});"/>
+                    </apex:outputPanel> 
+                    
+                    </apex:facet>
+                
+                         <apex:facet name="start">
+                
+                             <apex:outputPanel >
+                
+                                   <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                
+                                   <apex:commandButton styleClass="casePublisherButton zen-btn zen-highlightBtn"  value="Saving..." status="mySaveStatus1" disabled="true"/>
+                
+                               </apex:outputPanel>
+                
+                           </apex:facet>
+                
+                </apex:actionStatus -->
+            </div>
+        </div>
+        
+</apex:form>
+
+
+    
+</apex:page>

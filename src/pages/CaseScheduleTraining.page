@@ -1,0 +1,32 @@
+<apex:page standardController="Case" standardStylesheets="true">
+    <!--
+    <apex:messages />
+    <apex:form >
+        <apex:pageBlock title="Schedule Training" mode="edit">
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!Save}" value="Save"/>
+                <apex:commandButton action="{!Cancel}" value="Cancel"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="1" title="Schedule">    
+                <apex:inputField value="{!Case.DateTimeTraining__c}" required="true"/>
+                <apex:inputField value="{!Case.EstimatedDuration__c}" required="true"/>
+                <apex:inputField value="{!Case.Trainer__c}" required="true"/>
+                <apex:inputField value="{!Case.WebExSubject__c}"/>
+                <apex:inputField value="{!Case.WebExMeetingPassword__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Training Information" columns="2">
+                <apex:outputField value="{!Case.CaseNumber}"/>
+                <apex:outputField value="{!Case.Request_Type__c}"/>
+                <apex:outputField value="{!Case.Account.Name}"/>
+                <apex:outputField value="{!Case.Product_or_Service__c}"/>
+                <apex:outputField value="{!Case.Contact.Name}"/>
+                <apex:outputField value="{!Case.TrainingType__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection showHeader="false" columns="1">
+                <apex:outputField value="{!Case.Subject}"/>
+                <apex:outputField value="{!Case.Description}"/>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+	-->
+</apex:page>

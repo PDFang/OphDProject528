@@ -1,0 +1,7 @@
+<apex:page standardController="Account" extensions="AccountSegmentBannerExtension" >
+<table width="100%" style="background-color:{!BannerBackground}">
+    <tr>
+        <td style="text-align:center;"><b>{!Account.CustomerSegment__c}</b></td>
+    </tr>
+</table>
+</apex:page>

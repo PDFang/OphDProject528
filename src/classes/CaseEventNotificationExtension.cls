@@ -1,0 +1,447 @@
+public class CaseEventNotificationExtension 
+{
+    private Case c;
+    private Set<Id> accountIds;
+    private Id templateId;
+    private Map<Id, EmailTemplate> templates;
+    //private CaseEventClass.AccountIncident[] acctIncidents;
+    public CaseEventClass cec{public get;private set;}
+    private String[] csmEmails;
+    public string subject;
+    public string htmlString{public get;private set;}
+    public string emailBody{get;set;}
+    public string textBody{get;set;}
+    //public List<Contact> contacts{public get;private set;}
+    private List<Contact> allContacts;
+    public integer contactCount{public get;private set;}
+    public integer emailsSent{public get;private set;}
+    public boolean renderPage{public get;private set;}
+    public boolean renderConfirm{public get;private set;}
+    public boolean canEdit{public get;private set;}
+    public boolean allowNotifications{public get;private set;}
+    
+    private final List<RecordType> recordTypes;
+    private ID selRecordTypeId;
+    private String standText;
+    public boolean noText{get;set;}
+    public Id selectedStandardTextId{get;set;}
+    private List<Standard_Text__c> standardTexts;
+    public string contactRole{public get;private set;}
+    private string recordTypeName;
+    public static list<string> clusters = new list<string>();     
+    
+    
+    public CaseEventNotificationExtension(ApexPages.StandardController controller) 
+    {
+        this.c = (Case)controller.getRecord();
+		// Added the below query to accomodate all custom fields  for this P1 issue
+		//ISSUE: P1 - Service Console - Maint Notification Standard Text Errors		
+		c = [select Id,RecordTypeId, StartDateTImeUTC__c, EventType__c, Subject,  Description, ProductImpacted__c, CustomersMayExperienceTheFollowing__c
+						,CustomerAction__c, Status, CaseNumber, PlatformsImpacted__c, Owner.Name, Account.Id, NumberOfAccountsImpacted__c
+						FROM Case where Id =: c.Id];
+       // System.debug('Case Record is' + c);
+        string caseType;
+        
+        if(c.Id != null)
+        {
+             
+            accountIds = new Set<Id>();
+            csmEmails = new String[]{};
+            cec = new CaseEventClass(c);
+            cec.listSize = 50000;
+            if(clusters.size() > 0)
+            	cec.lstClusters = clusters;
+            AccountIncidentsUpdate();
+            
+            //system.debug('clusters arnab ==> ' + clusters);
+            Schema.DescribeSObjectResult d = Schema.SObjectType.Case; 
+            //Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
+            Map<ID,Schema.RecordTypeInfo> recordTypeMapById = d.getRecordTypeInfosByID();
+            
+            recordTypeName = recordTypeMapById.get(c.RecordTypeId).getName();
+            if(recordTypeName == 'Event')
+            {
+                caseType = 'Event Standard Text';
+                contactRole = 'Event Notification';
+            }
+            else if(recordTypeName == 'Maintenance Notification')
+            {
+                caseType = 'Notification Standard Text';
+                contactRole = 'Maintenance Notification';
+            }
+            
+            
+            EventContactsUpdate();
+            
+            //get all Standard Text record types for dropdown
+            recordTypes = new List<RecordType>([SELECT Name FROM RecordType WHERE sObjectType = 'Standard_Text__c' AND Name = :caseType ORDER BY Name]);
+            
+            SelectedRecordTypeId = recordTypes[0].Id;
+            
+            noText = true;
+            renderConfirm = false;
+            
+            canEdit = inContactBaseClass.HasEditAccess(c.Id,UserInfo.getUserId());
+            
+            if((recordTypeName == 'Event' && c.Owner.Name != 'NOC Queue') || c.Status == 'Suspected')
+            {
+                allowNotifications = false;
+            }
+            else
+            {
+                allowNotifications = true;
+            }
+        }
+    }
+    
+    private void AccountIncidentsUpdate()
+    {
+        CaseEventClass.AccountIncident[] acctIncidents = cec.AccountIncidentList();
+        
+        if(!acctIncidents.isEmpty())
+        {
+            for(CaseEventClass.AccountIncident a:acctIncidents )
+            {
+                accountIds.add(a.acct.Id);
+                
+                if(a.acct.CSM__r.Email != NULL)
+                {
+                    csmEmails.add(a.acct.CSM__r.Email);
+                }
+            }
+        }
+    }
+    
+    
+    private void EventContactsUpdate()
+    {
+        //contacts = new List<Contact>();
+        //List<Contact> allContacts = new List<Contact>();
+        
+        string countquery = 'SELECT COUNT(Id) cnt FROM Contact WHERE Email != NULL AND AccountId IN :accountIds AND Deactivated__c = FALSE AND Contact_Role__c INCLUDES (\'' + contactRole + '\') ' ;
+        AggregateResult[] getContacts = Database.Query(countquery);
+        contactCount = integer.valueOf(getContacts[0].get('cnt')) ;
+        
+        /*
+        if(contactCount > 1000)
+        {
+            for(integer i=0;i<1000;i++)
+            {
+                contacts.add(allContacts[i]);
+            }
+        }
+        else if(contactCount > 0)
+        {
+            contacts.addAll(allContacts);
+        }
+        */
+        
+        //if(contactCount > 0)
+        //{
+        //    contacts = [SELECT Id, Name, Email, AccountId FROM Contact WHERE Email != NULL AND Contact_Role__c INCLUDES(:contactRole) AND AccountId IN :accountIds];
+        //}
+    }
+    
+    public PageReference EventAccounts()
+    {
+        PageReference pageRef = Page.CaseEventAccounts;
+        pageRef.getParameters().put('id', c.Id);
+        
+        return pageRef;
+    }
+    
+    public PageReference SendNotification()
+    {
+        String[] addresses = new String[]{};
+        Set<String> setAddresses = new Set<String>();
+        String[] resellAddresses = new String[]{};
+        textBody = emailBody;
+        htmlString = emailBody.replace('\n','<br/>');
+        List<Task> tasks = new List<Task>();
+        Id internalEmailGroup;
+        Set<Id> internalEmailGroupMembers = new Set<Id>();
+        
+        if(emailBody.contains('{') || emailBody.contains('}') || subject.contains('{') || subject.contains('}'))
+        {
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Email cannot contain { or } characters.  Please update the place holder.'));
+            return null;
+        }
+        
+        if(string.isBlank(emailBody) || string.isBlank(subject))
+        {
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'The subject and body cannot be blank.'));
+            return null;
+        }
+        
+        
+        
+        if(recordTypeName == 'Event')
+        {
+            setAddresses.add(InContactConfiguration.EventEmailGroup);
+        }
+        else if(recordTypeName == 'Maintenance Notification')
+        {
+            setAddresses.add(InContactConfiguration.MaintenanceEmailGroup);
+        }
+        
+        system.debug(setAddresses);
+        
+        
+        List<Contact> allContacts = new List<Contact>();
+        
+        string countquery = 'SELECT Id, Name, Email, Account.RecordTypeId FROM Contact WHERE Email != NULL AND AccountId IN :accountIds AND Deactivated__c = FALSE AND Contact_Role__c INCLUDES (\'' + contactRole + '\') ORDER BY Account.Name, Name' ;
+        allContacts = Database.Query(countquery);
+        System.debug('allContacts arnab ==>' + allContacts);
+        System.debug('accountIds arnab ==>' + accountIds);
+        if(!allContacts.isEmpty())
+        {
+            for(Contact con:allContacts)
+            {
+                if(con.Account.RecordTypeId == '01270000000MATw')
+                {
+                    resellAddresses.add(con.Email);   
+                }
+                else
+                {
+                    setAddresses.add(con.Email);
+                }
+                
+                Task t = new Task();
+                t.Subject = subject;
+                t.Type = recordTypeName + ' Email';
+                t.WhoId = con.Id;
+                t.WhatId = c.Id;
+                t.Description = emailBody;
+                t.Status = 'Completed';
+                
+                tasks.add(t);
+            }
+            
+            system.debug('==== Set Addresses ====');
+            system.debug(setAddresses);
+            emailsSent = setAddresses.size() + resellAddresses.size();
+            
+            //add csms
+            setAddresses.addAll(csmEmails);
+            
+            addresses.addAll(setAddresses);           
+            
+            
+           
+            try
+            {
+                
+                list<NotificationHelperClass.EmailTemplate> listTemplates = new list<NotificationHelperClass.EmailTemplate>();
+                
+                if(addresses.size() > 0)
+                {
+                    NotificationHelperClass.EmailTemplate template = new NotificationHelperClass.EmailTemplate();
+                    template.recipients = addresses;
+                    template.subject = subject;
+                    template.htmlBody = htmlString;
+                    template.textBody = textBody; 
+                    template.templateId = 6;
+                    listTemplates.add(template);
+                }    
+                
+                // keeping resell partners separate in case they ask for different email template later
+                if(!resellAddresses.isEmpty())
+                {
+                    string platforms = 'Platform(s): ' + c.PlatformsImpacted__c.replace(';',',');
+                    NotificationHelperClass.EmailTemplate template = new NotificationHelperClass.EmailTemplate();
+                    template.recipients = resellAddresses;
+                    template.subject = subject;
+                    template.htmlBody = htmlString ;/**+ '<br/><br/>' + platforms';**/ 
+                    template.textBody = textBody; /**+ '\n\n' + platforms; **/ 
+                    template.templateId = 6;
+                    listTemplates.add(template);
+                }
+                
+                System.enqueueJob(new NotificationQueableClass(listTemplates));               
+           
+                insert tasks;
+                
+                EmailMessage em = new EmailMessage();
+                em.htmlBody = htmlString;
+                em.textBody = textBody;
+                em.Subject = subject;
+                em.ParentId = c.Id;
+                em.MessageDate = system.now();
+                
+                insert em;
+                
+                if(recordTypeName == 'Maintenance Notification')
+                {
+                    c.Status = 'Notification Sent';
+                    c.NumberOfAccountsImpacted__c = cec.totalSize;
+                    update c;
+                }
+                
+                renderConfirm = true;
+            }
+            catch(DmlException ex)
+            {
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getDmlMessage(0)));
+                return null;
+            }    
+        }
+        
+        return null;
+        
+    }
+    
+    private void MergeField(string field, string data)
+    {
+      string defaultReplaceMessage = ' ';
+        if (data != null || String.isEmpty(data) == false)
+        {
+            emailBody = emailBody.replace(field, data);
+        }
+        else
+        {
+             emailBody = emailBody.replace(field, defaultReplaceMessage);            
+        }
+    }
+    
+    private void MergeFieldListFormat(string field, string data, string delimiter)
+    {
+        //persumes list is delimited by 
+        string []lines;
+        string buffer ='';
+        lines = data.split(delimiter);
+        System.debug(lines);
+        buffer = String.join(lines, '\n'); 
+        buffer = '\n' + buffer; 
+       System.debug(buffer);     
+        emailBody = emailBody.replace(field, buffer);      
+        
+    }
+    public void MergeFieldUpdate()
+    {  
+     
+    
+        String formattedEventStartDate = c.StartDateTImeUTC__c;
+       formattedEventStartDate = formattedEventStartDate.substringBeforeLast(':');
+        formattedEventStartDate = formattedEventStartDate + ' (UTC)'; 
+        MergeField('{Event Type}',c.EventType__c);
+        MergeField('{Subject}',c.Subject);
+        MergeField('{Description}', c.Description);
+       MergeField('{Start Time}', formattedEventStartDate);
+        MergeField('{Product Impacted}', c.ProductImpacted__c);
+        MergeField('{Service Impact}', c.CustomersMayExperienceTheFollowing__c);
+        MergeField('{Case Status}', c.Status);
+        MergeField('{Customer Action}', c.CustomerAction__c);   //c.CustomerAction__c
+       MergeField('{Case Number}', c.CaseNumber);
+        MergeFieldListFormat('{Platform Impacted}',c.PlatformsImpacted__c.replace(' - inContact',''), ';');
+        
+    }
+    
+    public void MergeFieldUpdateSubject()
+    {        
+        subject = subject.replace('{Product Impacted}', c.ProductImpacted__c);
+        subject = subject.replace('{Platform Impacted}', c.PlatformsImpacted__c.replace(' - inContact',''));
+        subject = subject.replace('{Case Number}', c.CaseNumber);
+        subject = subject.replace('{Subject}', c.Subject);
+    }
+    
+    public void UpdateStandardText()
+    {
+        //loop though standard text to display the selected results
+        for(Standard_Text__c st : standardTexts)
+        {
+                if(st.Id == selectedStandardTextId)
+                {
+                        //in the display replace '\n' with '<br>' to add line breaks
+                        emailBody = st.StandardText__c;
+                        MergeFieldUpdate();
+                        subject = st.Name;
+                        MergeFieldUpdateSubject();
+                }
+        }
+    }
+    
+    
+    
+    public List<selectOption> RecordTypeOptions
+    {
+            get 
+            {
+                    //new list for holding all of the picklist options
+                    List<SelectOption> options = new List<SelectOption>();
+                    //Add the first option of '- Select Record Type -' in case no values are returned from query below
+                    options.add(new selectOption('', '- Select Record Type -'));
+                    //Create an Option for each of the Record Types
+                    for(RecordType rt : recordTypes)
+                    {
+                            options.add(new selectOption(rt.Id, rt.Name));
+                    }               
+                    return options;
+            } 
+    }
+    
+    public string SelectedStandardText
+    {
+            get
+            {
+                return emailBody;
+            }
+            set
+            {
+               emailBody = value;
+            }
+    }
+    
+    public Id SelectedRecordTypeId
+    { 
+        get
+        {
+                return selRecordTypeId; 
+        }
+        set
+        {
+                standText = '';
+                
+                selRecordTypeId = value;
+        }
+    }
+    
+    public string SubjectText
+    {
+        get
+        {
+            return subject;
+        }
+        set
+        {
+            subject = value;
+        }
+    }
+    
+    public List<selectOption> StandardTextOptions
+    {
+            get
+            {
+                    standardTexts = new List<Standard_Text__c>([Select Name, StandardText__c From Standard_Text__c WHERE RecordTypeId = :selRecordTypeId ORDER BY Name]);
+                    List<SelectOption> options = new List<SelectOption>();
+                    //Add the first option of '- Select Standard Text -' in case no values are returned from query below
+                    options.add(new selectOption('','- Select Standard Text -'));
+                    //Get Standard Text records for Record Type
+                    for(Standard_Text__c s : standardTexts)
+                    {
+                            options.add(new selectOption(s.Id,s.Name));                                     
+                    }
+                    return options;
+            }
+            
+            
+    }
+    
+    public PageReference RefreshPage()
+    {
+        PageReference currPage = Page.CaseEventNotification;
+        currPage.getParameters().put('id',c.id);
+        currPage.setRedirect(true);
+        return currPage;
+    }
+
+}

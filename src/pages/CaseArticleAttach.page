@@ -1,0 +1,94 @@
+<apex:page standardController="CaseArticle__c" extensions="CaseArticleAttachExtension" >
+ <style type="text/css">
+     
+     .articleTable {
+         width:500px;
+     } 
+           
+    .articleTable a{
+        color:blue;
+    }
+
+   
+</style>
+<apex:form >
+    <apex:pageBlock mode="edit" title="Attach Article to Case">
+        <apex:pageBlockSection columns="2" >
+            <apex:outputField value="{!caseArticle.Case__c}"/>
+        </apex:pageBlockSection>
+            <apex:actionRegion >
+                
+        <apex:pageBlockSection columns="2">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel for="search">Search Text</apex:outputLabel>
+                    <apex:inputText onkeypress="return noenter(event)" size="75" id="search" value="{!searchText}"/>
+                </apex:pageBlockSectionItem>                   
+                <apex:actionStatus id="mySaveStatus1">
+                                    
+                                       <apex:facet name="stop">
+                                                 <apex:commandButton id="searchButton"  status="mySaveStatus1" value="Search Articles" action="{!UploadArticles}"  reRender="theTable"/>
+                                             </apex:facet>
+                                    
+                                             <apex:facet name="start">
+                                    
+                                                 <apex:outputPanel >
+                                    
+                                                       <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                                    
+                                                       <apex:commandButton value="Searching KB..." status="mySaveStatus1" disabled="true"/>
+                                    
+                                                   </apex:outputPanel>
+                                    
+                                               </apex:facet>
+                                    
+                                            </apex:actionStatus>
+                <!-- javascript function allows search to be done on enter key press.  Must be within form tags to work -->
+                <script type="text/javascript">          
+                                        function noenter(e)
+                                        {  
+                                            if(window.event)
+                                            {                    
+                                                key = window.event.keyCode;     //IE               
+                                            } 
+                                            else
+                                            {                    
+                                                key = e.which;     //firefox               
+                                            }               
+                                            if(key == 13) 
+                                            {  
+                                                var ele = document.getElementById('{!$Component.searchButton}');
+                                                ele.click();                     
+                                                return false;               
+                                            } 
+                                            else
+                                            {                    
+                                                return true;               
+                                            }          
+                                        }     
+                                    </script>
+                </apex:pageBlockSection>
+            </apex:actionRegion>
+        <apex:pageBlockSection columns="1">
+            <apex:pageBlockSectionItem >
+              <apex:outputText >Articles</apex:outputText>
+              <apex:pageBlockTable style="width:80%;" styleClass="articleTable" value="{!knowledgeResults}" var="kb" rows="10" id="theTable">
+                  <apex:column headerValue="Attach" > 
+                      <apex:inputCheckbox value="{!kb.Selected}"/>
+                  </apex:column>
+                  <apex:column headerValue="Article Number" > 
+                      <apex:outputText escape="false" value="{!kb.ArticleNumber}"/>
+                  </apex:column>
+                  <apex:column headerValue="Title" > 
+                      <a href="{!kb.Path}" target="_blank">{!kb.Title}</a><br/>
+                      <apex:outputText escape="false" value="{!kb.HitHighlightedSummary}"/>
+                  </apex:column>
+              </apex:pageBlockTable>
+              </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+        <apex:pageBlockButtons location="bottom" >
+            <apex:commandButton action="{!Save}" value="Save"/>
+            <apex:commandButton action="{!Cancel}" value="Cancel"/>
+        </apex:pageBlockButtons>
+    </apex:pageBlock>
+</apex:form>
+</apex:page>

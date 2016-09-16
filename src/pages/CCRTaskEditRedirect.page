@@ -1,0 +1,5 @@
+<apex:page standardController="CCRTask__c" tabStyle="ChangeControlRequest__c" action="{!URLFOR('/apex/CCRTaskPage?id=' + CCRTask__c.ChangeControlRequest__c)}">
+    <apex:form >
+        <apex:inputHidden value="{!CCRTask__c.ChangeControlRequest__c}"/>
+    </apex:form>
+</apex:page>

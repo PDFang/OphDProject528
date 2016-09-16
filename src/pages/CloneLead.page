@@ -1,0 +1,51 @@
+<apex:page standardController="Lead" extensions="LeadCloneExtention" standardStylesheets="false">
+    <apex:form >
+        <apex:pageBlock title="Clone Lead" >
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Save" action="{!Save}"/>
+                <apex:commandButton value="Cancel" action="{!Cancel}"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection >
+                <apex:inputField rendered="false" value="{!Lead.Cloned__c}"/>
+                <apex:inputField rendered="false" value="{!Lead.LeadSource}"/>
+                <apex:inputField rendered="false" value="{!Lead.Lead_Source_Detail__c}"/>
+                <apex:inputField rendered="false" value="{!Lead.Original_Lead_Source__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2" title="Marketing Information">
+                <apex:repeat value="{!$ObjectType.Lead.FieldSets.MarketingInformation}" var="f">        
+                    <apex:inputField value="{!Lead[f]}"/>
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2" title="Lead Information">
+                <apex:repeat value="{!$ObjectType.Lead.FieldSets.LeadInformation}" var="f">        
+                    <apex:inputField value="{!Lead[f]}"/>
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2" title="Contact Center Information">
+                <apex:repeat value="{!$ObjectType.Lead.FieldSets.ContactCenterInformation}" var="f">        
+                    <apex:inputField value="{!Lead[f]}"/>
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2" title="Qualification Information">
+                <apex:repeat value="{!$ObjectType.Lead.FieldSets.QualificationInformation}" var="f">        
+                    <apex:inputField value="{!Lead[f]}"/>
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2" title="Product Information">
+                <apex:repeat value="{!$ObjectType.Lead.FieldSets.ProductInformation}" var="f">        
+                    <apex:inputField value="{!Lead[f]}"/>
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2" title="Partner Referral Information">
+                <apex:repeat value="{!$ObjectType.Lead.FieldSets.PartnerReferralInformation}" var="f">        
+                    <apex:inputField value="{!Lead[f]}"/>
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2" title="Team Information">
+                <apex:repeat value="{!$ObjectType.Lead.FieldSets.TeamInformation}" var="f">        
+                    <apex:inputField value="{!Lead[f]}"/>
+                </apex:repeat>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

@@ -1,0 +1,683 @@
+<apex:page standardController="WfoPremiseQuote__c" showHeader="false" renderAs="pdf">
+
+<apex:variable var="software_has_customer_discount" value="{!WfoPremiseQuote__c.software_has_customer_discount__c}" />
+<apex:variable var="hardware_has_customer_discount" value="{!WfoPremiseQuote__c.hardware_has_customer_discount__c}" />
+<apex:variable var="services_has_customer_discount" value="{!WfoPremiseQuote__c.services_has_customer_discount__c}" />
+<apex:variable var="amc_has_customer_discount" value="{!WfoPremiseQuote__c.amc_has_customer_discount__c}" />
+
+<head>
+<apex:stylesheet value="{!URLFOR($Resource.quoter_assets_uptivity2, 'main.css')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.quoter_assets_bo, 'bo.css')}"/>
+</head>
+<body>
+<!-- ********************************************************************* -->
+<!--                                Quote                                  -->
+<!-- ********************************************************************* -->
+
+<div class="page-break">
+
+        <div id="frontPageBanner">
+            <div id="frontPageLogo">
+            </div>
+            <div id="frontPageTitleArea">
+                <div id="frontPageTitle">
+                
+                
+                 <apex:OutputText Rendered="{!$CurrentPage.parameters.quotetype == 'Customer'}">Price Quote</apex:OutputText> 
+                 <apex:OutputText Rendered="{!$CurrentPage.parameters.quotetype == 'Partner'}">Partner Quote</apex:OutputText>     
+                      
+                      
+                    
+                </div>
+                <div id="frontPagePreparedBy">
+                    Prepared by: {!$User.FirstName} {!$User.LastName}<br />
+
+                    {!$User.Phone}<br />
+                    {!$User.Email}
+                </div>
+            </div>
+        </div>
+        <div id="frontPageDetailsTier">
+            <div id="frontPagePreparedFor">
+                <div class="detailsHeader">
+                    Prepared for:
+                </div>
+
+                <div class="detailsText">
+                    {!WfoPremiseQuote__c.contact__r.name}<br />
+                    {!WfoPremiseQuote__c.opportunity__r.account.name}<br />
+                    <apex:outputText Rendered="{!NOT(ISBLANK(WfoPremiseQuote__c.opportunity__r.account.BillingStreet))}">
+                    {!WfoPremiseQuote__c.opportunity__r.account.BillingStreet}<br />
+                    {!WfoPremiseQuote__c.opportunity__r.account.BillingCity}, {!WfoPremiseQuote__c.opportunity__r.account.BillingState}  {!WfoPremiseQuote__c.opportunity__r.account.BillingPostalCode}<br />
+                    </apex:OutputText> 
+                    {!WfoPremiseQuote__c.contact__r.phone}<br />
+
+                    {!WfoPremiseQuote__c.contact__r.email}<br /><br />
+                </div><br />
+            </div>
+            <div id="frontPageQuoteDetails">
+                <div class="detailsHeader">
+                    Quote Details:
+                </div>
+                <div class="detailsText">
+                    Notes: {!WfoPremiseQuote__c.Quote_General_Notes__c}<br />
+
+                    Method of recording:<br />
+                    Number of locations/sites:<br />
+                    Payment Terms:<br />
+                </div>
+            </div>
+        </div>
+
+
+        <div class="sectionArea">
+
+            <div class="h1">
+                <div class="h1Name">
+                    Quote # {!WfoPremiseQuote__c.name}
+                    
+                   
+                </div>
+                <div class="h1Date">
+                       <apex:outputText value="Expires: 
+                         {0,date,MM/dd/yyyy}">
+                       <apex:param value="{!WfoPremiseQuote__c.lastmodifieddate+30}" />    
+                    </apex:outputText>
+   
+   
+                </div>
+            </div>
+        </div>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+<!-- Render customer table view -->
+<c:QuoteSectionItemTablev2 rendered="{!$CurrentPage.parameters.quotetype == 'Customer'}" 
+   IsDistributorQuote="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+   HasCustomerDiscount="{!WfoPremiseQuote__c.software_has_customer_discount__c}" SectionName="cc: Discover Software Licensing" 
+   Items="{!WfoPremiseQuote__c.quote_items__r}" SectionCategory1="Software" SectionCategory2="Integration" Subtotal="{!WfoPremiseQuote__c.Customer_Software_Subtotal__c}"
+  SectionNotes="{!WfoPremiseQuote__c.Quote_Software_Notes__c}"/>
+
+<c:QuoteSectionItemTablev2 rendered="{!$CurrentPage.parameters.quotetype == 'Customer'}" 
+   IsDistributorQuote="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+  HasCustomerDiscount="{!WfoPremiseQuote__c.services_has_customer_discount__c}" SectionName="Professional Services" 
+  Items="{!WfoPremiseQuote__c.quote_items__r}" SectionCategory1="Services" Subtotal="{!WfoPremiseQuote__c.Customer_Services_Subtotal__c}"
+  SectionNotes="{!WfoPremiseQuote__c.Quote_Services_Notes__c}"/>
+
+<c:QuoteSectionItemTablev2 rendered="{!$CurrentPage.parameters.quotetype == 'Customer'}" 
+  IsDistributorQuote="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+  HasCustomerDiscount="{!WfoPremiseQuote__c.hardware_has_customer_discount__c}" SectionName="Hardware" 
+  Items="{!WfoPremiseQuote__c.quote_items__r}"  SectionCategory1="Hardware" Subtotal="{!WfoPremiseQuote__c.Customer_Hardware_Subtotal__c}"
+  SectionNotes="{!WfoPremiseQuote__c.Quote_Hardware_Notes__c}"/>
+
+<c:QuoteSectionItemTablev2 rendered="{!$CurrentPage.parameters.quotetype == 'Customer'}" 
+  IsDistributorQuote="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+  HasCustomerDiscount="{!WfoPremiseQuote__c.amc_has_customer_discount__c}" SectionName="Maintenance" 
+  Items="{!WfoPremiseQuote__c.quote_items__r}"  SectionCategory1="Maintenance" Subtotal="{!WfoPremiseQuote__c.Customer_AMC_Subtotal__c}"
+  SectionNotes="{!WfoPremiseQuote__c.Quote_AMC_Notes__c}"/>
+        
+        
+
+<c:QuoteSectionItemTablev2 rendered="{!$CurrentPage.parameters.quotetype == 'Customer'}" 
+  IsDistributorQuote="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+  HasCustomerDiscount="{!WfoPremiseQuote__c.other_has_customer_discount__c}" SectionName="Other" 
+  Items="{!WfoPremiseQuote__c.quote_items__r}"  SectionCategory1="Other" Subtotal="{!WfoPremiseQuote__c.customer_other_subtotal__c}"
+  SectionNotes=""/>
+        
+        <!-- Render partner table view -->
+  
+  <c:DistributorQuoteSectionItemTableV2 rendered="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+   IsDistributorQuote="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+   HasCustomerDiscount="{!WfoPremiseQuote__c.software_has_customer_discount__c}" SectionName="cc: Discover Software Licensing" 
+   HasDistributorDiscount="{!AND(WfoPremiseQuote__c.software_has_distributor_discount__c,$CurrentPage.parameters.quotetype == 'Partner')}"
+   Items="{!WfoPremiseQuote__c.quote_items__r}" SectionCategory1="Software" SectionCategory2="Integration" Subtotal="{!WfoPremiseQuote__c.Software_Subtotal__c}"
+  SectionNotes="{!WfoPremiseQuote__c.Quote_Software_Notes__c}"/>
+
+<c:DistributorQuoteSectionItemTableV2 rendered="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+   IsDistributorQuote="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+  HasCustomerDiscount="{!WfoPremiseQuote__c.services_has_customer_discount__c}" SectionName="Professional Services" 
+  HasdistributorDiscount="{!AND(WfoPremiseQuote__c.services_has_distributor_discount__c,$CurrentPage.parameters.quotetype == 'Partner')}" 
+  Items="{!WfoPremiseQuote__c.quote_items__r}" SectionCategory1="Services" Subtotal="{!WfoPremiseQuote__c.Services_Subtotal__c}"
+  SectionNotes="{!WfoPremiseQuote__c.Quote_Services_Notes__c}"/>
+
+<c:DistributorQuoteSectionItemTableV2 rendered="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+  IsDistributorQuote="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+  HasCustomerDiscount="{!WfoPremiseQuote__c.hardware_has_customer_discount__c}" SectionName="Hardware" 
+  HasDistributorDiscount="{!AND(WfoPremiseQuote__c.hardware_has_distributor_discount__c,$CurrentPage.parameters.quotetype == 'Partner')}" 
+  Items="{!WfoPremiseQuote__c.quote_items__r}"  SectionCategory1="Hardware" Subtotal="{!WfoPremiseQuote__c.Hardware_Subtotal__c}"
+  SectionNotes="{!WfoPremiseQuote__c.Quote_Hardware_Notes__c}"/>
+
+<c:DistributorQuoteSectionItemTableV2 rendered="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+  IsDistributorQuote="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+  HasCustomerDiscount="{!WfoPremiseQuote__c.amc_has_customer_discount__c}" SectionName="Maintenance" 
+  HasDistributorDiscount="{!AND(WfoPremiseQuote__c.amc_has_distributor_discount__c,$CurrentPage.parameters.quotetype == 'Partner')}" 
+  Items="{!WfoPremiseQuote__c.quote_items__r}"  SectionCategory1="Maintenance" Subtotal="{!WfoPremiseQuote__c.amc_subtotal__c}"
+  SectionNotes="{!WfoPremiseQuote__c.Quote_AMC_Notes__c}" />
+  
+  
+<c:DistributorQuoteSectionItemTableV2 rendered="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+  IsDistributorQuote="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+  HasCustomerDiscount="{!WfoPremiseQuote__c.other_has_customer_discount__c}" SectionName="Other" 
+  HasDistributorDiscount="false" 
+  Items="{!WfoPremiseQuote__c.quote_items__r}"  SectionCategory1="Other" Subtotal="{!WfoPremiseQuote__c.other_subtotal__c}"
+  SectionNotes="" />  
+        
+        
+        <!-- SUBTOTAL AREA -->
+        
+        <c:QuoteSubtotalSectionv2 rendered="{!$CurrentPage.parameters.quotetype == 'Customer'}" 
+   IsDistributorQuote="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+   Subtotal_Software="{!WfoPremiseQuote__c.Customer_Software_Subtotal__c}"
+   Subtotal_Hardware="{!WfoPremiseQuote__c.Customer_Hardware_Subtotal__c}"
+   Subtotal_Services="{!WfoPremiseQuote__c.Customer_Services_Subtotal__c}"
+   Subtotal_Other="{!WfoPremiseQuote__c.customer_other_subtotal__c}"
+   Subtotal_AMC="{!WfoPremiseQuote__c.Customer_AMC_Subtotal__c}"
+   Subtotal_Total="{!WfoPremiseQuote__c.Customer_Total__c}"
+   Subtotal_Software_List="{!WfoPremiseQuote__c.subtotal_list_software__c}"
+   Subtotal_Hardware_List="{!WfoPremiseQuote__c.subtotal_list_hardware__c}"
+   Subtotal_Services_List="{!WfoPremiseQuote__c.subtotal_list_services__c}"
+   Subtotal_Other_List="{!WfoPremiseQuote__c.subtotal_list_other__c}"
+   Subtotal_AMC_List="{!WfoPremiseQuote__c.subtotal_list_amc__c}"
+   Subtotal_Total_List="{!WfoPremiseQuote__c.subtotal_list_total__c}"  />
+   
+<c:QuoteSubtotalSectionv2 rendered="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+   IsDistributorQuote="{!$CurrentPage.parameters.quotetype == 'Partner'}" 
+   Subtotal_Software="{!WfoPremiseQuote__c.Software_Subtotal__c}"
+   Subtotal_Hardware="{!WfoPremiseQuote__c.Hardware_Subtotal__c}"
+   Subtotal_Services="{!WfoPremiseQuote__c.Services_Subtotal__c}"
+   Subtotal_Other="{!WfoPremiseQuote__c.customer_other_subtotal__c}"
+   Subtotal_AMC="{!WfoPremiseQuote__c.amc_subtotal__c}"
+   Subtotal_Total="{!WfoPremiseQuote__c.Total_Price__c}" 
+   Subtotal_Software_List="{!WfoPremiseQuote__c.subtotal_list_software__c}"
+   Subtotal_Hardware_List="{!WfoPremiseQuote__c.subtotal_list_hardware__c}"
+   Subtotal_Services_List="{!WfoPremiseQuote__c.subtotal_list_services__c}"
+   Subtotal_Other_List="{!WfoPremiseQuote__c.subtotal_list_other__c}"
+   Subtotal_AMC_List="{!WfoPremiseQuote__c.subtotal_list_amc__c}"
+   Subtotal_Total_List="{!WfoPremiseQuote__c.subtotal_list_total__c}" 
+   />
+
+
+<!-- apex:include pageName="QuoteDisclaimerTemplatev2"/ -->
+
+</div>
+<!-- ***************************** END QUOTE ***************************** -->
+
+
+<!-- ********************************************************************* -->
+<!--                                PSQ                                    -->
+<!-- ********************************************************************* -->
+<div class="page">
+  <div id="frontPageBanner">
+    <div id="frontPageLogo" />
+    <div id="frontPageTitleArea">
+      <div id="frontPageTitle">
+        Pre-Sale Qualification
+      </div>
+    </div>
+  </div>
+
+<div class="sectionArea">
+  <p>Completion of the first three sections is generally required for all sales.  For each product section following, complete the information in each as is dictated by the specific products being sold.</p>
+  <br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup> 
+    <thead> 
+      <tr>
+        <th colspan="4">Discovery &amp; Requirements</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Objective 1</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Objective_1__c}</td>
+        <td style="text-align:right;font-weight:bold;">Other Requirements</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Other_Requirements__c}</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">Objective 2</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Objective_2__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Objective 3</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Objective_3__c}</td>
+        <td style="text-align:right;font-weight:bold;">Playback Requirements</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Playback_Requirements__c}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Customer Environment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Workstation Virtualization</td><td>{!IF(WfoPremiseQuote__c.opportunity__r.Buildout__r==NULL,"",IF(WfoPremiseQuote__c.opportunity__r.Buildout__r.Application_Virtualization__c, "Yes", "N/A"))}</td>
+        <td style="text-align:right;font-weight:bold;">No. of Sites</td><td>{!Floor(WfoPremiseQuote__c.opportunity__r.Buildout__r.Number_of_Sites__c)}</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">Produt Type(s)</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Desktop_Clients__c}</td>
+        <td style="text-align:right;font-weight:bold;">Third Party Apps</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Third_Party_Applications__c}</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Other Type</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Other_Type__c}</td>
+        <td style="text-align:right;font-weight:bold;">VPN Users</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.VPN_Users__c}</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">Desktop OS</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Hardware__c}</td>
+        <td style="text-align:right;font-weight:bold;">Browsers</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Browsers__c}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Uptivity Application Environment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Server</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Virtualization__c}</td>
+        <td style="text-align:right;font-weight:bold;">Database</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Database__c}</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">HW Procurement</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Hardware_Procurement__c}</td>
+        <td style="text-align:right;font-weight:bold;">Database Version</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Database_Version__c}</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Licenses</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Channels__c}</td>
+        <td style="text-align:right;font-weight:bold;">Long Term Storage</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Long_Term_Storage__c}</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+        <td style="text-align:right;font-weight:bold;">Server OS</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Server_OS__c}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Audio Recording</th>
+      </tr>
+    </thead>
+<apex:outputText rendered="{!If(WfoPremiseQuote__c.opportunity__r.Buildout__r.Audio_Recording__c='Yes',true,false)}">
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Audio Recording?</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Audio_Recording__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">PBX Model</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.PBX_Model__c}</td>
+        <td style="text-align:right;font-weight:bold;">Integrations</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Integrations__c}</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">PBX Version</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.PBX_Version__c}</td>
+        <td style="text-align:right;font-weight:bold;">CTI Name/Version</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.CTI_name_ver__c}</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">Phone Models</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Phone_Models__c}</td>
+        <td style="text-align:right;font-weight:bold;">Add'l Licensing</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Third_Party_Licensing__c}</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Recording Method</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Recording_Method__c}</td>
+        <td style="text-align:right;font-weight:bold;">Span Port Requirement</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Span_Port_Requirement__c}</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+<apex:outputText rendered="{!If(WfoPremiseQuote__c.opportunity__r.Buildout__r.Audio_Recording__c='Yes',false,true)}">
+    <tbody>
+      <tr>
+        <td colspan="4" style="font-weight:bold;">Audio recording is not included in the scope of this engagement.</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+  </table>
+</div>
+<br/>
+
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Desktop Recording</th>
+      </tr>
+    </thead>
+<apex:outputText rendered="{!If(WfoPremiseQuote__c.opportunity__r.Buildout__r.Desktop_Recording__c='Yes',true,false)}">
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Desktop Recording?</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Desktop_Recording__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">No. of Monitors</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.No_of_Monitors__c}</td>
+        <td style="text-align:right;font-weight:bold;">Screen Resolution</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Screen_Resolution__c}</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+<apex:outputText rendered="{!If(WfoPremiseQuote__c.opportunity__r.Buildout__r.Desktop_Recording__c='Yes',false,true)}">
+    <tbody>
+      <tr>
+        <td colspan="4" style="font-weight:bold;">Desktop recording is not included in the scope of this engagement.</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">WFM</th>
+      </tr>
+    </thead>
+<apex:outputText rendered="{!If(WfoPremiseQuote__c.opportunity__r.Buildout__r.Workforce_Management__c='Yes',true,false)}">
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Workforce Management?</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Workforce_Management__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">ACD Integration Type</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.ACD_Type__c}</td>
+        <td style="text-align:right;font-weight:bold;">Third Party Licensing</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Third_Party_Licensing2__c}</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">No. of ACDs</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.No_of_ACDs__c}</td>
+        <td style="text-align:right;font-weight:bold;">Available Historical Data</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Historical_Data_Available__c}</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">ACD Software Version</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.ACD_Software_Version__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+<apex:outputText rendered="{!If(WfoPremiseQuote__c.opportunity__r.Buildout__r.Workforce_Management__c='Yes',false,true)}">
+    <tbody>
+      <tr>
+        <td colspan="4" style="font-weight:bold;">Workforce management is not included in the scope of this engagement.</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Desktop Analytics</th>
+      </tr>
+    </thead>
+<apex:outputText rendered="{!If(WfoPremiseQuote__c.opportunity__r.Buildout__r.Desktop_Analytics__c='Yes - Requires Desktop Analytics test and Executed SOW',true,false)}">    
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Desktop Analytics?</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Desktop_Analytics__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+<apex:outputText rendered="{!If(WfoPremiseQuote__c.opportunity__r.Buildout__r.Desktop_Analytics__c='Yes - Requires Desktop Analytics test and Executed SOW',false,true)}">    
+    <tbody>
+      <tr>
+        <td colspan="4" style="font-weight:bold;">Desktop analytics is not included in the scope of this engagement.</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Customer Survey</th>
+      </tr>
+    </thead>
+<apex:outputText rendered="{!If(WfoPremiseQuote__c.opportunity__r.Buildout__r.Customer_Survey__c='Yes',true,false)}">
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Customer Survey?</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Customer_Survey__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr class="alt">
+        <td style="text-align:right;font-weight:bold;">Survey Integration</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Survey_Integration__c}</td>
+        <td style="text-align:right;font-weight:bold;">PBX Model</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.PBX_Model_2__c}</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Agent Data</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Agent_Data__c}</td>
+        <td style="text-align:right;font-weight:bold;">PBX Version</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.PBX_Version_2__c}</td>
+      </tr>
+    </tbody>
+</apex:outputText>    
+<apex:outputText rendered="{!If(WfoPremiseQuote__c.opportunity__r.Buildout__r.Customer_Survey__c='Yes',false,true)}">
+    <tbody>
+      <tr>
+        <td colspan="4" style="font-weight:bold;">Customer survey is not included in the scope of this engagement.</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Custom Development</th>
+      </tr>
+    </thead>
+<apex:outputText rendered="{!If(WfoPremiseQuote__c.opportunity__r.Buildout__r.Custom_Development__c='Yes - Requires SE call and Executed SOW',true,false)}">    
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Custom Development?</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Custom_Development__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+<apex:outputText rendered="{!If(WfoPremiseQuote__c.opportunity__r.Buildout__r.Custom_Development__c='Yes - Requires SE call and Executed SOW',false,true)}">    
+    <tbody>
+      <tr>
+        <td colspan="4" style="font-weight:bold;">Custom development is not included in the scope of this engagement.</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Speech Analytics</th>
+      </tr>
+    </thead>
+<apex:outputText rendered="{!If(WfoPremiseQuote__c.opportunity__r.Buildout__r.Speech_Analytics__c='Yes',true,false)}">    
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Speech Analytics?</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Speech_Analytics__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+<apex:outputText rendered="{!If(WfoPremiseQuote__c.opportunity__r.Buildout__r.Speech_Analytics__c='Yes',false,true)}">    
+    <tbody>
+      <tr>
+        <td colspan="4" style="font-weight:bold;">Speech analytics is not included in the scope of this engagement.</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Insight</th>
+      </tr>
+    </thead>
+<apex:outputText rendered="{!If(WfoPremiseQuote__c.opportunity__r.Buildout__r.Insight__c='Yes - Requires SE Call and Executed SOW',true,false)}">
+    <tbody>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Insight?</td><td>{!WfoPremiseQuote__c.opportunity__r.Buildout__r.Insight__c}</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+    </tbody>
+</apex:outputText>    
+<apex:outputText rendered="{!If(WfoPremiseQuote__c.opportunity__r.Buildout__r.Insight__c='Yes - Requires SE Call and Executed SOW',false,true)}">
+    <tbody>
+      <tr>
+        <td colspan="4" style="font-weight:bold;">Insight is not included in the scope of this engagement.</td>
+      </tr>
+    </tbody>
+</apex:outputText>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="4">Acknowledgment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td colspan="4">
+          Where in scope, the customer agrees to provide all hardware meeting Uptvity’s minimum specifications as defined in the post-sale, design process.<br/><br/>
+          Providing ample file storage is the responsibility of the customer.  The Uptivity National Account Manager has provided a Disk Space Estimation tool to determine the amount of storage space required for this implementation.  The results from the completion of the disk space exercise are requirements of the sale.<br/><br/>
+          The quote provided is meant for budgetary purposes and is subject to change until a completed Pre-Sale Qualification form is received and subsequent, Uptivity approval is provided.<br/><br/>
+          Third party licensing may be required to support the Uptivity product installation.   You may refer to the appropriate Uptivity product integration guide or consult your telephony vendor for details.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<br/>
+<div class="datagrid">
+  <table>
+    <colgroup>
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+       <col span="1" style="width: 20%;" />
+       <col span="1" style="width: 30%;" />
+    </colgroup>
+    <tbody>
+      <tr>
+        <td colspan="4">
+          Acknowledgment of the accuracy of the information provided on this document and understanding of the conditions listed above are indicated by initialing below.
+        </td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Initials:</td><td style="border-bottom: 1px solid #000;">&nbsp;</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Name:</td><td style="border-bottom: 1px solid #000;">&nbsp;</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">Date:</td><td style="border-bottom: 1px solid #000;">&nbsp;</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+        <td style="text-align:right;font-weight:bold;">&nbsp;</td><td>&nbsp;</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+</div>
+
+</div>
+<!-- ******************************* END PSQ ***************************** -->
+
+</body>
+</apex:page>

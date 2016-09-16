@@ -1,0 +1,51 @@
+<apex:page controller="EventsCalendarController" title="Events Calendar" >
+    <apex:stylesheet value="{!URLFOR($Resource.CalendarCSS, 'calendar.css')}"/>
+    <apex:form id="calform">
+        <apex:pageBlock title="Event Calendar" >
+            Event Type:&nbsp;
+            <apex:selectList label="Event Type" id="eventtype" style="font-size:10px" size="1" value="{!eventType}">
+                <apex:selectOptions value="{!EventTypeSelect}"/>
+                <apex:actionSupport event="onchange" reRender="calform" action="{!SetEvents}" status="status"/>
+            </apex:selectList>
+            
+                            
+            <table>
+                <tr>
+                <td>       
+                        <table class="calendar">
+                            <tr>
+                                <th width="75px"><apex:commandLink action="{!SubtractMonth}" rerender="calform" value="<<" /></th>
+                                <th>{!selectedMonth}</th>
+                                <th width="75px"><apex:commandLink action="{!AddMonth}" rerender="calform" value=">>" /></th>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><apex:outputText escape="false" value="{!calendarControl}"/></td>
+                            </tr>
+                        </table>
+                </td>
+                <td>
+                    <table style="border:solid;border-width:1px;">
+                        <tr>
+                            <th>Legend</th>
+                        </tr>
+                            <apex:repeat value="{!AvailablePlatforms}" var="l">
+                                <tr>
+                                    <td>
+                                        <apex:image value="https://service.incontact.com/Images/transparent.png" style="background-color:{!PlatformColors[l]};" height="10" width="10"/>
+                                        {!l}
+                                    </td>
+                                </tr>
+                            </apex:repeat>
+                        <tr>
+                            <td>
+                                <apex:image value="https://service.incontact.com/Images/transparent.png" style="background-color:red;" height="10" width="10"/>
+                                Open Event
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                </tr>
+            </table>        
+        </apex:pageBlock>    
+    </apex:form>
+</apex:page>

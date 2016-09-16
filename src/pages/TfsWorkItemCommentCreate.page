@@ -1,0 +1,73 @@
+<apex:page standardController="TfsWorkItem__c" extensions="TfsWorkItemCommentCreateExtension" >
+    
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:stylesheet value="{!$Resource.SupportConsoleCss}" />
+  <apex:form id="commentForm" >
+      <apex:messages layout="table" styleClass="warning-message" />
+        <apex:inputHidden value="{!success}" id="success"/>
+      <apex:inputHidden value="{!TfsWorkItem__c.TFSExternalID__c}"/>
+      <apex:pageBlock title="Add Comment in TFS" >
+          <apex:pageBlockSection columns="1">
+             <apex:inputTextarea richText="true" rows="6" style="width:95%" value="{!comment}" />
+          </apex:pageBlockSection>
+          
+            <div class="save-cancel-button-group float-right" id="saveDiv" style="margin-top:1em;">
+                
+                        <apex:actionStatus id="mySaveStatus1">
+
+                            <apex:facet name="stop">
+                                <apex:outputPanel >
+                                    <apex:commandButton styleClass="k-button" value="Save" action="{!Save}" status="mySaveStatus1" oncomplete="onCompleteHandler()" reRender="mySaveStatus1,commentForm" />
+                                     <a class="k-button" href="javascript:void(0);" onclick="cancelForm()" id="cancelButton">Cancel</a>
+                                </apex:outputPanel>
+                            </apex:facet>
+
+                            <apex:facet name="start">
+
+                                <apex:outputPanel >
+
+                                    <apex:image value="/img/loading32.gif" style="height: 15px;" />
+
+                                    <apex:commandButton value="Processing..."
+                                        status="mySaveStatus1" disabled="true" />
+
+                                </apex:outputPanel>
+
+                            </apex:facet>
+
+                        </apex:actionStatus>
+            </div>
+        <div class="float-right loading-div" style="display: none;" data-role="spinner-container">
+            <div id="topSpinner" data-role="spinner-element"></div><div data-role="spinner-text">Saving...</div><div class="clear-both"></div>
+        </div>
+        <div class="clear-both"/>
+      </apex:pageBlock>
+      <apex:actionFunction action="{!Cancel}" name="cancelForm"/>
+  </apex:form>
+  <apex:detail inlineEdit="ture"/>
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.core.min.js')}" />
+    <apex:includeScript value="{!$Resource.incontactjs}" />
+    <apex:includeScript value="/support/console/28.0/integration.js"/>
+  <script type="text/javascript">
+      $(document).ready(function () {
+            StyleButtons();
+          
+            if (sforce.console.isInConsole()){
+          		sforce.console.setTabTitle('TFS Item: {!TfsWorkItem__c.TFSExternalID__c}');
+            };
+        });
+        
+        function onCompleteHandler() {
+          var successElement = document.getElementById('{!$Component.commentForm.success}');
+          if($(successElement).val()=='true') {
+            cancelForm()
+          } else {
+              
+            StyleButtons(); 
+          }
+        }
+    </script>
+</apex:page>

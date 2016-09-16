@@ -1,0 +1,483 @@
+<apex:page standardController="Case" extensions="CaseIncidentPage" applyBodyTag="true" applyHtmlTag="true">
+  <!-- action="{!IF(Case.RecordType.Name='Incident','',URLFOR($Action.Case.NewCase,$ObjectType.Case,[retURL=URLFOR($Action.Case.NewCase,$ObjectType.Case)],true))}" -->
+  
+    <apex:styleSheet value="{!URLFOR($Resource.JQuery, 'jquery-ui-themes-1.10.3/themes/black-tie/jquery-ui.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
+<apex:includeScript value="/support/console/33.0/integration.js"/>
+    <style type="text/css">
+        .pbBody a.k-state-selected,.k-state-selected, .k-secondary .k-button.k-state-selected {
+        background-image: none;
+        background-color: #0053dd;
+        border-color: #0053dd;
+        color: #FFF;
+    }
+    .requiredLegend { color:#FFF !important; }
+        .pbBody a.k-button
+        {
+            color:#fff;
+        }
+        .pbSubheader{
+        background-image:none !important;
+        background-color:#363940 !important;
+        color:#fff !important;
+        }
+        .k-button{
+        background-color:#363940;
+        border-color:#363940;
+        }
+        
+        .pbBody a.k-state-selected:focus:active {
+            border-color:#ff5301;
+            box-shadow:none;
+        }
+        
+        .k-datetimepicker .k-picker-wrap .k-icon {
+            margin-top: 0.3em;
+        }
+        
+        .k-datepicker .k-picker-wrap .k-icon {
+            margin-top: 4px;
+        }
+        
+        span.k-widget.k-datetimepicker.k-header,span.k-widget.k-datepicker.k-header, span.k-widget.k-combobox.k-header, span.k-widget.k-dropdown.k-header
+            {
+            width: 200px;
+        }
+        textarea {
+        width:100px;
+        height:70px;
+    }
+    
+    table.topTable{
+        width:85%
+        
+    }
+    
+    .ui-button{
+    color:#FFF !important;
+    }
+    .ui-button.ui-state-hover
+    {
+        color:#026890 !important;
+    }
+       
+    .ui-button.ui-state-focus
+    {
+        border-color:#acdd4a;
+        background-image:none;
+        background-color:#6eac2c;
+        color:#FFF !important; 
+    }
+    table.data td.label{
+        text-align: right;
+        font-weight: bold;
+        padding: 5px;
+        font-size: 12px;
+        width:20%;
+    }
+   
+    table.data td.data{
+        text-align: left;
+        padding: 5px;
+    }
+    
+    .dataCol textarea{
+        width:300px;
+    }
+   
+    h1.photo {
+        font-size: 2em;
+    }
+    
+    .eRadio input{
+        vertical-align:middle;
+        float: left;
+    }
+    
+    .eRadio {
+        //border-style: ridge;
+        //border-width: 8px;
+        //border-color: #CCCCCC;
+        padding: 5px;
+        //width:500px;
+    }
+        
+    .eRadio label{
+        vertical-align:bottom;
+        display: block;
+    }
+    
+    .rounded{
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+    }
+    
+    .vip-label {
+        background: #00a7ff;
+        color: #fff;
+        text-align: center;
+        font-weight: bold;
+        height:20px;
+        margin-right: 0.5em;
+        padding:5px;
+        width:100%;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+    }
+    .warning-message
+    {
+        margin-top:1em;
+        margin-bottom:1em;
+        padding:15px;
+        background-color:#fcf8e3;
+        color:#c09853;
+        border:1px solid #faebcc;
+        border-radius: 10px 10px 10px 10px;
+    }
+</style>
+    <apex:sectionHeader title="New Incident"/>
+    
+      <!-- apex:outputPanel layout="block" id="highlight">
+         <c:AccountHighlightComponent currentId="{!Case.AccountId}"></c:AccountHighlightComponent>
+     </apex:outputPanel -->
+  <apex:form styleClass="rounded" title="New Incident" id="mainForm" >
+      <apex:messages id="msg" styleClass="warning-message" />        
+      <apex:pageBlock mode="edit" id="thePage" >
+          <apex:pageBlockSection columns="1" title="Incident Detail" collapsible="false" id="topSection" >
+              <apex:panelGrid columns="1" styleClass="topTable" id="mainGrid" >
+                  <apex:panelGroup id="mainGroup" >
+                      <apex:panelGrid columns="2" styleClass="data" columnClasses="label,data" width="100%">
+                          <apex:outputText rendered="{!renderEvents}" >Related Event</apex:outputText>
+                          <apex:selectRadio styleClass="eRadio" rendered="{!renderEvents}" value="{!Case.ParentId}" layout="pageDirection">
+                                <apex:selectOptions value="{!ActiveEvents}" />
+                            </apex:selectRadio>
+                          <apex:outputLabel >Subject</apex:outputLabel>
+                          <apex:panelgroup >
+                                  <apex:actionRegion >
+                              <apex:panelGrid columns="2" width="100%">
+                                      <apex:inputField style="width:100%;" id="cas14" value="{!Case.Subject}" required="true"/>
+                                      <apex:actionStatus id="mySaveStatus1">
+                                    
+                                       <apex:facet name="stop">
+                                                 <apex:commandButton id="searchButton"  status="mySaveStatus1" value="Search Articles" action="{!UploadArticles}"  reRender="articlePanel" oncomplete="return articleDialog()"/>
+                                             </apex:facet>
+                                    
+                                             <apex:facet name="start">
+                                    
+                                                 <apex:outputPanel >
+                                    
+                                                       <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                                    
+                                                       <apex:commandButton value="Searching KB..." status="mySaveStatus1" disabled="true"/>
+                                    
+                                                   </apex:outputPanel>
+                                    
+                                               </apex:facet>
+                                    
+                                            </apex:actionStatus>
+                                     
+                          
+                              </apex:panelGrid>
+                                  </apex:actionRegion>
+                          </apex:panelgroup>
+                          
+
+                          <apex:outputPanel >Selected Articles</apex:outputPanel>
+                          <apex:outputPanel style="block" id="articleGrid">
+                              <apex:outputPanel rendered="{!RetrieveSelectedArticles.size>0}">
+                                  <apex:actionRegion >
+                                  <apex:pageBlockTable value="{!RetrieveSelectedArticles}" var="sa" id="selectedArticles">
+                                      <apex:column headerValue="Action" >
+                                        <apex:commandLink value="Remove" action="{!RemoveSelectedArticle}" reRender="articleGrid">
+                                            <apex:param name="kbNumber" value="{!sa.article.Id}" />
+                                        </apex:commandLink>
+                                      </apex:column>
+                                      <apex:column headerValue="Title" > 
+                                          <a href="{!sa.article.URLName}" target="_blank">{!sa.article.Title}</a><br/>
+                                          <apex:outputText escape="false" value="{!sa.article.Summary}"/>
+                                          
+                                      </apex:column>
+                                      
+                                  </apex:pageBlockTable>
+                                  </apex:actionRegion>
+                              </apex:outputPanel>
+                              <apex:outputPanel rendered="{!RetrieveSelectedArticles.size=0}">No articles selected</apex:outputPanel>
+                          </apex:outputPanel>
+                          <apex:outputLabel >Description</apex:outputLabel>
+                          <apex:inputField style="width:90%; height: 100px" id="description" value="{!Case.Description}" required="true" />
+                          <apex:outputLabel for="kiData" >Known Issue</apex:outputLabel>
+                          <apex:outputPanel id="kiField">
+                              <apex:outputField id="kiData" value="{!Case.KnownIssue__c}"/>&nbsp;
+                              <apex:commandButton styleClass="btn" action="{!ClearKnownIssue}" value="Clear" rendered="{!NOT(ISBLANK(Case.KnownIssue__c))}" reRender="thePage" immediate="true"/>
+                          </apex:outputPanel>
+                          <apex:outputText ></apex:outputText>
+                          <a href="#" onclick="return knownIssueDialog();">Search Known Issues</a>
+                      </apex:panelGrid>
+                  </apex:panelGroup>
+                          
+              </apex:panelGrid>
+              <apex:inputHidden id="recordType" value="{!Case.RecordTypeId}"/>
+              
+          </apex:pageBlockSection>
+              <apex:pageBlockSection columns="1" collapsible="false" title="Contact Information" >
+          <apex:outputPanel id="vipSection" >
+                     <apex:outputPanel styleClass="vip-label" rendered="{!isVip}" layout="block">VIP Customer</apex:outputPanel>
+          </apex:outputPanel>
+              </apex:pageBlockSection>
+           <apex:pageBlockSection columns="2" >
+             <!-- <apex:repeat value="{!$ObjectType.Case.FieldSets.ContactInformation}" var="f">
+                  <apex:inputField value="{!Case[f]}" required="{!OR(f.required, f.dbrequired)}"/>
+              </apex:repeat> -->
+                  <apex:pageBlockSectionItem >
+                  <apex:outputPanel layout="block">
+                      <apex:outputLabel value="Account" for="accountId"/>
+                  </apex:outputPanel>
+                      <apex:actionRegion >
+                  <apex:inputField id="accountId" value="{!Case.AccountId}" onchange="vip()" required="true"/>
+                  <apex:actionFunction action="{!SetIsVip}" name="vip" reRender="vipSection, highlight"/>
+                      </apex:actionRegion>
+                  </apex:pageBlockSectionItem>
+                  <apex:inputField value="{!Case.ContactId}" required="true"/>
+          </apex:pageBlockSection>
+      <apex:actionRegion >
+          <apex:pageBlockSection collapsible="false" title="Case Information" >
+                  <apex:inputField value="{!Case.Request_Type__c}" required="true">
+                  <apex:actionSupport event="onchange" 
+                                action="{!SetActiveSet}"  oncomplete="setTimeout(setStandardTextDropdowns,0)" 
+                                rerender="stText"/>
+                 </apex:inputField> 
+                 </apex:pageBlockSection>
+              </apex:actionRegion>
+              <apex:outputPanel id="casePanel">
+                  <apex:pageblockSection columns="2" >
+                      <apex:repeat value="{!$ObjectType.Case.FieldSets.StandardIncident}" var="f">
+                          <apex:inputField value="{!Case[f]}" required="{!OR(f.required, f.dbrequired)}"/>
+                      </apex:repeat>
+                  </apex:pageblockSection>
+              </apex:outputPanel>
+      </apex:pageBlock>
+      <apex:pageBlock mode="edit" id="form">
+      
+          <apex:outputPanel id="stText">
+          <apex:pageBlockSection columns="2" title="Standard Text" collapsible="false" >
+                  <apex:repeat value="{!ActiveSet}" var="f">
+                      <apex:inputField value="{!Case[f]}" required="{!OR(f.required, f.dbrequired)}" styleClass="standardTextField" />
+                  </apex:repeat>
+          </apex:pageBlockSection>
+          
+          </apex:outputPanel>
+          <apex:pageBlockButtons location="bottom">
+              <apex:commandButton styleClass="k-button" value="Save" action="{!Save}"/>
+              <apex:commandButton styleClass="k-button" value="Save & Track Time" action="{!SaveAndTrackTime}"/>
+              <apex:commandButton styleClass="k-button" value="Save & Close" action="{!SaveAndClose}"/>
+              <apex:commandButton styleClass="k-button" value="Cancel" action="{!Cancel}"/>
+          </apex:pageBlockButtons>
+    </apex:pageBlock>
+    </apex:form>
+    
+    
+    <div id="articleList" style="display:none;"> 
+        <apex:form id="articleForm" >
+            <apex:pageBlock mode="edit" id="articlePb">
+                <apex:outputPanel id="articlePanel">
+                          <apex:pageBlockTable value="{!knowledgeResults}" var="kb" id="theTable" >
+                                  <apex:column style="width:50px;" headerValue="Attach" > 
+                                      <apex:inputCheckbox value="{!kb.Selected}"/>
+                                  </apex:column>
+                                  <apex:column headerValue="Title" > 
+                                      <apex:outputLink target="_blank" value="/{!kb.article.KnowledgeArticleId}">{!kb.article.title}</apex:outputLink><br/>
+                                      <apex:outputText escape="false" value="{!kb.article.Summary}"/>
+                                      
+                                  </apex:column>
+                          </apex:pageBlockTable>
+                 </apex:outputPanel>       
+                      <apex:pageBlockButtons location="bottom">
+                           <a href="#" class="k-button" onclick="saveArticles()">ATTACH</a>
+                           <a href="#" class="k-button" onclick="closeArticleDialog()">CANCEL</a>
+                       </apex:pageBlockButtons>  
+           </apex:pageBlock>
+           <apex:actionFunction name="saveArticles" action="{!ArticlesSelected}" reRender="articleGrid" oncomplete="$('#articleList').data('kendoWindow').close();"/>
+       </apex:form>
+      
+      </div>
+    
+    
+    <!-- script type="text/javascript" src="{!URLFOR($Resource.JQuery, 'jquery-1.9.1.min.js')}"/>
+    <script type="text/javascript" src="{!URLFOR($Resource.JQuery, 'jquery-ui.min.js')}"/ -->
+    
+    <c:CaseSearchKnownIssues id="kiComp" currentCase="{!c}" searchRecordTypeName="Known Issue">
+        Please select an existing Known Issue. If there is not an existing Known Issue for this customer's issue click the "No Related Known Issue" button.
+    </c:CaseSearchKnownIssues>
+    
+    <script type="text/javascript">
+    
+    function SelectButtonClick(selectButton){
+        if($(selectButton).hasClass('k-state-selected')){
+           //$(selectButton).parent().siblings('select').val('');
+            $(selectButton).parent().siblings('select').children('option[value="' + $(selectButton).data('value') + '"]').prop("selected", false); 
+            $(selectButton).removeClass('k-state-selected');
+        }
+        else
+        {
+        $(selectButton).parent().siblings('select').children('option[value="' + $(selectButton).data('value') + '"]').prop("selected", true);
+        //$(selectButton).parent().siblings('select').val($(selectButton).data('value'));
+        if($(selectButton).parent().siblings('select').attr('multiple') !== 'multiple')
+            $(selectButton).siblings().removeClass('k-state-selected');
+        $(selectButton).addClass('k-state-selected');
+        }
+    }
+    function setStandardTextDropdowns()
+    {
+            SetupDateTimePickers();
+            UpdateSelectsIntoButtons();   
+    }
+    
+    function UpdateSelectsIntoButtons()
+    {
+             $('select').each(function(selectIndex, selectElement){
+                if($(selectElement).siblings('div.k-listview').size() == 0 && $(selectElement).hasClass('standardTextField') &&
+                    (($(selectElement).children('option[value!=""]').size() < 5 && $(selectElement).siblings('input').size() == 0) ||
+                    ($(selectElement).attr('multiple') === 'multiple' && $(selectElement).is( ":hidden" ))))
+                {
+                    $(selectElement).hide();
+                    $('<div>').addClass('k-listview').prependTo($(selectElement).parent());
+                    $(selectElement).children('option[value!=""]').each(function(optionIndex, optionElement){
+                        var link = $('<a>')
+                            .addClass('k-button')
+                            .attr('data-value', $(optionElement).attr('value'))
+                            .attr('href', 'javascript:void(0);')
+                            .attr('tabindex', '0')
+                            .click(function(){SelectButtonClick(this);})
+                            .html($(optionElement).html());
+                        $(link).appendTo($(selectElement).siblings('div.k-listview'));
+                            
+                        if($(optionElement).attr('selected') === 'selected')
+                        {
+                            $(link).addClass('k-state-selected');
+                        }
+                    });
+                }
+                else if($(selectElement).siblings('input').size() > 0)
+                {
+                    $(selectElement).hide();
+                }
+                else if($(selectElement).siblings('div.k-listview').size() === 0)
+                {
+                    
+                    //$(selectElement).addClass('k-secondary').kendoDropDownList({change: UpdateSelectsIntoButtons});
+                }
+            });
+            $('table.multiSelectPicklistTable').hide();   
+    }
+    
+    
+    
+    function ChangeSelectsIntoButtons()
+    {
+             $('select').each(function(selectIndex, selectElement){
+                if($(selectElement).siblings('div.k-listview').size() == 0 && 
+                    (($(selectElement).children('option[value!=""]').size() < 5 && $(selectElement).siblings('input').size() == 0) ||
+                    ($(selectElement).attr('multiple') === 'multiple' && $(selectElement).is( ":hidden" ))))
+                {
+                    $(selectElement).hide();
+                    $('<div>').addClass('k-listview').prependTo($(selectElement).parent());
+                    $(selectElement).children('option[value!=""]').each(function(optionIndex, optionElement){
+                        var link = $('<a>')
+                            .addClass('k-button')
+                            .attr('data-value', $(optionElement).attr('value'))
+                            .attr('href', 'javascript:void(0);')
+                            .attr('tabindex', '0')
+                            .click(function(){SelectButtonClick(this);})
+                            .html($(optionElement).html());
+                        $(link).appendTo($(selectElement).siblings('div.k-listview'));
+                        if($(selectElement).parents('[id*="RiskAssessmentFields"]').size() > 0)
+                            $('<div style="clear:both;">').appendTo($(selectElement).siblings('div.k-listview'));
+                            
+                        if($(optionElement).attr('selected') === 'selected')
+                        {
+                            $(link).addClass('k-state-selected');
+                        }
+                    });
+                }
+                else if($(selectElement).siblings('input').size() > 0)
+                {
+                    $(selectElement).hide();
+                }
+                else if($(selectElement).siblings('div.k-listview').size() === 0)
+                {
+                    
+                    //$(selectElement).addClass('k-secondary').kendoDropDownList({change: UpdateSelectsIntoButtons});
+                }
+            });  
+    }
+    
+    function ChangeSelectsIntoKendo()
+    {
+             $('select').each(function(selectIndex, selectElement){
+                 if($(selectElement).siblings('input').size() > 0)
+                {
+                    //$(selectElement).hide();
+                }
+                 else if($(selectElement).siblings('div.k-listview').size() === 0)
+                {
+                    //$(selectElement).addClass('k-secondary').kendoDropDownList();
+                }
+            });
+    }
+    
+        $(document).ready(function () {
+            SetKendoGrids();
+                ChangeSelectsIntoButtons();
+            $('#articleList').kendoWindow({
+                title: 'Select Articles',
+                resizable: false,
+                width: 800
+            });
+            $('.k-button.btn').removeClass('btn'); 
+            SetupDateTimePickers();
+            if (sforce.console.isInConsole()){
+                sforce.console.setTabTitle('New Incident');
+                sforce.console.setTabStyle('background-image: linear-gradient(to bottom, rgb(88, 128, 179) 0%, rgb(137, 153, 174) 100%);',null,null);
+            }
+        });
+        
+        
+    function SetupDateTimePickers()
+    {
+           $('span.dateInput').each(function(){
+               $(this).addClass('k-secondary');
+               $(this).children('input').removeAttr('onfocus');
+               $(this).children('span.dateFormat').hide();
+               if($(this).hasClass('dateOnlyInput'))
+                   $(this).children('input').kendoDatePicker();
+               else
+                   $(this).children('input').kendoDateTimePicker();
+           });
+    }
+               
+        function closeArticleDialog(){
+            
+            $('#articleList').data('kendoWindow').close();
+            SetKendoGrids();
+        }
+        
+        function articleDialog(){
+            $('#articleList').data('kendoWindow').center().open();
+            SetKendoGrids();
+        }
+        
+        function SetKendoGrids()
+        {
+            var articleTable = document.getElementById('{!$Component.articleForm.articlePb.theTable}');
+            $(articleTable).kendoGrid();
+            
+            var selectedArticles = document.getElementById('{!$Component.mainForm.thePage.topSection.selectedArticles}');
+            $(selectedArticles ).kendoGrid();
+        }
+        
+    </script>
+  
+</apex:page>

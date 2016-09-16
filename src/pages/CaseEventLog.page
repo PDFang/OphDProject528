@@ -1,0 +1,28 @@
+<apex:page standardController="Case" extensions="CaseEventLogExtension">
+    <apex:form >
+        <apex:inputHidden value="{!Case.ParentId}"/>
+        <apex:pageBlock rendered="{!NOT(ISBLANK(Case.ParentId))}" >
+            <apex:pageBlockSection title="Event Log" collapsible="false" columns="1">
+                <apex:pageBlockTable title="Event Log" value="{!comments}" var="c">
+                    <apex:column >
+                        <apex:facet name="header">Is Public</apex:facet>
+                        <apex:outputField value="{!c.IsPublished}"/>
+                    </apex:column>
+                    <apex:column >
+                        <apex:facet name="header">Comment</apex:facet>
+                        <apex:outputField value="{!c.CommentBody}"/>
+                    </apex:column>
+                    <apex:column >
+                        <apex:facet name="header">Created Date</apex:facet>
+                        <apex:outputField value="{!c.CreatedDate}"/>
+                    </apex:column>
+                    <apex:column >
+                        <apex:facet name="header">Created By</apex:facet>
+                        <apex:outputField value="{!c.CreatedBy.Name}"/>
+                    </apex:column>
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+
+</apex:page>

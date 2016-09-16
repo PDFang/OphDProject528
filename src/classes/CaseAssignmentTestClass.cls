@@ -1,0 +1,242 @@
+@isTest
+private class CaseAssignmentTestClass {
+
+	public static testMethod void testCasesAssignment()
+	{
+		//bulk load cases
+		List<Account> accounts = new List<Account>();
+		//build accounts
+		for (Integer i=0; i < 20; i++){
+			Account a = inContactBaseClass.CreateAccount('testName' + i);
+			a.Site = string.valueOf(i);
+			a.CS_AM__c = UserInfo.getUserId();
+			accounts.add(a);
+		}
+		
+		insert accounts;
+		System.debug('Insert accounts.');
+		
+		//get record type IDs
+		Id rtIncident = '01270000000LuEpAAK';
+		Id rtInfo = '01270000000LuEqAAK';
+		Id rtWO = '01270000000LuErAAK';
+		Id rtCustOther = '01270000000Lrn4AAC';
+		
+		List<Contact> contacts = new List<Contact>();
+		//create contacts
+		for(Account a:accounts)
+		{
+			Contact ct = inContactBaseClass.CreateContact(a.Id, 'firstName', 'lastName', 'email@test.com', rtCustOther);
+			contacts.add(ct);
+			
+		}
+		
+		insert contacts;
+		
+		
+		//test bulk loading cases
+		List<Case> cases = new List<Case>();
+		
+		for(Integer i=0;i<5;i++)
+		{
+			Case c = inContactBaseClass.CreateCase(accounts[i].Id, contacts[i].Id, rtWO, accounts[i].Name);
+			c.Request_Type__c = 'Adds/Moves/Changes';
+			c.Product_or_Service__c = 'DIA';
+			c.Status = 'New';
+			c.Freqeuncy__c = 'Occasional';
+			c.Number_of_Customers_Affected__c = '1';
+			c.Severity__c = 'S4';
+			
+			cases.add(c);
+		}
+		
+		
+		
+		for(Integer i=0;i<5;i++)
+		{
+			Case c = inContactBaseClass.CreateCase(accounts[i].Id, contacts[i].Id, rtWO, accounts[i].Name);
+			c.Request_Type__c = 'Application/Reporting/Scripting Issues';
+			c.Product_or_Service__c = 'Coaching';
+			c.Status = 'New';
+			c.Freqeuncy__c = 'Constant';
+			c.Number_of_Customers_Affected__c = '4 +';
+			c.Severity__c = 'S1';
+
+
+			cases.add(c);
+		}
+		
+		for(Integer i=0;i<5;i++)
+		{
+			Case c = inContactBaseClass.CreateCase(accounts[i].Id, contacts[i].Id, rtWO, accounts[i].Name);
+			c.Request_Type__c = 'Information Request';
+			c.Product_or_Service__c = 'DIA';
+			c.Status = 'New';
+			c.Freqeuncy__c = 'Constant';
+			c.Number_of_Customers_Affected__c = '1';
+			c.Severity__c = 'S1';
+
+
+			cases.add(c);
+		}
+		
+		for(Integer i=0;i<5;i++)
+		{
+			Case c = inContactBaseClass.CreateCase(accounts[i].Id, contacts[i].Id, rtWO, accounts[i].Name);
+			c.Request_Type__c = 'Not Sure...';
+			c.Product_or_Service__c = 'DIA';
+			c.Status = 'New';
+			c.Freqeuncy__c = 'Occasional';
+			c.Number_of_Customers_Affected__c = '1';
+			c.Severity__c = 'S1';
+
+
+			cases.add(c);
+		}
+		
+		Test.startTest();		
+		insert cases;
+		
+		Case c1 = cases[10];	
+		
+		c1.Status = 'Closed';
+		c1.Disposition__c = 'Other';
+		c1.Reason = 'Other';
+		c1.WorkDuration__c = 10;
+		c1.PublicComment__c = 'Test';
+		
+		update c1;
+        
+		Test.stopTest();
+	}
+	
+	public static testMethod void testCaseUpdate()
+	{ //update case
+		Id sfQueue = '00G70000001ciT7';
+		
+		//Case c = [SELECT Id, OwnerId, Priority, Freqeuncy__c, Number_of_Customers_Affected__c, Severity__c FROM Case WHERE Priority = 'P4' AND Status != 'New' AND OwnerID != :sfQueue LIMIT 1];
+		Account a = inContactBaseClass.CreateAccount('testName');
+		insert a;
+		
+		Contact ct = inContactBaseClass.CreateContact(a.Id, 'firstName', 'lastName', 'email@test.com');
+		insert ct;
+		
+		Case c = inContactBaseClass.CreateCase(a.Id, ct.Id, inContactBaseClass.SelectRecordTypeIDByName('Incident', 'Case'), 'test subject');
+		c.OwnerId = sfQueue;
+		c.Origin = 'Web';
+		c.Severity__c = 'S4';
+		c.Priority = 'P4';
+		
+		insert c;
+		
+		c.OwnerId = sfQueue;
+		c.Freqeuncy__c = 'Constant';
+		c.Number_of_Customers_Affected__c = '4 +';
+		c.Severity__c = 'S1';
+		c.Priority = 'P1';
+		c.WorkDuration__c = 10;
+		c.PublicComment__c = 'Test';
+		update c;
+	}
+	
+	public static testMethod void testCaseUpdate2()
+	{//update case
+		Id sfQueue = '00G70000001ciT7';
+		
+		Account a = inContactBaseClass.CreateAccount('testName');
+		insert a;
+		
+		Contact ct = inContactBaseClass.CreateContact(a.Id, 'firstName', 'lastName', 'email@test.com');
+		insert ct;
+		//Case c = [SELECT Id, OwnerId, Priority, Freqeuncy__c, Number_of_Customers_Affected__c, Severity__c FROM Case WHERE Priority = 'P1' AND Status != 'New' AND OwnerID = :sfQueue LIMIT 1];
+		Case c = inContactBaseClass.CreateCase(a.Id, ct.Id, inContactBaseClass.SelectRecordTypeIDByName('Incident', 'Case'), 'test subject');
+		c.OwnerId = sfQueue;
+		c.Origin = 'Web';
+		c.Severity__c = 'S1';
+		c.Priority = 'P1';
+		
+		insert c;
+				
+		c.Assigned_To__c = '00570000001GvceAAC';
+		c.Freqeuncy__c = 'Occasional';
+		c.Number_of_Customers_Affected__c = '1';
+		c.Severity__c = 'S4';
+		c.Priority = 'P4';
+		update c;
+	}
+	
+	static testMethod void TestCaseReassignExtension()
+    {
+        //create test account
+        Account a = inContactBaseClass.CreateAccount('testName');
+        a.Site = 'Test';
+        a.CS_AM__c = UserInfo.getUserId();
+                
+        insert a;
+        System.debug('Insert accounts.');
+        
+        //get record type IDs
+        Id rtIncident = '01270000000LuEpAAK';
+        Id rtInfo = '01270000000LuEqAAK';
+        Id rtWO = '01270000000LuErAAK';
+        Id rtCustOther = '01270000000Lrn4AAC';
+        
+        //create contact
+        Contact ct = inContactBaseClass.CreateContact(a.Id, 'firstName', 'lastName', 'email@test.com', rtCustOther);
+                            
+        insert ct;
+        
+        //create test case      
+        Case c = inContactBaseClass.CreateCase(a.Id, ct.Id, rtWO, a.Name);
+        c.Request_Type__c = 'Adds/Moves/Changes';
+        c.Product_or_Service__c = 'DIA';
+        c.Status = 'New';
+        c.Freqeuncy__c = 'Occasional';
+        c.Number_of_Customers_Affected__c = '1';
+        c.Severity__c = 'S4';
+        
+        insert c;
+        
+        ApexPages.StandardController controller = new ApexPages.StandardController(c);
+        CaseReassignExtension extension = new CaseReassignExtension(controller);
+        
+        List<SelectOption> queues = extension.AvailableQueues;
+                
+        try
+        {
+        	extension.Save();	
+        }
+        catch(Exception ex)
+        {
+        	system.assertEquals(ex.getMessage(), 'User is required.');
+        }
+        
+        extension.assignBy = 'User';
+        c.Assigned_To__c = UserInfo.getUserId();
+        extension.UpdateUsersQueue();
+        
+        try
+        {
+        	extension.Save();	
+        }
+        catch(Exception ex)
+        {
+        	system.assertEquals(ex.getMessage(), 'Queue is required.');
+        }
+        
+        extension.selectedQueue = queues[1].getValue();
+        
+        try
+        {
+        	extension.Save();	
+        }
+        catch(Exception ex)
+        {
+        	system.assertEquals(ex.getMessage(), 'Comment is required.');
+        }
+        
+        extension.commentBody = 'Test Comment';
+        extension.Save();
+    }
+
+}

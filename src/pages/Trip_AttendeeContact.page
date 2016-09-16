@@ -1,0 +1,35 @@
+<apex:page standardController="Trip_Attendee__c" extensions="Trip_AttendeeExtension" standardStylesheets="true" tabStyle="Account">
+    <apex:sectionHeader subtitle="New Trip Attendee" title="{!Trip_Report_Name}"/>
+    <apex:pageMessages />
+    
+    <apex:form id="tripAttendeeForm" title="Trip Attendee">
+    
+        <apex:inputHidden id="tripReportHidden" value="{!Trip_Attendee__c.Trip_Report__c}"/>
+        <apex:inputHidden id="surveyHidden" value="{!Trip_Attendee__c.Survey__c}"/>
+        
+        <apex:pageBlock title="Attendee Selection" mode="edit">
+
+            <apex:pageBlockButtons >
+                    <apex:commandButton value="Save" action="{!SaveAttendee}"/>
+                    <apex:commandButton value="Cancel" action="{!CancelNew}"/>
+            </apex:pageBlockButtons>
+            
+            <apex:pageBlockSection columns="1" showHeader="false" >
+          
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Attendee" for="tripAttendee" title="Shows only contacts that have an email address."/>
+                    <apex:selectList id="tripAttendee" value="{!Trip_Attendee__c.Attendee__c}" size="1" title="Shows only contacts that have an email address." >
+                        <apex:selectOptions value="{!Contacts}"></apex:selectOptions>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Survey Attendee" for="surveyAttendee" />
+                    <apex:inputCheckbox id="surveyAttendee" value="{!Survey}" />
+                </apex:pageBlockSectionItem>
+                
+            </apex:pageBlockSection>
+            
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>
