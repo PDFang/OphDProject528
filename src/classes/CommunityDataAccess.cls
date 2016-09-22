@@ -52,4 +52,16 @@ public without sharing class CommunityDataAccess {
 
     } // end of getAccounts()
 
+    public static Map<Id, List<String>> getAccountRoles(String adfsGuid) {
+        Map<Id, List<String>> accountRoles = new Map<Id, List<String>>();
+
+        for(CommunityRoles__c communityRole : [Select Contact__r.AccountId, Roles__c
+                                                From CommunityRoles__c
+                                                Where Contact__c In (Select Id From Contact Where ADFSGuid__c = :adfsGuid)]) {
+            List<String> roleList = communityRole.Roles__c.Split(';');
+            accountRoles.put(communityRole.Contact__r.AccountId, roleList);
+        }
+
+        return accountRoles;
+    }
 }
