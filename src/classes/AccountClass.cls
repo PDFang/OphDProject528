@@ -9,6 +9,7 @@ public class AccountClass
     {
         accountId = acctId;
         SetAccount();
+        system.debug(acctId);
     }
     
     public void SetAccount()
