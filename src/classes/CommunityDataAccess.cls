@@ -68,6 +68,8 @@ public without sharing class CommunityDataAccess {
             accountRoles.put(communityRole.Contact__r.AccountId, roleList);
         }
 
+        system.debug('getAccountRoles() : accountRoles - ' + accountRoles);
+
         return accountRoles;
     }
 }
