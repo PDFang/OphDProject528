@@ -27,6 +27,7 @@ public without sharing class CommunityDataAccess {
                 Select Id, Account.Id, Account.Name, Account.CadebillAccountNo__c
                 from Contact
                 where ADFSGuid__c = :adfsGuid
+                order by Account.Name
         ]){
             AccountWrapper wrapper = new AccountWrapper(c.Account);
             wrapperList.add(wrapper);
@@ -42,6 +43,7 @@ public without sharing class CommunityDataAccess {
                 Select Id, Name, CadebillAccountNo__c, ParentId
                 from Account
                 where ParentId IN :wrapperMap.keySet()
+                order by Name
         ]){
             AccountWrapper wrapper = wrapperMap.get(child.ParentId);
             wrapper.children.add(child);
@@ -64,12 +66,15 @@ public without sharing class CommunityDataAccess {
                                                 From CommunityRoles__c
                                                 Where Contact__r.ADFSGuid__c = :adfsGuid
                                                 And Roles__c != NULL]) {
-            List<String> roleList = communityRole.Roles__c.Split(';');
+            List<String> roleList = accountRoles.get(communityRole.Contact__r.AccountId);
+            if(roleList == null){
+                roleList = new List<String>();
+            }
+            roleList.addAll(communityRole.Roles__c.Split(';'));
+            roleList.sort();
             accountRoles.put(communityRole.Contact__r.AccountId, roleList);
         }
-
-        system.debug('getAccountRoles() : accountRoles - ' + accountRoles);
-
+        system.debug('getAccountRoles() : accountRoles - '+accountRoles);
         return accountRoles;
     }
 }
