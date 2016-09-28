@@ -1,0 +1,21 @@
+<apex:page controller="CommunityAccountRoleViewController" tabStyle="Account" title="Accounts and Roles">
+    <apex:sectionHeader title="Welcome" subtitle="{!fullName}"/>
+    <apex:form >
+        <apex:pageMessages />
+        <apex:pageBlock title="Select an Account to view the Roles" id="myBlock">
+            <!-- <apex:inputtext value="{!adfsGuid}"/>&nbsp;
+            <apex:commandButton value="Submit" action="{!submit}" rerender="myBlock"/><br/><br/> -->
+            <apex:pageBlockSection title="Accounts" columns="1" collapsible="false">
+                <apex:selectList multiselect="false" label="Account" value="{!accountId}" size="1">
+                    <apex:selectOptions value="{!accountList}"/>
+                    <apex:actionSupport event="onchange" action="{!selectAccount}" reRender="myBlock"/>
+                </apex:selectList>
+            </apex:pageBlockSection>        
+            <apex:pageBlockSection title="User Roles" columns="1" collapsible="false">
+                <apex:dataList value="{!rolesList}" var="role">
+                    {!role}
+                </apex:dataList>                    
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>        
+</apex:page>
