@@ -204,7 +204,7 @@ public class PartnerShareHelper {
         soql = string.format(soql, new String[]{string.valueOf(shareObject)});
         soql = soql + 'where RowCause = \'Manual\' and ParentId IN :recordIdSet and UserOrGroupId IN :UserOrGroupIdSet';
         
-        List<Sobject> shareList = database.query(soql);        
+        List<Sobject> shareList = database.query(soql);
         system.debug(' **** deleteShare() : shareList - '+shareList);
 
         if(shareList.isEmpty() == false){
@@ -247,7 +247,7 @@ public class PartnerShareHelper {
     }
     
     // retrieve account partner info
-    private static Map<ID, List<Account_Partner__c>> findPartners(Set<Id> customerIdSet)
+    public static Map<ID, List<Account_Partner__c>> findPartners(Set<Id> customerIdSet)
     {
         system.debug(' **** findPartners() : customerIdSet - '+customerIdSet);
         if(partnerMap != null && partnerMap.keySet().containsAll(customerIdSet)){
@@ -255,16 +255,19 @@ public class PartnerShareHelper {
         }
 
         partnerMap = new Map<Id, List<Account_Partner__c>>();
-        for(Account_Partner__c partner : [
-                SELECT Customer__c, Partner__c, PublicGroupId__c from Account_Partner__c
-                where Customer__c IN :customerIdSet
-        ]){
-            List<Account_Partner__c> partnerList = partnerMap.get(partner.Customer__c);
-            if (partnerList == null) {
-                partnerList = new List<Account_Partner__c>();
-                partnerMap.put(partner.Customer__c, partnerList);
+        if(customerIdSet.isEmpty() == false) {
+            for (Account_Partner__c partner : [
+                    SELECT Customer__c, Partner__c, PublicGroupId__c
+                    from Account_Partner__c
+                    where Customer__c IN :customerIdSet
+            ]) {
+                List<Account_Partner__c> partnerList = partnerMap.get(partner.Customer__c);
+                if (partnerList == null) {
+                    partnerList = new List<Account_Partner__c>();
+                    partnerMap.put(partner.Customer__c, partnerList);
+                }
+                partnerList.add(partner);
             }
-            partnerList.add(partner);
         }
         system.debug(' **** findPartners() : partnerMap - '+partnerMap);
         return partnerMap;
@@ -272,7 +275,7 @@ public class PartnerShareHelper {
     } // end of findPartners()
 
     // retrieve partner portal user info
-    private static Map<ID, List<User>> findPartnerUsers(Set<Id> partnerIdSet)
+    public static Map<ID, List<User>> findPartnerUsers(Set<Id> partnerIdSet)
     {
         system.debug(' **** findPartnerUsers() : partnerIdSet - '+partnerIdSet);
         if(accountUserMap != null && accountUserMap.keySet().containsAll(partnerIdSet)){

@@ -1,6 +1,7 @@
 public class ProjectTriggerHandler extends TriggerHandler{
 
     public override void afterInsert(){
+        new ProjectShareHelper().addShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         //new PartnerShareHelper().addShare(trigger.new, trigger.oldMap);
         calculateProjectedDeadline(trigger.new);
     }
@@ -8,6 +9,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
     public override void afterUpdate(){
         calculateProjectedDeadline(trigger.new);
         CallTFSService(trigger.new);
+        new ProjectShareHelper().deleteShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
+        new ProjectShareHelper().addShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         //new PartnerShareHelper().deleteShare(trigger.new, trigger.oldMap);
         //new PartnerShareHelper().addShare(trigger.new, trigger.oldMap);       
     }
