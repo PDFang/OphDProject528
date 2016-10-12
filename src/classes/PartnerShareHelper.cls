@@ -4,30 +4,30 @@ public class PartnerShareHelper {
 
     static Map<ID, List<User>> accountUserMap = null; // key account Id
     static Map<Id, List<Account_Partner__c>> partnerMap = null; // key customer Id
-	
+    
     static final Map<Schema.SobjectType, String> accountFieldMap = new Map<Schema.SobjectType, String>{
-    	Project__c.SobjectType => 'Account__c'
+        Project__c.SobjectType => 'Account__c'
         //Checklist1__c.SobjectType => 'Account_Name__c',
-		//Buildout__c.SobjectType => 'Account__c',
-		//Risk__c.SobjectType => 'Account__c',
-		//WorkLog__c.SobjectType => 'Project__r.Account__c'
+        //Buildout__c.SobjectType => 'Account__c',
+        //Risk__c.SobjectType => 'Account__c',
+        //WorkLog__c.SobjectType => 'Project__r.Account__c'
     };
-	
-	static final Map<Schema.SobjectType, Schema.SobjectType> shareObjectMap = new Map<Schema.SobjectType, Schema.SobjectType>{
-    	Project__c.SobjectType => Project__Share.SobjectType
-		//Checklist1__c.SobjectType => Checklist1__c.SobjectType,
-		//Buildout__c.SobjectType => Buildout__c.SobjectType,
-		//Risk__c.SobjectType => Risk__Share.SobjectType,
-		//WorkLog__c.SobjectType => WorkLog__Share.SobjectType
+    
+    static final Map<Schema.SobjectType, Schema.SobjectType> shareObjectMap = new Map<Schema.SobjectType, Schema.SobjectType>{
+        Project__c.SobjectType => Project__Share.SobjectType
+        //Checklist1__c.SobjectType => Checklist1__c.SobjectType,
+        //Buildout__c.SobjectType => Buildout__c.SobjectType,
+        //Risk__c.SobjectType => Risk__Share.SobjectType,
+        //WorkLog__c.SobjectType => WorkLog__Share.SobjectType
     };        
-		      
+              
     private String objectType = null;
     private String accountField = null;
     
     public class PartnerShareHelperException extends Exception{}     
     
     public void addShare(List<sObject> newList, Map<Id, sObject> oldMap){
-		
+        
         if(newList == null || newList.isEmpty()){
             return;
         }
@@ -49,7 +49,7 @@ public class PartnerShareHelper {
     
     @Future
     private static void addShareFuture(String objectType, Set<Id> recordIdSet, String accountField){
-		
+        
         List<Sobject> recordList = getRecords(objectType, recordIdSet, accountField);
         system.debug(' **** addShareFuture() : recordList - '+recordList);
         if(recordList.isEmpty()){
@@ -107,7 +107,7 @@ public class PartnerShareHelper {
                     // user iteration
                     for (User partnerUser :userList) {
                         try{
-                        	Sobject share = shareObjectMap.get(parentSobjectType).newSobject();
+                            Sobject share = shareObjectMap.get(parentSobjectType).newSobject();
                             share.put('ParentId', (Id)record.get('Id'));
                             share.put('UserOrGroupId', partnerUser.Id);
                             share.put('AccessLevel', 'Edit');
@@ -136,7 +136,7 @@ public class PartnerShareHelper {
     } // end of addShareFuture()
     
     public void deleteShare(List<sObject> newList, Map<Id, sObject> oldMap){
-		
+        
         if(newList == null || newList.isEmpty()){
             return;
         }
@@ -211,7 +211,7 @@ public class PartnerShareHelper {
             Database.DeleteResult[] resultList=  Database.delete(shareList, false);
             for(Database.DeleteResult result : resultList){
                 if(result.isSuccess() == false){
-					system.debug('**** deleteShare() : id - '+ result.getId());
+                    system.debug('**** deleteShare() : id - '+ result.getId());
                     system.debug('**** deleteShare() : error - '+ result.getErrors()[0]);
                     throw new PartnerShareHelperException(result.getErrors()[0].getMessage());
                 }
@@ -219,8 +219,8 @@ public class PartnerShareHelper {
         }
 
     } // end of deleteShare()
-	
-    /* validate that the Sobject is supported by this class*/
+    
+    // validate that the Sobject is supported by this class
     private void validateSobjectType(List<sObject> newList)
     {
         Schema.SobjectType sObjectType = newList.getSObjectType();
@@ -246,7 +246,7 @@ public class PartnerShareHelper {
         return recordList;
     }
     
-    /* retrieve account partner info **/
+    // retrieve account partner info
     private static Map<ID, List<Account_Partner__c>> findPartners(Set<Id> customerIdSet)
     {
         system.debug(' **** findPartners() : customerIdSet - '+customerIdSet);
@@ -271,7 +271,7 @@ public class PartnerShareHelper {
 
     } // end of findPartners()
 
-    /* retrieve partner portal user info **/
+    // retrieve partner portal user info
     private static Map<ID, List<User>> findPartnerUsers(Set<Id> partnerIdSet)
     {
         system.debug(' **** findPartnerUsers() : partnerIdSet - '+partnerIdSet);
@@ -284,7 +284,7 @@ public class PartnerShareHelper {
                     Select Id, ContactId, AccountId
                     from User
                     where IsPortalEnabled = true and IsActive = true
-                	and UserType IN ('Partner', 'PowerPartner')
+                    and UserType IN ('Partner', 'PowerPartner')
                     and AccountId IN :partnerIdSet
             ]) {
                 List<User> userList = accountUserMap.get(partnerUser.AccountId);
@@ -299,5 +299,5 @@ public class PartnerShareHelper {
         return accountUserMap;
 
     } // end of findPartnerUsers()
-    
+
 }

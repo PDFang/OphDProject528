@@ -47,7 +47,8 @@ private class AccountPartnerTriggerHandlerTest {
                 new Account_Partner__c(
                         Customer__c = accountList[0].Id,
                         Partner__c = accountList[2].Id,
-                        Partner_Type__c = typeList.size() > 0 ? typeList[0] : 'iCE'
+                        //Partner_Type__c = typeList.size() > 0 ? typeList[0] : 'iCE'
+                    	Partner_Type__c = AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER
                 )
         );
        
@@ -55,14 +56,16 @@ private class AccountPartnerTriggerHandlerTest {
                 new Account_Partner__c(
                         Customer__c = accountList[1].Id,
                         Partner__c = accountList[3].Id,
-                        Partner_Type__c = 'iCE'
+                        //Partner_Type__c = 'iCE'
+                    	Partner_Type__c = AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER
                 )
         );
         partnerList.add(
                 new Account_Partner__c(
                         Customer__c = accountList[1].Id,
                         Public_Group__c = 'Test Group',
-                        Partner_Type__c = typeList.size() > 0 ? typeList[0] : 'iCE'
+                        //Partner_Type__c = typeList.size() > 0 ? typeList[0] : 'iCE'
+                    	Partner_Type__c = AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER
                 )
         );
         insert partnerList;
@@ -81,8 +84,8 @@ private class AccountPartnerTriggerHandlerTest {
             List<Opportunity> opportunities = [SELECT Id from Opportunity where AccountId = :accounts[0].Id];
             system.assertEquals(1, opportunities.size());
 
-            List<Project__c> projects = [SELECT Id from Project__c where Account__c = :accounts[0].Id];
-            system.assertEquals(1, projects.size());
+            //List<Project__c> projects = [SELECT Id from Project__c where Account__c = :accounts[0].Id];
+            //system.assertEquals(1, projects.size());
         }
         // partner 2
         system.runAs(userList[1]){
@@ -98,8 +101,8 @@ private class AccountPartnerTriggerHandlerTest {
             List<Opportunity> opportunities = [SELECT Id from Opportunity where AccountId = :accounts[0].Id];
             system.assertEquals(1, opportunities.size());
 
-            List<Project__c> projects = [SELECT Id from Project__c where Account__c = :accounts[0].Id];
-            system.assertEquals(1, projects.size());
+            //List<Project__c> projects = [SELECT Id from Project__c where Account__c = :accounts[0].Id];
+            //system.assertEquals(1, projects.size());
         }
         // public group member
         system.runAs(userList[2]){
@@ -115,8 +118,8 @@ private class AccountPartnerTriggerHandlerTest {
             List<Opportunity> opportunities = [SELECT Id from Opportunity where AccountId = :accounts[0].Id];
             system.assertEquals(1, opportunities.size());
 
-            List<Project__c> projects = [SELECT Id from Project__c where Account__c = :accounts[0].Id];
-            system.assertEquals(1, projects.size());
+            //List<Project__c> projects = [SELECT Id from Project__c where Account__c = :accounts[0].Id];
+            //system.assertEquals(1, projects.size());
         }
 		
         // verify permission set assignments
@@ -192,8 +195,8 @@ private class AccountPartnerTriggerHandlerTest {
             List<Opportunity> opportunities = [SELECT Id from Opportunity];
             system.assertEquals(0, opportunities.size());
 
-            List<Project__c> projects = [SELECT Id from Project__c];
-            system.assertEquals(0, projects.size());
+            //List<Project__c> projects = [SELECT Id from Project__c];
+            //system.assertEquals(0, projects.size());
         }
 
         system.runAs(userList[1]){
@@ -209,8 +212,8 @@ private class AccountPartnerTriggerHandlerTest {
             List<Opportunity> opportunities = [SELECT Id from Opportunity];
             system.assertEquals(1, opportunities.size());
 
-            List<Project__c> projects = [SELECT Id from Project__c];
-            system.assertEquals(1, projects.size());
+            //List<Project__c> projects = [SELECT Id from Project__c];
+            //system.assertEquals(1, projects.size());
         }
 
         system.runAs(userList[2]){
@@ -226,8 +229,8 @@ private class AccountPartnerTriggerHandlerTest {
             List<Opportunity> opportunities = [SELECT Id from Opportunity];
             system.assertEquals(0, opportunities.size());
 
-            List<Project__c> projects = [SELECT Id from Project__c];
-            system.assertEquals(0, projects.size());
+            //List<Project__c> projects = [SELECT Id from Project__c];
+            //system.assertEquals(0, projects.size());
         }
 		
         // verify permission set assignments are removed
@@ -323,7 +326,7 @@ private class AccountPartnerTriggerHandlerTest {
         createContacts();
         createCases();
         createOpportunities();
-        createProjects();
+        //createProjects();
         CreatePortalUsers();
         CreatePublicGroup();
 
@@ -503,7 +506,7 @@ private class AccountPartnerTriggerHandlerTest {
         insert oppList;
 
     } // end of createOpportunities()
-
+/*
     static void createProjects(){
 
         List<Project__c> projectList = new List<Project__c>();
@@ -522,7 +525,7 @@ private class AccountPartnerTriggerHandlerTest {
         insert projectList;
 
     } // end of createProjects()
-
+*/
     static void CreatePortalUsers() {
 
         userList = new List<User>();
