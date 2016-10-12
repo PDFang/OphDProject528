@@ -12,7 +12,7 @@ public class Notificationproxy {
         public Notificationproxy.AuthHeader AuthHeader;
         private String AuthHeader_hns = 'AuthHeader=http://ucn.net/NotificationProxy/';
         private String[] ns_map_type_info = new String[]{'http://ucn.net/NotificationProxy/', 'Notificationproxy'};
-        public Boolean SendEmail(Notificationproxy.ArrayOfString recipients,String subject,String htmlBody,String textBody,Integer emailTemplateID) {
+        public String SendEmail(Notificationproxy.ArrayOfString recipients,String subject,String htmlBody,String textBody,Integer emailTemplateID) {
             Notificationproxy.SendEmail_element request_x = new Notificationproxy.SendEmail_element();
             Notificationproxy.SendEmailResponse_element response_x;
             request_x.recipients = recipients;
@@ -39,7 +39,7 @@ public class Notificationproxy {
         }
     }
     public class SendEmailResponse_element {
-        public Boolean SendEmailResult;
+        public String SendEmailResult;
         private String[] SendEmailResult_type_info = new String[]{'SendEmailResult','http://www.w3.org/2001/XMLSchema','boolean','1','1','false'};
         private String[] apex_schema_type_info = new String[]{'http://ucn.net/NotificationProxy/','true','false'};
         private String[] field_order_type_info = new String[]{'SendEmailResult'};

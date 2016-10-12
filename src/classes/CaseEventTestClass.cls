@@ -538,7 +538,7 @@ private class CaseEventTestClass {
         notify.emailBody = 'Test';
         notify.subject = 'test';
         notify.SendNotification();
-
+        system.debug('this is a test');
         Test.stopTest();
 
     }
@@ -548,7 +548,8 @@ private class CaseEventTestClass {
 
         Test.setMock(WebServiceMock.class, new INotificationProxy());
 
-        boolean testResult = NotificationHelperClass.GenerateEmail(new String[] { 'test@test.com' }, 'test', 'test', 'test', 3);
+        string testResult = NotificationHelperClass.GenerateEmail(new String[] { 'test@test.com' }, 'test', 'test', 'test', 3);
+
 
     }
 
