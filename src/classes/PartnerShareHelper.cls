@@ -1,7 +1,7 @@
 /* Generic class to share any sobject records related to customer accounts with affiliated partner users */
 /* The public methods shall be called from any sobject trigger */
 public class PartnerShareHelper {
-
+/*
     static Map<ID, List<User>> accountUserMap = null; // key account Id
     static Map<Id, List<Account_Partner__c>> partnerMap = null; // key customer Id
     
@@ -147,7 +147,7 @@ public class PartnerShareHelper {
             sObject oldRecord = ( oldMap != null ) ? oldMap.get(record.Id) : null;
             if( oldRecord != null && oldRecord.get(accountField) != null && oldRecord.get(accountField) != record.get(accountField) ){
                 recordIdSet.add(record.Id);
-                customerIdSet.add((Id)record.get(accountField));
+                customerIdSet.add((Id)oldRecord.get(accountField));
             }
         }
         system.debug(' **** deleteShare() : recordIdSet - '+recordIdSet);
@@ -302,5 +302,5 @@ public class PartnerShareHelper {
         return accountUserMap;
 
     } // end of findPartnerUsers()
-
+*/
 }
