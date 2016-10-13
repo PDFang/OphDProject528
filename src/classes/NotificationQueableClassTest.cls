@@ -1,15 +1,14 @@
 @isTest
 public class NotificationQueableClassTest {
     static testmethod void testQueable() {
+        
+        Id jobId;
+        
         // startTest/stopTest block to force async processes 
         //   to run in the test.
         Test.startTest();       
-        string caseNumber = '25602';
-        Number_Of_Retry__c retry = new Number_Of_Retry__c();    
-        retry.Name = 'Enqueued';    
-        retry.Retry__c = 0;
-        insert retry;
-        Test.setMock(WebServiceMock.class, new INotificationProxy());
+        string caseNumber = '25602';      
+        
         NotificationHelperClass.EmailTemplate[] templateList = new NotificationHelperClass.EmailTemplate[]{};        
             NotificationHelperClass.EmailTemplate template1 = new NotificationHelperClass.EmailTemplate();
         templateList.add(template1);
@@ -27,13 +26,15 @@ public class NotificationQueableClassTest {
         template2.textBody = 'test';
         template2.templateId = 3;
         template2.isResell = false; //caseNumber;
-        System.enqueueJob(new NotificationQueableClass(templateList));
+        Test.setMock(WebServiceMock.class, new INotificationProxy());
+        jobId = System.enqueueJob(new NotificationQueableClass(templateList, ''));
         //NotificationHelperClass.futureCallout(new String[] { 'test@test.com' }, 'test', 'test', 'test', 3);
         Test.stopTest();
         
         // Validate that the job has run 
-        retry = new Number_Of_Retry__c();   
-        retry = Number_Of_Retry__c.getInstance('Enqueued');
+        Number_Of_Retry__c retry = new Number_Of_Retry__c();   
+        retry = Number_Of_Retry__c.getInstance(jobId);
+        system.debug('retry.Retry__c ==>' + retry.Retry__c);
         System.assertNotEquals(0, retry.Retry__c);
         //System.assertEquals(3, retry.Retry__c);
     }

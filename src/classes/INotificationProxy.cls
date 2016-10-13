@@ -15,8 +15,9 @@ global class INotificationProxy implements WebServiceMock
    ) 
    {
    	   Notificationproxy.SendEmailResponse_element respElement = new NotificationProxy.SendEmailResponse_element();
-   	   respElement.SendEmailResult = true;
+   	   respElement.SendEmailResult = 'ConnectionFailure';
               		
        response.put('response_x', respElement); 
    }
+    
 }

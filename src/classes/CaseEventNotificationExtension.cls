@@ -34,23 +34,22 @@ public class CaseEventNotificationExtension
     public CaseEventNotificationExtension(ApexPages.StandardController controller) 
     {
         this.c = (Case)controller.getRecord();
-		// Added the below query to accomodate all custom fields  for this P1 issue
-		//ISSUE: P1 - Service Console - Maint Notification Standard Text Errors		
-		c = [select Id,RecordTypeId, StartDateTImeUTC__c, EventType__c, Subject,  Description, ProductImpacted__c, CustomersMayExperienceTheFollowing__c
-						,CustomerAction__c, Status, CaseNumber, PlatformsImpacted__c, Owner.Name, Account.Id, NumberOfAccountsImpacted__c
-						FROM Case where Id =: c.Id];
-       // System.debug('Case Record is' + c);
         string caseType;
         
         if(c.Id != null)
         {
-             
+            // Added the below query to accomodate all custom fields  for this P1 issue
+            //ISSUE: P1 - Service Console - Maint Notification Standard Text Errors     
+            c = [select Id,RecordTypeId, StartDateTImeUTC__c, EventType__c, Subject,  Description, ProductImpacted__c, CustomersMayExperienceTheFollowing__c
+                            ,CustomerAction__c, Status, CaseNumber, PlatformsImpacted__c, Owner.Name, Account.Id, NumberOfAccountsImpacted__c
+                            FROM Case where Id =: c.Id];
+            System.debug('Case Record is' + c);             
             accountIds = new Set<Id>();
             csmEmails = new String[]{};
             cec = new CaseEventClass(c);
             cec.listSize = 50000;
             if(clusters.size() > 0)
-            	cec.lstClusters = clusters;
+                cec.lstClusters = clusters;
             AccountIncidentsUpdate();
             
             //system.debug('clusters arnab ==> ' + clusters);
@@ -251,13 +250,13 @@ public class CaseEventNotificationExtension
                     NotificationHelperClass.EmailTemplate template = new NotificationHelperClass.EmailTemplate();
                     template.recipients = resellAddresses;
                     template.subject = subject;
-                    template.htmlBody = htmlString ;/**+ '<br/><br/>' + platforms';**/ 
-                    template.textBody = textBody; /**+ '\n\n' + platforms; **/ 
+                    template.htmlBody = htmlString ;
+                    template.textBody = textBody;
                     template.templateId = 6;
                     listTemplates.add(template);
                 }
                 
-                System.enqueueJob(new NotificationQueableClass(listTemplates));               
+                System.enqueueJob(new NotificationQueableClass(listTemplates, ''));               
            
                 insert tasks;
                 
