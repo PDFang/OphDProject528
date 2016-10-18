@@ -1,13 +1,13 @@
 public class AccountPartnerTriggerHandler extends TriggerHandler{
-
+    // constants
     public static final String SAAS_IMPLEMENTATION_PARTNER = 'Certified Implementation Partner – SaaS';
+    public static final Set<String> psSaaSProjectSet = new Set<String>{
+            'PS Parent Project - SaaS',
+            'PS Project Phase SaaS'
+    };
+
     private static Map<Id, List<User>> accountUserMap = null; // key partner account ID
     private static Map<Id, User> partnerUserMap = null; // key user ID
-	
-    private static final Set<String> psSaaSProjectSet = new Set<String>{
-        'PS Parent Project - SaaS',
-		'PS Project Phase SaaS'
-    };
 
     public class AccountPartnerTriggerHandlerException extends Exception{}
     
