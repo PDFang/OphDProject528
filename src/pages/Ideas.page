@@ -1,0 +1,11 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" cache="false" applyHtmlTag="true" controller="IdeasController" action="{!addToCache}">
+    <style>
+    body {
+        overflow : hidden;
+        }
+    </style>
+  <c:SupportSiteHeader ></c:SupportSiteHeader>
+       <div class="container" >
+        <c:CommunityIdeas ></c:CommunityIdeas> 
+    </div> 
+</apex:page>

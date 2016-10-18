@@ -1,0 +1,3 @@
+<apex:page >
+  <chatteranswers:allfeeds communityId="09a70000000PVWF"></chatteranswers:allfeeds>
+</apex:page>
