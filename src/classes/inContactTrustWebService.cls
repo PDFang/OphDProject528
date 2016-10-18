@@ -259,27 +259,28 @@ global class inContactTrustWebService
                             //system.debug('platform => ' + pem.Platform__c);
                             //system.debug('product => ' + pem.Product__c);
                             //loop through resell customer notes
-                            if(pem.Platform__c.startsWith('Cluster'))
+                            //if(pem.Platform__c.startsWith('Cluster'))
+                            if(pem.Platform__c.startsWith('Cluster') && resellCustomerClusters.containsKey('inContact'))
                             {
                                 for(string resellCluster:resellCustomerClusters.get('inContact'))
                                 {
                                     platforms.add(pem.Platform__c.replace('Cluster',resellCluster));
                                 }
-                            } else if(pem.Platform__c.startsWith('Verint'))
+                            } else if(pem.Platform__c.startsWith('Verint') && resellCustomerClusters.containsKey('Verint'))
                             {
                                 
                                 for(string resellCluster:resellCustomerClusters.get('Verint'))
                                 {
                                     platforms.add(pem.Platform__c.replace('Verint',resellCluster));
                                 }
-                            }else if(pem.Platform__c.startsWith('NWFM'))
+                            }else if(pem.Platform__c.startsWith('NWFM') && resellCustomerClusters.containsKey('NWFM'))
                             {
                                 
                                 for(string resellCluster:resellCustomerClusters.get('NWFM'))
                                 {
                                     platforms.add(pem.Platform__c.replace('NWFM',resellCluster));
                                 }
-                            }else if(pem.Platform__c.startsWith('NQM'))
+                            }else if(pem.Platform__c.startsWith('NQM') && resellCustomerClusters.containsKey('NQM'))
                             {
                                 
                                 for(string resellCluster:resellCustomerClusters.get('NQM'))
