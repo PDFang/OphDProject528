@@ -1,0 +1,20 @@
+<aura:component implements="forceCommunity:searchInterface,forceCommunity:availableForAllPageTypes" access="global" >
+	<aura:attribute name="cases" type="Case[]"/>
+	<aura:registerEvent name="SearchEvent" type="c:SearchEventHandler"/>
+	<center>
+        <div class="search">
+            <div class="search-wrapper">
+                <form class="search-form">
+                    <div class="search-input-wrapper">
+                        <ui:inputText class="search-input inputTextCSS" placeholder=""  aura:id="thisText"/>
+                        <ui:button aura:id="button" buttonTitle="" class="button" label="Search Cases" press="{!c.searchEventFire}"/>
+                        <!-- <ui:button class="uiOutputURL" press="{!c.gotoURL}">Canvas app</ui:button> -->
+    
+                    </div>
+                    <input type="hidden" name="language" value="en" />
+                </form>
+            </div>
+        </div>
+	</center>
+    
+</aura:component>

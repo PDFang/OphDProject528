@@ -1,0 +1,15 @@
+<!--
+ - Created by arnab.karsarkar on 10/17/2016.
+ -->
+
+<aura:component description="DisplayBrandImage" implements="forceCommunity:availableForAllPageTypes" access="global" controller="PartnerBrandingDisplayController" >
+
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+	<aura:attribute name="fileName" type="string" default=""/>
+    
+    <div>
+        <img src="{!v.fileName}"/>
+    </div>
+
+</aura:component>

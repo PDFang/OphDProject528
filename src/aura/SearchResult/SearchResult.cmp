@@ -1,0 +1,16 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="SearchController">
+    
+	<aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <!-- <aura:handler event="c:SearchEventHandler" action="{!c.search}"/> -->
+    <aura:attribute name="searchText" type="string" default=""/>
+    <aura:attribute name="cases" type="Case[]"/>
+    
+	<div> search results </div>    
+    <aura:iteration items="{!v.cases}" var="case">
+        <li>
+            <p>{!case.Id}</p>
+            <p>{!case.CaseNumber}</p>
+            <p>{!case.Subject}</p>
+        </li>
+    </aura:iteration>
+</aura:component>
