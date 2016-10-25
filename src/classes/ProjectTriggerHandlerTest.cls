@@ -7,6 +7,8 @@ private class ProjectTriggerHandlerTest {
     static final String ACCOUNT_PARTNER_TYPE_ACCOUNT = 'Partner Account';
     static final String ACCOUNT_PARTNER_TYPE_GROUP = 'Public Group';
     static final String PROJECT_TYPE_PARENT_SAAS = 'PS Parent Project - SaaS';
+    static final String PROJECT_TYPE_PHASE_PREMISE = 'PS Project Phase Premise WFO';
+    static final String PROJECT_TYPE_PARENT_PREMISE = 'PS Parent Project - Premise';
     static final String OPPORTUNITY_TYPE_NEW = 'New Opportunity';
     static final String CASE_TYPE_INCIDENT = 'Incident';
     static final String CASE_TYPE_EVENT = 'Event';
@@ -20,6 +22,8 @@ private class ProjectTriggerHandlerTest {
             ACCOUNT_PARTNER_TYPE_GROUP,
             OPPORTUNITY_TYPE_NEW,
             PROJECT_TYPE_PARENT_SAAS,
+            PROJECT_TYPE_PARENT_PREMISE,
+            PROJECT_TYPE_PHASE_PREMISE,
             CASE_TYPE_EVENT
     };
 
@@ -29,12 +33,104 @@ private class ProjectTriggerHandlerTest {
     static List<Opportunity> oppList = null;
     static List<User> userList = null;
 
-    /* Add a new project and verify portal users and public group members are granted access */
+    /* Add a phase project and verify the "projected deadline" on the parent project record is equal to most recent "projected deadline" on any project phase records */
+    static testMethod void ProjectedDeadlineInsertTest() {
+
+        createTestData();
+
+        Project__c parentProject = new Project__c();
+        parentProject.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_PREMISE);
+        parentProject.Opportunity__c = oppList[0].Id;
+        parentProject.Account__c = accountList[0].Id;
+        parentProject.Projected_Deadline__c = system.today().addDays(7);
+        insert parentProject;
+
+        test.startTest();
+        List<Project__c> projectList = new List<Project__c>();
+        Project__c phase1 = new Project__c();
+        phase1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_PREMISE);
+        phase1.Opportunity__c = oppList[1].Id;
+        phase1.Account__c = accountList[1].Id;
+        phase1.Projected_Deadline__c = system.today().addMonths(1);
+        phase1.ParentProject__c = parentProject.Id;
+        projectList.add(phase1);
+
+        Project__c phase2 = new Project__c();
+        phase2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_PREMISE);
+        phase2.Opportunity__c = oppList[1].Id;
+        phase2.Account__c = accountList[1].Id;
+        phase2.Projected_Deadline__c = system.today().addYears(1);
+        phase2.ParentProject__c = parentProject.Id;
+        projectList.add(phase2);
+
+        insert projectList;
+        test.stopTest();
+
+        parentProject = [SELECT Id, Projected_Deadline__c FROM Project__c WHERE Id = :parentProject.Id];
+        AggregateResult[] aggregateList = [
+                SELECT ParentProject__c, MAX(Projected_Deadline__c) maxDate FROM Project__c
+                WHERE ParentProject__c = :parentProject.Id and Projected_Deadline__c != null
+                GROUP BY ParentProject__c
+        ];
+
+        system.assertEquals((Date)aggregateList[0].get('maxDate'), parentProject.Projected_Deadline__c, 'Parent Projected Deadline is not equal to most recent project phase Projected Deadline.');
+
+        // delete a phase project
+        delete phase2;
+        parentProject = [SELECT Id, Projected_Deadline__c FROM Project__c WHERE Id = :parentProject.Id];
+        aggregateList = [
+                SELECT ParentProject__c, MAX(Projected_Deadline__c) maxDate FROM Project__c
+                WHERE ParentProject__c = :parentProject.Id and Projected_Deadline__c != null
+                GROUP BY ParentProject__c
+        ];
+        system.assertEquals((Date)aggregateList[0].get('maxDate'), parentProject.Projected_Deadline__c, 'Parent Projected Deadline is not equal to most recent project phase Projected Deadline.');
+
+    } // end of ProjectedDeadlineInsertTest()
+
+    /* Update a phase project and verify the "projected deadline" on the parent project record is equal to most recent "projected deadline" on any project phase records */
+    static testMethod void ProjectedDeadlineUpdateTest() {
+
+        createTestData();
+
+        Project__c parentProject = new Project__c();
+        parentProject.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_PREMISE);
+        parentProject.Opportunity__c = oppList[0].Id;
+        parentProject.Account__c = accountList[0].Id;
+        parentProject.Projected_Deadline__c = system.today().addDays(7);
+        insert parentProject;
+
+        Project__c phase1 = new Project__c();
+        phase1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_PREMISE);
+        phase1.Opportunity__c = oppList[1].Id;
+        phase1.Account__c = accountList[1].Id;
+        phase1.Projected_Deadline__c = system.today().addMonths(1);
+        phase1.ParentProject__c = parentProject.Id;
+        insert phase1;
+
+        test.startTest();
+        phase1.Projected_Deadline__c = system.today().addYears(1);
+        update phase1;
+        test.stopTest();
+
+        parentProject = [SELECT Id, Projected_Deadline__c FROM Project__c WHERE Id = :parentProject.Id];
+        AggregateResult[] aggregateList = [
+                SELECT ParentProject__c, MAX(Projected_Deadline__c) maxDate FROM Project__c
+                WHERE ParentProject__c = :parentProject.Id and Projected_Deadline__c != null
+                GROUP BY ParentProject__c
+        ];
+
+        system.assertEquals((Date)aggregateList[0].get('maxDate'), parentProject.Projected_Deadline__c, 'Parent Projected Deadline is not equal to most recent project phase Projected Deadline.');
+
+    } // end of ProjectedDeadlineUpdateTest()
+
+
+    // Add a new project and verify portal users and public group members are granted access
     static testMethod void insertProjectTest() {
 
         createTestData();
 
         test.startTest();
+
         List<Project__c> projectList = new List<Project__c>();
         Project__c project1 = new Project__c();
         project1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
@@ -43,61 +139,152 @@ private class ProjectTriggerHandlerTest {
         projectList.add(project1);
 
         Project__c project2 = new Project__c();
-        project2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
+        project2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_PREMISE);
         project2.Opportunity__c = oppList[1].Id;
         project2.Account__c = accountList[1].Id;
+        project2.ImplementationPartner__c = accountList[3].Id;
         projectList.add(project2);
 
         insert projectList;
+
         test.stopTest();
+
         // partner 1
         system.runAs(userList[0]){
-            List<Project__c> projects = [SELECT Id from Project__c];
-            system.assertEquals(1, projects.size());
+            // SaaS project
+            List<Project__c> saasProjects = [
+                    SELECT Id from Project__c
+                    where RecordType.Name = :PROJECT_TYPE_PARENT_SAAS
+                    and Id = :projectList[0].Id
+            ];
+            system.assertEquals(1, saasProjects.size());
+            // Premise project
+            List<Project__c> premiseProjects = [
+                    SELECT Id from Project__c
+                    where RecordType.Name = :PROJECT_TYPE_PARENT_PREMISE
+                    and Id = :projectList[1].Id
+            ];
+            system.assertEquals(0, premiseProjects.size());
         }
         // partner 2
         system.runAs(userList[1]){
-            List<Project__c> projects = [SELECT Id from Project__c];
-            system.assertEquals(1, projects.size());
+            // SaaS project
+            List<Project__c> saasProjects = [
+                    SELECT Id from Project__c
+                    where RecordType.Name = :PROJECT_TYPE_PARENT_SAAS
+                    and Id = :projectList[0].Id
+            ];
+            system.assertEquals(0, saasProjects.size());
+            // Premise project
+            List<Project__c> premiseProjects = [
+                    SELECT Id from Project__c
+                    where RecordType.Name = :PROJECT_TYPE_PARENT_PREMISE
+                    and Id = :projectList[1].Id
+            ];
+            system.assertEquals(1, premiseProjects.size());
         }
         // public group member
         system.runAs(userList[2]){
-            List<Project__c> projects = [SELECT Id from Project__c];
-            system.assertEquals(1, projects.size());
+            // SaaS project
+            List<Project__c> saasProjects = [
+                    SELECT Id from Project__c
+                    where RecordType.Name = :PROJECT_TYPE_PARENT_SAAS
+                    and Id = :projectList[0].Id
+            ];
+            system.assertEquals(1, saasProjects.size());
+            // Premise project
+            List<Project__c> premiseProjects = [
+                    SELECT Id from Project__c
+                    where RecordType.Name = :PROJECT_TYPE_PARENT_PREMISE
+                    and Id = :projectList[1].Id
+            ];
+            system.assertEquals(0, premiseProjects.size());
         }
 
     } // end of insertProjectTest()
 
-    /* Update the account on an existing project and verify portal users and public group members are granted or revoked access accordingly */
+    // Update the account on an existing project and verify portal users and public group members are granted or revoked access accordingly
     static testMethod void updateProjectTest() {
 
         createTestData();
 
+        List<Project__c> projectList = new List<Project__c>();
         Project__c project1 = new Project__c();
         project1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
-        project1.Opportunity__c = oppList[1].Id;
-        project1.Account__c = accountList[1].Id;
-        insert project1;
-
-        test.startTest();
         project1.Opportunity__c = oppList[0].Id;
         project1.Account__c = accountList[0].Id;
-        update project1;
+        projectList.add(project1);
+
+        Project__c project2 = new Project__c();
+        project2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_PREMISE);
+        project2.Opportunity__c = oppList[1].Id;
+        project2.Account__c = accountList[1].Id;
+        project2.ImplementationPartner__c = accountList[3].Id;
+        projectList.add(project2);
+
+        insert projectList;
+
+        test.startTest();
+
+        // change customer account
+        project1.Opportunity__c = oppList[1].Id;
+        project1.Account__c = accountList[1].Id;
+        // change implementation partner
+        project2.ImplementationPartner__c = accountList[2].Id;
+        update projectList;
+
         test.stopTest();
 
+        // partner 1
         system.runAs(userList[0]){
-            List<Project__c> projects = [SELECT Id from Project__c];
-            system.assertEquals(1, projects.size());
+            // SaaS project
+            List<Project__c> saasProjects = [
+                    SELECT Id from Project__c
+                    where RecordType.Name = :PROJECT_TYPE_PARENT_SAAS
+                    and Id = :projectList[0].Id
+            ];
+            system.assertEquals(0, saasProjects.size());
+            // Premise project
+            List<Project__c> premiseProjects = [
+                    SELECT Id from Project__c
+                    where RecordType.Name = :PROJECT_TYPE_PARENT_PREMISE
+                    and Id = :projectList[1].Id
+            ];
+            system.assertEquals(1, premiseProjects.size());
         }
-
+        // partner 2
         system.runAs(userList[1]){
-            List<Project__c> projects = [SELECT Id from Project__c];
-            system.assertEquals(0, projects.size());
+            // SaaS project
+            List<Project__c> saasProjects = [
+                    SELECT Id from Project__c
+                    where RecordType.Name = :PROJECT_TYPE_PARENT_SAAS
+                    and Id = :projectList[0].Id
+            ];
+            system.assertEquals(1, saasProjects.size());
+            // Premise project
+            List<Project__c> premiseProjects = [
+                    SELECT Id from Project__c
+                    where RecordType.Name = :PROJECT_TYPE_PARENT_PREMISE
+                    and Id = :projectList[1].Id
+            ];
+            system.assertEquals(0, premiseProjects.size());
         }
-
+        // public group member
         system.runAs(userList[2]){
-            List<Project__c> projects = [SELECT Id from Project__c];
-            system.assertEquals(0, projects.size());
+            // SaaS project
+            List<Project__c> saasProjects = [
+                    SELECT Id from Project__c
+                    where RecordType.Name = :PROJECT_TYPE_PARENT_SAAS
+                    and Id = :projectList[0].Id
+            ];
+            system.assertEquals(0, saasProjects.size());
+            // Premise project
+            List<Project__c> premiseProjects = [
+                    SELECT Id from Project__c
+                    where RecordType.Name = :PROJECT_TYPE_PARENT_PREMISE
+                    and Id = :projectList[1].Id
+            ];
+            system.assertEquals(0, premiseProjects.size());
         }
 
     } // end of updateProjectTest()
@@ -154,6 +341,12 @@ private class ProjectTriggerHandlerTest {
                         RecordTypeId = recordTypeMap.get(ACCOUNT_TYPE_PARTNERS)
                 )
         );
+        accountList.add(
+                new Account(
+                        Name = 'ProjectTriggerHandlerTest Partner 3',
+                        RecordTypeId = recordTypeMap.get(ACCOUNT_TYPE_PARTNERS)
+                )
+        );
 
         insert accountList;
     } // end of createAccounts()
@@ -167,7 +360,7 @@ private class ProjectTriggerHandlerTest {
                         Customer__c = accountList[0].Id,
                         Partner__c = accountList[2].Id,
                         RecordTypeId = recordTypeMap.get(ACCOUNT_PARTNER_TYPE_ACCOUNT),
-                        Partner_Type__c = 'iCE'
+                        Partner_Type__c = AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER
                 )
         );
         partnerList.add(
@@ -175,14 +368,15 @@ private class ProjectTriggerHandlerTest {
                         Customer__c = accountList[1].Id,
                         Partner__c = accountList[3].Id,
                         RecordTypeId = recordTypeMap.get(ACCOUNT_PARTNER_TYPE_ACCOUNT),
-                        Partner_Type__c = 'iCE'
+                        Partner_Type__c = AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER
                 )
         );
         partnerList.add(
                 new Account_Partner__c(
-                        Customer__c = accountList[1].Id,
+                        Customer__c = accountList[0].Id,
                         Public_Group__c = 'Test Group',
-                        RecordTypeId = recordTypeMap.get(ACCOUNT_PARTNER_TYPE_GROUP)
+                        RecordTypeId = recordTypeMap.get(ACCOUNT_PARTNER_TYPE_GROUP),
+                        Partner_Type__c = AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER
                 )
         );
         insert partnerList;
@@ -228,7 +422,7 @@ private class ProjectTriggerHandlerTest {
                         LastName = 'ProjectTriggerHandlerTest Contact 5',
                         Email = 'contact5@incontact.com',
                         RecordTypeId = recordTypeMap.get(CONTACT_TYPE_PARTNER),
-                        AccountId = accountList[3].Id
+                        AccountId = accountList[4].Id
                 )
         );
 
@@ -323,25 +517,6 @@ private class ProjectTriggerHandlerTest {
         insert oppList;
 
     } // end of createOpportunities()
-
-    static void createProjects(){
-
-        List<Project__c> projectList = new List<Project__c>();
-        Project__c project1 = new Project__c();
-        project1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
-        project1.Opportunity__c = oppList[0].Id;
-        project1.Account__c = accountList[0].Id;
-        projectList.add(project1);
-
-        Project__c project2 = new Project__c();
-        project2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
-        project2.Opportunity__c = oppList[1].Id;
-        project2.Account__c = accountList[1].Id;
-        projectList.add(project2);
-
-        insert projectList;
-
-    } // end of createProjects()
 
     static void CreatePortalUsers() {
 

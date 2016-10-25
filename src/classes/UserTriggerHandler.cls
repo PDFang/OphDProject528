@@ -1,5 +1,10 @@
 public class UserTriggerHandler extends TriggerHandler{
-	
+
+    // constants
+    private static final String SAAS_IMPLEMENTATION_PARTNER = AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER;
+    private static final Set<String> psSaaSProjectSet = ProjectShareHelper.psSaaSProjectSet;
+    private static final Set<String> psPremiseProjectSet = ProjectShareHelper.psPremiseProjectSet;
+
     public class UserTriggerHandlerException extends Exception{}
     
     public override void afterInsert()
@@ -38,7 +43,7 @@ public class UserTriggerHandler extends TriggerHandler{
 
     @Future
     private static void addShareFuture(set<Id> userIdSet){
-
+        // query user info
         List<User> partnerUserList = getPartnerUsers(userIdSet);
         system.debug(' **** addShareFuture() : partnerUserList - '+partnerUserList);
         if(partnerUserList.isEmpty())
@@ -50,15 +55,13 @@ public class UserTriggerHandler extends TriggerHandler{
         for(User partnerUser : partnerUserList){
             partnerIdSet.add(partnerUser.AccountId);
         }
-        
+        // query account partner info
         Map<Id, List<Account_Partner__c>> partnerMap = getAccountPartners(partnerIdSet);
 		system.debug(' **** addShareFuture() : partnerMap - '+partnerMap);        
-        if(partnerMap.isEmpty())
+        if(partnerMap.isEmpty() == false)
         {
-            return;
-        }        
-
-        addAccountShare(partnerUserList, partnerMap);
+            addAccountShare(partnerUserList, partnerMap);
+        }
         addProjectShare(partnerUserList, partnerMap);
 
     } // end of addShareFuture()
@@ -99,29 +102,59 @@ public class UserTriggerHandler extends TriggerHandler{
 
     } // end of addAccountShare()
 
-    /* Share customer projects with partner account portal users */
+    // Share SaaS projects with SaaS partner portal users and Premise projects with implementation partner portal users
     private static void addProjectShare(List<User> partnerUserList, Map<Id, List<Account_Partner__c>> partnerMap){
+
+        Set<Id> partnerIdSet = new Set<Id>();
+        for( User partnerUser : partnerUserList ){
+            partnerIdSet.add(partnerUser.AccountId);
+        }
+        system.debug(' **** addProjectShare() : partnerIdSet - '+partnerIdSet);
 
         Set<Id> customerIdSet = new Set<Id>();
         for( List<Account_Partner__c> partnerList : partnerMap.values() ){
             for( Account_Partner__c partner : partnerList ){
-                customerIdSet.add(partner.Customer__c);
+                if(partner.Partner_Type__c == SAAS_IMPLEMENTATION_PARTNER) {
+                    customerIdSet.add(partner.Customer__c);
+                }
             }
         }
-
         system.debug(' **** addProjectShare() : customerIdSet - '+customerIdSet);
 
+        // Get PS SaaS projects
         Map<ID, List<Project__c>> accountProjectMap = new Map<ID, List<Project__c>>();
-        for(Project__c project : [Select Id, Account__c from Project__c where Account__c IN :customerIdSet]){
-            List<Project__c> projectList = accountProjectMap.get(project.Account__c);
-            if(projectList == null) {
-                projectList = new List<Project__c>();
-                accountProjectMap.put(project.Account__c, projectList);
+        if(customerIdSet.isEmpty() == false){
+            for(Project__c project : [
+                    Select Id, Account__c from Project__c
+                    where Account__c IN :customerIdSet
+                    and RecordType.Name IN :psSaaSProjectSet
+            ]){
+                List<Project__c> projectList = accountProjectMap.get(project.Account__c);
+                if(projectList == null) {
+                    projectList = new List<Project__c>();
+                    accountProjectMap.put(project.Account__c, projectList);
+                }
+                projectList.add(project);
             }
-            projectList.add(project);
+        }
+        // Get PS Premise projects
+        Map<ID, List<Project__c>> impPartnerProjectMap = new Map<ID, List<Project__c>>();
+        if(partnerIdSet.isEmpty() == false){
+            for(Project__c project : [
+                    Select Id, ImplementationPartner__c from Project__c
+                    where ImplementationPartner__c IN :partnerIdSet
+                    and RecordType.Name IN :psPremiseProjectSet
+            ]){
+                List<Project__c> projectList = impPartnerProjectMap.get(project.ImplementationPartner__c);
+                if(projectList == null) {
+                    projectList = new List<Project__c>();
+                    impPartnerProjectMap.put(project.ImplementationPartner__c, projectList);
+                }
+                projectList.add(project);
+            }
         }
 
-        if(accountProjectMap.isEmpty()){
+        if(accountProjectMap.isEmpty() && impPartnerProjectMap.isEmpty()){
             return;
         }
 
@@ -129,30 +162,43 @@ public class UserTriggerHandler extends TriggerHandler{
         // user iteration
         for(User partnerUser :partnerUserList)
         {
-            if( partnerMap.get(partnerUser.AccountId) == null ){
-                continue;
-            }
-            List<Account_Partner__c> partnerList = partnerMap.get(partnerUser.AccountId);
-            system.debug(' **** addProjectShare() : partnerList - '+partnerList);
-            // customer iteration
-            for(Account_Partner__c partner : partnerList){
-                if( accountProjectMap.get(partner.Customer__c) == null ){
-                    continue;
-                }
-                List<Project__c> projectList = accountProjectMap.get(partner.Customer__c);
-                system.debug(' **** addProjectShare() : projectList - '+projectList);
+            // Share PS Premise Projects with implementation partner users
+            if( impPartnerProjectMap.containsKey(partnerUser.AccountId) ) {
+                List<Project__c> projectList = impPartnerProjectMap.get(partnerUser.AccountId);
+                system.debug(' **** addProjectShare() : Imp. Partner projectList - ' + projectList);
                 // project iteration
-                for(Project__c project : projectList){
+                for (Project__c project : projectList) {
                     Project__Share share = new Project__Share(
                             ParentId = project.Id,
                             UserOrGroupId = partnerUser.Id,
-                            AccessLevel  = 'Edit'
+                            AccessLevel = 'Edit'
                     );
                     shareList.add(share);
-                } // end project iteration
+                }
+            }
+            // Share PS SaaS projects with account partners
+            if( partnerMap.containsKey(partnerUser.AccountId) ) {
+                List<Account_Partner__c> partnerList = partnerMap.get(partnerUser.AccountId);
+                system.debug(' **** addProjectShare() : partnerList - ' + partnerList);
+                // account partner iteration
+                for (Account_Partner__c partner : partnerList) {
+                    if (accountProjectMap.get(partner.Customer__c) == null || partner.Partner_Type__c != SAAS_IMPLEMENTATION_PARTNER) {
+                        continue;
+                    }
+                    List<Project__c> projectList = accountProjectMap.get(partner.Customer__c);
+                    system.debug(' **** addProjectShare() : customer projectList - ' + projectList);
+                    // project iteration
+                    for (Project__c project : projectList) {
+                        Project__Share share = new Project__Share(
+                                ParentId = project.Id,
+                                UserOrGroupId = partnerUser.Id,
+                                AccessLevel = 'Edit'
+                        );
+                        shareList.add(share);
+                    } // end project iteration
 
-            } // end customer iteration
-
+                } // end account partner iteration
+            }
         } // end user iteration
 
         system.debug(' **** addProjectShare() : shareList - '+shareList);
@@ -163,7 +209,7 @@ public class UserTriggerHandler extends TriggerHandler{
                     system.debug('**** addProjectShare() : error - '+ result.getErrors()[0]);
                     throw new UserTriggerHandlerException(result.getErrors()[0].getMessage());
                 }
-            }            
+            }
         }
 
     } // end of addProjectShare()
@@ -354,5 +400,5 @@ public class UserTriggerHandler extends TriggerHandler{
 		return assigneeMap;
         
     } // end of getAssignees()
-    
+
 }
