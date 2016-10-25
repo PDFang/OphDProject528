@@ -1,0 +1,56 @@
+<apex:page standardController="ISTFSWorkItem__c" extensions="ISWorkItemCreateExtn" standardStylesheets="true">
+    <style>
+    	.requiredInput .requiredField {
+                    background-color: #c00;
+                    position: absolute;
+                    left: -4px;
+                    width: 3px;
+                    top: -3px;
+                    bottom: 1px;
+                    height: 19px;
+			}
+    </style>
+    <apex:form >
+       
+      <apex:pageblock > 
+       <apex:pageBlockSection columns="1">
+            <apex:outputPanel id="editPanel">
+            <div style="color:red"><apex:messages id="msg" /></div>
+        </apex:outputPanel>
+          <apex:pageBlockSectionItem >
+        <apex:outputLabel ><b>Select a RecordType</b></apex:outputLabel>
+              <apex:outputPanel styleClass="requiredInput">
+             	<div class="requiredField"></div>                  
+                <apex:selectList value="{!recordTyp}" size="1">
+                <apex:selectOptions value="{!RecordTypes}" ></apex:selectOptions>
+                </apex:selectList> 
+              </apex:outputPanel>
+          
+          </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+        <apex:pageBlockSection columns="2" id="detailsection" title="Info" collapsible="true">
+            <apex:repeat value="{!fields}" var="f">
+                     <apex:pageBlockSectionItem >
+                          <apex:outputLabel >{!f.label}</apex:outputLabel>
+                        <apex:inputField value="{!wi[f.fieldPath]}"  required="{!OR(f.required, f.dbrequired)}"/>
+                    </apex:pageBlockSectionItem>
+            </apex:repeat>
+        </apex:pageBlockSection>
+         <apex:pageBlockSection columns="2" title="Details" collapsible="true">
+          <apex:pageBlockSectionItem >
+                <apex:outputLabel >User Story/Issue Details</apex:outputLabel>
+            	<apex:inputTextarea value="{!acceptanceCriteria}" cols="40" rows="10" richText="true"></apex:inputTextarea>              
+            </apex:pageBlockSectionItem>	
+			<apex:pageBlockSectionItem >
+                <apex:outputLabel >Definition Of Done</apex:outputLabel>
+            	<apex:inputTextarea value="{!definitionOfDone}" cols="30" rows="8" richText="true"></apex:inputTextarea>              
+            </apex:pageBlockSectionItem> 
+        </apex:pageBlockSection>
+        <apex:pageBlockButtons >
+		<apex:commandButton action="{!save}" value="Save" />
+        <apex:commandButton action="{!SaveNew}" value="Save & New" />    
+        <apex:commandButton action="{!cancel}" value="Cancel"/>
+          </apex:pageBlockButtons>  
+      </apex:pageblock>  
+    </apex:form>
+</apex:page>

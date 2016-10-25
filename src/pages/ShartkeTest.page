@@ -1,0 +1,23 @@
+<apex:page >
+
+<apex:includeLightning />
+    <script type="text/javascript" src="/canvas/sdk/js/canvas-all.js"></script>
+ <script>
+  $Lightning.use("c:ShawnApp", function() {
+          $Lightning.createComponent(
+              "c:CanvasAppTest",
+              {},
+              "thecanvas",
+              function(cmp) {
+                  console.log("Component created!");
+                  console.log(cmp);
+                });
+            });
+    
+    //Sfdc.canvas.console.enable();
+    </script>
+    <div id ="thecanvas">        
+    </div>
+  
+<apex:canvasApp applicationName="ShartkeCanvasTest" parameters="{myawesomeParam:'boooya',param:'value'}" width="infinite"/>
+</apex:page>
