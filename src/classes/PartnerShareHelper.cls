@@ -1,7 +1,8 @@
 /* Generic class to share any sobject records related to customer accounts with affiliated partner users */
 /* The public methods shall be called from any sobject trigger */
-public class PartnerShareHelper {
 /*
+public class PartnerShareHelper {
+
     static Map<ID, List<User>> accountUserMap = null; // key account Id
     static Map<Id, List<Account_Partner__c>> partnerMap = null; // key customer Id
     
@@ -302,5 +303,6 @@ public class PartnerShareHelper {
         return accountUserMap;
 
     } // end of findPartnerUsers()
-*/
+
 }
+*/
