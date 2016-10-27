@@ -166,4 +166,69 @@ public class ProjectTriggerHelperTests
 
        Test.stopTest();
     }
+
+    static testmethod void createProjectTasks(){
+
+        Schema.DescribeSObjectResult d = Schema.SObjectType.Project__c;
+        Map<String, Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
+
+        OrderManagementTask__c omTask = new OrderManagementTask__c();
+        omTask.Name = 'Test OM';
+        omTask.DaysUntilDue__c = 7;
+        omTask.Description__c = 'New OM Task';
+        omTask.CustomerOrder__c = true;
+        omTask.NewOrder__c = true;
+        omTask.Type__c = 'OM - Good Order';
+        omTask.Order__C = 1;
+        insert omTask;
+
+        ProductReadinessTask__c prTask = new ProductReadinessTask__c();
+        prTask.Name = 'Test PR';
+        prTask.CorePlus__c = true;
+        prTask.TaskType__c = 'Work';
+        prTask.Description__c = 'Test';
+        prTask.AssignTo__c = 'Concept Owner';
+        prTask.DaysPrior__c = 5;
+        prTask.Order__C = 1;
+        insert prTask;
+
+        DedicatedProvisioningTask__c dpTask = new DedicatedProvisioningTask__c();
+        dpTask.Name = 'DIA 01';
+        dpTask.Dia__c = true;
+        dpTask.TaskType__c = 'Work';
+        dpTask.Task__c = 'Review';
+        dpTask.Order__C = 1;
+        insert dpTask;
+
+        test.startTest();
+        List<Project__c> projectList = new List<Project__c>();
+        // Dedicated Provisioning
+        Project__c dpProject = new Project__c();
+        dpProject.Summary__c = 'Dedicated Provisioning';
+        dpProject.RecordTypeId = rtMapByName.get('Dedicated Provisioning').getRecordTypeId();
+        dpProject.ProjectType__c = 'DIA';
+        projectList.add(dpProject);
+
+        //Order Management
+        Project__c omProject = new Project__c();
+        omProject.Summary__c = 'Order Management';
+        omProject.RecordTypeId = rtMapByName.get('Order Management').getRecordTypeId();
+        omProject.ProjectType__c = 'Customer';
+        omProject.RequestType__c = 'New';
+        projectList.add(omProject);
+
+        // Product Readiness
+        Project__c prProject = new Project__c();
+        prProject.Summary__c = 'Product Readiness';
+        prProject.RecordTypeId = rtMapByName.get('Product Readiness Project').getRecordTypeId();
+        prProject.PricingRateReview__c = true;
+        prProject.TargetLaunchDate__c = system.today().addMonths(1);
+        projectList.add(prProject);
+
+        insert projectList;
+        test.stopTest();
+
+        List<Task> result = [Select Id from Task where WhatId IN :projectList];
+        system.AssertEquals(3, result.size(), 'One or more task was not created.');
+    }
 }
