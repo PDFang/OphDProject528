@@ -41,7 +41,8 @@ public class NotificationHelperClass
 			//set body and subject
 			notificationExtension.emailBody = InContactConfiguration.NewEventEmailBody;
 			notificationExtension.SubjectText = InContactConfiguration.NewEventEmailSubject;
-			
+            CaseEventNotificationExtension.clusters = lstPlatforms;
+
 			//update merge fields
 			notificationExtension.MergeFieldUpdate();
 			notificationExtension.MergeFieldUpdateSubject();

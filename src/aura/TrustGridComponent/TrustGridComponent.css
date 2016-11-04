@@ -1,0 +1,166 @@
+/**
+ * Created by arnab.karsarkar on 11/2/2016.
+ */
+.THIS .iconClass{
+        position: relative;
+        top: -2px;
+        display: inline-block;
+        font-family: 'Glyphicons Halflings';
+        font-style: normal;
+        font-weight: 400;
+        line-height: 1;
+        padding-left: 28px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale
+ }
+
+ .THIS .imageClass{
+         height: 16px;
+         width: 16px;
+  }
+
+
+.THIS .tableHeader{
+    background-color: #001D42;
+    color: #fff;
+    border-style:solid;
+    border-width: 0 0 1px 1px;
+    height:28px;
+    text-align:center;
+}
+
+.THIS .healthy-row{
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        height: .375rem;
+        background-color: #4fc279;
+        z-index: 900;
+}
+
+.THIS .table-row{
+        flex: 0 8rem;
+        line-height: 5rem;
+        padding-left: 1rem;
+        color: #061c3f;
+        border: .1rem solid #d8dde6;
+        text-align:center;
+        height:50px;
+}
+
+.THIS .timeline-marker {
+          position: absolute;
+              bottom: 0;
+              width: 0;
+              z-index: 850;
+              border-right: 1px dashed #d8dde6;
+              height: 50px;
+              right: 58.2rem;
+ }
+
+ .THIS .row-impact {
+          width: 86px;
+           height: .625rem;
+           top: 50%;
+            transform: translateY(-50%);
+           z-index: 10001;
+           width: 86px;
+           position: relative;
+  }
+
+  .THIS .row-disruption {
+               background-color: #d4504c;
+    }
+    .THIS .row-degradation {
+                   background-color: #ff9a3c;
+        }
+
+    .THIS .rowImage{
+        position: absolute;
+        left: -1px;
+        top: 13px;
+        z-index: 10001;
+        height: 25px;
+        width: 25px;
+    }
+
+    .THIS .badge-degradation{
+            position: absolute;
+            left: 12px;
+            z-index: 11000;
+            background-color: #ff9a3c !important;
+    }
+
+    .THIS .badge-maintenance{
+                position: absolute;
+                left: 40px;
+                z-index: 11000;
+        }
+
+/**
+    .THIS .popover:after, .THIS .popover:before{
+             top: 100%;
+             	left: 50%;
+             	border: solid transparent;
+             	content: " ";
+             	height: 0;
+             	width: 0;
+             	position: absolute;
+             	pointer-events: none;
+          }
+
+    .THIS .popover:after {
+           border-color: rgba(255, 252, 250, 0);
+           	border-top-color: #fffcfa;
+           	border-width: 30px;
+           	margin-left: -30px;
+       }
+
+     .THIS .popover:before {
+           	border-color: rgba(0, 0, 0, 0);
+           	border-top-color: #000000;
+           	border-width: 36px;
+           	margin-left: -36px;
+           }
+**/
+    .THIS .popover{
+                display: block;
+                top: 34.9%;
+                left: 48%;
+                background-color: #f48b31;
+                color: white;
+                height: 55%;
+    }
+
+    .THIS .arrow-down {
+                width: 0;
+                height: 0;
+                border-left: 10px solid transparent;
+                border-right: 10px solid transparent;
+                position: absolute;
+                left: 54.5%;
+                top: 84.5%;
+                border-top: 10px solid #f48b31;
+                z-index: 11000;
+          }
+
+     .THIS .currentStatus {
+             left: 97.6%;
+             position: absolute;
+             float: right;
+             top: 11px;
+             z-index: 10001;
+             height: 25px;
+             width:25px;
+     }
+
+     .THIS .panel-body{
+         border: .1rem solid #d8dde6;
+     }
+
+     .THIS .pager{
+             margin: 0 36px;
+             margin-top: 28px;
+     }

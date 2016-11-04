@@ -1,0 +1,22 @@
+/**
+ * Created by arnab.karsarkar on 10/18/2016.
+ */
+.THIS .container {
+          margin-left: 5% !important;
+          margin-right: 30%;
+ }
+
+.THIS .slds-form-element__control {
+          width: 95% !important;
+       }
+
+
+.THIS .richTextClass{
+    width: 50%;
+}
+
+.THIS .containerDiv{
+       width: 60%;
+       margin-left: 10%;
+       text-align: left;
+}

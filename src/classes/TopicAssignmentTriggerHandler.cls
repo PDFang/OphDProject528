@@ -17,7 +17,8 @@ public class TopicAssignmentTriggerHandler extends TriggerHandler {
       set<string> sObjectIds = new set<string>();
        for(TopicAssignment wi : lstTags)
        {
-       		sObjectIds.add(wi.EntityId);                                                                                                                 
+           if(wi.EntityType == 'Project' || wi.EntityType == 'ISTFSWorkItem' || wi.EntityType == 'ISTFSWorkItemComment')
+       		    sObjectIds.add(wi.EntityId);
        }
         
        if(sObjectIds.size() > 0)
