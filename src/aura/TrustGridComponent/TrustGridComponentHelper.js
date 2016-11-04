@@ -42,10 +42,11 @@
             var dates  = [];
             var lastDate  = component.get("v.lastDate");
             var d = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate() + 7);
+
             var pastDt;
             var today = new Date();
             for(var i = 0; i < 7; i++){
-                pastDt = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i);
+                pastDt = new Date(d.getFullYear(), d.getMonth(), d.getDate() - i);
                 var monthName = monthNames[pastDt.getMonth()];
                 var date = monthName + ' ' + pastDt.getDate();
                 dates.push(date);
