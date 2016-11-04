@@ -22,7 +22,7 @@ global with sharing class CommunityPermissionSetService {
 
     public class HttpPostRequest{
         public String federationId;
-        public List<CommunityPermissionSet> assignmentList;
+        public List<CommunityPermissionSet> permissionSets;
     }
 
     global class HttpPostResponse{
@@ -91,22 +91,21 @@ global with sharing class CommunityPermissionSetService {
 
     }
 
-/*
     @HttpPost
-    global static HttpPostResponse addRemoveAccess(){
+    global static HttpPostResponse managePermissionAssignments(){
         RestRequest req = RestContext.request;
         RestResponse res = RestContext.response;
-        system.debug('addRemoveAccess(): header - ' + req.headers);
-        system.debug('addRemoveAccess(): requestBody - ' + req.requestBody);
+        system.debug('managePermissionAssignments(): header - ' + req.headers);
+        system.debug('managePermissionAssignments(): requestBody - ' + req.requestBody);
 
         HttpPostResponse response = new HttpPostResponse();
 
         HttpPostRequest request = null;
         try {
             request = (HttpPostRequest) JSON.deserialize(req.requestBody.toString(), HttpPostRequest.class);
-            system.debug('addRemoveAccess(): request - ' +request);
+            system.debug('managePermissionAssignments(): request - ' +request);
         } catch(system.JSONException ex){
-            system.debug('addRemoveAccess(): JSONException - ' +ex);
+            system.debug('managePermissionAssignments(): JSONException - ' +ex);
             response.status = 'Failed';
             response.message = 'BAD_REQUEST';
             return response;
@@ -115,53 +114,59 @@ global with sharing class CommunityPermissionSetService {
         Savepoint beforeDML = null;
         try {
             String federationId = request.federationId;
-            system.debug('addRemoveAccess(): federationId - ' +federationId);
-            List<CommunityAssignment> assignmentList = request.assignmentList;
-            system.debug('addRemoveAccess(): assignmentList - ' +assignmentList);
+            system.debug('managePermissionAssignments(): federationId - ' +federationId);
+            List<CommunityPermissionSet> permissionSetList = request.permissionSets;
+            system.debug('managePermissionAssignments(): permissionSetList - ' +permissionSetList);
 
-            List<User> userList = [Select Id, Profile.UserLicense.Name from User where FederationIdentifier = :federationId];
+            List<User> userList = [Select Id, Profile.UserLicenseId, Profile.UserLicense.Name from User where FederationIdentifier = :federationId];
             if (userList.isEmpty()) {
                 response.status = 'Failed';
                 response.message = 'USER_NOT_FOUND';
                 return response;
             }
+            system.debug('managePermissionAssignments(): userInfo - ' +userList[0]);
 
-            Map<String, Community_Permission_Sets__c> communityConfigMap = Community_Permission_Sets__c.getAll();
-            if (communityConfigMap.isEmpty()) {
+            Map<String, Community_Permission_Sets__c> settingsMap = Community_Permission_Sets__c.getAll();
+            if (settingsMap.isEmpty()) {
                 response.status = 'Failed';
                 response.message = 'NO_DATA_FOUND';
                 return response;
             }
 
-            Map<String, PermissionSet> permissionSetMap = getPermissionSet(communityConfigMap.values());
-            system.debug('addRemoveAccess(): permissionSetMap - ' +permissionSetMap);
-            Map<String, PermissionSetAssignment> permissionAssignmentMap = getPermissionSetAssignment(userList[0].Id, permissionSetMap.keySet());
-            system.debug('addRemoveAccess(): permissionAssignmentMap - ' +permissionAssignmentMap);
+            Set<String> permissionSet = new Set<String>();
+            for(Community_Permission_Sets__c setting : settingsMap.values()){
+                permissionSet.add(setting.Permission_Set__c);
+            }
+            system.debug('getPermissionSets(): permissionSet - ' + permissionSet);
+
+            Map<String, PermissionSet> permissionSetMap = getPermissionSetDetail(permissionSet, userList[0].Profile.UserLicenseId);
+            system.debug('getPermissionSets(): permissionSetMap - ' +permissionSetMap);
+
+            Map<Id, PermissionSetAssignment> permissionAssignmentMap = getPermissionSetAssignment(userList[0].Id, permissionSet);
+            system.debug('managePermissionAssignments(): permissionAssignmentMap - ' +permissionAssignmentMap);
 
             List<PermissionSetAssignment> addList = new List<PermissionSetAssignment>();
             List<PermissionSetAssignment> removeList = new List<PermissionSetAssignment>();
-            for(CommunityAssignment assignment : assignmentList){
-                Community_Permission_Sets__c communityConfig = communityConfigMap.get(assignment.communityName);
-                if(communityConfig == null){
-                    throw new CommunityPermissionSetException('INVALID_COMMUNITY  -  ' + assignment.communityName);
+            for(CommunityPermissionSet communityPermission : permissionSetList){
+                PermissionSet psDetail = permissionSetMap.get(communityPermission.permissionSetName);
+                if(psDetail == null){
+                    throw new CommunityPermissionSetException('INVALID_PERMISSION_SET: '+ communityPermission.permissionSetName);
                 }
-                if(assignment.isAssigned && !permissionAssignmentMap.containsKey(communityConfig.Permission_Set__c)
-                        && permissionSetMap.containsKey(communityConfig.Permission_Set__c)){
+                if(communityPermission.isAssigned && !permissionAssignmentMap.containsKey(psDetail.Id)){
                     PermissionSetAssignment psa = new PermissionSetAssignment();
                     psa.AssigneeId = userList[0].Id;
-                    psa.PermissionSetId = permissionSetMap.get(communityConfig.Permission_Set__c).Id;
+                    psa.PermissionSetId = psDetail.Id;
                     addList.add(psa);
                 }
-                else if(!assignment.isAssigned && permissionAssignmentMap.containsKey(communityConfig.Permission_Set__c)){
-                    PermissionSetAssignment psa =permissionAssignmentMap.get(communityConfig.Permission_Set__c);
+                else if(!communityPermission.isAssigned && permissionAssignmentMap.containsKey(psDetail.Id)){
+                    PermissionSetAssignment psa = permissionAssignmentMap.get(psDetail.Id);
                     removeList.add(psa);
                 } else{
-
                 }
 
             }
-            system.debug('addRemoveAccess(): addList - ' +addList);
-            system.debug('addRemoveAccess(): removeList - ' +removeList);
+            system.debug('managePermissionAssignments(): addList - ' +addList);
+            system.debug('managePermissionAssignments(): removeList - ' +removeList);
 
             beforeDML = Database.setSavepoint();
             if(addList.isEmpty() == false){
@@ -175,18 +180,18 @@ global with sharing class CommunityPermissionSetService {
             response.message = 'SUCCESS';
 
         } catch(System.DMLException ex){
-            system.debug('addRemoveAccess(): DMLException - ' +ex);
+            system.debug('managePermissionAssignments(): DMLException - ' +ex);
             Database.Rollback(beforeDML);
             response.status = 'Failed';
             response.message = ex.getMessage();
         } catch(System.Exception ex){
-            system.debug('addRemoveAccess(): exception - ' +ex);
+            system.debug('managePermissionAssignments(): exception - ' +ex);
             response.status = 'Failed';
             response.message = ex.getMessage();
         }
         return response;
     }
-*/
+
     private static Map<String, PermissionSet> getPermissionSetDetail(Set<String> permissionSet, Id licenseId){
         Map<String, PermissionSet> permissionSetMap = new Map<String, PermissionSet>();
         for (PermissionSet ps: [
