@@ -2,12 +2,20 @@ public class ProjectShareHelper {
 
     // constants
     private static final String SAAS_IMPLEMENTATION_PARTNER = AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER;
-    private static final Set<String> psSaaSProjectSet = AccountPartnerTriggerHandler.psSaaSProjectSet;
+    public static final Set<String> psSaaSProjectSet = new Set<String>{
+            'PS Parent Project - SaaS',
+            'PS Project Phase SaaS'
+    };
+    public static final Set<String> psPremiseProjectSet = new Set<String>{
+            'PS Parent Project - Premise',
+            'PS Project Phase Premise WFO'
+    };
 
     static Map<ID, List<User>> accountUserMap = null; // key account Id
     static Map<Id, List<Account_Partner__c>> partnerMap = null; // key customer Id
 
     Set<Id> psSaasProjectIdSet = null;
+    Set<Id> psPremiseProjectIdSet = null;
 
     public class ProjectShareHelperException extends Exception{}
 
@@ -15,11 +23,16 @@ public class ProjectShareHelper {
     public ProjectShareHelper(){
         Map<String, Schema.RecordTypeInfo> recordTypeNameMap = Schema.SObjectType.Project__c.getRecordTypeInfosByName();
         psSaasProjectIdSet = new Set<Id>();
+        psPremiseProjectIdSet = new Set<Id>();
         for(String psSaaSProject :  psSaaSProjectSet){
             psSaasProjectIdSet.add(recordTypeNameMap.get(psSaaSProject).recordTypeId);
         }
+        for(String psPremiseProject :  psPremiseProjectSet){
+            psPremiseProjectIdSet.add(recordTypeNameMap.get(psPremiseProject).recordTypeId);
+        }
     }
 
+    // Share SaaS projects with SaaS partner portal users and Premise Projects with implementation partner portal users
     public void addShare(List<Project__c> newList, Map<Id, Project__c> oldMap){
 
         if(newList == null || newList.isEmpty()){
@@ -32,10 +45,12 @@ public class ProjectShareHelper {
             if(
                 // PS SaaS Project - new or account updated
                 ( record.Account__c != null && ( oldRecord == null || oldRecord.Account__c != record.Account__c ) && psSaasProjectIdSet.contains(record.RecordTypeId) )
-                // Non PS SaaS Project - new or implementation partner updated
-                || (record.ImplementationPartner__c != null && ( oldRecord == null || oldRecord.ImplementationPartner__c != record.ImplementationPartner__c ) && !psSaasProjectIdSet.contains(record.RecordTypeId) )
+                // PS Premise Project - new or implementation partner updated
+                || (record.ImplementationPartner__c != null && ( oldRecord == null || oldRecord.ImplementationPartner__c != record.ImplementationPartner__c ) && psPremiseProjectIdSet.contains(record.RecordTypeId) )
                 // Record type changed to PS SaaS Project and previous record type other than PS SaaS Project
-                || (oldRecord != null && !psSaasProjectIdSet.contains(oldRecord.RecordTypeId) && psSaasProjectIdSet.contains(record.RecordTypeId) )
+                || (oldRecord != null && !psSaasProjectIdSet.contains(oldRecord.RecordTypeId) && psSaasProjectIdSet.contains(record.RecordTypeId) && record.Account__c != null)
+                // Record type changed to PS Premise Project and previous record type other than PS Premise Project
+                || (oldRecord != null && !psPremiseProjectIdSet.contains(oldRecord.RecordTypeId) && psPremiseProjectIdSet.contains(record.RecordTypeId) && record.ImplementationPartner__c != null)
             ){
                 recordIdSet.add(record.Id);
             }
@@ -66,9 +81,9 @@ public class ProjectShareHelper {
         Set<Id> customerIdSet = new Set<Id>();
         Set<Id> partnerIdSet = new Set<Id>();
         for(Project__c record : recordList){
-            if(psSaaSProjectSet.contains(record.RecordType.Name) ){
+            if(psSaaSProjectSet.contains(record.RecordType.Name) && record.Account__c != null){
                 customerIdSet.add(record.Account__c);
-            } else if(record.ImplementationPartner__c != null){
+            } else if(psPremiseProjectSet.contains(record.RecordType.Name) && record.ImplementationPartner__c != null){
                 partnerIdSet.add(record.ImplementationPartner__c);
             }
         }
@@ -79,6 +94,7 @@ public class ProjectShareHelper {
         }
 
         Set<Id> groupIdSet = new Set<Id>();
+        // Get account partner info
         Map<Id, List<Account_Partner__c>> lPartnerMap = findPartners(customerIdSet);
         for(List<Account_Partner__c> partnerList : lPartnerMap.values()) {
             for (Account_Partner__c partner : partnerList) {
@@ -90,7 +106,7 @@ public class ProjectShareHelper {
             }
         }
         system.debug(' **** addShareFuture() : lPartnerMap - '+lPartnerMap);
-
+        // Get partner user info
         Map<ID, List<User>> lAccountUserMap = findPartnerUsers(partnerIdSet);
         if(lAccountUserMap.isEmpty() && groupIdSet.isEmpty()){
             return;
@@ -100,7 +116,7 @@ public class ProjectShareHelper {
         // record iteration
         for(Project__c record : recordList) {
             system.debug(' **** addShareFuture() : record - '+record);
-            // PS SaaS Project
+            // Share PS SaaS Project with SaaS partner users
             if (psSaaSProjectSet.contains(record.RecordType.Name)) {
                 List<Account_Partner__c> partnerList = lPartnerMap.get(record.Account__c);
                 system.debug(' **** addShareFuture() : partnerList - '+partnerList);
@@ -131,8 +147,8 @@ public class ProjectShareHelper {
                     }
                 } // end partner iteration
             }
-            // Not a PS SaaS project but having an implementation partner
-            else if(record.ImplementationPartner__c != null){
+            // Share PS Premise projects with implementation partner users
+            else if(psPremiseProjectSet.contains(record.RecordType.Name)){
                 List<User> userList = lAccountUserMap.get(record.ImplementationPartner__c);
                 system.debug(' **** addShareFuture() : userList - '+userList);
                 if (userList == null || userList.isEmpty()) {
@@ -162,6 +178,7 @@ public class ProjectShareHelper {
 
     } // end of addShareFuture()
 
+    // delete project share records
     public void deleteShare(List<Project__c> newList, Map<Id, Project__c> oldMap){
 
         if(newList == null || newList.isEmpty()){
@@ -178,9 +195,9 @@ public class ProjectShareHelper {
                 recordIdSet.add(record.Id);
                 customerIdSet.add(oldRecord.Account__c);
             }
-            // Non PS SaaS Project - implementation partner updated and previous value not blank
+            // PS Premise Project - implementation partner updated and previous value not blank
             if( oldRecord != null && oldRecord.ImplementationPartner__c != null && oldRecord.ImplementationPartner__c != record.ImplementationPartner__c
-            && !psSaasProjectIdSet.contains(oldRecord.RecordTypeId) ){
+            && psPremiseProjectIdSet.contains(oldRecord.RecordTypeId) ){
                 recordIdSet.add(record.Id);
                 partnerIdSet.add(oldRecord.ImplementationPartner__c);
             }
@@ -190,8 +207,8 @@ public class ProjectShareHelper {
                 recordIdSet.add(record.Id);
                 customerIdSet.add(oldRecord.Account__c);
             }
-            // Record type changed from other than PS SaaS Project to PS SaaS Project record type
-            if( oldRecord != null && !psSaasProjectIdSet.contains(oldRecord.RecordTypeId) && psSaasProjectIdSet.contains(record.RecordTypeId)
+            // Record type changed from PS Premise Project to record type other than PS Premise Project
+            if( oldRecord != null && psPremiseProjectIdSet.contains(oldRecord.RecordTypeId) && !psPremiseProjectIdSet.contains(record.RecordTypeId)
             && oldRecord.ImplementationPartner__c != null){
                 recordIdSet.add(record.Id);
                 partnerIdSet.add(oldRecord.ImplementationPartner__c);
@@ -203,8 +220,8 @@ public class ProjectShareHelper {
             return;
         }
 
-
         set<Id> groupIdSet = new set<Id>();
+        // Get account partner info
         Map<Id, List<Account_Partner__c>> lPartnerMap = findPartners(customerIdSet);
         for(List<Account_Partner__c> partnerList : lPartnerMap.values()) {
             for (Account_Partner__c partner : partnerList) {
@@ -221,7 +238,7 @@ public class ProjectShareHelper {
         if(partnerIdSet.isEmpty() && groupIdSet.isEmpty()){
             return;
         }
-
+        // Get partner user info
         Map<ID, List<User>> lAccountUserMap = findPartnerUsers(partnerIdSet);
         Set<Id> userIdSet = new Set<Id>();
         for(List<User> userList : lAccountUserMap.values()){
@@ -229,7 +246,6 @@ public class ProjectShareHelper {
                 userIdSet.add(u.Id);
             }
         }
-
         system.debug(' **** deleteShare() : userIdSet - '+userIdSet);
 
         if(userIdSet.isEmpty() && groupIdSet.isEmpty()){

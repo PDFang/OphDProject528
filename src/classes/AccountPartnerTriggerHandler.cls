@@ -1,10 +1,8 @@
 public class AccountPartnerTriggerHandler extends TriggerHandler{
     // constants
     public static final String SAAS_IMPLEMENTATION_PARTNER = 'Certified Implementation Partner – SaaS';
-    public static final Set<String> psSaaSProjectSet = new Set<String>{
-            'PS Parent Project - SaaS',
-            'PS Project Phase SaaS'
-    };
+    public static final String PREMISE_IMPLEMENTATION_PARTNER = 'Certified Implementation Partner - Premise';
+    private static final Set<String> psSaaSProjectSet = ProjectShareHelper.psSaaSProjectSet;
 
     private static Map<Id, List<User>> accountUserMap = null; // key partner account ID
     private static Map<Id, User> partnerUserMap = null; // key user ID
@@ -227,7 +225,204 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
         }
 
     } // deleteAccountShare()
-	
+
+    // Share PS SaaS projects with SaaS partner portal users
+    private static void addProjectShare(List<Account_Partner__c> partnerList)
+    {
+        if(partnerList == null || partnerList.isEmpty())
+        {
+            return;
+        }
+        system.debug(' **** addProjectShare() : partnerList size - '+partnerList.size());
+        List<Account_Partner__c> newList = new List<Account_Partner__c>();
+        set<Id> partnerIdSet = new set<Id>();
+        Set<Id> customerIdSet = new set<Id>();
+        set<Id> groupIdSet = new set<Id>();
+        for(Account_Partner__c partner :partnerList)
+        {
+            if( ( partner.Partner__c == null && partner.PublicGroupId__c == null ) || partner.Customer__c == null || partner.Partner_Type__c != SAAS_IMPLEMENTATION_PARTNER)
+            {
+                continue;
+            }
+            if( partner.Partner__c != null ) {
+                partnerIdSet.add(partner.Partner__c);
+            }
+            else if( partner.PublicGroupId__c != null ){
+                groupIdSet.add(partner.PublicGroupId__c);
+            }
+            customerIdSet.add(partner.Customer__c);
+            newList.add(partner);
+        }
+
+        if(newList.isEmpty())
+        {
+            return;
+        }
+        system.debug(' **** addProjectShare() : newList size - '+newList.size());
+        // Get PS SaaS projects
+        Map<ID, List<Project__c>> accountProjectMap = new Map<ID, List<Project__c>>();
+        for(Project__c project : [
+                Select Id, Account__c from Project__c
+                where Account__c IN :customerIdSet and RecordType.Name in :psSaaSProjectSet
+        ]){
+            List<Project__c> projectList = accountProjectMap.get(project.Account__c);
+            if(projectList == null) {
+                projectList = new List<Project__c>();
+                accountProjectMap.put(project.Account__c, projectList);
+            }
+            projectList.add(project);
+        }
+        if(accountProjectMap.isEmpty()){
+            return;
+        }
+        // Get partner user info
+        Map<ID, List<User>> lAccountUserMap = getAccountUserMap(partnerIdSet);
+        if(groupIdSet.isEmpty() && ( lAccountUserMap == null || lAccountUserMap.isEmpty() ) ){
+            return;
+        }
+
+        List<Project__Share> shareList = new List<Project__Share>();
+        for(Account_Partner__c partner :newList)
+        {
+            if( partner.Customer__c == null || accountProjectMap.get(partner.Customer__c) == null ){
+                continue;
+            }
+            List<Project__c> projectList = accountProjectMap.get(partner.Customer__c);
+
+            if(partner.PublicGroupId__c != null)
+            {
+                for(Project__c project : projectList) {
+                    Project__Share share = new Project__Share(
+                            ParentId = project.Id,
+                            UserOrGroupId = partner.PublicGroupId__c,
+                            AccessLevel  = 'Edit'
+                    );
+                    shareList.add(share);
+                }
+            }
+            if( partner.Partner__c == null || lAccountUserMap.get(partner.Partner__c) == null ){
+                continue;
+            }
+            List<User> userList = lAccountUserMap.get(partner.Partner__c);
+
+            for(User u : userList) {
+                for(Project__c project : projectList) {
+                    Project__Share share = new Project__Share(
+                            ParentId = project.Id,
+                            UserOrGroupId = u.Id,
+                            AccessLevel  = 'Edit'
+                    );
+                    shareList.add(share);
+                }
+            }
+
+        }
+        system.debug(' **** addProjectShare() : shareList - '+shareList);
+        if(shareList.isEmpty() == false){
+            Database.saveResult[] resultList=  Database.insert(shareList, false);
+            for(Database.saveResult result : resultList){
+                if(result.isSuccess() == false){
+                    system.debug('**** addProjectShare() : error - '+ result.getErrors()[0]);
+                    throw new AccountPartnerTriggerHandlerException(result.getErrors()[0].getMessage());
+                }
+            }
+        }
+
+    } // end of addProjectShare()
+
+    // Revoke partner account portal users access to customer projects
+    private static void deleteProjectShare(List<Account_Partner__c> partnerList)
+    {
+        if(partnerList == null || partnerList.isEmpty())
+        {
+            return;
+        }
+        system.debug(' **** deleteProjectShare() : partnerList.size() - '+partnerList);
+        Map<Id, Set<Id>> customerPartnerGroupMap = new Map<Id, Set<Id>>();
+        Set<Id> partnerIdSet = new set<Id>();
+        set<Id> groupIdSet = new set<Id>();
+        for(Account_Partner__c partner :partnerList)
+        {
+            if( (partner.Partner__c == null && partner.PublicGroupId__c == null) || partner.Partner_Type__c != SAAS_IMPLEMENTATION_PARTNER)
+            {
+                continue;
+            }
+            Set<Id> partnerSet = customerPartnerGroupMap.get(partner.Customer__c);
+            if (partnerSet == null) {
+                partnerSet = new Set<Id>();
+                customerPartnerGroupMap.put(partner.Customer__c, partnerSet);
+            }
+            if(partner.PublicGroupId__c != null)
+            {
+                partnerSet.add(partner.PublicGroupId__c);
+                groupIdSet.add(partner.PublicGroupId__c);
+            }
+            else if(partner.Partner__c != null) {
+                partnerSet.add(partner.Partner__c);
+                partnerIdSet.add(partner.Partner__c);
+            }
+        }
+
+        if(customerPartnerGroupMap.isEmpty())
+        {
+            return;
+        }
+
+        Set<Id> customerIdSet = new set<Id>(customerPartnerGroupMap.keySet());
+        system.debug(' **** deleteProjectShare() : customerIdSet - '+customerIdSet);
+        // Get PS SaaS projects
+        Map<Id, Project__c> projectMap = new Map<Id, Project__c>([
+                Select Id, Account__c from Project__c where Account__c IN :customerIdSet and RecordType.Name in :psSaaSProjectSet
+        ]);
+        if(projectMap.isEmpty()){
+            return;
+        }
+        system.debug(' **** deleteProjectShare() : projectMap - '+projectMap);
+
+        Map<Id, User> lPartnerUserMap = getPartnerUserMap(partnerIdSet);
+        if(groupIdSet.isEmpty() && (lPartnerUserMap == null || lPartnerUserMap.isEmpty()) ){
+            return;
+        }
+        set<Id> UserOrGroupIdSet = new set<Id>();
+        UserOrGroupIdSet.addAll(groupIdSet); // Group ID's
+        UserOrGroupIdSet.addAll(lPartnerUserMap.keySet()); // User ID's
+
+        List<Project__Share> shareList = new List<Project__Share>();
+        for(Project__Share share : [
+                Select Id, ParentId, UserOrGroupId from Project__Share
+                where RowCause = 'Manual' and ParentId IN :projectMap.keyset()
+                and UserOrGroupId IN :UserOrGroupIdSet
+        ])
+        {
+            Set<Id> partnerGroupSet = customerPartnerGroupMap.get(projectMap.get(share.ParentId).Account__c);
+            if(partnerGroupSet == null || partnerGroupSet.isEmpty()){
+                continue;
+            }
+            if( String.valueOf(share.UserOrGroupId).startsWith('005') ){
+                User partnerUser = lPartnerUserMap.get(share.UserOrGroupId);
+                if( partnerUser != null && partnerGroupSet.contains(partnerUser.AccountId) ){
+                    shareList.add(share);
+                }
+            }
+            else if( partnerGroupSet.contains(share.UserOrGroupId) ) {
+                shareList.add(share);
+            }
+        }
+
+        system.debug(' **** deleteProjectShare() : shareList - '+shareList);
+        if(shareList.isEmpty() == false){
+            Database.DeleteResult[] resultList=  Database.delete(shareList, false);
+            for(Database.DeleteResult result : resultList){
+                if(result.isSuccess() == false){
+                    system.debug('**** deleteAccountShare() : id - '+ result.getId());
+                    system.debug('**** deleteAccountShare() : error - '+ result.getErrors()[0]);
+                    throw new AccountPartnerTriggerHandlerException(result.getErrors()[0].getMessage());
+                }
+            }
+        }
+
+    } // deleteProjectShare()
+
     /* Assign permission set to partner users based on partner type */
     private static void assignPermissionSet(List<Account_Partner__c> partnerList){
 		if(partnerList == null || partnerList.isEmpty())
@@ -663,198 +858,5 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
         system.debug(' **** getPartnerUsers() : accountUserMap - '+accountUserMap);
         return accountUserMap;
     }
-
-    // Share customer projects with partner account portal users
-    private static void addProjectShare(List<Account_Partner__c> partnerList)
-    {
-        if(partnerList == null || partnerList.isEmpty())
-        {
-            return;
-        }
-        system.debug(' **** addProjectShare() : partnerList size - '+partnerList.size());
-        List<Account_Partner__c> newList = new List<Account_Partner__c>();
-        set<Id> partnerIdSet = new set<Id>();
-        Set<Id> customerIdSet = new set<Id>();
-        set<Id> groupIdSet = new set<Id>();
-        for(Account_Partner__c partner :partnerList)
-        {
-            if( ( partner.Partner__c == null && partner.PublicGroupId__c == null ) || partner.Customer__c == null || partner.Partner_Type__c != SAAS_IMPLEMENTATION_PARTNER)
-            {
-                continue;
-            }
-            if( partner.Partner__c != null ) {
-                partnerIdSet.add(partner.Partner__c);
-            }
-            else if( partner.PublicGroupId__c != null ){
-                groupIdSet.add(partner.PublicGroupId__c);
-            }
-            customerIdSet.add(partner.Customer__c);
-            newList.add(partner);
-        }
-
-        if(newList.isEmpty())
-        {
-            return;
-        }
-        system.debug(' **** addProjectShare() : newList size - '+newList.size());
-
-        Map<ID, List<Project__c>> accountProjectMap = new Map<ID, List<Project__c>>();
-        for(Project__c project : [Select Id, Account__c from Project__c where Account__c IN :customerIdSet and RecordType.Name in :psSaaSProjectSet]){
-            List<Project__c> projectList = accountProjectMap.get(project.Account__c);
-            if(projectList == null) {
-                projectList = new List<Project__c>();
-                accountProjectMap.put(project.Account__c, projectList);
-            }
-            projectList.add(project);
-        }
-
-        if(accountProjectMap.isEmpty()){
-            return;
-        }
-
-        Map<ID, List<User>> lAccountUserMap = getAccountUserMap(partnerIdSet);
-        if(groupIdSet.isEmpty() && ( lAccountUserMap == null || lAccountUserMap.isEmpty() ) ){
-            return;
-        }
-
-        List<Project__Share> shareList = new List<Project__Share>();
-        for(Account_Partner__c partner :newList)
-        {
-            if( partner.Customer__c == null || accountProjectMap.get(partner.Customer__c) == null ){
-                continue;
-            }
-            List<Project__c> projectList = accountProjectMap.get(partner.Customer__c);
-
-            if(partner.PublicGroupId__c != null)
-            {
-                for(Project__c project : projectList) {
-                    Project__Share share = new Project__Share(
-                            ParentId = project.Id,
-                            UserOrGroupId = partner.PublicGroupId__c,
-                            AccessLevel  = 'Edit'
-                    );
-                    shareList.add(share);
-                }
-            }
-            if( partner.Partner__c == null || lAccountUserMap.get(partner.Partner__c) == null ){
-                continue;
-            }
-            List<User> userList = lAccountUserMap.get(partner.Partner__c);
-
-            for(User u : userList) {
-                for(Project__c project : projectList) {
-                    Project__Share share = new Project__Share(
-                            ParentId = project.Id,
-                            UserOrGroupId = u.Id,
-                            AccessLevel  = 'Edit'
-                    );
-                    shareList.add(share);
-                }
-            }
-
-        }
-        system.debug(' **** addProjectShare() : shareList - '+shareList);
-        if(shareList.isEmpty() == false){
-            Database.saveResult[] resultList=  Database.insert(shareList, false);
-            for(Database.saveResult result : resultList){
-                if(result.isSuccess() == false){
-                    system.debug('**** addProjectShare() : error - '+ result.getErrors()[0]);
-                    throw new AccountPartnerTriggerHandlerException(result.getErrors()[0].getMessage());
-                }
-            }            
-        }
-
-    } // end of addProjectShare()
-
-    // Revoke partner account portal users access to customer projects
-    private static void deleteProjectShare(List<Account_Partner__c> partnerList)
-    {
-        if(partnerList == null || partnerList.isEmpty())
-        {
-            return;
-        }
-        system.debug(' **** deleteProjectShare() : partnerList.size() - '+partnerList);
-        Map<Id, Set<Id>> customerPartnerGroupMap = new Map<Id, Set<Id>>();
-        Set<Id> partnerIdSet = new set<Id>();
-        set<Id> groupIdSet = new set<Id>();
-        for(Account_Partner__c partner :partnerList)
-        {
-            if( (partner.Partner__c == null && partner.PublicGroupId__c == null) || partner.Partner_Type__c != SAAS_IMPLEMENTATION_PARTNER)
-            {
-                continue;
-            }
-            Set<Id> partnerSet = customerPartnerGroupMap.get(partner.Customer__c);
-            if (partnerSet == null) {
-                partnerSet = new Set<Id>();
-                customerPartnerGroupMap.put(partner.Customer__c, partnerSet);
-            }
-            if(partner.PublicGroupId__c != null)
-            {
-                partnerSet.add(partner.PublicGroupId__c);
-                groupIdSet.add(partner.PublicGroupId__c);
-            }
-            else if(partner.Partner__c != null) {
-                partnerSet.add(partner.Partner__c);
-                partnerIdSet.add(partner.Partner__c);
-            }
-        }
-
-        if(customerPartnerGroupMap.isEmpty())
-        {
-            return;
-        }
-
-        Set<Id> customerIdSet = new set<Id>(customerPartnerGroupMap.keySet());
-        system.debug(' **** deleteProjectShare() : customerIdSet - '+customerIdSet);
-
-        Map<Id, Project__c> projectMap = new Map<Id, Project__c>([
-                Select Id, Account__c from Project__c where Account__c IN :customerIdSet and RecordType.Name in :psSaaSProjectSet
-        ]);
-        if(projectMap.isEmpty()){
-            return;
-        }
-        system.debug(' **** deleteProjectShare() : projectMap - '+projectMap);
-
-        Map<Id, User> lPartnerUserMap = getPartnerUserMap(partnerIdSet);
-        if(groupIdSet.isEmpty() && (lPartnerUserMap == null || lPartnerUserMap.isEmpty()) ){
-            return;
-        }
-        set<Id> UserOrGroupIdSet = new set<Id>();
-        UserOrGroupIdSet.addAll(groupIdSet); // Group ID's
-        UserOrGroupIdSet.addAll(lPartnerUserMap.keySet()); // User ID's
-
-        List<Project__Share> shareList = new List<Project__Share>();
-        for(Project__Share share : [Select Id, ParentId, UserOrGroupId from Project__Share
-                                    where RowCause = 'Manual' and ParentId IN :projectMap.keyset()
-                                    and UserOrGroupId IN :UserOrGroupIdSet])
-        {
-            Set<Id> partnerGroupSet = customerPartnerGroupMap.get(projectMap.get(share.ParentId).Account__c);
-            if(partnerGroupSet == null || partnerGroupSet.isEmpty()){
-                continue;
-            }
-            if( String.valueOf(share.UserOrGroupId).startsWith('005') ){
-                User partnerUser = lPartnerUserMap.get(share.UserOrGroupId);
-                if( partnerUser != null && partnerGroupSet.contains(partnerUser.AccountId) ){
-                    shareList.add(share);
-                }
-            }
-            else if( partnerGroupSet.contains(share.UserOrGroupId) ) {
-                shareList.add(share);
-            }
-        }
-
-        system.debug(' **** deleteProjectShare() : shareList - '+shareList);
-        if(shareList.isEmpty() == false){
-            Database.DeleteResult[] resultList=  Database.delete(shareList, false);
-            for(Database.DeleteResult result : resultList){
-                if(result.isSuccess() == false){
-					system.debug('**** deleteAccountShare() : id - '+ result.getId());
-                    system.debug('**** deleteAccountShare() : error - '+ result.getErrors()[0]);
-                    throw new AccountPartnerTriggerHandlerException(result.getErrors()[0].getMessage());
-                }
-            }            
-        }
-
-    } // deleteAccountShare()
 
 }

@@ -5,6 +5,7 @@ private class UserTriggerHandlerTest {
     static final String ACCOUNT_TYPE_PARTNERS = 'Partners';
     static final String CONTACT_TYPE_PARTNER = 'Partner Contact';
     static final String PROJECT_TYPE_PARENT_SAAS = 'PS Parent Project - SaaS';
+    static final String PROJECT_TYPE_PARENT_PREMISE = 'PS Parent Project - Premise';
     static final String OPPORTUNITY_TYPE_NEW = 'New Opportunity';
     static final String CASE_TYPE_INCIDENT = 'Incident';
     static final String CASE_TYPE_EVENT = 'Event';
@@ -16,6 +17,7 @@ private class UserTriggerHandlerTest {
             CONTACT_TYPE_PARTNER,
             OPPORTUNITY_TYPE_NEW,
             PROJECT_TYPE_PARENT_SAAS,
+            PROJECT_TYPE_PARENT_PREMISE,
             CASE_TYPE_INCIDENT,
             CASE_TYPE_EVENT
     };
@@ -24,7 +26,6 @@ private class UserTriggerHandlerTest {
     static List<Account> accountList = null;
     static List<Contact> contactList = null;
     static List<Opportunity> oppList = null;
-	static Map<String, String> partnerPermissionMap = null;
     
     /* Create a new portal user and verify 
 	1. user has access to the customer account and it's related records 
@@ -36,7 +37,8 @@ private class UserTriggerHandlerTest {
 
         Profile profile = [SELECT Id from Profile where Name = 'Partner Community User'];
 
-        user portalUser = new User(
+        List<User> partnerUserList = new List<User>();
+        user partnerUser1 = new User(
                 FirstName = 'Partner',
                 LastName = 'User1',
                 ContactId = contactList[1].Id,
@@ -49,11 +51,26 @@ private class UserTriggerHandlerTest {
                 LocaleSidKey = 'en_US',
                 LanguageLocaleKey = 'en_US'
         );
-        insert portalUser;
+        partnerUserList.add(partnerUser1);
+        user partnerUser2 = new User(
+                FirstName = 'Partner',
+                LastName = 'User2',
+                ContactId = contactList[3].Id,
+                Email = 'partner2@incontact.com',
+                Username = 'partner2@incontact.com',
+                Alias = 'test',
+                profileId = profile.Id,
+                EmailEncodingKey = 'UTF-8',
+                TimeZoneSidKey = 'America/Los_Angeles',
+                LocaleSidKey = 'en_US',
+                LanguageLocaleKey = 'en_US'
+        );
+        partnerUserList.add(partnerUser2);
+        insert partnerUserList;
 
         test.stopTest();
-
-        system.runAs(portalUser){
+        // SaaS Implementation partner user
+        system.runAs(partnerUserList[0]){
             List<Account> accounts = [SELECT Id from Account where Type = 'Customer'];
             system.assertEquals(1, accounts.size());
 
@@ -66,12 +83,42 @@ private class UserTriggerHandlerTest {
             List<Opportunity> opportunities = [SELECT Id from Opportunity where AccountId = :accounts[0].Id];
             system.assertEquals(2, opportunities.size());
 
-            List<Project__c> projects = [SELECT Id from Project__c where Account__c = :accounts[0].Id];
+            List<Project__c> projects = [SELECT Id from Project__c where RecordType.Name = :PROJECT_TYPE_PARENT_SAAS];
             system.assertEquals(2, projects.size());
 
+            projects = [SELECT Id from Project__c where RecordType.Name = :PROJECT_TYPE_PARENT_PREMISE];
+            system.assertEquals(1, projects.size());
         }
-        
+        // Premise Implementation partner user
+        system.runAs(partnerUserList[1]){
+            List<Account> accounts = [SELECT Id from Account where Type = 'Customer'];
+            system.assertEquals(1, accounts.size());
+
+            List<Contact> Contacts = [SELECT Id from Contact where AccountId = :accounts[0].Id];
+            system.assertEquals(1, Contacts.size());
+
+            List<Case> cases = [SELECT Id from Case where AccountId = :accounts[0].Id];
+            system.assertEquals(2, cases.size());
+
+            List<Opportunity> opportunities = [SELECT Id from Opportunity where AccountId = :accounts[0].Id];
+            system.assertEquals(2, opportunities.size());
+
+            List<Project__c> projects = [SELECT Id from Project__c where RecordType.Name = :PROJECT_TYPE_PARENT_SAAS];
+            system.assertEquals(0, projects.size());
+
+            projects = [SELECT Id from Project__c where RecordType.Name = :PROJECT_TYPE_PARENT_PREMISE];
+            system.assertEquals(1, projects.size());
+        }
+
         // verify permission set assignments
+        Map<String, String> partnerPermissionMap = new Map<String, String>();
+        for(Partner_Permission_Set__mdt mdt : [
+                Select Permission_Set__c, Partner_Type__c from Partner_Permission_Set__mdt
+        ])
+        {
+            partnerPermissionMap.put(mdt.Partner_Type__c, mdt.Permission_Set__c);
+        }
+
         if(partnerPermissionMap.size() > 0){
             Set<Id> assigneeIdSet = new Set<Id>();
             for(PermissionSetAssignment psa :[
@@ -79,7 +126,9 @@ private class UserTriggerHandlerTest {
             ]){
                 assigneeIdSet.add(psa.AssigneeId);
             }
-            system.assert(assigneeIdSet.contains(portalUser.Id), 'Permission set assignment failed.');
+            if(partnerPermissionMap.containsKey(AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER)){
+                system.assert(assigneeIdSet.contains(partnerUserList[0].Id), 'Permission set assignment failed.');
+            }
         }
         
     } // end of testNewUser()
@@ -137,8 +186,11 @@ private class UserTriggerHandlerTest {
             List<Opportunity> opportunities = [SELECT Id from Opportunity where AccountId = :accounts[0].Id];
             system.assertEquals(2, opportunities.size());
 
-            List<Project__c> projects = [SELECT Id from Project__c where Account__c = :accounts[0].Id];
+            List<Project__c> projects = [SELECT Id from Project__c where RecordType.Name = :PROJECT_TYPE_PARENT_SAAS];
             system.assertEquals(2, projects.size());
+
+            projects = [SELECT Id from Project__c where RecordType.Name = :PROJECT_TYPE_PARENT_PREMISE];
+            system.assertEquals(1, projects.size());
 
         }
 
@@ -192,28 +244,19 @@ private class UserTriggerHandlerTest {
 
     static void createPartners()
     {
-        partnerPermissionMap = new Map<String, String>();
-        for(Partner_Permission_Set__mdt mdt : [
-            Select Permission_Set__c, Partner_Type__c from Partner_Permission_Set__mdt
-        ])
-        {
-            partnerPermissionMap.put(mdt.Partner_Type__c, mdt.Permission_Set__c);
-        }
-        List<String> typeList = new List<String>(partnerPermissionMap.keySet());
-        
         List<Account_Partner__c> partnerList = new List<Account_Partner__c>();
         partnerList.add(
                 new Account_Partner__c(
                         Customer__c = accountList[0].Id,
                         Partner__c = accountList[1].Id,
-                        Partner_Type__c = typeList.size() > 0 ? typeList[0] : 'iCE'
+                        Partner_Type__c = AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER
                 )
         );
         partnerList.add(
                 new Account_Partner__c(
                         Customer__c = accountList[0].Id,
                         Partner__c = accountList[2].Id,
-                        Partner_Type__c = 'iCE'
+                        Partner_Type__c = AccountPartnerTriggerHandler.PREMISE_IMPLEMENTATION_PARTNER
                 )
         );
         insert partnerList;
@@ -238,6 +281,7 @@ private class UserTriggerHandlerTest {
                         AccountId = accountList[1].Id
                 )
         );
+
         contactList.add(
                 new Contact(
                         LastName = 'UserTriggerHandlerTest Contact 3',
@@ -254,6 +298,7 @@ private class UserTriggerHandlerTest {
                         AccountId = accountList[2].Id
                 )
         );
+
         insert contactList;
     } // end of createContacts()
 
@@ -359,6 +404,20 @@ private class UserTriggerHandlerTest {
         project2.Opportunity__c = oppList[1].Id;
         project2.Account__c = accountList[0].Id;
         projectList.add(project2);
+
+        Project__c project3 = new Project__c();
+        project3.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_PREMISE);
+        project3.Opportunity__c = oppList[0].Id;
+        project3.Account__c = accountList[0].Id;
+        project3.ImplementationPartner__c = accountList[1].Id;
+        projectList.add(project3);
+
+        Project__c project4 = new Project__c();
+        project4.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_PREMISE);
+        project4.Opportunity__c = oppList[1].Id;
+        project4.Account__c = accountList[1].Id;
+        project4.ImplementationPartner__c = accountList[2].Id;
+        projectList.add(project4);
 
         insert projectList;
 
