@@ -29,12 +29,16 @@ public without sharing class PartnerBrandingDisplayController {
 
             PartnerBranding__c[] brandingImage = [select FileName__c from PartnerBranding__c where  PartnerAccount__c = :accountId and IsDisplayBrand__c = true];
 
-            if(brandingImage != null)
+            if(brandingImage.size() > 0)
             {
                 fileName = brandingImage[0].FileName__c;
-                if(fileName == '' || fileName == null)
-                    fileName = 'inContactLogo';
+
+
             }
+            if(fileName == '' || fileName == null)
+                fileName = 'inContactLogo';
+
+            system.debug('fileName >' + fileName);
             return fileName;
         }
 

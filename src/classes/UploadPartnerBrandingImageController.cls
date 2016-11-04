@@ -67,10 +67,14 @@ public without sharing class UploadPartnerBrandingImageController {
                 return null;
             }
 
-            system.debug('partnerBranding ==>' + partnerBranding);
             if(partnerBranding.PartnerAccount__c != null)
             {
-               insert partnerBranding;
+                String resourceId = [select Id from StaticResource where Name = :partnerBranding.FileName__c].Id;
+                partnerBranding.StaticResourceId__c = resourceId;
+
+                system.debug('partnerBranding ==>' + partnerBranding);
+
+                insert partnerBranding;
             }
 
         }

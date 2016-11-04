@@ -1,0 +1,141 @@
+<!--
+ - Created by arnab.karsarkar on 11/1/2016.
+ -->
+
+<aura:component description="TrustGridComponent">
+    <ltng:require scripts="{!join(',', $Resource.inContactResource + '/inContactResource/js/jquery-3.1.1.min.js',
+                                       $Resource.inContactResource + '/inContactResource/js/bootstrap.min.js')}"
+                  styles="{!join(',', $Resource.inContactResource + '/inContactResource/css/bootstrap.min.css',
+                          $Resource.inContactResource + '/inContactResource/css/bootstrap-theme.min.css')}"
+                  afterScriptsLoaded="{!c.loadDates}" />
+
+    <aura:attribute name="dates" type="string[]"/>
+    <aura:attribute name="lastDate" type="string" default=""/>
+    <!--<aura:handler name="init" value="{!this}" action="{!c.doInit}"/>-->
+    <aura:handler event="aura:doneRendering" action="{!c.doneRendering}"/>
+
+    <div class="container">
+    <h2>inContact TRUST Grid</h2>
+    <div class="row">
+    <div class="panel-group">
+      <div class="panel panel-default">
+
+       <div class="panel-heading">
+           <div class="row">
+               <div class="col-sm-4"><label>Status</label></div>
+               <div class="col-sm-8">
+                   <p>
+                       <span class="iconClass">
+                            <img src="{!$Resource.inContactResource + '/inContactResource/fonts/available.png'}" class="imageClass"/>
+                       </span>
+                       Available
+                       <span class="iconClass">
+                            <img src="{!$Resource.inContactResource + '/inContactResource/fonts/degradation.png'}" class="imageClass"/>
+                        </span>
+                       Service Degradation
+                       <span class="iconClass">
+                            <img src="{!$Resource.inContactResource + '/inContactResource/fonts/disruption.png'}" class="imageClass"/>
+                       </span>
+                       Disruption
+                       <span class="iconClass">
+                            <img src="{!$Resource.inContactResource + '/inContactResource/fonts/maintenance.png'}" class="imageClass"/>
+                        </span>
+                       Maintenance
+                   </p>
+               </div>
+
+           </div>
+          </div>
+      </div>
+         <div class="panel-body">
+             Gain access to inContact platform status history and domain event information for the past 30 days. Select a Service Disruption or Performance Issue icon below for a given date and domain and the update will populate below the status grid.
+         </div>
+     </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-9" style="height:67px;">
+        <div class="arrow-down"></div>
+        <div class="popover popover-top">
+            <div class="popover-content">
+                <p>Current Status</p>
+            </div>
+        </div>
+        </div>
+        <div class="col-sm-3" style="height:67px;">
+            <ul class="pager">
+                <li class="previous disabled" onclick="{!c.loadPrevious}"><a href="#">&larr; Previous</a></li>
+                <li class="next"><a href="#" onclick="{!c.loadDates}">Next &rarr;</a></li>
+            </ul>
+        </div>
+
+    </div>
+    <div class="row">
+        <div class="col-sm-5 tableHeader" >Platform</div>
+        <aura:iteration items="{!v.dates}" var="date" indexVar="item">
+            <div class="col-sm-1 tableHeader" id="{!item + '_date'}">{!date}</div>
+
+        </aura:iteration>
+
+    </div>
+    <div class="row">
+        <div class="col-sm-5 table-row">C8 - Dialer
+            <img src="{!$Resource.inContactResource + '/inContactResource/fonts/available.png'}" class="currentStatus"/>
+        </div>
+
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px">
+            <div class="healthy-row"/></div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px;"><div class="healthy-row"/></div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px"><div class="healthy-row"/></div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px">
+            <div class="row-impact row-disruption"></div>
+            <img src="{!$Resource.inContactResource + '/inContactResource/fonts/disruption.png'}" class="rowImage"/>
+            <a>
+                <span class="badge badge-maintenance">2</span>
+                <img src="{!$Resource.inContactResource + '/inContactResource/fonts/maintenance.png'}" class="rowImage" style="left: 27px;"/>
+            </a>
+
+            <div class="healthy-row"/>
+        </div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px"><div class="healthy-row"/></div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px"><div class="healthy-row"/></div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px"><div class="healthy-row"/></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-5 table-row">C8 - inContact
+            <img src="{!$Resource.inContactResource + '/inContactResource/fonts/available.png'}" class="currentStatus"/>
+        </div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px">
+            <div class="healthy-row"/></div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px;"><div class="healthy-row"/></div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px"><div class="healthy-row"/></div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px"><div class="healthy-row"/>
+
+        </div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px"><div class="healthy-row"/></div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px"><div class="healthy-row"/>
+            <div class="row-impact row-degradation"></div>
+            <a>
+                <span class="badge badge-degradation">2</span>
+                <img src="{!$Resource.inContactResource + '/inContactResource/fonts/degradation.png'}" class="rowImage"/>
+            </a>
+        </div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px"><div class="healthy-row"/></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-5 table-row">Intelligent Network
+            <img src="{!$Resource.inContactResource + '/inContactResource/fonts/available.png'}" class="currentStatus"/>
+        </div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px">
+            <div class="healthy-row"/></div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px;"><div class="healthy-row"/></div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px"><div class="healthy-row"/></div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px"><div class="healthy-row"/></div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px"><div class="healthy-row"/></div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px"><div class="healthy-row"/></div>
+        <div class="col-sm-1 table-row" style="border-right:1px dashed #d8dde6;border-left: 0px"><div class="healthy-row"/></div>
+    </div>
+
+
+ </div>
+
+</aura:component>

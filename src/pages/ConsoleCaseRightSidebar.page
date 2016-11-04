@@ -108,7 +108,7 @@
                             <div  id="file-container">
                                 <apex:inputFile value="{!fileToUpload.body}" fileName="{!fileToUpload.Name}" id="fileButton" /> 
                             </div>
-                            <div style="margin:5px;padding:5px;">Internal Only &nbsp;<apex:inputCheckbox id="internalCheck" value="{!isFileInternal}" /></div>
+                            <div style="margin:5px;padding:5px;">Internal Only &nbsp;<apex:inputCheckbox id="internalCheck" value="{!isFileInternal}" selected="true" /></div>
                             <div>
                                 <apex:commandLink value="Submit" action="{!CreateAttachment}" styleClass="k-button" ></apex:commandLink>
                             </div>
