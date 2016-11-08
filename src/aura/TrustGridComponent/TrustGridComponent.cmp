@@ -11,6 +11,7 @@
 
     <aura:attribute name="dates" type="string[]"/>
     <aura:attribute name="lastDate" type="string" default=""/>
+    <aura:attribute name="firstDate" type="string" default=""/>
     <!--<aura:handler name="init" value="{!this}" action="{!c.doInit}"/>-->
     <aura:handler event="aura:doneRendering" action="{!c.doneRendering}"/>
 

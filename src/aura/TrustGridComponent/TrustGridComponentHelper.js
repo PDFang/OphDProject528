@@ -8,6 +8,7 @@
         var dates  = [];
         var lastDate  = component.get("v.lastDate");
         var d = lastDate == "" ? new Date() : lastDate;
+        component.set("v.firstDate", d);
         var pastDt;
         var today = new Date();
         var priorDate =  new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
@@ -40,16 +41,17 @@
             var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
             var dates  = [];
-            var lastDate  = component.get("v.lastDate");
-            var d = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate() + 7);
-
+            var firstDate  = component.get("v.firstDate");
+            var d = new Date(firstDate);
+            console.log(d);
+             var today = new Date();
             var pastDt;
-            var today = new Date();
-            for(var i = 0; i < 7; i++){
+            for(var i = 7; i > 0; i--){
                 pastDt = new Date(d.getFullYear(), d.getMonth(), d.getDate() - i);
                 var monthName = monthNames[pastDt.getMonth()];
                 var date = monthName + ' ' + pastDt.getDate();
                 dates.push(date);
+                console.log(i);
             }
             if(today.getTime() == pastDt.getTime())
             {
@@ -57,7 +59,7 @@
              var obj = jQuery('li.previous');
              obj.addClass("disabled");
             }
-            else if(lastDate != ''){
+            else {
 
                 jQuery.noConflict();
                 var obj = jQuery('li.next');
@@ -65,7 +67,7 @@
                 obj.removeClass("disabled");
             }
             component.set("v.dates", dates);
-            component.set("v.lastDate", pastDt);
+            component.set("v.lastDate", new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7));
 
         }
 
