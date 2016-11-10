@@ -1,12 +1,12 @@
 @IsTest
 private class CommunityHeaderControllerTests {
-    static testMethod void CommunityHeaderController_getPermissionSets() {
+    static testMethod void CommunityHeaderController_getCommunityLinks() {
         //Act
         Test.startTest();
-        List<CommunityHeaderMapping__mdt> mappings = CommunityHeaderController.getPermissionSets();
+        List<Community_Permission_Sets__c> links = CommunityHeaderController.getCommunityLinks();
         Test.stopTest();
 
         //Assert
-        system.assert(mappings.size() > 0);
+        system.assert(links.size() > 0);
     }
 }
