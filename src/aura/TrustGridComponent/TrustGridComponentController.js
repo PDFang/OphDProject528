@@ -5,13 +5,22 @@
 
     loadDates: function(component, event, helper) {
         console.log("scripts loaded");
-         helper.getPastSevenDates(component);
+         //helper.getPastSevenDates(component);
+         jQuery(document).ready(function() {
+             jQuery("body").tooltip({ selector: '[data-toggle=tooltip]' });
+         });
+
+
     },
 
     loadPrevious : function(component, event, helper){
          helper.getFutureDates(component);
     },
 
+    doIntit:function(component, event, helper) {
+      console.log("call do init");
+      helper.loadTableData(component);
+    },
     doneRendering: function(component){
        /** jQuery.noConflict();
         var firstDate = '0_date';
