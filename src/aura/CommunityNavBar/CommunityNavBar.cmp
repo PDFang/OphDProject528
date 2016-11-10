@@ -6,11 +6,9 @@
         <div class="navigationMenuWrapper">
             <ul class="navigationMenu">
                 <aura:iteration items="{!v.CommunityLinks}" var="link">
-                    <!--<aura:if isTrue="">-->
                     <li class="navigationMenuNode">
                         <a class="menuItemLink" href="{!link.Community_URL__c}">{!link.Community_Name__c}</a>
                     </li>
-                    <!--</aura:if>-->
                 </aura:iteration>
             </ul>
         </div>
