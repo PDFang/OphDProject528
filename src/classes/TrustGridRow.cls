@@ -24,4 +24,9 @@ public class TrustGridRow {
 
     }
 
+    // constructor
+    public TrustGridRow(String platform){
+        this.platformName = platform;
+    }
+
 }
