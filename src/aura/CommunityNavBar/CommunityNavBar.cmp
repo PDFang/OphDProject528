@@ -1,0 +1,16 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="Global" controller="CommunityHeaderController">
+    <aura:attribute name="CommunityLinks" type="Community_Permission_Sets__c[]" />
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+
+    <div class="forceCommunityNavigationMenu">
+        <div class="navigationMenuWrapper">
+            <ul class="navigationMenu">
+                <aura:iteration items="{!v.CommunityLinks}" var="link">
+                    <li class="navigationMenuNode">
+                        <a class="menuItemLink" href="{!link.Community_URL__c}">{!link.Community_Name__c}</a>
+                    </li>
+                </aura:iteration>
+            </ul>
+        </div>
+    </div>
+</aura:component>
