@@ -4,15 +4,16 @@
 
 public without sharing class TrustGridController {
 
+    public enum Month {Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec}
+
     @AuraEnabled
-    public static list<Platforms> getPlatformInfo()
+    public static list<Platforms> getPlatformInfo(string lastDate)
     {
         list<Platforms> lstPlatforms = new list<Platforms>();
-        Date today = system.today();
+        Date today = getFormattedDate(lastDate);
         list<EventDate> lstEvents = new list<EventDate>();
         list<string> platforms = new list<string>();
         list<EventCounts> lstCounts = new list<EventCounts>();
-        platforms.add('Platforms');
         platforms.add('C8 - Dialer');
         platforms.add('C8 - inContact');
         platforms.add('Intelligent Network');
@@ -74,6 +75,40 @@ public without sharing class TrustGridController {
 
         return lstPlatforms;
     }
+
+
+    public static date getFormattedDate(string lastDate)
+    {
+        Date today = system.today();
+        if(lastDate == '' || lastDate == null)
+            return today;
+
+
+        integer theYear = today.year();
+        integer theMonth = 0;
+        string lastDayMonth = lastDate.substring(0,3);
+
+        if(today.month() == 1 && lastDayMonth == 'Dec')
+            theYear = theYear - 1;
+
+        integer theDate = integer.valueOf(lastDate.substring(4).trim());
+
+
+        for (Month m: Month.values())
+        {
+            if (m.name() == lastDayMonth)
+            {
+                theMonth = m.ordinal();
+                theMonth++;
+                break;
+            }
+        }
+
+        Date d =  date.newinstance(theYear, theMonth, theDate);
+
+        return d;
+    }
+
 
     public class Platforms {
         @AuraEnabled
