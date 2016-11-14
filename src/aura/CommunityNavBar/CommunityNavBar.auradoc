@@ -1,0 +1,6 @@
+<aura:documentation>
+    <aura:description>Navigation header with links to available communities and other resources</aura:description>
+    <aura:example name="ExampleName" ref="exampleComponentName" label="Label">
+        Example Description
+    </aura:example>
+</aura:documentation>

@@ -1,4 +1,9 @@
 <aura:application access="GLOBAL" >
-	<c:CanvasAppTest ></c:CanvasAppTest>
-    <!--<aura:dependency resource="c:CanvasAppTest"/>-->
+   <!--<ltng:require styles="/resource/slds213/assets/styles/salesforce-lightning-design-system-ltng.css"/>-->
+    <!-- <ltng:require styles="{!$Resource.slds213 +
+			'/assets/styles/salesforce-lightning-design-system-ltng.css'}"/>
+
+    <c:CreateTFSWorkItemComp/> -->
+	<!--<aura:dependency resource="c:CanvasAppTest"/>-->
+    <c:TrustGridComponent />
 </aura:application>

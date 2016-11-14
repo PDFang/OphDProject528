@@ -1,0 +1,37 @@
+<!--
+ - Created by arnab.karsarkar on 10/18/2016.
+ -->
+
+<aura:component description="CreateTFSWorkItemComp" implements="forceCommunity:availableForAllPageTypes,flexipage:availableForAllPageTypes,force:appHostable" access="global" controller="WorkItemCreateController">
+
+    <aura:handler name="init" value="{!this}" action="{!c.init}" />
+    <aura:attribute name="record" type="Object" description="The record being edited"/>
+    <aura:attribute name="fields" type="Object[]"/>
+    <aura:attribute name="form" type="Aura.Component[]"/>
+    <aura:attribute name="inputToField" type="Map"/>
+
+    <div class="slds sldsCustom">
+        <div class="slds-form--horizontal">
+        <div class="slds-form-element containerDiv">
+            <label class="slds-checkbox--toggle slds-grid">
+                <span class="slds-form-element__label slds-m-bottom--none">User Issue?</span>
+                <input name="checkbox" type="checkbox" aria-describedby="toggle-desc" />
+                <span id="toggle-desc" class="slds-checkbox--faux_container" aria-live="assertive">
+                  <span class="slds-checkbox--faux"></span>
+                  <span class="slds-checkbox--on">Enabled</span>
+                  <span class="slds-checkbox--off">Disabled</span>
+                  </span>
+            </label>
+            <div class="slds-item--label" title="First Label">Comment
+                <ui:inputRichText aura:id="arnabText" class="richTextClass"/>
+            </div>
+
+        </div>
+        <fieldset class="slds-form-element containerDiv">
+            <div class="slds-form-element__control">
+                    {!v.form}
+            </div>
+        </fieldset>
+    </div>
+    </div>
+</aura:component>

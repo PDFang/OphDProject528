@@ -55,17 +55,11 @@ public without sharing class CommunityDataAccess {
     } // end of getAccounts()
 
     public static Map<Id, List<String>> getAccountRoles(String adfsGuid) {
-        system.debug('getAccountRoles() : adfsGuid - '+adfsGuid);
         Map<Id, List<String>> accountRoles = new Map<Id, List<String>>();
-
-        if(String.isBlank(adfsGuid)){
-            return accountRoles;
-        }
 
         for(CommunityRoles__c communityRole : [Select Contact__r.AccountId, Roles__c
                                                 From CommunityRoles__c
-                                                Where Contact__r.ADFSGuid__c = :adfsGuid
-                                                And Roles__c != NULL]) {
+                                                Where Contact__c In (Select Id From Contact Where ADFSGuid__c = :adfsGuid)]) {
             List<String> roleList = accountRoles.get(communityRole.Contact__r.AccountId);
             if(roleList == null){
                 roleList = new List<String>();

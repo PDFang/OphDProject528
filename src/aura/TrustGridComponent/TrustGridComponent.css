@@ -1,0 +1,258 @@
+/**
+ * Created by arnab.karsarkar on 11/2/2016.
+ */
+.THIS .iconClass{
+        position: relative;
+        top: -2px;
+        display: inline-block;
+        font-family: 'Glyphicons Halflings';
+        font-style: normal;
+        font-weight: 400;
+        line-height: 1;
+        padding-left: 28px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale
+ }
+
+ .THIS .imageClass{
+         height: 16px;
+         width: 16px;
+
+  }
+
+
+.THIS .tableHeader{
+    background-color: #001D42;
+    color: #fff;
+    border-style:solid;
+    border-width: 0 0 1px 1px;
+    height:28px;
+    text-align:center;
+}
+
+.THIS .healthy-row{
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        height: .375rem;
+        background-color: #4fc279;
+        z-index: 900;
+}
+
+.THIS .table-row{
+        flex: 0 8rem;
+        line-height: 5rem;
+        padding: 0rem;
+        color: #061c3f;
+        border: .1rem solid #d8dde6;
+        text-align:center;
+        height:50px;
+        border-right:1px dashed #d8dde6;
+        border-left: 0px;
+}
+
+.THIS .timeline-marker {
+          position: absolute;
+              bottom: 0;
+              width: 0;
+              z-index: 850;
+              border-right: 1px dashed #d8dde6;
+              height: 50px;
+              right: 58.2rem;
+ }
+
+ .THIS .row-impact {
+           height: .625rem;
+           top: 50%;
+            transform: translateY(-50%);
+           z-index: 10001;
+           width: 28%;
+           position: relative;
+  }
+
+  .THIS .row-disruption {
+               background-color: #d4504c;
+               margin-left: 14px;
+    }
+    .THIS .row-degradation {
+                   background-color: #ff9a3c;
+                   margin-left: 14px;
+        }
+
+    .THIS .rowImage{
+        position: absolute;
+        left: 40px;
+        top: 9px;
+        z-index: 10001;
+        height: 25px;
+        width: 25px;
+    }
+
+    .THIS .badge-degradation{
+            position: absolute;
+            left: 58px;
+            top: 2px;
+            z-index: 11000;
+            background-color: #ff9a3c !important;
+    }
+   .THIS .badge-disruption{
+               position: absolute;
+               left: 58px;
+               top: 2px;
+               z-index: 11000;
+               background-color: #d4504c !important;
+       }
+
+
+    .THIS .badge-maintenance{
+                position: absolute;
+                left: 40px;
+                z-index: 11000;
+        }
+
+/**
+    .THIS .popover:after, .THIS .popover:before{
+             top: 100%;
+             	left: 50%;
+             	border: solid transparent;
+             	content: " ";
+             	height: 0;
+             	width: 0;
+             	position: absolute;
+             	pointer-events: none;
+          }
+
+    .THIS .popover:after {
+           border-color: rgba(255, 252, 250, 0);
+           	border-top-color: #fffcfa;
+           	border-width: 30px;
+           	margin-left: -30px;
+       }
+
+     .THIS .popover:before {
+           	border-color: rgba(0, 0, 0, 0);
+           	border-top-color: #000000;
+           	border-width: 36px;
+           	margin-left: -36px;
+           }
+**/
+    .THIS .popover{
+                display: block;
+                top: 34.9%;
+                left: 48%;
+                background-color: #f48b31;
+                color: white;
+                height: 55%;
+    }
+
+    .THIS .arrow-down {
+                width: 0;
+                height: 0;
+                border-left: 10px solid transparent;
+                border-right: 10px solid transparent;
+                position: absolute;
+                left: 54.5%;
+                top: 84.5%;
+                border-top: 10px solid #f48b31;
+                z-index: 11000;
+          }
+
+     .THIS .currentStatus {
+             left: 97.6%;
+             position: absolute;
+             float: right;
+             top: 11px;
+             z-index: 10002;
+             height: 25px;
+             width:25px;
+     }
+
+     .THIS .panel-body{
+         border: .1rem solid #d8dde6;
+     }
+
+     .THIS .pager{
+             margin-left: 36%;
+             margin-top: 28px;
+     }
+
+     .THIS .tooltip-inner{
+         background-color: #16325c !important;
+
+     }
+
+     .THIS .modal{
+         z-index: 15013;
+     }
+
+     .THIS .modal-dialog{
+         position: relative;
+         top: 160px;
+     }
+
+     .THIS .modalTitle {
+       font-size: 1.05rem;
+       line-height: 1.25;
+       color: #54698d;
+       text-transform: uppercase;
+       letter-spacing: .0625rem;
+       padding: 1rem;
+       border-bottom: .0625rem solid #e2e5ea;
+       border-top: 0;
+       background-color: #f4f6f9;
+       justify-content: space-between;
+      }
+
+      .THIS .details{
+          padding-top: 1.5rem;
+          padding-bottom: 1.5rem;
+          padding-right: 1rem;
+          padding-left: 1rem;
+      }
+
+      .THIS .detailLine{
+              margin-bottom: 1.3rem;
+               font-size: 1.1rem;
+      }
+
+      .THIS .titleCaps{
+                 line-height: 1.25;
+                 color: #54698d;
+                 text-transform: uppercase;
+                 padding-right: 8px;
+       }
+       .THIS .impactDiv{
+           padding: 1rem;
+       }
+     .THIS .impactRow {
+           display: flex;
+           padding-bottom: .375rem;
+       }
+     .THIS .impactListHeader {
+           color: #f4f6f9;
+           background-color: #54698d;
+     }
+
+     .THIS .impactlabel {
+        width: 2.5rem;
+        min-height: 1.25rem;
+        margin-right: 1rem;
+        flex-shrink: 0;
+        border: 1px solid #54698d;
+        border-radius: .25rem;
+        font-size: .625rem;
+        font-weight: 400;
+        color: #16325c;
+        text-align: center;
+        line-height: 1rem;
+        text-transform: uppercase;
+        background-color: #f4f6f9;
+    }
+
+    .THIS .impactlistbody {
+       line-height: .75rem;
+       margin: .125rem 0;
+   }
+
