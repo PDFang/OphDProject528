@@ -157,7 +157,7 @@ public class TrustGridHelper {
         String queryString = '';
         if(productSet.size() > 0 && platformSet.size() > 0){
             for(String platform : platformSet){
-                platformString += platformString.length() > 0 ? ',' : '';
+                platformString = ( platformString.length() > 0 ? ',' : '') + platform;
             }
             system.debug('**** DEBUG: platformString - ' + platformString);
             queryString = 'SELECT Id, Subject, EventStartDateTime__c, EventEndDateTime__c, EventType__c, PlatformsImpacted__c FROM Case '

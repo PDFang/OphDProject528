@@ -5,14 +5,14 @@ public without sharing class TrustGridApexController {
         List<TrustGridRow> trustGridList = new List<TrustGridRow>();
         TrustGridHelper helper = new TrustGridHelper(cadebillAccountNo);
         Set<String> platformSet = helper.getPlatforms();
-        system.debug(' initTrustGrid - ' + eventList);
+        system.debug(' initTrustGrid - ' + platformSet);
 
         for(String platform : platformSet){
             TrustGridRow row = new TrustGridRow(platform);
             trustGridList.add(row);
         }
 
-        Map<String, List<Case>> eventList = TrustGridHelper.getEvents(cadebillAccountNo, platformSet);
+        List<Case> eventList = helper.getEvents(system.today(), 120);
         system.debug(' eventList - ' + eventList);
         return trustGridList;
     }
