@@ -17,6 +17,7 @@
  .THIS .imageClass{
          height: 16px;
          width: 16px;
+
   }
 
 
@@ -43,11 +44,13 @@
 .THIS .table-row{
         flex: 0 8rem;
         line-height: 5rem;
-        padding-left: 1rem;
+        padding: 0rem;
         color: #061c3f;
         border: .1rem solid #d8dde6;
         text-align:center;
         height:50px;
+        border-right:1px dashed #d8dde6;
+        border-left: 0px;
 }
 
 .THIS .timeline-marker {
@@ -61,12 +64,11 @@
  }
 
  .THIS .row-impact {
-          width: 86px;
            height: .625rem;
            top: 50%;
             transform: translateY(-50%);
            z-index: 10001;
-           width: 86px;
+           width: 100%;
            position: relative;
   }
 
@@ -79,7 +81,7 @@
 
     .THIS .rowImage{
         position: absolute;
-        left: -1px;
+        left: 30px;
         top: 13px;
         z-index: 10001;
         height: 25px;
@@ -88,10 +90,19 @@
 
     .THIS .badge-degradation{
             position: absolute;
-            left: 12px;
+            left: 42px;
+            top: 1.5px;
             z-index: 11000;
             background-color: #ff9a3c !important;
     }
+   .THIS .badge-disruption{
+               position: absolute;
+               left: 42px;
+               top: 1.5px;
+               z-index: 11000;
+               background-color: #d4504c !important;
+       }
+
 
     .THIS .badge-maintenance{
                 position: absolute;
@@ -151,7 +162,7 @@
              position: absolute;
              float: right;
              top: 11px;
-             z-index: 10001;
+             z-index: 10002;
              height: 25px;
              width:25px;
      }

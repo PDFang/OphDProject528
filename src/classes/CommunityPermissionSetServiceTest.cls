@@ -1,7 +1,7 @@
 @isTest
 public class CommunityPermissionSetServiceTest {
-/*
-    static testmethod void getCommunitiesTest(){
+
+    static testmethod void getPermissionSetsTest(){
 
         List<User> adminUser = [Select Id from User where isActive = true and Profile.Name = 'System Administrator'];
         PermissionSet ps;
@@ -30,37 +30,38 @@ public class CommunityPermissionSetServiceTest {
             );
             insert testUser;
         }
-        Community_Configuration__c newConfig = new Community_Configuration__c();
+        Community_Permission_Sets__c newConfig = new Community_Permission_Sets__c();
         newConfig.Name = 'Test Community';
+        newConfig.Community_Name__c = 'Test Community';
         newConfig.Permission_Set__c = ps.Name;
-        newConfig.Tab_name__c = 'Test Community';
+        newConfig.Community_Tab_Name__c = 'Test Community';
         newConfig.Community_URL__c = '/TestCommunity';
         insert newConfig;
 
         test.startTest();
         System.RestContext.request = new RestRequest();
-        RestContext.request.requestURI = '/CommunityAccess/' + testuser.FederationIdentifier;
-        CommunityAccessService.HttpGetResponse response = CommunityAccessService.getCommunities();
+        RestContext.request.requestURI = '/CommunityPermissionSet/' + testuser.FederationIdentifier;
+        CommunityPermissionSetService.HttpGetResponse response = CommunityPermissionSetService.getPermissionSets();
         test.stopTest();
 
         system.assertEquals('Success', response.status);
         system.assertEquals('SUCCESS', response.message);
     }
 
-    static testmethod void noUserGetCommunitiesTest(){
+    static testmethod void noUserGetPermissionSetsTest(){
 
         test.startTest();
         System.RestContext.request = new RestRequest();
-        RestContext.request.requestURI = '/CommunityAccess/testuser';
-        CommunityAccessService.HttpGetResponse response = CommunityAccessService.getCommunities();
+        RestContext.request.requestURI = '/CommunityPermissionSet/testuser';
+        CommunityPermissionSetService.HttpGetResponse response = CommunityPermissionSetService.getPermissionSets();
         test.stopTest();
 
         system.assertEquals('Failed', response.status);
-        system.assertEquals('NO_USER_FOUND', response.message);
+        system.assertEquals('USER_NOT_FOUND', response.message);
 
     }
 
-    static testmethod void noDataGetCommunitiesTest(){
+    static testmethod void noDataGetPermissionSetsTest(){
 
         Profile profile = [SELECT Id from Profile where Name = 'System Administrator-CRM'];
 
@@ -81,13 +82,13 @@ public class CommunityPermissionSetServiceTest {
 
         test.startTest();
         System.RestContext.request = new RestRequest();
-        RestContext.request.requestURI = '/CommunityAccess/' + testuser.FederationIdentifier;
-        CommunityAccessService.HttpGetResponse response = CommunityAccessService.getCommunities();
+        RestContext.request.requestURI = '/CommunityPermissionSet/' + testuser.FederationIdentifier;
+        CommunityPermissionSetService.HttpGetResponse response = CommunityPermissionSetService.getPermissionSets();
         test.stopTest();
 
         system.assertEquals('Failed', response.status);
         system.assertEquals('NO_DATA_FOUND', response.message);
     }
-*/
+
 
 }

@@ -13,11 +13,38 @@ public class TrustGridHelper {
 
     };
 
-    // Get all the platforms
-    public static Set<String> getPlatformsByCustomer(Integer cadebillAccountNo)
-    {
-        Set<String> platforms = new Set<String>();
-        Set<String> products = new Set<String>();
+    private static final Set<String> caseFieldSet = new Set<String>{
+        'Id',
+        'Subject',
+        'EventStartDateTime__c',
+        'EventEndDateTime__c',
+        'EventType__c',
+        'PlatformsImpacted__c'
+    };
+
+    private Integer cadebillAccountNo;
+    //private Date startDate;
+    //private Integer daysBack;
+    private Account customer;
+    private Set<String> platformSet = null;
+    private Set<String> productSet = null;
+
+    public Set<String> getPlatforms(){
+        return platformSet;
+    }
+
+    public Set<String> getProducts(){
+        return productSet;
+    }
+    
+    // Constructor
+    public TrustGridHelper(Integer cadebillAccountNo){ //, Date startDate, Integer daysBack){
+        
+        this.cadebillAccountNo = cadebillAccountNo;
+        //this.startDate = startDate;
+        //this.daysBack = daysBack;
+        platformSet = new Set<String>();
+        productSet = new Set<String>();
 
         List<Account> accountList = [
                 SELECT ID, inContact_Cluster__c, Verint_Cluster__c, NICE_WFM_Cluster__c, NICE_QM_Cluster__c, RecordType.Name
@@ -25,14 +52,24 @@ public class TrustGridHelper {
                 WHERE CadebillAccountNo__c = :cadebillAccountNo LIMIT 1
         ];
         if(accountList.isEmpty()){
-            return platforms;
+            return;
         }
-        Account customer = accountList[0];
-        system.debug('**** DEBUG: getPlatformsByCustomer(): customer - ' + customer);
+        customer = accountList[0];
+        findPlatformsAndProducts();
+        
+    } // end of Constructor
 
+
+    // Get platforms and products impacted
+    private void findPlatformsAndProducts()
+    {
+
+        List<Account> accountList = new List<Account>();
+        accountList.add(customer);
+        
         Map<String,ProductEventMap__c> productEventMap = ProductEventMap__c.getAll();
         if(productEventMap.isEmpty()){
-            return platforms;
+            return;
         }
         List<ProductEventMap__c> productEventList = new List<ProductEventMap__c>(productEventMap.values());
         productEventMap = new Map<String, ProductEventMap__c>();
@@ -40,13 +77,20 @@ public class TrustGridHelper {
             if(productEvent.DoNotPost__c){
                 continue;
             }
-            productEventMap.put(productEvent.ImplementedProduct__c, productEvent);
+            if(productEvent.AllCustomers__c){
+                platformSet.add(productEvent.Platform__c);
+                productSet.add(productEvent.Product__c);
+            }
+            if(productEvent.ImplementedProduct__c != null) {
+                productEventMap.put(productEvent.ImplementedProduct__c, productEvent);
+            }
         }
-        system.debug('**** DEBUG: getPlatformsByCustomer(): productEventMap - ' + productEventMap);
+        system.debug('**** DEBUG: findPlatformsAndProducts(): productEventMap - ' + productEventMap);
         if(productEventMap.isEmpty()){
-            return platforms;
+            return;
         }
-
+        
+        // select child accounts
         if(customer.RecordType.Name == 'Resell Partner')
         {
             for(Account child :[
@@ -57,7 +101,8 @@ public class TrustGridHelper {
                 accountList.add(child);
             }
         }
-
+        
+        // select implemented products
         List<ImplementedProduct__c> impProductList = new List<ImplementedProduct__c>();
         for(ImplementedProduct__c ip :[
                 SELECT Account__c, Product__c FROM ImplementedProduct__c
@@ -65,17 +110,15 @@ public class TrustGridHelper {
         ]){
             impProductList.add(ip);
         }
-
+        system.debug('**** DEBUG: findPlatformsAndProducts(): impProductList - ' + impProductList);
         if(impProductList.isEmpty()){
-            return platforms;
+            return;
         }
 
         for(ImplementedProduct__c ip :impProductList)
         {
-            //node = ''; // arnab changes here
-            system.debug('**** DEBUG: getPlatformsByCustomer(): ip - ' + ip);
             ProductEventMap__c productEvent = productEventMap.get(ip.Product__c);
-            system.debug('**** DEBUG: getPlatformsByCustomer(): productEvent - ' + productEvent);
+            system.debug('**** DEBUG: findPlatformsAndProducts(): productEvent - ' + productEvent);
             if(productEvent == null){
                 continue;
             }
@@ -87,7 +130,7 @@ public class TrustGridHelper {
                         String accountCluster = (String)account.get(fieldName);
                         if(accountCluster != null && productEvent.Platform__c.startsWith(cluster)){
                             String platform = productEvent.Platform__c.replaceFirst(cluster, accountCluster);
-                            platforms.add(platform);
+                            platformSet.add(platform);
 
                         }
                     }
@@ -95,17 +138,64 @@ public class TrustGridHelper {
             }
             else
             {
-                platforms.add(productEvent.Platform__c);
+                platformSet.add(productEvent.Platform__c);
             }
-
-            products.add(productEvent.Product__c);
-
+            productSet.add(productEvent.Product__c);
         }
 
-        system.debug('platforms == > ' + platforms);
-        return platforms;
+        system.debug('**** DEBUG: findPlatformsAndProducts(): platformSet - ' + platformSet);
+        system.debug('**** DEBUG: findPlatformsAndProducts(): productSet  - ' + productSet);
 
-    } // end of getPlatformsByCustomer()
+    } // end of findPlatformsAndProducts()
 
+    public List<Case> getEvents(Date startDate, Integer daysBack)
+    {
+
+        List<Case> eventList = new List<Case>();
+
+        String platformString = '';
+        String queryString = '';
+        if(productSet.size() > 0 && platformSet.size() > 0){
+            for(String platform : platformSet){
+                platformString += platformString.length() > 0 ? ',' : '';
+            }
+            system.debug('**** DEBUG: platformString - ' + platformString);
+            queryString = 'SELECT Id, Subject, EventStartDateTime__c, EventEndDateTime__c, EventType__c, PlatformsImpacted__c FROM Case '
+                            + 'WHERE RecordType.Name = \'Event\' AND NonEvent__c = false AND InternalEvent__c = false '
+                            + 'AND ProductImpacted__c IN :productSet AND PlatformsImpacted__c includes (' + platformString + ') '
+                            + 'AND (EventStartDateTime__c >= LAST_N_DAYS:' + string.valueOf(daysBack) + ' OR EventEndDateTime__c >= LAST_N_DAYS:' + string.valueOf(daysBack)
+                            + ' OR EventEndDateTime__c = NULL) AND ID NOT IN(SELECT Event__c FROM EventAccount__c WHERE Account__r.CadebillAccountNo__c = :cadebillAccountNo AND Excluded__c = true) ';
+            system.debug('**** DEBUG: queryString - ' + queryString);
+            eventList = Database.Query(queryString);
+        }
+        system.debug('**** DEBUG: eventList - ' + eventList);
+
+        queryString = 'SELECT Id, Subject, EventStartDateTime__c, EventEndDateTime__c, EventType__c, PlatformsImpacted__c FROM Case '
+                        + 'WHERE ID IN(SELECT Event__c FROM EventAccount__c WHERE Account__r.CadebillAccountNo__c = :cadebillAccountNo AND Excluded__c = false) '
+                        + 'AND RecordType.Name = \'Event\' AND NonEvent__c = false AND InternalEvent__c = false '
+                        + 'AND (EventStartDateTime__c >= LAST_N_DAYS:' + string.valueOf(daysBack)
+                        + ' OR EventEndDateTime__c >= LAST_N_DAYS:' + string.valueOf(daysBack) + ' OR EventEndDateTime__c = NULL)';
+        List<Case> eventSpecificList = Database.Query(queryString);
+        system.debug('**** DEBUG: eventSpecificList - ' + eventSpecificList);
+        if(eventSpecificList.size() > 0)
+        {
+            eventList.addAll(eventSpecificList);
+        }
+/*
+        for(Case c :eventList){
+            List<String> platformList = c.PlatformsImpacted__c.split(',');
+            for(String p : platformList){
+                List<Case> events = platformEventMap.get(p);
+                if(events == null){
+                    events = new List<Case>();
+                    platformEventMap.put(p, events);
+                }
+                events.add(c);
+            }
+        }
+*/
+        return eventList;
+
+    } // end of getEvents()
 
 }
