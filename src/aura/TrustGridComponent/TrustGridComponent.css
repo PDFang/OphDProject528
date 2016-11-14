@@ -68,21 +68,23 @@
            top: 50%;
             transform: translateY(-50%);
            z-index: 10001;
-           width: 100%;
+           width: 28%;
            position: relative;
   }
 
   .THIS .row-disruption {
                background-color: #d4504c;
+               margin-left: 14px;
     }
     .THIS .row-degradation {
                    background-color: #ff9a3c;
+                   margin-left: 14px;
         }
 
     .THIS .rowImage{
         position: absolute;
-        left: 30px;
-        top: 13px;
+        left: 40px;
+        top: 9px;
         z-index: 10001;
         height: 25px;
         width: 25px;
@@ -90,15 +92,15 @@
 
     .THIS .badge-degradation{
             position: absolute;
-            left: 42px;
-            top: 1.5px;
+            left: 58px;
+            top: 2px;
             z-index: 11000;
             background-color: #ff9a3c !important;
     }
    .THIS .badge-disruption{
                position: absolute;
-               left: 42px;
-               top: 1.5px;
+               left: 58px;
+               top: 2px;
                z-index: 11000;
                background-color: #d4504c !important;
        }
@@ -172,6 +174,85 @@
      }
 
      .THIS .pager{
-             margin: 0 36px;
+             margin-left: 36%;
              margin-top: 28px;
      }
+
+     .THIS .tooltip-inner{
+         background-color: #16325c !important;
+
+     }
+
+     .THIS .modal{
+         z-index: 15013;
+     }
+
+     .THIS .modal-dialog{
+         position: relative;
+         top: 160px;
+     }
+
+     .THIS .modalTitle {
+       font-size: 1.05rem;
+       line-height: 1.25;
+       color: #54698d;
+       text-transform: uppercase;
+       letter-spacing: .0625rem;
+       padding: 1rem;
+       border-bottom: .0625rem solid #e2e5ea;
+       border-top: 0;
+       background-color: #f4f6f9;
+       justify-content: space-between;
+      }
+
+      .THIS .details{
+          padding-top: 1.5rem;
+          padding-bottom: 1.5rem;
+          padding-right: 1rem;
+          padding-left: 1rem;
+      }
+
+      .THIS .detailLine{
+              margin-bottom: 1.3rem;
+               font-size: 1.1rem;
+      }
+
+      .THIS .titleCaps{
+                 line-height: 1.25;
+                 color: #54698d;
+                 text-transform: uppercase;
+                 padding-right: 8px;
+       }
+       .THIS .impactDiv{
+           padding: 1rem;
+       }
+     .THIS .impactRow {
+           display: flex;
+           padding-bottom: .375rem;
+       }
+     .THIS .impactListHeader {
+           color: #f4f6f9;
+           background-color: #54698d;
+     }
+
+     .THIS .impactlabel {
+        width: 2.5rem;
+        min-height: 1.25rem;
+        margin-right: 1rem;
+        flex-shrink: 0;
+        border: 1px solid #54698d;
+        border-radius: .25rem;
+        font-size: .625rem;
+        font-weight: 400;
+        color: #16325c;
+        text-align: center;
+        line-height: 1rem;
+        text-transform: uppercase;
+        background-color: #f4f6f9;
+    }
+
+    .THIS .impactlistbody {
+       line-height: .75rem;
+       margin: .125rem 0;
+   }
+
