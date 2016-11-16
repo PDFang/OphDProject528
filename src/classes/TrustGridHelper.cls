@@ -157,7 +157,7 @@ public class TrustGridHelper {
         String queryString = '';
         if(productSet.size() > 0 && platformSet.size() > 0){
             for(String platform : platformSet){
-                platformString += platformString.length() > 0 ? ',' : '';
+                platformString += ( platformString.length() > 0 ? ',' : '') + '\'' + platform + '\'';
             }
             system.debug('**** DEBUG: platformString - ' + platformString);
             queryString = 'SELECT Id, Subject, EventStartDateTime__c, EventEndDateTime__c, EventType__c, PlatformsImpacted__c FROM Case '
@@ -181,19 +181,7 @@ public class TrustGridHelper {
         {
             eventList.addAll(eventSpecificList);
         }
-/*
-        for(Case c :eventList){
-            List<String> platformList = c.PlatformsImpacted__c.split(',');
-            for(String p : platformList){
-                List<Case> events = platformEventMap.get(p);
-                if(events == null){
-                    events = new List<Case>();
-                    platformEventMap.put(p, events);
-                }
-                events.add(c);
-            }
-        }
-*/
+
         return eventList;
 
     } // end of getEvents()
