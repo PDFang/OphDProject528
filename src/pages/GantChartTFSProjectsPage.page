@@ -1,0 +1,105 @@
+<!--
+ - Created by arnab.karsarkar on 11/15/2016.
+ -->
+<apex:page id="GantChartTFSProjectsPage" sideBar="false" controller="GanttChartTFSProjectController">
+
+    <apex:includeScript value="{!$Resource.GoogleGanttChart}"/>
+    <script>
+
+   var ownerId = '';
+    function callJs(obj)
+    {
+     console.log(obj.value);
+     ownerId = obj.value;
+     loadProjects();
+
+     console.log('visible ' + {!isVisibleProgramList});
+     google.charts.load('current', {'packages':['gantt']});
+     google.charts.setOnLoadCallback(drawChart);
+    }
+
+    function daysToMilliseconds(days) {
+      return days * 24 * 60 * 60 * 1000;
+    }
+
+    function drawChart() {
+        //console.log('ownerId =>' + ownerId);
+
+
+
+      GanttChartTFSProjectController.getChartData(
+          ownerId,
+          '',
+          '',
+          function(result, event){
+             if(event.status){
+                  var data = new google.visualization.DataTable();
+                  data.addColumn('string', 'Project ID');
+                  data.addColumn('string', 'Project Name');
+                  data.addColumn('date', 'Start Date');
+                  data.addColumn('date', 'End Date');
+                  data.addColumn('number', 'Duration');
+                  data.addColumn('number', 'Percent Complete');
+                  data.addColumn('string', 'Dependencies');
+                 for (var i = 0; i < result.length; i++) {
+                     var r = result[i];
+                     console.log('result =' + JSON.stringify(r));
+                     data.addRow([r.ProjectId, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, r.StartDateDay),null, daysToMilliseconds(r.DurationDays)
+                                    ,r.PercentComplete,null]);
+                 }
+
+                var options = {
+                    height: 275,
+                    gantt: {
+                      criticalPathEnabled: true,
+                      criticalPathStyle: {
+                          stroke: '#e64a19',
+                          strokeWidth: 5
+                        }
+                      }
+                  };
+                var chart = new google.visualization.Gantt(document.getElementById('chart_div'));
+                chart.draw(data, options);
+
+             }
+
+          },{escape:true});
+
+
+
+    }
+    </script>
+
+    <apex:form >
+        <apex:actionFunction name="loadProjects" action="{!loadPrograms}" rerender="programPanel"/>
+        <div>
+            <center>
+                <apex:outputPanel>Please Choose a Project owner to view the Programms
+                    <apex:selectList value="{!selectedOwner}" onChange="callJs(this);" size="1">
+                        <apex:selectOptions value="{!owmersList}" />
+                    </apex:selectList>
+                </apex:outputPanel>
+            </center>
+
+        </div>
+        <div style="padding-bottom:5px;">
+
+            <apex:outputPanel id="programPanel">
+                <apex:outputPanel rendered="{!isVisibleProgramList}" layout="block">Select a Program to filter &nbsp;
+                    <apex:selectList value="{!selectedProgram}" size="1">
+                        <apex:selectOptions value="{!programs}" />
+                    </apex:selectList>
+                    <center>
+
+                        <apex:selectCheckboxes  value="{!selectedTeams}" >
+                            <apex:selectOptions value="{!TeamLists}" />
+                        </apex:selectCheckboxes>
+                    </center>
+                </apex:outputPanel>
+
+            </apex:outputPanel>
+        </div>
+
+        <div id="chart_div"></div>
+    </apex:form>
+</apex:page>
