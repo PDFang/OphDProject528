@@ -99,13 +99,14 @@
 
                 <aura:iteration items="{!row.cellList}" var="cell" indexVar="insideIndex">
                     <div class="col-sm-1 table-row" >
-                        <aura:iteration items="{!cell.summaryMap.values}" var="event">
-                            <div class="healthy-row"/>
+                        <div class="healthy-row"/>
+                        <aura:iteration items="{!cell.summaryList}" var="event">
+
+
                             <aura:if isTrue="{!event.noOfEvents == 0}">
 
                                 <aura:set attribute="else">
                                     <aura:if isTrue="{!event.eventType == 'Service Disruption'}">
-
 
                                         <a data-toggle="modal" data-target="#myModal">
                                             <aura:if isTrue="{!event.noOfEvents > 1}">
