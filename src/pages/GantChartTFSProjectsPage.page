@@ -1,36 +1,67 @@
 <!--
  - Created by arnab.karsarkar on 11/15/2016.
  -->
-<apex:page id="GantChartTFSProjectsPage" sideBar="false" controller="GanttChartTFSProjectController">
+<apex:page id="GantChartTFSProjectsPage" sideBar="false" controller="GanttChartTFSProjectController" standardStylesheets="false">
 
     <apex:includeScript value="{!$Resource.GoogleGanttChart}"/>
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+
+
+
     <script>
 
-   var ownerId = '';
+    var projOwner = '';
+    var program = '';
     function callJs(obj)
     {
      console.log(obj.value);
-     ownerId = obj.value;
      loadProjects();
+     initChart(obj.value, '', []);
+     projOwner = obj.value;
+    }
 
-     console.log('visible ' + {!isVisibleProgramList});
-     google.charts.load('current', {'packages':['gantt']});
-     google.charts.setOnLoadCallback(drawChart);
+    function onChangeProj(obj)
+    {
+        program = obj.value == 'All' ? '' : obj.value;
+        initChart(projOwner, obj.value, []);
+    }
+
+    function onChangeTeam(thisObj)
+    {
+        var teams = [];
+
+        jQuery(thisObj).closest('tr').children('td').each(function(){
+              var childObj = jQuery(this).children('input');
+              if(jQuery(childObj).is(':checked')){
+                  teams.push(jQuery(childObj).val());
+              }
+
+           }) ;
+
+         initChart(projOwner, program,  teams);
     }
 
     function daysToMilliseconds(days) {
       return days * 24 * 60 * 60 * 1000;
     }
 
-    function drawChart() {
-        //console.log('ownerId =>' + ownerId);
+    function initChart(ownerId, projName, team){
+      google.charts.load('current', {'packages':['gantt']});
+      google.charts.setOnLoadCallback(function()
+      {
+        drawChart(ownerId, projName, team);
+      });
 
-
-
-      GanttChartTFSProjectController.getChartData(
+    }
+    function drawChart(ownerId, projName, team ) {
+       console.log('ownerId =>' + ownerId);
+       GanttChartTFSProjectController.getChartData(
           ownerId,
-          '',
-          '',
+          projName,
+          team,
           function(result, event){
              if(event.status){
                   var data = new google.visualization.DataTable();
@@ -41,11 +72,13 @@
                   data.addColumn('number', 'Duration');
                   data.addColumn('number', 'Percent Complete');
                   data.addColumn('string', 'Dependencies');
+
                  for (var i = 0; i < result.length; i++) {
+
                      var r = result[i];
                      console.log('result =' + JSON.stringify(r));
                      data.addRow([r.ProjectId, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, r.StartDateDay),null, daysToMilliseconds(r.DurationDays)
-                                    ,r.PercentComplete,null]);
+                                    ,r.PercentComplete,r.Dependency]);
                  }
 
                 var options = {
@@ -55,26 +88,38 @@
                       criticalPathStyle: {
                           stroke: '#e64a19',
                           strokeWidth: 5
+                        },
+                        arrow: {
+                            color : '#00ffffff'
+                        },
+                        labelMaxWidth : 500,
+                        percentEnabled : true,
+                        percentStyle: {
+                            fill : '#ff3300'
                         }
+
                       }
                   };
                 var chart = new google.visualization.Gantt(document.getElementById('chart_div'));
+                chart.clearChart();
                 chart.draw(data, options);
 
              }
 
           },{escape:true});
-
-
-
     }
+
+    function createDataTableDiv(divId){
+//     jQuery('div').attr('id', 'chart').append('<div id="' + divId '"></div>');
+    }
+
     </script>
 
     <apex:form >
         <apex:actionFunction name="loadProjects" action="{!loadPrograms}" rerender="programPanel"/>
         <div>
             <center>
-                <apex:outputPanel>Please Choose a Project owner to view the Programms
+                <apex:outputPanel>Please choose a Project Owner to view Programs &nbsp;
                     <apex:selectList value="{!selectedOwner}" onChange="callJs(this);" size="1">
                         <apex:selectOptions value="{!owmersList}" />
                     </apex:selectList>
@@ -86,12 +131,12 @@
 
             <apex:outputPanel id="programPanel">
                 <apex:outputPanel rendered="{!isVisibleProgramList}" layout="block">Select a Program to filter &nbsp;
-                    <apex:selectList value="{!selectedProgram}" size="1">
+                    <apex:selectList value="{!selectedProgram}" size="1" onChange="onChangeProj(this);">
                         <apex:selectOptions value="{!programs}" />
                     </apex:selectList>
                     <center>
 
-                        <apex:selectCheckboxes  value="{!selectedTeams}" >
+                        <apex:selectCheckboxes  value="{!selectedTeams}" onChange="onChangeTeam(this);" >
                             <apex:selectOptions value="{!TeamLists}" />
                         </apex:selectCheckboxes>
                     </center>

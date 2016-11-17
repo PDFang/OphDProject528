@@ -56,7 +56,7 @@ public without sharing class GanttChartTFSProjectController {
         programs = new list<SelectOption>();
         programs.add(new SelectOption('All', 'All'));
         TeamLists  = new list<SelectOption>();
-        selectedTeams = new list<string>{'Avengers', 'Justice League', 'X-men'};
+        selectedTeams = new list<string>{'Avengers', 'Justice League', 'X-Men'};
         for(Project__c proj : [select Id, Summary__c
                                 from Project__c
                                 where  RecordType.Name = 'PMO Project'
@@ -66,13 +66,13 @@ public without sharing class GanttChartTFSProjectController {
         }
         TeamLists.add(new SelectOption('Avengers', 'Avengers'));
         TeamLists.add(new SelectOption('Justice League', 'Justice League'));
-        TeamLists.add(new SelectOption('X-men', 'X-men'));
+        TeamLists.add(new SelectOption('X-Men', 'X-Men'));
         isVisibleProgramList = true;
 
     }
 
     @RemoteAction
-    public static list<ChartData> getChartData(string ownerId, string programName, string TeamName)
+    public static list<ChartData> getChartData(string ownerId, string programName, list<string> TeamName)
     {
         if(ownerId == '' && ownerId == null )
             return null;
@@ -82,9 +82,9 @@ public without sharing class GanttChartTFSProjectController {
         map<string, Project__c> parentProjects = new map<string, Project__c>();
         list<Project__c> lstProjects  = new list<Project__c>();
 
-        string queryString = 'select Name, Summary__c, Scheduled_Start_Date__c,PercentComplete__c from Project__c Where ProjectOwner__c = :ownerId';
+        string queryString = 'select Name, Summary__c,PlannedStartDate__c, Scheduled_Start_Date__c,PercentComplete__c from Project__c Where ProjectOwner__c = :ownerId and RecordType.Name = \'PMO Project\' ';
         if(programName != '')
-        queryString +=  ' And Summary__c = :' +  programName;
+        queryString +=  ' And Summary__c = :programName';
 
         lstProjects = Database.query(queryString);
 
@@ -92,35 +92,50 @@ public without sharing class GanttChartTFSProjectController {
         {
             parentProjects.put(proj.Id, proj);
         }
+        set<string> projectids = parentProjects.keySet();
+       // set<string> stTeams = ;
 
+        string childQueryString = 'SELECT Id, ChildProject__r.Name, ChildProject__r.RecordType.Name, ChildProject__r.PlannedStartDate__c, ' +
+                              'ChildProject__r.Summary__c, ChildProject__r.ClosedDate__c, ParentProject__c, ChildProject__r.Team__c, ParentProject__r.Name '+
+                              ' FROM RelatedProject__c WHERE ParentProject__c in :projectids';
 
-        for(RelatedProject__c childProject :[SELECT Id, ChildProject__r.Name, ChildProject__r.RecordType.Name, ChildProject__r.PlannedStartDate__c,
-                              ChildProject__r.Summary__c, ChildProject__r.ClosedDate__c, ParentProject__c, ChildProject__r.Team__c
-                              FROM RelatedProject__c WHERE ParentProject__c = :  parentProjects.keySet()])
+        if(TeamName.size() > 0)
+            childQueryString += ' And ChildProject__r.Team__c in :TeamName';
+
+        system.debug('childQueryString =>' + childQueryString);
+        list<RelatedProject__c> relatedProjects = Database.query(childQueryString);
+
+       set<Id> parentProjectIds = new set<id>();
+
+        for(RelatedProject__c childProject :relatedProjects)
         {
 
-            if(parentProjects.containsKey(childProject.ParentProject__c))
+            if(parentProjects.containsKey(childProject.ParentProject__c) && !parentProjectIds.contains(childProject.ParentProject__c))
                 {
                     Project__c parent = parentProjects.get(childProject.ParentProject__c);
                     ChartData data = new ChartData();
                     data.ProjectId = parent.Name;
                     data.ProjectName = parent.Summary__c;
-                    data.StartDateDay = parent.Scheduled_Start_Date__c.day();
-                    data.StartDateMonth = parent.Scheduled_Start_Date__c.month() - 1;
-                    data.StartDateYear = parent.Scheduled_Start_Date__c.year();
+                    data.StartDateDay = parent.PlannedStartDate__c.day();
+                    data.StartDateMonth = parent.PlannedStartDate__c.month() - 1;
+                    data.StartDateYear = parent.PlannedStartDate__c.year();
                     data.DurationDays = 90;
                     data.PercentComplete = parent.PercentComplete__c;
+                    data.Dependency = null;
                     dataList.add(data);
+
+                    parentProjectIds.add(childProject.ParentProject__c);
                 }
 
                     ChartData data = new ChartData();
                     data.ProjectId = childProject.ChildProject__r.Name;
-                    data.ProjectName = childProject.ChildProject__r.Team__c;
+                    data.ProjectName = childProject.ChildProject__r.Summary__c + '(' + childProject.ChildProject__r.Team__c + ')';
                     data.StartDateDay = childProject.ChildProject__r.PlannedStartDate__c.day();
                     data.StartDateMonth = childProject.ChildProject__r.PlannedStartDate__c.month() - 1;
                     data.StartDateYear = childProject.ChildProject__r.PlannedStartDate__c.year();
                     data.DurationDays = 30;
                     data.PercentComplete = 55;
+                    data.Dependency = childProject.ParentProject__r.Name;
                     dataList.add(data);
 
         }
@@ -140,6 +155,7 @@ public without sharing class GanttChartTFSProjectController {
       //  public string  EndDate{get; set;}
         public integer DurationDays{get; set;}
         public decimal PercentComplete{get; set;}
+        public string Dependency{get;set;}
     }
 
 

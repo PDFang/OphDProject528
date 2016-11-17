@@ -26,14 +26,12 @@ public without sharing class TrustGridController {
 
             if(pl=='C8 - Dialer')
             {
-                pla.CurrentStatus = 'D';
+                pla.CurrentStatus = 'A';
             }
             else
             {
                 pla.CurrentStatus = 'A';
             }
-
-
 
             for(integer i = 0; i < 7; i++)
             {
