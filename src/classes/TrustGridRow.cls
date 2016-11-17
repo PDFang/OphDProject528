@@ -3,10 +3,13 @@
  */
 
 public class TrustGridRow {
-
+    @AuraEnabled
     public String platformName{get; private set;}
+    @AuraEnabled
     public String platformDescription{get; private set;}
+    @AuraEnabled
     public String currentStatus{get; set;}
+    @AuraEnabled
     public List<TrustGridCell> cellList{get; private set;}
 
     // constructor
@@ -21,7 +24,11 @@ public class TrustGridRow {
         public Date today{get; private set;}
         public String dateString{get; private set;}
         //public List<EventInfo> eventList{get; private set;}
-        public Map<String, EventSummary> summaryMap{get; private set;}
+        @AuraEnabled
+        public List<EventSummary> getSummaryList(){
+            return summaryMap != null ? summaryMap.values() : null;
+        }
+        private Map<String, EventSummary> summaryMap;
 
         public TrustGridCell(Date dateParam){
             this.today = dateParam;
@@ -42,7 +49,9 @@ public class TrustGridRow {
 
     // inner class
     public class EventSummary{
+        @AuraEnabled
         public String eventType{get; private set;}
+        @AuraEnabled
         public Integer noOfEvents{get; private set;}
 
         public EventSummary(Case event){
