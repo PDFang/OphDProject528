@@ -13,30 +13,15 @@ public class TrustGridHelper {
 
     };
 
-    private static final Set<String> caseFieldSet = new Set<String>{
-        'Id',
-        'Subject',
-        'EventStartDateTime__c',
-        'EventEndDateTime__c',
-        'EventType__c',
-        'PlatformsImpacted__c'
-    };
-
     private Integer cadebillAccountNo;
-    //private Date startDate;
-    //private Integer daysBack;
-    private Account customer;
     private Set<String> platformSet = null;
     private Set<String> productSet = null;
+    public Account customer;
 
     public Set<String> getPlatforms(){
-        return platformSet;
+        return platformSet == null ? new Set<String>() : platformSet;
     }
 
-    public Set<String> getProducts(){
-        return productSet;
-    }
-    
     // Constructor
     public TrustGridHelper(Integer cadebillAccountNo){ //, Date startDate, Integer daysBack){
         
@@ -52,7 +37,7 @@ public class TrustGridHelper {
                 WHERE CadebillAccountNo__c = :cadebillAccountNo LIMIT 1
         ];
         if(accountList.isEmpty()){
-            return;
+            throw new TrustGridException('No account found.');
         }
         customer = accountList[0];
         findPlatformsAndProducts();
