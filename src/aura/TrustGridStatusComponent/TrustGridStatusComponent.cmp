@@ -99,11 +99,12 @@
 
                 <aura:iteration items="{!row.cellList}" var="cell" indexVar="insideIndex">
                     <div class="col-sm-1 table-row" >
+                        <div class="healthy-row"/>
                         <aura:iteration items="{!cell.summaryList}" var="event">
 
 
                             <aura:if isTrue="{!event.noOfEvents == 0}">
-                                <div class="healthy-row"/>
+
                                 <aura:set attribute="else">
                                     <aura:if isTrue="{!event.eventType == 'Service Disruption'}">
 

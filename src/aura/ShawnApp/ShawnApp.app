@@ -5,6 +5,6 @@
 
     <c:CreateTFSWorkItemComp/> -->
 	<!--<aura:dependency resource="c:CanvasAppTest"/>-->
-   <!-- <c:TrustGridStatusComponent />-->
-    <c:TrustGridComponent />
+<c:TrustGridStatusComponent />
+   <!--<c:TrustGridComponent />-->
 </aura:application>
