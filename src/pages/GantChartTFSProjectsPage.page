@@ -13,20 +13,20 @@
 
     <script>
 
-    var projOwner = '';
+
     var program = '';
-    function callJs(obj)
-    {
-     console.log(obj.value);
-     loadProjects();
-     initChart(obj.value, '', []);
-     projOwner = obj.value;
-    }
+
+    jQuery(document).ready(function(){
+         initChart('', []);
+    });
+
 
     function onChangeProj(obj)
     {
+
         program = obj.value == 'All' ? '' : obj.value;
-        initChart(projOwner, obj.value, []);
+        initChart(program, []);
+        console.log('program ==>' + program);
     }
 
     function onChangeTeam(thisObj)
@@ -41,25 +41,24 @@
 
            }) ;
 
-         initChart(projOwner, program,  teams);
+         initChart(program,  teams);
     }
 
     function daysToMilliseconds(days) {
       return days * 24 * 60 * 60 * 1000;
     }
 
-    function initChart(ownerId, projName, team){
+    function initChart(projName, team){
       google.charts.load('current', {'packages':['gantt']});
       google.charts.setOnLoadCallback(function()
       {
-        drawChart(ownerId, projName, team);
+        drawChart(projName, team);
       });
 
     }
-    function drawChart(ownerId, projName, team ) {
-       console.log('ownerId =>' + ownerId);
+    function drawChart(projName, team ) {
+
        GanttChartTFSProjectController.getChartData(
-          ownerId,
           projName,
           team,
           function(result, event){
@@ -72,19 +71,20 @@
                   data.addColumn('number', 'Duration');
                   data.addColumn('number', 'Percent Complete');
                   data.addColumn('string', 'Dependencies');
-
+                var numOfRows;
                  for (var i = 0; i < result.length; i++) {
 
                      var r = result[i];
                      console.log('result =' + JSON.stringify(r));
-                     data.addRow([r.ProjectId, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, r.StartDateDay),null, daysToMilliseconds(r.DurationDays)
+                     data.addRow([r.ProjectId, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, r.StartDateDay),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay),r.DurationDays
                                     ,r.PercentComplete,r.Dependency]);
+                     numOfRows = i;
                  }
 
                 var options = {
-                    height: 275,
+                    height: 100*numOfRows,
                     gantt: {
-                      criticalPathEnabled: true,
+                      criticalPathEnabled: false,
                       criticalPathStyle: {
                           stroke: '#e64a19',
                           strokeWidth: 5
@@ -109,28 +109,14 @@
           },{escape:true});
     }
 
-    function createDataTableDiv(divId){
-//     jQuery('div').attr('id', 'chart').append('<div id="' + divId '"></div>');
-    }
 
     </script>
 
     <apex:form >
-        <apex:actionFunction name="loadProjects" action="{!loadPrograms}" rerender="programPanel"/>
-        <div>
-            <center>
-                <apex:outputPanel>Please choose a Project Owner to view Programs &nbsp;
-                    <apex:selectList value="{!selectedOwner}" onChange="callJs(this);" size="1">
-                        <apex:selectOptions value="{!owmersList}" />
-                    </apex:selectList>
-                </apex:outputPanel>
-            </center>
-
-        </div>
         <div style="padding-bottom:5px;">
 
             <apex:outputPanel id="programPanel">
-                <apex:outputPanel rendered="{!isVisibleProgramList}" layout="block">Select a Program to filter &nbsp;
+                <apex:outputPanel layout="block">Select a Program to filter &nbsp;
                     <apex:selectList value="{!selectedProgram}" size="1" onChange="onChangeProj(this);">
                         <apex:selectOptions value="{!programs}" />
                     </apex:selectList>

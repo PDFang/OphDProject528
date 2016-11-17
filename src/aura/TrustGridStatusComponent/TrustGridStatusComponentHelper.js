@@ -1,5 +1,5 @@
 /**
- * Created by arnab.karsarkar on 11/4/2016.
+ * Created by mohandaas.rangaswamy on 11/16/2016.
  */
 ({
     getPastSevenDates: function(component, helper){
@@ -106,6 +106,38 @@
                        }
 
                        component.set('v.datalist', tableData);
+                } else {
+                    // error handling
+                }
+
+        });
+         $A.enqueueAction(myAction);
+    },
+
+    loadTrustGrid: function(component, helper){
+         var myAction = component.get('c.initTrustGrid');
+         // Handle returned results...
+         myAction.setParams(
+             {cadebillAccountNo : 4593141},
+             {daysBack : null}
+         );
+         myAction.setCallback(component, function(response) {
+                var state = response.getState();
+
+                if(component.isValid() && state === "SUCCESS") {
+                    var result = response.getReturnValue();
+                    console.log('result =>' + result);
+                    console.log('temp =>' + JSON.stringify(result));
+                    var trustGridRows = [];
+                    // Loop through results; remember, this is a list of sObjects
+                    for(var item in result) {
+                        // Get the record
+                        var temp =  result[item];
+                        console.log('temp =>' + JSON.stringify(temp));
+                        //platforms.push(temp.platformName);
+                        trustGridRows.push(temp);
+                    }
+                    component.set('v.gridRows', trustGridRows);
                 } else {
                     // error handling
                 }

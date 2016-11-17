@@ -16,127 +16,180 @@ public without sharing class GanttChartTFSProjectController {
 
 
     public GanttChartTFSProjectController(){
-        owmersList = new list<SelectOption>();
-        owmersList = loadProjectOwners();
-        system.debug('ownerList ==>' + owmersList);
-        isVisibleProgramList = false;
+        loadPrograms();
     }
 
-    public list<SelectOption> loadProjectOwners()
-    {
-        system.debug('came here');
-        list<SelectOption> owners = new list<SelectOption>();
-        map<Id, string> ownerMap = new  map<Id, string> ();
-        owners.add(new SelectOption('None', 'None'));
-        for(Project__c proj : [select Id, ProjectOwner__r.Name,  ProjectOwner__c
-                                from Project__c
-                                where  RecordType.Name = 'PMO Project'
-                                And ProjectStatus__c Not in ('Completed','Closed', 'Canceled', 'On Hold')
-                                And ProjectType__c = 'Corporate IT'])
-        {
 
-            if(proj.ProjectOwner__c != null )
-            {
-                ownerMap.put(proj.ProjectOwner__c, proj.ProjectOwner__r.Name);
-                //owners.add(new selectOptions(proj.ProjectOwner__c,proj.ProjectOwner__r.Name));
-            }
-        }
-
-        for(Id userId : ownerMap.keySet())
-        {
-            owners.add(new SelectOption(userId, ownerMap.get(userId)));
-        }
-
-        return owners;
-
-    }
 
     public void loadPrograms()
     {
         programs = new list<SelectOption>();
         programs.add(new SelectOption('All', 'All'));
         TeamLists  = new list<SelectOption>();
-        selectedTeams = new list<string>{'Avengers', 'Justice League', 'X-Men'};
-        for(Project__c proj : [select Id, Summary__c
-                                from Project__c
-                                where  RecordType.Name = 'PMO Project'
-                                And ProjectOwner__c = : selectedOwner])
-        {
-            programs.add(new SelectOption(proj.Summary__c, proj.Summary__c));
-        }
-        TeamLists.add(new SelectOption('Avengers', 'Avengers'));
-        TeamLists.add(new SelectOption('Justice League', 'Justice League'));
-        TeamLists.add(new SelectOption('X-Men', 'X-Men'));
-        isVisibleProgramList = true;
+        selectedTeams = new list<string>();
 
+        Schema.DescribeFieldResult fieldResultPrograms = Project__c.Primary_Product__c.getDescribe();
+        List<Schema.PicklistEntry> plePrograms = fieldResultPrograms.getPicklistValues();
+
+        for( Schema.PicklistEntry f : plePrograms)
+        {
+            programs.add(new SelectOption(f.getLabel(), f.getValue()));
+        }
+
+        Schema.DescribeFieldResult fieldResult = ISTFSWorkItem__c.Team__c.getDescribe();
+        List<Schema.PicklistEntry> ple = fieldResult.getPicklistValues();
+
+        for( Schema.PicklistEntry f : ple)
+        {
+            TeamLists.add(new SelectOption(f.getLabel(), f.getValue()));
+            selectedTeams.add(f.getLabel());
+        }
     }
 
     @RemoteAction
-    public static list<ChartData> getChartData(string ownerId, string programName, list<string> TeamName)
+    public static list<ChartData> getChartData(string programName, list<string> TeamName)
     {
-        if(ownerId == '' && ownerId == null )
-            return null;
+
 
         List<RelatedProject__c> rpChildList = new list<RelatedProject__c>();
         list<ChartData> dataList = new list<ChartData>();
-        map<string, Project__c> parentProjects = new map<string, Project__c>();
+        map<string, list<Project__c>> parentProjects = new map<string, list<Project__c>>();
         list<Project__c> lstProjects  = new list<Project__c>();
+        map<string, list<date>> minStartDtList = new map<string, list<date>>();
+        map<string, date> minStartDt = new map<string, date>();
+        map<string, date> maxEndDt = new map<string, date>();
+        map<string, date> projectStartDate = new map<string, date>();
 
-        string queryString = 'select Name, Summary__c,PlannedStartDate__c, Scheduled_Start_Date__c,PercentComplete__c from Project__c Where ProjectOwner__c = :ownerId and RecordType.Name = \'PMO Project\' ';
+        set<string> stProjectIds = new set<string>();
+
+
+        string queryString = 'select Name, Primary_Product__c,Team__c, Summary__c,RequestedDeliveryDate__c, PercentComplete__c from Project__c Where ProjectStatus__c = \'Active/Being Worked\' and RecordType.Name = \'IT Project Request\' ';
         if(programName != '')
-        queryString +=  ' And Summary__c = :programName';
+                queryString +=  ' And Primary_Product__c = :programName';
+        else
+                queryString +=  ' And Primary_Product__c != null';
+
+        if(TeamName.size() > 0)
+            queryString += ' And Team__c in :TeamName';
+
+        queryString += ' Order By Name';
 
         lstProjects = Database.query(queryString);
 
         for(Project__c proj :lstProjects)
         {
-            parentProjects.put(proj.Id, proj);
+            stProjectIds.add(proj.Id);
+            if(parentProjects.containsKey(proj.Primary_Product__c))
+            {
+                parentProjects.get(proj.Primary_Product__c).add(proj);
+            }
+            else
+            {
+                parentProjects.put(proj.Primary_Product__c, new list<Project__c>{proj});
+            }
+
         }
-        set<string> projectids = parentProjects.keySet();
-       // set<string> stTeams = ;
 
-        string childQueryString = 'SELECT Id, ChildProject__r.Name, ChildProject__r.RecordType.Name, ChildProject__r.PlannedStartDate__c, ' +
-                              'ChildProject__r.Summary__c, ChildProject__r.ClosedDate__c, ParentProject__c, ChildProject__r.Team__c, ParentProject__r.Name '+
-                              ' FROM RelatedProject__c WHERE ParentProject__c in :projectids';
-
-        if(TeamName.size() > 0)
-            childQueryString += ' And ChildProject__r.Team__c in :TeamName';
-
-        system.debug('childQueryString =>' + childQueryString);
-        list<RelatedProject__c> relatedProjects = Database.query(childQueryString);
-
-       set<Id> parentProjectIds = new set<id>();
-
-        for(RelatedProject__c childProject :relatedProjects)
+        for(AggregateResult agr : [select Primary_Product__c, MAX(RequestedDeliveryDate__c)  maxDt
+                                    FROM Project__c where  ProjectStatus__c = 'Active/Being Worked'
+                                    And RecordType.Name = 'IT Project Request'
+                                    AND Primary_Product__c != null
+                                    Group By Primary_Product__c])
         {
+            if(programName != '' &&   string.valueOf(agr.get('Primary_Product__c')) == programName)
+            {
+                maxEndDt.put(programName, date.valueOf(agr.get('maxDt')));
+                break;
+            }
+            else
+            {
+                string program = string.valueOf(agr.get('Primary_Product__c'));
+                maxEndDt.put(string.valueOf(program), date.valueOf(agr.get('maxDt')));
+            }
+        }
 
-            if(parentProjects.containsKey(childProject.ParentProject__c) && !parentProjectIds.contains(childProject.ParentProject__c))
+
+
+        for(Project__history projHist : [select Parent.Primary_Product__c, NewValue, CreatedDate
+                                    FROM Project__history where  Parent.ProjectStatus__c = 'Active/Being Worked'
+                                    And Parent.RecordType.Name = 'IT Project Request'
+                                    AND Parent.Primary_Product__c != null
+                                    Order By CreatedDate desc])
+        {
+            date thisCreatedDate = Date.valueOf(projHist.CreatedDate);
+            if(programName != '' &&   projHist.Parent.Primary_Product__c == programName && projHist.NewValue == 'Active/Being Worked')
+            {
+                minStartDtList.put(programName, new list<date>{thisCreatedDate});
+            }
+            else if(projHist.NewValue == 'Active/Being Worked' && programName == '')
+            {
+                if(!minStartDtList.containsKey(projHist.Parent.Primary_Product__c))
                 {
-                    Project__c parent = parentProjects.get(childProject.ParentProject__c);
-                    ChartData data = new ChartData();
-                    data.ProjectId = parent.Name;
-                    data.ProjectName = parent.Summary__c;
-                    data.StartDateDay = parent.PlannedStartDate__c.day();
-                    data.StartDateMonth = parent.PlannedStartDate__c.month() - 1;
-                    data.StartDateYear = parent.PlannedStartDate__c.year();
-                    data.DurationDays = 90;
-                    data.PercentComplete = parent.PercentComplete__c;
-                    data.Dependency = null;
-                    dataList.add(data);
-
-                    parentProjectIds.add(childProject.ParentProject__c);
+                    minStartDtList.put(projHist.Parent.Primary_Product__c, new list<date>{thisCreatedDate});
+                }
+                else{
+                     system.debug('program ==>' + projHist.Parent.Primary_Product__c);
+                     minStartDtList.get(projHist.Parent.Primary_Product__c).add(thisCreatedDate);
                 }
 
-                    ChartData data = new ChartData();
-                    data.ProjectId = childProject.ChildProject__r.Name;
-                    data.ProjectName = childProject.ChildProject__r.Summary__c + '(' + childProject.ChildProject__r.Team__c + ')';
-                    data.StartDateDay = childProject.ChildProject__r.PlannedStartDate__c.day();
-                    data.StartDateMonth = childProject.ChildProject__r.PlannedStartDate__c.month() - 1;
-                    data.StartDateYear = childProject.ChildProject__r.PlannedStartDate__c.year();
-                    data.DurationDays = 30;
-                    data.PercentComplete = 55;
-                    data.Dependency = childProject.ParentProject__r.Name;
-                    dataList.add(data);
+            }
+        }
+
+        for(string program : minStartDtList.keySet())
+        {
+            list<date> lstCreatedDates = new list<date>();
+            lstCreatedDates = minStartDtList.get(program);
+            lstCreatedDates.sort();
+            date maxDate = lstCreatedDates[lstCreatedDates.size() - 1];
+            minStartDt.put(program, maxDate);
+        }
+
+        for(Project__history hist : [select ParentId, NewValue, CreatedDate from Project__history where  Parent.ProjectStatus__c = 'Active/Being Worked'
+                                    And Parent.RecordType.Name = 'IT Project Request'
+                                    AND Parent.Primary_Product__c != null
+                                    ])
+        {
+            if(hist.NewValue == 'Active/Being Worked')
+                 projectStartDate.put(hist.ParentId, Date.valueOf(hist.CreatedDate));
+        }
+
+
+        for(String program : parentProjects.keySet())
+        {
+
+
+            ChartData data = new ChartData();
+            data.ProjectId = program;
+            data.ProjectName = 'Program = ' + program;
+            data.StartDateDay = minStartDt.get(program).day();
+            data.StartDateMonth =minStartDt.get(program).month() - 1;
+            data.StartDateYear = minStartDt.get(program).year();
+            data.EndDateDay = maxEndDt.get(program).day();
+            data.EndDateMonth =maxEndDt.get(program).month() - 1;
+            data.EndDateYear = maxEndDt.get(program).year();
+            data.DurationDays = 90;
+            data.PercentComplete = 80;
+            data.Dependency = null;
+            dataList.add(data);
+
+
+            for(Project__c proj : parentProjects.get(program))
+            {
+                ChartData childData = new ChartData();
+                childData.ProjectId = proj.Name;
+                childData.ProjectName = proj.Summary__c + ' (' + proj.Team__c + ')';
+                childData.StartDateDay = projectStartDate.get(proj.Id).day();
+                childData.StartDateMonth = projectStartDate.get(proj.Id).month() - 1;
+                childData.StartDateYear = projectStartDate.get(proj.Id).year();
+                childData.EndDateDay = proj.RequestedDeliveryDate__c.day();
+                childData.EndDateMonth = proj.RequestedDeliveryDate__c.month() - 1;
+                childData.EndDateYear = proj.RequestedDeliveryDate__c.year();
+                childData.DurationDays = null;
+                childData.PercentComplete = 50;
+                childData.Dependency = program;
+                dataList.add(childData);
+
+            }
 
         }
 
@@ -152,7 +205,9 @@ public without sharing class GanttChartTFSProjectController {
         public integer  StartDateDay{get; set;}
         public integer  StartDateMonth{get; set;}
         public integer  StartDateYear{get; set;}
-      //  public string  EndDate{get; set;}
+        public integer  EndDateDay{get; set;}
+        public integer  EndDateMonth{get; set;}
+        public integer  EndDateYear{get; set;}
         public integer DurationDays{get; set;}
         public decimal PercentComplete{get; set;}
         public string Dependency{get;set;}
