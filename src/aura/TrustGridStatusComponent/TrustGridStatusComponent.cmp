@@ -1,10 +1,6 @@
-<!--
- - Created by arnab.karsarkar on 11/1/2016.
- -->
-
-<aura:component description="TrustGridComponent" controller="TrustGridController" access="global">
+<aura:component description="TrustGridStatusComponent" controller="TrustGridApexController" access="global">
     <ltng:require scripts="{!join(',', $Resource.inContactResource + '/inContactResource/js/jquery-3.1.1.min.js',
-                                       $Resource.inContactResource + '/inContactResource/js/bootstrap.min.js')}"
+            $Resource.inContactResource + '/inContactResource/js/bootstrap.min.js')}"
                   styles="{!join(',', $Resource.inContactResource + '/inContactResource/css/bootstrap.min.css',
                           $Resource.inContactResource + '/inContactResource/css/bootstrap-theme.min.css')}"
                   afterScriptsLoaded="{!c.loadDates}" />
@@ -14,68 +10,69 @@
     <aura:attribute name="lastDate" type="string" default=""/>
     <aura:attribute name="firstDate" type="string" default=""/>
     <aura:attribute name="datalist" type="string[]" default="[]"/>
+    <aura:attribute name="gridRows" type="string[]" default="[]"/>
     <!--<aura:handler name="init" value="{!this}" action="{!c.doInit}"/>-->
-    <aura:handler name="init" value="{!this}" action="{!c.doIntit}" />
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
     <aura:handler event="aura:doneRendering" action="{!c.doneRendering}"/>
 
 
 
 
     <div class="container">
-    <h2>inContact TRUST Grid</h2>
-    <div class="row">
-    <div class="panel-group">
-      <div class="panel panel-default">
+        <h2>inContact TRUST Grid</h2>
+        <div class="row">
+            <div class="panel-group">
+                <div class="panel panel-default">
 
-       <div class="panel-heading">
-           <div class="row">
-               <div class="col-sm-4"><label>Status</label></div>
-               <div class="col-sm-8">
-                   <p>
+                    <div class="panel-heading">
+                        <div class="row">
+                            <div class="col-sm-4"><label>Status</label></div>
+                            <div class="col-sm-8">
+                                <p>
                        <span class="iconClass">
                             <img src="{!$Resource.inContactResource + '/inContactResource/fonts/available.png'}" class="imageClass"/>
                        </span>
-                       Available
-                       <span class="iconClass">
+                                    Available
+                                    <span class="iconClass">
                             <img src="{!$Resource.inContactResource + '/inContactResource/fonts/degradation.png'}" class="imageClass"/>
                         </span>
-                       Service Degradation
-                       <span class="iconClass">
+                                    Service Degradation
+                                    <span class="iconClass">
                             <img src="{!$Resource.inContactResource + '/inContactResource/fonts/disruption.png'}" class="imageClass"/>
                        </span>
-                       Disruption
-                       <span class="iconClass">
+                                    Disruption
+                                    <span class="iconClass">
                             <img src="{!$Resource.inContactResource + '/inContactResource/fonts/maintenance.png'}" class="imageClass"/>
                         </span>
-                       Maintenance
-                   </p>
-               </div>
+                                    Maintenance
+                                </p>
+                            </div>
 
-           </div>
-          </div>
-      </div>
-         <div class="panel-body">
-             Gain access to inContact platform status history and domain event information for the past 30 days. Select a Service Disruption or Performance Issue icon below for a given date and domain and the update will populate below the status grid.
-         </div>
-     </div>
-    </div>
-    <div class="row">
-        <div class="col-sm-9" style="height:67px;">
-        <div class="arrow-down"></div>
-        <div class="popover popover-top">
-            <div class="popover-content">
-                <p>Current Status</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    Gain access to inContact platform status history and domain event information for the past 30 days. Select a Service Disruption or Performance Issue icon below for a given date and domain and the update will populate below the status grid.
+                </div>
             </div>
         </div>
-        </div>
-        <div class="col-sm-3" style="height:67px;padding-right: 0;">
-            <ul class="pager">
-                <li class="previous disabled" onclick="{!c.loadPrevious}"><a href="#">&larr; Newer</a></li>
-                <li class="next"><a href="#" onclick="{!c.loadNext}">Older &rarr;</a></li>
-            </ul>
-        </div>
+        <div class="row">
+            <div class="col-sm-9" style="height:67px;">
+                <div class="arrow-down"></div>
+                <div class="popover popover-top">
+                    <div class="popover-content">
+                        <p>Current Status</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-3" style="height:67px;padding-right: 0;">
+                <ul class="pager">
+                    <li class="previous disabled" onclick="{!c.loadPrevious}"><a href="#">&larr; Newer</a></li>
+                    <li class="next"><a href="#" onclick="{!c.loadNext}">Older &rarr;</a></li>
+                </ul>
+            </div>
 
-    </div>
+        </div>
 
         <!-- this is a new table -->
         <div class="row">
@@ -84,11 +81,12 @@
                 <div class="col-sm-1 tableHeader" id="{!item + '_date'}">{!date}</div>
             </aura:iteration>
         </div>
+
         <div class="row">
 
-            <aura:iteration items="{!v.datalist}" var="data" indexVar="index">
-                <div class="col-sm-5 table-row" style="border-left:1px solid #d8dde6;"><a href="#" data-toggle="tooltip" data-placement="top" title="" data-original-title="{!data.platformName}">{!data.platformName}</a>
-                    <aura:if isTrue="{!data.CurrentStatus != 'A'}">
+            <aura:iteration items="{!v.gridRows}" var="row" indexVar="index">
+                <div class="col-sm-5 table-row" style="border-left:1px solid #d8dde6;"><a href="#" data-toggle="tooltip" data-placement="top" title="" data-original-title="{!row.platformName}">{!row.platformName}</a>
+                    <aura:if isTrue="{!row.currentStatus != 'Active'}">
                         <img src="{!$Resource.inContactResource + '/inContactResource/fonts/disruption.png'}" class="currentStatus"/>
 
                         <aura:set attribute="else">
@@ -99,28 +97,29 @@
                     </aura:if>
                 </div>
 
-                <aura:iteration items="{!data.EventLists}" var="insidedata" indexVar="insideIndex">
+                <aura:iteration items="{!row.cellList}" var="cell" indexVar="insideIndex">
                     <div class="col-sm-1 table-row" >
-                        <aura:iteration items="{!insidedata.EventCountLists}" var="event">
-                            <div class="healthy-row"/>
-                            <aura:if isTrue="{!event.Count == 0}">
+                        <div class="healthy-row"/>
+                        <aura:iteration items="{!cell.summaryList}" var="event">
+
+
+                            <aura:if isTrue="{!event.noOfEvents == 0}">
 
                                 <aura:set attribute="else">
-                                    <aura:if isTrue="{!event.EventName == 'D'}">
-
+                                    <aura:if isTrue="{!event.eventType == 'Service Disruption'}">
 
                                         <a data-toggle="modal" data-target="#myModal">
-                                            <aura:if isTrue="{!event.Count > 1}">
-                                                <span class="badge badge-disruption">{!event.Count}</span>
+                                            <aura:if isTrue="{!event.noOfEvents > 1}">
+                                                <span class="badge badge-disruption">{!event.noOfEvents}</span>
                                             </aura:if>
                                             <img src="{!$Resource.inContactResource + '/inContactResource/fonts/disruption.png'}" class="rowImage"/>
                                         </a>
                                         <div class="row-impact row-disruption"></div>
                                         <aura:set attribute="else">
-                                            <aura:if isTrue="{!event.EventName == 'SI'}">
+                                            <aura:if isTrue="{!event.eventType == 'Performance Issue'}">
 
                                                 <a data-toggle="modal" data-target="#myModal">
-                                                    <span class="badge badge-degradation">{!event.Count}</span>
+                                                    <span class="badge badge-degradation">{!event.noOfEvents}</span>
                                                     <img src="{!$Resource.inContactResource + '/inContactResource/fonts/degradation.png'}" class="rowImage"/>
                                                 </a>
                                                 <div class="row-impact row-degradation"></div>
@@ -163,7 +162,7 @@
                             </div>
                             <div class="detailLine">
                                 <span class="titleCaps">Start Time</span>
-                                    <span>TBD</span>
+                                <span>TBD</span>
                             </div>
                             <div class="detailLine">
                                 <span class="titleCaps">End Time:</span>
@@ -190,7 +189,7 @@
                                         Start
                                     </div>
                                     <div class="impactlistbody">
-                                          Nov 6
+                                        Nov 6
                                     </div>
                                 </div>
                             </div>
@@ -205,5 +204,5 @@
         </div>
 
 
- </div>
+    </div>
 </aura:component>
