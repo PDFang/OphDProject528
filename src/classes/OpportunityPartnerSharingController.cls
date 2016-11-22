@@ -4,6 +4,8 @@
 
 public without sharing class OpportunityPartnerSharingController {
 
+    private static final String PARTNEY_TYPE_ICE = 'iCE';
+
     public class PartnerWrapper{
         @AuraEnabled
         public boolean selected{get;set;}
@@ -18,9 +20,25 @@ public without sharing class OpportunityPartnerSharingController {
 
     @AuraEnabled
     public static List<PartnerWrapper> getiCEPartners(){
+
         List<PartnerWrapper> wrapperList = new List<PartnerWrapper>();
-        for(User u : [Select Id, Name, isActive from User where accountID != null limit 10]){
-            PartnerWrapper wrapper = new PartnerWrapper(u);
+
+        List<Partner_Permission_Set__mdt> mdt = [
+                Select Permission_Set__c, Partner_Type__c
+                from Partner_Permission_Set__mdt
+                where Partner_Type__c = :PARTNEY_TYPE_ICE
+        ];
+        if(mdt.isEmpty()){
+            return wrapperList;
+        }
+
+        for(PermissionSetAssignment psa :[
+                Select AssigneeId, Assignee.Name, Assignee.isActive
+                from PermissionSetAssignment
+                where PermissionSet.Name = :mdt[0].Permission_Set__c
+                and Assignee.isActive = true
+        ]){
+            PartnerWrapper wrapper = new PartnerWrapper(psa.Assignee);
             wrapperList.add(wrapper);
         }
         return wrapperList;
@@ -36,7 +54,6 @@ public without sharing class OpportunityPartnerSharingController {
 
         List<Shared_Opportunity__c> sharedList = new List<Shared_Opportunity__c>();
         for(PartnerWrapper wrapper : partnerList){
-            system.debug('**** shareOpportunity():  wrapper - '+wrapper);
             if(!wrapper.selected){
                 continue;
             }
@@ -47,7 +64,8 @@ public without sharing class OpportunityPartnerSharingController {
         }
         system.debug('**** shareOpportunity():  partnerList - '+partnerList);
         try{
-            insert sharedList;
+            if(sharedList.size() > 0)
+                insert sharedList;
         }catch(Exception ex){
             return false;
         }

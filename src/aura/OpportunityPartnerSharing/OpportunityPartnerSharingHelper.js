@@ -16,13 +16,24 @@
 
         var opportunityId = component.get('v.opportunityId');
         var partnerList = component.get('v.partnerList');
-        var action = component.get('c.shareOpportunity');
-        action.setParams({'opportunityId': opportunityId, 'jsonString': JSON.stringify(partnerList)});
-        action.setCallback(this, function(response){
-            if(response.getState() == 'SUCCESS' && component.isValid()){
-                component.set('v.result', response.getReturnValue());
+
+        var selectedList = [];
+        partnerList.forEach(function(partner){
+            if(partner.selected){
+                selectedList.push(partner);
             }
         });
-        $A.enqueueAction(action);
+
+        if(selectedList.length > 0){
+            var action = component.get('c.shareOpportunity');
+            action.setParams({'opportunityId': opportunityId, 'jsonString': JSON.stringify(selectedList)});
+            action.setCallback(this, function(response){
+                if(response.getState() == 'SUCCESS' && component.isValid()){
+                    component.set('v.result', response.getReturnValue());
+                }
+            });
+            $A.enqueueAction(action);
+        }
+
     }
 })
