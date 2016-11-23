@@ -13,10 +13,21 @@ public without sharing class GanttChartTFSProjectController {
     public list<string> selectedTeams{get; set;}
     public list<SelectOption> TeamLists{get;set;}
 
-
+    //Comments
 
     public GanttChartTFSProjectController(){
         loadPrograms();
+    }
+
+    @RemoteAction
+    public static PageReference RedirectToProject(string projName)
+    {
+        GanttChartTFSProjectHelper helper = new GanttChartTFSProjectHelper();
+        Project__c project =  helper.GetProjectByName(projName);
+        PageReference demoPage = new PageReference('/' +  project.Id);
+        //PageReference demoPage = new PageReference('http://www.yahoo.com');
+        demoPage.setRedirect(true);
+        return demoPage;
     }
 
 
@@ -47,10 +58,17 @@ public without sharing class GanttChartTFSProjectController {
     }
 
     @RemoteAction
-    public static list<ChartData> getChartData(string programName, list<string> TeamName)
+    public static List<TFSSprintDate__c> GetIterationsForPeriod(Date startDate, Date endDate)
+    {
+        GanttChartTFSProjectHelper helper = new GanttChartTFSProjectHelper();
+        return helper.GetIterationList(startDate, endDate);
+    }
+
+    @RemoteAction
+    public static TimeLineData getChartData(string programName, list<string> TeamName)
     {
 
-
+        TimeLineData timeline = new  TimeLineData();
         List<RelatedProject__c> rpChildList = new list<RelatedProject__c>();
         list<ChartData> dataList = new list<ChartData>();
         map<string, list<Project__c>> parentProjects = new map<string, list<Project__c>>();
@@ -65,7 +83,7 @@ public without sharing class GanttChartTFSProjectController {
 
         string queryString = 'select Name, Primary_Product__c,Team__c, Summary__c,RequestedDeliveryDate__c, PercentComplete__c from Project__c Where ProjectStatus__c = \'Active/Being Worked\' and RecordType.Name = \'IT Project Request\' ';
         if(programName != '')
-                queryString +=  ' And Primary_Product__c = :programName';
+            queryString +=  ' And Primary_Product__c = :programName';
         else
                 queryString +=  ' And Primary_Product__c != null';
 
@@ -91,10 +109,10 @@ public without sharing class GanttChartTFSProjectController {
         }
 
         for(AggregateResult agr : [select Primary_Product__c, MAX(RequestedDeliveryDate__c)  maxDt
-                                    FROM Project__c where  ProjectStatus__c = 'Active/Being Worked'
-                                    And RecordType.Name = 'IT Project Request'
-                                    AND Primary_Product__c != null
-                                    Group By Primary_Product__c])
+        FROM Project__c where  ProjectStatus__c in ('Active/Being Worked', 'In Queue', 'Ready to Deploy')
+        And RecordType.Name = 'IT Project Request'
+        AND Primary_Product__c != null
+        Group By Primary_Product__c])
         {
             if(programName != '' &&   string.valueOf(agr.get('Primary_Product__c')) == programName)
             {
@@ -111,10 +129,10 @@ public without sharing class GanttChartTFSProjectController {
 
 
         for(Project__history projHist : [select Parent.Primary_Product__c, NewValue, CreatedDate
-                                    FROM Project__history where  Parent.ProjectStatus__c = 'Active/Being Worked'
-                                    And Parent.RecordType.Name = 'IT Project Request'
-                                    AND Parent.Primary_Product__c != null
-                                    Order By CreatedDate desc])
+        FROM Project__history where  Parent.ProjectStatus__c = 'Active/Being Worked'
+        And Parent.RecordType.Name = 'IT Project Request'
+        AND Parent.Primary_Product__c != null
+        Order By CreatedDate desc])
         {
             date thisCreatedDate = Date.valueOf(projHist.CreatedDate);
             if(programName != '' &&   projHist.Parent.Primary_Product__c == programName && projHist.NewValue == 'Active/Being Worked')
@@ -128,8 +146,8 @@ public without sharing class GanttChartTFSProjectController {
                     minStartDtList.put(projHist.Parent.Primary_Product__c, new list<date>{thisCreatedDate});
                 }
                 else{
-                     system.debug('program ==>' + projHist.Parent.Primary_Product__c);
-                     minStartDtList.get(projHist.Parent.Primary_Product__c).add(thisCreatedDate);
+                    system.debug('program ==>' + projHist.Parent.Primary_Product__c);
+                    minStartDtList.get(projHist.Parent.Primary_Product__c).add(thisCreatedDate);
                 }
 
             }
@@ -145,12 +163,12 @@ public without sharing class GanttChartTFSProjectController {
         }
 
         for(Project__history hist : [select ParentId, NewValue, CreatedDate from Project__history where  Parent.ProjectStatus__c = 'Active/Being Worked'
-                                    And Parent.RecordType.Name = 'IT Project Request'
-                                    AND Parent.Primary_Product__c != null
-                                    ])
+        And Parent.RecordType.Name = 'IT Project Request'
+        AND Parent.Primary_Product__c != null
+        ])
         {
             if(hist.NewValue == 'Active/Being Worked')
-                 projectStartDate.put(hist.ParentId, Date.valueOf(hist.CreatedDate));
+                projectStartDate.put(hist.ParentId, Date.valueOf(hist.CreatedDate));
         }
 
 
@@ -158,7 +176,7 @@ public without sharing class GanttChartTFSProjectController {
         {
 
 
-            ChartData data = new ChartData();
+           /** ChartData data = new ChartData();
             data.ProjectId = program;
             data.ProjectName = 'Program = ' + program;
             data.StartDateDay = minStartDt.get(program).day();
@@ -169,15 +187,16 @@ public without sharing class GanttChartTFSProjectController {
             data.EndDateYear = maxEndDt.get(program).year();
             data.DurationDays = 90;
             data.PercentComplete = 80;
-            data.Dependency = null;
-            dataList.add(data);
+            data.Dependency = program;
+            data.Type = 'Program';
+            dataList.add(data); **/
 
 
             for(Project__c proj : parentProjects.get(program))
             {
                 ChartData childData = new ChartData();
                 childData.ProjectId = proj.Name;
-                childData.ProjectName = proj.Summary__c + ' (' + proj.Team__c + ')';
+                childData.ProjectName = proj.Name + ' - ' +  proj.Summary__c;
                 childData.StartDateDay = projectStartDate.get(proj.Id).day();
                 childData.StartDateMonth = projectStartDate.get(proj.Id).month() - 1;
                 childData.StartDateYear = projectStartDate.get(proj.Id).year();
@@ -187,15 +206,28 @@ public without sharing class GanttChartTFSProjectController {
                 childData.DurationDays = null;
                 childData.PercentComplete = 50;
                 childData.Dependency = program;
+                childData.Type = proj.Team__c;
                 dataList.add(childData);
 
             }
 
         }
 
+        timeline.lstChartData = dataList;
+        date startDate = date.today();
+        date endDate = date.today().addDays(180);
+        timeline.lstSprintData = GetIterationsForPeriod(startDate, endDate);
 
-        return dataList;
+        return timeline;
     }
+
+
+    public class TimeLineData
+    {
+          List<ChartData>  lstChartData;
+          List<TFSSprintDate__c>  lstSprintData;
+    }
+
 
 
     public class ChartData
@@ -211,7 +243,10 @@ public without sharing class GanttChartTFSProjectController {
         public integer DurationDays{get; set;}
         public decimal PercentComplete{get; set;}
         public string Dependency{get;set;}
+        public string Type{get;set;}
     }
+
+
 
 
 }
