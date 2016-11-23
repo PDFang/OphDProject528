@@ -6,29 +6,31 @@
 
     <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
 
-    <div class="slds">
+    <div class="slds slds-p-around--small">
         <div class="slds-page-header" role="banner">
             <p class="slds-page-header__title slds-truncate">Partner Sharing</p>
         </div>
-
-        <table class="slds-table slds-table--bordered slds-table--fixed-layout" role="grid">
-            <thead>
-                <tr class="slds-text-title--caps">
-                    <th>Select</th>
-                    <th>Name</th>
-                </tr>
-            </thead>
-            <tbody>
-                <aura:iteration items="{!v.partnerList}" var="item">
-                    <tr class="slds-hint-parent">
-                        <td role="gridcell"><ui:inputCheckbox value="{!item.selected}"/></td>
-                        <td role="gridcell">{!item.partner.Name}</td>
+        <div class="slds-p-top--small">
+            <table class="slds-table slds-table--bordered slds-table--fixed-layout slds-table--striped" role="grid">
+                <thead>
+                    <tr class="slds-text-title--caps">
+                        <th>Select</th>
+                        <th class="slds-is-sortable">Name</th>
                     </tr>
-                </aura:iteration>
-            </tbody>
-        </table>
-
-        <ui:button class="slds-button" label="Share" press="{!c.clickShare}"/>
+                </thead>
+                <tbody>
+                    <aura:iteration items="{!v.partnerList}" var="item">
+                        <tr class="slds-hint-parent">
+                            <td role="gridcell"><ui:inputCheckbox value="{!item.selected}"/></td>
+                            <td role="gridcell">{!item.partner.Name}</td>
+                        </tr>
+                    </aura:iteration>
+                </tbody>
+            </table>
+        </div>
+        <div class="slds-p-top--small">
+            <ui:button class="slds-button" label="Share" press="{!c.clickShare}"/>
+        </div>
         <p>{!v.result}</p>
     </div>
 </aura:component>
