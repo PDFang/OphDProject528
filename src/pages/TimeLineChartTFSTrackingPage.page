@@ -1,0 +1,180 @@
+<!--
+ - Created by arnab.karsarkar on 11/18/2016.
+ -->
+<apex:page id="TimeLineChartTFSTrackingPage" controller="GanttChartTFSProjectController" standardStylesheets="false" sideBar="false">
+
+    <apex:includeScript value="{!$Resource.GoogleGanttChart}"/>
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+
+    <script>
+
+   //Comments to be updated
+    var chart;
+    var program = '';
+    var data;
+
+    jQuery(document).ready(function(){
+         initChart('', []);
+    });
+
+
+    function onChangeProj(obj)
+    {
+
+        program = obj.value == 'All' ? '' : obj.value;
+        initChart(program, []);
+        console.log('program ==>' + program);
+    }
+
+    function onChangeTeam(thisObj)
+    {
+        var teams = [];
+
+        jQuery(thisObj).closest('tr').children('td').each(function(){
+              var childObj = jQuery(this).children('input');
+              if(jQuery(childObj).is(':checked')){
+                  teams.push(jQuery(childObj).val());
+              }
+
+           }) ;
+
+         initChart(program,  teams);
+    }
+
+    function daysToMilliseconds(days) {
+      return days * 24 * 60 * 60 * 1000;
+    }
+
+    function initChart(projName, team){
+      google.charts.load('current', {'packages':['timeline']});
+      google.charts.setOnLoadCallback(function()
+      {
+        drawChart(projName, team);
+      });
+
+    }
+
+    function handleProjectClick(myvis){
+      var selection = chart.getSelection();
+      var message = '';
+      if (selection) {
+        var value = data.getValue(selection[0].row, 1);
+        var numb = value.match(/\d/g);
+        numb = numb.join("");
+        GanttChartTFSProjectController.RedirectToProject(numb, function(result, event){
+            debugger;
+            if(event.status){
+                window.location.href = result;
+            }
+            },{escape:true});
+        } ;
+      }
+
+      function drawChart(projName, team ) {
+
+       GanttChartTFSProjectController.getChartData(
+          projName,
+          team,
+          function(result, event){
+             if(event.status){
+                    data = new google.visualization.DataTable();
+                    data.addColumn({ type: 'string', id: 'Project ID' });
+                    data.addColumn({ type: 'string', id: 'Project Name' });
+                    data.addColumn({ type: 'date', id: 'Start' });
+                    data.addColumn({ type: 'date', id: 'End' });
+
+                var numOfRows;
+                var timelineColor = [];
+
+
+                 for (var i = 0; i < result.lstChartData.length; i++) {
+
+                     var r = result.lstChartData[i];
+                     console.log('result =' + JSON.stringify(r));
+                     if(i == 1)
+                     {
+                         data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, 18),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay)]);
+                     }
+                     else if(i == 4)
+                     {
+                          data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, 24),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay)]);
+                     }
+                      else if(i == 6)
+                     {
+                          data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, 26),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay)]);
+                     }
+                     else
+                     data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, r.StartDateDay),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay)]);
+
+                     if(r.Type == 'Avengers')
+                     {
+                         timelineColor.push('#f48f42');
+                     }
+                     else if(r.Type == 'Justice League')
+                     {
+                          timelineColor.push('#f4c242');
+                     }
+                     else  if(r.Type == 'X-Men')
+                        {
+                             timelineColor.push('#4289f4');
+                        }
+
+                     numOfRows = i;
+                 }
+
+
+                 for (var i = 0; i < result.lstSprintData.length; i++) {
+                     var r = result.lstSprintData[i];
+                     data.addRow(['Iterations', r.Name , new Date(r.Start_Date__c),new Date(r.End_Date__c)]);
+                     timelineColor.push('#848587');
+                 }
+
+
+                 numOfRows += 3;
+
+                var options = {
+                    height: 100*numOfRows,
+                    avoidOverlappingGridLines: false,
+                    colors : timelineColor,
+                    width:1100
+                  };
+                chart = new google.visualization.Timeline(document.getElementById('chart_div'));
+                google.visualization.events.addListener(chart, 'select', handleProjectClick);
+                chart.clearChart();
+                chart.draw(data, options);
+
+             }
+
+          },{escape:true});
+    }
+
+
+    </script>
+
+    <apex:form >
+        <div style="padding-bottom:5px;">
+
+            <apex:outputPanel id="programPanel">
+                <apex:outputPanel layout="block">Select a Program to filter &nbsp;
+                    <apex:selectList value="{!selectedProgram}" size="1" onChange="onChangeProj(this);">
+                        <apex:selectOptions value="{!programs}" />
+                    </apex:selectList>
+
+                    <br/><br/>
+
+                    <apex:outputText value="Filter Teams"></apex:outputText>
+                    <apex:selectCheckboxes title="Teams" layout="pageDirection" style="float=left;" value="{!selectedTeams}" onChange="onChangeTeam(this);" >
+                            <apex:selectOptions value="{!TeamLists}" />
+                     </apex:selectCheckboxes>
+
+                </apex:outputPanel>
+
+            </apex:outputPanel>
+        </div>
+
+        <div id="chart_div"></div>
+    </apex:form>
+</apex:page>
