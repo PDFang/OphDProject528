@@ -44,13 +44,16 @@ public class LicenseTriggerTest {
             RecordTypeId = recordTypeIdTrial,
             sfLma__Status__c = 'Trial',
             sfLma__Seats__c = 10,
+            //sfLma__Used_Licenses__c = 10,
             sfLma__License_Type__c = 'Editable',
             sfLma__Account__c = acct.Id,
-           // sfLma__Expiration__c = system.today().addDays(365),
+            sfLma__Expiration__c = Date.newInstance(1970, 1, 1),// system.today().addDays(365),
             sfLma__Install_Date__c = system.today(),
             sfLma__Package_Version__c = packVersion.Id,
             sfLma__Org_Instance__c = 'NA1',
-			sfLma__Subscriber_Org_ID__c = '00D5B0000008bOp'            
+            sfLma__Version_Number__c = '1',
+			sfLma__Subscriber_Org_ID__c = '00D5B0000008bOp',
+			sfLma__Proxy_User__c = '033i0000000ty0uaas@00ds0000003eehamaw'            
         );
         insert lic;	 
         
