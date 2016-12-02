@@ -57,6 +57,8 @@ public without sharing class GanttChartTFSProjectController {
         }
     }
 
+
+
     @RemoteAction
     public static List<TFSSprintDate__c> GetIterationsForPeriod(Date startDate, Date endDate)
     {
@@ -80,17 +82,20 @@ public without sharing class GanttChartTFSProjectController {
 
         set<string> stProjectIds = new set<string>();
 
+        String[] statusFilters = new String[]{'Active/Being Worked', 'In Queue'};
 
-        string queryString = 'select Name, Primary_Product__c,Team__c, Summary__c,RequestedDeliveryDate__c, PercentComplete__c from Project__c Where ProjectStatus__c = \'Active/Being Worked\' and RecordType.Name = \'IT Project Request\' ';
+        string queryString = 'select Name, ProjectStatus__c, Primary_Product__c,Team__c, Summary__c,RequestedDeliveryDate__c, Story_Point_Percentage_Complete__c, T_Shirt__c, PercentComplete__c from Project__c Where ProjectStatus__c in :statusFilters and RecordType.Name = \'IT Project Request\' ';
         if(programName != '')
             queryString +=  ' And Primary_Product__c = :programName';
         else
-                queryString +=  ' And Primary_Product__c != null';
+                queryString +=  ' And Primary_Product__c != null and T_Shirt__c !=null';
 
         if(TeamName.size() > 0)
             queryString += ' And Team__c in :TeamName';
 
         queryString += ' Order By Name';
+
+        System.debug(queryString);
 
         lstProjects = Database.query(queryString);
 
@@ -171,47 +176,8 @@ public without sharing class GanttChartTFSProjectController {
                 projectStartDate.put(hist.ParentId, Date.valueOf(hist.CreatedDate));
         }
 
-
-        for(String program : parentProjects.keySet())
-        {
-
-
-           /** ChartData data = new ChartData();
-            data.ProjectId = program;
-            data.ProjectName = 'Program = ' + program;
-            data.StartDateDay = minStartDt.get(program).day();
-            data.StartDateMonth =minStartDt.get(program).month() - 1;
-            data.StartDateYear = minStartDt.get(program).year();
-            data.EndDateDay = maxEndDt.get(program).day();
-            data.EndDateMonth =maxEndDt.get(program).month() - 1;
-            data.EndDateYear = maxEndDt.get(program).year();
-            data.DurationDays = 90;
-            data.PercentComplete = 80;
-            data.Dependency = program;
-            data.Type = 'Program';
-            dataList.add(data); **/
-
-
-            for(Project__c proj : parentProjects.get(program))
-            {
-                ChartData childData = new ChartData();
-                childData.ProjectId = proj.Name;
-                childData.ProjectName = proj.Name + ' - ' +  proj.Summary__c;
-                childData.StartDateDay = projectStartDate.get(proj.Id).day();
-                childData.StartDateMonth = projectStartDate.get(proj.Id).month() - 1;
-                childData.StartDateYear = projectStartDate.get(proj.Id).year();
-                childData.EndDateDay = proj.RequestedDeliveryDate__c.day();
-                childData.EndDateMonth = proj.RequestedDeliveryDate__c.month() - 1;
-                childData.EndDateYear = proj.RequestedDeliveryDate__c.year();
-                childData.DurationDays = null;
-                childData.PercentComplete = 50;
-                childData.Dependency = program;
-                childData.Type = proj.Team__c;
-                dataList.add(childData);
-
-            }
-
-        }
+        GanttChartTFSProjectHelper helper = new GanttChartTFSProjectHelper();
+        dataList = helper.GetProjectsInPriority(parentProjects) ;
 
         timeline.lstChartData = dataList;
         date startDate = date.today();
@@ -227,26 +193,4 @@ public without sharing class GanttChartTFSProjectController {
           List<ChartData>  lstChartData;
           List<TFSSprintDate__c>  lstSprintData;
     }
-
-
-
-    public class ChartData
-    {
-        public string  ProjectId {get; set;}
-        public string  ProjectName {get; set;}
-        public integer  StartDateDay{get; set;}
-        public integer  StartDateMonth{get; set;}
-        public integer  StartDateYear{get; set;}
-        public integer  EndDateDay{get; set;}
-        public integer  EndDateMonth{get; set;}
-        public integer  EndDateYear{get; set;}
-        public integer DurationDays{get; set;}
-        public decimal PercentComplete{get; set;}
-        public string Dependency{get;set;}
-        public string Type{get;set;}
-    }
-
-
-
-
 }
