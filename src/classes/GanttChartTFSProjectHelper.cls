@@ -6,7 +6,7 @@ public with sharing class GanttChartTFSProjectHelper {
 
     public  List<TFSSprintDate__c>   GetIterationList(date startDate, date endDate)
     {
-        List<TFSSprintDate__c> lstSprints =   [Select Name, Start_Date__c, End_Date__c from TFSSprintDate__c where Start_Date__c <=  :startDate  and  End_Date__c  <=  :endDate order by Start_Date__c];
+        List<TFSSprintDate__c> lstSprints = [Select Name, Start_Date__c, End_Date__c from TFSSprintDate__c where Start_Date__c <= NEXT_N_MONTHS:6  and  End_Date__c  >=  TODAY order by Start_Date__c];
         return lstSprints;
     }
 
@@ -31,7 +31,7 @@ public with sharing class GanttChartTFSProjectHelper {
     }
 
     public list<ChartData> GetProjectsInPriority(map<string, list<Project__c>> parentProjects)
-    {       integer i;
+    {
         list<ChartData> dataList = new list<ChartData>();
         //get ideal team list
         Map<String, Project_Sprint_Size__c> sprintMap = GetSprintSizeList();
@@ -52,7 +52,7 @@ public with sharing class GanttChartTFSProjectHelper {
                 childData.ProjectId = proj.Name;
                 childData.ProjectName = proj.Name + ' - ' + proj.Summary__c;
 
-                if(proj.ProjectStatus__c == 'New'){
+                if(proj.ProjectStatus__c == 'In Queue'){
                     projectStartDate = getNextIterationStart(Date.today());
                 }
                 else{

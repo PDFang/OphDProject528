@@ -18,6 +18,7 @@
 
     jQuery(document).ready(function(){
          initChart('', []);
+         InitUI();
     });
 
 
@@ -54,8 +55,15 @@
       {
         drawChart(projName, team);
       });
+    }
+
+    function InitUI(){
+        //set backbround colors
 
     }
+
+
+
 
     function handleProjectClick(myvis){
       var selection = chart.getSelection();
@@ -65,7 +73,6 @@
         var numb = value.match(/\d/g);
         numb = numb.join("");
         GanttChartTFSProjectController.RedirectToProject(numb, function(result, event){
-            debugger;
             if(event.status){
                 window.location.href = result;
             }
@@ -111,7 +118,7 @@
 
                      if(r.Type == 'Avengers')
                      {
-                         timelineColor.push('#f48f42');
+                         timelineColor.push('#E68000');
                      }
                      else if(r.Type == 'Justice League')
                      {
@@ -124,7 +131,6 @@
 
                      numOfRows = i;
                  }
-
 
                  for (var i = 0; i < result.lstSprintData.length; i++) {
                      var r = result.lstSprintData[i];
@@ -150,11 +156,41 @@
 
           },{escape:true});
     }
-
-
+    function changeColor(elem){
+        var pElem = elem.parentElement;
+        if(elem.checked){
+            pElem.style.backgroundColor = "red";
+        }else{
+            pElem.style.backgroundColor = "";
+        }
+    }
     </script>
 
     <apex:form >
+        <style>
+            body {
+            font-family: Roboto;
+            }
+            input[value="Avengers"] + label
+            {
+                background-color:#E68000;
+            }
+            input[value="Justice League"] + label
+            {
+                background-color:#f4c242;
+            }
+            input[value="X-Men"] + label
+            {
+                background-color:#4289f4;
+            }
+             input[value="Operations"] + label
+            {
+                background-color:#a20077;
+            }
+            .selectedFilter label {color:white;}
+
+        </style>
+
         <div style="padding-bottom:5px;">
 
             <apex:outputPanel id="programPanel">
@@ -166,7 +202,7 @@
                     <br/><br/>
 
                     <apex:outputText value="Filter Teams"></apex:outputText>
-                    <apex:selectCheckboxes title="Teams" layout="pageDirection" style="float=left;" value="{!selectedTeams}" onChange="onChangeTeam(this);" >
+                    <apex:selectCheckboxes title="Teams"  styleClass="selectedFilter"  layout="pageDirection" style="float=left;" value="{!selectedTeams}" onChange="onChangeTeam(this);" >
                             <apex:selectOptions value="{!TeamLists}" />
                      </apex:selectCheckboxes>
 
