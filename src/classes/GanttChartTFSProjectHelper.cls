@@ -30,9 +30,9 @@ public with sharing class GanttChartTFSProjectHelper {
         return sprintSize;
     }
 
-    public list<ChartData> GetProjectsInPriority(map<string, list<Project__c>> parentProjects)
+    public list<ChartData2> GetProjectsInPriority(map<string, list<Project__c>> parentProjects)
     {
-        list<ChartData> dataList = new list<ChartData>();
+        list<ChartData2> dataList = new list<ChartData2>();
         //get ideal team list
         Map<String, Project_Sprint_Size__c> sprintMap = GetSprintSizeList();
         //get t-shirt iteration size
@@ -48,7 +48,7 @@ public with sharing class GanttChartTFSProjectHelper {
             long sprintLength;
 
             for (Project__c proj : parentProjects.get(program)) {
-                ChartData childData = new ChartData();
+                ChartData2 childData = new ChartData2();
                 childData.ProjectId = proj.Name;
                 childData.ProjectName = proj.Name + ' - ' + proj.Summary__c;
 
@@ -72,11 +72,14 @@ public with sharing class GanttChartTFSProjectHelper {
                 childData.EndDateDay = projectEndDate.day();
                 childData.EndDateMonth = projectEndDate.month();
                 childData.EndDateYear = projectEndDate.year();
+                childData.StartDate = projectStartDate;
+                childData.EndDate = projectEndDate;
                 childData.DurationDays = null;
                 childData.PercentComplete = proj.Story_Point_Percentage_Complete__c;
                 childData.Dependency = program;
                 childData.Type = proj.Team__c;
                 dataList.add(childData);
+
             }
         }
         //begin iterating through the list by team assign based on capacity
@@ -101,7 +104,7 @@ public with sharing class GanttChartTFSProjectHelper {
     {
         //need to update this with logic for team capacity
 
-        List<TFSSprintDate__c> lstIterations =   [Select Name, Start_Date__c, End_Date__c from TFSSprintDate__c where Start_Date__c <=  :startDate  and  End_Date__c  >  :startDate];
+        List<TFSSprintDate__c> lstIterations =   [Select Name, Start_Date__c, End_Date__c from TFSSprintDate__c where Start_Date__c >=  :startDate order by Start_Date__c LIMIT 1];
         if (lstIterations.size() == 1)
         {
             TFSSprintDate__c iteration =  lstIterations.get(0);

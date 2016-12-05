@@ -72,7 +72,7 @@ public without sharing class GanttChartTFSProjectController {
 
         TimeLineData timeline = new  TimeLineData();
         List<RelatedProject__c> rpChildList = new list<RelatedProject__c>();
-        list<ChartData> dataList = new list<ChartData>();
+        list<ChartData2> dataList = new list<ChartData2>();
         map<string, list<Project__c>> parentProjects = new map<string, list<Project__c>>();
         list<Project__c> lstProjects  = new list<Project__c>();
         map<string, list<date>> minStartDtList = new map<string, list<date>>();
@@ -185,12 +185,5 @@ public without sharing class GanttChartTFSProjectController {
         timeline.lstSprintData = GetIterationsForPeriod(startDate, endDate);
 
         return timeline;
-    }
-
-
-    public class TimeLineData
-    {
-          List<ChartData>  lstChartData;
-          List<TFSSprintDate__c>  lstSprintData;
     }
 }

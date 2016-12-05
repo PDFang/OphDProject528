@@ -92,6 +92,7 @@
                     data.addColumn({ type: 'string', id: 'Project Name' });
                     data.addColumn({ type: 'date', id: 'Start' });
                     data.addColumn({ type: 'date', id: 'End' });
+                    data.addColumn({type: 'string', role: 'tooltip', 'p': {'html': true}});
 
                 var numOfRows;
                 var timelineColor = [];
@@ -103,19 +104,22 @@
                      console.log('result =' + JSON.stringify(r));
                      if(i == 1)
                      {
-                         data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, 18),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay)]);
+                         //data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, r.StartDateDay),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay)]);
+                         data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDate),new Date(r.EndDate), buildPopUp(r)]);
                      }
                      else if(i == 4)
                      {
-                          data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, 24),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay)]);
+                          //data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, r.StartDateDay),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay)]);
+                          data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDate),new Date(r.EndDate),buildPopUp(r)]);
                      }
                       else if(i == 6)
                      {
-                          data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, 26),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay)]);
+                          //data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, r.StartDateDay),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay)]);
+                          data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDate),new Date(r.EndDate),buildPopUp(r)]);
                      }
                      else
-                     data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, r.StartDateDay),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay)]);
-
+                     //data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, r.StartDateDay),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay)]);
+                     data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDate),new Date(r.EndDate), buildPopUp(r)]);
                      if(r.Type == 'Avengers')
                      {
                          timelineColor.push('#E68000');
@@ -134,7 +138,8 @@
 
                  for (var i = 0; i < result.lstSprintData.length; i++) {
                      var r = result.lstSprintData[i];
-                     data.addRow(['Iterations', r.Name , new Date(r.Start_Date__c),new Date(r.End_Date__c)]);
+                     data.addRow(['Iterations', r.Name , new Date(r.Start_Date__c),new Date(r.End_Date__c),"Sprint"]);
+                     console.log("start date :" + r.Start_Date__c);
                      timelineColor.push('#848587');
                  }
 
@@ -152,7 +157,13 @@
                 chart.clearChart();
                 chart.draw(data, options);
 
-             }
+                function myHandler(e){
+                if(e.row != null){
+                    $(".google-visualization-tooltip").html(data.getValue(e.row,4)).css({width:"auto",height:"auto"});
+                }
+            }
+            google.visualization.events.addListener(chart, 'onmouseover', myHandler);
+           }
 
           },{escape:true});
     }
@@ -164,6 +175,20 @@
             pElem.style.backgroundColor = "";
         }
     }
+
+    function buildPopUp(r){
+
+        var buffer;
+        buffer = "<label>Project #</label></br>";
+        buffer += "<label> Project Title: " +  r.ProjectName + "</label></br>";
+        buffer += "<label> Project Status: In Queue" + "</label></br>";
+        buffer += "<label> Project Channel: " +  r.Dependency + "</label></br>";
+        buffer += "<label> Project Execution Team: " +  r.Type + "</label></br>";
+        buffer += "<label> T Shirt Size: Medium" + "</label></br>";
+        buffer += "<label> Project Manager: Tyson Whetton </label></br>";
+        buffer += "<label> Business Analyst: John Doucette" + "</label></br>";
+        return buffer;
+     }
     </script>
 
     <apex:form >
