@@ -4,9 +4,12 @@ public without sharing class CommunityHeaderController {
     public static List<Community_Permission_Sets__c> getCommunityLinks()
     {
         //Retrieve all community header links
-        Community_Permission_Sets__c[] communityLinks = [SELECT Id, Community_Name__c, Community_URL__c, Permission_Set__c
-                                                         FROM Community_Permission_Sets__c
-                                                         ORDER BY Community_Name__c];
+        Community_Permission_Sets__c[] communityLinks = [
+                SELECT Id, Community_Name__c, Community_URL__c, Permission_Set__c
+                FROM Community_Permission_Sets__c
+                where IsActive__c = true
+                ORDER BY Community_Name__c
+        ];
         Set<string> permissionStrings = new Set<string>();
         for(Community_Permission_Sets__c commLink : communityLinks)
         {
