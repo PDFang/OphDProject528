@@ -29,6 +29,7 @@ public with sharing class WorkItemCreateController {
                 List<Schema.PicklistEntry> fieldResult = describeField.getPicklistValues();
                 system.debug('fieldResult =>' + fieldResult);
                 system.debug('fieldResult =>' + fieldResult);
+                this.picklistOptions.add('--None--');
                 for (Schema.PicklistEntry pickList : fieldResult) {
                     this.picklistOptions.add(pickList.getLabel());
                 }

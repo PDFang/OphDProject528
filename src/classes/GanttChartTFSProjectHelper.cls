@@ -4,10 +4,144 @@
 
 public with sharing class GanttChartTFSProjectHelper {
 
-    public  List<TFSSprintDate__c>   GetIterationList(date startDate, date endDate)
+
+    public static list<ChartData2> GetProjectsInPriority(list<string>  programName, list<string> TeamName)
     {
-        List<TFSSprintDate__c> lstSprints = [Select Name, Start_Date__c, End_Date__c from TFSSprintDate__c where Start_Date__c <= NEXT_N_MONTHS:6  and  End_Date__c  >=  TODAY order by Start_Date__c];
-        return lstSprints;
+
+        list<ChartData2> dataList = new list<ChartData2>();
+        list<Project__c> lstProjects  = queryProject(programName, TeamName);
+        map<string, list<Project__c>> mpProjectsByTeam = GetProjectsByTeam(lstProjects);
+        map<integer, string> sprintMaps = mapSprints();
+
+        //iterate through the list due date based on size of project and current status
+        for(string team : mpProjectsByTeam.keySet())
+        {
+
+            TeamSizeMap__c teamSize = TeamSizeMap__c.getValues(team);
+            decimal idealTeam = teamSize.IdealTeamSize__c;
+            double estimate = 0.0;
+            for(Project__c proj : mpProjectsByTeam.get(team)){
+                ProjectSizeMap__c projSize = ProjectSizeMap__c.getValues(proj.T_Shirt__c);
+                double runningEstimate = projSize.Estimate__c + estimate;
+                estimate = projSize.Estimate__c;
+
+                integer sprintOut = integer.valueOf(runningEstimate/idealTeam) + 1;
+                if(proj.ProjectStatus__c == 'Active/Being Worked')
+                    sprintOut = 0;
+                string sprint = sprintMaps.get(sprintOut);
+                SprintDateMap__c sprintdate = SprintDateMap__c.getValues(sprint);
+                date projectEndDate =  sprintdate.EndDate__c;
+                date sprintStartDate = sprintdate.StartDate__c;
+                integer datediff = sprintStartDate.daysBetween(projectEndDate);
+                decimal estimatedDuration = (datediff * estimate).round();
+                date projectStartDate = projectEndDate.addDays(-integer.valueOf(estimatedDuration));
+
+                ChartData2 childData = new ChartData2();
+                childData.ProjectId = proj.Name;
+                childData.ProjectName = proj.Name + ' - ' + proj.Summary__c;
+                childData.StartDate = projectStartDate;
+                childData.EndDate = projectEndDate;
+                childData.DurationDays = integer.valueOf(estimatedDuration);
+                childData.PercentComplete = proj.Story_Point_Percentage_Complete__c;
+                childData.ProjectManager = proj.ProjectManager__r.Name;
+                childData.Team = team;
+                childData.TShirtSize = proj.T_Shirt__c;
+                childData.ProductChannel = proj.Primary_Product__c;
+                childData.ProjectStatus = proj.ProjectStatus__c;
+                ProgramColorMapping__c colorProgram = ProgramColorMapping__c.getValues(proj.Primary_Product__c);
+                childData.ProgramColor = colorProgram.Color__c;
+                TeamColorMapping__c colorTeam = TeamColorMapping__c.getValues(proj.Team__c);
+                childData.TeamColor = colorTeam.Color__c;
+                dataList.add(childData);
+            }
+        }
+
+        //begin iterating through the list by team assign based on capacity
+        return dataList;
+    }
+
+
+    public static list<Project__c> queryProject(list<string>  programName, list<string> TeamName)
+    {
+        list<Project__c> lstProjects  = new list<Project__c>();
+
+        String[] statusFilters = new String[]{'Active/Being Worked', 'In Queue'};
+
+        string queryString = 'select Name, ProjectManager__r.Name, ProjectStatus__c,BattingOrder__c, Primary_Product__c,Team__c, Summary__c,RequestedDeliveryDate__c, Story_Point_Percentage_Complete__c, T_Shirt__c, PercentComplete__c from Project__c Where ProjectStatus__c in :statusFilters and RecordType.Name = \'IT Project Request\' ';
+        if(programName.size() > 0)
+            queryString +=  ' And Primary_Product__c in :programName';
+        else
+                queryString +=  ' And Primary_Product__c != null and T_Shirt__c !=null';
+
+        if(TeamName.size() > 0)
+            queryString += ' And Team__c in :TeamName';
+
+        queryString += ' Order By BattingOrder__c asc';
+
+        System.debug(queryString);
+
+        lstProjects = Database.query(queryString);
+
+
+
+        return lstProjects;
+
+    }
+
+    private static map<string, list<Project__c>> GetProjectsByTeam(list<Project__c> lstProjects)
+    {
+        map<string, list<Project__c>> mpProjectsByTeam = new map<string, list<Project__c>>();
+        ProjectCustomSort[] sortedPrjectList = new list<ProjectCustomSort>();
+        for(Project__c proj : lstProjects){
+            if(proj.BattingOrder__c == null)
+                proj.BattingOrder__c = 0;
+            if(proj.ProjectStatus__c == 'Active/Being Worked')
+                proj.BattingOrder__c = -1;
+            sortedPrjectList.add(new ProjectCustomSort(proj));
+        }
+        sortedPrjectList.sort();
+
+        for(ProjectCustomSort projSorted : sortedPrjectList){
+            if(mpProjectsByTeam.containsKey(projSorted.project.Team__c))
+            {
+                mpProjectsByTeam.get(projSorted.project.Team__c).add(projSorted.project);
+            }
+            else
+            {
+                mpProjectsByTeam.put(projSorted.project.Team__c, new list<Project__c>{projSorted.project});
+            }
+        }
+
+        return mpProjectsByTeam;
+
+    }
+
+    private static map<integer, string> mapSprints(){
+        map<string, SprintDateMap__c> mpSprintMaps =   SprintDateMap__c.getall();
+        map<string, SprintDateMap__c> tempMap = new map<string, SprintDateMap__c>();
+        tempMap.putAll(mpSprintMaps);
+        list<string> sprintNames = new list<string>();
+        sprintNames.addAll(mpSprintMaps.keySet());
+        sprintNames.sort();
+
+        map<integer, string> mpSprint = new map<integer, string>();
+        date currentDate = system.today();
+
+        for(SprintDateMap__c dateMap : mpSprintMaps.values()){
+            if(dateMap.EndDate__c <= currentDate){
+                tempMap.remove(dateMap.Sprint__c);
+            }
+        }
+        integer currentSprint = 0;
+        for (string sprint: sprintNames){
+            if(tempMap.containsKey(sprint)){
+                mpSprint.put(currentSprint, sprint);
+                currentSprint++;
+            }
+        }
+
+        return mpSprint;
+
     }
 
     public Project__c GetProjectByName (string Name){
@@ -16,103 +150,20 @@ public with sharing class GanttChartTFSProjectHelper {
         return project;
     }
 
-    public List<Project_Ideal_Team__c> GetIdealTeamList (){
-        List<Project_Ideal_Team__c> lst  = [Select Name, Ideal_Teams__c from Project_Ideal_Team__c];
-        return lst;
-    }
-
-    public Map<String, Project_Sprint_Size__c> GetSprintSizeList() {
-        Map<String, Project_Sprint_Size__c> sprintSize = new Map<String, Project_Sprint_Size__c>();
-        for (Project_Sprint_Size__c sprint :[SELECT Name, Estimate__c FROM Project_Sprint_Size__c])
-        {
-            sprintSize.put(sprint.Name, sprint);
-        }
-        return sprintSize;
-    }
-
-    public list<ChartData2> GetProjectsInPriority(map<string, list<Project__c>> parentProjects)
+    public static list<SprintDateMap__c>   GetIterationList()
     {
-        list<ChartData2> dataList = new list<ChartData2>();
-        //get ideal team list
-        Map<String, Project_Sprint_Size__c> sprintMap = GetSprintSizeList();
-        //get t-shirt iteration size
-        List<Project_Ideal_Team__c> idealTeamLst = GetIdealTeamList();
-
-        //start calculating delivery date
-        //iterate through the list due date based on size of project and current status
-
-        for(String program : parentProjects.keySet())
+        list<SprintDateMap__c> iterationDates = SprintDateMap__c.getall().values();
+        list<SprintDateMap__c> lstSprints = new list<SprintDateMap__c>();
+        for(SprintDateMap__c sp : iterationDates)
         {
-            Date projectStartDate;
-            Date projectEndDate;
-            long sprintLength;
-
-            for (Project__c proj : parentProjects.get(program)) {
-                ChartData2 childData = new ChartData2();
-                childData.ProjectId = proj.Name;
-                childData.ProjectName = proj.Name + ' - ' + proj.Summary__c;
-
-                if(proj.ProjectStatus__c == 'In Queue'){
-                    projectStartDate = getNextIterationStart(Date.today());
-                }
-                else{
-                    projectStartDate = Date.today();  // need to pass this in for existing projects
-                }
-                //get number of sprints
-                System.debug(sprintMap);
-                System.debug(proj.T_Shirt__c);
-                Project_Sprint_Size__c sprint =  sprintMap.get(proj.T_Shirt__c);
-                sprintLength = sprint.Estimate__c.round(System.RoundingMode.CEILING);
-
-                projectEndDate = getIterationEndDate(sprintLength,projectStartDate);
-
-                childData.StartDateDay = projectStartDate.day();
-                childData.StartDateMonth = projectStartDate.month();
-                childData.StartDateYear = projectStartDate.year();
-                childData.EndDateDay = projectEndDate.day();
-                childData.EndDateMonth = projectEndDate.month();
-                childData.EndDateYear = projectEndDate.year();
-                childData.StartDate = projectStartDate;
-                childData.EndDate = projectEndDate;
-                childData.DurationDays = null;
-                childData.PercentComplete = proj.Story_Point_Percentage_Complete__c;
-                childData.Dependency = program;
-                childData.Type = proj.Team__c;
-                dataList.add(childData);
-
+            if(sp.EndDate__c >= system.today())
+            {
+                lstSprints.add(sp);
             }
         }
-        //begin iterating through the list by team assign based on capacity
-        return dataList;
+        return lstSprints;
     }
 
-    public date getIterationEndDate(long iterations, date startDate){
 
-        Date projectEndDate;
-        //calculate the project end date
-        projectEndDate = startDate.addDays(iterations.intValue() * 21);  // jump ahead to the estimated completion date
-        //go get the actual sprint end date
-        TFSSprintDate__c actualSprintEnd =   [Select Name, Start_Date__c, End_Date__c from TFSSprintDate__c where Start_Date__c >=  :projectEndDate order by Start_Date__c LIMIT 1];
-        if (actualSprintEnd != null)
-        {
-            projectEndDate = actualSprintEnd.End_Date__c;
-        }
-        return projectEndDate;
-    }
-
-    public date getNextIterationStart(date startDate)
-    {
-        //need to update this with logic for team capacity
-
-        List<TFSSprintDate__c> lstIterations =   [Select Name, Start_Date__c, End_Date__c from TFSSprintDate__c where Start_Date__c >=  :startDate order by Start_Date__c LIMIT 1];
-        if (lstIterations.size() == 1)
-        {
-            TFSSprintDate__c iteration =  lstIterations.get(0);
-            return iteration.Start_Date__c;
-        }
-        else {
-            return Date.today();  //need to pick a better default
-        }
-    }
 
 }

@@ -17,9 +17,9 @@
 		</div>
         <div class="navigation">
             {!v.navBar}
+            <c:CommunityNavBar />
         </div>
         <div class="newHeader">
-            <p>this is a test</p>
 			{!v.newHeader}
         </div> 
         <div class="mainContentArea">

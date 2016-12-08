@@ -13,35 +13,60 @@
 
    //Comments to be updated
     var chart;
-    var program = '';
+    var program = [];
+    var teams = [];
     var data;
 
     jQuery(document).ready(function(){
-         initChart('', []);
-         InitUI();
+         initChart([], []);
     });
-
 
     function onChangeProj(obj)
     {
+        program = [];
+        var parentTbl = jQuery(obj).closest('tr').closest('table');
+        var programChkboxes = [];
+        jQuery(parentTbl).children('tbody').children('tr').each(function(){
+              var childObj = jQuery(this).children('td').children('input');
 
-        program = obj.value == 'All' ? '' : obj.value;
-        initChart(program, []);
+              if(jQuery(childObj).is(':checked')){
+                  programChkboxes.push(childObj);
+                  program.push(jQuery(childObj).val());
+              }
+           }) ;
+        if(program == ''){
+            alert("You cannot uncheck all checkboxes.");
+            jQuery(programChkboxes).each(function(){
+             jQuery(this).prop('checked', true);
+            });
+            return;
+        }
+
+        initChart(program, teams);
         console.log('program ==>' + program);
     }
 
     function onChangeTeam(thisObj)
     {
-        var teams = [];
+        teams = [];
+        var parentTbl = jQuery(thisObj).closest('tr').closest('table');
+        var teamCheckboxes = [];
+        jQuery(parentTbl).children('tbody').children('tr').each(function(){
+              var childObj = jQuery(this).children('td').children('input');
 
-        jQuery(thisObj).closest('tr').children('td').each(function(){
-              var childObj = jQuery(this).children('input');
               if(jQuery(childObj).is(':checked')){
+                  teamCheckboxes.push(childObj);
                   teams.push(jQuery(childObj).val());
               }
-
            }) ;
-
+         if(teams == ''){
+            alert("You cannot uncheck all checkboxes.");
+            jQuery(teamCheckboxes).each(function(){
+                jQuery(this).prop('checked', true);
+            });
+            return;
+        }
+         console.log('teams ==>' + teams);
          initChart(program,  teams);
     }
 
@@ -57,14 +82,6 @@
       });
     }
 
-    function InitUI(){
-        //set backbround colors
-
-    }
-
-
-
-
     function handleProjectClick(myvis){
       var selection = chart.getSelection();
       var message = '';
@@ -76,105 +93,142 @@
             if(event.status){
                 window.location.href = result;
             }
-            },{escape:true});
-        } ;
+            },{escape:true}
+        );
       }
-
+    }
       function drawChart(projName, team ) {
-
-       GanttChartTFSProjectController.getChartData(
+        GanttChartTFSProjectController.getChartData(
           projName,
           team,
           function(result, event){
              if(event.status){
-                    data = new google.visualization.DataTable();
-                    data.addColumn({ type: 'string', id: 'Project ID' });
-                    data.addColumn({ type: 'string', id: 'Project Name' });
-                    data.addColumn({ type: 'date', id: 'Start' });
-                    data.addColumn({ type: 'date', id: 'End' });
-                    data.addColumn({type: 'string', role: 'tooltip', 'p': {'html': true}});
 
-                var numOfRows;
-                var timelineColor = [];
-
-
-                 for (var i = 0; i < result.lstChartData.length; i++) {
-
-                     var r = result.lstChartData[i];
-                     console.log('result =' + JSON.stringify(r));
-                     if(i == 1)
-                     {
-                         //data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, r.StartDateDay),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay)]);
-                         data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDate),new Date(r.EndDate), buildPopUp(r)]);
-                     }
-                     else if(i == 4)
-                     {
-                          //data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, r.StartDateDay),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay)]);
-                          data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDate),new Date(r.EndDate),buildPopUp(r)]);
-                     }
-                      else if(i == 6)
-                     {
-                          //data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, r.StartDateDay),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay)]);
-                          data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDate),new Date(r.EndDate),buildPopUp(r)]);
-                     }
-                     else
-                     //data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDateYear, r.StartDateMonth, r.StartDateDay),new Date(r.EndDateYear, r.EndDateMonth, r.EndDateDay)]);
-                     data.addRow([r.Dependency, r.ProjectName, new Date(r.StartDate),new Date(r.EndDate), buildPopUp(r)]);
-                     if(r.Type == 'Avengers')
-                     {
-                         timelineColor.push('#E68000');
-                     }
-                     else if(r.Type == 'Justice League')
-                     {
-                          timelineColor.push('#f4c242');
-                     }
-                     else  if(r.Type == 'X-Men')
-                        {
-                             timelineColor.push('#4289f4');
-                        }
-
-                     numOfRows = i;
-                 }
-
-                 for (var i = 0; i < result.lstSprintData.length; i++) {
-                     var r = result.lstSprintData[i];
-                     data.addRow(['Iterations', r.Name , new Date(r.Start_Date__c),new Date(r.End_Date__c),"Sprint"]);
-                     console.log("start date :" + r.Start_Date__c);
-                     timelineColor.push('#848587');
-                 }
+                drawChartByTeam(result);
+                drawChartByProgram(result);
+             }
+          },
+          {escape:true}
+        );
+      }
 
 
-                 numOfRows += 3;
+    function drawChartByTeam(result){
+        var numOfRows;
+        var timelineColor = [];
+        data = new google.visualization.DataTable();
+        data.addColumn({ type: 'string', id: 'Project ID' });
+        data.addColumn({ type: 'string', id: 'Project Name' });
+        data.addColumn({ type: 'date', id: 'Start' });
+        data.addColumn({ type: 'date', id: 'End' });
+        data.addColumn({type: 'string', role: 'tooltip', 'p': {'html': true}});
 
-                var options = {
-                    height: 100*numOfRows,
-                    avoidOverlappingGridLines: false,
-                    colors : timelineColor,
-                    width:1100
-                  };
-                chart = new google.visualization.Timeline(document.getElementById('chart_div'));
-                google.visualization.events.addListener(chart, 'select', handleProjectClick);
-                chart.clearChart();
-                chart.draw(data, options);
+        for (var i = 0; i < result.lstChartData.length; i++) {
+             var r = result.lstChartData[i];
+             console.log('result =' + JSON.stringify(r));
+             data.addRow([r.Team, r.ProjectName, new Date(r.StartDate),new Date(r.EndDate), buildPopUp(r)]);
+             timelineColor.push(r.ProgramColor);
+             numOfRows = i;
 
-                function myHandler(e){
-                if(e.row != null){
-                    $(".google-visualization-tooltip").html(data.getValue(e.row,4)).css({width:"auto",height:"auto"});
-                }
-            }
-            google.visualization.events.addListener(chart, 'onmouseover', myHandler);
-           }
+            jQuery("input[value='" + r.ProductChannel + "']").next().css({"background-color": r.ProgramColor,"font-weight" : "normal"});
 
-          },{escape:true});
+             r = '';
+
+        }
+
+        console.log('timelineColor =>' + timelineColor);
+
+
+        for (var i = 0; i < result.lstSprintData.length; i++) {
+             var r = result.lstSprintData[i];
+             data.addRow(['Iterations', r.Sprint__c , new Date(r.StartDate__c),new Date(r.EndDate__c),r.Sprint__c]);
+             timelineColor.push('#848587');
+              numOfRows = i;
+        }
+        numOfRows += 3;
+        var options = {
+             height: 60*numOfRows,
+             avoidOverlappingGridLines: false,
+             colors : timelineColor,
+             width:1100
+        };
+
+
+
+        chart = new google.visualization.Timeline(document.getElementById('team_div'));
+        google.visualization.events.addListener(chart, 'select', handleProjectClick);
+        chart.clearChart();
+        chart.draw(data, options);
+        google.visualization.events.addListener(chart, 'onmouseover', myHandler);
+
     }
-    function changeColor(elem){
-        var pElem = elem.parentElement;
-        if(elem.checked){
-            pElem.style.backgroundColor = "red";
-        }else{
-            pElem.style.backgroundColor = "";
+
+    function myHandler(e){
+             if(e.row != null){
+                $(".google-visualization-tooltip").html(data.getValue(e.row,4)).css({width:"auto",height:"auto"});
+             }
+     }
+
+    function drawChartByProgram(result){
+        var numOfRows;
+        var timelineColor = [];
+        var data = new google.visualization.DataTable();
+        data.addColumn({ type: 'string', id: 'Project ID' });
+        data.addColumn({ type: 'string', id: 'Project Name' });
+        data.addColumn({ type: 'date', id: 'Start' });
+        data.addColumn({ type: 'date', id: 'End' });
+        data.addColumn({type: 'string', role: 'tooltip', 'p': {'html': true}});
+
+        result.lstChartData.sort(function(a, b){
+            var channelA=a.ProductChannel.toLowerCase(), channelB=b.ProductChannel.toLowerCase();
+            if (channelA < channelB) //sort string ascending
+                return -1
+            if (channelA > channelB)
+                return 1
+            return 0 //default return value (no sorting)
+        });
+
+
+        for (var i = 0; i < result.lstChartData.length; i++) {
+
+             var r = result.lstChartData[i];
+             console.log('result =' + JSON.stringify(r));
+             data.addRow([r.ProductChannel, r.ProjectName, new Date(r.StartDate),new Date(r.EndDate), buildPopUp(r)]);
+             timelineColor.push(r.TeamColor);
+             jQuery("input[value='" + r.Team + "']").next().css({"background-color": r.TeamColor, "font-weight" : "normal"});
+             numOfRows = i;
+             r = '';
+        }
+
+
+        for (var i = 0; i < result.lstSprintData.length; i++) {
+             var r = result.lstSprintData[i];
+             data.addRow(['Iterations', r.Sprint__c , new Date(r.StartDate__c),new Date(r.EndDate__c),r.Sprint__c]);
+             timelineColor.push('#848587');
+        }
+        numOfRows += 3;
+        var options = {
+             height: 50*numOfRows,
+             avoidOverlappingGridLines: false,
+             colors : timelineColor,
+             width:1100
+        };
+
+
+
+        chart = new google.visualization.Timeline(document.getElementById('program_div'));
+        google.visualization.events.addListener(chart, 'select', handleProjectClick);
+        chart.clearChart();
+        chart.draw(data, options);
+        google.visualization.events.addListener(chart, 'onmouseover', myHandler);
+        function myHandler(e){
+             if(e.row != null){
+                $(".google-visualization-tooltip").html(data.getValue(e.row,4)).css({width:"auto",height:"auto"});
+             }
         }
     }
+
+
 
     function buildPopUp(r){
 
@@ -196,46 +250,34 @@
             body {
             font-family: Roboto;
             }
-            input[value="Avengers"] + label
+
+            fieldset
             {
-                background-color:#E68000;
+                width:30%
             }
-            input[value="Justice League"] + label
-            {
-                background-color:#f4c242;
-            }
-            input[value="X-Men"] + label
-            {
-                background-color:#4289f4;
-            }
-             input[value="Operations"] + label
-            {
-                background-color:#a20077;
-            }
-            .selectedFilter label {color:white;}
 
         </style>
 
-        <div style="padding-bottom:5px;">
+        <div style="padding-bottom: 5px;position: relative; left: 21%; width:65%">
 
-            <apex:outputPanel id="programPanel">
-                <apex:outputPanel layout="block">Select a Program to filter &nbsp;
-                    <apex:selectList value="{!selectedProgram}" size="1" onChange="onChangeProj(this);">
+            <div class="row">
+                <div class="col-sm-4 teamList">
+
+                   <label>Teams</label>
+                    <apex:selectCheckboxes title="Teams"  styleClass="selectedFilter"  layout="pageDirection" style="margin-left: 11%;width: 100%;" value="{!selectedTeams}" onChange="onChangeTeam(this);" id="teamCheckBoxes">
+                        <apex:selectOptions value="{!TeamLists}" />
+                    </apex:selectCheckboxes>
+                    </div>
+                <div class="col-sm-8">
+                   <label>Programs</label>
+                    <apex:selectCheckboxes title="Programs"  value="{!selectedPrograms}" onChange="onChangeProj(this);"  layout="pageDirection" style="margin-left: 6%;width: 100%; color:white;">
                         <apex:selectOptions value="{!programs}" />
-                    </apex:selectList>
-
-                    <br/><br/>
-
-                    <apex:outputText value="Filter Teams"></apex:outputText>
-                    <apex:selectCheckboxes title="Teams"  styleClass="selectedFilter"  layout="pageDirection" style="float=left;" value="{!selectedTeams}" onChange="onChangeTeam(this);" >
-                            <apex:selectOptions value="{!TeamLists}" />
-                     </apex:selectCheckboxes>
-
-                </apex:outputPanel>
-
-            </apex:outputPanel>
+                    </apex:selectCheckboxes>
+                </div>
+            </div>
+        <div id="program_div"></div>
+        <div id="team_div"></div>
         </div>
-
-        <div id="chart_div"></div>
     </apex:form>
 </apex:page>
+
