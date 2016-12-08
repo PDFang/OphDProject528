@@ -159,10 +159,10 @@ trigger CaseBeforeUpdate on Case (before update)
          //System.debug('cn.RecordType.Name ==>' + cn.RecordType.Name);
         if(!System.isFuture() && cn.SystemClosed__c != true && !excludedResellerAccounts.containsKey(cn.AccountId) && !system.isBatch())//batch soql does not accept @future callouts
         {
-			//get all the product and practice experts queue cases --
-			if(newlyClosed && (allQueues.get(cn.OwnerId).Name == 'Product & Practice Experts Queue'))
-            {		
-            	closedTechSupportCaseIds.add(cn.Id);
+            //get all the product and practice experts queue cases --
+            if(newlyClosed && (allQueues.get(cn.OwnerId).Name == 'Product & Practice Experts Queue'))
+            {       
+                closedTechSupportCaseIds.add(cn.Id);
             }    
             //get all closed Tech Support cases for survey
             if(newlyClosed && (cn.RecordTypeId == incidentRecordType || cn.RecordTypeId == incidentUptivityRecordType) && (allQueues.get(cn.OwnerId).Name == 'Tech Support Queue' || allQueues.get(cn.OwnerId).Name == 'TSA Queue' || allQueues.get(cn.OwnerId).Name == 'TSM Queue' || allQueues.get(cn.OwnerId).Name == 'Premise TSM Queue' || allQueues.get(cn.OwnerId).Name == 'Premise Tech Support Queue' ||allQueues.get(cn.OwnerId).Name == 'Premise Tech Support II Queue'))
@@ -317,7 +317,7 @@ trigger CaseBeforeUpdate on Case (before update)
             if(siteConfig.AutoEventEmails__c && !cn.IsClosed)
             {
                 //RUN FOR EVENTS. Initial communication
-                if(cn.Priority == 'P1' || cn.Priority == 'P2')
+                if((cn.Priority == 'P1' || cn.Priority == 'P2') && cn.Status != 'Resolved')
                 {
                     if(cn.EventConfirmedDateTime__c != null && !cn.EventEmailSent__c && !cn.InternalEvent__c)
                     {
@@ -334,9 +334,26 @@ trigger CaseBeforeUpdate on Case (before update)
                              }
                          }
                         if(listPlatforms.size() > 0)
-                        	NotificationHelperClass.NewEventEmailAsync(cn.Id, listPlatforms);
+                        {
+                            system.debug('test lstPlatforms CaseBeforeUpdate => ' + listPlatforms);
+                            NotificationHelperClass.NewEventEmailAsync(cn.Id, listPlatforms);
+                        }
                     }
                 }
+                
+            }
+            
+            Set<string> eventResolvedPriorities = new Set<string>();
+            if(!string.isBlank(siteConfig.EventResolvedPriorities__c))
+            {
+            	eventResolvedPriorities = new Set<string>(siteConfig.EventResolvedPriorities__c.split('\\;'));
+            }
+            
+            if(siteConfig.EventResolvedEmails__c && cn.Status == 'Resolved' && !cn.EventResolvedEmailRequested__c && (eventResolvedPriorities.contains(cn.Priority) || cn.SendNotificationEmail__c) && !cn.InternalEvent__c)
+            { 
+                NotificationHelperClass.ResolvedEventEmail(cn.Id);
+                cn.EventResolvedEmailRequested__c = true;
+                cn.SendNotificationEmail__c = false;
             }
         }
         

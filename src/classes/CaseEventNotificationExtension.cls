@@ -28,7 +28,7 @@ public class CaseEventNotificationExtension
     private List<Standard_Text__c> standardTexts;
     public string contactRole{public get;private set;}
     private string recordTypeName;
-    public static list<string> clusters = new list<string>();     
+    public static list<string> clusters;     
     
     
     public CaseEventNotificationExtension(ApexPages.StandardController controller) 
@@ -36,11 +36,16 @@ public class CaseEventNotificationExtension
         this.c = (Case)controller.getRecord();
         string caseType;
         
+        if(clusters == null)
+        {
+            clusters = new list<string>();
+        }
+        
         if(c.Id != null)
         {
             // Added the below query to accomodate all custom fields  for this P1 issue
             //ISSUE: P1 - Service Console - Maint Notification Standard Text Errors     
-            c = [select Id,RecordTypeId, StartDateTImeUTC__c, EventType__c, Subject,  Description, ProductImpacted__c, CustomersMayExperienceTheFollowing__c
+            c = [select Id,RecordTypeId, StartDateTImeUTC__c,EndDateTimeUTC__c, EventType__c, Subject,  Description, ProductImpacted__c, CustomersMayExperienceTheFollowing__c
                             ,CustomerAction__c, Status, CaseNumber, PlatformsImpacted__c, Owner.Name, Account.Id, NumberOfAccountsImpacted__c
                             FROM Case where Id =: c.Id];
             System.debug('Case Record is' + c);             
@@ -154,7 +159,8 @@ public class CaseEventNotificationExtension
         String[] addresses = new String[]{};
         Set<String> setAddresses = new Set<String>();
         String[] resellAddresses = new String[]{};
-        textBody = emailBody;
+        textBody = emailBody.replace('<br/>', '');
+        htmlString = emailBody.replace('\\n','<br/>');
         htmlString = emailBody.replace('\n','<br/>');
         List<Task> tasks = new List<Task>();
         Id internalEmailGroup;
@@ -162,13 +168,25 @@ public class CaseEventNotificationExtension
         
         if(emailBody.contains('{') || emailBody.contains('}') || subject.contains('{') || subject.contains('}'))
         {
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Email cannot contain { or } characters.  Please update the place holder.'));
+            if(system.isFuture())
+            {
+                inContactBaseClass.SendErrorEmail('Event Email cannot contain { or } characters.  Please update the place holder.', c.CaseNumber);
+            }else
+            {
+            	ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Email cannot contain { or } characters.  Please update the place holder.'));
+            }
             return null;
         }
         
         if(string.isBlank(emailBody) || string.isBlank(subject))
         {
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'The subject and body cannot be blank.'));
+            if(system.isFuture())
+            {
+                inContactBaseClass.SendErrorEmail('The subject and body cannot be blank in an Event Email', c.CaseNumber);
+            }else
+            {
+            	ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'The subject and body cannot be blank.'));
+            }
             return null;
         }
         
@@ -250,13 +268,13 @@ public class CaseEventNotificationExtension
                     NotificationHelperClass.EmailTemplate template = new NotificationHelperClass.EmailTemplate();
                     template.recipients = resellAddresses;
                     template.subject = subject;
-                    template.htmlBody = htmlString ;
-                    template.textBody = textBody;
+                    template.htmlBody = htmlString ;/**+ '<br/><br/>' + platforms';**/ 
+                    template.textBody = textBody; /**+ '\n\n' + platforms; **/ 
                     template.templateId = 6;
                     listTemplates.add(template);
                 }
                 
-                System.enqueueJob(new NotificationQueableClass(listTemplates, ''));               
+                System.enqueueJob(new NotificationQueableClass(listTemplates,''));               
            
                 insert tasks;
                 
@@ -322,10 +340,19 @@ public class CaseEventNotificationExtension
         String formattedEventStartDate = c.StartDateTImeUTC__c;
        formattedEventStartDate = formattedEventStartDate.substringBeforeLast(':');
         formattedEventStartDate = formattedEventStartDate + ' (UTC)'; 
+        
+        String formattedEventEndDate = c.EndDateTimeUTC__c;
+        if(formattedEventStartDate != null)
+        {
+            formattedEventEndDate = formattedEventEndDate.substringBeforeLast(':');
+            formattedEventEndDate = formattedEventEndDate + ' (UTC)'; 
+        }
+        
         MergeField('{Event Type}',c.EventType__c);
         MergeField('{Subject}',c.Subject);
         MergeField('{Description}', c.Description);
        MergeField('{Start Time}', formattedEventStartDate);
+       MergeField('{End Time}', formattedEventStartDate);
         MergeField('{Product Impacted}', c.ProductImpacted__c);
         MergeField('{Service Impact}', c.CustomersMayExperienceTheFollowing__c);
         MergeField('{Case Status}', c.Status);

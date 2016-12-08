@@ -14,6 +14,9 @@
             <apex:inputHidden value="{!Case.ProductImpacted__c}"/>
             <apex:inputHidden value="{!Case.PlatformsImpacted__c}"/>
             <apex:inputHidden value="{!Case.Description}"/>
+            <apex:inputHidden value="{!Case.Priority}"/>
+            <apex:inputHidden value="{!Case.InternalEvent__c}"/>
+            <apex:inputHidden value="{!Case.EventResolvedEmailRequested__c}"/>
             <apex:pageBlockSection columns="1" >
                 <apex:outputField value="{!Case.CaseNumber}"/>
                 <apex:outputField value="{!Case.Subject}"/>
@@ -24,23 +27,33 @@
             </apex:pageBlockSection>
 
             <!-- Resolved picklists-->
-			<apex:pageblocksection id="info" columns="1">
+            <apex:pageblocksection id="info" columns="1">
 
-				<apex:inputfield value="{!Case.Reason__c}" rendered="{!Case.Status='Resolved'}" required="{!Case.Status='Resolved'}">
+                <apex:inputfield value="{!Case.Reason__c}" rendered="{!Case.Status='Resolved'}" required="{!Case.Status='Resolved'}">
                     <apex:actionsupport event="onchange" rerender="mainPage"/>
                 </apex:inputfield>
 
-				<apex:inputfield value="{!Case.Database__c}" rendered="{!Case.Status='Resolved'}" required="{!Case.Status='Resolved'}" >
+                <apex:inputfield value="{!Case.Database__c}" rendered="{!Case.Status='Resolved'}" required="{!Case.Status='Resolved'}" >
                     <apex:actionsupport event="onchange" rerender="mainPage"/>
                 </apex:inputfield>
 
-				<apex:inputfield value="{!Case.Releases__c}" rendered="{!Case.Status='Resolved'}" required="{!Case.Status='Resolved'}">
-					<apex:actionsupport event="onchange" rerender="mainPage"/>
-				</apex:inputfield>
+                <apex:inputfield value="{!Case.Releases__c}" rendered="{!Case.Status='Resolved'}" required="{!Case.Status='Resolved'}">
+                    <apex:actionsupport event="onchange" rerender="mainPage"/>
+                </apex:inputfield>
+                <apex:pageBlockSectionItem rendered="{!ShowSendEventResolvedEmail}" >
+                    <apex:outputLabel title="This will notify all associated Event Notification contacts"  >Send Notification Email</apex:outputLabel>
+                    <apex:inputCheckbox title="This will notify all associated Event Notification contacts"  value="{!SetSendEventResovledEmail}" > 
+                        <apex:actionsupport event="onchange" rerender="mainPage"/>
+                    </apex:inputCheckbox> 
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem id="sendAlert" rendered="{!AND(ShowSendEventResolvedEmail,SetSendEventResovledEmail)}" >
+                    <apex:outputLabel title="This will notify all associated Event Notification contacts"  ></apex:outputLabel>
+                    <apex:outputPanel style="color:#FF0000;"  >Warning: This will notify all associated Event Notification contacts</apex:outputPanel>
+                </apex:pageBlockSectionItem>
 
                 <!-- Only Render the Justification if the Case Status is resolved and the type is Other-->
                 <apex:inputfield id="justification" value="{!Case.OtherJustification__c}" rendered="{!Case.Releases__c='Other (enter details below)' && Case.Status='Resolved'}" />
-			</apex:pageblocksection>
+            </apex:pageblocksection>
 
             <apex:pageBlockSection columns="1">
                 <apex:pageBlockSectionItem >
@@ -153,7 +166,7 @@
             }            
         }
     
-    	function currentTab() {
+        function currentTab() {
             //First find the ID of the current tab to close it
             sforce.console.getEnclosingTabId(refreshPrimaryTab);
         }

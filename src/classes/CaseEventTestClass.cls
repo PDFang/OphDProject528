@@ -8,8 +8,12 @@ private class CaseEventTestClass {
         sbx.AutoEventEmails__c = true;
         sbx.DaysToDisplayKnownIssues__c = 30;
         sbx.OrgId__c = inContactBaseClass.OrgId15Digit;
-
+		sbx.EventResolvedPriorities__c = 'P1;P2;';
+        sbx.EventResolvedEmails__c = true;
+        
         insert sbx;
+        
+        
 
     }
 
@@ -538,7 +542,7 @@ private class CaseEventTestClass {
         notify.emailBody = 'Test';
         notify.subject = 'test';
         notify.SendNotification();
-        system.debug('this is a test');
+
         Test.stopTest();
 
     }
@@ -548,8 +552,7 @@ private class CaseEventTestClass {
 
         Test.setMock(WebServiceMock.class, new INotificationProxy());
 
-        string testResult = NotificationHelperClass.GenerateEmail(new String[] { 'test@test.com' }, 'test', 'test', 'test', 3);
-
+        String testResult = NotificationHelperClass.GenerateEmail(new String[] { 'test@test.com' }, 'test', 'test', 'test', 3);
 
     }
 
@@ -655,8 +658,13 @@ private class CaseEventTestClass {
         cecExt.SelectedRecordTypeId = rto[1].getValue();
         Id rtId = cecExt.SelectedRecordTypeId;
         c.Status = 'TEST';
+        
+        boolean sendResolvedEmailVisible = cecExt.ShowSendEventResolvedEmail;
+        boolean getCurrentSendEmail = cecExt.SetSendEventResovledEmail;
+        
 
         cecExt.Save();
+        cecExt.RefreshPage();
     }
 
     static testMethod void TestRCAButtonBannerExtension()

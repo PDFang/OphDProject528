@@ -2,18 +2,57 @@
  - Created by mohandaas.rangaswamy on 11/21/2016.
  -->
 
-<apex:page id="OpportunityPartnerSharing">
+<apex:page standardController="Opportunity" extensions="OpportunityPartnerSharingExtension" id="mypage" title="Partner Sharing">
 
-    <apex:includeLightning/>
-
-    <div id="lightning"/>
-
-    <script>
-        $Lightning.use('c:OpportunityPartnerSharingOut',function(){
-            $Lightning.createComponent("c:OpportunityPartnerSharing",
-            {opportunityId : '{!$CurrentPage.Parameters.id}'},
-            'lightning')
-        });
-    </script>
+    <apex:form id="myform">
+        <apex:sectionHeader title="Partner Sharing" subTitle="{!opp.Name}"/>
+        <apex:pageMessages id="mymessage"/>
+        <apex:pageBlock title="Partner Sharing" mode="edit" id="myblock">
+            <apex:pageBlockButtons location="both">
+                <apex:commandButton value="Share" action="{!shareOpportunity}" disabled="{!displayList.size == 0}"/>
+                <apex:commandButton value="Cancel" action="{!cancel}"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="Search" collapsible="false" columns="1">
+                <apex:outputPanel layout="block">
+                    <apex:inputText value="{!keyword}"/>&nbsp;&nbsp;
+                    <apex:commandButton value="Go!" action="{!search}" disabled="{!!enableSharing}" rerender="mytable,mymessage"/>
+                    <p>You can use "*" as a wildcard next to other characters to improve your search results.</p>
+                    <apex:selectRadio id="radio" value="{!searchBy}" title="Search">
+                        <apex:selectOptions value="{!options}"/>
+                    </apex:selectRadio>
+                </apex:outputPanel>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Partner Users" collapsible="false" columns="1">
+                <apex:pageBlockTable value="{!displayList}" var="wrapper" id="mytable">
+                    <apex:column headerValue="Select">
+                        <apex:inputCheckbox value="{!wrapper.selected}" id="check"/>
+                    </apex:column>
+                    <apex:column headerValue="Name">
+                        <!--<apex:outputField value="{!wrapper.partner.Name}"/>-->
+                        <apex:outputLink  title="{!wrapper.partner.Name}" value="/{!wrapper.partner.contactId}" target="_blank">{!wrapper.partner.Name}</apex:outputLink>
+                    </apex:column>
+                    <apex:column headerValue="Account Name">
+                        <!--<apex:outputField value="{!wrapper.partner.Account.Name}"/>-->
+                        <apex:outputLink title="{!wrapper.partner.Account.Name}" value="/{!wrapper.partner.accountId}" target="_blank">{!wrapper.partner.Account.Name}</apex:outputLink>
+                    </apex:column>
+                    <apex:facet name="footer">
+                        <apex:outputPanel style="font-size: 10pt; font-weight: bold;">
+                            <center>
+                                <apex:outputText value="First" rendered="{!(currentPage == 1)}"/>
+                                <apex:commandLink value="First" action="{!first}" reRender="mytable" rendered="{!(currentPage > 1)}"/>&nbsp;|&nbsp;
+                                <apex:outputText value="Previous" rendered="{!(currentPage == 1)}"/>
+                                <apex:commandLink value="Previous" action="{!previous}" reRender="mytable" rendered="{!(currentPage > 1)}"/>&nbsp;|&nbsp;
+                                <apex:outputText value="Next" rendered="{!!(currentPage < totalPages)}"/>
+                                <apex:commandLink value="Next" action="{!next}" reRender="mytable" rendered="{!(currentPage < totalPages)}"/>&nbsp;|&nbsp;
+                                <apex:outputText value="Last" rendered="{!(currentPage == totalPages)}"/>
+                                <apex:commandLink value="Last" action="{!last}" reRender="mytable" rendered="{!(currentPage != totalPages)}"/>&nbsp;&nbsp;
+                                Page {!currentPage} of {!totalPages}&nbsp;&nbsp;
+                            </center>
+                        </apex:outputPanel>
+                    </apex:facet>
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
 
 </apex:page>

@@ -2,6 +2,7 @@
 public class NotificationHelperClassTest {
 
     static testmethod void testNotification() {
+
         Test.startTest();
         string caseNumber = '25602';
         Number_Of_Retry__c retry = new Number_Of_Retry__c();
