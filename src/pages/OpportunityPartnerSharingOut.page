@@ -1,0 +1,19 @@
+<!--
+ - Created by mohandaas.rangaswamy on 11/21/2016.
+ -->
+
+<apex:page standardController="Opportunity" id="OpportunityPartnerSharing">
+
+    <apex:includeLightning/>
+
+    <div id="lightning"/>
+
+    <script>
+        $Lightning.use('c:OpportunityPartnerSharingOut',function(){
+            $Lightning.createComponent("c:OpportunityPartnerSharing",
+            {opportunityId : '{!$CurrentPage.Parameters.id}'},
+            'lightning')
+        });
+    </script>
+
+</apex:page>

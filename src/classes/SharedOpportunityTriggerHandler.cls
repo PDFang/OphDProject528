@@ -11,47 +11,61 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
     }
 
     public override void afterUpdate(){
-        updateOpportunity((Map<Id, Shared_Opportunity__c>) trigger.newMap, (Map<Id, Shared_Opportunity__c>) trigger.oldMap);
-        deleteShare((List<Shared_Opportunity__c>) trigger.new, (Map<Id, Shared_Opportunity__c>) trigger.oldMap);
+        updateOpportunity((List<Shared_Opportunity__c>) trigger.new, (Map<Id, Shared_Opportunity__c>) trigger.oldMap);
+        updateStatusAndRemoveSharing((Map<Id, Shared_Opportunity__c>) trigger.newMap, (Map<Id, Shared_Opportunity__c>) trigger.oldMap);
         createAccountPartner((List<Shared_Opportunity__c>) trigger.new, (Map<Id, Shared_Opportunity__c>) trigger.oldMap);
     }
 
+    // update Shared Opportunity status to 'Closed', if the opportunity has been accepted but Shared Opportunity status is 'New'
     // delete apex sharing when the status is changed from 'New' to 'Accepted' or 'Rejected'
-    public static void deleteShare(Map<Id, Shared_Opportunity__c> newMap, Map<Id, Shared_Opportunity__c> oldMap){
+    public static void updateStatusAndRemoveSharing(Map<Id, Shared_Opportunity__c> newMap, Map<Id, Shared_Opportunity__c> oldMap){
 
-        system.debug('**** deleteShare(): oppList - ' + oppList);
-        Set<Id> sharedOppIdSet = new Set<Id>();
+        system.debug('**** updateStatusAndRemoveSharing(): shared opps - ' + newMap.values());
+        Set<Id> oppIdSet = new Set<Id>();
 
-        for(Shared_Opportunity__c opp : newMap.values()){
-            if((opp.Status__c == 'Accepted' || opp.Status__c == 'Rejected') && oldMap.get(opp.Id).Status__c != opp.Status__c ){
-                sharedOppIdSet.add(opp.Id);
+        for(Shared_Opportunity__c sharedOpp : newMap.values()){
+            if((sharedOpp.Status__c == 'Accepted' || sharedOpp.Status__c == 'Rejected') && oldMap.get(sharedOpp.Id).Status__c != sharedOpp.Status__c ){
+                oppIdSet.add(sharedOpp.Opportunity__c);
             }
         }
 
-        if(sharedOppIdSet.isEmpty()){
+        if(oppIdSet.isEmpty()){
             return;
         }
-        system.debug('**** deleteShare(): sharedOppIdSet - ' + sharedOppIdSet);
+        system.debug('**** updateStatusAndRemoveSharing(): oppIdSet - ' + oppIdSet);
 
         List<Shared_Opportunity__Share> shareList = new List<Shared_Opportunity__Share>();
+        List<Shared_Opportunity__c> sharedOppList = new List<Shared_Opportunity__c>();
+
         for(Shared_Opportunity__Share share : [
-                Select Id, UserOrGroupId from Shared_Opportunity__Share
-                where ParentId IN :sharedOppIdSet
+                Select Id, ParentId, Parent.Status__c, Parent.Opportunity__r.iCE_Partner_Status__c, Parent.Partner_User__c, UserOrGroupId
+                from Shared_Opportunity__Share
+                where Parent.Opportunity__c IN :oppIdSet
                 and Rowcause = :Schema.Shared_Opportunity__Share.RowCause.iCE_Partner__c
         ]){
-            Shared_Opportunity__c sharedOpp = newMap.get(share.ParentId);
-            if(sharedOpp.Status__c == 'Rejected' && sharedOpp.Partner_User__C == share.UserOrGroupId){
+            if(share.Parent.Status__c == 'Rejected' && share.Parent.Partner_User__c == share.UserOrGroupId){
                 shareList.add(share);
-            } else if(sharedOpp.Status__c == 'Accepted'){
+            } else if(share.Parent.Opportunity__r.iCE_Partner_Status__c == 'Accepted'){
                 shareList.add(share);
+                if(share.Parent.Status__c != 'Accepted'){
+                    Shared_Opportunity__c updateOpp = new Shared_Opportunity__c(
+                            Id = share.ParentId,
+                            Status__c = 'Closed'
+                    );
+                    sharedOppList.add(updateOpp);
+                }
             }
         }
 
-        system.debug('**** createAccountPartner(): shareList - ' + shareList);
+        system.debug('**** updateStatusAndRemoveSharing(): shareList - ' + shareList);
         if(shareList.size() > 0)
             delete shareList;
 
-    } // end of deleteShare()
+        system.debug('**** updateStatusAndRemoveSharing(): sharedOppList - ' + sharedOppList);
+        if(sharedOppList.size() > 0)
+            update sharedOppList;
+
+    } // end of updateStatusAndRemoveSharing()
 
     // create an account partner record when Shared Opportunity is accepted
     public static void createAccountPartner(List<Shared_Opportunity__c> oppList, Map<Id, Shared_Opportunity__c> oldMap){
@@ -135,7 +149,7 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
         if(processList.isEmpty()){
             return;
         }
-        system.debug('**** createAccountPartner(): processList - ' + processList);
+        system.debug('**** updateOpportunity(): processList - ' + processList);
 
         Map<Id, User> partnerUserMap = getUserInfo(partnerIdSet);
 
@@ -150,7 +164,7 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
             opportunityList.add(newPartner);
         }
 
-        system.debug('**** createAccountPartner(): opportunityList - ' + opportunityList);
+        system.debug('**** updateOpportunity(): opportunityList - ' + opportunityList);
 
         if(opportunityList.size() > 0)
             update opportunityList;

@@ -7,30 +7,69 @@
     <aura:handler name="init" action="{!c.doInit}" value="{!this}"/>
 
     <div class="slds slds-p-around--small">
+
+        <div aura:id="messageBlock"></div>
+
         <div class="slds-page-header" role="banner">
             <p class="slds-page-header__title slds-truncate">Partner Sharing</p>
         </div>
-        <div class="slds-p-top--small">
-            <table class="slds-table slds-table--bordered slds-table--fixed-layout slds-table--striped" role="grid">
-                <thead>
-                    <tr class="slds-text-title--caps">
-                        <th>Select</th>
-                        <th class="slds-is-sortable">Name</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <aura:iteration items="{!v.partnerList}" var="item">
-                        <tr class="slds-hint-parent">
-                            <td role="gridcell"><ui:inputCheckbox value="{!item.selected}"/></td>
-                            <td role="gridcell">{!item.partner.Name}</td>
-                        </tr>
-                    </aura:iteration>
-                </tbody>
-            </table>
+
+
+
+        <div class="slds-card__header slds-grid slds-p-top--small">
+            <div class="slds-media slds-media--center slds-has-flexi-truncate">
+                <!--<div class="slds-media__figure">-->
+                <!--</div>-->
+                <div class="slds-media__body">
+                    <h2 class="slds-text-heading--small slds-truncate">iCE Partners</h2>
+                </div>
+            </div>
         </div>
+
+        <div class="slds-card__body">
+            <section class="slds-card__body">
+                <table class="slds-table slds-table--bordered slds-table--fixed-layout slds-table--striped" role="grid">
+                    <thead>
+                        <tr class="slds-text-title--caps slds-no-hover">
+                            <th class="slds-text-heading--label slds-size--1-of-6" scope="col">Select</th>
+                            <th class="slds-text-heading--label slds-size--1-of-6" scope="col">Name</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data">
+                        <aura:iteration items="{!v.partnerList}" var="item">
+                            <tr class="slds-hint-parent">
+                                <td role="gridcell"><ui:inputCheckbox value="{!item.selected}"/></td>
+                                <td role="gridcell">{!item.partner.Name}</td>
+                            </tr>
+                        </aura:iteration>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+
+        <!--<div class="slds-p-top&#45;&#45;small">-->
+            <!--<table class="slds-table slds-table&#45;&#45;bordered slds-table&#45;&#45;fixed-layout slds-table&#45;&#45;striped" role="grid">-->
+                <!--<thead>-->
+                    <!--<tr class="slds-text-title&#45;&#45;caps">-->
+                        <!--<th>Select</th>-->
+                        <!--<th class="slds-is-sortable">Name</th>-->
+                    <!--</tr>-->
+                <!--</thead>-->
+                <!--<tbody>-->
+                    <!--<aura:iteration items="{!v.partnerList}" var="item">-->
+                        <!--<tr class="slds-hint-parent">-->
+                            <!--<td role="gridcell"><ui:inputCheckbox value="{!item.selected}"/></td>-->
+                            <!--<td role="gridcell">{!item.partner.Name}</td>-->
+                        <!--</tr>-->
+                    <!--</aura:iteration>-->
+                <!--</tbody>-->
+            <!--</table>-->
+        <!--</div>-->
         <div class="slds-p-top--small">
             <ui:button class="slds-button" label="Share" press="{!c.clickShare}"/>
+            <ui:button class="slds-button" label="Cancel" press="{!c.clickCancel}"/>
         </div>
-        <p>{!v.result}</p>
+
+        <p>{!v.partnerList.length}{!v.result}</p>
     </div>
 </aura:component>

@@ -26,12 +26,17 @@ public without sharing class OpportunityPartnerSharingExtension {
 
     private Integer startIndex = 0;
     private List<UserWrapper> wrapperList;
+    private Set<Id> currentUserIds;
 
     public static List<SelectOption> getOptions() {
         List<SelectOption> options = new List<SelectOption>();
         options.add(new SelectOption('Name','Name'));
         options.add(new SelectOption('Account','Account'));
         return options;
+    }
+
+    public boolean getEnableSharing(){
+        return opp != null && opp.iCE_Partner__c == null;
     }
 
     public class UserWrapper{
@@ -81,7 +86,7 @@ public without sharing class OpportunityPartnerSharingExtension {
             return;
         }
 
-        Set<Id> currentUserIds = new Set<Id>();
+        currentUserIds = new Set<Id>();
         for(Shared_Opportunity__c sharedOpp : [
                 Select Partner_User__c
                 from Shared_Opportunity__c
@@ -91,7 +96,7 @@ public without sharing class OpportunityPartnerSharingExtension {
         }
 
         for(PermissionSetAssignment psa :[
-                Select AssigneeId, Assignee.Name, Assignee.isActive, Assignee.AccountId, Assignee.Account.Name
+                Select AssigneeId, Assignee.Name, Assignee.isActive, Assignee.ContactId, Assignee.AccountId, Assignee.Account.Name
                 from PermissionSetAssignment
                 where PermissionSet.Name = :mdt[0].Permission_Set__c
                 and Assignee.isActive = true
@@ -154,13 +159,16 @@ public without sharing class OpportunityPartnerSharingExtension {
                 return null;
             }
 
+            String s = String.join(new List<Id>(currentUserIds), ',');
             string refinedKeyword = keyword.replaceAll('[*]', '%');
             refinedKeyword += refinedKeyword.endsWith('%') ? '' : '%';
-            String soql = 'Select AssigneeId, Assignee.Name, Assignee.isActive, Assignee.AccountId, Assignee.Account.Name '
+            String soql = 'Select AssigneeId, Assignee.Name, Assignee.isActive, Assignee.ContactId, Assignee.AccountId, Assignee.Account.Name '
                     + 'from PermissionSetAssignment '
                     + 'where PermissionSet.Name = \'' + mdt[0].Permission_Set__c + '\' '
                     + 'and Assignee.isActive = true and ';
-
+            if(currentUserIds.size() > 0 ){
+                soql = soql + 'AssigneeId NOT IN (\'' + String.join(new List<Id>(currentUserIds), ',') + '\') and ';
+            }
             soql = soql + ( (searchBy == 'Name') ? 'Assignee.Name ' : 'Assignee.Account.Name ' );
             soql = soql + 'like \'' + refinedKeyword + '\' order by Assignee.Name';
 
