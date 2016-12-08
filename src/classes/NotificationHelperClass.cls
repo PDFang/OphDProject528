@@ -23,25 +23,55 @@ public class NotificationHelperClass
         
 	}
 	
+    @future(callout=true)
+    public static void ResolvedEventEmail(Id eventId)
+    {
+        Case event = [SELECT Id,CustomerAction__c, EndDateTimeUTC__c,StartDateTImeUTC__c, EventType__c, CustomersMayExperienceTheFollowing__c, OwnerId, Owner.Name, Status, Subject, Priority, Description, RecordTypeId, EventEmailSent__c, CaseNumber, PlatformsImpacted__c, ProductImpacted__c FROM Case WHERE ID = :eventId];
+		CaseEventClass cec = new CaseEventClass(event);
+        
+        ApexPages.StandardController stdCtrl = new ApexPages.StandardController(event);
+        CaseEventNotificationExtension notificationExtension = new CaseEventNotificationExtension(stdCtrl);
+        
+        //set body and subject
+        notificationExtension.emailBody = Label.EventResolvedEmail;
+        notificationExtension.SubjectText = Label.EventResolvedSubject;
+        
+        //update merge fields
+        notificationExtension.MergeFieldUpdate();
+        notificationExtension.MergeFieldUpdateSubject();
+        
+        //send notificiation
+        try
+        {
+            notificationExtension.SendNotification();
+        }
+        catch(Exception ex)
+        {
+            inContactBaseClass.SendErrorEmail(ex, 'Event: ' + event.CaseNumber);
+        }
+        
+    }
 	
     @future(callout=true)
 	public static void NewEventEmailAsync(Id eventId, list<string> lstPlatforms)
 	{
-		Case event = [SELECT Id,CustomerAction__c,StartDateTImeUTC__c, EventType__c, CustomersMayExperienceTheFollowing__c, OwnerId, Owner.Name, Status, Subject, Priority, Description, RecordTypeId, EventEmailSent__c, CaseNumber, PlatformsImpacted__c, ProductImpacted__c FROM Case WHERE ID = :eventId];
+		Case event = [SELECT Id,CustomerAction__c,StartDateTImeUTC__c,EndDateTimeUTC__c, EventType__c, CustomersMayExperienceTheFollowing__c, OwnerId, Owner.Name, Status, Subject, Priority, Description, RecordTypeId, EventEmailSent__c, CaseNumber, PlatformsImpacted__c, ProductImpacted__c FROM Case WHERE ID = :eventId];
 		system.debug('testing event ==>' + event);
+        system.debug('testing lstPlatforms NewEventEmailAsync ==>' + lstPlatforms);
 		//if(!event.EventEmailSent__c)
 		//{
+		//
 			CaseEventClass cec = new CaseEventClass(event);
         	if(lstPlatforms != null)
 				cec.lstClusters = lstPlatforms; // Added by Aranb
         
+            CaseEventNotificationExtension.clusters = lstPlatforms;
 			ApexPages.StandardController stdCtrl = new ApexPages.StandardController(event);
 			CaseEventNotificationExtension notificationExtension = new CaseEventNotificationExtension(stdCtrl);
 			
 			//set body and subject
 			notificationExtension.emailBody = InContactConfiguration.NewEventEmailBody;
 			notificationExtension.SubjectText = InContactConfiguration.NewEventEmailSubject;
-            CaseEventNotificationExtension.clusters = lstPlatforms;
 
 			//update merge fields
 			notificationExtension.MergeFieldUpdate();
