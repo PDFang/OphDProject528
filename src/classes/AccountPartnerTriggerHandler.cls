@@ -2,6 +2,8 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
     // constants
     public static final String SAAS_IMPLEMENTATION_PARTNER = 'Certified Implementation Partner – SaaS';
     public static final String PREMISE_IMPLEMENTATION_PARTNER = 'Certified Implementation Partner - Premise';
+    public static final String ICE_PARTNER = 'iCE';
+
     private static final Set<String> psSaaSProjectSet = ProjectShareHelper.psSaaSProjectSet;
 
     private static Map<Id, List<User>> accountUserMap = null; // key partner account ID
