@@ -20,6 +20,7 @@ public without sharing class OpportunityPartnerSharingExtension {
         return displayList;
     }
 
+    @TestVisible
     private static final String PARTNEY_TYPE_ICE = 'iCE';
 
     private static final Integer NO_OF_ROWS = 10;
