@@ -16,5 +16,6 @@ public class ChartData2
     public string Team{get;set;}
     public string TeamColor{get;set;}
     public string ProgramColor{get;set;}
+    public string ProductChannelFullName{get;set;}
 
 }
