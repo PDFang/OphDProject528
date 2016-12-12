@@ -48,7 +48,7 @@
             for (var i = 0; i < fields.length; i++) {
                 var field = fields[i];
                 var config = {};
-
+				console.log('field path ==>' + field.fieldPath);
                 var opts = [];
                 if(field.type.toLowerCase() == 'picklist'){
                     for(var j = 0; j<field.picklistOptions.length; j++)
@@ -57,10 +57,12 @@
 
                         var isSelect = j == 0 ? true : false;
                         opts.push({
-                            class: "optionClass",
-                             label: picklistVal,
-                             value : picklistVal,
-                             selected : isSelect
+                            "class": "optionClass",
+                             "label": picklistVal,
+                             "value" : picklistVal,
+                            "aura:id" : field.fieldPath,
+                             "selected" : isSelect,
+                            
                         });
                     }
                 }
@@ -73,7 +75,8 @@
                            "label" :  field.label,
                            "aura:id" : field.fieldPath,
                            "options" : opts,
-                           "class" : "slds-input"
+                           "class" : "slds-input",
+                        
                        }
                     ]);
 
@@ -89,8 +92,8 @@
 
                 var inputToField = {};
                 for (var i = 0; i < fieldPaths.length; i++) {
-                      console.log('cmps ' + cmps[i]);
-                   // cmps[i].addHandler('change', cmp, 'c.handleValueChange');
+                      //console.log('cmps ' + cmps[i]);
+                   cmps[i].addHandler('change', cmp, 'c.handleValueChange');
                     inputToField[cmps[i].getGlobalId()] = fieldPaths[i];
                 }
                 cmp.set('v.form', cmps);

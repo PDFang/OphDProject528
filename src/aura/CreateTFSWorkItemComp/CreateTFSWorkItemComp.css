@@ -20,3 +20,11 @@
        margin-left: 10%;
        text-align: left;
 }
+
+.THIS .errorMessage{
+       border-color: #aa1f1f !important;
+}
+
+.THIS .buttonWhite{
+    color : white !important;
+}

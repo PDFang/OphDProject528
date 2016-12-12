@@ -4,6 +4,6 @@
 
 public with sharing class TimeLineData {
    public List<ChartData2> lstChartData {get;set;}
-   public List<TFSSprintDate__c>  lstSprintData {get;set;}
+   public List<SprintDateMap__c> lstSprintData {get;set;}
 }
 

@@ -20,16 +20,53 @@
         $A.enqueueAction(action);
     },
 
-    /**handleValueChange: function(cmp, event, helper) {
+    doSubmit: function(cmp, event, helper){
+         var record = [];
+        record = cmp.get('v.record');
+        var inputToField = cmp.get('v.inputToField');
+       // var field = inputToField[event.getSource().getGlobalId()];
+        //var obj = cmp.get('v.record');
+
+       record = JSON.parse(JSON.stringify(record));
+       console.log(JSON.stringify(record));
+       var errorMessages = [];
+       var fields = cmp.get('v.changedFields');
+       var requiredFields = [];
+        for(field in inputToField)
+        {
+          for(i = 0; i < fields.length; i++){
+               if(inputToField[field] == fields[i]){
+                   delete inputToField[field];
+               }
+
+          }
+
+        }
+        for(field in inputToField){
+            var comp = $A.getComponent(field);
+            comp.set("v.errors", [{message:"Value cannot be blank" }]);
+            $A.util.addClass(comp, 'errorMessage');
+        }
+    },
+    
+    handleValueChange: function(cmp, event, helper) {
         console.log('change');
         var inputToField = cmp.get('v.inputToField');
+		var records =  cmp.get('v.record');
         var field = inputToField[event.getSource().getGlobalId()];
-        var obj = cmp.get('v.record');
+        var comp = $A.getComponent(event.getSource().getGlobalId());
+        comp.set("v.errors", []);
+         $A.util.removeClass(comp, 'errorMessage');
+        var obj = {};
         if (!obj[field]) {
             // Have to make a copy of the object to set a new property - thanks LockerService!
             obj = JSON.parse(JSON.stringify(obj));
         }
         obj[field] = event.getSource().get('v.value');
-        cmp.set('v.record', obj);
-    }**/
+        records.push(obj);
+        var fields =  cmp.get('v.changedFields');
+        fields.push(field);
+        cmp.set('v.changedFields', fields);
+        cmp.set('v.record', records);
+    }
 })

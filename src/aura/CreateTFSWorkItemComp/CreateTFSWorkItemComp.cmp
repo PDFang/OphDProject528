@@ -4,11 +4,17 @@
 
 <aura:component description="CreateTFSWorkItemComp" implements="forceCommunity:availableForAllPageTypes,flexipage:availableForAllPageTypes,force:appHostable" access="global" controller="WorkItemCreateController">
 
+    <ltng:require styles="/resource/slds213/assets/styles/salesforce-lightning-design-system-vf.css" />
+    <ltng:require styles="/resource/slds213/assets/styles/salesforce-lightning-design-system-ltng.min.css" />
     <aura:handler name="init" value="{!this}" action="{!c.init}" />
-    <aura:attribute name="record" type="Object" description="The record being edited"/>
+    <aura:attribute name="record" type="Object[]" description="The record being edited"/>
     <aura:attribute name="fields" type="Object[]"/>
     <aura:attribute name="form" type="Aura.Component[]"/>
     <aura:attribute name="inputToField" type="Map"/>
+    <aura:attribute name="values" type="Object[]"/>
+
+    <aura:attribute name="changedFields" type="object[]"/>
+
 
     <div class="slds sldsCustom">
         <div class="slds-form--horizontal">
@@ -27,11 +33,16 @@
             </div>
 
         </div>
-        <fieldset class="slds-form-element containerDiv">
-            <div class="slds-form-element__control">
+        <fieldset class="slds-form-element containerDiv" style="padding-bottom:20px;">
+            <div class="slds-form-element__control" >
                     {!v.form}
             </div>
         </fieldset>
     </div>
+		<Center>
+        <button class="slds-button slds-button--brand" onclick="{!c.doSubmit}">Save</button>
+        <button class="slds-button">Cancel</button>
+        </Center>
+        
     </div>
 </aura:component>

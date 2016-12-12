@@ -1,0 +1,12 @@
+<aura:component >
+    <aura:attribute name="sampleMap" type="Map" default="{0:'Zero',1:'One'}"/>
+    
+    <div>
+        <h1>Map</h1>
+        <aura:iteration items="{!v.sampleMap}" var="row">
+            {!row}
+        </aura:iteration>
+    </div>
+    
+	
+</aura:component>
