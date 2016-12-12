@@ -18,7 +18,7 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
 
     // update Shared Opportunity status to 'Closed', if the opportunity has been accepted but Shared Opportunity status is 'New'
     // delete apex sharing when the status is changed from 'New' to 'Accepted' or 'Rejected'
-    public static void updateStatusAndRemoveSharing(Map<Id, Shared_Opportunity__c> newMap, Map<Id, Shared_Opportunity__c> oldMap){
+    private static void updateStatusAndRemoveSharing(Map<Id, Shared_Opportunity__c> newMap, Map<Id, Shared_Opportunity__c> oldMap){
 
         system.debug('**** updateStatusAndRemoveSharing(): shared opps - ' + newMap.values());
         Set<Id> oppIdSet = new Set<Id>();
@@ -34,7 +34,7 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
         }
         system.debug('**** updateStatusAndRemoveSharing(): oppIdSet - ' + oppIdSet);
 
-        List<Shared_Opportunity__Share> shareList = new List<Shared_Opportunity__Share>();
+        Set<Id> shareIds = new Set<Id>();
         List<Shared_Opportunity__c> sharedOppList = new List<Shared_Opportunity__c>();
 
         for(Shared_Opportunity__Share share : [
@@ -44,9 +44,9 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
                 and Rowcause = :Schema.Shared_Opportunity__Share.RowCause.iCE_Partner__c
         ]){
             if(share.Parent.Status__c == 'Rejected' && share.Parent.Partner_User__c == share.UserOrGroupId){
-                shareList.add(share);
+                shareIds.add(share.Id);
             } else if(share.Parent.Opportunity__r.iCE_Partner_Status__c == 'Accepted'){
-                shareList.add(share);
+                shareIds.add(share.Id);
                 if(share.Parent.Status__c != 'Accepted'){
                     Shared_Opportunity__c updateOpp = new Shared_Opportunity__c(
                             Id = share.ParentId,
@@ -57,9 +57,9 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
             }
         }
 
-        system.debug('**** updateStatusAndRemoveSharing(): shareList - ' + shareList);
-        if(shareList.size() > 0)
-            delete shareList;
+        system.debug('**** updateStatusAndRemoveSharing(): shareIds - ' + shareIds);
+        if(shareIds.size() > 0)
+            deleteApexSharingFuture(shareIds);
 
         system.debug('**** updateStatusAndRemoveSharing(): sharedOppList - ' + sharedOppList);
         if(sharedOppList.size() > 0)
@@ -67,8 +67,25 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
 
     } // end of updateStatusAndRemoveSharing()
 
+    @Future
+    private static void deleteApexSharingFuture(Set<Id> shareIds){
+
+        List<Shared_Opportunity__Share> shareList = new List<Shared_Opportunity__Share>();
+        for(Shared_Opportunity__Share share : [
+                Select Id from Shared_Opportunity__Share
+                where Id IN :shareIds
+        ]){
+            shareList.add(share);
+        }
+
+        system.debug('**** deleteApexSharingFuture(): shareList - ' + shareList);
+        if(shareList.size() > 0)
+            delete shareList;
+
+    } // end of deleteApexSharingFuture()
+
     // create an account partner record when Shared Opportunity is accepted
-    public static void createAccountPartner(List<Shared_Opportunity__c> oppList, Map<Id, Shared_Opportunity__c> oldMap){
+    private static void createAccountPartner(List<Shared_Opportunity__c> oppList, Map<Id, Shared_Opportunity__c> oldMap){
         system.debug('**** createAccountPartner(): oppList - ' + oppList);
         Set<Id> partnerIdSet = new Set<Id>();
         Set<Id> accountIdSet = new Set<Id>();
@@ -132,7 +149,7 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
     } // end of createAccountPartner()
 
     // Update opportunity when Shared Opportunity is accepted
-    public static void updateOpportunity(List<Shared_Opportunity__c> oppList, Map<Id, Shared_Opportunity__c> oldMap){
+    private static void updateOpportunity(List<Shared_Opportunity__c> oppList, Map<Id, Shared_Opportunity__c> oldMap){
 
         system.debug('**** updateOpportunity(): oppList - ' + oppList);
         Set<Id> partnerIdSet = new Set<Id>();
