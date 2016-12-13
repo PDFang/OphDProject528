@@ -20,22 +20,57 @@ public with sharing class GanttChartTFSProjectHelper {
             TeamSizeMap__c teamSize = TeamSizeMap__c.getValues(team);
             decimal idealTeam = teamSize.IdealTeamSize__c;
             double estimate = 0.0;
+            decimal runningCapacity = 0.0;
+            date prevEndDate;
             for(Project__c proj : mpProjectsByTeam.get(team)){
                 ProjectSizeMap__c projSize = ProjectSizeMap__c.getValues(proj.T_Shirt__c);
-                double runningEstimate = projSize.Estimate__c + estimate;
-                estimate = projSize.Estimate__c;
 
-                integer sprintOut = integer.valueOf(runningEstimate/idealTeam) + 1;
+                decimal runningEstimate = projSize.Estimate__c + estimate;
+                estimate = runningEstimate;
+                decimal sprintOutDecimal = runningEstimate /idealTeam;
+                sprintOutDecimal = sprintOutDecimal.round(System.RoundingMode.CEILING);
+                integer sprintOut = integer.valueOf(sprintOutDecimal) ;
                 if(proj.ProjectStatus__c == 'Active/Being Worked')
                     sprintOut = 0;
-                string sprint = sprintMaps.get(sprintOut);
-                SprintDateMap__c sprintdate = SprintDateMap__c.getValues(sprint);
-                date projectEndDate =  sprintdate.EndDate__c;
-                date sprintStartDate = sprintdate.StartDate__c;
-                integer datediff = sprintStartDate.daysBetween(projectEndDate);
-                decimal estimatedDuration = (datediff * estimate).round();
-                date projectStartDate = projectEndDate.addDays(-integer.valueOf(estimatedDuration));
 
+
+
+
+                string sprint = sprintMaps.get(sprintOut);
+
+                SprintDateMap__c sprintdate = SprintDateMap__c.getValues(sprint);
+                date sprintEndDate =  sprintdate.EndDate__c;
+                date sprintStartDate = sprintdate.StartDate__c;
+                date projectStartDate = sprintStartDate;
+
+                runningCapacity = 1 - (runningEstimate/idealTeam);
+                if(runningEstimate > runningCapacity)
+                {
+                    if(prevEndDate != null)
+                        projectStartDate = prevEndDate;
+
+                }
+
+
+                integer datediff = sprintStartDate.daysBetween(sprintEndDate);
+                decimal estimatedDuration = ((datediff * projSize.Estimate__c)/idealTeam);
+                estimatedDuration = estimatedDuration.round(System.RoundingMode.CEILING);
+                date projectEndDate = projectStartDate.addDays(integer.valueOf(estimatedDuration));
+                prevEndDate = projectEndDate;
+
+                if(team == 'Justice League')
+                {
+                    system.debug('Project & priority => ' + proj.Summary__c + ' => ' + proj.BattingOrder__c);
+                  /**  system.debug('runningEstimate =>' + runningEstimate);
+                    system.debug('sprintOutDecimal =>' + sprintOutDecimal);**/
+                    system.debug('sprintOut=> ' + sprintOut);
+                    system.debug('projectEndDate=> ' + projectEndDate);
+                    system.debug('datediff=> ' + datediff);
+                    system.debug('projectStartDate=> ' + projectStartDate);
+
+                }
+                string productChannel =  proj.Primary_Product__c;
+                productChannel = productChannel.length() > 14 ? productChannel.substring(0,11) + '...' : productChannel;
                 ChartData2 childData = new ChartData2();
                 childData.ProjectId = proj.Name;
                 childData.ProjectName = proj.Name + ' - ' + proj.Summary__c;
@@ -46,7 +81,8 @@ public with sharing class GanttChartTFSProjectHelper {
                 childData.ProjectManager = proj.ProjectManager__r.Name;
                 childData.Team = team;
                 childData.TShirtSize = proj.T_Shirt__c;
-                childData.ProductChannel = proj.Primary_Product__c;
+                childData.ProductChannel = productChannel ;
+                childData.ProductChannelFullName = proj.Primary_Product__c ;
                 childData.ProjectStatus = proj.ProjectStatus__c;
                 ProgramColorMapping__c colorProgram = ProgramColorMapping__c.getValues(proj.Primary_Product__c);
                 childData.ProgramColor = colorProgram.Color__c;
@@ -56,7 +92,6 @@ public with sharing class GanttChartTFSProjectHelper {
             }
         }
 
-        //begin iterating through the list by team assign based on capacity
         return dataList;
     }
 
@@ -66,12 +101,14 @@ public with sharing class GanttChartTFSProjectHelper {
         list<Project__c> lstProjects  = new list<Project__c>();
 
         String[] statusFilters = new String[]{'Active/Being Worked', 'In Queue'};
+        string[] projectSubTypeFilters = new string[]{'Reporting','CDR Scrub','COGS','Reporting Services'};
 
         string queryString = 'select Name, ProjectManager__r.Name, ProjectStatus__c,BattingOrder__c, Primary_Product__c,Team__c, Summary__c,RequestedDeliveryDate__c, Story_Point_Percentage_Complete__c, T_Shirt__c, PercentComplete__c from Project__c Where ProjectStatus__c in :statusFilters and RecordType.Name = \'IT Project Request\' ';
+
+        queryString +=  ' And Primary_Product__c != null and T_Shirt__c !=null and Team__c != null  and Blocked__c = false '
+                     + ' and ProjectType__c != \'Time Keeping\'';
         if(programName.size() > 0)
             queryString +=  ' And Primary_Product__c in :programName';
-        else
-                queryString +=  ' And Primary_Product__c != null and T_Shirt__c !=null';
 
         if(TeamName.size() > 0)
             queryString += ' And Team__c in :TeamName';
@@ -81,8 +118,6 @@ public with sharing class GanttChartTFSProjectHelper {
         System.debug(queryString);
 
         lstProjects = Database.query(queryString);
-
-
 
         return lstProjects;
 
@@ -156,7 +191,7 @@ public with sharing class GanttChartTFSProjectHelper {
         list<SprintDateMap__c> lstSprints = new list<SprintDateMap__c>();
         for(SprintDateMap__c sp : iterationDates)
         {
-            if(sp.EndDate__c >= system.today())
+            if(sp.StartDate__c >= system.today())
             {
                 lstSprints.add(sp);
             }
