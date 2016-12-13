@@ -20,8 +20,7 @@ public without sharing class OpportunityPartnerSharingExtension {
         return displayList;
     }
 
-    @TestVisible
-    private static final String PARTNEY_TYPE_ICE = 'iCE';
+    public static final String PARTNEY_TYPE_ICE = 'iCE';
 
     private static final Integer NO_OF_ROWS = 10;
 
@@ -78,12 +77,12 @@ public without sharing class OpportunityPartnerSharingExtension {
 
     private void doInit(){
 
-        List<Partner_Permission_Set__mdt> mdt = [
+        List<Partner_Permission_Sets__c> partnerPermissions = [
                 Select Permission_Set__c, Partner_Type__c
-                from Partner_Permission_Set__mdt
+                from Partner_Permission_Sets__c
                 where Partner_Type__c = :PARTNEY_TYPE_ICE
         ];
-        if(mdt.isEmpty()){
+        if(partnerPermissions.isEmpty()){
             return;
         }
 
@@ -99,7 +98,7 @@ public without sharing class OpportunityPartnerSharingExtension {
         for(PermissionSetAssignment psa :[
                 Select AssigneeId, Assignee.Name, Assignee.isActive, Assignee.ContactId, Assignee.AccountId, Assignee.Account.Name
                 from PermissionSetAssignment
-                where PermissionSet.Name = :mdt[0].Permission_Set__c
+                where PermissionSet.Name = :partnerPermissions[0].Permission_Set__c
                 and Assignee.isActive = true
                 and AssigneeId NOT IN :currentUserIds
                 order by Assignee.Name
@@ -151,12 +150,12 @@ public without sharing class OpportunityPartnerSharingExtension {
         system.debug('**** search(): keyword - ' + keyword);
         system.debug('**** search(): searchBy - ' + searchBy);
         try {
-            List<Partner_Permission_Set__mdt> mdt = [
+            List<Partner_Permission_Sets__c> partnerPermissions = [
                     Select Permission_Set__c, Partner_Type__c
-                    from Partner_Permission_Set__mdt
+                    from Partner_Permission_Sets__c
                     where Partner_Type__c = :PARTNEY_TYPE_ICE
             ];
-            if (mdt.isEmpty() || string.isBlank(keyword) || string.isBlank(searchBy)) {
+            if (partnerPermissions.isEmpty() || string.isBlank(keyword) || string.isBlank(searchBy)) {
                 return null;
             }
 
@@ -165,14 +164,18 @@ public without sharing class OpportunityPartnerSharingExtension {
             refinedKeyword += refinedKeyword.endsWith('%') ? '' : '%';
             String soql = 'Select AssigneeId, Assignee.Name, Assignee.isActive, Assignee.ContactId, Assignee.AccountId, Assignee.Account.Name '
                     + 'from PermissionSetAssignment '
-                    + 'where PermissionSet.Name = \'' + mdt[0].Permission_Set__c + '\' '
+                    + 'where PermissionSet.Name = \'' + partnerPermissions[0].Permission_Set__c + '\' '
                     + 'and Assignee.isActive = true and ';
             if(currentUserIds.size() > 0 ){
-                soql = soql + 'AssigneeId NOT IN (\'' + String.join(new List<Id>(currentUserIds), ',') + '\') and ';
+                String userIdString = '';
+                for(Id userId : currentUserIds){
+                    userIdString += userIdString.length() > 0 ? ',' : '';
+                    userIdString += '\'' + userId + '\'';
+                }
+                soql = soql + 'AssigneeId NOT IN (' + userIdString + ') and ';
             }
             soql = soql + ( (searchBy == 'Name') ? 'Assignee.Name ' : 'Assignee.Account.Name ' );
             soql = soql + 'like \'' + refinedKeyword + '\' order by Assignee.Name';
-
             system.debug('**** search(): soql - ' + soql);
 
             for (PermissionSetAssignment psa :Database.query(soql)) {

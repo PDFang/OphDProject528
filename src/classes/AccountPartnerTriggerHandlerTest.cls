@@ -154,11 +154,11 @@ private class AccountPartnerTriggerHandlerTest {
 		
         // verify permission set assignments
         Map<String, String> partnerPermissionMap = new Map<String, String>();
-        for(Partner_Permission_Set__mdt mdt : [
-                Select Permission_Set__c, Partner_Type__c from Partner_Permission_Set__mdt
+        for(Partner_Permission_Sets__c ps : [
+                Select Permission_Set__c, Partner_Type__c from Partner_Permission_Sets__c
         ])
         {
-            partnerPermissionMap.put(mdt.Partner_Type__c, mdt.Permission_Set__c);
+            partnerPermissionMap.put(ps.Partner_Type__c, ps.Permission_Set__c);
         }
 
         if(partnerPermissionMap.size() > 0){
@@ -289,11 +289,11 @@ private class AccountPartnerTriggerHandlerTest {
 		
         // verify permission set assignments are removed
         Map<String, String> partnerPermissionMap = new Map<String, String>();
-        for(Partner_Permission_Set__mdt mdt : [
-                Select Permission_Set__c, Partner_Type__c from Partner_Permission_Set__mdt
+        for(Partner_Permission_Sets__c ps : [
+                Select Permission_Set__c, Partner_Type__c from Partner_Permission_Sets__c
         ])
         {
-            partnerPermissionMap.put(mdt.Partner_Type__c, mdt.Permission_Set__c);
+            partnerPermissionMap.put(ps.Partner_Type__c, ps.Permission_Set__c);
         }
 
         if(partnerPermissionMap.size() > 0){

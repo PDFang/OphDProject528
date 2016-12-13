@@ -58,8 +58,8 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
         }
 
         system.debug('**** updateStatusAndRemoveSharing(): shareIds - ' + shareIds);
-        if(shareIds.size() > 0)
-            deleteApexSharingFuture(shareIds);
+        /*if(shareIds.size() > 0)
+            deleteApexSharingFuture(shareIds);*/
 
         system.debug('**** updateStatusAndRemoveSharing(): sharedOppList - ' + sharedOppList);
         if(sharedOppList.size() > 0)
@@ -67,7 +67,7 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
 
     } // end of updateStatusAndRemoveSharing()
 
-    @Future
+    /*@Future
     private static void deleteApexSharingFuture(Set<Id> shareIds){
 
         List<Shared_Opportunity__Share> shareList = new List<Shared_Opportunity__Share>();
@@ -82,7 +82,7 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
         if(shareList.size() > 0)
             delete shareList;
 
-    } // end of deleteApexSharingFuture()
+    } // end of deleteApexSharingFuture()*/
 
     // create an account partner record when Shared Opportunity is accepted
     private static void createAccountPartner(List<Shared_Opportunity__c> oppList, Map<Id, Shared_Opportunity__c> oldMap){
@@ -128,7 +128,7 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
             Set<Id> iCEPartners = iCEPartnerMap.get(opp.Account_ID__c);
             User partner = partnerUserMap.get(opp.Partner_User__c);
             // check already an iCE partner
-            if(iCEPartners.contains(partner.AccountId)){
+            if(iCEPartners != null && iCEPartners.contains(partner.AccountId)){
                 continue;
             }
             Account_Partner__c newPartner = new Account_Partner__c(

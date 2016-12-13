@@ -359,11 +359,11 @@ public class UserTriggerHandler extends TriggerHandler{
         
     } // end of getAccountPartners()  
     
-    // get Partner Permission Set custom metadata type
+    // get Partner Permission Set custom settings
     private static Map<String, String> getMetaDataType(){        
     	Map<String, String> partnerPermissionMap = new Map<String, String>();
-        for(Partner_Permission_Set__mdt mdt : [
-            Select Permission_Set__c, Partner_Type__c from Partner_Permission_Set__mdt
+        for(Partner_Permission_Sets__c mdt : [
+            Select Permission_Set__c, Partner_Type__c from Partner_Permission_Sets__c
         ])
         {
             partnerPermissionMap.put(mdt.Partner_Type__c, mdt.Permission_Set__c);
