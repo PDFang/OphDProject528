@@ -25,17 +25,6 @@ private class SharedOpportunityTriggerHandlerTest {
             sharedOppList.add(sharedOpp);
         }
         insert sharedOppList;
-        // apex sharing
-        List<Shared_Opportunity__Share> shareList = new List<Shared_Opportunity__Share>();
-        for(Shared_Opportunity__c sharedOpp : sharedOppList){
-            Shared_Opportunity__Share newShare = new Shared_Opportunity__Share();
-            newShare.ParentId = sharedOpp.Id;
-            newShare.UserOrGroupId = sharedOpp.Partner_User__c;
-            newShare.AccessLevel = 'Edit';
-            newShare.Rowcause = Schema.Shared_Opportunity__Share.RowCause.iCE_Partner__c;
-            shareList.add(newShare);
-        }
-        insert shareList;
 
         test.startTest();
         sharedOppList[0].Status__c = 'Accepted';
@@ -81,17 +70,6 @@ private class SharedOpportunityTriggerHandlerTest {
             sharedOppList.add(sharedOpp);
         }
         insert sharedOppList;
-        // apex sharing
-        List<Shared_Opportunity__Share> shareList = new List<Shared_Opportunity__Share>();
-        for(Shared_Opportunity__c sharedOpp : sharedOppList){
-            Shared_Opportunity__Share newShare = new Shared_Opportunity__Share();
-            newShare.ParentId = sharedOpp.Id;
-            newShare.UserOrGroupId = sharedOpp.Partner_User__c;
-            newShare.AccessLevel = 'Edit';
-            newShare.Rowcause = Schema.Shared_Opportunity__Share.RowCause.iCE_Partner__c;
-            shareList.add(newShare);
-        }
-        insert shareList;
 
         test.startTest();
         sharedOppList[0].Status__c = 'Rejected';

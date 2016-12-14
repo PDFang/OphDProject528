@@ -216,18 +216,6 @@ public without sharing class OpportunityPartnerSharingExtension {
             if(sharedOppList.size() > 0)
                 insert sharedOppList;
 
-            // share records with partner users
-            List<Shared_Opportunity__Share> shareList = new List<Shared_Opportunity__Share>();
-            for(Shared_Opportunity__c sharedOpp : sharedOppList){
-                Shared_Opportunity__Share newShare = new Shared_Opportunity__Share();
-                newShare.ParentId = sharedOpp.Id;
-                newShare.UserOrGroupId = sharedOpp.Partner_User__c;
-                newShare.AccessLevel = 'Edit';
-                newShare.Rowcause = Schema.Shared_Opportunity__Share.RowCause.iCE_Partner__c;
-                shareList.add(newShare);
-            }
-            insert shareList;
-
             // update opportunity status
             opp.iCE_Partner_Status__c = 'Pending';
             update opp;

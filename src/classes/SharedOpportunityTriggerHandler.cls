@@ -7,7 +7,7 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
     private static Map<Id, User> userMap = null;
 
     public override void afterInsert(){
-
+        createSharing((List<Shared_Opportunity__c>) trigger.new);
     }
 
     public override void afterUpdate(){
@@ -15,6 +15,28 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
         updateStatusAndRemoveSharing((Map<Id, Shared_Opportunity__c>) trigger.newMap, (Map<Id, Shared_Opportunity__c>) trigger.oldMap);
         createAccountPartner((List<Shared_Opportunity__c>) trigger.new, (Map<Id, Shared_Opportunity__c>) trigger.oldMap);
     }
+
+    // create apex sharing
+    private static void createSharing(List<Shared_Opportunity__c> newList){
+
+        // share records with partner users
+        List<Shared_Opportunity__Share> shareList = new List<Shared_Opportunity__Share>();
+        for(Shared_Opportunity__c sharedOpp : newList){
+            if(sharedOpp.Partner_User__c == null){
+                continue;
+            }
+            Shared_Opportunity__Share newShare = new Shared_Opportunity__Share();
+            newShare.ParentId = sharedOpp.Id;
+            newShare.UserOrGroupId = sharedOpp.Partner_User__c;
+            newShare.AccessLevel = 'Edit';
+            newShare.Rowcause = Schema.Shared_Opportunity__Share.RowCause.iCE_Partner__c;
+            shareList.add(newShare);
+        }
+
+        if(shareList.size() > 0)
+            insert shareList;
+
+    } // end of createSharing()
 
     // update Shared Opportunity status to 'Closed', if the opportunity has been accepted but Shared Opportunity status is 'New'
     // delete apex sharing when the status is changed from 'New' to 'Accepted' or 'Rejected'
