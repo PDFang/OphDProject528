@@ -17,5 +17,8 @@ public class ChartData2
     public string TeamColor{get;set;}
     public string ProgramColor{get;set;}
     public string ProductChannelFullName{get;set;}
+    public string ProgramFontColor{get;set;}
+    public string TeamFontColor{get;set;}
+    public decimal GlobalPriority{get;set;}
 
 }
