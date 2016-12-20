@@ -81,19 +81,16 @@
     function handleTeamClick(){
       var selection = chart1.getSelection();
       var message = '';
-      if(JSON.stringify(selection) != '[{"row":null,"column":null}]'){
       if (selection) {
         var value = dataTeam.getValue(selection[0].row, 1);
         var numb = value.match(/\d/g);
         numb = numb.join("");
         GanttChartTFSProjectController.RedirectToProject(numb, function(result, event){
             if(event.status){
-                chart1.setSelection([]);
-               window.open(result, '_blank')
+               window.open(result, '_blank');
             }
             },{escape:true}
         );
-      }
       }
     }
 
@@ -123,12 +120,6 @@
         dataTeam.addColumn({ type: 'date', id: 'End' });
         dataTeam.addColumn({type: 'string', role: 'tooltip', 'p': {'html': true}});
 
-         result.lstChartData = result.lstChartData.sort(
-                                      sort_by('Team', {
-                                                name: 'StartDate',
-                                                primer: parseInt,
-                                                reverse: false
-                                                }));
 
         for (var i = 0; i < result.lstChartData.length; i++) {
             var r = result.lstChartData[i];
@@ -158,7 +149,7 @@
              width:1100
         };
 
-        console.log('data =>' + dataTeam.toJSON());
+
 
         chart1 = new google.visualization.Timeline(document.getElementById('team_div'));
         google.visualization.events.addListener(chart1, 'select', handleTeamClick);
@@ -166,7 +157,7 @@
         chart1.draw(dataTeam, options);
         google.visualization.events.addListener(chart1, 'onmouseover', function (e){
              if(e.row != null){
-                $(".google-visualization-tooltip").html(dataTeam.getValue(e.row,5)).css({width:"500px",height:"auto"});
+                $(".google-visualization-tooltip").html(dataProgram.getValue(e.row,5)).css({width:"500px",height:"auto"});
              }
         });
     }
@@ -240,24 +231,29 @@
    function handleProjectClick(){
       var selection = chart.getSelection();
       var message = '';
+      
+      console.log(JSON.stringify(selection));
       if(JSON.stringify(selection) != '[{"row":null,"column":null}]'){
-          if (selection) {
+      
+      if (selection) {
 
 
-            var value = dataProgram.getValue(selection[0].row, 1);
-            console.log('value ' + value);
-            var numb = value.match(/\d/g);
-            numb = numb.join("");
-            GanttChartTFSProjectController.RedirectToProject(numb, function(result, event){
-                if(event.status){
-                     chart.setSelection([]);
-                     window.open(result, '_blank');
-                }
-                },{escape:true}
-            );
+        var value = dataProgram.getValue(selection[0].row, 1);
+        console.log('value ' + value);
+        var numb = value.match(/\d/g);
+        numb = numb.join("");
+        GanttChartTFSProjectController.RedirectToProject(numb, function(result, event){
+            if(event.status){
+                 chart.setSelection([]);
+                 window.open(result, '_blank');
+            }
+            },{escape:true}
+        );
+        
 
-          }
       }
+      }
+      
     }
 
    function buildPopUp(r){
@@ -265,19 +261,17 @@
         if(typeof r.ProjectManager != 'undefined')
             manager = r.ProjectManager;
         var buffer = "";
-        buffer = '<div  style="width:100%"><div class="row tooltipRow"><div class="col-sm-4" > Project#</div><div class="col-sm-8"><b>' + r.ProjectId + '</b></div></div>';
-        buffer += '<div class="row tooltipRow"><div class="col-sm-4"> Project Title</div><div class="col-sm-8"><b>' + r.ProjectName + '</b></div></div>';
-        buffer += '<div class="row tooltipRow"><div class="col-sm-4"> Project status</div><div class="col-sm-8"><b>' + r.ProjectStatus + '</b></div></div>';
-        buffer += '<div class="row tooltipRow"><div class="col-sm-4" > Project channel</div><div class="col-sm-8"><b>' +  r.ProductChannelFullName + '</b></div></div>';
+        buffer = '<div  style="width:100%"><div class="row tooltipRow"><div class="col-sm-3" > Project#</div><div class="col-sm-9"><b>' + r.ProjectId + '</b></div></div>';
+        buffer += '<div class="row tooltipRow"><div class="col-sm-3"> Project Title</div><div class="col-sm-9"><b>' + r.ProjectName + '</b></div></div>';
+        buffer += '<div class="row tooltipRow"><div class="col-sm-3"> Project status</div><div class="col-sm-9"><b>' + r.ProjectStatus + '</b></div></div>';
+        buffer += '<div class="row tooltipRow"><div class="col-sm-3" > Project channel</div><div class="col-sm-9"><b>' +  r.ProductChannelFullName + '</b></div></div>';
         buffer += '<div class="row tooltipRow"><div class="col-sm-4" style="white-space nowrap"> Project Execution Team</div><div class="col-sm-8"><b>' +  r.Team + '</b></div></div>';
-        buffer += '<div class="row tooltipRow"> <div class="col-sm-4"> T Shirt Size</div><div class="col-sm-8"><b>' + r.TShirtSize + '</b></div></div>';
-        buffer += '<div class="row tooltipRow"> <div class="col-sm-4"> Priority</div><div class="col-sm-8"><b>' + r.GlobalPriority+ '</b></div></div>';
-        buffer += '<div class="row tooltipRow"> <div class="col-sm-4">Project Manager</div><div class="col-sm-8"><b>'+manager +"</b></div></div></div>";
+        buffer += '<div class="row tooltipRow"> <div class="col-sm-3"> T Shirt Size</div><div class="col-sm-9"><b>' + r.TShirtSize + '</b></div></div>';
+        buffer += '<div class="row tooltipRow"> <div class="col-sm-3"> Priority</div><div class="col-sm-9"><b>' + r.GlobalPriority+ '</b></div></div>';
+        buffer += '<div class="row tooltipRow"> <div class="col-sm-3">Project Manager</div><div class="col-sm-9"><b>'+manager +"</b></div></div></div>";
        // buffer += "<label> Business Analyst: " + "</label></br>";
         return buffer;
      }
-
-
 
      var sort_by;
      (function() {

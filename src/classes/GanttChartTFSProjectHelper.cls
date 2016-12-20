@@ -12,7 +12,19 @@ public with sharing class GanttChartTFSProjectHelper {
         list<Project__c> lstProjects  = queryProject(programName, TeamName);
         map<string, list<Project__c>> mpProjectsByTeam = GetProjectsByTeam(lstProjects);
         map<integer, string> sprintMaps = mapSprints();
+        set<string> teamSet = new set<string>();
+        set<string> programSet = new set<string>();
+        teamset.addAll(TeamName);
+        programSet.addAll(programName);
+        set<string> availableTeams = new set<string>();
+        for(string team : mpProjectsByTeam.keySet()){
+            if(teamSet.contains(team) && teamSet.size() > 0)
+                availableTeams.add(team);
+            else if ( teamSet.size() == 0)
+                availableTeams.add(team);
 
+        }
+        integer maxLength = getMaxLength(availableTeams);
         //iterate through the list due date based on size of project and current status
         for(string team : mpProjectsByTeam.keySet())
         {
@@ -22,6 +34,8 @@ public with sharing class GanttChartTFSProjectHelper {
             double estimate = 0.0;
             decimal runningCapacity = 0.0;
             date prevEndDate;
+
+
             for(Project__c proj : mpProjectsByTeam.get(team)){
                 ProjectSizeMap__c projSize = ProjectSizeMap__c.getValues(proj.T_Shirt__c);
 
@@ -58,43 +72,53 @@ public with sharing class GanttChartTFSProjectHelper {
                 date projectEndDate = projectStartDate.addDays(integer.valueOf(estimatedDuration));
                 prevEndDate = projectEndDate;
 
-                if(team == 'Justice League')
+                if((teamset.size() == 0 || teamSet.contains(team)) && (programSet.size() == 0 || programSet.contains(proj.Primary_Product__c)))
                 {
-                    system.debug('Project & priority => ' + proj.Summary__c + ' => ' + proj.BattingOrder__c);
-                  /**  system.debug('runningEstimate =>' + runningEstimate);
-                    system.debug('sprintOutDecimal =>' + sprintOutDecimal);**/
-                    system.debug('sprintOut=> ' + sprintOut);
-                    system.debug('projectEndDate=> ' + projectEndDate);
-                    system.debug('datediff=> ' + datediff);
-                    system.debug('projectStartDate=> ' + projectStartDate);
-
+                    string productChannel =  proj.Primary_Product__c;
+                    productChannel = productChannel.length() > maxLength ? productChannel.substring(0,(maxLength - 3)) + '...' : productChannel;
+                    ChartData2 childData = new ChartData2();
+                    childData.ProjectId = proj.Name;
+                    childData.ProjectName = proj.Name + ' - ' + proj.Summary__c;
+                    childData.StartDate = projectStartDate;
+                    childData.EndDate = projectEndDate;
+                    childData.DurationDays = integer.valueOf(estimatedDuration);
+                    childData.PercentComplete = proj.Story_Point_Percentage_Complete__c;
+                    childData.ProjectManager = proj.ProjectManager__r.Name;
+                    childData.Team = team;
+                    childData.TShirtSize = proj.T_Shirt__c;
+                    childData.ProductChannel = productChannel ;
+                    childData.ProductChannelFullName = proj.Primary_Product__c ;
+                    childData.ProjectStatus = proj.ProjectStatus__c;
+                    ProgramColorMapping__c colorProgram = ProgramColorMapping__c.getValues(proj.Primary_Product__c);
+                    childData.ProgramFontColor = colorProgram.FontColor__c;
+                    childData.ProgramColor = colorProgram.Color__c;
+                    TeamColorMapping__c colorTeam = TeamColorMapping__c.getValues(proj.Development_Team__c);
+                    childData.TeamColor = colorTeam.Color__c;
+                    childData.TeamFontColor = colorTeam.FontColor__c;
+                    childData.GlobalPriority = proj.BattingOrder__c;
+                    dataList.add(childData);
                 }
-                string productChannel =  proj.Primary_Product__c;
-                productChannel = productChannel.length() > 14 ? productChannel.substring(0,11) + '...' : productChannel;
-                ChartData2 childData = new ChartData2();
-                childData.ProjectId = proj.Name;
-                childData.ProjectName = proj.Name + ' - ' + proj.Summary__c;
-                childData.StartDate = projectStartDate;
-                childData.EndDate = projectEndDate;
-                childData.DurationDays = integer.valueOf(estimatedDuration);
-                childData.PercentComplete = proj.Story_Point_Percentage_Complete__c;
-                childData.ProjectManager = proj.ProjectManager__r.Name;
-                childData.Team = team;
-                childData.TShirtSize = proj.T_Shirt__c;
-                childData.ProductChannel = productChannel ;
-                childData.ProductChannelFullName = proj.Primary_Product__c ;
-                childData.ProjectStatus = proj.ProjectStatus__c;
-                ProgramColorMapping__c colorProgram = ProgramColorMapping__c.getValues(proj.Primary_Product__c);
-                childData.ProgramColor = colorProgram.Color__c;
-                TeamColorMapping__c colorTeam = TeamColorMapping__c.getValues(proj.Team__c);
-                childData.TeamColor = colorTeam.Color__c;
-                dataList.add(childData);
+
             }
         }
 
         return dataList;
     }
 
+    private static integer getMaxLength(set<string> stTeams){
+        map<string, Integer> mpTeamLen = new map<string, integer>();
+        integer maxLen;
+        for(string team : stTeams){
+            mpTeamLen.put(team, team.length());
+        }
+        string maxkey = mpTeamLen.isEmpty()?null:new List<String>(mpTeamLen.keyset())[0];
+        for(string teamName : mpTeamLen.keySet()){
+            maxLen = mpTeamLen.get(teamName) > mpTeamLen.get(maxkey) ? mpTeamLen.get(teamName) : mpTeamLen.get(maxkey);
+        }
+
+        return maxLen;
+
+    }
 
     public static list<Project__c> queryProject(list<string>  programName, list<string> TeamName)
     {
@@ -103,15 +127,10 @@ public with sharing class GanttChartTFSProjectHelper {
         String[] statusFilters = new String[]{'Active/Being Worked', 'In Queue'};
         string[] projectSubTypeFilters = new string[]{'Reporting','CDR Scrub','COGS','Reporting Services'};
 
-        string queryString = 'select Name, ProjectManager__r.Name, ProjectStatus__c,BattingOrder__c, Primary_Product__c,Team__c, Summary__c,RequestedDeliveryDate__c, Story_Point_Percentage_Complete__c, T_Shirt__c, PercentComplete__c from Project__c Where ProjectStatus__c in :statusFilters and RecordType.Name = \'IT Project Request\' ';
+        string queryString = 'select Name, ProjectManager__r.Name, ProjectStatus__c,BattingOrder__c, Primary_Product__c,Development_Team__c, Summary__c,RequestedDeliveryDate__c, Story_Point_Percentage_Complete__c, T_Shirt__c, PercentComplete__c from Project__c Where ProjectStatus__c in :statusFilters and RecordType.Name = \'IT Project Request\' ';
 
-        queryString +=  ' And Primary_Product__c != null and T_Shirt__c !=null and Team__c != null  and Blocked__c = false '
+        queryString +=  ' And Primary_Product__c != null and T_Shirt__c !=null and Development_Team__c != null  and Blocked__c = false '
                      + ' and ProjectType__c != \'Time Keeping\'';
-        if(programName.size() > 0)
-            queryString +=  ' And Primary_Product__c in :programName';
-
-        if(TeamName.size() > 0)
-            queryString += ' And Team__c in :TeamName';
 
         queryString += ' Order By BattingOrder__c asc';
 
@@ -137,13 +156,13 @@ public with sharing class GanttChartTFSProjectHelper {
         sortedPrjectList.sort();
 
         for(ProjectCustomSort projSorted : sortedPrjectList){
-            if(mpProjectsByTeam.containsKey(projSorted.project.Team__c))
+            if(mpProjectsByTeam.containsKey(projSorted.project.Development_Team__c))
             {
-                mpProjectsByTeam.get(projSorted.project.Team__c).add(projSorted.project);
+                mpProjectsByTeam.get(projSorted.project.Development_Team__c).add(projSorted.project);
             }
             else
             {
-                mpProjectsByTeam.put(projSorted.project.Team__c, new list<Project__c>{projSorted.project});
+                mpProjectsByTeam.put(projSorted.project.Development_Team__c, new list<Project__c>{projSorted.project});
             }
         }
 
@@ -196,6 +215,7 @@ public with sharing class GanttChartTFSProjectHelper {
                 lstSprints.add(sp);
             }
         }
+        lstSprints.sort();
         return lstSprints;
     }
 
