@@ -102,12 +102,16 @@ public class OpportunityTriggerHelper {
         Set<Id> salesEngineerReassigned = new Set<Id>();
         //String wfoPremiseOpp = inContactBaseClass.SelectRecordTypeIDByName('WFO Premise', 'Opportunity');
         //Project #75777 - Label changed from 'WFO Premise' to 'Qualified WFO Premise'
-        String wfoPremiseOpp = inContactBaseClass.SelectRecordTypeIDByName('Qualified WFO Premise', 'Opportunity');
+        Map<String,Schema.RecordTypeInfo> rtMapByName = Schema.SObjectType.Opportunity.getRecordTypeInfosByName();
+        String wfoPremiseQualifiedOpp = rtMapByName.containsKey('Qualified WFO Premise')
+                    ? rtMapByName.get('Qualified WFO Premise').getRecordTypeId() : null;
+        String wfoPremiseNewOpp = rtMapByName.containsKey('New WFO Premise')
+                    ? rtMapByName.get('New WFO Premise').getRecordTypeId() : null;
 
         for(Opportunity o : newOppList)
         {
 
-            if(o.RecordTypeId != wfoPremiseOpp)
+            if(o.RecordTypeId != wfoPremiseQualifiedOpp && o.RecordTypeId != wfoPremiseNewOpp)
             {
                 if(isInserted && o.SalesEngineer__c != null)
                 {
