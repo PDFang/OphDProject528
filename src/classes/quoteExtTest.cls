@@ -118,7 +118,9 @@ private class quoteExtTest {
 
         /* Get a valid stage name */
         OpportunityStage stage = [select MasterLabel from OpportunityStage limit 1];
-        Id oppRecordTypeId = inContactBaseClass.SelectRecordTypeIDByName('WFO Premise', 'Opportunity');
+        //Id oppRecordTypeId = inContactBaseClass.SelectRecordTypeIDByName('WFO Premise', 'Opportunity');
+        //Project #75777 - Label changed from 'WFO Premise' to 'Qualified WFO Premise'
+        Id oppRecordTypeId = inContactBaseClass.SelectRecordTypeIDByName('Qualified WFO Premise', 'Opportunity');
 
         /* Setup a basic opportunity */
         Opportunity o  = new Opportunity();
