@@ -1,23 +1,23 @@
 global class ContactFieldCleaner implements Database.Batchable<sObject>
 { 
 	global final String query;
-	global string sandboxId;
+	global string sandboxName;
 
-	global ContactFieldCleaner(string query, string sandboxId)
+	global class ContactFieldCleanerException extends Exception{}
+
+	global ContactFieldCleaner(string query, string sandboxName)
 	{
         //prevent this process from running against Production
 		string orgId = UserInfo.getOrganizationId();
 
         //don't run for the production OrgId unless running unit tests.
-        if(orgId != '00D700000008HFcEAM' || Test.isRunningTest())
+        if(orgId == '00D700000008HFcEAM' && !Test.isRunningTest())
 		{
-			this.query = query;
-			this.sandboxId = sandboxId;
+			throw new ContactFieldCleanerException('Not suppose to run this job in Production.');
 		}
-		else
-		{
-			this.query = '';
-		}
+		this.query = query;
+		this.sandboxName = sandboxName;
+
 	}
 
 	global Database.QueryLocator start(Database.BatchableContext context)
@@ -37,7 +37,7 @@ global class ContactFieldCleaner implements Database.Batchable<sObject>
         //update the contact records
 		for(Contact contact : scope)
 		{
-			contact.Email = contact.Email == null ? null : String.format('{0}.{1}', new List<string> { contact.Email, sandboxId });
+			contact.Email = contact.Email == null ? null : String.format('{0}.{1}', new List<string> { contact.Email, sandboxName });
 			contact.ADFSGuid__c = null;
 		}
 
@@ -70,9 +70,10 @@ global class ContactFieldCleaner implements Database.Batchable<sObject>
 		string messageBody = 'The ContactFieldCleaner process has completed';
 		message.setPlainTextBody(messageBody);
 
-		if(!Test.isRunningTest())
-		{
+		try{
 			Messaging.sendEmail(new Messaging.SingleEmailMessage[] { message });
+		}catch(system.EmailException ex){
+			system.debug(ex);
 		}
 	}
 
@@ -88,13 +89,14 @@ global class ContactFieldCleaner implements Database.Batchable<sObject>
 		for(String id : errorIds)
 		{
 			messageBody += String.Format('{0}\n', new List<string> { id });
-		}		
+		}
 
 		message.setPlainTextBody(messageBody);
 
-		if(!Test.isRunningTest())
-		{							
+		try{
 			Messaging.sendEmail(new Messaging.SingleEmailMessage[] { message });
+		}catch(system.EmailException ex){
+			system.debug(ex);
 		}
 	}
 }

@@ -1,0 +1,27 @@
+<!--
+ - Created by mohandaas.rangaswamy on 12/19/2016.
+ -->
+
+<aura:component description="TrustGridContainer">
+    <aura:attribute name="trustGridComponent" description="Trust Grid component" required="true" type="Aura.Component[]"/>
+    <aura:attribute name="mosScoreComponent" description="MOS Score component" required="true" type="Aura.Component[]"/>
+
+    <div class="slds-tabs--scoped">
+        <ul aura:id="tablist" class="slds-tabs--scoped__nav" role="tablist">
+            <li class="slds-tabs--scoped__item slds-text-heading--medium slds-active" title="Item One" role="presentation">
+                <a class="slds-tabs--scoped__link" href="javascript:void(0);" role="tab" tabindex="0" onclick="{!c.clickTab}" aria-selected="true" aria-controls="tab-scoped-1" id="tab-scoped-1__item">Status</a>
+            </li>
+            <li class="slds-tabs--scoped__item slds-text-heading--medium" title="Item Two" role="presentation">
+                <a class="slds-tabs--scoped__link" href="javascript:void(0);" role="tab" tabindex="-1"  onclick="{!c.clickTab}" aria-selected="false" aria-controls="tab-scoped-2" id="tab-scoped-2__item">MOS Scores</a>
+            </li>
+
+        </ul>
+        <div id="tab-scoped-1" class="slds-tabs--scoped__content slds-show" role="tabpanel" aria-labelledby="tab-scoped-1__item">
+            {!v.trustGridComponent}
+        </div>
+        <div id="tab-scoped-2" class="slds-tabs--scoped__content slds-hide" role="tabpanel" aria-labelledby="tab-scoped-2__item">
+            {!v.mosScoreComponent}
+        </div>
+    </div>
+
+</aura:component>

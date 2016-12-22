@@ -2,14 +2,21 @@ public class UpdateTotalMATAmount {
     public static void updateAmount(set<Id> stQuotes, set<string> stProdFam){
          Schema.DescribeSObjectResult d = Schema.SObjectType.Opportunity; 
          Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
-         ID  wfo = rtMapByName.get('WFO Premise').getRecordTypeId();
+         //ID  wfo = rtMapByName.get('WFO Premise').getRecordTypeId();
+        //Project #75777 - Label changed from 'WFO Premise' to 'Qualified WFO Premise'
+        Set<Id> wfoRecordTypeIds = new Set<Id>();
+        if(rtMapByName.containsKey('Qualified WFO Premise'))
+            wfoRecordTypeIds.add(rtMapByName.get('Qualified WFO Premise').getRecordTypeId());
+        if(rtMapByName.containsKey('New WFO Premise'))
+            wfoRecordTypeIds.add(rtMapByName.get('New WFO Premise').getRecordTypeId());
+
          list<Opportunity> lstOpp = new list<Opportunity>();
           
          AggregateResult[] sumOfQuotelines 
                  = [select SBQQ__Quote__r.SBQQ__Opportunity2__c Opp, SUM(SBQQ__NetTotal__c) Total
                    FROM SBQQ__QuoteLine__c 
                    where SBQQ__Quote__c in : stQuotes 
-                   and SBQQ__Quote__r.SBQQ__Opportunity2__r.RecordTypeId !=: wfo
+                   and SBQQ__Quote__r.SBQQ__Opportunity2__r.RecordTypeId NOT IN :wfoRecordTypeIds
                    and SBQQ__Product__r.Family in : stProdFam
                    and SBQQ__Quote__r.SBQQ__Primary__c =: true
                    Group By SBQQ__Quote__r.SBQQ__Opportunity2__c];
