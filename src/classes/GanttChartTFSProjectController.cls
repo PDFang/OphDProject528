@@ -29,8 +29,8 @@ public without sharing class GanttChartTFSProjectController {
 
         set<string> stPrograms = new set<string>();
         set<string> stTeams = new set<string>();
-        String[] statusFilters = new String[]{'Active/Being Worked', 'In Queue'};
-        for(Project__c project : [select Development_Team__c, Primary_Product__c From Project__c where Primary_Product__c != null and Development_Team__c !=null and RecordType.Name = 'IT Project Request' and ProjectStatus__c in :statusFilters]){
+        String[] statusFilters = new String[]{'In Queue'}; // 'Active/Being Worked',  - Future implementation
+        for(Project__c project : [select Development_Team__c, Primary_Product__c From Project__c where Primary_Product__c != null and Development_Team__c !=null and T_Shirt__c !=null and RecordType.Name = 'IT Project Request' and ProjectStatus__c in :statusFilters]){
             stPrograms.add(project.Primary_Product__c);
             stTeams.add(project.Development_Team__c);
         }

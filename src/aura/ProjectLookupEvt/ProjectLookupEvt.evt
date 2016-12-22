@@ -1,0 +1,7 @@
+<!--
+ - Created by arnab.karsarkar on 12/16/2016.
+ -->
+
+<aura:event type="COMPONENT" description="ProjectLookupEvt">
+    <aura:attribute name="searchString" type="String"/>
+</aura:event>

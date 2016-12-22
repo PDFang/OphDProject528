@@ -1,2 +1,15 @@
-.THIS {
+.THIS .slds-datepicker{
+    margin-top: 65% !important;
+    font-size: 1.25rem !important;
+    position: relative !important;
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+
+.THIS .event-day{
+        border-radius: 50%;
+        border-color: blue;
+        border-width: 1px;
+        border-style: solid;
 }

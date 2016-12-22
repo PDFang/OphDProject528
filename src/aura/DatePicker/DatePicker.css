@@ -1,0 +1,20 @@
+/**
+ * Created by arnab.karsarkar on 12/21/2016.
+ */
+.THIS thead {
+    background-color: #f0f1f2;
+    border-bottom: 1px solid #f0f1f2;
+}
+
+.THIS .-select {
+  height:2.125rem!important;
+}
+
+.THIS .slds-transition-hide {
+    transition: opacity 2s;
+}
+
+.THIS .slds-day{
+    font-size: 1.25rem !important;
+}
+

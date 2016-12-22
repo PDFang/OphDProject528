@@ -29,6 +29,7 @@
 
        record = JSON.parse(JSON.stringify(record));
        console.log(JSON.stringify(record));
+        cmp.set('v.result', JSON.stringify(record));
        var errorMessages = [];
        var fields = cmp.get('v.changedFields');
        var requiredFields = [];

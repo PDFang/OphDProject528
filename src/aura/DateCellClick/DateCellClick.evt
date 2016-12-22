@@ -1,0 +1,6 @@
+<!--
+ - Created by arnab.karsarkar on 12/21/2016.
+ -->
+
+<aura:event type="COMPONENT" description="DateCellClick">
+</aura:event>
