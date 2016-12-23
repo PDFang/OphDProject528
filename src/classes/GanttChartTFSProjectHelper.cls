@@ -40,8 +40,12 @@ public with sharing class GanttChartTFSProjectHelper {
                 ProjectSizeMap__c projSize = ProjectSizeMap__c.getValues(proj.T_Shirt__c);
 
                 decimal runningEstimate = projSize.Estimate__c + estimate;
+
+                decimal sprintOutDecimal = runningEstimate/idealTeam;
+                if(estimate == 0.0)
+                    sprintOutDecimal = 1;
+
                 estimate = runningEstimate;
-                decimal sprintOutDecimal = runningEstimate /idealTeam;
                 sprintOutDecimal = sprintOutDecimal.round(System.RoundingMode.CEILING);
                 integer sprintOut = integer.valueOf(sprintOutDecimal) ;
                 if(proj.ProjectStatus__c == 'Active/Being Worked')
@@ -67,11 +71,13 @@ public with sharing class GanttChartTFSProjectHelper {
 
 
                 integer datediff = sprintStartDate.daysBetween(sprintEndDate);
-                decimal estimatedDuration = ((datediff * projSize.Estimate__c)/idealTeam);
+                decimal estimatedDuration = (datediff * (projSize.Estimate__c/idealTeam));
                 estimatedDuration = estimatedDuration.round(System.RoundingMode.CEILING);
                 date projectEndDate = projectStartDate.addDays(integer.valueOf(estimatedDuration));
+                if(sprintEndDate > projectEndDate){
+                    projectEndDate = projectEndDate.addDays(1);
+                }
                 prevEndDate = projectEndDate;
-
                 if((teamset.size() == 0 || teamSet.contains(team)) && (programSet.size() == 0 || programSet.contains(proj.Primary_Product__c)))
                 {
                     string productChannel =  proj.Primary_Product__c;
@@ -124,7 +130,7 @@ public with sharing class GanttChartTFSProjectHelper {
     {
         list<Project__c> lstProjects  = new list<Project__c>();
 
-        String[] statusFilters = new String[]{'Active/Being Worked', 'In Queue'};
+        String[] statusFilters = new String[]{'In Queue'}; // 'Active/Being Worked', - Future implementation
         string[] projectSubTypeFilters = new string[]{'Reporting','CDR Scrub','COGS','Reporting Services'};
 
         string queryString = 'select Name, ProjectManager__r.Name, ProjectStatus__c,BattingOrder__c, Primary_Product__c,Development_Team__c, Summary__c,RequestedDeliveryDate__c, Story_Point_Percentage_Complete__c, T_Shirt__c, PercentComplete__c from Project__c Where ProjectStatus__c in :statusFilters and RecordType.Name = \'IT Project Request\' ';

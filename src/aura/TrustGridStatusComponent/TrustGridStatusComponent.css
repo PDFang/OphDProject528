@@ -67,7 +67,7 @@
            height: .625rem;
            top: 50%;
             transform: translateY(-50%);
-           z-index: 10001;
+           z-index: 10000;
            width: 28%;
            position: relative;
   }

@@ -158,10 +158,10 @@ public class CaseEventNotificationExtension
     {
         String[] addresses = new String[]{};
         Set<String> setAddresses = new Set<String>();
-        String[] resellAddresses = new String[]{};
+        String[] resellAndInternalAddresses = new String[]{};
         textBody = emailBody.replace('<br/>', '');
         htmlString = emailBody.replace('\\n','<br/>');
-        htmlString = emailBody.replace('\n','<br/>');
+        htmlString = htmlString.replace('\n','<br/>');
         List<Task> tasks = new List<Task>();
         Id internalEmailGroup;
         Set<Id> internalEmailGroupMembers = new Set<Id>();
@@ -194,11 +194,11 @@ public class CaseEventNotificationExtension
         
         if(recordTypeName == 'Event')
         {
-            setAddresses.add(InContactConfiguration.EventEmailGroup);
+            resellAndInternalAddresses.add(InContactConfiguration.EventEmailGroup);// changed this to internal & resell Addresses too
         }
         else if(recordTypeName == 'Maintenance Notification')
         {
-            setAddresses.add(InContactConfiguration.MaintenanceEmailGroup);
+            resellAndInternalAddresses.add(InContactConfiguration.MaintenanceEmailGroup);// changed this to internal & resell Addresses too
         }
         
         system.debug(setAddresses);
@@ -216,12 +216,19 @@ public class CaseEventNotificationExtension
             {
                 if(con.Account.RecordTypeId == '01270000000MATw')
                 {
-                    resellAddresses.add(con.Email);   
+                    resellAndInternalAddresses.add(con.Email);   
+                }
+                else if(con.Email.containsIgnoreCase('incontact.com'))
+                {
+                    resellAndInternalAddresses.add(con.Email);
+                    
                 }
                 else
                 {
                     setAddresses.add(con.Email);
                 }
+                
+                
                 
                 Task t = new Task();
                 t.Subject = subject;
@@ -236,7 +243,7 @@ public class CaseEventNotificationExtension
             
             system.debug('==== Set Addresses ====');
             system.debug(setAddresses);
-            emailsSent = setAddresses.size() + resellAddresses.size();
+            emailsSent = setAddresses.size() + resellAndInternalAddresses.size();
             
             //add csms
             setAddresses.addAll(csmEmails);
@@ -262,14 +269,16 @@ public class CaseEventNotificationExtension
                 }    
                 
                 // keeping resell partners separate in case they ask for different email template later
-                if(!resellAddresses.isEmpty())
+                if(!resellAndInternalAddresses.isEmpty())
                 {
-                    string platforms = 'Platform(s): ' + c.PlatformsImpacted__c.replace(';',',');
+                    //Platform(s) Impacted:\t{Platform Impacted}
+                    string platformImpacted = MergeFieldListFormat('{Platform Impacted}',c.PlatformsImpacted__c.replace(' - inContact',''), ';');
+                    string platforms = '<b>Platform(s) Impacted:</b>\t ' + platformImpacted;                    
                     NotificationHelperClass.EmailTemplate template = new NotificationHelperClass.EmailTemplate();
-                    template.recipients = resellAddresses;
+                    template.recipients = resellAndInternalAddresses;
                     template.subject = subject;
-                    template.htmlBody = htmlString ;/**+ '<br/><br/>' + platforms';**/ 
-                    template.textBody = textBody; /**+ '\n\n' + platforms; **/ 
+                    template.htmlBody = htmlString + '<br/><br/>' + platforms; 
+                    template.textBody = textBody + '\n\n' + platforms; 
                     template.templateId = 6;
                     listTemplates.add(template);
                 }
@@ -320,7 +329,7 @@ public class CaseEventNotificationExtension
         }
     }
     
-    private void MergeFieldListFormat(string field, string data, string delimiter)
+    private string MergeFieldListFormat(string field, string data, string delimiter)
     {
         //persumes list is delimited by 
         string []lines;
@@ -329,8 +338,9 @@ public class CaseEventNotificationExtension
         System.debug(lines);
         buffer = String.join(lines, '\n'); 
         buffer = '\n' + buffer; 
-       System.debug(buffer);     
-        emailBody = emailBody.replace(field, buffer);      
+       System.debug(buffer);
+        return buffer;
+        // return emailBody = emailBody.replace(field, buffer);      
         
     }
     public void MergeFieldUpdate()
@@ -358,7 +368,7 @@ public class CaseEventNotificationExtension
         MergeField('{Case Status}', c.Status);
         MergeField('{Customer Action}', c.CustomerAction__c);   //c.CustomerAction__c
        MergeField('{Case Number}', c.CaseNumber);
-        MergeFieldListFormat('{Platform Impacted}',c.PlatformsImpacted__c.replace(' - inContact',''), ';');
+        
         
     }
     
