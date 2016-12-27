@@ -62,13 +62,17 @@ global class ContactFieldCleaner implements Database.Batchable<sObject>
 
 	global void finish(Database.BatchableContext context)
 	{
-		AsyncApexJob a = [SELECT Id, CreatedBy.Email FROM AsyncApexJob WHERE Id = :context.getJobId()];
+		AsyncApexJob a = [SELECT Id, NumberOfErrors, JobItemsProcessed,
+                            TotalJobItems, CreatedBy.Email
+                            FROM AsyncApexJob
+                            WHERE Id = :context.getJobId()];
 		Messaging.SingleEmailMessage message = new Messaging.SingleEmailMessage();
 		String[] toAddresses = new String[] { a.CreatedBy.Email };
 		message.setToAddresses(toAddresses);
 		message.setSubject('ContactFieldCleaner has completed');
 
-		string messageBody = 'The ContactFieldCleaner process has completed';
+		string messageBody = 'The ContactFieldCleaner process has completed.';
+        messageBody = messageBody + ' The batch Apex job processed ' + a.TotalJobItems + ' batches with '+ a.NumberOfErrors + ' failures.';
 		message.setPlainTextBody(messageBody);
 
 		try{
