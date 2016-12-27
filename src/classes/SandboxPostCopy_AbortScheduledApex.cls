@@ -9,7 +9,7 @@ public class SandboxPostCopy_AbortScheduledApex extends SandboxPostCopyTask{
 
     public override void task(SandboxContext context){
 
-        Id batchId = database.executeBatch(new DeleteScheduledApex());
+        Id batchId = database.executeBatch(new AbortScheduledApexBatch(), 150);
         system.debug('task(): batchId - '+batchId);
 
     }
