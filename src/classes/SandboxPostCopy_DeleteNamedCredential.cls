@@ -1,0 +1,54 @@
+/**
+ * Created by mohandaas.rangaswamy on 12/27/2016.
+ */
+
+public with sharing class SandboxPostCopy_DeleteNamedCredential extends SandboxPostCopyTask{
+
+    static final Integer METADATA_RECORD_LIMIT = 10;
+
+    public override String getClassName(){
+        return 'SandboxPostCopy_DeleteNamedCredential';
+    }
+
+    public override void task(SandboxContext context) {
+
+        String[] credentials = new String[]{};
+        for(NamedCredential c : [SELECT DeveloperName FROM NamedCredential]){
+            credentials.add(c.DeveloperName);
+        }
+        if (credentials.size() > 0) {
+            deleteNamedCredentials(credentials, userinfo.getSessionId());
+        }
+
+    } // end of task()
+
+    @Future(callout = true)
+    private static void deleteNamedCredentials(String[] credentials, String sessionId){
+
+        MetadataService.MetadataPort port = new MetadataService.MetadataPort();
+        MetadataService.SessionHeader_element SessionHeader = new MetadataService.SessionHeader_element();
+        SessionHeader.sessionId = sessionId;
+        port.SessionHeader = SessionHeader;
+
+        // update metadata in batches of 10
+        Integer count = 0;
+        String[] deleteMetadataList;
+        do {
+            deleteMetadataList = new String[]{};
+            for(Integer i=0; i < METADATA_RECORD_LIMIT && count < credentials.size(); i++){
+                deleteMetadataList.add(credentials[count]);
+                count++;
+            }
+            system.debug('deleteNamedCredentials(): deleteMetadataList - ' + deleteMetadataList);
+            MetadataService.DeleteResult[] resultList = port.deleteMetadata('NamedCredential', deleteMetadataList);
+            for (MetadataService.DeleteResult result : resultList) {
+                if (result.success != true) {
+                    system.debug(result.errors);
+                    system.debug('deleteNamedCredentials(): Failed to update - ' + result.fullName);
+                }
+            }
+        }while (count < credentials.size());
+
+    } // end of deleteNamedCredentials()
+
+}
