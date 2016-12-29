@@ -5,6 +5,10 @@
 public with sharing class SandboxPostCopyImplementation implements SandboxPostCopy
 {
     public void runApexClass(SandboxContext context){
+
+        if(!test.isRunningTest() && userinfo.getOrganizationId() == '00D700000008HFcEAM'){
+            return;
+        }
         List<Sandbox_Post_Copy_Task__mdt> postCopyTasks = [
                 SELECT Id, DeveloperName, IsActive__c, Task_Order__c
                 FROM Sandbox_Post_Copy_Task__mdt
