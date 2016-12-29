@@ -9,7 +9,7 @@ public class SandboxPostCopy_UpdateEmailRecipients extends SandboxPostCopyTask{
         return 'SandboxPostCopy_UpdateEmailRecipients';
     }
 
-    public override void task(SandboxContext context) {
+    public override string task(SandboxContext context) {
 
         MetadataService.MetadataPort port = new MetadataService.MetadataPort();
         MetadataService.SessionHeader_element SessionHeader = new MetadataService.SessionHeader_element();
@@ -37,9 +37,16 @@ public class SandboxPostCopy_UpdateEmailRecipients extends SandboxPostCopyTask{
 
         if (emailAlerts.size() > 0) {
             readAndUpdateEmailAlert(emailAlerts, SessionHeader.sessionId);
+            List<AsyncApexJob> jobList = [
+                    Select Id, Status from AsyncApexJob
+                    where ApexClass.Name = :getClassName() and Status IN ('Queued', 'Pending') and JobType = 'Future'
+                    order by createddate desc LIMIT 1
+            ];
+            if(jobList.size() > 0){
+                return jobList[0].Id;
+            }
         }
-
-
+        return null;
 
     } // end of task()
 

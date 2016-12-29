@@ -7,7 +7,7 @@ public class SandboxPostCopy_UpdateSiteConfiguration extends SandboxPostCopyTask
         return 'SandboxPostCopy_UpdateSiteConfiguration';
     }
 
-    public override void task(SandboxContext context){
+    public override string task(SandboxContext context){
 
         SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(((String)context.organizationId()).left(15));
         if(siteConfig != null){
@@ -19,6 +19,7 @@ public class SandboxPostCopy_UpdateSiteConfiguration extends SandboxPostCopyTask
             update siteConfig;
         }
         system.debug('task(): siteConfig - '+siteConfig);
+        return null;
 
     }
 }

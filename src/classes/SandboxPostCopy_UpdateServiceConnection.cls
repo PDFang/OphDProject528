@@ -7,7 +7,7 @@ public class SandboxPostCopy_UpdateServiceConnection extends SandboxPostCopyTask
         return 'SandboxPostCopy_UpdateServiceConnection';
     }
 
-    public override void task(SandboxContext context){
+    public override string task(SandboxContext context){
 
         ServiceConnection__c accountSync = ServiceConnection__c.getInstance('AccountSync');
         if(accountSync != null && accountSync.EndPoint__c != null){
@@ -21,6 +21,7 @@ public class SandboxPostCopy_UpdateServiceConnection extends SandboxPostCopyTask
             update accountSync;
         }
         system.debug('task(): accountSync - '+accountSync);
+        return null;
 
     }
 }

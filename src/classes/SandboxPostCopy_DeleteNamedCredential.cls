@@ -10,7 +10,7 @@ public with sharing class SandboxPostCopy_DeleteNamedCredential extends SandboxP
         return 'SandboxPostCopy_DeleteNamedCredential';
     }
 
-    public override void task(SandboxContext context) {
+    public override string task(SandboxContext context) {
 
         String[] credentials = new String[]{};
         for(NamedCredential c : [SELECT DeveloperName FROM NamedCredential]){
@@ -18,7 +18,16 @@ public with sharing class SandboxPostCopy_DeleteNamedCredential extends SandboxP
         }
         if (credentials.size() > 0) {
             deleteNamedCredentials(credentials, userinfo.getSessionId());
+            List<AsyncApexJob> jobList = [
+                    Select Id, Status from AsyncApexJob
+                    where ApexClass.Name = :getClassName() and Status IN ('Queued', 'Pending') and JobType = 'Future'
+                    order by createddate desc LIMIT 1
+            ];
+            if(jobList.size() > 0){
+                return jobList[0].Id;
+            }
         }
+        return null;
 
     } // end of task()
 

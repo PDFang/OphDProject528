@@ -10,7 +10,7 @@ public with sharing class SandboxPostCopy_DisableSsoPermission extends SandboxPo
         return 'SandboxPostCopy_DisableSsoPermission';
     }
 
-    public override void task(SandboxContext context) {
+    public override string task(SandboxContext context) {
 
         String[] profiles = new String[]{};
         for(Profile p : [SELECT Id, Name FROM Profile where IsSsoEnabled = true]){
@@ -18,7 +18,16 @@ public with sharing class SandboxPostCopy_DisableSsoPermission extends SandboxPo
         }
         if (profiles.size() > 0) {
             updateSsoPermission(profiles, userinfo.getSessionId());
+            List<AsyncApexJob> jobList = [
+                    Select Id, Status from AsyncApexJob
+                    where ApexClass.Name = :getClassName() and Status IN ('Queued', 'Pending') and JobType = 'Future'
+                    order by createddate desc LIMIT 1
+            ];
+            if(jobList.size() > 0){
+                return jobList[0].Id;
+            }
         }
+        return null;
 
     } // end of task()
 

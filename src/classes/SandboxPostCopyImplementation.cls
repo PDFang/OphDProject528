@@ -2,7 +2,7 @@
  * Created by mohandaas.rangaswamy on 12/21/2016.
  */
 
-public with sharing class SandboxPostCopyImplementation //implements SandboxPostCopy
+public with sharing class SandboxPostCopyImplementation implements SandboxPostCopy
 {
     public void runApexClass(SandboxContext context){
         List<Sandbox_Post_Copy_Task__mdt> postCopyTasks = [

@@ -9,7 +9,7 @@ public class SandboxPostCopy_UpdateOutboundMessage extends SandboxPostCopyTask{
         return 'SandboxPostCopy_UpdateOutboundMessage';
     }
 
-    public override void task(SandboxContext context) {
+    public override string task(SandboxContext context) {
 
         MetadataService.MetadataPort port = new MetadataService.MetadataPort();
         MetadataService.SessionHeader_element SessionHeader = new MetadataService.SessionHeader_element();
@@ -38,9 +38,16 @@ public class SandboxPostCopy_UpdateOutboundMessage extends SandboxPostCopyTask{
         if (outboundMessages.size() > 0) {
             String proxyUrl =  (context.sandboxName() == 'QA') ? System.LABEL.QA_Proxy : System.LABEL.LAB_Proxy;
             readAndUpdateOutboundMessages(outboundMessages, proxyURL, SessionHeader.sessionId);
+            List<AsyncApexJob> jobList = [
+                    Select Id, Status from AsyncApexJob
+                    where ApexClass.Name = :getClassName() and Status IN ('Queued', 'Pending') and JobType = 'Future'
+                    order by createddate desc LIMIT 1
+            ];
+            if(jobList.size() > 0){
+                return jobList[0].Id;
+            }
         }
-
-
+        return null;
 
     } // end of task()
 
