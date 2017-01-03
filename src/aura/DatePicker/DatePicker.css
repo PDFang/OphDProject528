@@ -18,3 +18,11 @@
     font-size: 1.25rem !important;
 }
 
+.THIS .headerClass{
+        font-size: 2rem;
+        text-align: center;
+        padding-bottom: 40px;
+        border-bottom: 1px;
+        border-bottom-style: dashed;
+        border-bottom-color: lightgray;
+}

@@ -18,190 +18,213 @@
 
 
 
-    <div class="container">
-        <h2>inContact TRUST Grid</h2>
+    <div class="container-fluid">
         <div class="row">
-            <div class="panel-group">
-                <div class="panel panel-default">
+            <div class="col-md-8">
+                <h2>inContact TRUST Grid</h2>
+                <div class="row">
+                    <div class="panel-group">
+                        <div class="panel panel-default">
 
-                    <div class="panel-heading">
-                        <div class="row">
-                            <div class="col-sm-4"><label>Status</label></div>
-                            <div class="col-sm-8">
-                                <p>
+                            <div class="panel-heading">
+                                <div class="row">
+                                    <div class="col-sm-4"><label>Status</label></div>
+                                    <div class="col-sm-8">
+                                        <p>
                        <span class="iconClass">
                             <img src="{!$Resource.inContactResource + '/inContactResource/fonts/available.png'}" class="imageClass"/>
                        </span>
-                                    Available
-                                    <span class="iconClass">
+                                            Available
+                                            <span class="iconClass">
                             <img src="{!$Resource.inContactResource + '/inContactResource/fonts/degradation.png'}" class="imageClass"/>
                         </span>
-                                    Service Degradation
-                                    <span class="iconClass">
+                                            Service Degradation
+                                            <span class="iconClass">
                             <img src="{!$Resource.inContactResource + '/inContactResource/fonts/disruption.png'}" class="imageClass"/>
                        </span>
-                                    Disruption
-                                    <span class="iconClass">
+                                            Disruption
+                                            <span class="iconClass">
                             <img src="{!$Resource.inContactResource + '/inContactResource/fonts/maintenance.png'}" class="imageClass"/>
                         </span>
-                                    Maintenance
-                                </p>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-                <div class="panel-body">
-                    Gain access to inContact platform status history and domain event information for the past 30 days. Select a Service Disruption or Performance Issue icon below for a given date and domain and the update will populate below the status grid.
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-9" style="height:67px;">
-                <div class="arrow-down"></div>
-                <div class="popover popover-top">
-                    <div class="popover-content">
-                        <p>Current Status</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-3" style="height:67px;padding-right: 0;">
-                <ul class="pager">
-                    <li class="previous disabled" onclick="{!c.loadPrevious}"><a href="#">&larr; Newer</a></li>
-                    <li class="next"><a href="#" onclick="{!c.loadNext}">Older &rarr;</a></li>
-                </ul>
-            </div>
-
-        </div>
-
-        <!-- this is a new table -->
-        <div class="row">
-            <div class="col-sm-5 tableHeader" >Platforms</div>
-            <aura:iteration items="{!v.dates}" var="date" indexVar="index">
-                <div class="col-sm-1 tableHeader" id="{!item + '_date'}">{!date}</div>
-            </aura:iteration>
-        </div>
-
-        <div class="row">
-
-            <aura:iteration items="{!v.gridRows}" var="row" indexVar="index">
-                <div class="col-sm-5 table-row" style="border-left:1px solid #d8dde6;"><a href="#" data-toggle="tooltip" data-placement="top" title="" data-original-title="{!row.platformName}">{!row.platformName}</a>
-                    <aura:if isTrue="{!row.currentStatus != 'Active'}">
-                        <img src="{!$Resource.inContactResource + '/inContactResource/fonts/disruption.png'}" class="currentStatus"/>
-
-                        <aura:set attribute="else">
-                            <img src="{!$Resource.inContactResource + '/inContactResource/fonts/available.png'}" class="currentStatus"/>
-                        </aura:set>
-
-
-                    </aura:if>
-                </div>
-
-                <aura:iteration items="{!row.cellList}" var="cell" indexVar="insideIndex">
-                    <div class="col-sm-1 table-row" >
-                        <div class="healthy-row"/>
-                        <aura:iteration items="{!cell.summaryList}" var="event">
-
-                            <aura:if isTrue="{!event.noOfEvents == 0}">
-
-                                <aura:set attribute="else">
-                                    <aura:if isTrue="{!event.eventType == 'Service Disruption'}">
-
-
-                                        <a data-toggle="modal" data-target="#myModal">
-                                            <aura:if isTrue="{!event.noOfEvents > 1}">
-                                                <span class="badge badge-disruption">{!event.noOfEvents}</span>
-                                            </aura:if>
-                                            <img src="{!$Resource.inContactResource + '/inContactResource/fonts/disruption.png'}" class="rowImage"/>
-                                        </a>
-                                        <div class="row-impact row-disruption"></div>
-                                        <aura:set attribute="else">
-                                            <aura:if isTrue="{!event.eventType == 'Performance Issue'}">
-
-                                                <a data-toggle="modal" data-target="#myModal">
-                                                    <span class="badge badge-degradation">{!event.noOfEvents}</span>
-                                                    <img src="{!$Resource.inContactResource + '/inContactResource/fonts/degradation.png'}" class="rowImage"/>
-                                                </a>
-                                                <div class="row-impact row-degradation"></div>
-                                            </aura:if>
-                                        </aura:set>
-                                    </aura:if>
-                                </aura:set>
-                            </aura:if>
-                        </aura:iteration>
-                    </div>
-                </aura:iteration>
-            </aura:iteration>
-        </div>
-
-        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="myModalLabel">Event Details will be displayed here</h4>
-                    </div>
-                    <div class="modal-body">
-                        <div class="modalTitle">
-                            INCIDENT DETAILS
-                        </div>
-                        <div class="details">
-                            <div class="detailLine">
-                                <span class="titleCaps">Status</span>
-                                <span class="">Resolved</span>
-                            </div>
-                            <div class="detailLine">
-                                <span class="titleCaps">Related Platforms</span>
-                                <span>C8-Dialer</span>
-                            </div>
-                            <div class="detailLine">
-                                <span class="titleCaps">Related Services</span>
-                                <span>Core Service</span>
-                            </div>
-                            <div class="detailLine">
-                                <span class="titleCaps">Start Time</span>
-                                <span>TBD</span>
-                            </div>
-                            <div class="detailLine">
-                                <span class="titleCaps">End Time:</span>
-                                <span>TBD</span>
-                            </div>
-                            <div class="detailLine">
-                                <span class="titleCaps">Root Cause</span>
-                                The problem was caused..
-                            </div>
-                            <div class="detailLine">
-                                <span class="titleCaps">Action Plan</span>
-                                Investigating..
-                            </div>
-                            <div class="detailLine">
-                                <span class="titleCaps">Additional Information</span>
-                                Customers may have experienced..
-                            </div>
-                        </div>
-                        <div class="modalTitle"><span class="titleCaps">Incident History</span></div>
-                        <div class="impactDiv">
-                            <div class="impactRow">
-                                <div class="impactlabel">
-                                    <div class="impactListHeader">
-                                        Start
+                                            Maintenance
+                                        </p>
                                     </div>
-                                    <div class="impactlistbody">
-                                        Nov 6
-                                    </div>
+
                                 </div>
                             </div>
                         </div>
-
+                        <div class="panel-body">
+                            Gain access to inContact platform status history and domain event information for the past 30 days. Select a Service Disruption or Performance Issue icon below for a given date and domain and the update will populate below the status grid.
+                        </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+                <div class="row">
+                    <div class="col-sm-9" style="height:67px;">
+                        <div class="arrow-down"></div>
+                        <div class="popover popover-top">
+                            <div class="popover-content">
+                                <p>Current Status</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3" style="height:67px;padding-right: 0;">
+                        <ul class="pager">
+                            <li class="previous disabled" onclick="{!c.loadPrevious}"><a href="#">&larr; Newer</a></li>
+                            <li class="next"><a href="#" onclick="{!c.loadNext}">Older &rarr;</a></li>
+                        </ul>
+                    </div>
+
+                </div>
+
+                <!-- this is a new table -->
+                <div class="row first-col-group">
+                    <div class="col-sm-5 tableHeader " >Platforms</div>
+                    <aura:iteration items="{!v.dates}" var="date" indexVar="index">
+                        <div class="col-sm-1 tableHeader" id="{!item + '_date'}">{!date}</div>
+                    </aura:iteration>
+                </div>
+
+                <div class="row first-col-group ">
+
+                    <aura:iteration items="{!v.gridRows}" var="row" indexVar="index">
+
+                        <div class="col-sm-5 table-row " style="border-left:1px solid #d8dde6;"><a href="#" data-toggle="tooltip" data-placement="top" title="" data-original-title="{!row.platformName}">{!row.platformName}</a>
+                            <aura:if isTrue="{!row.currentStatus == 'Active'}">
+                                <img src="{!$Resource.inContactResource + '/inContactResource/fonts/available.png'}" class="currentStatus"/>
+
+
+                                <aura:set attribute="else">
+                                    <aura:if isTrue="{!row.currentStatus == 'Performance Issue'}">
+                                    <img src="{!$Resource.inContactResource + '/inContactResource/fonts/degradation.png'}" class="currentStatus"/>
+                                        <aura:set attribute="else">
+                                            <img src="{!$Resource.inContactResource + '/inContactResource/fonts/disruption.png'}" class="currentStatus"/>
+                                        </aura:set>
+                                        </aura:if>
+                                </aura:set>
+
+
+                            </aura:if>
+                        </div>
+
+                        <aura:iteration items="{!row.cellList}" var="cell" indexVar="insideIndex">
+                            <div class="col-sm-1 table-row" >
+
+                                <div class="healthy-row"/>
+                                <aura:iteration items="{!cell.summaryList}" var="event">
+
+                                    <aura:if isTrue="{!event.noOfEvents == 0}">
+
+                                        <aura:set attribute="else">
+                                            <aura:if isTrue="{!event.eventType == 'Service Disruption'}">
+
+
+                                                <a data-toggle="modal" data-target="#myModal">
+                                                    <aura:if isTrue="{!event.noOfEvents > 1}">
+                                                        <span class="badge badge-disruption">{!event.noOfEvents}</span>
+                                                    </aura:if>
+                                                    <img src="{!$Resource.inContactResource + '/inContactResource/fonts/disruption.png'}" class="rowImage"/>
+                                                </a>
+                                                <div class="row-impact row-disruption"></div>
+                                                <aura:set attribute="else">
+                                                    <aura:if isTrue="{!event.eventType == 'Performance Issue'}">
+
+                                                        <a data-toggle="modal" data-target="#myModal">
+                                                            <span class="badge badge-degradation">{!event.noOfEvents}</span>
+                                                            <img src="{!$Resource.inContactResource + '/inContactResource/fonts/degradation.png'}" class="rowImage"/>
+                                                        </a>
+                                                        <div class="row-impact row-degradation"></div>
+                                                    </aura:if>
+                                                </aura:set>
+                                            </aura:if>
+                                        </aura:set>
+                                    </aura:if>
+                                </aura:iteration>
+                            </div>
+                        </aura:iteration>
+                    </aura:iteration>
+                </div>
+
+                <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                <h4 class="modal-title" id="myModalLabel">Event Details will be displayed here</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="modalTitle">
+                                    INCIDENT DETAILS
+                                </div>
+                                <div class="details">
+                                    <div class="detailLine">
+                                        <span class="titleCaps">Status</span>
+                                        <span class="">Resolved</span>
+                                    </div>
+                                    <div class="detailLine">
+                                        <span class="titleCaps">Related Platforms</span>
+                                        <span>C8-Dialer</span>
+                                    </div>
+                                    <div class="detailLine">
+                                        <span class="titleCaps">Related Services</span>
+                                        <span>Core Service</span>
+                                    </div>
+                                    <div class="detailLine">
+                                        <span class="titleCaps">Start Time</span>
+                                        <span>TBD</span>
+                                    </div>
+                                    <div class="detailLine">
+                                        <span class="titleCaps">End Time:</span>
+                                        <span>TBD</span>
+                                    </div>
+                                    <div class="detailLine">
+                                        <span class="titleCaps">Root Cause</span>
+                                        The problem was caused..
+                                    </div>
+                                    <div class="detailLine">
+                                        <span class="titleCaps">Action Plan</span>
+                                        Investigating..
+                                    </div>
+                                    <div class="detailLine">
+                                        <span class="titleCaps">Additional Information</span>
+                                        Customers may have experienced..
+                                    </div>
+                                </div>
+                                <div class="modalTitle"><span class="titleCaps">Incident History</span></div>
+                                <div class="impactDiv">
+                                    <div class="impactRow">
+                                        <div class="impactlabel">
+                                            <div class="impactListHeader">
+                                                Start
+                                            </div>
+                                            <div class="impactlistbody">
+                                                Nov 6
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="col-md-4">
+                <div class="slds sldsCustom">
+                    <div class="slds-form">
+
+                        <c:DatePicker label="Test Date" placeholder="Enter a Date" formatSpecifier="MM/dd/yyyy" />
                     </div>
                 </div>
             </div>
+
         </div>
+
 
 
     </div>

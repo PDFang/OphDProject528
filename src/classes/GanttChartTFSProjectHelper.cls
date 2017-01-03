@@ -102,6 +102,7 @@ public with sharing class GanttChartTFSProjectHelper {
                     childData.TeamColor = colorTeam.Color__c;
                     childData.TeamFontColor = colorTeam.FontColor__c;
                     childData.GlobalPriority = proj.BattingOrder__c;
+                    childData.Sprint = sprint;
                     dataList.add(childData);
                 }
 

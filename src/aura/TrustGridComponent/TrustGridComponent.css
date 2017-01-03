@@ -74,11 +74,11 @@
 
   .THIS .row-disruption {
                background-color: #d4504c;
-               margin-left: 14px;
+               margin-left: 22px;
     }
     .THIS .row-degradation {
                    background-color: #ff9a3c;
-                   margin-left: 14px;
+                   margin-left: 22px;
         }
 
     .THIS .rowImage{
@@ -174,7 +174,7 @@
      }
 
      .THIS .pager{
-             margin-left: 36%;
+             margin-left: 27%;
              margin-top: 28px;
      }
 
@@ -255,3 +255,13 @@
        line-height: .75rem;
        margin: .125rem 0;
    }
+
+   .THIS .panel-group{
+       margin-bottom:-15px;
+       margin-left: 14px;
+
+   }
+
+   .THIS .first-col-group{
+              margin-left: 0px !important;
+      }

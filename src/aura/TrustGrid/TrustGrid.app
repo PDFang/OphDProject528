@@ -5,9 +5,11 @@
     <c:TrustGridContainer>
         <aura:set attribute="trustGridComponent">
             <c:TrustGridStatusComponent/>
+
         </aura:set>
         <aura:set attribute="mosScoreComponent">
             <p>MOS Score</p>
         </aura:set>
     </c:TrustGridContainer>
+
 </aura:application>

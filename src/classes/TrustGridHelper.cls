@@ -70,7 +70,7 @@ public class TrustGridHelper {
                 productEventMap.put(productEvent.ImplementedProduct__c, productEvent);
             }
         }
-        system.debug('**** DEBUG: findPlatformsAndProducts(): productEventMap - ' + productEventMap);
+       // system.debug('**** DEBUG: findPlatformsAndProducts(): productEventMap - ' + productEventMap);
         if(productEventMap.isEmpty()){
             return;
         }
@@ -103,7 +103,7 @@ public class TrustGridHelper {
         for(ImplementedProduct__c ip :impProductList)
         {
             ProductEventMap__c productEvent = productEventMap.get(ip.Product__c);
-            system.debug('**** DEBUG: findPlatformsAndProducts(): productEvent - ' + productEvent);
+          //  system.debug('**** DEBUG: findPlatformsAndProducts(): productEvent - ' + productEvent);
             if(productEvent == null){
                 continue;
             }
@@ -128,12 +128,12 @@ public class TrustGridHelper {
             productSet.add(productEvent.Product__c);
         }
 
-        system.debug('**** DEBUG: findPlatformsAndProducts(): platformSet - ' + platformSet);
+      //  system.debug('**** DEBUG: findPlatformsAndProducts(): platformSet - ' + platformSet);
         system.debug('**** DEBUG: findPlatformsAndProducts(): productSet  - ' + productSet);
 
     } // end of findPlatformsAndProducts()
 
-    public List<Case> getEvents(Date startDate, Integer daysBack)
+    public List<Case> getEvents(Date startDate, date endDate)
     {
 
         List<Case> eventList = new List<Case>();
@@ -146,9 +146,9 @@ public class TrustGridHelper {
             }
             system.debug('**** DEBUG: platformString - ' + platformString);
             queryString = 'SELECT Id, Subject, EventStartDateTime__c, EventEndDateTime__c, EventType__c, PlatformsImpacted__c FROM Case '
-                            + 'WHERE RecordType.Name = \'Event\' AND NonEvent__c = false AND InternalEvent__c = false '
+                            + 'WHERE RecordType.Name = \'Event\' AND NonEvent__c = false AND InternalEvent__c = false  AND Priority in (\'P1\', \'P2\') '
                             + 'AND ProductImpacted__c IN :productSet AND PlatformsImpacted__c includes (' + platformString + ') '
-                            + 'AND (EventStartDateTime__c >= LAST_N_DAYS:' + string.valueOf(daysBack) + ' OR EventEndDateTime__c >= LAST_N_DAYS:' + string.valueOf(daysBack)
+                            + ' AND ((EventStartDateTime__c >= :endDate AND EventStartDateTime__c <= :startDate)'
                             + ' OR EventEndDateTime__c = NULL) AND ID NOT IN(SELECT Event__c FROM EventAccount__c WHERE Account__r.CadebillAccountNo__c = :cadebillAccountNo AND Excluded__c = true) ';
             system.debug('**** DEBUG: queryString - ' + queryString);
             eventList = Database.Query(queryString);
@@ -157,9 +157,9 @@ public class TrustGridHelper {
 
         queryString = 'SELECT Id, Subject, EventStartDateTime__c, EventEndDateTime__c, EventType__c, PlatformsImpacted__c FROM Case '
                         + 'WHERE ID IN(SELECT Event__c FROM EventAccount__c WHERE Account__r.CadebillAccountNo__c = :cadebillAccountNo AND Excluded__c = false) '
-                        + 'AND RecordType.Name = \'Event\' AND NonEvent__c = false AND InternalEvent__c = false '
-                        + 'AND (EventStartDateTime__c >= LAST_N_DAYS:' + string.valueOf(daysBack)
-                        + ' OR EventEndDateTime__c >= LAST_N_DAYS:' + string.valueOf(daysBack) + ' OR EventEndDateTime__c = NULL)';
+                        + 'AND RecordType.Name = \'Event\' AND NonEvent__c = false AND InternalEvent__c = false AND Priority in (\'P1\', \'P2\') '
+                        + ' AND ((EventStartDateTime__c >= :endDate AND EventStartDateTime__c <= :startDate )'
+                        + ' OR EventEndDateTime__c = NULL)';
         List<Case> eventSpecificList = Database.Query(queryString);
         system.debug('**** DEBUG: eventSpecificList - ' + eventSpecificList);
         if(eventSpecificList.size() > 0)

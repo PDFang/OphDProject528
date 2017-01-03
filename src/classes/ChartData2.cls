@@ -14,6 +14,7 @@ public class ChartData2
     public string ProjectStatus{get; set;}
     public string ProductChannel{get;set;}
     public string Team{get;set;}
+    public string Sprint{get;set;}
     public string TeamColor{get;set;}
     public string ProgramColor{get;set;}
     public string ProductChannelFullName{get;set;}

@@ -1,0 +1,10 @@
+/**
+ * Created by arnab.karsarkar on 12/22/2016.
+ */
+.THIS .slds-datepicker{
+    margin-top: 10%!important;
+    font-size: 1.25rem !important;
+    position: relative !important;
+    max-width: 100% !important;
+    width: 100% !important;
+}

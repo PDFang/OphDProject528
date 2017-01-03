@@ -72,4 +72,77 @@ public without sharing class GanttChartTFSProjectController {
     }
 
 
+    @RemoteAction
+    public static string kendoData (){
+        list<string> programName = new list<string>{
+                'Customer Portal',
+                'Partner Portal'
+        };
+        list<string> TeamName = new list<string>{
+                'Avengers',
+                'Justice League'
+        };
+
+        TimeLineData timeline = new  TimeLineData();
+        list<ChartData2> dataList = new list<ChartData2>();
+        dataList = GanttChartTFSProjectHelper.GetProjectsInPriority(programName, TeamName);
+        timeline.lstChartData = dataList;
+        timeline.lstSprintData = GanttChartTFSProjectHelper.GetIterationList();
+
+        list<GanttData> lstGanttData = new list<GanttData>();
+
+        for(ChartData2 cd : dataList){
+            GanttData projects = new GanttData();
+            projects.ProjectId = cd.ProjectId;
+            projects.ProjectName = cd.ProjectName;
+            projects.StartDate = cd.StartDate;
+            projects.EndDate = cd.EndDate;
+            projects.ParentId = cd.Sprint;
+            projects.GlobalPriority = cd.GlobalPriority;
+            projects.Expanded = true;
+            projects.PercentComplete = 0;
+            projects.Summary = false;
+            projects.ProgramColor = cd.ProgramColor;
+
+            lstGanttData.add(projects);
+        }
+
+        integer i = 0;
+        for(SprintDateMap__c sp : timeline.lstSprintData)
+        {
+            i++;
+            GanttData gd = new GanttData();
+            gd.ProjectId = sp.Sprint__c;
+            gd.ProjectName = sp.Sprint__c;
+            gd.StartDate = sp.StartDate__c;
+            gd.EndDate = sp.EndDate__c;
+            gd.ParentId = null;
+            gd.Expanded = true;
+            gd.GlobalPriority = i;
+            gd.PercentComplete = 0;
+            gd.Summary = true;
+            gd.ProgramColor = null;
+            lstGanttData.add(gd);
+
+        }
+        return JSON.serialize(lstGanttData);
+    }
+
+
+    public class GanttData
+    {
+        public string  ProjectId {get; set;}
+        public string  ProjectName {get; set;}
+        public Date EndDate {get; set;}
+        public Date StartDate {get; set;}
+        public string ParentId {get; set;}
+        public decimal GlobalPriority{get;set;}
+        public decimal PercentComplete{get;set;}
+        public boolean Expanded{get;set;}
+        public boolean Summary{get;set;}
+        public string ProgramColor{get; set;}
+
+
+    }
+
 }

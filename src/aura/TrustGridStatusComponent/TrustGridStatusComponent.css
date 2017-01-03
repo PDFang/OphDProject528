@@ -67,18 +67,18 @@
            height: .625rem;
            top: 50%;
             transform: translateY(-50%);
-           z-index: 10000;
+           z-index: 10001;
            width: 28%;
            position: relative;
   }
 
   .THIS .row-disruption {
                background-color: #d4504c;
-               margin-left: 14px;
+               margin-left: 22px;
     }
     .THIS .row-degradation {
                    background-color: #ff9a3c;
-                   margin-left: 14px;
+                   margin-left: 22px;
         }
 
     .THIS .rowImage{
@@ -141,7 +141,7 @@
     .THIS .popover{
                 display: block;
                 top: 34.9%;
-                left: 48%;
+                left: 49%;
                 background-color: #f48b31;
                 color: white;
                 height: 55%;
@@ -153,7 +153,7 @@
                 border-left: 10px solid transparent;
                 border-right: 10px solid transparent;
                 position: absolute;
-                left: 54.5%;
+                left: 55.5%;
                 top: 84.5%;
                 border-top: 10px solid #f48b31;
                 z-index: 11000;
@@ -174,7 +174,7 @@
      }
 
      .THIS .pager{
-             margin-left: 36%;
+             margin-left: 27%;
              margin-top: 28px;
      }
 
@@ -255,3 +255,13 @@
        line-height: .75rem;
        margin: .125rem 0;
    }
+
+   .THIS .panel-group{
+       margin-bottom:-15px;
+       margin-left: 14px;
+
+   }
+
+   .THIS .first-col-group{
+              margin-left: 0px !important;
+      }

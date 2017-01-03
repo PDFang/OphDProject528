@@ -20,19 +20,20 @@ public class TrustGridRow {
     }
 
     // inner class
-    public Class TrustGridCell{
+    public Class
+    TrustGridCell{
         public Date today{get; private set;}
         public String dateString{get; private set;}
         //public List<EventInfo> eventList{get; private set;}
         @AuraEnabled
         public List<EventSummary> getSummaryList(){
-            return summaryMap != null ? summaryMap.values() : null;
+                return summaryMap != null ? summaryMap.values() : null;
         }
         private Map<String, EventSummary> summaryMap;
 
         public TrustGridCell(Date dateParam){
             this.today = dateParam;
-            this.dateString = DateTime.newInstanceGMT(today.year(), today.month(), today.day()).formatGMT('MMM d');
+            this.dateString = DateTime.newInstance(today.year(), today.month(), today.day()).formatGMT('MMM d');
             //this.eventList = new List<EventInfo>();
             this.summaryMap = new Map<String, EventSummary>();
         }

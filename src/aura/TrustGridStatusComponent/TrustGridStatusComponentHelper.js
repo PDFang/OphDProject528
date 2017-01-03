@@ -34,6 +34,8 @@
         }
         component.set("v.dates", dates);
         component.set("v.lastDate", pastDt);
+        this.loadTrustGrid(component);
+
 
     },
 
@@ -74,7 +76,7 @@
             component.set("v.dates", dates);
             component.set("v.lastDate", pastDt);
             component.set("v.firstDate", curDt);
-
+            this.loadTrustGrid(component);
         },
 
         loadTableData: function(component, helper){
@@ -115,11 +117,24 @@
     },
 
     loadTrustGrid: function(component, helper){
-         var myAction = component.get('c.initTrustGrid');
+
+
+         var firstDate  = component.get("v.firstDate");
+         var f = firstDate == "" ? new Date() : firstDate;
+         var today = new Date();
+         var day7 = today.setDate(today.getDate() - 7);
+         day7 = new Date(day7);
+         var lastDate  = component.get("v.lastDate");
+         var l = lastDate == "" ? day7 : lastDate;
+
+        console.log('firstDate =>' + f.toString());
+        console.log('lastDate =>' + l.toString());
          // Handle returned results...
+         var myAction = component.get('c.initTrustGrid');
          myAction.setParams(
-             {cadebillAccountNo : 4593141},
-             {daysBack : null}
+             {cadebillAccountNo : 4593141,
+             firstDate : f,
+             lastDate : l}
          );
          myAction.setCallback(component, function(response) {
                 var state = response.getState();
@@ -127,13 +142,13 @@
                 if(component.isValid() && state === "SUCCESS") {
                     var result = response.getReturnValue();
                     console.log('result =>' + result);
-                    console.log('temp =>' + JSON.stringify(result));
+                    console.log('result =>' + JSON.stringify(result));
                     var trustGridRows = [];
                     // Loop through results; remember, this is a list of sObjects
                     for(var item in result) {
                         // Get the record
                         var temp =  result[item];
-                        console.log('temp =>' + JSON.stringify(temp));
+                        //console.log('temp =>' + JSON.stringify(temp));
                         //platforms.push(temp.platformName);
                         trustGridRows.push(temp);
                     }

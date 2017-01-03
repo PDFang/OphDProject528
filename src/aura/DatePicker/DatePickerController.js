@@ -10,13 +10,6 @@
         cellCmp.addHandler("dateCellClick", component, "c.handleClick");
       }
     }
-
-    // var cmpArr = component.find("maintable").find({ instancesOf : "c:DateCell" });
-    // for (var i = 0; i < cmpArr.length; i++) {
-    //     var outputCmpArr = cmpArr[i];
-    //     outputCmpArr.addHandler("dateCellClick", component, "c.handleClick");
-    // }
-
     var format = component.get("v.formatSpecifier");
     var datestr = component.get("v.value");
     var langLocale = $A.get("$Locale.langLocale");

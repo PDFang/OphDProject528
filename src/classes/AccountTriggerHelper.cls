@@ -119,8 +119,11 @@ public static void updateVariousAccountTypes(Map<Id, Account> mpNewAccts, Map<Id
             // expire license -- Please uncomment this logic before LMA deployment.
             list<sfLma__License__c> lstlicense = new list<sfLma__License__c>();
                          
-              for (sfLma__License__c lic : [select Id, sfLma__Expiration__c FROM sfLma__License__c where sfLma__Account__c in :  discAccts and (NOT sfLma__Instance__c like 'CS%')])
-              {            
+              for (sfLma__License__c lic : [select Id, sfLma__Expiration__c
+			  								FROM sfLma__License__c
+			  								where sfLma__Account__c in :  discAccts
+											and (NOT sfLma__Instance__c like 'CS%') and sfLma__License_Status__c in('Active', 'Trial')])
+              {            // add status to the SOQL
                 sfLma__License__c updlic = new sfLma__License__c(id = lic.Id);
                 
                 if (lic.sfLma__Expiration__c == null)

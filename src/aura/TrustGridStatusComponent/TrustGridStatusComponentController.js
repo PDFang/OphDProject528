@@ -19,7 +19,7 @@
 
     doInit:function(component, event, helper) {
         console.log("call do init");
-        helper.loadTrustGrid(component);
+       // helper.loadTrustGrid(component);
     },
 
     loadNext:function(component, event, helper){

@@ -33,7 +33,8 @@
     <!-- events -->
     <aura:registerevent name="dateChangeEvent" type="c:DateChange" description="The event fired when a calendar value is selected" />
 
-    <div aura:id="grid" class="slds-datepicker slds-dropdown slds-dropdown--left customDatePicker">
+    <div aura:id="grid" class="slds-datepicker slds-dropdown slds-dropdown--left customDatePicker sldsCustom">
+        <h2 class="slds-align-middle headerClass">Maintenance Calendar</h2>
         <div class="slds-datepicker__filter slds-grid">
             <div class="slds-datepicker__filter--month slds-grid slds-grid--align-spread slds-grow">
                 <div class="slds-align-middle">
