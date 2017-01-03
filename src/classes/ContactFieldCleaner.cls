@@ -56,18 +56,23 @@ global class ContactFieldCleaner implements Database.Batchable<sObject>
 
 		if(errorIds.size() > 0)
 		{
-			sendErrorEmail(errorIds);
+			sendErrorEmail(context, errorIds);
 		}
 	}
 
 	global void finish(Database.BatchableContext context)
 	{
+		AsyncApexJob a = [SELECT Id, NumberOfErrors, JobItemsProcessed,
+                            TotalJobItems, CreatedBy.Email
+                            FROM AsyncApexJob
+                            WHERE Id = :context.getJobId()];
 		Messaging.SingleEmailMessage message = new Messaging.SingleEmailMessage();
-		String[] toAddresses = new String[] { 'arnab.karsarkar@incontact.com', 'mike.burkhard@incontact.com' };
+		String[] toAddresses = new String[] { a.CreatedBy.Email };
 		message.setToAddresses(toAddresses);
 		message.setSubject('ContactFieldCleaner has completed');
 
-		string messageBody = 'The ContactFieldCleaner process has completed';
+		string messageBody = 'The ContactFieldCleaner process has completed.';
+        messageBody = messageBody + ' The batch Apex job processed ' + a.TotalJobItems + ' batches with '+ a.NumberOfErrors + ' failures.';
 		message.setPlainTextBody(messageBody);
 
 		try{
@@ -77,10 +82,11 @@ global class ContactFieldCleaner implements Database.Batchable<sObject>
 		}
 	}
 
-	private void sendErrorEmail(List<String> errorIds)
+	private void sendErrorEmail(Database.BatchableContext context, List<String> errorIds)
 	{
+		AsyncApexJob a = [SELECT Id, CreatedBy.Email FROM AsyncApexJob WHERE Id = :context.getJobId()];
 		Messaging.SingleEmailMessage message = new Messaging.SingleEmailMessage();
-		String[] toAddresses = new String[] { 'arnab.karsarkar@incontact.com', 'mike.burkhard@incontact.com' };
+		String[] toAddresses = new String[] { a.CreatedBy.Email };
 		message.setToAddresses(toAddresses);
 		message.setSubject('ContactFieldCleaner Errored on these Contact records');
 
