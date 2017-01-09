@@ -50,7 +50,7 @@ public class ISIntegrationHandlerClass
                                           proj.ProjectType__c,
                                           proj.ProjectSubType__c,
                                           tfsId,
-                                          proj.Summary__c,
+                                          proj.Name + ' - ' + proj.Summary__c, // added project number prefix
                                           proj.ProjectTFSStatus__c,
                                           8,                                                
                                           proj.ProblemStatement__c,
