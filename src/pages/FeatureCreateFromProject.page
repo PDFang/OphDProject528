@@ -1,32 +1,36 @@
-<apex:page standardController="Project__c" extensions="FeatureCreateFromProject" title="Create Feature" >
+<apex:page standardController="Project__c" extensions="FeatureCreateFromProject" title="Create Feature" standardStylesheets="false">
     
     <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
     <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
     <apex:stylesheet value="{!$Resource.SupportConsoleCss}" />
     
-    <apex:outputField value="{!Project__c.Summary__c}" rendered="false"/>
-    <apex:outputField value="{!Project__c.ProblemStatement__c}" rendered="false"/>
-    <apex:outputField value="{!Project__c.Feature__c}" rendered="false"/>
     
     <apex:form id="featureForm" >
         
-        <apex:pageBlock mode="edit" id="featureBlock" title="Create Corporate TFS Feature">
-            <div id="java-errors" style="display:none" class="warning-message"></div>
-            <apex:messages styleClass="warning-message"/>
-            <apex:pageblockSection columns="1">
-                <apex:outputPanel layout="block"  rendered="{!HasFeature}" >
-                    <div class="warning-message">Project <a href="/{!Project__c.Id}">{!Project__c.Name}</a> already is associated with Feature <a href="/{!Project__c.Feature__c}">{!Project__c.Feature__r.Name}</a></div>
-                    <div><a class="k-button" href="#" onclick="cancel()">Cancel</a></div>
-                </apex:outputPanel>
-            </apex:pageblockSection>
-            <apex:pageBlockSection id="featureSection" columns="1" rendered="{!NOT(HasFeature)}" >
-                <apex:inputField required="true" id="title" style="width:80%;" value="{!feature.Title__c}"/>
-                <apex:pageBlockSectionItem >
-                    <apex:outputLabel for="details">Details</apex:outputLabel>
-                    <textarea id="details" >{!feature.Details__c}</textarea>
-                </apex:pageBlockSectionItem>
-            </apex:pageBlockSection>
-            <apex:pageBlockButtons location="bottom"  rendered="{!NOT(HasFeature)}" >
+        <apex:pageBlock mode="edit" id="featureBlock" title="Create Corporate TFS Feature">           
+            <apex:messages styleClass="warning-message"/>            
+           
+               <table style="width: 100%;">
+                  <tr>
+                   <td style="width:29%">
+                      
+                   </td>
+                   <td>
+                       <apex:outputPanel layout="block" >
+                        <apex:outputLabel value="Team" style="padding-right:3px;font-weight:bold;"></apex:outputLabel>   
+                        <apex:selectList value="{!selectedTeam}" multiselect="false" size="1"> 
+                            <apex:selectOptions value="{!Team}"/>
+                        </apex:selectList>
+                        <apex:outputLabel value="Product" style="padding-right:3px;font-weight:bold;"></apex:outputLabel>   
+                        <apex:selectList value="{!selectedArea}" multiselect="false" size="1">
+                            <apex:selectOptions value="{!Area}"/>
+                        </apex:selectList>
+                       </apex:outputPanel>        
+                    </td>
+                  </tr>
+               </table>
+            
+            <apex:pageBlockButtons location="bottom">
                 <div class="loading-div" style="display: none;" data-role="spinner-container">
                     <div id="topSpinner" data-role="spinner-element"></div><div data-role="spinner-text">Saving...</div><div class="clear-both"></div>
                 </div>
@@ -36,92 +40,30 @@
                 </div>
             </apex:pageBlockButtons>
         </apex:pageBlock>
+        <apex:actionFunction action="{!save}" name="createSfdcFeature" status="tfsStatus" oncomplete="CallTFS()" reRender="detailpage" />
+        <apex:actionFunction action="{!callTFS}" name="CallTFS"/>
         <apex:actionFunction action="{!Cancel}" name="cancel"/>
+     
     </apex:form>
     
+        <apex:actionStatus id="tfsStatus" layout="block" startText="Requesting..">
+             <apex:facet name="start">
+                    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: black;">
+         		   	 &nbsp;
+       			    </div>
+                    <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 15% 45%">
+                    <div style="display: inline-block; padding: 2px; background-color: #fff; width: 150px;">
+                        <img src="/img/loading.gif" style="float: left; margin: 8px;" />
+                        <span style="display: inline-block; padding: 10px 0px;">creating TFS item...</span>
+                    </div>
+                   </div>
+             </apex:facet>
+        </apex:actionStatus>
+    <apex:detail id="detailpage"/>
     <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
     <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.web.min.js')}" />
     <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/kendo.core.min.js')}" />
     <apex:includeScript value="{!URLFOR($Resource.JQuery, '/spin.js')}" />
     <apex:includeScript value="{!$Resource.incontactjs}" />
-    <script type="text/javascript">
-        
-                $(document).ready(function() {
-                    // create Editor from textarea HTML element with default set of tools
-                    $("#details").kendoEditor();
-                    
-                    
-        
-                    $("#create").bind("click", function (e) {
-                        $(".save-cancel-button-group").hide();
-                        var spinnerOptions = {
-                            top: -2,
-                            left: 0,
-                            lines: 9,
-                            length: 4,
-                            width: 3,
-                            radius: 6,
-                            corners: 1,
-                            color: '#f48B31',
-                            speed: 1.2,
-                            trail: 40
-                        };
-            
-                        var topSpinner = new Spinner(spinnerOptions);
-                        topSpinner.spin(document.getElementById('topSpinner'));
-                        var bottomSpinner = new Spinner(spinnerOptions);
-                        bottomSpinner.spin(document.getElementById('bottomSpinner'));
-                        $(".loading-div").show();
-                    });
-                });
-                
-        function createSfdcFeature(){
-            var title = $(document.getElementById('{!$Component.featureForm.featureBlock.featureSection.title}')).val();
-            var d = $("#details").data("kendoEditor").value();
-            
-            if(title == ''){
-                document.getElementById("java-errors").innerHTML = 'Title is required';
-                $("#java-errors").show();
-            } else{
-                FeatureCreateFromProject.InsertNewFeature(
-                      title, d, '{!Project__c.Id}',
-                      function(result,event)
-                      {
-                          
-                          if (event.status) {
-                              createTfsFeature(result);
-                              $("#java-errors").hide();
-                            } else if (event.type === 'exception') {
-                                document.getElementById("java-errors").innerHTML = event.message;
-                                $("#java-errors").show();
-                            } else {
-                                document.getElementById("java-errors").innerHTML = event.message;
-                                $("#java-errors").show();
-                            }
-                      },
-                      {escape: false}
-               );
-           }
-        }
-        
-        function createTfsFeature(featureId){
-            FeatureCreateFromProject.InsertTfsFeature(
-                  featureId,
-                  function(result,event)
-                  {
-                      
-                      if (event.status) {
-                          cancel();
-                        } else if (event.type === 'exception') {
-                            document.getElementById("java-errors").innerHTML = event.message;
-                            $("#java-errors").show();
-                        } else {
-                            document.getElementById("java-errors").innerHTML = event.message;
-                            $("#java-errors").show();
-                        }
-                  },
-                  {escape: false}
-           );
-        }
-    </script>
+ 
 </apex:page>
