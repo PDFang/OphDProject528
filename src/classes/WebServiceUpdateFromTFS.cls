@@ -173,7 +173,7 @@ global class WebServiceUpdateFromTFS
         {
             string error ='Other error: at line '+ e.getLineNumber() + ' with ' + e.getMessage();
             System.debug(error);
-            //doSendEmail(error);
+            doSendEmail(error);
 
         }
         
