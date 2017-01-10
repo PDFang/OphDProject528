@@ -18,13 +18,13 @@ public class CaseSendSurvey
             system.debug(c.Owner.Type);
             if(c.Contact.Email != null && c.Contact.Email != '')
             {
-                
-                if(c.Owner.Name == 'Product & Practice Experts Queue')
+                // Removed SME Survey Logic from the Product & Practice Experts cases - User Story 25121
+                /*if(c.Owner.Name == 'Product & Practice Experts Queue')
                 {
                     endPointURLParam = SMEProductPracticeSurveyMapping(c);
-                }
+                }*/
                 /*if(c.RecordType.Name == 'Incident' && (c.Owner.Name == 'TSA Queue' || c.Owner.Name == 'TSM Queue' || c.Owner.Name == 'Tech Support Queue'))*/
-                else if(c.RecordType.Name == 'Incident' && (c.Owner.Name == 'TSM Queue' || c.Owner.Name == 'Tech Support Queue'))
+                if(c.RecordType.Name == 'Incident' && (c.Owner.Name == 'TSM Queue' || c.Owner.Name == 'Tech Support Queue'))
                 {
                     endPointURLParam = TSMSurveyMapping(c);   
                 }
@@ -59,9 +59,9 @@ public class CaseSendSurvey
             }
         }
     }
-    
-    
-    private static string SMEProductPracticeSurveyMapping(Case c)
+
+    // Removed SME Survey Logic from the Product & Practice Experts cases - User Story 25121
+    /*private static string SMEProductPracticeSurveyMapping(Case c)
     { 
         //Get the URL from the static configuration file
         string url = Label.SMEproductPracticeEchoSurveyURL;  
@@ -100,7 +100,7 @@ public class CaseSendSurvey
         url = url.replace('[[Subject]]', EncodingUtil.urlEncode(c.Subject,'UTF-8'));
         System.debug(url);
         return url;
-    }
+    }*/
     
     
 

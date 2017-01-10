@@ -160,10 +160,11 @@ trigger CaseBeforeUpdate on Case (before update)
         if(!System.isFuture() && cn.SystemClosed__c != true && !excludedResellerAccounts.containsKey(cn.AccountId) && !system.isBatch())//batch soql does not accept @future callouts
         {
             //get all the product and practice experts queue cases --
-            if(newlyClosed && (allQueues.get(cn.OwnerId).Name == 'Product & Practice Experts Queue'))
+            // Removed SME Survey Logic from the Product & Practice Experts cases - User Story 25121
+            /*if(newlyClosed && (allQueues.get(cn.OwnerId).Name == 'Product & Practice Experts Queue'))
             {
                 closedTechSupportCaseIds.add(cn.Id);
-            }
+            }*/
             //get all closed Tech Support cases for survey
             if(newlyClosed && (cn.RecordTypeId == incidentRecordType || cn.RecordTypeId == incidentUptivityRecordType) && (allQueues.get(cn.OwnerId).Name == 'Tech Support Queue' || allQueues.get(cn.OwnerId).Name == 'TSA Queue' || allQueues.get(cn.OwnerId).Name == 'TSM Queue' || allQueues.get(cn.OwnerId).Name == 'Premise TSM Queue' || allQueues.get(cn.OwnerId).Name == 'Premise Tech Support Queue' ||allQueues.get(cn.OwnerId).Name == 'Premise Tech Support II Queue'))
             {
