@@ -122,7 +122,7 @@
                 <c:DataCell aura:id="41" />
             </tr>
             <tr>
-                <td colspan="7" role="gridcell"><a onclick="{!c.goToToday}" href="javascript:void(0);" class="slds-show--inline-block slds-p-bottom--x-small">Today</a></td>
+                <td colspan="7" role="gridcell"><a onclick="{!c.goToToday}" href="javascript:void(0);" class="slds-show--inline-block slds-p-bottom--x-medium"><p class="slds-text-heading--medium">Today</p></a></td>
             </tr>
             </tbody>
         </table>

@@ -383,13 +383,13 @@
                 <div class="col-sm-4 teamList">
 
                     <label>Teams</label>
-                    <apex:selectCheckboxes title="Teams"  styleClass="selectedFilter"  layout="pageDirection" style="margin-left: 11%;width: 100%;" value="{!selectedTeams}" onChange="onChangeTeam(this);" id="teamCheckBoxes">
+                    <apex:selectCheckboxes title="Teams"  styleClass="selectedFilter"  layout="pageDirection" style="font-weight:100; margin-left: 11%;width: 100%;" value="{!selectedTeams}" onChange="onChangeTeam(this);" id="teamCheckBoxes">
                         <apex:selectOptions value="{!TeamLists}" />
                     </apex:selectCheckboxes>
                 </div>
-                <div class="col-sm-8">
+                <div class="col-sm-8 ">
                     <label>Programs</label>
-                    <apex:selectCheckboxes title="Programs"  value="{!selectedPrograms}" onChange="onChangeProj(this);"  layout="pageDirection" style="margin-left: 6%;width: 100%; color:white;">
+                    <apex:selectCheckboxes title="Programs"  value="{!selectedPrograms}" onChange="onChangeProj(this);"  layout="pageDirection" style="margin-left: 6%;width: 100%; color:white; font-weight:100">
                         <apex:selectOptions value="{!programs}" />
                     </apex:selectCheckboxes>
                 </div>

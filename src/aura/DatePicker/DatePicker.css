@@ -26,3 +26,20 @@
         border-bottom-style: dashed;
         border-bottom-color: lightgray;
 }
+
+
+.THIS td.maintenance-day > .slds-day{
+    border: .16rem solid #ec9918;
+    line-height: 1.84rem!important;
+    border-radius: 49%;
+}
+
+
+.THIS td.slds-is-selected:not(.slds-disabled-text) > .slds-day {
+    background: #ec9918 !important;
+    color: white;
+}
+
+.THIS .slds-text-heading--medium{
+        font-weight: 500 !important;
+}

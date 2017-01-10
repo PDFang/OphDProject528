@@ -14,9 +14,14 @@ public class NotificationHelperClass
 		npp.AuthHeader = ah;
 		npp.timeout_x = 50000;
 		//npp.clientCertName_x = null;
-		string result = npp.SendEmail(aos,subject,htmlBody,textBody,templateId);
-		system.debug('webservice response ==>' + result);
+        system.debug('subject => ' + subject);
+        system.debug('htmlBody => ' + htmlBody);
+        system.debug('templateId => ' + templateId);
+
         system.debug('addresses => ' + aos);
+		string result = npp.SendEmail(aos,subject,htmlBody,textBody,templateId);
+
+        system.debug('webservice response ==>' + result);
         
 		return result;
         

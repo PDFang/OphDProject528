@@ -19,6 +19,7 @@
             var date = monthName + ' ' + pastDt.getDate();
             dates.push(date);
         }
+
         if(priorDate.getTime() == pastDt.getTime())
         {
          jQuery.noConflict();
@@ -34,6 +35,7 @@
         }
         component.set("v.dates", dates);
         component.set("v.lastDate", pastDt);
+
         this.loadTrustGrid(component);
 
 
@@ -80,6 +82,7 @@
         },
 
         loadTableData: function(component, helper){
+
          var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
          var myAction = component.get('c.getPlatformInfo');
@@ -117,8 +120,8 @@
     },
 
     loadTrustGrid: function(component, helper){
-
-
+        var thisHelper = this;
+        this.showSpinner(component, helper);
          var firstDate  = component.get("v.firstDate");
          var f = firstDate == "" ? new Date() : firstDate;
          var today = new Date();
@@ -129,6 +132,7 @@
 
         console.log('firstDate =>' + f.toString());
         console.log('lastDate =>' + l.toString());
+        component.set('v.gridRows',null);
          // Handle returned results...
          var myAction = component.get('c.initTrustGrid');
          myAction.setParams(
@@ -152,13 +156,32 @@
                         //platforms.push(temp.platformName);
                         trustGridRows.push(temp);
                     }
+
                     component.set('v.gridRows', trustGridRows);
+                     thisHelper.hideSpinner(component, helper);
+
                 } else {
                     // error handling
                 }
 
         });
          $A.enqueueAction(myAction);
+
+    },
+
+
+     showSpinner : function (component, helper) {
+        var spinner = component.find('spinner');
+        var evt = spinner.get("e.toggle");
+        evt.setParams({ isVisible : true });
+        evt.fire();
+    },
+
+    hideSpinner : function (component, helper) {
+       var spinner = component.find('spinner');
+       var evt = spinner.get("e.toggle");
+       evt.setParams({ isVisible : false });
+       evt.fire();
     }
 
 })

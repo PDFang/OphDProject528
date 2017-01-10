@@ -1,7 +1,7 @@
 <!--
  - Created by arnab.karsarkar on 11/15/2016.
  -->
-<apex:page id="GantChartTFSProjectsPage" sideBar="false" controller="GanttChartTFSProjectController" standardStylesheets="false">
+<apex:page id="GantChartTFSProjectsPage" sideBar="false" controller="GanttChartTFSProjectController" standardStylesheets="false" showHeader="true" title="Program Channel Roadmap">
 
 
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
@@ -21,19 +21,79 @@
 
 
     var program = '';
+    var program = [];
+    var teams = [];
+    var this_gantt = '';
+
 
     $(document).ready(function(){
-        var ganttdataSource = new kendo.data.GanttDataSource({
+      loadgantt();
+    });
+
+    function onChangeProj(obj)
+    {
+        program = [];
+        var parentTbl = jQuery(obj).closest('tr').closest('table');
+        var programChkboxes = [];
+        jQuery(parentTbl).children('tbody').children('tr').each(function(){
+              var childObj = jQuery(this).children('td').children('input');
+
+              if(jQuery(childObj).is(':checked')){
+                  programChkboxes.push(childObj);
+                  program.push(jQuery(childObj).val());
+              }
+           }) ;
+        if(program == ''){
+
+          program.push('None');
+        }
+        jQuery('#chart_div').empty();
+        loadgantt();
+       // console.log('program ==>' + program);
+    }
+
+    function onChangeTeam(thisObj)
+    {
+        teams = [];
+        var parentTbl = jQuery(thisObj).closest('tr').closest('table');
+        var teamCheckboxes = [];
+        jQuery(parentTbl).children('tbody').children('tr').each(function(){
+              var childObj = jQuery(this).children('td').children('input');
+
+              if(jQuery(childObj).is(':checked')){
+                  teamCheckboxes.push(childObj);
+                  teams.push(jQuery(childObj).val());
+              }
+           }) ;
+         if(teams == ''){
+           teams.push('None');
+        }
+         //console.log('teams ==>' + teams);
+         //console.log('program ==>' + program);
+         jQuery('#chart_div').empty();
+         loadgantt();
+    }
+
+
+
+    function loadgantt(){
+          var ganttdataSource = new kendo.data.GanttDataSource({
           transport: {
             read: function(options){
                  GanttChartTFSProjectController.kendoData(
+                     program,
+                     teams,
                      function(result,event){
                        options.success(JSON.parse(result));
-                       console.log('options =>' + JSON.stringify(options));
-                       console.log(JSON.stringify(result));
+
+                       colorLabel(result);
                      },
                      {escape: false}
                  );
+            },
+            update: function(options){
+                console.log('update');
+                options.success();
             }
           },
           schema: {
@@ -45,7 +105,12 @@
                 parentId: { from: "ParentId", type: "string",defaultValue: null },
                 start: { from: "StartDate", type: "date" },
                 end: { from: "EndDate", type: "date" },
+                team: { from: "Team", type: "string" },
+                program: { from: "ProductChannel", type: "string" },
                 title: { from: "ProjectName", defaultValue: "", type: "string" },
+                status: { from: "ProjectStatus", defaultValue: "", type: "string" },
+                manager: { from: "ProjectManager", defaultValue: "", type: "string" },
+                size: { from: "TShirtSize", defaultValue: "", type: "string" },
                 percentComplete: { from: "PercentComplete", type: "number" },
                 summary: { from: "Summary", type: "boolean" },
                 expanded: { from: "Expanded", type:"boolean", defaultValue: true  }
@@ -57,78 +122,200 @@
          var gantt = $("#chart_div").kendoGantt({
             tooltip: {
                 visible: true,
+                 autoHide: false,
                 template: $("#tooltip-template").html()
               },
             dataSource:ganttdataSource,
             editable: false,
             showWorkHours: false,
             showWorkDays: false,
+            resizable:true,
             snap: false,
+
             columns: [
-                        { field: "title", title: "Title", editable: true, sortable: true },
-                        { field: "start", title: "Start Time", format: "{0:MM/dd/yyyy}", width: 100},
-                        { field: "end", title: "End Time", format: "{0:MM/dd/yyyy}", width: 100}
+                        { field: "title", title: "Title", editable: false, sortable: true },
+                        { field: "team", title: "Team",  editable: false, sortable: true },
+                        { field: "program", title: "Program",  editable: false, sortable: true }
                     ],
             views: [  { type: "month", selected: true },
 
                     ],
-            dataBound: onDataBound
-
+            dataBound: onDataBound,
+            change: onChange
          }).data("kendoGantt");
 
         $(document).bind("kendo:skinChange", function() {
                     gantt.refresh();
          });
+    }
 
 
+    function onChange(e) {
+        var gantt = e.sender;
+        var selection = gantt.select();
 
-    });
+        if (selection.length) {
+            var dataItem = gantt.dataItem(selection);
+            console.log("Gantt selection change :: " + dataItem.id);
+            projName = dataItem.id;
+             GanttChartTFSProjectController.RedirectToProject(projName, function(result, event){
+                if(event.status){
+                     window.open(result, '_blank');
+                }
+                },{escape:true}
+            );
+        }
+    }
 
     function onDataBound() {
         var gantt = this;
-
+        this_gantt = gantt;
         gantt.element.find(".k-task").each(function(e) {
           var dataItem = gantt.dataSource.getByUid($(this).attr("data-uid"));
             this.style.backgroundColor = dataItem.ProgramColor;
           // colorize task per business requirements
-          console.log('dataItem.ProgramColor =>' + dataItem.ProgramColor);
+          //console.log('dataItem.ProgramColor =>' + dataItem.ProgramColor);
 
         });
+      }
+
+     function changeColor(obj){
+         var val = obj.value;
+
+         this_gantt.element.find(".k-task").each(function(e) {
+            var dataItem = this_gantt.dataSource.getByUid($(this).attr("data-uid"));
+            if(val == 'Team')
+                this.style.backgroundColor = dataItem.TeamColor;
+            else
+                this.style.backgroundColor = dataItem.ProgramColor;
+        });
+     }
+
+
+
+      function colorLabel(result){
+
+            var theResult = JSON.parse(result);
+           //console.log('r =>' + r[0]);
+          for (var i = 0; i < theResult.length; i++) {
+            var r = theResult[i];
+            //console.log('r =>' + JSON.stringify(r));
+
+            jQuery("input[value='" + r.ProductChannel + "']").next().css({"background-color": r.ProgramColor,"font-weight" : "normal", "font-size" : "14px"});
+            jQuery("input[value='" + r.Team + "']").next().css({"background-color": r.TeamColor, "font-weight" : "normal", "font-size" : "14px"});
+
+        }
       }
 
 
     </script>
 
     <script id="tooltip-template" type="text/x-kendo-template">
-
-            <div>
-                <strong >Title  : #= task.title #</strong><br/>
-                <strong>Start Date:  #= task.start #</strong><br/>
-                <strong>End Date:  #= task.end #</strong><br/>
+        <div  style="width:100%">
+            <div class="row tooltipRow">
+                <div class="col-sm-5" > Project Number </div><div class="col-sm-7"><b> #= task.id #</b></div>
             </div>
+            <div class="row tooltipRow">
+                <div class="col-sm-5"> Summary</div><div class="col-sm-7"><b> #=  task.title  #</b></div>
+            </div>
+            <div class="row tooltipRow">
+                <div class="col-sm-5"> Project Status</div><div class="col-sm-7"><b>  #=  task.status  #</b></div>
+            </div>
+            <div class="row tooltipRow">
+                <div class="col-sm-5" > Primary Channel</div><div class="col-sm-7"><b>   #=  task.program  #</b></div>
+            </div>
+            <div class="row tooltipRow">
+                <div class="col-sm-5" style="white-space nowrap">Development Team</div><div class="col-sm-7"><b>   #=  task.team # </b></div>
+            </div>
+            <div class="row tooltipRow">
+                <div class="col-sm-5">T-Shirt</div><div class="col-sm-7"><b>  #=  task.size # </b></div>
+            </div>
+            <div class="row tooltipRow">
+                <div class="col-sm-5"> Governance Committee Priority </div><div class="col-sm-7"><b>  #=  task.orderId #</b></div>
+            </div>
+            <div class="row tooltipRow">
+                <div class="col-sm-5">Project Manager</div><div class="col-sm-7"><b> #=  task.manager #</b></div>
+            </div>
+        </div>
+
+
 
     </script>
 
 
     <apex:form >
-        <div style="padding-bottom:5px;">
+        <style>
+            body {
+            font-family: Roboto;
+            }
 
-            <apex:outputPanel id="programPanel">
-                <apex:outputPanel layout="block">Select a Program to filter &nbsp;
-                    <apex:selectList value="{!selectedPrograms}" size="1" onChange="onChangeProj(this);">
-                        <apex:selectOptions value="{!programs}" />
-                    </apex:selectList>
-                    <center>
+            fieldset
+            {
+                width:100%
+            }
 
-                        <apex:selectCheckboxes  value="{!selectedTeams}" onChange="onChangeTeam(this);" >
+            .tooltipRow{
+                    border-bottom: 1px solid rgba(128, 128, 128, 0.14);
+                    margin-left:1px;
+                        white-space: normal;
+                       text-align : left;
+            }
+
+            .k-tooltip{
+                max-width : 100% !important;
+                width:500px !important;
+            }
+            .k-widget, .k-widget *, .k-widget :before {
+                        -webkit-box-sizing: border-box !important;
+                        box-sizing: border-box !important;
+            }
+
+            .float-center{
+                    position: relative;
+                    left: 21%;
+            }
+
+        </style>
+
+        <div class="container-fluid">
+            <div class="form-group float-center">
+                <div class="row">
+                    <div class="col-sm-4 teamList">
+
+                        <label>Teams</label>
+                        <apex:selectCheckboxes title="Teams"  styleClass="selectedFilter"  layout="pageDirection" style="font-weight:100;margin-left: 11%;width: 100%;" value="{!selectedTeams}" onChange="onChangeTeam(this);" id="teamCheckBoxes">
                             <apex:selectOptions value="{!TeamLists}" />
                         </apex:selectCheckboxes>
-                    </center>
-                </apex:outputPanel>
+                    </div>
+                    <div class="col-sm-8">
+                        <label>Programs</label>
+                        <apex:selectCheckboxes title="Programs"  value="{!selectedPrograms}" onChange="onChangeProj(this);"  layout="pageDirection" style="font-weight:100; margin-left: 6%;width: 100%; color:white;">
+                            <apex:selectOptions value="{!programs}" />
+                        </apex:selectCheckboxes>
+                    </div>
+                </div>
+            </div>
+            <div class="row form-group float-center" >
+                <div class="col-sm-2" style="width: 9%;padding-right: 0;">
+                    <label for="sel1">Show Grid Color by:</label>
+                </div>
+                <div class="col-sm-10" style="padding:0;">
+                    <select class="form-control" id="sel1" style="width:8%" onchange="changeColor(this);">
+                        <option>Program</option>
+                        <option>Team</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-3">
+                <label style="position:fixed; left:10%; top:55%;">Placeholder for Sorting</label>
+                </div>
+                <div class="col-lg-9">
+                    <div id="chart_div"></div>
+                </div>
+            </div>
 
-            </apex:outputPanel>
         </div>
-
-        <div id="chart_div"></div>
     </apex:form>
+
 </apex:page>

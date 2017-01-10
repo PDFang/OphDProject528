@@ -135,7 +135,7 @@ public class InContactConfiguration
     //New P1/P2 Event email verbiage
     public static string NewEventEmailBody = 'inContact Technicians have received an alert of potential customer impact. This alert is related specifically to {Product Impacted}. Engineers are actively engaged and updates will be posted to our Trust site shortly.\n\n' + 
 	'If you feel you have been impacted by this event, please click <a href=\"http://support.incontact.com/Support/Trust">here</a> to visit the Trust section on the support site to get additional details regarding impact, create a case associated with Event {Case Number}, or to receive updates.\n\n' + 
-	'<b>Event Type:</b>\t{Event Type}\n\n<b>Incident Description:</b>\t\n\n{Subject}\n\n{Description}\n\n<b>Start Time:</b>\t{Start Time}\n\n<b>Product Impacted:</b>\t{Product Impacted}\n\n<b>Platform(s) Impacted:</b>\t{Platform Impacted}\n\n<b>Service Impact:</b>\t{Service Impact}\n\n<b>Status:</b>\t{Case Status}\n\n<b>Customer Action:</b>\t{Customer Action}\n\n\n\nThank you,\ninContact Support';
+	'<b>Event Type:</b>\t{Event Type}\n\n<b>Incident Description:</b>\t\n\n{Subject}\n\n{Description}\n\n<b>Start Time:</b>\t{Start Time}\n\n<b>Product Impacted:</b>\t{Product Impacted}\n\n<b>Service Impact:</b>\t{Service Impact}\n\n<b>Status:</b>\t{Case Status}\n\n<b>Customer Action:</b>\t{Customer Action}\n\n\n\nThank you,\ninContact Support';
     
     public static string NewEventEmailSubject = '***Service Impacting Event for {Product Impacted}***';
 

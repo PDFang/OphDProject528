@@ -18,6 +18,8 @@ public class TrustGridHelper {
     private Set<String> productSet = null;
     public Account customer;
 
+    public static list<string> Platforms = null;
+
     public Set<String> getPlatforms(){
         return platformSet == null ? new Set<String>() : platformSet;
     }
@@ -146,7 +148,7 @@ public class TrustGridHelper {
             }
             system.debug('**** DEBUG: platformString - ' + platformString);
             queryString = 'SELECT Id, Subject, EventStartDateTime__c, EventEndDateTime__c, EventType__c, PlatformsImpacted__c FROM Case '
-                            + 'WHERE RecordType.Name = \'Event\' AND NonEvent__c = false AND InternalEvent__c = false  AND Priority in (\'P1\', \'P2\') '
+                            + 'WHERE RecordType.Name = \'Event\' AND NonEvent__c = false AND InternalEvent__c = false '
                             + 'AND ProductImpacted__c IN :productSet AND PlatformsImpacted__c includes (' + platformString + ') '
                             + ' AND ((EventStartDateTime__c >= :endDate AND EventStartDateTime__c <= :startDate)'
                             + ' OR EventEndDateTime__c = NULL) AND ID NOT IN(SELECT Event__c FROM EventAccount__c WHERE Account__r.CadebillAccountNo__c = :cadebillAccountNo AND Excluded__c = true) ';
@@ -157,7 +159,7 @@ public class TrustGridHelper {
 
         queryString = 'SELECT Id, Subject, EventStartDateTime__c, EventEndDateTime__c, EventType__c, PlatformsImpacted__c FROM Case '
                         + 'WHERE ID IN(SELECT Event__c FROM EventAccount__c WHERE Account__r.CadebillAccountNo__c = :cadebillAccountNo AND Excluded__c = false) '
-                        + 'AND RecordType.Name = \'Event\' AND NonEvent__c = false AND InternalEvent__c = false AND Priority in (\'P1\', \'P2\') '
+                        + 'AND RecordType.Name = \'Event\' AND NonEvent__c = false AND InternalEvent__c = false  '
                         + ' AND ((EventStartDateTime__c >= :endDate AND EventStartDateTime__c <= :startDate )'
                         + ' OR EventEndDateTime__c = NULL)';
         List<Case> eventSpecificList = Database.Query(queryString);
@@ -170,5 +172,35 @@ public class TrustGridHelper {
         return eventList;
 
     } // end of getEvents()
+
+    // Call inContactTrustWebservice
+    public static List<Case> GetEventsByAccounts(Date startDate, date endDate, integer acctNo){
+        integer daysBack = endDate.daysBetween(startDate);
+        list<Case> lstCases = new list<Case>();
+        Platforms = new list<string>();
+        inContactTrustWebService.CustomerNodeEvents cn = inContactTrustWebService.SelectTrustNodesByCustomerAndDaysBackLocal(acctNo, daysBack);
+
+        for(inContactTrustWebService.TrustNode tn : cn.trustNodes)
+        {
+            Case c = new Case(
+                    Id = tn.caseId,
+                    PlatformsImpacted__c = tn.nodes,
+                    EventType__c = tn.eventType,
+                    EventStartDateTime__c = tn.eventStartDate,
+                    EventEndDateTime__c = tn.eventEndDate
+            );
+
+            lstCases.add(c);
+        }
+
+        Platforms = cn.customerNodes;
+        return lstCases;
+
+
+
+    }
+
+
+
 
 }
