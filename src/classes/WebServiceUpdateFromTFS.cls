@@ -18,6 +18,7 @@ global class WebServiceUpdateFromTFS
 
         Schema.DescribeSObjectResult d = Schema.SObjectType.IsTfsWorkItem__c;
         Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
+        system.debug('******* WorkItemLists - ' + WorkItemLists);
 
         try
         {
