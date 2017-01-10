@@ -339,8 +339,8 @@ public class CaseEventNotificationExtension
         buffer = String.join(lines, '\n'); 
         buffer = '\n' + buffer; 
        System.debug(buffer);
-        return buffer;
-        // return emailBody = emailBody.replace(field, buffer);      
+        //return buffer;
+         return emailBody = emailBody.replace(field, buffer);
         
     }
     public void MergeFieldUpdate()

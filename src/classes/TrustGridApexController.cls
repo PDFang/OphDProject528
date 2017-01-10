@@ -31,26 +31,26 @@ public without sharing class TrustGridApexController {
         Map<String, TrustGridRow> trustGridMap = new Map<String, TrustGridRow>();
 
         try {
-            helper = new TrustGridHelper(cadebillAccountNo);
-            Set<String> platformSet = helper.getPlatforms();
-            system.debug(' initTrustGrid - ' + platformSet);
-            if(platformSet.isEmpty()){
-                return trustGridList;
-            }
 
-            for (String platform : platformSet) {
-                TrustGridRow row = new TrustGridRow(platform);
-                trustGridMap.put(platform, row);
-                for (Integer i = 0; i <= daysBack; i++) {
+            List<Case> eventList = TrustGridHelper.GetEventsByAccounts(fDTLocal,lDtLocal,cadebillAccountNo);
 
-                    TrustGridRow.TrustGridCell cell = new TrustGridRow.TrustGridCell(fDTLocal.addDays(-i));
+            for (String platform : TrustGridHelper.Platforms) {
+                if(platform != '')
+                {
+                    TrustGridRow row = new TrustGridRow(platform);
+                    trustGridMap.put(platform, row);
+                    for (Integer i = 0; i <= daysBack; i++) {
+
+                        TrustGridRow.TrustGridCell cell = new TrustGridRow.TrustGridCell(fDTLocal.addDays(-i));
                         row.cellList.add(cell);
+                    }
+                    trustGridList.add(row);
                 }
-                trustGridList.add(row);
-            }
-            system.debug(' trustGridMap - ' + trustGridMap);
 
-            List<Case> eventList = helper.getEvents(fDTLocal, lDtLocal);
+            }
+            system.debug(' Platforms - ' + TrustGridHelper.Platforms);
+
+
             system.debug(' eventList - ' + eventList);
 
             for (Case c : eventList) {
@@ -72,7 +72,6 @@ public without sharing class TrustGridApexController {
                                 || (c.EventEndDateTime__c == null && c.EventStartDateTime__c.date() <= cell.today)) {
                             //TrustGridRow.EventInfo newEvent = new TrustGridRow.EventInfo(c);
                             //cell.eventList.add(newEvent);
-                            system.debug('came here c =>' + c);
                             cell.addEvent(c);
                         }
                     }
@@ -87,4 +86,5 @@ public without sharing class TrustGridApexController {
         return trustGridList;
 
     } // end of initTrustGrid()
+
 }

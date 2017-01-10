@@ -11,9 +11,11 @@
     <aura:attribute name="firstDate" type="string" default=""/>
     <aura:attribute name="datalist" type="string[]" default="[]"/>
     <aura:attribute name="gridRows" type="string[]" default="[]"/>
+    <aura:attribute name="currentDate" type="string" default=""/>
     <!--<aura:handler name="init" value="{!this}" action="{!c.doInit}"/>-->
     <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
     <aura:handler event="aura:doneRendering" action="{!c.doneRendering}"/>
+
 
 
 
@@ -28,8 +30,8 @@
 
                             <div class="panel-heading">
                                 <div class="row">
-                                    <div class="col-sm-4"><label>Status</label></div>
-                                    <div class="col-sm-8">
+                                    <div class="col-sm-3"><label>Status</label></div>
+                                    <div class="col-sm-9">
                                         <p>
                        <span class="iconClass">
                             <img src="{!$Resource.inContactResource + '/inContactResource/fonts/available.png'}" class="imageClass"/>
@@ -38,15 +40,19 @@
                                             <span class="iconClass">
                             <img src="{!$Resource.inContactResource + '/inContactResource/fonts/degradation.png'}" class="imageClass"/>
                         </span>
-                                            Service Degradation
+                                            Performance Issue
                                             <span class="iconClass">
                             <img src="{!$Resource.inContactResource + '/inContactResource/fonts/disruption.png'}" class="imageClass"/>
                        </span>
-                                            Disruption
+                                           Service Disruption
                                             <span class="iconClass">
                             <img src="{!$Resource.inContactResource + '/inContactResource/fonts/maintenance.png'}" class="imageClass"/>
                         </span>
                                             Maintenance
+                                            <span class="iconClass">
+                            <img src="{!$Resource.inContactResource + '/inContactResource/fonts/badge.PNG'}" style="height: 19px;width: 21px;"/>
+                        </span>
+                                            Multiple Events
                                         </p>
                                     </div>
 
@@ -54,7 +60,7 @@
                             </div>
                         </div>
                         <div class="panel-body">
-                            Gain access to inContact platform status history and domain event information for the past 30 days. Select a Service Disruption or Performance Issue icon below for a given date and domain and the update will populate below the status grid.
+                            Gain access to inContact platform status history and domain event information for the past 30 days. Select a Service Disruption or Performance Issue icon below for a given date and domain and the update will be shown on a popover window.
                         </div>
                     </div>
                 </div>
@@ -63,7 +69,7 @@
                         <div class="arrow-down"></div>
                         <div class="popover popover-top">
                             <div class="popover-content">
-                                <p>Current Status</p>
+                                <p>Current Status ({!v.currentDate})</p>
                             </div>
                         </div>
                     </div>
@@ -83,6 +89,7 @@
                         <div class="col-sm-1 tableHeader" id="{!item + '_date'}">{!date}</div>
                     </aura:iteration>
                 </div>
+                <center><ui:spinner aura:id="spinner"/></center>
 
                 <div class="row first-col-group ">
 
@@ -116,9 +123,7 @@
 
                                         <aura:set attribute="else">
                                             <aura:if isTrue="{!event.eventType == 'Service Disruption'}">
-
-
-                                                <a data-toggle="modal" data-target="#myModal">
+                                                <a onclick="{!c.showModal}">
                                                     <aura:if isTrue="{!event.noOfEvents > 1}">
                                                         <span class="badge badge-disruption">{!event.noOfEvents}</span>
                                                     </aura:if>
@@ -128,7 +133,7 @@
                                                 <aura:set attribute="else">
                                                     <aura:if isTrue="{!event.eventType == 'Performance Issue'}">
 
-                                                        <a data-toggle="modal" data-target="#myModal">
+                                                        <a onclick="{!c.showModal}">
                                                             <span class="badge badge-degradation">{!event.noOfEvents}</span>
                                                             <img src="{!$Resource.inContactResource + '/inContactResource/fonts/degradation.png'}" class="rowImage"/>
                                                         </a>
@@ -144,11 +149,12 @@
                     </aura:iteration>
                 </div>
 
-                <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div aura:id="myModal" class="modal-hide" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-backdrop fade in" style="height: 100%;z-index:0;" onclick="{!c.hideModal}"></div>
                     <div class="modal-dialog" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="{!c.hideModal}">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                                 <h4 class="modal-title" id="myModalLabel">Event Details will be displayed here</h4>
@@ -207,7 +213,7 @@
 
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="{!c.hideModal}">Close</button>
                             </div>
                         </div>
                     </div>

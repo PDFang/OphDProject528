@@ -13,7 +13,13 @@ global class inContactTrustWebService
         
         return cne;
     }
-    
+
+    public static CustomerNodeEvents SelectTrustNodesByCustomerAndDaysBackLocal(integer account_no, integer daysBack)
+    {
+        CustomerNodeEvents cne = inContactTrustWebService.SelectTrustNodesByCustomerAndDaysBack(account_no, daysBack);
+        return cne;
+    }
+
     webservice static List<MaintenanceNotification> SelectMaintenanceNotificationsByCustomerAndDates(integer account_no, datetime startDate, datetime endDate)
     {
         List<MaintenanceNotification> notifications = new List<MaintenanceNotification>();

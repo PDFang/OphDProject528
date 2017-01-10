@@ -15,15 +15,24 @@
 
     loadPrevious : function(component, event, helper){
          helper.getFutureDates(component);
+
     },
 
     doInit:function(component, event, helper) {
         console.log("call do init");
+        var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var today = new Date();
+        var monthName = monthNames[today.getMonth()];
+         var date = monthName + ' ' + today.getDate();
+         component.set("v.currentDate", date);
        // helper.loadTrustGrid(component);
     },
 
     loadNext:function(component, event, helper){
+
         helper.getPastSevenDates(component);
+
     },
 
 
@@ -37,6 +46,21 @@
                    container : 'body'
                });
           }); **/
-    }
+    },
+    showModal :  function(component, event, helper) {
+
+      var cmpModal = component.find('myModal');
+      $A.util.addClass(cmpModal, 'incontact-modal');
+      $A.util.removeClass(cmpModal, 'modal-hide');
+
+     },
+
+     hideModal :  function(component, event, helper) {
+
+           var cmpModal = component.find('myModal');
+           $A.util.removeClass(cmpModal, 'incontact-modal');
+           $A.util.addClass(cmpModal, 'modal-hide');
+
+          }
 
 })

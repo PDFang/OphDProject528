@@ -8,7 +8,7 @@
         var selectedTab = event.currentTarget.parentElement;
         $A.util.toggleClass(selectedTab, "slds-active");
         var tabContentArray = document.getElementsByClassName("slds-tabs--scoped__content");
-        for(i=0; i < tabContentArray.length; i++){
+        for(var i=0; i < tabContentArray.length; i++){
             var tabContent = tabContentArray[i];
             if(tabContent.id == event.currentTarget.getAttribute("aria-controls")
             || tabContent.id == currentTab.firstChild.getAttribute("aria-controls")){

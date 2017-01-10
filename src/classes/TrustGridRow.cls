@@ -20,8 +20,7 @@ public class TrustGridRow {
     }
 
     // inner class
-    public Class
-    TrustGridCell{
+    public Class TrustGridCell{
         public Date today{get; private set;}
         public String dateString{get; private set;}
         //public List<EventInfo> eventList{get; private set;}

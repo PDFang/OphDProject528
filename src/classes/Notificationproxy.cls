@@ -10,8 +10,8 @@ public class Notificationproxy {
         public String clientCertPasswd_x;
         public Integer timeout_x;
         public Notificationproxy.AuthHeader AuthHeader;
-        private String AuthHeader_hns = 'AuthHeader=http://ucn.net/NotificationProxy/';
-        private String[] ns_map_type_info = new String[]{'http://ucn.net/NotificationProxy/', 'Notificationproxy'};
+        private String AuthHeader_hns = 'AuthHeader=http://199.172.9.115:30443/';
+        private String[] ns_map_type_info = new String[]{'http://199.172.9.115:30443/NotificationProxy.asmx', 'Notificationproxy'};
         public String SendEmail(Notificationproxy.ArrayOfString recipients,String subject,String htmlBody,String textBody,Integer emailTemplateID) {
             Notificationproxy.SendEmail_element request_x = new Notificationproxy.SendEmail_element();
             Notificationproxy.SendEmailResponse_element response_x;
@@ -27,10 +27,10 @@ public class Notificationproxy {
               request_x,
               response_map_x,
               new String[]{endpoint_x,
-              'http://ucn.net/NotificationProxy/SendEmail',
-              'http://ucn.net/NotificationProxy/',
+              'http://199.172.9.115:30443/NotificationProxy.asmx',
+              'http://199.172.9.115:30443/NotificationProxy.asmx',
               'SendEmail',
-              'http://ucn.net/NotificationProxy/',
+              'http://199.172.9.115:30443/NotificationProxy.asmx',
               'SendEmailResponse',
               'Notificationproxy.SendEmailResponse_element'}
             );
@@ -41,7 +41,7 @@ public class Notificationproxy {
     public class SendEmailResponse_element {
         public String SendEmailResult;
         private String[] SendEmailResult_type_info = new String[]{'SendEmailResult','http://www.w3.org/2001/XMLSchema','boolean','1','1','false'};
-        private String[] apex_schema_type_info = new String[]{'http://ucn.net/NotificationProxy/','true','false'};
+        private String[] apex_schema_type_info = new String[]{'http://199.172.9.115:30443/NotificationProxy.asmx','true','false'};
         private String[] field_order_type_info = new String[]{'SendEmailResult'};
     }
     public class AuthHeader {
@@ -49,7 +49,7 @@ public class Notificationproxy {
         public String Password;
         private String[] Username_type_info = new String[]{'Username','http://www.w3.org/2001/XMLSchema','string','0','1','false'};
         private String[] Password_type_info = new String[]{'Password','http://www.w3.org/2001/XMLSchema','string','0','1','false'};
-        private String[] apex_schema_type_info = new String[]{'http://ucn.net/NotificationProxy/','true','false'};
+        private String[] apex_schema_type_info = new String[]{'http://199.172.9.115:30443/NotificationProxy.asmx','true','false'};
         private String[] field_order_type_info = new String[]{'Username','Password'};
     }
     public class SendEmail_element {
@@ -58,18 +58,18 @@ public class Notificationproxy {
         public String htmlBody;
         public String textBody;
         public Integer emailTemplateID;
-        private String[] recipients_type_info = new String[]{'recipients','http://ucn.net/NotificationProxy/','ArrayOfString','0','1','false'};
+        private String[] recipients_type_info = new String[]{'recipients','http://199.172.9.115:30443/NotificationProxy.asmx','ArrayOfString','0','1','false'};
         private String[] subject_type_info = new String[]{'subject','http://www.w3.org/2001/XMLSchema','string','0','1','false'};
         private String[] htmlBody_type_info = new String[]{'htmlBody','http://www.w3.org/2001/XMLSchema','string','0','1','false'};
         private String[] textBody_type_info = new String[]{'textBody','http://www.w3.org/2001/XMLSchema','string','0','1','false'};
         private String[] emailTemplateID_type_info = new String[]{'emailTemplateID','http://www.w3.org/2001/XMLSchema','int','1','1','false'};
-        private String[] apex_schema_type_info = new String[]{'http://ucn.net/NotificationProxy/','true','false'};
+        private String[] apex_schema_type_info = new String[]{'http://199.172.9.115:30443/NotificationProxy.asmx','true','false'};
         private String[] field_order_type_info = new String[]{'recipients','subject','htmlBody','textBody','emailTemplateID'};
     }
     public class ArrayOfString {
         public String[] string_x;
         private String[] string_x_type_info = new String[]{'string','http://www.w3.org/2001/XMLSchema','string','0','-1','true'};
-        private String[] apex_schema_type_info = new String[]{'http://ucn.net/NotificationProxy/','true','false'};
+        private String[] apex_schema_type_info = new String[]{'http://199.172.9.115:30443/NotificationProxy.asmx','true','false'};
         private String[] field_order_type_info = new String[]{'string_x'};
     }
 }

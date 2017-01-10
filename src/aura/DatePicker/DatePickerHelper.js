@@ -144,6 +144,10 @@
           firstFocusableDate = cellCmp;
         }
 
+        if(i== 12 || i == 15 || i == 7)
+        {
+             tdClass += ' maintenance-day';
+        }
         cellCmp.set("v.tabIndex", -1);
         cellCmp.set("v.label", d.getDate());
         cellCmp.set("v.tdClass", tdClass)
