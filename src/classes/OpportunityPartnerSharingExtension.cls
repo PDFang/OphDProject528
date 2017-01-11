@@ -1,7 +1,7 @@
 /**
  * Created by mohandaas.rangaswamy on 11/28/2016.
  */
-public without sharing class OpportunityPartnerSharingExtension {
+public with sharing class OpportunityPartnerSharingExtension {
 
     public Opportunity opp{get;set;}
     public string keyword{get;set;}
@@ -95,14 +95,22 @@ public without sharing class OpportunityPartnerSharingExtension {
             currentUserIds.add(sharedOpp.Partner_User__c);
         }
 
-        for(PermissionSetAssignment psa :[
-                Select AssigneeId, Assignee.Name, Assignee.isActive, Assignee.ContactId, Assignee.AccountId, Assignee.Account.Name
-                from PermissionSetAssignment
-                where PermissionSet.Name = :partnerPermissions[0].Permission_Set__c
-                and Assignee.isActive = true
-                and AssigneeId NOT IN :currentUserIds
-                order by Assignee.Name
-        ]){
+        String soql = 'Select AssigneeId, Assignee.Name, Assignee.isActive, Assignee.ContactId, Assignee.AccountId, Assignee.Account.Name '
+                + 'from PermissionSetAssignment '
+                + 'where PermissionSet.Name = \'' + partnerPermissions[0].Permission_Set__c + '\' '
+                + 'and Assignee.isActive = true ';
+
+        if(currentUserIds.size() > 0 ){
+            String userIdString = '';
+            for(Id userId : currentUserIds){
+                userIdString += userIdString.length() > 0 ? ',' : '';
+                userIdString += '\'' + userId + '\'';
+            }
+            soql = soql + 'and AssigneeId NOT IN (' + userIdString + ') ';
+        }
+        soql = soql + 'order by Assignee.Name';
+
+        for(PermissionSetAssignment psa :Database.query(soql)){
             UserWrapper wrapper = new UserWrapper(psa.Assignee);
             wrapperList.add(wrapper);
         }
