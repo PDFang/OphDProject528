@@ -16,9 +16,10 @@ private class OpportunityPartnerSharingExtensionTest {
         test.startTest();
         ApexPAges.StandardController oppController = new ApexPAges.StandardController(opp);
         OpportunityPartnerSharingExtension extension = new OpportunityPartnerSharingExtension(oppController);
+        system.assertNotEquals(null,extension.opp, ApexPages.getMessages());
         OpportunityPartnerSharingExtension.getOptions();
         List<OpportunityPartnerSharingExtension.UserWrapper> wrapperList = extension.getDisplayList();
-        system.assertEquals(4, wrapperList.size());
+        system.assertEquals(4, wrapperList.size(), ApexPages.getMessages());
 
         extension.keyword = 'Partner';
         extension.search();
