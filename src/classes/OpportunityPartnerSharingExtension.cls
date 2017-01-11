@@ -1,7 +1,7 @@
 /**
  * Created by mohandaas.rangaswamy on 11/28/2016.
  */
-public with sharing class OpportunityPartnerSharingExtension {
+public without sharing class OpportunityPartnerSharingExtension {
 
     public Opportunity opp{get;set;}
     public string keyword{get;set;}
