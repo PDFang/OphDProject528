@@ -50,6 +50,7 @@ public class WebserviceUpdateFromTFSTest {
                 Team__c = 'Operations',               
                 RecordTypeId = rtByNameMap.get(PROJECT_TYPE_PSA).getRecordTypeId(),
                 RequestedDeliveryDate__c = system.today().addDays(7),
+                TfsId__c = '12345',
                 SyncToTFS__c = false
         );
         insert testProject;        
@@ -58,11 +59,10 @@ public class WebserviceUpdateFromTFSTest {
     
     
     
-    public static testMethod void testProjectUpdate()
+    public static testMethod void testWorkItemCreate()
     {
         Project__c testProject = CreateProject();
-      //  ISTFSWorkItem__c testWorkItem = CreateWorkItem();
- 
+
         Profile p = [SELECT Id FROM Profile WHERE Name='System Administrator']; 
       	User u = new User(Alias = 'standt', Email='standarduser@testorg.com', 
                           EmailEncodingKey='UTF-8', LastName='Testing', LanguageLocaleKey='en_US', 
@@ -71,30 +71,70 @@ public class WebserviceUpdateFromTFSTest {
 
         
         
-        WebServiceUpdateFromTFS.WorkItemsWrapperParams wrapperParams = new WebServiceUpdateFromTFS.WorkItemsWrapperParams();
-        wrapperParams.SalesforceRecordId = testProject.Id;
-        wrapperParams.AssignedTo = 'Testing';
-        wrapperParams.StackRank =  1258456325;
-        wrapperParams.State =  'Active';
-        wrapperParams.Description =  'Test Description';
-        wrapperParams.Title =   'TEST PROJECT';   
-        wrapperParams.Team =  'Avengers';
-        wrapperParams.Priority = 'Normal';
- 		wrapperParams.Iteration = 'TFS';
-        wrapperParams.StoryPoints = '5';
-        wrapperParams.Comment = '';
-        wrapperParams.Tags = new list<string>{'TEST1', 'TEST2'};
-        
+        WebServiceUpdateFromTFS.WorkItemsWrapperParams wrapperParam1 = new WebServiceUpdateFromTFS.WorkItemsWrapperParams();
+        wrapperParam1.SalesforceRecordId = null;
+        wrapperParam1.ParentTfsId = testProject.TfsId__c;
+        wrapperParam1.WorkItemType = 'User Story';
+        wrapperParam1.TfsId = '1800';
+        wrapperParam1.AssignedTo = 'Testing';
+        wrapperParam1.StackRank =  1258456325;
+        wrapperParam1.State =  'Active';
+        wrapperParam1.Description =  'Test Description';
+        wrapperParam1.Title =   'TEST PROJECT';
+        wrapperParam1.Team =  'Avengers';
+        wrapperParam1.Priority = 'Normal';
+ 		wrapperParam1.Iteration = 'TFS';
+        wrapperParam1.StoryPoints = '5';
+        wrapperParam1.Comment = 'Test';
+        wrapperParam1.Tags = new list<string>{'TEST1', 'TEST2'};
+
         list<WebServiceUpdateFromTFS.WorkItemsWrapperParams> lstParams = new  list<WebServiceUpdateFromTFS.WorkItemsWrapperParams>();
-        lstParams.add(wrapperParams);
-        
+        lstParams.add(wrapperParam1);
+
         Test.startTest();
         
         WebServiceUpdateFromTFS.UpdateTFSItems(lstParams);
-         
-           Test.stopTest();  
+
+        Test.stopTest();
             
     }
-    
-    
+
+    public static testMethod void testProjectUpdate()
+    {
+        Project__c testProject = CreateProject();
+        //  ISTFSWorkItem__c testWorkItem = CreateWorkItem();
+
+        Profile p = [SELECT Id FROM Profile WHERE Name='System Administrator'];
+        User u = new User(Alias = 'standt', Email='standarduser@testorg.com',
+                EmailEncodingKey='UTF-8', LastName='Testing', LanguageLocaleKey='en_US',
+                LocaleSidKey='en_US', ProfileId = p.Id,
+                TimeZoneSidKey='America/Los_Angeles', UserName='standarduser@testorg.com');
+
+
+
+        WebServiceUpdateFromTFS.WorkItemsWrapperParams wrapperParam1 = new WebServiceUpdateFromTFS.WorkItemsWrapperParams();
+        wrapperParam1.SalesforceRecordId = testProject.Id;
+        wrapperParam1.AssignedTo = userInfo.getFirstName() + ' ' + userinfo.getLastName();
+        wrapperParam1.StackRank =  1258456325;
+        wrapperParam1.State =  'Active';
+        wrapperParam1.Description =  'Test Description';
+        wrapperParam1.Title =   'TEST PROJECT';
+        wrapperParam1.Team =  'Avengers';
+        wrapperParam1.Priority = 'Normal';
+        wrapperParam1.Iteration = 'TFS';
+        wrapperParam1.StoryPoints = '5';
+        wrapperParam1.Comment = 'Test';
+        wrapperParam1.Tags = new list<string>{'TEST1', 'TEST2'};
+
+        list<WebServiceUpdateFromTFS.WorkItemsWrapperParams> lstParams = new  list<WebServiceUpdateFromTFS.WorkItemsWrapperParams>();
+        lstParams.add(wrapperParam1);
+
+        Test.startTest();
+
+        WebServiceUpdateFromTFS.UpdateTFSItems(lstParams);
+
+        Test.stopTest();
+
+    }
+
 }
