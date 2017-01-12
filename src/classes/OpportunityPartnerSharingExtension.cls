@@ -95,22 +95,15 @@ public without sharing class OpportunityPartnerSharingExtension {
             currentUserIds.add(sharedOpp.Partner_User__c);
         }
 
-        String soql = 'Select AssigneeId, Assignee.Name, Assignee.isActive, Assignee.ContactId, Assignee.AccountId, Assignee.Account.Name '
-                + 'from PermissionSetAssignment '
-                + 'where PermissionSet.Name = \'' + partnerPermissions[0].Permission_Set__c + '\' '
-                + 'and Assignee.isActive = true ';
-
-        if(currentUserIds.size() > 0 ){
-            String userIdString = '';
-            for(Id userId : currentUserIds){
-                userIdString += userIdString.length() > 0 ? ',' : '';
-                userIdString += '\'' + userId + '\'';
-            }
-            soql = soql + 'and AssigneeId NOT IN (' + userIdString + ') ';
-        }
-        soql = soql + 'order by Assignee.Name';
-
-        for(PermissionSetAssignment psa :Database.query(soql)){
+        for(PermissionSetAssignment psa :[
+                Select AssigneeId, Assignee.Name, Assignee.isActive, Assignee.ContactId, Assignee.Contact.Account.Name, Assignee.AccountId
+                from PermissionSetAssignment
+                where PermissionSet.Name = :partnerPermissions[0].Permission_Set__c
+                and Assignee.isActive = true
+                and Assignee.isPortalEnabled = true
+                and AssigneeId NOT IN :currentUserIds
+                order by Assignee.Name
+        ]){
             UserWrapper wrapper = new UserWrapper(psa.Assignee);
             wrapperList.add(wrapper);
         }
@@ -170,10 +163,11 @@ public without sharing class OpportunityPartnerSharingExtension {
             String s = String.join(new List<Id>(currentUserIds), ',');
             string refinedKeyword = keyword.replaceAll('[*]', '%');
             refinedKeyword += refinedKeyword.endsWith('%') ? '' : '%';
-            String soql = 'Select AssigneeId, Assignee.Name, Assignee.isActive, Assignee.ContactId, Assignee.AccountId, Assignee.Account.Name '
+            String soql = 'Select AssigneeId, Assignee.Name, Assignee.isActive, Assignee.ContactId, Assignee.AccountId, Assignee.Contact.Account.Name '
                     + 'from PermissionSetAssignment '
                     + 'where PermissionSet.Name = \'' + partnerPermissions[0].Permission_Set__c + '\' '
-                    + 'and Assignee.isActive = true and ';
+                    + 'and Assignee.isActive = true '
+                    + 'and Assignee.isPortalEnabled = true and ';
             if(currentUserIds.size() > 0 ){
                 String userIdString = '';
                 for(Id userId : currentUserIds){
@@ -182,7 +176,7 @@ public without sharing class OpportunityPartnerSharingExtension {
                 }
                 soql = soql + 'AssigneeId NOT IN (' + userIdString + ') and ';
             }
-            soql = soql + ( (searchBy == 'Name') ? 'Assignee.Name ' : 'Assignee.Account.Name ' );
+            soql = soql + ( (searchBy == 'Name') ? 'Assignee.Name ' : 'Assignee.Contact.Account.Name ' );
             soql = soql + 'like \'' + refinedKeyword + '\' order by Assignee.Name';
             system.debug('**** search(): soql - ' + soql);
 

@@ -33,7 +33,7 @@
                     </apex:column>
                     <apex:column headerValue="Account Name">
                         <!--<apex:outputField value="{!wrapper.partner.Account.Name}"/>-->
-                        <apex:outputLink title="{!wrapper.partner.Account.Name}" value="/{!wrapper.partner.accountId}" target="_blank">{!wrapper.partner.Account.Name}</apex:outputLink>
+                        <apex:outputLink title="{!wrapper.partner.Contact.Account.Name}" value="/{!wrapper.partner.accountId}" target="_blank">{!wrapper.partner.Contact.Account.Name}</apex:outputLink>
                     </apex:column>
                     <apex:facet name="footer">
                         <apex:outputPanel style="font-size: 10pt; font-weight: bold;">
