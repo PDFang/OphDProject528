@@ -6,7 +6,7 @@
 
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
-
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
 
 
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
@@ -24,10 +24,14 @@
     var program = [];
     var teams = [];
     var this_gantt = '';
+    var maxEndDate = '';
 
 
     $(document).ready(function(){
       loadgantt();
+      $('.dropdown-toggle').dropdown();
+
+
     });
 
     function onChangeProj(obj)
@@ -77,6 +81,61 @@
 
 
     function loadgantt(){
+
+        kendo.ui.GanttCustomView = kendo.ui.GanttView.extend({
+          name: "custom",
+          options: {
+            yearHeaderTemplate: kendo.template("#=kendo.toString(start, 'yyyy')#"),
+            quarterHeaderTemplate:  kendo.template("#return ['Q1 '+kendo.toString(start,'yyyy') , 'Q2 '+kendo.toString(start,'yyyy'), 'Q3 '+kendo.toString(start,'yyyy'), 'Q4 '+kendo.toString(start,'yyyy')][start.getMonth() / 3] #"),
+            monthHeaderTemplate: kendo.template("#=kendo.toString(start, 'MMM')#")
+          },
+
+          range: function(range) {
+            this.start = new Date();
+            this.end = maxEndDate;
+          },
+
+          _generateSlots: function(incrementCallback, span) {
+            var slots = [];
+            var slotStart = new Date(this.start);
+            var slotEnd;
+
+            while (slotStart < this.end) {
+              slotEnd = new Date(slotStart);
+              incrementCallback(slotEnd);
+
+              slots.push({ start: slotStart, end: slotEnd, span: span });
+
+              slotStart = slotEnd;
+            }
+
+            return slots;
+          },
+
+          _createSlots: function() {
+            var slots = [];
+
+            slots.push(this._generateSlots(function(date) { date.setFullYear(date.getFullYear() + 1); }, 12));
+            slots.push(this._generateSlots(function(date) { date.setMonth(date.getMonth() + 3); }, 3));
+            slots.push(this._generateSlots(function(date) { date.setMonth(date.getMonth() + 1); }, 1));
+
+            return slots;
+          },
+
+          _layout: function() {
+            var rows = [];
+            var options = this.options;
+
+            rows.push(this._slotHeaders(this._slots[0], kendo.template(options.yearHeaderTemplate)));
+            rows.push(this._slotHeaders(this._slots[1], kendo.template(options.quarterHeaderTemplate)));
+            rows.push(this._slotHeaders(this._slots[2], kendo.template(options.monthHeaderTemplate)));
+
+            return rows;
+          }
+        });
+
+
+
           var ganttdataSource = new kendo.data.GanttDataSource({
           transport: {
             read: function(options){
@@ -113,7 +172,9 @@
                 size: { from: "TShirtSize", defaultValue: "", type: "string" },
                 percentComplete: { from: "PercentComplete", type: "number" },
                 summary: { from: "Summary", type: "boolean" },
-                expanded: { from: "Expanded", type:"boolean", defaultValue: true  }
+                expanded: { from: "Expanded", type:"boolean", defaultValue: true  },
+                formattedStart : { from: "FormattedStartDt", type:"string", defaultValue: ""},
+                formattedEnd : { from: "FormattedEndDt", type:"string", defaultValue: ""}
               }
             }
           }
@@ -131,14 +192,16 @@
             showWorkDays: false,
             resizable:true,
             snap: false,
-
+            taskTemplate: $("#task-template").html(),
+            listWidth:525,
+            rowHeight:3,
             columns: [
-                        { field: "title", title: "Title", editable: false, sortable: true },
-                        { field: "team", title: "Team",  editable: false, sortable: true },
-                        { field: "program", title: "Program",  editable: false, sortable: true }
+                        { field: "title", title: "Title", editable: false, sortable: true, width: "300px"  },
+                        { field: "team", title: "Team",  editable: false, sortable: true,width: "100px"  },
+                        { field: "program", title: "Program",  editable: false, sortable: true, width: "125px"  }
                     ],
-            views: [  { type: "month", selected: true },
-
+            views: [  { type: "month"},
+                      { type: "kendo.ui.GanttCustomView", title: "Quarter", selected: true }
                     ],
             dataBound: onDataBound,
             change: onChange
@@ -147,6 +210,8 @@
         $(document).bind("kendo:skinChange", function() {
                     gantt.refresh();
          });
+
+
     }
 
 
@@ -170,21 +235,34 @@
     function onDataBound() {
         var gantt = this;
         this_gantt = gantt;
+
         gantt.element.find(".k-task").each(function(e) {
           var dataItem = gantt.dataSource.getByUid($(this).attr("data-uid"));
-            this.style.backgroundColor = dataItem.ProgramColor;
+              if (jQuery('#team').is(':checked'))
+                this.style.backgroundColor = dataItem.TeamColor;
+            else
+                this.style.backgroundColor = dataItem.ProgramColor;
           // colorize task per business requirements
           //console.log('dataItem.ProgramColor =>' + dataItem.ProgramColor);
 
+
         });
+
+      var height = this.timeline.view()._slots.length * 2.5;
+      this.list.header.find("tr").height(height + "em");
+      this.list._adjustHeight();
+
+
+
       }
 
      function changeColor(obj){
          var val = obj.value;
 
+
          this_gantt.element.find(".k-task").each(function(e) {
             var dataItem = this_gantt.dataSource.getByUid($(this).attr("data-uid"));
-            if(val == 'Team')
+            if(val == 'team')
                 this.style.backgroundColor = dataItem.TeamColor;
             else
                 this.style.backgroundColor = dataItem.ProgramColor;
@@ -196,22 +274,36 @@
       function colorLabel(result){
 
             var theResult = JSON.parse(result);
+            var dates = [];
            //console.log('r =>' + r[0]);
+           startDt = theResult[0].StartDate;
           for (var i = 0; i < theResult.length; i++) {
             var r = theResult[i];
             //console.log('r =>' + JSON.stringify(r));
+            dates.push(new Date(r.EndDate));
+            jQuery("input[value='" + r.ProductChannel + "']").next().css({"background-color": r.ProgramColor,"font-weight" : "normal", "font-size" : "9px"});
+            jQuery("input[value='" + r.Team + "']").next().css({"background-color": r.TeamColor, "font-weight" : "normal", "font-size" : "10px"});
+            endDt = r.EndDate;
+          }
 
-            jQuery("input[value='" + r.ProductChannel + "']").next().css({"background-color": r.ProgramColor,"font-weight" : "normal", "font-size" : "14px"});
-            jQuery("input[value='" + r.Team + "']").next().css({"background-color": r.TeamColor, "font-weight" : "normal", "font-size" : "14px"});
+          var maxdate = new Date(Math.max.apply(null,dates));
+          maxEndDate = new Date ('12/31/' + maxdate.getFullYear());
+          console.log('maxDate =>' + maxEndDate);
 
-        }
       }
-
 
     </script>
 
+    <script id="task-template" type="text/x-kendo-template">
+        <div class="template">
+        </div>
+     </script>
+
+
+
     <script id="tooltip-template" type="text/x-kendo-template">
         <div  style="width:100%">
+            #if(task.parentId  != null){#
             <div class="row tooltipRow">
                 <div class="col-sm-5" > Project Number </div><div class="col-sm-7"><b> #= task.id #</b></div>
             </div>
@@ -236,15 +328,27 @@
             <div class="row tooltipRow">
                 <div class="col-sm-5">Project Manager</div><div class="col-sm-7"><b> #=  task.manager #</b></div>
             </div>
+            #}else{#
+            <div class="row tooltipRow">
+                <div class="col-sm-4" > Sprint</div>
+                <div class="col-sm-8"><b>#=  task.id # </b></div>
+            </div>
+            <div class="row tooltipRow">
+                <div class="col-sm-4"> Sprint Start Date</div>
+                <div class="col-sm-8"><b> #=  task.formattedStart # </b></div>
+            </div>
+            <div class="row tooltipRow">
+                <div class="col-sm-4"> Sprint End Date</div>
+                <div class="col-sm-8"><b> #=  task.formattedEnd #</b></div>
+            </div>
+            #}#
+
         </div>
 
 
 
     </script>
-
-
-    <apex:form >
-        <style>
+    <style>
             body {
             font-family: Roboto;
             }
@@ -272,50 +376,201 @@
 
             .float-center{
                     position: relative;
-                    left: 21%;
+                    left: 22%;
+                    font-size: 9px;
             }
 
+            .k-gantt-layout {
+                font-size: 10px;
+            }
+            .k-gantt td {
+                font-size: 9px;
+            }
+
+            .checkboxStyle{
+                 font-weight:100;
+                 width: 100%;
+                 margin-left: 1.5em;
+            }
+
+            .floatright
+            {
+                float:right;
+                padding-top:5px;
+
+            }
+            .bootstrap-btn{
+                display: inline-block;
+                padding: 6px 12px;
+                margin-bottom: 0;
+                font-size: 14px;
+                font-weight: 400;
+                line-height: 1.42857143;
+                text-align: center;
+                white-space: nowrap;
+                vertical-align: middle;
+                -ms-touch-action: manipulation;
+                touch-action: manipulation;
+                cursor: pointer;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+                background-image: none;
+                border: 1px solid transparent;
+                border-radius: 4px
+            }
+
+            .dropdown-toggle::after {
+                display: inline-block;
+                width: 0;
+                height: 0;
+                margin-left: .3em;
+                vertical-align: middle;
+                content: "";
+                border-top: .3em solid;
+                border-right: .3em solid transparent;
+                border-left: .3em solid transparent;
+            }
+
+            .dropdown-fixed{
+                    position: absolute;
+                    z-index: 1000;
+                    top: 20.5%;
+                    width: auto;
+                    margin-top: -100px;
+                    margin-left: -100px;
+                    left:24%;
+            }
+
+            .colorDropdownlabel{
+                    width: 13%;
+                    font-size: 14px;
+                    height: 32px;
+                    position: absolute;
+                    top: 3%;
+                    left: 35%;
+                    padding-top: 5px;
+                    font-weight: 100;
+            }
+
+            .colorDropdown{
+                    width: 8%;
+                    font-size: 14px;
+                    height: 32px;
+                    position: absolute;
+                    top: 3%;
+                    left: 45%;
+            }
+
+            .k-gantt-toolbar li:last-child, .k-gantt-toolbar li:last-child>.k-link {
+                    margin-left: 0px;
+            }
+            .k-task-single{
+                height: 20px !important;
+            }
+            .k-task-wrap {
+                padding-bottom: 0px;
+            }
+            .page-header{
+                padding-bottom: 4px !important;
+                margin: 0px 0 1px !important;
+                border-bottom : none;
+            }
+            .page-header h1{
+                font-size: 20px;
+                text-decoration: none;
+                color: #767474;
+                font-family: Segoe UI;
+                font-weight: 300;
+               }
+            .k-gantt-toolbar {
+               height: 51px !important;
+            }
+            .dropdown-menu{
+                    background-color: #eeeeef !important;
+            }
         </style>
 
+    <apex:form >
         <div class="container-fluid">
-            <div class="form-group float-center">
-                <div class="row">
-                    <div class="col-sm-4 teamList">
 
-                        <label>Teams</label>
-                        <apex:selectCheckboxes title="Teams"  styleClass="selectedFilter"  layout="pageDirection" style="font-weight:100;margin-left: 11%;width: 100%;" value="{!selectedTeams}" onChange="onChangeTeam(this);" id="teamCheckBoxes">
-                            <apex:selectOptions value="{!TeamLists}" />
-                        </apex:selectCheckboxes>
-                    </div>
-                    <div class="col-sm-8">
-                        <label>Programs</label>
-                        <apex:selectCheckboxes title="Programs"  value="{!selectedPrograms}" onChange="onChangeProj(this);"  layout="pageDirection" style="font-weight:100; margin-left: 6%;width: 100%; color:white;">
-                            <apex:selectOptions value="{!programs}" />
-                        </apex:selectCheckboxes>
-                    </div>
-                </div>
-            </div>
-            <div class="row form-group float-center" >
-                <div class="col-sm-2" style="width: 9%;padding-right: 0;">
-                    <label for="sel1">Show Grid Color by:</label>
-                </div>
-                <div class="col-sm-10" style="padding:0;">
-                    <select class="form-control" id="sel1" style="width:8%" onchange="changeColor(this);">
-                        <option>Program</option>
-                        <option>Team</option>
-                    </select>
-                </div>
-            </div>
+
+
+
             <div class="row">
-                <div class="col-lg-3">
-                <label style="position:fixed; left:10%; top:55%;">Placeholder for Sorting</label>
-                </div>
-                <div class="col-lg-9">
+
+                <div class="col-md-9 col-md-push-3" id="kendochart">
+                    <div class="page-header">
+                        <h1>Program Channel Roadmap</h1>
+                    </div>
+                    <div class="dropdown-fixed" style="left: 20%;width: 8%;margin-left:3px;">
+                    <button type="button" class="navbar-toggle" style="border: 1px solid gray;" data-toggle="collapse" data-target="#myNavbar">
+                        <span class="icon-bar" style="background-color:black"></span>
+                        <span class="icon-bar" style="background-color:black"></span>
+                        <span class="icon-bar" style="background-color:black"></span>
+                    </button>
+                    </div>
+                    <div class="collapse navbar-collapse dropdown-fixed" style="overflow-x:hidden;margin-left:3px;" id="myNavbar">
+                    <ul class="nav navbar-nav">
+                        <li class="dropdown">
+                            <button class="bootstrap-btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Show Grid Color by
+                            </button>
+                            <ul class="dropdown-menu" style="font-size: 9px;">
+                                <li>
+                                    <label class="custom-control custom-radio">
+                                        <input id="program" name="radio-stacked" type="radio" value="program" class="custom-control-input" onClick="changeColor(this);" checked="true"/>
+                                        <span class="custom-control-indicator"></span>
+                                        <span class="custom-control-description">Program</span>
+                                    </label>
+                                </li>
+                                <li>
+                                    <label class="custom-control custom-radio">
+                                        <input id="team" name="radio-stacked" type="radio" value="team" class="custom-control-input" onClick="changeColor(this);"/>
+                                        <span class="custom-control-indicator"></span>
+                                        <span class="custom-control-description">Team</span>
+                                    </label>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="dropdown" >
+                            <button class="bootstrap-btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Filter by Programs
+                            </button>
+                            <div class="dropdown-menu">
+                                <apex:selectCheckboxes title="Programs"  value="{!selectedPrograms}" onChange="onChangeProj(this);"  styleClass="checkboxStyle" layout="pageDirection">
+                                    <apex:selectOptions value="{!programs}" />
+                                </apex:selectCheckboxes>
+                            </div>
+                        </li>
+                        <li class="dropdown">
+                            <button class="bootstrap-btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Filter by Teams
+                            </button>
+                            <div class="dropdown-menu">
+                                <apex:selectCheckboxes title="Teams"  styleClass="checkboxStyle"  value="{!selectedTeams}" onChange="onChangeTeam(this);" id="teamCheckBoxes" layout="pageDirection">
+                                    <apex:selectOptions value="{!TeamLists}" />
+                                </apex:selectCheckboxes>
+                            </div>
+                        </li>
+                    </ul>
+                     </div>
                     <div id="chart_div"></div>
                 </div>
+                <div class="col-md-3 col-md-pull-9" id="placeholder" >
+                    <div class="page-header">
+                        <h1>Global Priority</h1>
+                    </div>
+                    <div style="background-color: #e0e4e5; height: 601px;">
+                        <label style="position:absolute; left:10%; top:55%;">Placeholder for Sorting</label>
+
+                    </div>
+
+                </div>
             </div>
+
 
         </div>
     </apex:form>
-
 </apex:page>

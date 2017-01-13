@@ -265,28 +265,31 @@ public with sharing class GanttChartTFSProjectHelper {
                 date sprintEndDate =  sprintdate.EndDate__c;
                 date sprintStartDate = sprintdate.StartDate__c;
                 date projectStartDate = sprintStartDate;
-                runningCapacity = 1 - (runningEstimate/idealTeam);
-                if(runningEstimate > runningCapacity)
-                {
-                    if(prevEndDate != null)
+
+                if(prevEndDate != null)
                         projectStartDate = prevEndDate;
 
-                }
                 integer datediff = sprintStartDate.daysBetween(sprintEndDate);
                 decimal estimatedDuration = (datediff * (projSize.Estimate__c/idealTeam));
                 estimatedDuration = estimatedDuration.round(System.RoundingMode.CEILING);
                 date projectEndDate = projectStartDate.addDays(integer.valueOf(estimatedDuration));
+
                 if(sprintEndDate > projectEndDate){
                     projectEndDate = projectEndDate.addDays(1);
                 }
 
-               if(team == 'X-Men')
-               {
-                   system.debug('ProjectId =>' + proj.Name + ' - ' + proj.Summary__c);
-                   system.debug('sprint =>' + sprint);
-                   //system.debug('Team =>' + team);
-               }
+
                 prevEndDate = projectEndDate;
+
+                /*if(team == 'X-Men')
+                {
+                    system.debug('projectStartDate =>'  + projectStartDate);
+                    system.debug('ProjectId =>'  + proj.Name);
+                    string sprintName =GenerateSprintByDate(projectStartDate);
+                    system.debug('sprintName =>'  + sprintName);
+
+                }*/
+
                 if((teamset.size() == 0 || teamSet.contains(team)) && (programSet.size() == 0 || programSet.contains(proj.Primary_Product__c)))
                 {
                     string productChannel =  proj.Primary_Product__c;
@@ -308,7 +311,7 @@ public with sharing class GanttChartTFSProjectHelper {
                     childData.TeamColor = colorTeam.Color__c;
                     childData.TeamFontColor = colorTeam.FontColor__c;
                     childData.GlobalPriority = proj.BattingOrder__c;
-                    childData.ParentId = sprint;
+                    childData.ParentId = GenerateSprintByDate(projectStartDate);
                     dataList.add(childData);
                 }
 
@@ -331,6 +334,8 @@ public with sharing class GanttChartTFSProjectHelper {
             childData.Summary = true;
             childData.Team = '';
             childData.ProductChannel = '';
+            childData.FormattedStartDt = GetformattedDate(sp.StartDate__c);
+            childData.FormattedEndDt = GetformattedDate(sp.EndDate__c);
             dataList.add(childData);
 
         }
@@ -339,4 +344,29 @@ public with sharing class GanttChartTFSProjectHelper {
 
     }
 
+    private static string GetformattedDate(date dt){
+        integer month = dt.month();
+        integer day = dt.day();
+        integer year = dt.year();
+
+        string formattedDate = month + '/' + day + '/' + year;
+
+        return formattedDate;
+
+    }
+    private static string GenerateSprintByDate(date dt){
+
+        list<SprintDateMap__c> iterationDates = SprintDateMap__c.getall().values();
+        list<SprintDateMap__c> lstSprints = new list<SprintDateMap__c>();
+        string sprintName;
+        for(SprintDateMap__c sp : iterationDates)
+        {
+            if(sp.StartDate__c <= dt && sp.EndDate__c > dt)
+            {
+                sprintName = sp.Sprint__c;
+                break;
+            }
+        }
+        return sprintName;
+    }
 }

@@ -24,7 +24,8 @@ public class KendoGanttData implements Comparable{
     public string ProductChannel{get;set;}
     public string ProgramFontColor{get;set;}
     public string TeamFontColor{get;set;}
-
+    public string FormattedStartDt{get;set;}
+    public string FormattedEndDt{get;set;}
 
     public Integer compareTo(Object compareTo) {
 
