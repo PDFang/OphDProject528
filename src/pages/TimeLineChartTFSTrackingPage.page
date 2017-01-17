@@ -286,13 +286,7 @@
         return buffer;
      }
 
-     function GetFormattedDate(thisdt) {
-            var theDate = new Date(thisdt);
-            var month = theDate.getMonth() + 1;
-            var day = theDate.getDate();
-            var year =theDate.getFullYear();
-            return month + "/" + day + "/" + year;
-           }
+
 
 
      var sort_by;
