@@ -1,6 +1,85 @@
 @isTest
 public class CaseUpdateBatchTest {
-    
+
+    static testMethod void testNewVsKnown(){
+
+        Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SobjectType.Case.getRecordTypeInfosByName();
+        List<Case> caseList = new List<Case>();
+        for(Integer i=0;i < 100; i++){
+            Case caseObj = new Case(
+                    RecordTypeId = recordTypeMap.get('Service Request').getRecordTypeId(),
+                    Type = 'Help Request',
+                    Status = 'New',
+                    KB_Attached__c = false,
+                    Subject = 'CaseUpdateBatchTest',
+                    Description = 'KB testNewVsKnown',
+                    Origin = 'Web'
+
+            );
+            caseList.add(caseObj);
+        }
+
+        Database.DMLOptions dmo = new Database.DMLOptions();
+        dmo.assignmentRuleHeader.useDefaultRule = true;
+        Database.insert(caseList, dmo);
+
+        KnowledgeArticle testArticle = [SELECT Id FROM KnowledgeArticle LIMIT 1];
+        List<CaseArticle> articleList = new List<CaseArticle>();
+        for(Integer i=0; i<10; i++){
+            CaseArticle caseArticleRecord = new CaseArticle(
+                    CaseId = caseList[i].Id,
+                    KnowledgeArticleId = testArticle.Id,
+                    ArticleVersionNumber = MATH.mod(i,3)
+            );
+            articleList.add(caseArticleRecord);
+        }
+        insert articleList;
+
+        for(Case caseObj : caseList){
+            caseObj.status = 'Closed';
+        }
+        update caseList;
+
+        test.startTest();
+        string caseQuery = 'SELECT Id, KB_Attached__c, New_vs_Known__c, CaseNumber, Status, ClosedDate FROM Case WHERE (KB_ATTACHED__C = false OR (KB_ATTACHED__C = true AND New_vs_Known__c = \'N/A\' )) AND isClosed = true AND recordTypeId in :stRecordTypes';
+        Database.executeBatch(new CaseUpdateBatch(caseQuery));
+        test.stopTest();
+
+        system.assertEquals(caseList.size() - articleList.size(), [SELECT count() FROM Case where KB_Attached__c = false and New_vs_Known__c = :CaseUpdateBatch.NO_ARTICLE]);
+        system.assertEquals(articleList.size(), [SELECT count() FROM Case where KB_Attached__c = true]);
+    }
+
+    @TestSetup
+    static void setupTestData(){
+
+        FAQ__kav a = new FAQ__kav(
+                Title = 'FAQ One',
+                Summary = 'CaseUpdateBatchTest FQA ',
+                URLName = 'CaseUpdateBatchTestOne'
+        );
+
+        insert a;
+
+        //in order to get the KnowledgeArticleId
+        a = [SELECT KnowledgeArticleId FROM FAQ__kav WHERE Id = :a.Id];
+
+
+        //publish it
+        KbManagement.PublishingService.publishArticle(a.KnowledgeArticleId, true);
+
+        KbManagement.PublishingService.archiveOnlineArticle(a.KnowledgeArticleId, null);
+
+        KbManagement.PublishingService.editArchivedArticle(a.KnowledgeArticleId);
+
+        KbManagement.PublishingService.publishArticle(a.KnowledgeArticleId, true);
+
+        KbManagement.PublishingService.editOnlineArticle (a.KnowledgeArticleId, false);
+
+        system.assertEquals(1, [SELECT count() FROM KnowledgeArticleVersion where KnowledgeArticleId = :a.KnowledgeArticleId and PublishStatus = 'Online']);
+        system.assertEquals(1, [SELECT count() FROM KnowledgeArticleVersion where KnowledgeArticleId = :a.KnowledgeArticleId and PublishStatus = 'Draft']);
+        system.assertEquals(1, [SELECT count() FROM KnowledgeArticleVersion where KnowledgeArticleId = :a.KnowledgeArticleId and PublishStatus = 'Archived' and IsLatestVersion = false]);
+    }
+/*
     @isTest
 	static void TestKBAttachedFlag_Updated_WhenClosed() 
     {
@@ -108,4 +187,5 @@ public class CaseUpdateBatchTest {
         System.assertEquals('N/A', caseWithoutKBAttached.New_vs_Known__c);
         System.assertEquals(case2.Id, caseWithoutKBAttached.Id);
     }
+*/
 }

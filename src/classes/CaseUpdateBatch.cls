@@ -1,13 +1,32 @@
+/*
+    New - Article created from case.
+    Known - Article not created from case.
+    N/A - No article, or article attached after 7 days from case close date.
+    Citation - Knowledge Article created by is not who created Case Article (or who attached article to case). Citation: "use of someone else’s article".
+*/
 global class CaseUpdateBatch implements Database.Batchable<sObject> {
+
 	global final String gstrQuery;
 	Set<String> stRecordTypes = new Set<String>();
-        
+
+    static final Set<String> caseRecordTypes = new Set<String>{
+        'Incident',
+        'Incident - Premise',
+        'Work Orders',
+        'Service Request'
+    };
+
+    public static final String NO_ARTICLE = 'N/A';
+    public static final String NEW_ARTICLE = 'New';
+    public static final String KNOWN_ARTICLE = 'Known';
+
+
     global CaseUpdateBatch(String query)
     {
-        stRecordTypes.add('01270000000LuEpAAK');
-		stRecordTypes.add('01270000000MzcWAAS');
-		stRecordTypes.add('01270000000LuErAAK');
-		stRecordTypes.add('01270000000LuEqAAK');
+        Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SobjectType.Case.getRecordTypeInfosByName();
+        for(String recordType : caseRecordTypes){
+            stRecordTypes.add(recordTypeMap.get(recordType).getRecordTypeId());
+        }
         gstrQuery = query;
         system.debug('gstrQuery ==>' + gstrQuery);
     }
@@ -19,184 +38,182 @@ global class CaseUpdateBatch implements Database.Batchable<sObject> {
  
     global void execute(Database.BatchableContext BC, List<Case> scope)
     {
-        Set<Id> closedCasesWithKbUsed = new Set<Id>();
-		List<Case> listCasesToUpdate = new List<Case>();
-		List<Case> newCases = new List<Case>();
-		List<Case> CitationCases = new List<Case>();
-		Map<String,Case> knownCases = new Map<String,Case>();
-        Map<String,Case> noArticlesCase = new Map<String,Case>();
-		Map<String,Case> ArticleCaseBridge = new Map<String,Case>();
-		Map<String,String> ArticleCreatedBridge = new Map<String,String>();
-		Map<Id, Case> mpCases = new Map<Id, Case>();
+
+        Map<Id, Case> caseMap = new Map<Id, Case>(); // CaseId => Case
 		// create a Map of Cases
-		for (Case c : scope)
-		{
-			mpCases.put(c.Id, c);
-			noArticlesCase.put(c.Id, c);
+		for (Case c : scope){
+            caseMap.put(c.Id, c);
 		}
+        system.debug('***** Total No. of Cases - ' + caseMap.size());
 
-        // Grab  a list of articles referenced in cases. Specifically those in scope
-		// Get the Articles with KB ID
-	    for(CaseArticle ca:[Select CaseId, KnowledgeArticleId, CreatedById from CaseArticle WHERE CaseId IN : mpCases.keySet()])
-        {
-            closedCasesWithKbUsed.add(ca.CaseId);
-			ArticleCreatedBridge.put(ca.KnowledgeArticleId, ca.CreatedById);
-			ArticleCaseBridge.put(ca.KnowledgeArticleId,mpCases.get(ca.CaseId));
-			knownCases.put(ca.CaseId, mpCases.get(ca.CaseId));
-			noArticlesCase.remove(ca.CaseId);
+        Set<Id> articleIdSet = new Set<Id>();
+        Map<Id, CaseArticle> caseArticleMap = new Map<Id, CaseArticle>(); // CaseId => CaseArticle
+        // Grab all case articles
+	    for(CaseArticle ca:[
+                Select CaseId, KnowledgeArticleId, CreatedById, ArticleVersionNumber
+                from CaseArticle
+                WHERE CaseId IN : caseMap.keySet()
+                order by CaseId, CreatedDate
+        ]){
+            caseArticleMap.put(ca.CaseId, ca);
+            articleIdSet.add(ca.KnowledgeArticleId);
         }
-		system.debug('newCases before ==> ' + newCases);
-        system.debug('closedCasesWithKbUsed ==> ' + closedCasesWithKbUsed);
-        // For Published Articles
-		for(KnowledgeArticleVersion kav: [SELECT SourceId, CreatedById, KnowledgeArticleId FROM KnowledgeArticleVersion
-										 WHERE PublishStatus='Online' AND Language = 'en_US'
-                                          AND SourceId != null
-                                          AND KnowledgeArticleId IN : ArticleCreatedBridge.keySet()])
-		{
-			// if the case article created by someone else that case is a citation case
-			if(kav.CreatedById != ArticleCreatedBridge.get(kav.KnowledgeArticleId))
-			{               
-				CitationCases.add(ArticleCaseBridge.get(kav.KnowledgeArticleId));
-			}
-			// new article  => if the Knowedge base article was created from the current case (sourceid = currentCase)
-			// Known article => if the Knowedge base article was created from otherCase (sourceid = null / othercase)
-			if(closedCasesWithKbUsed.contains(kav.SourceId) && knownCases.containsKey(kav.SourceId))
-			{
-				newCases.add(knownCases.get(kav.SourceId));
-				knownCases.remove(kav.SourceId);
-			}
-		}
-		system.debug('newCases after online ==> ' + newCases);
-        // For Draft Articles
-	/**	for(KnowledgeArticleVersion kav: [SELECT SourceId, CreatedById, KnowledgeArticleId FROM KnowledgeArticleVersion
-										 WHERE PublishStatus='Draft' AND Language = 'en_US' AND KnowledgeArticleId IN : ArticleCreatedBridge.keySet()])
-		{
-			if(closedCasesWithKbUsed.contains(kav.SourceId) && knownCases.get(kav.SourceId))
-			{
-				newCases.add(knownCases.get(kav.SourceId));
-				knownCases.remove(kav.SourceId);
-			}
-		}**/
-		system.debug('newCases after draft ==> ' + newCases);
-        
-        Map<String, Case> mpUpdateCases = new Map<String, Case>();
-        
-        if(!CitationCases.isEmpty())
-        {
-            for(Case c: CitationCases)
-            {
-                if (!mpUpdateCases.containsKey(c.Id))
-                {
-                    case  updateCase= new Case(Id = c.Id);
-                    updateCase.Citation__c = true;
-                    mpUpdateCases.put(c.Id, updateCase);
+        system.debug('***** No. of Cases having article - ' + caseArticleMap.size());
+
+        // read KnowledgeArticleVersions
+        Map<Id, List<KnowledgeArticleVersion>> articleVersionMap = new Map<Id, List<KnowledgeArticleVersion>>(); // KnowledgeArticleId => List<KnowledgeArticleVersion>
+        if(articleIdSet.size() > 0) {
+            readKnowledgeArticleVersions(articleIdSet, articleVersionMap);
+        }
+
+        // update New_vs_Known__c
+        List<Case> caseUpdateList = new List<Case>();
+        for(Case caseObj : caseMap.values()){
+            // No article
+            if(!caseArticleMap.containsKey(caseObj.Id)){
+                if(caseObj.New_vs_Known__c != NO_ARTICLE || caseObj.KB_Attached__c){
+                    caseObj.New_vs_Known__c = NO_ARTICLE;
+                    caseObj.KB_Attached__c = false;
+                    caseUpdateList.add(caseObj);
                 }
             }
-        }
-        
-        if(!newCases.isEmpty())
-        {
-            for(Case c: newCases)
-            {
-                if (!mpUpdateCases.containsKey(c.Id))
-                {
-                    case  updateCase= new Case(Id = c.Id);
-                    updateCase.New_vs_Known__c = 'New';
-                    mpUpdateCases.put(c.Id, updateCase);
+            // has article
+            else{
+                CaseArticle ca = caseArticleMap.get(caseObj.Id);
+                List<KnowledgeArticleVersion> versions = articleVersionMap.get(ca.KnowledgeArticleId);
+                if(versions == null){
+                    continue;
                 }
-                else
-                {
-                    mpUpdateCases.get(c.Id).New_vs_Known__c = 'New';
-    
-                }
-            }
-        }
-    	
-        if(!knownCases.isEmpty())
-        {
-            for(Case c: knownCases.values())
-            {
-                if (!mpUpdateCases.containsKey(c.Id))
-                {
-                    case  updateCase= new Case(Id = c.Id);
-                    updateCase.New_vs_Known__c = 'Known';
-                    mpUpdateCases.put(c.Id, updateCase);
-                }
-                else
-                {
-                    mpUpdateCases.get(c.Id).New_vs_Known__c = 'Known';
-    
+                for(KnowledgeArticleVersion kav :versions){
+                    if(kav.VersionNumber == ca.ArticleVersionNumber){
+                        caseObj.New_vs_Known__c = (ca.CaseId == kav.SourceId) ? NEW_ARTICLE : KNOWN_ARTICLE;
+                        caseObj.Citation__c = (ca.CreatedById == kav.CreatedById) ? true : false;
+                        caseObj.KB_Attached__c = true;
+                        caseUpdateList.add(caseObj);
+                        break;
+                    }
                 }
             }
-        }
-        
-        if(!noArticlesCase.isEmpty())
-        {
-            for(Case c: noArticlesCase.values())
+        } // case iteration
+
+        if(caseUpdateList.size() > 0){
+            Database.SaveResult[] results = Database.update(caseUpdateList, false);
+            Map<Id,String> errorDetails = new Map<Id,String>();
+            for (Database.SaveResult sr : results)
             {
-                if (!mpUpdateCases.containsKey(c.Id))
-                {
-                    case  updateCase= new Case(Id = c.Id);
-                    updateCase.New_vs_Known__c = 'N/A';
-                    mpUpdateCases.put(c.Id, updateCase);
+                if (!sr.isSuccess() && sr.getErrors().size() > 0){
+                    errorDetails.put(sr.getId(), sr.getErrors()[0].getMessage());
                 }
-                else
-                {
-                    mpUpdateCases.get(c.Id).New_vs_Known__c = 'N/A';
+            }
+            if(errorDetails.size() > 0){
+                try{
+                    sendErrorEmail(errorDetails);
+                }catch(System.Exception ex){
+                    system.debug('***** Error sending email - ' + ex);
                 }
+
             }
         }
 
-      	for(Case objSObject : scope)
-       	{
-           	Case caseRecord = objSObject;
-            
-            // If the case has an associated article that was used then flag it
-			if(closedCasesWithKbUsed.contains(caseRecord.Id))
-            {
-                
-                if (!mpUpdateCases.containsKey(caseRecord.Id))
-				{
-					
-					caseRecord.KB_Attached__c = true;					
-					mpUpdateCases.put(caseRecord.Id, caseRecord);
-				}
-				else
-				{
-					mpUpdateCases.get(caseRecord.Id).KB_Attached__c = true;
-				}
-			}
+    } // end of execute()
+
+    private void readKnowledgeArticleVersions(Set<Id> articleIdSet, Map<Id, List<KnowledgeArticleVersion>> articleVersionMap){
+
+        // salesforce limitation - Must filter KnowledgeArticleVersion by ID or Status
+        // Published Articles
+        for(KnowledgeArticleVersion kav: [
+                SELECT Id, SourceId, CreatedById, KnowledgeArticleId, VersionNumber  FROM KnowledgeArticleVersion
+                WHERE PublishStatus='Online' AND Language = 'en_US'
+                AND KnowledgeArticleId IN : articleIdSet
+        ]){
+            List<KnowledgeArticleVersion> versions = articleVersionMap.get(kav.KnowledgeArticleId);
+            if(versions == null){
+                versions = new List<KnowledgeArticleVersion>();
+                articleVersionMap.put(kav.KnowledgeArticleId, versions);
+            }
+            versions.add(kav);
         }
-        
-        if (mpUpdateCases.size() > 0 ) 
+
+        // Draft Articles
+        for(KnowledgeArticleVersion kav: [
+                SELECT Id, SourceId, CreatedById, KnowledgeArticleId, VersionNumber  FROM KnowledgeArticleVersion
+                WHERE PublishStatus='Draft' AND Language = 'en_US'
+                AND KnowledgeArticleId IN : articleIdSet
+        ]){
+            List<KnowledgeArticleVersion> versions = articleVersionMap.get(kav.KnowledgeArticleId);
+            if(versions == null){
+                versions = new List<KnowledgeArticleVersion>();
+                articleVersionMap.put(kav.KnowledgeArticleId, versions);
+            }
+            versions.add(kav);
+        }
+
+        // Archived Articles
+        for(KnowledgeArticleVersion kav: [
+                SELECT Id, SourceId, CreatedById, KnowledgeArticleId, VersionNumber  FROM KnowledgeArticleVersion
+                WHERE PublishStatus='Archived' AND IsLatestVersion = false AND Language = 'en_US'
+                AND KnowledgeArticleId IN : articleIdSet
+        ]){
+            List<KnowledgeArticleVersion> versions = articleVersionMap.get(kav.KnowledgeArticleId);
+            if(versions == null){
+                versions = new List<KnowledgeArticleVersion>();
+                articleVersionMap.put(kav.KnowledgeArticleId, versions);
+            }
+            versions.add(kav);
+        }
+
+    } // end of readKnowledgeArticleVersions()
+
+    private void sendErrorEmail(Map<Id,String> errorDetails){
+        string subject = 'Case KB Update Batch Errors' ;
+        Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+        String[] toAddresses = new String[]{};
+        toAddresses = Label.DEVErrorEmailRecipient.split(',');
+        email.setSenderDisplayName('Salesforce IT');
+        email.setSubject(subject);
+        email.setToAddresses(toAddresses);
+        string body = '<table align="center" border="1" cellpadding="0" cellspacing="0"><thead><th><b>Case ID</b></th><th><b>Error message</b></th><th><b>Link</b></th></thead><tbody>' ;
+        for(Id caseId : errorDetails.keySet())
         {
-            update mpUpdateCases.values();
+            body += '<tr><td>' + caseId + '</td>';
+            body += '<td>' + errorDetails.get(caseId) + '</td>';
+            body += '<td>' + URL.getSalesforceBaseUrl() + '/' + caseId + '</td></tr>';
         }
+
+        body += '</tbody></table>';
+        email.setHtmlBody(body);
+        //send message
+        Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
     }
     
     global void finish(Database.BatchableContext BC)
     {
-        Last_Batch_Run_Date__c batchRunDt = Last_Batch_Run_Date__c.getall().values();
-        batchRunDt.LastRunTime__c = system.now();
-        update batchRunDt;
-		        
-        AsyncApexJob a = [SELECT Id, Status, NumberOfErrors, JobItemsProcessed,
-	   		 TotalJobItems, CreatedBy.Email, ExtendedStatus
-	   				 FROM AsyncApexJob WHERE Id =
-	   				 :BC.getJobId()];
-        
-	   	// Send an email to the Apex job's submitter notifying of job completion. 
-		Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-		String[] toAddresses = new String[] {a.CreatedBy.Email};
-		mail.setToAddresses(toAddresses);
-		mail.setSubject('Case KB Attached Batch ' + a.Status);
-		mail.setPlainTextBody('The batch Apex job processed ' 
-                              + a.TotalJobItems 
-                              + ' batches with '
-                              + a.NumberOfErrors 
-                              + ' failures.');
-		Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
-        
+        Last_Batch_Run_Date__c batchRunDt = Last_Batch_Run_Date__c.getInstance('LastRunTime');
+        if(batchRunDt != null) {
+            batchRunDt.LastRunTime__c = system.now();
+            update batchRunDt;
+        }
+        AsyncApexJob a = [
+                SELECT Id, Status, NumberOfErrors, JobItemsProcessed,
+                        TotalJobItems, CreatedBy.Email, ExtendedStatus
+                FROM AsyncApexJob
+                WHERE Id =
+                        :BC.getJobId()
+        ];
+
+        // Send an email to the Apex job's submitter notifying of job completion.
+        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+        String[] toAddresses = new String[]{
+                a.CreatedBy.Email
+        };
+        mail.setToAddresses(toAddresses);
+        mail.setSubject('Case KB Attached Batch ' + a.Status);
+        mail.setPlainTextBody('The batch Apex job processed '
+                + a.TotalJobItems
+                + ' batches with '
+                + a.NumberOfErrors
+                + ' failures.');
+        Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
         
     }
 }

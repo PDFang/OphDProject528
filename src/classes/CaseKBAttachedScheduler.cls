@@ -13,8 +13,8 @@ global class CaseKBAttachedScheduler implements Schedulable {
         string formattedDate = lastBatchRunTime.format('yyyy-MM-dd') + 'T00:00:00Z';
         Set<String> stRecordTypes = new Set<String>();
         
-        string casesQuery = 'SELECT Id, KB_Attached__c, CaseNumber, Status, ClosedDate FROM Case WHERE (KB_ATTACHED__C = false OR (KB_ATTACHED__C = true AND New_vs_Known__c = NULL)) AND isClosed = true AND ClosedDate >= ' + formattedDate + ' AND recordTypeId in :stRecordTypes';
-        
+        //string casesQuery = 'SELECT Id, KB_Attached__c, New_vs_Known__c, CaseNumber, Status, ClosedDate FROM Case WHERE (KB_ATTACHED__C = false OR (KB_ATTACHED__C = true AND New_vs_Known__c = NULL)) AND isClosed = true AND ClosedDate >= ' + formattedDate + ' AND recordTypeId in :stRecordTypes';
+        string casesQuery = 'SELECT Id, KB_Attached__c, New_vs_Known__c, CaseNumber, Status, ClosedDate FROM Case WHERE (KB_ATTACHED__C = false OR (KB_ATTACHED__C = true AND New_vs_Known__c = \'N/A\' )) AND isClosed = true AND ClosedDate >= ' + formattedDate + ' AND recordTypeId in :stRecordTypes';
         id batchinstanceid = database.executeBatch(new CaseUpdateBatch(casesQuery), 100);
     }
 }
