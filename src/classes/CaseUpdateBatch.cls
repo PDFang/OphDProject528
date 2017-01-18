@@ -190,16 +190,16 @@ global class CaseUpdateBatch implements Database.Batchable<sObject> {
     global void finish(Database.BatchableContext BC)
     {
         Last_Batch_Run_Date__c batchRunDt = Last_Batch_Run_Date__c.getInstance('LastRunTime');
-        if(batchRunDt != null) {
+        if (batchRunDt != null) {
             batchRunDt.LastRunTime__c = system.now();
             update batchRunDt;
         }
         AsyncApexJob a = [
                 SELECT Id, Status, NumberOfErrors, JobItemsProcessed,
-                        TotalJobItems, CreatedBy.Email, ExtendedStatus
+                TotalJobItems, CreatedBy.Email, ExtendedStatus
                 FROM AsyncApexJob
                 WHERE Id =
-                        :BC.getJobId()
+                :BC.getJobId()
         ];
 
         // Send an email to the Apex job's submitter notifying of job completion.
@@ -214,7 +214,9 @@ global class CaseUpdateBatch implements Database.Batchable<sObject> {
                 + ' batches with '
                 + a.NumberOfErrors
                 + ' failures.');
-        Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+        Messaging.sendEmail(new Messaging.SingleEmailMessage[]{
+                mail
+        });
         
     }
 }
