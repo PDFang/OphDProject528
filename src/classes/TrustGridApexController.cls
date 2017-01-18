@@ -16,14 +16,14 @@ public without sharing class TrustGridApexController {
             daysBack = DAYS_BACK;
         }*/
 
-      System.debug('first date =>> ' + firstDate);
+        System.debug('first date =>> ' + firstDate);
         System.debug('last date =>> ' + lastDate);
         date fDt = date.valueOf(firstDate);
         date lDt = date.valueOf(lastDate);
-
+        system.debug('fDt =>' + fDt);
         Date fDTLocal = Date.newinstance(fDt.year(), fDt.month(), fDt.day());
         Date lDtLocal = Date.newinstance(lDt.year(), lDt.month(), lDt.day());
-       // system.debug('fdtlocal =>' + fDTLocal);
+        system.debug('fdtlocal =>' + fDTLocal);
 
         integer daysBack = lDtLocal.daysBetween(fDTLocal);
        //System.debug('daysBack =>> ' + daysBack);
