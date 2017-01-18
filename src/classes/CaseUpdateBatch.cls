@@ -99,10 +99,10 @@ global class CaseUpdateBatch implements Database.Batchable<sObject> {
         if(caseUpdateList.size() > 0){
             Database.SaveResult[] results = Database.update(caseUpdateList, false);
             Map<Id,String> errorDetails = new Map<Id,String>();
-            for (Database.SaveResult sr : results)
-            {
+            for (Integer i = 0; i < caseUpdateList.size(); i++){
+                Database.SaveResult sr = results[i];
                 if (!sr.isSuccess() && sr.getErrors().size() > 0){
-                    errorDetails.put(sr.getId(), sr.getErrors()[0].getMessage());
+                    errorDetails.put(caseUpdateList[i].Id, sr.getErrors()[0].getMessage());
                 }
             }
             if(errorDetails.size() > 0){
@@ -172,12 +172,13 @@ global class CaseUpdateBatch implements Database.Batchable<sObject> {
         email.setSenderDisplayName('Salesforce IT');
         email.setSubject(subject);
         email.setToAddresses(toAddresses);
-        string body = '<table align="center" border="1" cellpadding="0" cellspacing="0"><thead><th><b>Case ID</b></th><th><b>Error message</b></th><th><b>Link</b></th></thead><tbody>' ;
+        Url baseUrl = URL.getSalesforceBaseUrl();
+        string body = '<table align="center" border="1" cellpadding="0" cellspacing="0"><thead><th><b>Case ID</b></th><th><b>Error message</b></th></thead><tbody>' ;
         for(Id caseId : errorDetails.keySet())
         {
-            body += '<tr><td>' + caseId + '</td>';
-            body += '<td>' + errorDetails.get(caseId) + '</td>';
-            body += '<td>' + URL.getSalesforceBaseUrl() + '/' + caseId + '</td></tr>';
+            String hrefValue = baseUrl + '/' + caseId;
+            body += '<tr><td><a href="' + hrefValue + '">' + caseId + '</a></td>';
+            body += '<td>' + errorDetails.get(caseId) + '</td></tr>';
         }
 
         body += '</tbody></table>';
