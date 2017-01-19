@@ -36,7 +36,7 @@ public class SandboxPostCopy_UpdateOutboundMessage extends SandboxPostCopyTask{
         system.debug('task(): outboundMessages - ' + outboundMessages);
 
         if (outboundMessages.size() > 0) {
-            String proxyUrl =  (context.sandboxName() == 'QA') ? System.LABEL.QA_Proxy : System.LABEL.LAB_Proxy;
+            String proxyUrl =  (context != null && context.sandboxName() == 'QA') ? System.LABEL.QA_Proxy : System.LABEL.LAB_Proxy;
             readAndUpdateOutboundMessages(outboundMessages, proxyURL, SessionHeader.sessionId);
             List<AsyncApexJob> jobList = [
                     Select Id, Status from AsyncApexJob

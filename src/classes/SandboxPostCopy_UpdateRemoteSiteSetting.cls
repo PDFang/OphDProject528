@@ -28,7 +28,7 @@ public class SandboxPostCopy_UpdateRemoteSiteSetting extends SandboxPostCopyTask
         String[] remoteSites = new String[]{
         };
         for (MetadataService.FileProperties property : properties) {
-            if (property.namespacePrefix != null) {
+            if (property.namespacePrefix != null || property.createdDate >= system.today()) {
                 continue;
             }
             remoteSites.add(property.fullName);

@@ -11,7 +11,7 @@ public class SandboxPostCopy_UpdateServiceConnection extends SandboxPostCopyTask
 
         ServiceConnection__c accountSync = ServiceConnection__c.getInstance('AccountSync');
         if(accountSync != null && accountSync.EndPoint__c != null){
-            if(context.sandboxName() == 'QA'){
+            if(context != null && context.sandboxName() == 'QA'){
                 accountSync.EndPoint__c = accountSync.EndPoint__c.replace(System.LABEL.Corp_Proxy, System.LABEL.QA_Proxy);
             }else{
                 accountSync.EndPoint__c = accountSync.EndPoint__c.replace(System.LABEL.Corp_Proxy, System.LABEL.LAB_Proxy);
