@@ -26,8 +26,11 @@
     color: #fff;
     border-style:solid;
     border-width: 0 0 1px 1px;
-    height:28px;
+    height:32px;
     text-align:center;
+    line-height: 4rem;
+    text-size-adjust: 89%;
+    white-space: nowrap;
 }
 
 .THIS .healthy-row{
@@ -51,6 +54,7 @@
         height:50px;
         border-right:1px dashed #d8dde6;
         border-left: 0px;
+        text-size-adjust: 89%;
 }
 
 .THIS .timeline-marker {
@@ -67,8 +71,8 @@
            height: .625rem;
            top: 50%;
             transform: translateY(-50%);
-           z-index: 10001;
-           width: 28%;
+           z-index: 10000;
+           width: 35%;
            position: relative;
   }
 
@@ -141,7 +145,7 @@
     .THIS .popover{
                 display: block;
                 top: 34.9%;
-                left: 49%;
+                left: 54%;
                 background-color: #f48b31;
                 color: white;
                 height: 55%;
@@ -153,7 +157,7 @@
                 border-left: 10px solid transparent;
                 border-right: 10px solid transparent;
                 position: absolute;
-                left: 55.5%;
+                left: 62.49%;
                 top: 84.5%;
                 border-top: 10px solid #f48b31;
                 z-index: 11000;
@@ -174,7 +178,6 @@
      }
 
      .THIS .pager{
-             margin-left: 27%;
              margin-top: 28px;
      }
 

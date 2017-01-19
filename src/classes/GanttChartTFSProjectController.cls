@@ -65,10 +65,14 @@ public without sharing class GanttChartTFSProjectController {
     {
         GanttChartTFSProjectHelper helper = new GanttChartTFSProjectHelper();
         Project__c project =  helper.GetProjectByName(projName);
-        PageReference demoPage = new PageReference('/' +  project.Id);
-        //PageReference demoPage = new PageReference('http://www.yahoo.com');
-        demoPage.setRedirect(true);
-        return demoPage;
+        if(project != null){
+            PageReference demoPage = new PageReference('/' +  project.Id);
+            //PageReference demoPage = new PageReference('http://www.yahoo.com');
+            demoPage.setRedirect(true);
+            return demoPage;
+        }
+        return null;
+
     }
 
 

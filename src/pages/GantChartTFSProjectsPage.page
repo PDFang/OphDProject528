@@ -56,6 +56,11 @@
        // console.log('program ==>' + program);
     }
 
+    function changeView(obj){
+         var val = obj.value;
+         this_gantt.view(val);
+     }
+
     function onChangeTeam(thisObj)
     {
         teams = [];
@@ -174,7 +179,8 @@
                 summary: { from: "Summary", type: "boolean" },
                 expanded: { from: "Expanded", type:"boolean", defaultValue: true  },
                 formattedStart : { from: "FormattedStartDt", type:"string", defaultValue: ""},
-                formattedEnd : { from: "FormattedEndDt", type:"string", defaultValue: ""}
+                formattedEnd : { from: "FormattedEndDt", type:"string", defaultValue: ""},
+                projectSummary : { from: "ProjectSummary", type:"string", defaultValue: ""}
               }
             }
           }
@@ -194,22 +200,31 @@
             snap: false,
             taskTemplate: $("#task-template").html(),
             listWidth:525,
-            rowHeight:3,
+            scrollable: false,
+            //rowHeight:3,
             columns: [
-                        { field: "title", title: "Title", editable: false, sortable: true, width: "300px"  },
+                        { field: "title", title: "Project", editable: false, sortable: true, width: "300px"  },
                         { field: "team", title: "Team",  editable: false, sortable: true,width: "100px"  },
                         { field: "program", title: "Program",  editable: false, sortable: true, width: "125px"  }
                     ],
             views: [  { type: "month"},
                       { type: "kendo.ui.GanttCustomView", title: "Quarter", selected: true }
                     ],
+
             dataBound: onDataBound,
-            change: onChange
+            change: onChange,
+            toolbar: [
+
+                ]
          }).data("kendoGantt");
 
         $(document).bind("kendo:skinChange", function() {
                     gantt.refresh();
          });
+
+
+             $("div.k-splitbar").height( $("div.k-gantt-treelist").height() * 10);
+
 
 
     }
@@ -221,11 +236,12 @@
 
         if (selection.length) {
             var dataItem = gantt.dataItem(selection);
-            console.log("Gantt selection change :: " + dataItem.id);
+            console.log("Gantt selection change :: " + dataItem.title);
             projName = dataItem.id;
              GanttChartTFSProjectController.RedirectToProject(projName, function(result, event){
                 if(event.status){
-                     window.open(result, '_blank');
+                    if(result != '/null')
+                        window.open(result, '_blank');
                 }
                 },{escape:true}
             );
@@ -308,7 +324,7 @@
                 <div class="col-sm-5" > Project Number </div><div class="col-sm-7"><b> #= task.id #</b></div>
             </div>
             <div class="row tooltipRow">
-                <div class="col-sm-5"> Summary</div><div class="col-sm-7"><b> #=  task.title  #</b></div>
+                <div class="col-sm-5"> Summary</div><div class="col-sm-7"><b> #=  task.projectSummary  #</b></div>
             </div>
             <div class="row tooltipRow">
                 <div class="col-sm-5"> Project Status</div><div class="col-sm-7"><b>  #=  task.status  #</b></div>
@@ -399,69 +415,7 @@
                 padding-top:5px;
 
             }
-            .bootstrap-btn{
-                display: inline-block;
-                padding: 6px 12px;
-                margin-bottom: 0;
-                font-size: 14px;
-                font-weight: 400;
-                line-height: 1.42857143;
-                text-align: center;
-                white-space: nowrap;
-                vertical-align: middle;
-                -ms-touch-action: manipulation;
-                touch-action: manipulation;
-                cursor: pointer;
-                -webkit-user-select: none;
-                -moz-user-select: none;
-                -ms-user-select: none;
-                user-select: none;
-                background-image: none;
-                border: 1px solid transparent;
-                border-radius: 4px
-            }
 
-            .dropdown-toggle::after {
-                display: inline-block;
-                width: 0;
-                height: 0;
-                margin-left: .3em;
-                vertical-align: middle;
-                content: "";
-                border-top: .3em solid;
-                border-right: .3em solid transparent;
-                border-left: .3em solid transparent;
-            }
-
-            .dropdown-fixed{
-                    position: absolute;
-                    z-index: 1000;
-                    top: 20.5%;
-                    width: auto;
-                    margin-top: -100px;
-                    margin-left: -100px;
-                    left:24%;
-            }
-
-            .colorDropdownlabel{
-                    width: 13%;
-                    font-size: 14px;
-                    height: 32px;
-                    position: absolute;
-                    top: 3%;
-                    left: 35%;
-                    padding-top: 5px;
-                    font-weight: 100;
-            }
-
-            .colorDropdown{
-                    width: 8%;
-                    font-size: 14px;
-                    height: 32px;
-                    position: absolute;
-                    top: 3%;
-                    left: 45%;
-            }
 
             .k-gantt-toolbar li:last-child, .k-gantt-toolbar li:last-child>.k-link {
                     margin-left: 0px;
@@ -490,6 +444,78 @@
             .dropdown-menu{
                     background-color: #eeeeef !important;
             }
+
+            input[type="radio"]{
+               vertical-align: bottom;
+            }
+            input[type="checkbox"]{
+                vertical-align: sub;
+            }
+            .btn-primary{
+                background-color: #1984c8;
+                font-family: Arial,Helvetica,sans-serif;
+            }
+
+            .k-grid-content{
+                    height: auto !important;
+            }
+            div.k-gantt-timeline{
+                    height: auto !important;
+            }
+
+
+            div#chart_div{
+                    height: auto !important;
+            }
+
+            div.k-gantt-treelist{
+                 height: auto !important;
+            }
+
+            li.checkboxClass{
+                display : table-row;
+            }
+
+            .panel{
+                margin-bottom :0px !important;
+                border-bottom :0px  ;
+            }
+
+            .k-gantt-toolbar {
+               height: 0px !important;
+               padding: 0px !important;
+               border: 0px !important transparent;
+               display: none !important;
+            }
+            .k-gantt-views{
+               height: 0px !important;
+               padding: 0px !important;
+               border: 0px !important;
+                 display: none !important;
+            }
+            .k-gantt-toggle{
+               height: 0px !important;
+               padding: 0px !important;
+               border: 0px !important;
+                 display: none !important;
+            }
+            .k-gantt .k-gantt-toolbar:last-child{
+                 display: none;
+            }
+            .panel-heading .accordion-toggle:after {
+                font-family: 'Glyphicons Halflings';
+                content: "\e114";
+                float: left;
+                padding-right : 6px;
+                color: grey;
+            }
+
+            .panel-heading .accordion-toggle.collapsed:after {
+                content: "\e080";
+            }
+
+
+
         </style>
 
     <apex:form >
@@ -504,66 +530,89 @@
                     <div class="page-header">
                         <h1>Program Channel Roadmap</h1>
                     </div>
-                    <div class="dropdown-fixed" style="left: 20%;width: 8%;margin-left:3px;">
-                    <button type="button" class="navbar-toggle" style="border: 1px solid gray;" data-toggle="collapse" data-target="#myNavbar">
-                        <span class="icon-bar" style="background-color:black"></span>
-                        <span class="icon-bar" style="background-color:black"></span>
-                        <span class="icon-bar" style="background-color:black"></span>
-                    </button>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                                <a class="accordion-toggle collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse" style="font-family: Arial,Helvetica,sans-serif; font-size: 12px;">
+                                  Filters
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="collapse" class="panel-collapse collapse">
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-md-3 col-sm-3">
+                                        <label>Show Grid Color by</label>
+                                        <ul style="font-size: 9px;">
+                                            <li class="checkboxClass">
+                                                <label class="custom-control custom-radio">
+
+                                                    <input id="program" name="colorfilter" type="radio" value="program" class="custom-control-input" onClick="changeColor(this);" checked="true"/>
+                                                    <span class="custom-control-indicator"></span>
+                                                    <span class="custom-control-description">Program</span>
+                                                </label>
+                                            </li>
+                                            <li class="checkboxClass">
+                                                <label class="custom-control custom-radio">
+                                                    <input id="team" name="colorfilter" type="radio" value="team" class="custom-control-input" onClick="changeColor(this);"/>
+                                                    <span class="custom-control-indicator"></span>
+                                                    <span class="custom-control-description">Team</span>
+                                                </label>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-3 col-sm-3">
+                                        <label>Filter by Programs</label>
+                                        <div >
+                                            <apex:selectCheckboxes title="Programs"  value="{!selectedPrograms}" onChange="onChangeProj(this);"  styleClass="checkboxStyle" layout="pageDirection">
+                                                <apex:selectOptions value="{!programs}" />
+                                            </apex:selectCheckboxes>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-sm-3">
+                                        <label>Filter by Teams</label>
+                                        <div >
+                                            <apex:selectCheckboxes title="Teams"  styleClass="checkboxStyle"  value="{!selectedTeams}" onChange="onChangeTeam(this);" id="teamCheckBoxes" layout="pageDirection">
+                                                <apex:selectOptions value="{!TeamLists}" />
+                                            </apex:selectCheckboxes>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 col-sm-3">
+                                        <label>View</label>
+                                        <ul style="font-size: 9px; padding-left:10px;">
+                                            <li class="checkboxClass">
+                                                <label class="custom-control custom-radio">
+                                                    <input id="month" name="view" type="radio" value="month" class="custom-control-input" onClick="changeView(this);" />
+                                                    <span class="custom-control-indicator"></span>
+                                                    <span class="custom-control-description">Month</span>
+                                                </label>
+                                            </li>
+                                            <li class="checkboxClass">
+                                                <label class="custom-control custom-radio">
+                                                    <input id="quarter" name="view" type="radio" value="kendo.ui.GanttCustomView" class="custom-control-input" onClick="changeView(this);" checked="true"/>
+                                                    <span class="custom-control-indicator"></span>
+                                                    <span class="custom-control-description">Quarter</span>
+                                                </label>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
-                    <div class="collapse navbar-collapse dropdown-fixed" style="overflow-x:hidden;margin-left:3px;" id="myNavbar">
-                    <ul class="nav navbar-nav">
-                        <li class="dropdown">
-                            <button class="bootstrap-btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Show Grid Color by
-                            </button>
-                            <ul class="dropdown-menu" style="font-size: 9px;">
-                                <li>
-                                    <label class="custom-control custom-radio">
-                                        <input id="program" name="radio-stacked" type="radio" value="program" class="custom-control-input" onClick="changeColor(this);" checked="true"/>
-                                        <span class="custom-control-indicator"></span>
-                                        <span class="custom-control-description">Program</span>
-                                    </label>
-                                </li>
-                                <li>
-                                    <label class="custom-control custom-radio">
-                                        <input id="team" name="radio-stacked" type="radio" value="team" class="custom-control-input" onClick="changeColor(this);"/>
-                                        <span class="custom-control-indicator"></span>
-                                        <span class="custom-control-description">Team</span>
-                                    </label>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="dropdown" >
-                            <button class="bootstrap-btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Filter by Programs
-                            </button>
-                            <div class="dropdown-menu">
-                                <apex:selectCheckboxes title="Programs"  value="{!selectedPrograms}" onChange="onChangeProj(this);"  styleClass="checkboxStyle" layout="pageDirection">
-                                    <apex:selectOptions value="{!programs}" />
-                                </apex:selectCheckboxes>
-                            </div>
-                        </li>
-                        <li class="dropdown">
-                            <button class="bootstrap-btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Filter by Teams
-                            </button>
-                            <div class="dropdown-menu">
-                                <apex:selectCheckboxes title="Teams"  styleClass="checkboxStyle"  value="{!selectedTeams}" onChange="onChangeTeam(this);" id="teamCheckBoxes" layout="pageDirection">
-                                    <apex:selectOptions value="{!TeamLists}" />
-                                </apex:selectCheckboxes>
-                            </div>
-                        </li>
-                    </ul>
-                     </div>
                     <div id="chart_div"></div>
                 </div>
                 <div class="col-md-3 col-md-pull-9" id="placeholder" >
                     <div class="page-header">
                         <h1>Global Priority</h1>
                     </div>
-                    <div style="background-color: #e0e4e5; height: 601px;">
-                        <label style="position:absolute; left:10%; top:55%;">Placeholder for Sorting</label>
+                    <div style="background-color: #e0e4e5; height: 1060px;">
+                        <label class="custom-control custom-radio">
+                            <input name="noidea" type="radio" value="program" class="custom-control-input" checked="true"/>
+                            <span class="custom-control-indicator"></span>
+                            <span class="custom-control-description">Program</span>
+                        </label>
 
                     </div>
 

@@ -35,6 +35,14 @@
 
     },
 
+    loadCurrentWeek:function(component, event, helper){
+           component.set("v.lastDate", '');
+            helper.getPastSevenDates(component);
+                 jQuery.noConflict();
+                  var obj = jQuery('li.previous');
+                  obj.addClass("disabled");
+
+        },
 
     doneRendering: function(component){
        /** jQuery.noConflict();

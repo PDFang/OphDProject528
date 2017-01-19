@@ -60,23 +60,23 @@
                             </div>
                         </div>
                         <div class="panel-body">
-                            Gain access to inContact platform status history and domain event information for the past 30 days. Select a Service Disruption or Performance Issue icon below for a given date and domain and the update will be shown on a popover window.
+                            {!$Label.c.TrustGridText}
                         </div>
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-sm-9" style="height:67px;">
+                    <div class="col-sm-8" style="height:67px;">
                         <div class="arrow-down"></div>
                         <div class="popover popover-top">
                             <div class="popover-content">
-                                <p>Current Status ({!v.currentDate})</p>
+                                <a onclick="{!c.loadCurrentWeek}" style="color:white;">Current Status ({!v.currentDate})</a>
                             </div>
                         </div>
                     </div>
-                    <div class="col-sm-3" style="height:67px;padding-right: 0;">
+                    <div class="col-sm-4" style="height:67px;padding-right: 0;">
                         <ul class="pager">
-                            <li class="previous disabled" onclick="{!c.loadPrevious}"><a href="#">&larr; Newer</a></li>
-                            <li class="next"><a href="#" onclick="{!c.loadNext}">Older &rarr;</a></li>
+                            <li class="previous disabled"  id="previousLink" aura:id="previous"><a href="#" onclick="{!c.loadPrevious}">&larr; Newer</a></li>
+                            <li class="next" aura:id="next"><a href="#" onclick="{!c.loadNext}" >Older &rarr;</a></li>
                         </ul>
                     </div>
 
