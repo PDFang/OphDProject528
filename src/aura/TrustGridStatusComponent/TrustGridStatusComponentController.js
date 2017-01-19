@@ -23,8 +23,8 @@
         var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         var today = new Date();
-        var monthName = monthNames[today.getMonth()];
-         var date = monthName + ' ' + today.getDate();
+        var monthName = monthNames[today.getUTCMonth()];
+         var date = monthName + ' ' + today.getUTCDate();
          component.set("v.currentDate", date);
        // helper.loadTrustGrid(component);
     },

@@ -5,6 +5,13 @@
     getPastSevenDates: function(component, helper){
         var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        var dateLocal = new Date();
+//        debugger;
+//        var dateUTCString = $A.localizationService.formatDateTimeUTC(dateLocal);
+//        var dateUTC = this.convertToUTC(dateLocal);
+//        var parse1 = $A.localizationService.parseDateTime(dateLocal.toISOString());
+//        var parse2 = $A.localizationService.parseDateTimeUTC(dateLocal.toISOString());
         var dates  = [];
         var lastDate  = component.get("v.lastDate");
         var d = lastDate == "" ? new Date() : lastDate;
@@ -14,9 +21,9 @@
         var priorDate =  new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
 
         for(var i = 0; i < 7; i++){
-            pastDt = new Date(d.getFullYear(), d.getMonth(), d.getDate() - i);
-            var monthName = monthNames[pastDt.getMonth()];
-            var date = monthName + ' ' + pastDt.getDate();
+            pastDt = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - i);
+            var monthName = monthNames[pastDt.getUTCMonth()];
+            var date = monthName + ' ' + pastDt.getUTCDate();
             dates.push(date);
         }
 
@@ -54,9 +61,9 @@
             var curDt;
             for(var i = 6; i >= 0; i--){
 
-                pastDt = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i);
-                var monthName = monthNames[pastDt.getMonth()];
-                var date = monthName + ' ' + pastDt.getDate();
+                pastDt = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + i);
+                var monthName = monthNames[pastDt.getUTCMonth()];
+                var date = monthName + ' ' + pastDt.getUTCDate();
                 dates.push(date);
                 if(i == 6)
                     curDt = pastDt;
@@ -182,6 +189,19 @@
        var evt = spinner.get("e.toggle");
        evt.setParams({ isVisible : false });
        evt.fire();
+    },
+
+    convertToUTC : function(dateLocal){
+        var dateUTC = new Date(
+            dateLocal.getUTCFullYear(),
+            dateLocal.getUTCMonth(),
+            dateLocal.getUTCDate(),
+            dateLocal.getUTCHours(),
+            dateLocal.getUTCMinutes(),
+            dateLocal.getUTCSeconds(),
+            dateLocal.getUTCMilliseconds()
+        );
+        return dateUTC;
     }
 
 })
