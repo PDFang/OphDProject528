@@ -204,8 +204,11 @@ public with sharing class GanttChartTFSProjectHelper {
 
     public Project__c GetProjectByName (string Name){
 
-        Project__c project = [Select id, Name from Project__c where name = :Name ];
-        return project;
+        Project__c[] project = [Select id, Name from Project__c where name = :Name ];
+        if(project.size() > 0)
+            return project[0];
+        else
+                return new Project__c();
     }
 
     public static list<SprintDateMap__c>   GetIterationList()
@@ -296,6 +299,7 @@ public with sharing class GanttChartTFSProjectHelper {
                     KendoGanttData childData = new KendoGanttData();
                     childData.ProjectId = proj.Name;
                     childData.ProjectName = proj.Name + ' - ' + proj.Summary__c;
+                    childData.ProjectSummary =  proj.Summary__c;
                     childData.StartDate = projectStartDate;
                     childData.EndDate = projectEndDate;
                     childData.PercentComplete = 0;
