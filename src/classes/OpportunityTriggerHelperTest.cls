@@ -6,6 +6,7 @@ public class OpportunityTriggerHelperTest {
     static final String PROJECT_TYPE_PARENT_SAAS = 'PS Parent Project - SaaS';
     static final String PROJECT_TYPE_PHASE_SAAS = 'PS Project Phase SaaS';
     static final String OPPORTUNITY_TYPE_NEW = 'New Opportunity';
+    //static final String OPPORTUNITY_TYPE_PS = 'PS Opportunity';
 
     static final Set<String> recordTypeSet = new Set<String>
     {
@@ -23,10 +24,11 @@ public class OpportunityTriggerHelperTest {
     static User impManagementUser = null;
 
     // Test the opportunity "Handed off to CC/CS" checkbox cannot be checked unless all related SaaS project phases are complete
-    static testmethod void AvaiableForCCHandOffTest(){
+    static testmethod void AvailableForCCHandOffTest(){
 
         createTestData();
-
+        createOpportunity();
+        createProjects();
         test.startTest();
         system.runAs(impManagementUser){
             testOpp.HandedOffToCCCS__c = true;
@@ -43,9 +45,53 @@ public class OpportunityTriggerHelperTest {
         }
         test.stopTest();
 
-    }
+    } // end of AvailableForCCHandOffTest()
 
-    /* Create all the test data required to execute the tests successfully */
+    // Verify timestamp is captured when opportunity stage is changed
+    static testMethod void timestampHelperTest(){
+
+        createTestData();
+        test.starttest();
+        createOpportunity();
+        test.stopTest();
+
+        Opportunity oppResult = [
+                Select Stage_2_Timestamp__c, Stage_3_Timestamp__c, Stage_4_Timestamp__c, Stage_5_Timestamp__c, Stage_6_Timestamp__c
+                from Opportunity where Id = :testOpp.Id
+        ];
+        system.assertEquals(system.today(), oppResult.Stage_2_Timestamp__c);
+        system.assertEquals(null, oppResult.Stage_3_Timestamp__c);
+        system.assertEquals(null, oppResult.Stage_4_Timestamp__c);
+        system.assertEquals(null, oppResult.Stage_5_Timestamp__c);
+        system.assertEquals(null, oppResult.Stage_6_Timestamp__c);
+
+        testOpp.StageName = OpportunityTriggerHelper.OPPORTUNITY_STAGE_FOUR;
+        update testOpp;
+        oppResult = [
+                Select Stage_2_Timestamp__c, Stage_3_Timestamp__c, Stage_4_Timestamp__c, Stage_5_Timestamp__c, Stage_6_Timestamp__c
+                from Opportunity where Id = :testOpp.Id
+        ];
+        system.assertEquals(system.today(), oppResult.Stage_2_Timestamp__c);
+        system.assertEquals(null, oppResult.Stage_3_Timestamp__c);
+        system.assertEquals(system.today(), oppResult.Stage_4_Timestamp__c);
+        system.assertEquals(null, oppResult.Stage_5_Timestamp__c);
+        system.assertEquals(null, oppResult.Stage_6_Timestamp__c);
+
+        testOpp.StageName = OpportunityTriggerHelper.OPPORTUNITY_STAGE_CLOSED_WON;
+        update testOpp;
+        oppResult = [
+                Select Stage_2_Timestamp__c, Stage_3_Timestamp__c, Stage_4_Timestamp__c, Stage_5_Timestamp__c, Stage_6_Timestamp__c
+                from Opportunity where Id = :testOpp.Id
+        ];
+        system.assertEquals(system.today(), oppResult.Stage_2_Timestamp__c);
+        system.assertEquals(null, oppResult.Stage_3_Timestamp__c);
+        system.assertEquals(system.today(), oppResult.Stage_4_Timestamp__c);
+        system.assertEquals(null, oppResult.Stage_5_Timestamp__c);
+        system.assertEquals(system.today(), oppResult.Stage_6_Timestamp__c);
+
+    } // end of timestampHelperTest()
+
+    /* Create the test data required to execute the tests successfully */
     static void createTestData(){
 
         recordTypeMap = new Map<String, Id>();
@@ -59,8 +105,6 @@ public class OpportunityTriggerHelperTest {
         impManagementUser = [Select Id from User where Profile.Name = 'Implementation Management' and isActive = true LIMIT 1][0];
         createAccount();
         createContact();
-        createOpportunity();
-        createProjects();
 
     } // end of createTestData()
 
@@ -93,7 +137,7 @@ public class OpportunityTriggerHelperTest {
                 Name = 'ProjectTriggerHandlerTest Opp 1',
                 AccountId = testAccount.Id,
                 RecordTypeId = recordTypeMap.get(OPPORTUNITY_TYPE_NEW),
-                StageName = 'Prospecting',
+                StageName = OpportunityTriggerHelper.OPPORTUNITY_STAGE_TWO,
                 CloseDate = Date.today(),
                 Probability = 25,
                 Partner_Deal__c = 'NO',

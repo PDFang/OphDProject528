@@ -1,5 +1,11 @@
 public class OpportunityTriggerHelper {
 
+    public static final String OPPORTUNITY_STAGE_TWO = '2 - Determining Problem / Impact';
+    public static final String OPPORTUNITY_STAGE_THREE = '3 - Aligning Benefits & Value';
+    public static final String OPPORTUNITY_STAGE_FOUR = '4 - Confirm Value & Agreement';
+    public static final String OPPORTUNITY_STAGE_FIVE = '5 - Proposal / Negotiation';
+    public static final String OPPORTUNITY_STAGE_SIX = '6 - Pending';
+    public static final String OPPORTUNITY_STAGE_CLOSED_WON = 'Closed – Won';
     public static final string PS_PROJECT_PARENT_SAAS = 'PS Parent Project - SaaS';
     public static final string PS_PROJECT_PHASE_SAAS = 'PS Project Phase SaaS';
     public static final Set<String> profileSet = new Set<String>{
@@ -25,7 +31,7 @@ public class OpportunityTriggerHelper {
             }
 
         }
-        OpportunityTriggerHelper.timestampHelper(newOppList);
+//        OpportunityTriggerHelper.timestampHelper(newOppList);
     }
 
     // create trip reports for Education request opportunities
@@ -136,42 +142,36 @@ public class OpportunityTriggerHelper {
 
     }
 
-    //update timestamp helper
-    public static void timestampHelper(list<Opportunity> newOppList){
-        for( Opportunity o : newOppList)
+    //update timestamp when opportunity stage changes
+    public static void timestampHelper(list<Opportunity> newOppList, Map<Id, Opportunity> oldMap){
+
+        for( Opportunity newOpp : newOppList)
         {
-            if(o.StageName == '2 - Determining Problem / Impact')
+            Opportunity oldOpp = oldMap != null ? oldMap.get(newOpp.Id) : null;
+            if(newOpp.StageName == OPPORTUNITY_STAGE_TWO && (oldOpp == null || oldOpp.StageName != OPPORTUNITY_STAGE_TWO) )
             {
-                o.Stage_2_Timestamp__c = system.today();
+                newOpp.Stage_2_Timestamp__c = system.today();
             }
-            else if(o.StageName == '3 - Aligning Benefits & Value')
+            else if(newOpp.StageName == OPPORTUNITY_STAGE_THREE && (oldOpp == null || oldOpp.StageName != OPPORTUNITY_STAGE_THREE) )
             {
-                o.Stage_2_Timestamp__c = system.today();
-                o.Stage_3_Timestamp__c = system.today();
+                newOpp.Stage_3_Timestamp__c = system.today();
             }
-            else if(o.StageName == '4 - Confirm Value & Agreement')
+            else if(newOpp.StageName == OPPORTUNITY_STAGE_FOUR && (oldOpp == null || oldOpp.StageName != OPPORTUNITY_STAGE_FOUR) )
             {
-                o.Stage_2_Timestamp__c = system.today();
-                o.Stage_3_Timestamp__c = system.today();
-                o.Stage_4_Timestamp__c = system.today();
+                newOpp.Stage_4_Timestamp__c = system.today();
             }
-            else if(o.StageName == '5 - Proposal / Negotiation')
+            else if(newOpp.StageName == OPPORTUNITY_STAGE_FIVE && (oldOpp == null || oldOpp.StageName != OPPORTUNITY_STAGE_FIVE) )
             {
-                o.Stage_2_Timestamp__c = system.today();
-                o.Stage_3_Timestamp__c = system.today();
-                o.Stage_4_Timestamp__c = system.today();
-                o.Stage_5_Timestamp__c = system.today();
+                newOpp.Stage_5_Timestamp__c = system.today();
             }
-            else if(o.StageName == '6 - Pending' || o.StageName == 'Closed – Won')
+            else if( (newOpp.StageName == OPPORTUNITY_STAGE_SIX && (oldOpp == null || oldOpp.StageName != OPPORTUNITY_STAGE_SIX) )
+                || (newOpp.StageName == OPPORTUNITY_STAGE_CLOSED_WON && (oldOpp == null || oldOpp.StageName != OPPORTUNITY_STAGE_CLOSED_WON) ) )
             {
-                o.Stage_2_Timestamp__c = system.today();
-                o.Stage_3_Timestamp__c = system.today();
-                o.Stage_4_Timestamp__c = system.today();
-                o.Stage_5_Timestamp__c = system.today();
-                o.Stage_6_Timestamp__c = system.today();
+                newOpp.Stage_6_Timestamp__c = system.today();
             }
         }
-    }
+
+    } // end of timestampHelper()
 
     // all other Update operations -
     // Chatter Closed deal update
@@ -240,8 +240,8 @@ public class OpportunityTriggerHelper {
                 updateOpportunityList.add(o);
         }
 
-        if(!updateOpportunityList.isEmpty())
-            OpportunityTriggerHelper.timestampHelper(updateOpportunityList);
+//        if(!updateOpportunityList.isEmpty())
+//            OpportunityTriggerHelper.timestampHelper(updateOpportunityList);
 
         if(!closedDeals.isEmpty())
             ChatterUpdates.ChatterPostClosedDeal(closedDeals);
