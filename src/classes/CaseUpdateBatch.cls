@@ -4,9 +4,11 @@
     N/A - No article, or article attached after 7 days from case close date.
     Citation - Knowledge Article created by is not who created Case Article (or who attached article to case). Citation: "use of someone else’s article".
 */
-global class CaseUpdateBatch implements Database.Batchable<sObject> {
+global class CaseUpdateBatch implements Database.Batchable<sObject>, Database.Stateful {
 
 	global final String gstrQuery;
+    Integer totalCases = 0;
+    Integer updatedCases = 0;
 	Set<String> stRecordTypes = new Set<String>();
 
     static final Set<String> caseRecordTypes = new Set<String>{
@@ -38,7 +40,7 @@ global class CaseUpdateBatch implements Database.Batchable<sObject> {
  
     global void execute(Database.BatchableContext BC, List<Case> scope)
     {
-
+        totalCases += scope.size();
         Map<Id, Case> caseMap = new Map<Id, Case>(); // CaseId => Case
 		// create a Map of Cases
 		for (Case c : scope){
@@ -103,6 +105,8 @@ global class CaseUpdateBatch implements Database.Batchable<sObject> {
                 Database.SaveResult sr = results[i];
                 if (!sr.isSuccess() && sr.getErrors().size() > 0){
                     errorDetails.put(caseUpdateList[i].Id, sr.getErrors()[0].getMessage());
+                } else{
+                    updatedCases++;
                 }
             }
             if(errorDetails.size() > 0){
@@ -213,7 +217,8 @@ global class CaseUpdateBatch implements Database.Batchable<sObject> {
                 + a.TotalJobItems
                 + ' batches with '
                 + a.NumberOfErrors
-                + ' failures.');
+                + ' failures.' + '\n\n'
+                + 'The batch Apex job processed ' + totalCases + ' Cases and updated ' + updatedCases + ' Cases.');
         Messaging.sendEmail(new Messaging.SingleEmailMessage[]{
                 mail
         });
