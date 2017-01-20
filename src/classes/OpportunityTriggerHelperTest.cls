@@ -59,8 +59,8 @@ public class OpportunityTriggerHelperTest {
                 Select Stage_2_Timestamp__c, Stage_3_Timestamp__c, Stage_4_Timestamp__c, Stage_5_Timestamp__c, Stage_6_Timestamp__c
                 from Opportunity where Id = :testOpp.Id
         ];
-        system.assertEquals(system.today(), oppResult.Stage_2_Timestamp__c);
-        system.assertEquals(null, oppResult.Stage_3_Timestamp__c);
+        system.assertEquals(null, oppResult.Stage_2_Timestamp__c);
+        system.assertEquals(system.today(), oppResult.Stage_3_Timestamp__c);
         system.assertEquals(null, oppResult.Stage_4_Timestamp__c);
         system.assertEquals(null, oppResult.Stage_5_Timestamp__c);
         system.assertEquals(null, oppResult.Stage_6_Timestamp__c);
@@ -71,8 +71,8 @@ public class OpportunityTriggerHelperTest {
                 Select Stage_2_Timestamp__c, Stage_3_Timestamp__c, Stage_4_Timestamp__c, Stage_5_Timestamp__c, Stage_6_Timestamp__c
                 from Opportunity where Id = :testOpp.Id
         ];
-        system.assertEquals(system.today(), oppResult.Stage_2_Timestamp__c);
-        system.assertEquals(null, oppResult.Stage_3_Timestamp__c);
+        system.assertEquals(null, oppResult.Stage_2_Timestamp__c);
+        system.assertEquals(system.today(), oppResult.Stage_3_Timestamp__c);
         system.assertEquals(system.today(), oppResult.Stage_4_Timestamp__c);
         system.assertEquals(null, oppResult.Stage_5_Timestamp__c);
         system.assertEquals(null, oppResult.Stage_6_Timestamp__c);
@@ -83,10 +83,10 @@ public class OpportunityTriggerHelperTest {
                 Select Stage_2_Timestamp__c, Stage_3_Timestamp__c, Stage_4_Timestamp__c, Stage_5_Timestamp__c, Stage_6_Timestamp__c
                 from Opportunity where Id = :testOpp.Id
         ];
-        system.assertEquals(system.today(), oppResult.Stage_2_Timestamp__c);
-        system.assertEquals(null, oppResult.Stage_3_Timestamp__c);
+        system.assertEquals(null, oppResult.Stage_2_Timestamp__c);
+        system.assertEquals(system.today(), oppResult.Stage_3_Timestamp__c);
         system.assertEquals(system.today(), oppResult.Stage_4_Timestamp__c);
-        system.assertEquals(null, oppResult.Stage_5_Timestamp__c);
+        system.assertEquals(system.today(), oppResult.Stage_5_Timestamp__c);
         system.assertEquals(system.today(), oppResult.Stage_6_Timestamp__c);
 
     } // end of timestampHelperTest()
@@ -137,7 +137,7 @@ public class OpportunityTriggerHelperTest {
                 Name = 'ProjectTriggerHandlerTest Opp 1',
                 AccountId = testAccount.Id,
                 RecordTypeId = recordTypeMap.get(OPPORTUNITY_TYPE_NEW),
-                StageName = OpportunityTriggerHelper.OPPORTUNITY_STAGE_TWO,
+                StageName = OpportunityTriggerHelper.OPPORTUNITY_STAGE_THREE,
                 CloseDate = Date.today(),
                 Probability = 25,
                 Partner_Deal__c = 'NO',

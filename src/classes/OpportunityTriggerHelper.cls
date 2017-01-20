@@ -1,11 +1,4 @@
 public class OpportunityTriggerHelper {
-
-    public static final String OPPORTUNITY_STAGE_TWO = '2 - Determining Problem / Impact';
-    public static final String OPPORTUNITY_STAGE_THREE = '3 - Aligning Benefits & Value';
-    public static final String OPPORTUNITY_STAGE_FOUR = '4 - Confirm Value & Agreement';
-    public static final String OPPORTUNITY_STAGE_FIVE = '5 - Proposal / Negotiation';
-    public static final String OPPORTUNITY_STAGE_SIX = '6 - Pending';
-    public static final String OPPORTUNITY_STAGE_CLOSED_WON = 'Closed – Won';
     public static final string PS_PROJECT_PARENT_SAAS = 'PS Parent Project - SaaS';
     public static final string PS_PROJECT_PHASE_SAAS = 'PS Project Phase SaaS';
     public static final Set<String> profileSet = new Set<String>{
@@ -15,6 +8,27 @@ public class OpportunityTriggerHelper {
             'PS Management'
     };
     private static Map<Id, String> profileMap = null;
+
+    public static final String OPPORTUNITY_STAGE_ONE = '1 - Identification / Qualification';
+    public static final String OPPORTUNITY_STAGE_TWO = '2 - Determining Problem / Impact';
+    public static final String OPPORTUNITY_STAGE_THREE = '3 - Aligning Benefits & Value';
+    public static final String OPPORTUNITY_STAGE_FOUR = '4 - Confirm Value & Agreement';
+    public static final String OPPORTUNITY_STAGE_FIVE = '5 - Proposal / Negotiation';
+    public static final String OPPORTUNITY_STAGE_SIX = '6 - Pending';
+    public static final String OPPORTUNITY_STAGE_CLOSED_WON = 'Closed – Won';
+    private static final Map<String, Integer> stageRankMap = new Map<String, Integer>{
+            OPPORTUNITY_STAGE_ONE => 1,
+            OPPORTUNITY_STAGE_TWO => 2,
+            OPPORTUNITY_STAGE_THREE => 3,
+            OPPORTUNITY_STAGE_FOUR => 4,
+            OPPORTUNITY_STAGE_FIVE => 5,
+            OPPORTUNITY_STAGE_SIX => 6,
+            OPPORTUNITY_STAGE_CLOSED_WON => 7
+    };
+    private static Integer getStageRank(String stageName){
+        return stageRankMap.containsKey(stageName) ? stageRankMap.get(stageName) : -1;
+    }
+
 
     public static void updateTimeStamps(list<Opportunity> newOppList){
         String eduOppRT = inContactBaseClass.SelectRecordTypeIDByName('Education Request', 'Opportunity');
@@ -147,28 +161,36 @@ public class OpportunityTriggerHelper {
 
         for( Opportunity newOpp : newOppList)
         {
-            Opportunity oldOpp = oldMap != null ? oldMap.get(newOpp.Id) : null;
-            if(newOpp.StageName == OPPORTUNITY_STAGE_TWO && (oldOpp == null || oldOpp.StageName != OPPORTUNITY_STAGE_TWO) )
-            {
+            Integer newRank = getStageRank(newOpp.StageName);
+            String previousStage = (oldMap != null) ? oldMap.get(newOpp.Id).StageName : null;
+            Integer oldRank = getStageRank(previousStage);
+
+            system.debug('timestampHelper(): new StageName - '+ newOpp.StageName + ', rank #'+ newRank);
+            system.debug('timestampHelper(): previous StageName - '+ previousStage + ', rank #'+ oldRank);
+            if(String.isNotBlank(previousStage) && newOpp.StageName == previousStage){
+                continue;
+            }
+            if(newRank == 2 || ( newRank > 2 && oldRank < 2 && oldRank > 0) ){
                 newOpp.Stage_2_Timestamp__c = system.today();
             }
-            else if(newOpp.StageName == OPPORTUNITY_STAGE_THREE && (oldOpp == null || oldOpp.StageName != OPPORTUNITY_STAGE_THREE) )
-            {
+            if(newRank == 3 || ( newRank > 3 && oldRank < 3 && oldRank > 0) ){
                 newOpp.Stage_3_Timestamp__c = system.today();
             }
-            else if(newOpp.StageName == OPPORTUNITY_STAGE_FOUR && (oldOpp == null || oldOpp.StageName != OPPORTUNITY_STAGE_FOUR) )
-            {
+            if(newRank == 4 || ( newRank > 4 && oldRank < 4 && oldRank > 0) ){
                 newOpp.Stage_4_Timestamp__c = system.today();
             }
-            else if(newOpp.StageName == OPPORTUNITY_STAGE_FIVE && (oldOpp == null || oldOpp.StageName != OPPORTUNITY_STAGE_FIVE) )
-            {
+            if(newRank == 5 || ( newRank > 5 && oldRank < 5 && oldRank > 0) ){
                 newOpp.Stage_5_Timestamp__c = system.today();
             }
-            else if( (newOpp.StageName == OPPORTUNITY_STAGE_SIX && (oldOpp == null || oldOpp.StageName != OPPORTUNITY_STAGE_SIX) )
-                || (newOpp.StageName == OPPORTUNITY_STAGE_CLOSED_WON && (oldOpp == null || oldOpp.StageName != OPPORTUNITY_STAGE_CLOSED_WON) ) )
-            {
+            if(newRank == 6 || ( newRank > 6 && oldRank < 6 && oldRank > 0) ){
                 newOpp.Stage_6_Timestamp__c = system.today();
             }
+
+            system.debug('timestampHelper(): Stage_2_Timestamp__c - '+ newOpp.Stage_2_Timestamp__c);
+            system.debug('timestampHelper(): Stage_3_Timestamp__c - '+ newOpp.Stage_3_Timestamp__c);
+            system.debug('timestampHelper(): Stage_4_Timestamp__c - '+ newOpp.Stage_4_Timestamp__c);
+            system.debug('timestampHelper(): Stage_5_Timestamp__c - '+ newOpp.Stage_5_Timestamp__c);
+            system.debug('timestampHelper(): Stage_6_Timestamp__c - '+ newOpp.Stage_6_Timestamp__c);
         }
 
     } // end of timestampHelper()
