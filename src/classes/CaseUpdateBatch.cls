@@ -89,7 +89,7 @@ global class CaseUpdateBatch implements Database.Batchable<sObject>, Database.St
                 for(KnowledgeArticleVersion kav :versions){
                     if(kav.VersionNumber == ca.ArticleVersionNumber){
                         caseObj.New_vs_Known__c = (ca.CaseId == kav.SourceId) ? NEW_ARTICLE : KNOWN_ARTICLE;
-                        caseObj.Citation__c = (ca.CreatedById == kav.CreatedById) ? true : false;
+                        caseObj.Citation__c = (ca.CreatedById != kav.CreatedById) ? true : false;
                         caseObj.KB_Attached__c = true;
                         caseUpdateList.add(caseObj);
                         break;
