@@ -5,7 +5,7 @@ public class CaseUpdateBatchTest {
 
         Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SobjectType.Case.getRecordTypeInfosByName();
         List<Case> caseList = new List<Case>();
-        for(Integer i=0;i < 100; i++){
+        for(Integer i=0;i < 10; i++){
             Case caseObj = new Case(
                     RecordTypeId = recordTypeMap.get('Service Request').getRecordTypeId(),
                     Type = 'Help Request',
@@ -25,7 +25,7 @@ public class CaseUpdateBatchTest {
 
         KnowledgeArticle testArticle = [SELECT Id FROM KnowledgeArticle LIMIT 1];
         List<CaseArticle> articleList = new List<CaseArticle>();
-        for(Integer i=0; i<10; i++){
+        for(Integer i=0; i<5; i++){
             CaseArticle caseArticleRecord = new CaseArticle(
                     CaseId = caseList[i].Id,
                     KnowledgeArticleId = testArticle.Id,
