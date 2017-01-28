@@ -16,7 +16,7 @@ public with sharing class SandboxPostCopy_DeleteNamedCredential extends SandboxP
         for(NamedCredential c : [SELECT DeveloperName FROM NamedCredential]){
             credentials.add(c.DeveloperName);
         }
-        if (credentials.size() > 0) {
+        if (credentials.size() > 0 && allowFutureCall() && allowCallout()) {
             deleteNamedCredentials(credentials, userinfo.getSessionId());
             List<AsyncApexJob> jobList = [
                     Select Id, Status from AsyncApexJob

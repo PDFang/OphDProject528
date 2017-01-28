@@ -22,28 +22,32 @@ public class SandboxPostCopy_UpdateEmailRecipients extends SandboxPostCopyTask{
                 queryElement
         };
         Double version = 38.0;
-        MetadataService.FileProperties[] properties = port.listMetadata(queryList, version);
-        system.debug('task(): Total no.of email alerts retrieved ' + properties.size());
+        if(allowCallout()) {
+            MetadataService.FileProperties[] properties = port.listMetadata(queryList, version);
+            system.debug('task(): Total no.of email alerts retrieved ' + properties.size());
 
-        String[] emailAlerts = new String[]{
-        };
-        for (MetadataService.FileProperties property : properties) {
-            if (property.namespacePrefix != null) {
-                continue;
+            String[] emailAlerts = new String[]{
+            };
+            for (MetadataService.FileProperties property : properties) {
+                if (property.namespacePrefix != null) {
+                    continue;
+                }
+                emailAlerts.add(property.fullName);
             }
-            emailAlerts.add(property.fullName);
-        }
-        system.debug('task(): emailAlerts - ' + emailAlerts);
+            system.debug('task(): emailAlerts - ' + emailAlerts);
 
-        if (emailAlerts.size() > 0) {
-            readAndUpdateEmailAlert(emailAlerts, SessionHeader.sessionId);
-            List<AsyncApexJob> jobList = [
-                    Select Id, Status from AsyncApexJob
-                    where ApexClass.Name = :getClassName() and Status IN ('Queued', 'Pending') and JobType = 'Future'
-                    order by createddate desc LIMIT 1
-            ];
-            if(jobList.size() > 0){
-                return jobList[0].Id;
+            if (emailAlerts.size() > 0 && allowFutureCall() && allowCallout()) {
+                readAndUpdateEmailAlert(emailAlerts, SessionHeader.sessionId);
+                List<AsyncApexJob> jobList = [
+                        Select Id, Status
+                        from AsyncApexJob
+                        where ApexClass.Name = :getClassName() and Status IN ('Queued', 'Pending') and JobType = 'Future'
+                        order by createddate desc
+                        LIMIT 1
+                ];
+                if (jobList.size() > 0) {
+                    return jobList[0].Id;
+                }
             }
         }
         return null;

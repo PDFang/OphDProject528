@@ -22,29 +22,33 @@ public class SandboxPostCopy_UpdateOutboundMessage extends SandboxPostCopyTask{
                 queryElement
         };
         Double version = 38.0;
-        MetadataService.FileProperties[] properties = port.listMetadata(queryList, version);
-        system.debug('task(): Total no.of outbound message retrieved ' + properties.size());
+        if(allowCallout()) {
+            MetadataService.FileProperties[] properties = port.listMetadata(queryList, version);
+            system.debug('task(): Total no.of outbound message retrieved ' + properties.size());
 
-        String[] outboundMessages = new String[]{
-        };
-        for (MetadataService.FileProperties property : properties) {
-            if (property.namespacePrefix != null) {
-                continue;
+            String[] outboundMessages = new String[]{
+            };
+            for (MetadataService.FileProperties property : properties) {
+                if (property.namespacePrefix != null) {
+                    continue;
+                }
+                outboundMessages.add(property.fullName);
             }
-            outboundMessages.add(property.fullName);
-        }
-        system.debug('task(): outboundMessages - ' + outboundMessages);
+            system.debug('task(): outboundMessages - ' + outboundMessages);
 
-        if (outboundMessages.size() > 0) {
-            String proxyUrl =  (context != null && context.sandboxName() == 'QA') ? System.LABEL.QA_Proxy : System.LABEL.LAB_Proxy;
-            readAndUpdateOutboundMessages(outboundMessages, proxyURL, SessionHeader.sessionId);
-            List<AsyncApexJob> jobList = [
-                    Select Id, Status from AsyncApexJob
-                    where ApexClass.Name = :getClassName() and Status IN ('Queued', 'Pending') and JobType = 'Future'
-                    order by createddate desc LIMIT 1
-            ];
-            if(jobList.size() > 0){
-                return jobList[0].Id;
+            if (outboundMessages.size() > 0 && allowFutureCall() && allowCallout()) {
+                String proxyUrl = (context != null && context.sandboxName() == 'QA') ? System.LABEL.QA_Proxy : System.LABEL.LAB_Proxy;
+                readAndUpdateOutboundMessages(outboundMessages, proxyURL, SessionHeader.sessionId);
+                List<AsyncApexJob> jobList = [
+                        Select Id, Status
+                        from AsyncApexJob
+                        where ApexClass.Name = :getClassName() and Status IN ('Queued', 'Pending') and JobType = 'Future'
+                        order by createddate desc
+                        LIMIT 1
+                ];
+                if (jobList.size() > 0) {
+                    return jobList[0].Id;
+                }
             }
         }
         return null;

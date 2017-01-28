@@ -4,6 +4,8 @@
 
 public with sharing abstract class SandboxPostCopyTask {
 
+    public class SandboxPostCopyTaskException extends Exception{}
+
     protected abstract String getClassName();
 
     // class extension must implement this method and include post copy logic
@@ -24,6 +26,20 @@ public with sharing abstract class SandboxPostCopyTask {
             log.Status__c = ex.getMessage();
         }
         insert log;
+    }
+
+    protected boolean allowFutureCall(){
+        if(Limits.getFutureCalls() == Limits.getLimitFutureCalls()){
+            throw new SandboxPostCopyTaskException('Future method call limit has been reached.');
+        }
+        return true;
+    }
+
+    protected boolean allowCallout(){
+        if(Limits.getCallouts() == Limits.getLimitCallouts()){
+            throw new SandboxPostCopyTaskException('Callout limit has been reached.');
+        }
+        return true;
     }
 
 }

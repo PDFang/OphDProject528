@@ -1,7 +1,7 @@
 /**
  * Created by mohandaas.rangaswamy on 12/27/2016.
  */
-
+// Disable Single Sign-On permission on all profiles
 public with sharing class SandboxPostCopy_DisableSsoPermission extends SandboxPostCopyTask{
 
     static final Integer METADATA_RECORD_LIMIT = 10;
@@ -16,7 +16,7 @@ public with sharing class SandboxPostCopy_DisableSsoPermission extends SandboxPo
         for(Profile p : [SELECT Id, Name FROM Profile where IsSsoEnabled = true]){
             profiles.add(p.Name);
         }
-        if (profiles.size() > 0) {
+        if (profiles.size() > 0 && allowFutureCall() && allowCallout()) {
             updateSsoPermission(profiles, userinfo.getSessionId());
             List<AsyncApexJob> jobList = [
                     Select Id, Status from AsyncApexJob
@@ -38,7 +38,7 @@ public with sharing class SandboxPostCopy_DisableSsoPermission extends SandboxPo
         MetadataService.SessionHeader_element SessionHeader = new MetadataService.SessionHeader_element();
         SessionHeader.sessionId = sessionId;
         port.SessionHeader = SessionHeader;
-        port.timeout_x = 60000;
+        port.timeout_x = 80000;
         // update metadata in batches of 10
         Integer profileCount = 0;
         MetadataService.Profile[] updateMetadataList;
