@@ -12,6 +12,14 @@ private class SandboxPostCopyImplementationTest {
 
     }
 
+    static testMethod void testUpdateOutboundMessage() {
+        test.startTest();
+        Test.setMock(WebServiceMock.class, new WebServiceMockImpl());
+        new SandboxPostCopy_UpdateOutboundMessage().task(null);
+        test.stopTest();
+
+    }
+
 
     private class WebServiceMockImpl implements WebServiceMock
     {
@@ -24,16 +32,40 @@ private class SandboxPostCopyImplementationTest {
                 response.put('response_x', new MetadataService.retrieveResponse_element());
             else if(request instanceof MetadataService.checkDeployStatus_element)
                 response.put('response_x', new MetadataService.checkDeployStatusResponse_element());
-            else if(request instanceof MetadataService.listMetadata_element)
-                response.put('response_x', new MetadataService.listMetadataResponse_element());
+            else if(request instanceof MetadataService.readMetadata_element) {
+                MetadataService.WorkflowOutboundMessage message = new MetadataService.WorkflowOutboundMessage();
+                message.fullName = 'TEST';
+                MetadataService.ReadWorkflowOutboundMessageResult result = new MetadataService.ReadWorkflowOutboundMessageResult();
+                result.records = new MetadataService.WorkflowOutboundMessage[]{
+                        message
+                };
+                MetadataService.readWorkflowOutboundMessageResponse_element responseElement = new MetadataService.readWorkflowOutboundMessageResponse_element();
+                response.put('response_x', responseElement);
+            }
+            else if(request instanceof MetadataService.listMetadata_element) {
+                MetadataService.FileProperties result = new MetadataService.FileProperties();
+                result.fullName = 'TEST';
+                MetadataService.listMetadataResponse_element responseElement = new MetadataService.listMetadataResponse_element();
+                responseElement.result = new MetadataService.FileProperties[]{
+                        result
+                };
+                response.put('response_x', responseElement);
+            }
             else if(request instanceof MetadataService.checkRetrieveStatus_element)
                 response.put('response_x', new MetadataService.checkRetrieveStatusResponse_element());
             else if(request instanceof MetadataService.describeMetadata_element)
                 response.put('response_x', new MetadataService.describeMetadataResponse_element());
             else if(request instanceof MetadataService.deploy_element)
                 response.put('response_x', new MetadataService.deployResponse_element());
-            else if(request instanceof MetadataService.updateMetadata_element)
-                response.put('response_x', new MetadataService.updateMetadataResponse_element());
+            else if(request instanceof MetadataService.updateMetadata_element) {
+                MetadataService.SaveResult result = new MetadataService.SaveResult();
+                result.success = true;
+                MetadataService.updateMetadataResponse_element responseElement = new MetadataService.updateMetadataResponse_element();
+                responseElement.result = new MetadataService.SaveResult[]{
+                        result
+                };
+                response.put('response_x', responseElement);
+            }
             else if(request instanceof MetadataService.renameMetadata_element)
                 response.put('response_x', new MetadataService.renameMetadataResponse_element());
             else if(request instanceof  MetadataService.cancelDeploy_element)
