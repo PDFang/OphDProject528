@@ -1,9 +1,8 @@
 /**
  * Created by mohandaas.rangaswamy on 12/22/2016.
  */
+// Deactivate remote site settings that are not part of a managed package
 public class SandboxPostCopy_UpdateRemoteSiteSetting extends SandboxPostCopyTask{
-
-    static final Integer METADATA_RECORD_LIMIT = 10;
 
     public override String getClassName(){
         return 'SandboxPostCopy_UpdateRemoteSiteSetting';
@@ -69,7 +68,7 @@ public class SandboxPostCopy_UpdateRemoteSiteSetting extends SandboxPostCopyTask
         String[] readMetadataList;
         do {
             readMetadataList = new String[]{};
-            for(Integer i=0; i < METADATA_RECORD_LIMIT && index < remoteSites.size(); i++){
+            for(Integer i=0; i < SandboxPostCopyTask.METADATA_RECORD_LIMIT && index < remoteSites.size(); i++){
                 readMetadataList.add(remoteSites[index]);
                 index++;
             }
@@ -94,7 +93,7 @@ public class SandboxPostCopy_UpdateRemoteSiteSetting extends SandboxPostCopyTask
         MetadataService.RemoteSiteSetting[] updateMetadataList;
         do {
             updateMetadataList = new MetadataService.RemoteSiteSetting[]{};
-            for(Integer i=0; i < METADATA_RECORD_LIMIT && updateCount < remoteSiteUpdateList.size(); i++){
+            for(Integer i=0; i < SandboxPostCopyTask.METADATA_RECORD_LIMIT && updateCount < remoteSiteUpdateList.size(); i++){
                 updateMetadataList.add(remoteSiteUpdateList[updateCount]);
                 updateCount++;
             }

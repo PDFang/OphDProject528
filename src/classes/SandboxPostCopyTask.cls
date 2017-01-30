@@ -6,6 +6,8 @@ public with sharing abstract class SandboxPostCopyTask {
 
     public class SandboxPostCopyTaskException extends Exception{}
 
+    public static final Integer METADATA_RECORD_LIMIT = 10;
+
     protected abstract String getClassName();
 
     // class extension must implement this method and include post copy logic

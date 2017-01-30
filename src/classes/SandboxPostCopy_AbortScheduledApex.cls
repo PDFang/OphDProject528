@@ -1,6 +1,7 @@
 /**
  * Created by mohandaas.rangaswamy on 12/22/2016.
  */
+// Abort scheduled apex jobs
 public class SandboxPostCopy_AbortScheduledApex extends SandboxPostCopyTask{
 
     public override String getClassName(){

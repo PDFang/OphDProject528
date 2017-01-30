@@ -1,6 +1,7 @@
 /**
  * Created by mohandaas.rangaswamy on 12/22/2016.
  */
+// Void contacts email
 public class SandboxPostCopy_ContactFieldCleaner extends SandboxPostCopyTask{
 
     public override String getClassName(){

@@ -1,7 +1,7 @@
 /**
  * Created by mohandaas.rangaswamy on 12/27/2016.
  */
-// Disable Api Only User permission on Cast Iron profile
+// Disable Api Only User permission in Cast Iron profile
 public with sharing class SandboxPostCopy_UpdateCastIronProfile extends SandboxPostCopyTask{
 
     public override String getClassName(){

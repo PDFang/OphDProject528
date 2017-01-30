@@ -1,6 +1,7 @@
 /**
  * Created by mohandaas.rangaswamy on 12/22/2016.
  */
+// Update ServiceConnection__c custom setting
 public class SandboxPostCopy_UpdateServiceConnection extends SandboxPostCopyTask{
 
     public override String getClassName(){

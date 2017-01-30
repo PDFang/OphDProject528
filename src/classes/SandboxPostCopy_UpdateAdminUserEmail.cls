@@ -17,7 +17,7 @@ public with sharing class SandboxPostCopy_UpdateAdminUserEmail extends SandboxPo
                 and Department = 'Information Systems 00' and IsActive = true
         ]){
             String email = admin.Email;
-            if(email.endsWith('@example.com')){
+            if(email.endsWith('@example.com') && email.indexOf('=') > 0){
                 email = email.left(email.indexOf('@'));
                 admin.Email = email.replace('=','@');
                 userList.add(admin);

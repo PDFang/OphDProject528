@@ -1,10 +1,8 @@
 /**
  * Created by mohandaas.rangaswamy on 12/27/2016.
  */
-
+// Delete named credentials
 public with sharing class SandboxPostCopy_DeleteNamedCredential extends SandboxPostCopyTask{
-
-    static final Integer METADATA_RECORD_LIMIT = 10;
 
     public override String getClassName(){
         return 'SandboxPostCopy_DeleteNamedCredential';
@@ -13,7 +11,7 @@ public with sharing class SandboxPostCopy_DeleteNamedCredential extends SandboxP
     public override string task(SandboxContext context) {
 
         String[] credentials = new String[]{};
-        for(NamedCredential c : [SELECT DeveloperName FROM NamedCredential]){
+        for(NamedCredential c : [SELECT DeveloperName FROM NamedCredential where NamespacePrefix = null]){
             credentials.add(c.DeveloperName);
         }
         if (credentials.size() > 0 && allowFutureCall() && allowCallout()) {
@@ -44,7 +42,7 @@ public with sharing class SandboxPostCopy_DeleteNamedCredential extends SandboxP
         String[] deleteMetadataList;
         do {
             deleteMetadataList = new String[]{};
-            for(Integer i=0; i < METADATA_RECORD_LIMIT && count < credentials.size(); i++){
+            for(Integer i=0; i < SandboxPostCopyTask.METADATA_RECORD_LIMIT && count < credentials.size(); i++){
                 deleteMetadataList.add(credentials[count]);
                 count++;
             }

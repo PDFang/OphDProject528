@@ -1,10 +1,8 @@
 /**
  * Created by mohandaas.rangaswamy on 12/27/2016.
  */
-// Disable Single Sign-On permission on all profiles
+// Disable Single Sign-On permission in all profiles
 public with sharing class SandboxPostCopy_DisableSsoPermission extends SandboxPostCopyTask{
-
-    static final Integer METADATA_RECORD_LIMIT = 10;
 
     public override String getClassName(){
         return 'SandboxPostCopy_DisableSsoPermission';
@@ -44,7 +42,7 @@ public with sharing class SandboxPostCopy_DisableSsoPermission extends SandboxPo
         MetadataService.Profile[] updateMetadataList;
         do {
             updateMetadataList = new MetadataService.Profile[]{};
-            for(Integer i=0; i < METADATA_RECORD_LIMIT && profileCount < profiles.size(); i++){
+            for(Integer i=0; i < SandboxPostCopyTask.METADATA_RECORD_LIMIT && profileCount < profiles.size(); i++){
                 MetadataService.Profile newProfile = new MetadataService.Profile();
                 newProfile.fullName = profiles[profileCount];
                 MetadataService.ProfileUserPermission ssoPermission = new MetadataService.ProfileUserPermission();

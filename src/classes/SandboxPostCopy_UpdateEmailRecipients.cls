@@ -1,9 +1,8 @@
 /**
  * Created by mohandaas.rangaswamy on 12/22/2016.
  */
+// Remove additional recipients in email alerts
 public class SandboxPostCopy_UpdateEmailRecipients extends SandboxPostCopyTask{
-
-    static final Integer METADATA_RECORD_LIMIT = 10;
 
     public override String getClassName(){
         return 'SandboxPostCopy_UpdateEmailRecipients';
@@ -68,7 +67,7 @@ public class SandboxPostCopy_UpdateEmailRecipients extends SandboxPostCopyTask{
         String[] readAlertList;
         do {
             readAlertList = new String[]{};
-            for(Integer i=0; i < METADATA_RECORD_LIMIT && index < emailAlerts.size(); i++){
+            for(Integer i=0; i < SandboxPostCopyTask.METADATA_RECORD_LIMIT && index < emailAlerts.size(); i++){
                 readAlertList.add(emailAlerts[index]);
                 index++;
             }
@@ -95,7 +94,7 @@ public class SandboxPostCopy_UpdateEmailRecipients extends SandboxPostCopyTask{
         MetadataService.WorkflowAlert[] updateMetadataList;
         do {
             updateMetadataList = new MetadataService.WorkflowAlert[]{};
-            for(Integer i=0; i < METADATA_RECORD_LIMIT && updateCount < emailUpdateList.size(); i++){
+            for(Integer i=0; i < SandboxPostCopyTask.METADATA_RECORD_LIMIT && updateCount < emailUpdateList.size(); i++){
                 updateMetadataList.add(emailUpdateList[updateCount]);
                 updateCount++;
             }
