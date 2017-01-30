@@ -12,7 +12,7 @@ public class SandboxPostCopy_UpdateSiteConfiguration extends SandboxPostCopyTask
 
         SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(((String)context.organizationId()).left(15));
         if(siteConfig != null){
-            siteConfig.Name = ((String)context.sandboxId()).left(15);
+            //siteConfig.Name = ((String)context.sandboxId()).left(15);
             siteConfig.AutoEventEmails__c = false;
             siteConfig.EventResolvedEmails__c = false;
             siteConfig.DeveloperErrorFromName__c = context.sandboxName() + ' Sandbox';
