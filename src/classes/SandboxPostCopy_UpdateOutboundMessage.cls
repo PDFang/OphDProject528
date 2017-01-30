@@ -1,9 +1,8 @@
 /**
  * Created by mohandaas.rangaswamy on 12/22/2016.
  */
+// Update outbound message endpoint URL
 public class SandboxPostCopy_UpdateOutboundMessage extends SandboxPostCopyTask{
-
-    static final Integer METADATA_RECORD_LIMIT = 10;
 
     public override String getClassName(){
         return 'SandboxPostCopy_UpdateOutboundMessage';
@@ -69,7 +68,7 @@ public class SandboxPostCopy_UpdateOutboundMessage extends SandboxPostCopyTask{
         String[] readMessageList;
         do {
             readMessageList = new String[]{};
-            for(Integer i=0; i < METADATA_RECORD_LIMIT && index < outboundMessages.size(); i++){
+            for(Integer i=0; i < SandboxPostCopyTask.METADATA_RECORD_LIMIT && index < outboundMessages.size(); i++){
                 readMessageList.add(outboundMessages[index]);
                 index++;
             }
@@ -92,7 +91,7 @@ public class SandboxPostCopy_UpdateOutboundMessage extends SandboxPostCopyTask{
         MetadataService.WorkflowOutboundMessage[] updateMetadataList;
         do {
             updateMetadataList = new MetadataService.WorkflowOutboundMessage[]{};
-            for(Integer i=0; i < METADATA_RECORD_LIMIT && updateCount < messageUpdateList.size(); i++){
+            for(Integer i=0; i < SandboxPostCopyTask.METADATA_RECORD_LIMIT && updateCount < messageUpdateList.size(); i++){
                 updateMetadataList.add(messageUpdateList[updateCount]);
                 updateCount++;
             }
