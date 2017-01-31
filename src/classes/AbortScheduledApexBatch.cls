@@ -1,12 +1,15 @@
 /**
  * Created by mohandaas.rangaswamy on 12/23/2016.
  */
-
+// Abort scheduled apex jobs
 global class AbortScheduledApexBatch implements Database.Batchable<sObject> {
 
     global Database.QueryLocator start(Database.BatchableContext context)
     {
-        return Database.getQueryLocator('SELECT Id FROM CronTrigger WHERE CronJobDetail.JobType = \'7\'');
+        String soql = 'SELECT Id FROM CronTrigger WHERE CronJobDetail.JobType = \'7\' ';
+        if(Test.isRunningTest())
+            soql += 'LIMIT 100 ';
+        return Database.getQueryLocator('');
     }
 
     global void execute(Database.BatchableContext context, List<CronTrigger> scope)
