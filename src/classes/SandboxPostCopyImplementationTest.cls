@@ -45,8 +45,6 @@ private class SandboxPostCopyImplementationTest {
         {
             if(request instanceof MetadataService.retrieve_element)
                 response.put('response_x', new MetadataService.retrieveResponse_element());
-            else if(request instanceof MetadataService.checkDeployStatus_element)
-                response.put('response_x', new MetadataService.checkDeployStatusResponse_element());
             else if(request instanceof MetadataService.readMetadata_element) {
                 String metadataType = ((MetadataService.readMetadata_element)request).type_x;
                 if(metadataType == 'WorkflowOutboundMessage') {
@@ -95,12 +93,8 @@ private class SandboxPostCopyImplementationTest {
                 };
                 response.put('response_x', responseElement);
             }
-            else if(request instanceof MetadataService.checkRetrieveStatus_element)
-                response.put('response_x', new MetadataService.checkRetrieveStatusResponse_element());
             else if(request instanceof MetadataService.describeMetadata_element)
                 response.put('response_x', new MetadataService.describeMetadataResponse_element());
-            else if(request instanceof MetadataService.deploy_element)
-                response.put('response_x', new MetadataService.deployResponse_element());
             else if(request instanceof MetadataService.updateMetadata_element) {
                 MetadataService.SaveResult result = new MetadataService.SaveResult();
                 result.success = true;
@@ -110,10 +104,6 @@ private class SandboxPostCopyImplementationTest {
                 };
                 response.put('response_x', responseElement);
             }
-            else if(request instanceof MetadataService.renameMetadata_element)
-                response.put('response_x', new MetadataService.renameMetadataResponse_element());
-            else if(request instanceof  MetadataService.cancelDeploy_element)
-                response.put('response_x', new MetadataService.cancelDeployResponse_element());
             else if(request instanceof  MetadataService.deleteMetadata_element) {
                 MetadataService.DeleteResult result = new MetadataService.DeleteResult();
                 result.success = true;
@@ -125,12 +115,6 @@ private class SandboxPostCopyImplementationTest {
                 response.put('response_x', new MetadataService.upsertMetadataResponse_element());
             else if(request instanceof  MetadataService.createMetadata_element)
                 response.put('response_x', new MetadataService.createMetadataResponse_element());
-            else if(request instanceof  MetadataService.deployRecentValidation_element)
-                response.put('response_x', new MetadataService.deployRecentValidationResponse_element());
-            else if(request instanceof MetadataService.describeValueType_element)
-                response.put('response_x', new MetadataService.describeValueTypeResponse_element());
-            else if(request instanceof MetadataService.checkRetrieveStatus_element)
-                response.put('response_x', new MetadataService.checkRetrieveStatusResponse_element());
             return;
         }
     }
