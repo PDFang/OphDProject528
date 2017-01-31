@@ -64,6 +64,23 @@ private class SandboxPostCopyImplementationTest {
         siteConfig.OrgId__c = userInfo.getOrganizationName();
         insert siteConfig;
 
+        Profile sysAdmin = [SELECT Id from Profile where Name = 'System Administrator'];
+
+        user adminUser = new User(
+                FirstName = 'Test System',
+                LastName = 'Admin',
+                Email = 'adminuser=incontact.com@example.com',
+                Username = 'adminuser@incontact.com',
+                Department = 'Information Systems 00',
+                Alias = 'test',
+                profileId = sysAdmin.Id,
+                EmailEncodingKey = 'UTF-8',
+                TimeZoneSidKey = 'America/Los_Angeles',
+                LocaleSidKey = 'en_US',
+                LanguageLocaleKey = 'en_US'
+        );
+        insert adminUser;
+
     } // end of createTestData()
 
     private class WebServiceMockImpl implements WebServiceMock
