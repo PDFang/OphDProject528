@@ -72,7 +72,9 @@ public class ISIntegrationHandlerClassTest {
 	private static testmethod void  WorkItemCommentTest(){
         
         ISTFSWorkItem__c testWorkItem = CreateWorkItem();
-    	
+    	testWorkItem.TFSId__c = DEFAULT_TEST_TFS_ID;
+        update testWorkItem;
+        
         test.startTest();
         Test.setMock(HttpCalloutMock.class, new ISTFSINTEGRATIONCLASSMOCKTEST());
         ISTFSWorkItemComment__c testWorkItemComment = new ISTFSWorkItemComment__c(
@@ -148,7 +150,7 @@ public class ISIntegrationHandlerClassTest {
                 What_kind_of_request__c = 'Feature Enhancement',
                 ProjectStatus__c = 'New',
                 Area__c = 'SalesForce',
-                Team__c = 'Operations',
+                Team__c = 'Avengers',
                 TFSId__c = DEFAULT_TEST_TFS_ID,
                 RecordTypeId = rtByNameMap.get(PROJECT_TYPE_PSA).getRecordTypeId(),
             	//RecordTypeId = rtByNameMap.get(PROJECT_TYPE_IT).getRecordTypeId(),
@@ -177,7 +179,7 @@ public class ISIntegrationHandlerClassTest {
             StackRank__c = 10, 
             WorkItemTFSState__c = 'New', 
             StoryPoints__c = '1', 
-            Team__c = 'Operations',
+            Team__c = 'Avengers',
             Title__c = 'New work item'
 		);
         
