@@ -20,6 +20,21 @@ private class SandboxPostCopyImplementationTest {
 
     }
 
+    static testMethod void testUpdateRemoteSiteSetting() {
+        test.startTest();
+        Test.setMock(WebServiceMock.class, new WebServiceMockImpl());
+        new SandboxPostCopy_UpdateRemoteSiteSetting().task(null);
+        test.stopTest();
+
+    }
+
+    static testMethod void testUpdateEmailRecipients() {
+        test.startTest();
+        Test.setMock(WebServiceMock.class, new WebServiceMockImpl());
+        new SandboxPostCopy_UpdateEmailRecipients().task(null);
+        test.stopTest();
+
+    }
 
     private class WebServiceMockImpl implements WebServiceMock
     {
@@ -33,14 +48,43 @@ private class SandboxPostCopyImplementationTest {
             else if(request instanceof MetadataService.checkDeployStatus_element)
                 response.put('response_x', new MetadataService.checkDeployStatusResponse_element());
             else if(request instanceof MetadataService.readMetadata_element) {
-                MetadataService.WorkflowOutboundMessage message = new MetadataService.WorkflowOutboundMessage();
-                message.fullName = 'TEST';
-                MetadataService.ReadWorkflowOutboundMessageResult result = new MetadataService.ReadWorkflowOutboundMessageResult();
-                result.records = new MetadataService.WorkflowOutboundMessage[]{
-                        message
-                };
-                MetadataService.readWorkflowOutboundMessageResponse_element responseElement = new MetadataService.readWorkflowOutboundMessageResponse_element();
-                response.put('response_x', responseElement);
+                String metadataType = ((MetadataService.readMetadata_element)request).type_x;
+                if(metadataType == 'WorkflowOutboundMessage') {
+                    MetadataService.WorkflowOutboundMessage message = new MetadataService.WorkflowOutboundMessage();
+                    message.fullName = 'TEST_MESSAGE';
+                    message.endpointUrl = 'https://test.incontact.com';
+                    MetadataService.ReadWorkflowOutboundMessageResult result = new MetadataService.ReadWorkflowOutboundMessageResult();
+                    result.records = new MetadataService.WorkflowOutboundMessage[]{
+                            message
+                    };
+                    MetadataService.readWorkflowOutboundMessageResponse_element responseElement = new MetadataService.readWorkflowOutboundMessageResponse_element();
+                    responseElement.result = result;
+                    response.put('response_x', responseElement);
+                }
+                else if(metadataType == 'RemoteSiteSetting') {
+                    MetadataService.RemoteSiteSetting remoteSite = new MetadataService.RemoteSiteSetting();
+                    remoteSite.fullName = 'TEST_SITE';
+                    remoteSite.isActive = true;
+                    MetadataService.ReadRemoteSiteSettingResult result = new MetadataService.ReadRemoteSiteSettingResult();
+                    result.records = new MetadataService.RemoteSiteSetting[]{
+                            remoteSite
+                    };
+                    MetadataService.readRemoteSiteSettingResponse_element responseElement = new MetadataService.readRemoteSiteSettingResponse_element();
+                    responseElement.result = result;
+                    response.put('response_x', responseElement);
+                }
+                else if(metadataType == 'WorkflowAlert'){
+                    MetadataService.WorkflowAlert emailAlert = new MetadataService.WorkflowAlert();
+                    emailAlert.fullName = 'TEST_ALERT';
+                    emailAlert.ccEmails = new String[]{'user1@incontact.com'};
+                    MetadataService.ReadWorkflowAlertResult result = new MetadataService.ReadWorkflowAlertResult();
+                    result.records = new MetadataService.WorkflowAlert[]{
+                            emailAlert
+                    };
+                    MetadataService.readWorkflowAlertResponse_element responseElement = new MetadataService.readWorkflowAlertResponse_element();
+                    responseElement.result = result;
+                    response.put('response_x', responseElement);
+                }
             }
             else if(request instanceof MetadataService.listMetadata_element) {
                 MetadataService.FileProperties result = new MetadataService.FileProperties();
