@@ -8,6 +8,7 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
 
     private static Map<Id, List<User>> accountUserMap = null; // key partner account ID
     private static Map<Id, User> partnerUserMap = null; // key user ID
+    private static Map<Id, User> groupMemberInfoMap = null; // key user ID
 
     public class AccountPartnerTriggerHandlerException extends Exception{}
     
@@ -525,6 +526,11 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
                     if( (assigneeMap != null && assigneeMap.containsKey(member.UserOrGroupId)) || string.valueOf(member.UserOrGroupId).startsWith('00G') ){
                         continue;
                     }
+                    User memberInfo = groupMemberInfoMap.containsKey(member.UserOrGroupId) ? groupMemberInfoMap.get(member.UserOrGroupId) : null;
+                    if(memberInfo != null && memberInfo.ContactId != null && memberInfo.Contact.Do_Not_Assign_Partner_Permission_Set__c){
+                        system.debug(' **** assignPermissionSetFuture() : GroupMember excluded from Permission set assignment - '+ member);
+                        continue;
+                    }
                     psaList.add(new PermissionSetAssignment(
                     	PermissionSetId = permissionSetMap.get(permissionSetName),
                         AssigneeId = member.UserOrGroupId
@@ -542,7 +548,11 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
                 }
                 for(User usr : userList){
                     if(assigneeMap != null && assigneeMap.containsKey(usr.Id) ){
-                        system.debug(' **** assignPermissionSetFuture() : Permission set already assigned to -'+ usr.Id);
+                        system.debug(' **** assignPermissionSetFuture() : Permission set already assigned to - '+ usr.Id);
+                        continue;
+                    }
+                    if(usr.ContactId != null && usr.Contact.Do_Not_Assign_Partner_Permission_Set__c){
+                        system.debug(' **** assignPermissionSetFuture() : User excluded from Permission set assignment - '+ usr.Id);
                         continue;
                     }
                     psaList.add(new PermissionSetAssignment(
@@ -783,8 +793,9 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
     private static Map<ID, List<GroupMember>> getGroupMembers(Set<Id> groupIdSet){
     	Map<ID, List<GroupMember>> groupMemberMap = new Map<ID, List<GroupMember>>();
         if(groupIdSet.isEmpty() == false){
+            Set<Id> userIdSet = new Set<Id>();
             for(GroupMember member : [
-                Select Id, GroupId, UserOrGroupId from GroupMember where GroupId IN :groupIdSet 
+                Select Id, GroupId, UserOrGroupId from GroupMember where GroupId IN :groupIdSet
             ])
             {
                 List<GroupMember> memberList = groupMemberMap.get(member.GroupId);
@@ -793,7 +804,13 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
                     groupMemberMap.put(member.GroupId, memberList);
                 }
                 memberList.add(member);
+                userIdSet.add(member.UserOrGroupId);
             }
+            groupMemberInfoMap = new Map<Id, User>([
+                    Select Id, ContactId, Contact.Do_Not_Assign_Partner_Permission_Set__c
+                    from User
+                    where Id = :userIdSet
+            ]);
         }
         return groupMemberMap;
     }    
@@ -828,7 +845,7 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
         newPartnerIds.addAll(accountUserMap.keyset());
 
         for (User partnerUser : [
-                Select Id, ContactId, AccountId
+                Select Id, ContactId, AccountId, Contact.Do_Not_Assign_Partner_Permission_Set__c
                 from User
                 where IsPortalEnabled = true and IsActive = true
                 and AccountId IN :newPartnerIds
