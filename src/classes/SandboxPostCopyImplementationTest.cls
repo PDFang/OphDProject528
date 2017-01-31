@@ -10,6 +10,16 @@ private class SandboxPostCopyImplementationTest {
         test.testSandboxPostCopyScript(new SandboxPostCopyImplementation(), userinfo.getOrganizationId(), userinfo.getOrganizationId(), 'LAB');
         test.stopTest();
 
+        List<Sandbox_Post_Copy_Task__mdt> taskList = [Select DeveloperName, Task_Order__c from Sandbox_Post_Copy_Task__mdt where IsActive__c = true];
+        List<Sandbox_Post_Copy_Log__c> logList = [Select Class_Name__c, Status__c from  Sandbox_Post_Copy_Log__c];
+        system.assertEquals(logList.size(), taskList.size(), 'Not all active sandbox post copy tasks were executed.');
+    }
+
+    static testMethod void testDisableSsoPermission() {
+        test.startTest();
+        Test.setMock(WebServiceMock.class, new WebServiceMockImpl());
+        new SandboxPostCopy_DisableSsoPermission().task(null);
+        test.stopTest();
     }
 
     static testMethod void testUpdateOutboundMessage() {
@@ -35,6 +45,26 @@ private class SandboxPostCopyImplementationTest {
         test.stopTest();
 
     }
+
+    @testsetup
+    static void createTestData(){
+
+        ServiceConnection__c accountSync = new ServiceConnection__c();
+        accountSync.Name = 'AccountSync';
+        accountSync.EndPoint__c = System.LABEL.Corp_Proxy;
+        accountSync.Username__c = 'testuser';
+        accountSync.Password__c = '@#$!%^';
+        insert accountSync;
+
+        SiteConfiguration__c siteConfig = new SiteConfiguration__c();
+        siteConfig.Name = userInfo.getOrganizationId().left(15);
+        siteConfig.AutoEventEmails__c = true;
+        siteConfig.EventResolvedEmails__c = true;
+        siteConfig.DeveloperErrorFromName__c = 'inContact';
+        siteConfig.OrgId__c = userInfo.getOrganizationName();
+        insert siteConfig;
+
+    } // end of createTestData()
 
     private class WebServiceMockImpl implements WebServiceMock
     {
