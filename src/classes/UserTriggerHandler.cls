@@ -248,7 +248,8 @@ public class UserTriggerHandler extends TriggerHandler{
         
         set<Id> partnerIdSet = new set<Id>();
         for(User partnerUser : partnerUserList){
-            partnerIdSet.add(partnerUser.AccountId);
+            if(partnerUser.Contact.Do_Not_Assign_Partner_Permission_Set__c == false)
+                partnerIdSet.add(partnerUser.AccountId);
         }
         
         Map<Id, List<Account_Partner__c>> partnerMap = getAccountPartners(partnerIdSet);
@@ -326,7 +327,7 @@ public class UserTriggerHandler extends TriggerHandler{
     	List<User> partnerUserList = new List<User>();
 		if(userIdSet.size() > 0){
             for(User partnerUser : [
-                    Select Id, ContactId, AccountId from User
+                    Select Id, ContactId, Contact.Do_Not_Assign_Partner_Permission_Set__c, AccountId from User
                     where IsActive = true and IsPortalEnabled = true
                 	and UserType IN ('Partner', 'PowerPartner')
                     and Id IN :userIdSet and AccountId != null
