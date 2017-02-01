@@ -5,6 +5,7 @@
 @IsTest
 private class SandboxPostCopyImplementationTest {
     static testMethod void testBehavior() {
+        createTestData();
         test.startTest();
         Test.setMock(WebServiceMock.class, new WebServiceMockImpl());
         test.testSandboxPostCopyScript(new SandboxPostCopyImplementation(), userinfo.getOrganizationId(), userinfo.getOrganizationId(), 'LAB');
@@ -46,7 +47,7 @@ private class SandboxPostCopyImplementationTest {
 
     }
 
-    @testsetup
+
     static void createTestData(){
 
         ServiceConnection__c accountSync = new ServiceConnection__c();
@@ -65,7 +66,6 @@ private class SandboxPostCopyImplementationTest {
         insert siteConfig;
 
         Profile sysAdmin = [SELECT Id from Profile where Name = 'System Administrator'];
-
         user adminUser = new User(
                 FirstName = 'Test System',
                 LastName = 'Admin',

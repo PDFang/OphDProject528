@@ -9,7 +9,7 @@ global class AbortScheduledApexBatch implements Database.Batchable<sObject> {
         String soql = 'SELECT Id FROM CronTrigger WHERE CronJobDetail.JobType = \'7\' ';
         if(Test.isRunningTest())
             soql += 'LIMIT 100 ';
-        return Database.getQueryLocator('');
+        return Database.getQueryLocator(soql);
     }
 
     global void execute(Database.BatchableContext context, List<CronTrigger> scope)
