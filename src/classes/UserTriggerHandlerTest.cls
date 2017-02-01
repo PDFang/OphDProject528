@@ -66,6 +66,22 @@ private class UserTriggerHandlerTest {
                 LanguageLocaleKey = 'en_US'
         );
         partnerUserList.add(partnerUser2);
+
+        user partnerUser3 = new User(
+                FirstName = 'Partner',
+                LastName = 'User4',
+                ContactId = contactList[4].Id,
+                Email = 'partner4@incontact.com',
+                Username = 'partner4@incontact.com',
+                Alias = 'test',
+                profileId = profile.Id,
+                EmailEncodingKey = 'UTF-8',
+                TimeZoneSidKey = 'America/Los_Angeles',
+                LocaleSidKey = 'en_US',
+                LanguageLocaleKey = 'en_US'
+        );
+        partnerUserList.add(partnerUser3);
+
         insert partnerUserList;
 
         test.stopTest();
@@ -128,6 +144,10 @@ private class UserTriggerHandlerTest {
             }
             if(partnerPermissionMap.containsKey(AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER)){
                 system.assert(assigneeIdSet.contains(partnerUserList[0].Id), 'Permission set assignment failed.');
+            }
+
+            for(User userRecord : [ SELECT Id FROM User WHERE Contact.Do_Not_Assign_Partner_Permission_Set__c = true]){
+                system.assert(!assigneeIdSet.contains(userRecord.Id), 'Contact Record Has Do not Assign Flag Set and shouldnt be in the list');
             }
         }
         
@@ -294,6 +314,15 @@ private class UserTriggerHandlerTest {
                 new Contact(
                         LastName = 'UserTriggerHandlerTest Contact 4',
                         Email = 'contact4@incontact.com',
+                        RecordTypeId = recordTypeMap.get(CONTACT_TYPE_PARTNER),
+                        AccountId = accountList[2].Id
+                )
+        );
+
+        contactList.add(
+                new Contact(
+                        LastName = 'UserTriggerHandlerTest Contact 5',
+                        Email = 'contact5@incontact.com',
                         RecordTypeId = recordTypeMap.get(CONTACT_TYPE_PARTNER),
                         AccountId = accountList[2].Id
                 )
