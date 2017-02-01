@@ -1,11 +1,10 @@
 /**
  * Created by mohandaas.rangaswamy on 1/11/2017.
  */
-
 @IsTest
 private class SandboxPostCopyImplementationTest {
-    static testMethod void testBehavior() {
-        createTestData();
+    static testMethod void testSandboxPostCopyImplementation() {
+
         test.startTest();
         Test.setMock(WebServiceMock.class, new WebServiceMockImpl());
         test.testSandboxPostCopyScript(new SandboxPostCopyImplementation(), userinfo.getOrganizationId(), userinfo.getOrganizationId(), 'LAB');
@@ -13,15 +12,31 @@ private class SandboxPostCopyImplementationTest {
 
         List<Sandbox_Post_Copy_Task__mdt> taskList = [Select DeveloperName, Task_Order__c from Sandbox_Post_Copy_Task__mdt where IsActive__c = true];
         List<Sandbox_Post_Copy_Log__c> logList = [Select Class_Name__c, Status__c from  Sandbox_Post_Copy_Log__c];
-        system.assertEquals(logList.size(), taskList.size(), 'Not all active sandbox post copy tasks were executed.');
+        system.assertEquals(logList.size(), taskList.size(), 'Not all active sandbox post copy tasks were executed successfully.');
     }
 
-    static testMethod void testDisableSsoPermission() {
+    static testMethod void testRunInactiveApexClass() {
+
+        List<Sandbox_Post_Copy_Task__mdt> taskList = [Select DeveloperName, Task_Order__c from Sandbox_Post_Copy_Task__mdt where IsActive__c = false];
         test.startTest();
         Test.setMock(WebServiceMock.class, new WebServiceMockImpl());
-        new SandboxPostCopy_DisableSsoPermission().task(null);
+        for(Sandbox_Post_Copy_Task__mdt mdt : taskList){
+            Type t = Type.forName(mdt.DeveloperName);
+            SandboxPostCopyTask task = (SandboxPostCopyTask) t.newInstance();
+            task.execute(null);
+        }
         test.stopTest();
+
+        List<Sandbox_Post_Copy_Log__c> logList = [Select Class_Name__c, Status__c from  Sandbox_Post_Copy_Log__c];
+        system.assertEquals(logList.size(), taskList.size(), 'Not all inactive sandbox post copy tasks were executed successfully.');
     }
+
+//    static testMethod void testDisableSsoPermission() {
+//        test.startTest();
+//        Test.setMock(WebServiceMock.class, new WebServiceMockImpl());
+//        new SandboxPostCopy_DisableSsoPermission().task(null);
+//        test.stopTest();
+//    }
 
     static testMethod void testUpdateOutboundMessage() {
         test.startTest();
@@ -47,7 +62,7 @@ private class SandboxPostCopyImplementationTest {
 
     }
 
-
+    @TestSetup
     static void createTestData(){
 
         ServiceConnection__c accountSync = new ServiceConnection__c();
@@ -65,21 +80,21 @@ private class SandboxPostCopyImplementationTest {
         siteConfig.OrgId__c = userInfo.getOrganizationName();
         insert siteConfig;
 
-        Profile sysAdmin = [SELECT Id from Profile where Name = 'System Administrator'];
-        user adminUser = new User(
-                FirstName = 'Test System',
-                LastName = 'Admin',
-                Email = 'adminuser=incontact.com@example.com',
-                Username = 'adminuser@incontact.com',
-                Department = 'Information Systems 00',
-                Alias = 'test',
-                profileId = sysAdmin.Id,
-                EmailEncodingKey = 'UTF-8',
-                TimeZoneSidKey = 'America/Los_Angeles',
-                LocaleSidKey = 'en_US',
-                LanguageLocaleKey = 'en_US'
-        );
-        insert adminUser;
+//        Profile sysAdmin = [SELECT Id from Profile where Name = 'System Administrator'];
+//        user adminUser = new User(
+//                FirstName = 'Test System',
+//                LastName = 'Admin',
+//                Email = 'adminuser=incontact.com@example.com',
+//                Username = 'adminuser@incontact.com',
+//                Department = 'Information Systems 00',
+//                Alias = 'test',
+//                profileId = sysAdmin.Id,
+//                EmailEncodingKey = 'UTF-8',
+//                TimeZoneSidKey = 'America/Los_Angeles',
+//                LocaleSidKey = 'en_US',
+//                LanguageLocaleKey = 'en_US'
+//        );
+//        insert adminUser;
 
     } // end of createTestData()
 
