@@ -9,12 +9,12 @@ global class CorporateItWebServices
         
         if(InContactConfiguration.Instance == 'Sandbox')
         {
-            username = username + '.sbx';
+            username = username + '.lab';
         }
-        
+         
         try
         {
-        	Id projectId = [SELECT Id FROM Project__c WHERE Feature__c IN (SELECT Id FROM Feature__c WHERE TFSID__C = :featureId) LIMIT 1].Id;
+        	Id projectId = [SELECT Id FROM Project__c WHERE TFSID__c = :featureId OR Feature__r.TFSID__C = :featureId  LIMIT 1].Id;
         	Id userId = [SELECT Id FROM User WHERE UserName = :username].Id;
         
         
