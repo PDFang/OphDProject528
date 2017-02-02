@@ -172,6 +172,10 @@ private class AccountPartnerTriggerHandlerTest {
         	system.assertEquals(partnerPermissionMap.containsKey(AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER),assigneeIdSet.contains(userList[1].Id), 'Permission set assignment failed.');
             system.assertEquals(partnerPermissionMap.containsKey(AccountPartnerTriggerHandler.PREMISE_IMPLEMENTATION_PARTNER),assigneeIdSet.contains(userList[1].Id), 'Permission set assignment failed.');
         	system.assertEquals(partnerPermissionMap.containsKey(AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER),assigneeIdSet.contains(userList[2].Id), 'Permission set assignment failed.');
+
+            for(User userRecord : [ SELECT Id FROM User WHERE Contact.Do_Not_Assign_Partner_Permission_Set__c = true]){
+                system.assert(!assigneeIdSet.contains(userRecord.Id), 'Contact Record Has Do not Assign Flag Set and shouldnt be in the list');
+            }
         }
         
     } // end of addPartnerTest()
@@ -269,8 +273,8 @@ private class AccountPartnerTriggerHandlerTest {
         system.runAs(userList[2]){
             List<Account> accounts = [SELECT Id from Account where Type = 'Customer'];
             system.assertEquals(0, accounts.size());
-
-            List<Contact> Contacts = [SELECT Id from Contact where Id != :userList[2].contactId];
+            
+            List<Contact> Contacts = [SELECT Id from Contact where Id != :userList[2].contactId AND Do_Not_Assign_Partner_Permission_Set__c = false];
             system.assertEquals(0, Contacts.size());
 
             List<Case> cases = [SELECT Id from Case];
@@ -477,6 +481,16 @@ private class AccountPartnerTriggerHandlerTest {
                 )
         );
 
+        contactList.add(
+                new Contact(
+                        LastName = 'AccountPartnerTriggerHandlerTest Contact 6',
+                        Email = 'contact4@incontact.com',
+                        RecordTypeId = recordTypeMap.get(CONTACT_TYPE_PARTNER),
+                        AccountId = accountList[4].Id,
+                        Do_Not_Assign_Partner_Permission_Set__c = true
+                )
+        );
+
         insert contactList;
     } // end of createContacts()
 
@@ -645,6 +659,22 @@ private class AccountPartnerTriggerHandlerTest {
                         ContactId = contactList[4].Id,
                         Email = 'partner3@incontact.com',
                         Username = 'partner3@incontact.com',
+                        Alias = 'test',
+                        profileId = profile.Id,
+                        EmailEncodingKey = 'UTF-8',
+                        TimeZoneSidKey = 'America/Los_Angeles',
+                        LocaleSidKey = 'en_US',
+                        LanguageLocaleKey = 'en_US'
+                )
+        );
+
+        userList.add(
+                new User(
+                        FirstName = 'Partner',
+                        LastName = 'User4',
+                        ContactId = contactList[5].Id,
+                        Email = 'partner4@incontact.com',
+                        Username = 'partner4@incontact.com',
                         Alias = 'test',
                         profileId = profile.Id,
                         EmailEncodingKey = 'UTF-8',
