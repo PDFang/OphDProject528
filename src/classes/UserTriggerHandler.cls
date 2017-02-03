@@ -245,7 +245,7 @@ public class UserTriggerHandler extends TriggerHandler{
         {
             return;
         }
-        
+
         set<Id> partnerIdSet = new set<Id>();
         for(User partnerUser : partnerUserList){
             if(partnerUser.Contact.Do_Not_Assign_Partner_Permission_Set__c == false)
@@ -282,6 +282,10 @@ public class UserTriggerHandler extends TriggerHandler{
         List<PermissionSetAssignment> psaList = new List<PermissionSetAssignment>();
         
         for(User partnerUser :partnerUserList){
+            if(partnerUser.Contact.Do_Not_Assign_Partner_Permission_Set__c){
+                system.debug(' **** assignPermissionSetFuture() : Contact has Do Not Assign Flag checked - '+ partnerUser);
+                continue;
+            }
             List<Account_Partner__c> partnerList = partnerMap.get(partnerUser.AccountId);
             if(partnerList == null){
                 continue;

@@ -144,10 +144,8 @@ private class UserTriggerHandlerTest {
             }
             if(partnerPermissionMap.containsKey(AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER)){
                 system.assert(assigneeIdSet.contains(partnerUserList[0].Id), 'Permission set assignment failed.');
-            }
-
-            for(User userRecord : [ SELECT Id FROM User WHERE Contact.Do_Not_Assign_Partner_Permission_Set__c = true]){
-                system.assert(!assigneeIdSet.contains(userRecord.Id), 'Contact Record Has Do not Assign Flag Set and shouldnt be in the list');
+                system.assert(!assigneeIdSet.contains(partnerUserList[1].Id), 'No permission set defined for Premise Partner and shouldnt be in the list');
+                system.assert(!assigneeIdSet.contains(partnerUserList[2].Id), 'Related contact record has Do not Assign Flag Set and shouldnt be in the list');
             }
         }
         
@@ -227,6 +225,21 @@ private class UserTriggerHandlerTest {
         {
             recordTypeMap.put(record.Name, record.Id);
         }
+        // create permission set for SaaS Partner
+        PermissionSet saasPs = new PermissionSet(
+                Name = 'SAAS_Permission_Set',
+                Label = 'SAAS_Permission_Set'
+        );
+        system.runAs(new User(Id = userInfo.getUserId())){
+            insert saasPs;
+        }
+        // Create a custom setting
+        Partner_Permission_Sets__c setting = new Partner_Permission_Sets__c(
+                Name ='SAAS_IMPLEMENTATION_PARTNER',
+                Permission_Set__c = saasPs.Name,
+                Partner_Type__c = AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER
+        );
+        insert setting;
 
         createAccounts();
         createPartners();
@@ -324,7 +337,8 @@ private class UserTriggerHandlerTest {
                         LastName = 'UserTriggerHandlerTest Contact 5',
                         Email = 'contact5@incontact.com',
                         RecordTypeId = recordTypeMap.get(CONTACT_TYPE_PARTNER),
-                        AccountId = accountList[2].Id
+                        AccountId = accountList[1].Id,
+                        Do_Not_Assign_Partner_Permission_Set__c = true
                 )
         );
 
