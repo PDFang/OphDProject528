@@ -1,3 +1,4 @@
+
 @IsTest
 private class AccountPartnerTriggerHandlerTest {
 
@@ -172,10 +173,7 @@ private class AccountPartnerTriggerHandlerTest {
         	system.assertEquals(partnerPermissionMap.containsKey(AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER),assigneeIdSet.contains(userList[1].Id), 'Permission set assignment failed.');
             system.assertEquals(partnerPermissionMap.containsKey(AccountPartnerTriggerHandler.PREMISE_IMPLEMENTATION_PARTNER),assigneeIdSet.contains(userList[1].Id), 'Permission set assignment failed.');
         	system.assertEquals(partnerPermissionMap.containsKey(AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER),assigneeIdSet.contains(userList[2].Id), 'Permission set assignment failed.');
-
-            for(User userRecord : [ SELECT Id FROM User WHERE Contact.Do_Not_Assign_Partner_Permission_Set__c = true]){
-                system.assert(!assigneeIdSet.contains(userRecord.Id), 'Contact Record Has Do not Assign Flag Set and shouldnt be in the list');
-            }
+            system.assertEquals(partnerPermissionMap.containsKey(AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER),!assigneeIdSet.contains(userList[3].Id), 'Contact has Do Not Assign Permission Set flag checked.');
         }
         
     } // end of addPartnerTest()
@@ -220,8 +218,8 @@ private class AccountPartnerTriggerHandlerTest {
             List<Account> accounts = [SELECT Id from Account where RecordType.Name = :ACCOUNT_TYPE_CUSTOMERS];
             system.assertEquals(0, accounts.size());
 
-            List<Contact> Contacts = [SELECT Id from Contact where Id != :userList[0].contactId];
-            system.assertEquals(0, Contacts.size());
+            List<Contact> Contacts = [SELECT Id, Name from Contact where Account.RecordType.Name = :ACCOUNT_TYPE_CUSTOMERS];
+            system.assertEquals(0, Contacts.size(), Contacts);
 
             List<Case> cases = [SELECT Id from Case];
             system.assertEquals(0, cases.size());
@@ -247,7 +245,7 @@ private class AccountPartnerTriggerHandlerTest {
             List<Account> accounts = [SELECT Id from Account where RecordType.Name = :ACCOUNT_TYPE_CUSTOMERS];
             system.assertEquals(0, accounts.size());
 
-            List<Contact> Contacts = [SELECT Id from Contact where Id != :userList[1].contactId];
+            List<Contact> Contacts = [SELECT Id from Contact where Account.RecordType.Name = :ACCOUNT_TYPE_CUSTOMERS];
             system.assertEquals(0, Contacts.size());
 
             List<Case> cases = [SELECT Id from Case];
@@ -271,10 +269,10 @@ private class AccountPartnerTriggerHandlerTest {
         }
 
         system.runAs(userList[2]){
-            List<Account> accounts = [SELECT Id from Account where Type = 'Customer'];
+            List<Account> accounts = [SELECT Id from Account where RecordType.Name = :ACCOUNT_TYPE_CUSTOMERS];
             system.assertEquals(0, accounts.size());
             
-            List<Contact> Contacts = [SELECT Id from Contact where Id != :userList[2].contactId AND Do_Not_Assign_Partner_Permission_Set__c = false];
+            List<Contact> Contacts = [SELECT Id from Contact where Account.RecordType.Name = :ACCOUNT_TYPE_CUSTOMERS];
             system.assertEquals(0, Contacts.size());
 
             List<Case> cases = [SELECT Id from Case];
@@ -388,6 +386,40 @@ private class AccountPartnerTriggerHandlerTest {
             recordTypeMap.put(record.Name, record.Id);
         }
 
+        // create permission set for SaaS and Premise Partner
+        PermissionSet[] permissionSets = new PermissionSet[]{};
+        PermissionSet saasPs = new PermissionSet(
+                Name = 'SAAS_Permission_Set',
+                Label = 'SAAS_Permission_Set'
+        );
+        permissionSets.add(saasPs);
+        PermissionSet premisePs = new PermissionSet(
+                Name = 'PREMISE_Permission_Set',
+                Label = 'PREMISE_Permission_Set'
+        );
+        permissionSets.add(premisePs);
+        system.runAs(new User(Id = userInfo.getUserId())){
+            insert permissionSets;
+        }
+
+        // Create permission set mapping
+        Partner_Permission_Sets__c[] settings = new Partner_Permission_Sets__c[]{};
+        Partner_Permission_Sets__c saasPartner = new Partner_Permission_Sets__c(
+                Name ='SAAS_IMPLEMENTATION_PARTNER',
+                Permission_Set__c = permissionSets[0].Name,
+                Partner_Type__c = AccountPartnerTriggerHandler.SAAS_IMPLEMENTATION_PARTNER
+        );
+        settings.add(saasPartner);
+        Partner_Permission_Sets__c premisePartner = new Partner_Permission_Sets__c(
+                Name ='PREMISE_IMPLEMENTATION_PARTNER',
+                Permission_Set__c = permissionSets[1].Name,
+                Partner_Type__c = AccountPartnerTriggerHandler.PREMISE_IMPLEMENTATION_PARTNER
+        );
+        settings.add(premisePartner);
+
+        insert settings;
+
+
         createAccounts();
         createContacts();
         createCases();
@@ -486,7 +518,7 @@ private class AccountPartnerTriggerHandlerTest {
                         LastName = 'AccountPartnerTriggerHandlerTest Contact 6',
                         Email = 'contact4@incontact.com',
                         RecordTypeId = recordTypeMap.get(CONTACT_TYPE_PARTNER),
-                        AccountId = accountList[4].Id,
+                        AccountId = accountList[2].Id,
                         Do_Not_Assign_Partner_Permission_Set__c = true
                 )
         );
