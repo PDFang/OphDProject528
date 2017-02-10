@@ -13,7 +13,9 @@ public class CaseTriggerHandler extends TriggerHandler
     private static Id helpDeskRCTypeId;
     private static Set<String> closedStatuses;
     private static SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(inContactBaseClass.OrgId15Digit);
-    
+
+    public static final String BILLING_GROUP_VERIZON = 'Verizon';
+
     public CaseTriggerHandler()
     {
         if(!staticValuesSet)
@@ -51,33 +53,75 @@ public class CaseTriggerHandler extends TriggerHandler
             closedStatuses.add(cs.MasterLabel);
         }
     }
-    
+
+    public static void CallPartnerCaseProxyService(List<Case> newList, Map<Id, Case> oldMap){
+
+        Set<Id> caseIdSet = new Set<Id>();
+        for(Case newCase : newList){
+            Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
+            if(oldCase == null || (newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null) ){
+                caseIdSet.add(newCase.Id);
+            }
+        }
+
+        if(caseIdSet.size() > 0){
+            CallPartnerCaseProxyServiceFuture(caseIdSet);
+        }
+
+    }
+
     @future(callout=true)
-    public static void CallPartnerCaseProxyService(Set<Id> caseIds){
-        
-        List<Case> caseList = [Select Id, CaseNumber, Priority, Description, Account.Partner_Agent_ID__c from Case where Id IN :caseIds];
-        
-        PartnerCaseProxyService.SalesforceCase[] caseArray = new PartnerCaseProxyService.SalesforceCase[]{};		
-		for(Case newCase: caseList){
-			PartnerCaseProxyService.SalesforceCase partnerCase = createPartnerCase(newCase);
-            caseArray.add(partnerCase);
-		}
-        
-        PartnerCaseProxyService.PartnerCaseProxySoap proxy = new PartnerCaseProxyService.PartnerCaseProxySoap();
-        
-        PartnerCaseProxyService.ArrayOfSalesforceCase caseParam = new PartnerCaseProxyService.ArrayOfSalesforceCase();
-        caseParam.SalesforceCase = caseArray;
-        
-        proxy.CreatePartnerCase(caseParam, '');
-        
+    private static void CallPartnerCaseProxyServiceFuture(Set<Id> caseIds){
+
+        try{
+            PartnerCaseProxyService.SalesforceCase[] caseArray = new PartnerCaseProxyService.SalesforceCase[]{};
+            for(Case newCase : [
+                    Select Id, CaseNumber, Priority, Description, CreatedDate,
+                            Product_or_Service__c, Request_Type__c, Database__c, Releases__c,
+                            Account.Name, Account.Billing_Group__c, Account.CadebillAccountNo__c,
+                            Contact.Name, Contact.Phone, Owner.Name, Owner.Phone
+                    from Case
+                    where Id IN :caseIds and Account.Billing_Group__c = :BILLING_GROUP_VERIZON
+            ]){
+                PartnerCaseProxyService.SalesforceCase partnerCase = createPartnerCase(newCase);
+                caseArray.add(partnerCase);
+            }
+
+            PartnerCaseProxyService.PartnerCaseProxySoap proxy = new PartnerCaseProxyService.PartnerCaseProxySoap();
+            proxy.endpoint_x = 'https://labproxy.ucn.net/PartnerProxyService/PartnerCaseProxy.asmx';
+            PartnerCaseProxyService.ArrayOfSalesforceCase caseRequest = new PartnerCaseProxyService.ArrayOfSalesforceCase();
+            caseRequest.SalesforceCase = caseArray;
+            proxy.CreatePartnerCase(caseRequest, BILLING_GROUP_VERIZON);
+        } catch(system.CalloutException ex){
+            throw ex;
+        } catch(system.Exception ex){
+            throw ex;
+        }
+
     }
     
     private static PartnerCaseProxyService.SalesforceCase createPartnerCase(Case sfCase){
         PartnerCaseProxyService.SalesforceCase partnerCase = new PartnerCaseProxyService.SalesforceCase();
         partnerCase.SalesforceId = sfCase.Id;
-        partnerCase.Priority = sfCase.Priority;
         partnerCase.Number_x = sfCase.CaseNumber;
+        //partnerCase.Comment = '';
         partnerCase.Description = sfCase.Description;
+        partnerCase.ContactName = sfCase.Contact.Name;
+        partnerCase.ContactPhone = sfCase.Contact.Phone;
+        partnerCase.OwnerName = sfCase.Description;
+        partnerCase.OwnerPhone = sfCase.Description;
+        partnerCase.CadebillAccountNumber = Integer.valueOf(sfCase.Account.CadebillAccountNo__c);
+        partnerCase.EventTime = sfCase.CreatedDate;
+        //partnerCase.Country = '';
+        partnerCase.AccountName = sfCase.Account.Name;
+        partnerCase.Priority = sfCase.Priority;
+        partnerCase.Product = sfCase.Product_or_Service__c;
+        partnerCase.RequestType = sfCase.Request_Type__c;
+        partnerCase.Reason = sfCase.Database__c;
+        partnerCase.ReasonDetails = sfCase.Releases__c;
+        partnerCase.EtmsTroubleType = '';
+        partnerCase.TroubleTypeDescription = '';
+
 		return partnerCase;
     }
 }
