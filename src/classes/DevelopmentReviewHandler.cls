@@ -4,6 +4,12 @@
 
 public with sharing class DevelopmentReviewHandler {
 
+    /*
+    * Runs all local tests in the connected Org
+    * Connected Org endpoint and authentication settings are specified in named credential : Salesforce_QA
+    * */
+
+    @Future(callout=true)
     public static void RunLocalTestsAsynchronous(){
 
         String body =   '{"testLevel":"RunLocalTests"}';
@@ -14,8 +20,13 @@ public with sharing class DevelopmentReviewHandler {
         request.setHeader('Content-Type', 'application/json');
         request.setBody(body);
         HttpResponse response = new http().send(request);
-        system.debug(response.getStatusCode());
-        system.debug(response.getBody());
+        system.debug('RunLocalTestsAsynchronous(): response body - ' + response.getBody());
+        String asyncJobId = null;
+        if(response.getStatusCode() == 200){
+            asyncJobId = response.getBody();
+        }
+
+        system.debug('RunLocalTestsAsynchronous(): asyncJobId - ' + asyncJobId);
     }
 
 }
