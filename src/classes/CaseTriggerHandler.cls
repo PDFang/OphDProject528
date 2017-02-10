@@ -51,4 +51,33 @@ public class CaseTriggerHandler extends TriggerHandler
             closedStatuses.add(cs.MasterLabel);
         }
     }
+    
+    @future(callout=true)
+    public static void CallPartnerCaseProxyService(Set<Id> caseIds){
+        
+        List<Case> caseList = [Select Id, CaseNumber, Priority, Description, Account.Partner_Agent_ID__c from Case where Id IN :caseIds];
+        
+        PartnerCaseProxyService.SalesforceCase[] caseArray = new PartnerCaseProxyService.SalesforceCase[]{};		
+		for(Case newCase: caseList){
+			PartnerCaseProxyService.SalesforceCase partnerCase = createPartnerCase(newCase);
+            caseArray.add(partnerCase);
+		}
+        
+        PartnerCaseProxyService.PartnerCaseProxySoap proxy = new PartnerCaseProxyService.PartnerCaseProxySoap();
+        
+        PartnerCaseProxyService.ArrayOfSalesforceCase caseParam = new PartnerCaseProxyService.ArrayOfSalesforceCase();
+        caseParam.SalesforceCase = caseArray;
+        
+        proxy.CreatePartnerCase(caseParam, '');
+        
+    }
+    
+    private static PartnerCaseProxyService.SalesforceCase createPartnerCase(Case sfCase){
+        PartnerCaseProxyService.SalesforceCase partnerCase = new PartnerCaseProxyService.SalesforceCase();
+        partnerCase.SalesforceId = sfCase.Id;
+        partnerCase.Priority = sfCase.Priority;
+        partnerCase.Number_x = sfCase.CaseNumber;
+        partnerCase.Description = sfCase.Description;
+		return partnerCase;
+    }
 }
