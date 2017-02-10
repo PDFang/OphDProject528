@@ -88,6 +88,7 @@ public class CaseTriggerHandler extends TriggerHandler
             }
 
             PartnerCaseProxyService.PartnerCaseProxySoap proxy = new PartnerCaseProxyService.PartnerCaseProxySoap();
+            // TBD: add Named credentials
             proxy.endpoint_x = 'https://labproxy.ucn.net/PartnerProxyService/PartnerCaseProxy.asmx';
             PartnerCaseProxyService.ArrayOfSalesforceCase caseRequest = new PartnerCaseProxyService.ArrayOfSalesforceCase();
             caseRequest.SalesforceCase = caseArray;
@@ -119,6 +120,7 @@ public class CaseTriggerHandler extends TriggerHandler
         partnerCase.RequestType = sfCase.Request_Type__c;
         partnerCase.Reason = sfCase.Database__c;
         partnerCase.ReasonDetails = sfCase.Releases__c;
+        // TBD: ETMS mapping
         partnerCase.EtmsTroubleType = '';
         partnerCase.TroubleTypeDescription = '';
 
