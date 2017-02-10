@@ -39,16 +39,12 @@ trigger CaseBeforeUpdate on Case (before update)
     // send to the Assignment Validation
     Set<String> closedStatuses = new Set<String>();
     Set<Id> closedTechSupportCaseIds = new Set<ID>();
-    Set<Id> closedAMSRandWOIds = new Set<ID>();
-    Set<Id> closedSDSRandWOIds = new Set<ID>();
     List<Id> closedCasesForEntitlements = new List<ID>();
     Set<Id> affectedQueueIDs = new Set<ID>();
     Set<Id> affectedUserIDs = new Set<ID>();
     Set<Id> accountIds = new Set<ID>();
     Set<Id> parentCaseIds = new Set<Id>();
     Set<Id> attachedToKnownIssue = new Set<Id>();
-    Set<Id> closedPremiseInstallationCaseIds = new Set<Id>();
-    Set<Id> closedCustomerSuccessCaseIds = new Set<Id>();
     Set<Id> closedCaseHD = new Set<Id>();
 
     Id[] itCaseIds = new Id[]{};
@@ -144,43 +140,13 @@ trigger CaseBeforeUpdate on Case (before update)
             }
         }
 
-        //case owner must be a queue
-        /*if(!CaseAssignmentClass.isTest)
-        {
-            if(queueUsers.containsKey(cn.OwnerID))
-            {
-                cn.Escalation_Manager__c = queueManagers.get(allQueues.get(cn.OwnerId).Name);
-            }
-            else
-            {
-                cn.addError('Case Owner must be a queue.');
-            }
-        }*/
-        //System.debug('cn.RecordType.Name ==>' + cn.RecordType.Name);
+
         if(!System.isFuture() && cn.SystemClosed__c != true && !excludedResellerAccounts.containsKey(cn.AccountId) && !system.isBatch())//batch soql does not accept @future callouts
         {
-            //get all the product and practice experts queue cases --
-            // Removed SME Survey Logic from the Product & Practice Experts cases - User Story 25121
-            /*if(newlyClosed && (allQueues.get(cn.OwnerId).Name == 'Product & Practice Experts Queue'))
-            {
-                closedTechSupportCaseIds.add(cn.Id);
-            }*/
-            //get all closed Tech Support cases for survey
-            if(newlyClosed && (cn.RecordTypeId == incidentRecordType || cn.RecordTypeId == incidentUptivityRecordType) && (allQueues.get(cn.OwnerId).Name == 'Tech Support Queue' || allQueues.get(cn.OwnerId).Name == 'TSA Queue' || allQueues.get(cn.OwnerId).Name == 'TSM Queue' || allQueues.get(cn.OwnerId).Name == 'Premise TSM Queue' || allQueues.get(cn.OwnerId).Name == 'Premise Tech Support Queue' ||allQueues.get(cn.OwnerId).Name == 'Premise Tech Support II Queue'))
-            {
+            if(newlyClosed && cn.RecordTypeId == helpDeskRCTypeId){ // Get Closed cases for HelpDesk - Arnab (The man)
                 closedTechSupportCaseIds.add(cn.Id);
             }
-            if(newlyClosed && (cn.RecordTypeId == incidentUptivityRecordType || cn.RecordTypeId == workOrderUptivityRecordType) && (allQueues.get(cn.OwnerId).Name == 'Premise Optimization Queue' || allQueues.get(cn.OwnerId).Name == 'Premise Installation Queue'))
-            {
-                closedPremiseInstallationCaseIds.add(cn.Id);
-            }
-            if(newlyClosed && (cn.RecordTypeId == serviceRequestRecordType || cn.RecordTypeId == workOrderRecordType) && (allQueues.get(cn.OwnerId).Name == 'Customer Success Queue'))
-            {
-                closedCustomerSuccessCaseIds.add(cn.Id);
-            }
-            if(newlyClosed && cn.RecordTypeId == helpDeskRCTypeId){ // Get Closed cases for HelpDesk - Arnab
-                closedTechSupportCaseIds.add(cn.Id);
-            }
+
             if(newlyClosed && Userinfo.getLastName() == '_castiron')
             {
                 if(cn.Disposition__c == null)
@@ -196,15 +162,7 @@ trigger CaseBeforeUpdate on Case (before update)
                     cn.Issue_Product__c = 'Customer Closed';
                 }
             }
-
-            //get all closed service delivery service requests and work orders for survey
-            if(cn.IsVisibleInSelfService == true && newlyClosed && (cn.OwnerId == '00G70000001fs0f' || allQueues.get(cn.OwnerId).Name == 'TSA Queue' || allQueues.get(cn.OwnerId).Name == 'TSM Queue') && (cn.RecordTypeId == '01270000000LuEq' || cn.RecordTypeId == '01270000000LuEr')) //01270000000LuEq = Service Request, 01270000000LuEr = Work Orders
-            {
-                closedSDSRandWOIds.add(cn.Id);
-            }
         }
-
-
 
         if(cn.RecordTypeId != eventRecordType)
         {
@@ -407,24 +365,11 @@ trigger CaseBeforeUpdate on Case (before update)
     if(!System.isFuture() && !system.isBatch())
     {
         System.debug('closedTechSupportCaseIds ==>' + closedTechSupportCaseIds);
+
         //if there are closed tech support cases send survey
         if(!closedTechSupportCaseIds.isEmpty())
         {
-
             CaseSendSurvey.TechSupportSurveyMain(closedTechSupportCaseIds);
-        }
-        if(!closedPremiseInstallationCaseIds.isEmpty())
-        {
-            CaseSendSurvey.SendPremiseInstallationSurvey(closedPremiseInstallationCaseIds);
-        }
-        if(!closedCustomerSuccessCaseIds.isEmpty())
-        {
-            CaseSendSurvey.SendCSSurvey(closedCustomerSuccessCaseIds);
-        }
-
-        if(!closedSDSRandWOIds.isEmpty())
-        {
-            CaseSendSurvey.SendSDSSurvey(closedSDSRandWOIds);
         }
     }
 
