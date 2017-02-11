@@ -59,6 +59,7 @@ public class CaseTriggerHandler extends TriggerHandler
         Set<Id> caseIdSet = new Set<Id>();
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
+            // TBD: Record type filter
             if(oldCase == null || (newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null) ){
                 caseIdSet.add(newCase.Id);
             }
