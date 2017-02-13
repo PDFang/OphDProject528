@@ -72,8 +72,9 @@ public class CaseSendSurvey
         //If this isn't a test method then go ahead and make the web service call
         string resultMsg = '';
         
-        if(!istest)
-        {
+        if(istest){
+            resultMsg = 'Success!';
+        }else{
             HTTPResponse res = http.send(req);
             resultMsg = res.getBody();
         }
