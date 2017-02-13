@@ -112,5 +112,7 @@ trigger CaseAfterInsert on Case (after insert, after update)
     {
         CaseAssignmentClass.InsertCaseTeamMembers(caseAccountIds, trigger.new);        
     }
+
+    new CaseTriggerHandler().run();
     
 }

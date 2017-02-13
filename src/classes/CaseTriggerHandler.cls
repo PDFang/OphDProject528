@@ -27,7 +27,15 @@ public class CaseTriggerHandler extends TriggerHandler
         	staticValuesSet = true;
         }
     }
-    
+
+    protected override void afterInsert(){
+        CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
+    }
+
+    protected override void afterUpdate(){
+        CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
+    }
+
     private void SetRecordTypeIds()
     {
         Schema.DescribeSObjectResult d = Schema.SObjectType.Case; 
@@ -55,6 +63,7 @@ public class CaseTriggerHandler extends TriggerHandler
             closedStatuses.add(cs.MasterLabel);
         }
     }
+
 
     // push incidents to partner case proxy service
     public static void CallPartnerCaseProxyService(List<Case> newList, Map<Id, Case> oldMap){
@@ -123,13 +132,11 @@ public class CaseTriggerHandler extends TriggerHandler
             proxy.endpoint_x = 'https://labproxy.ucn.net/PartnerProxyService/PartnerCaseProxy.asmx';
             PartnerCaseProxyService.ArrayOfSalesforceCase caseRequest = new PartnerCaseProxyService.ArrayOfSalesforceCase();
             caseRequest.SalesforceCase = caseArray;
-            try {
-                proxy.CreatePartnerCase(caseRequest, BILLING_GROUP_VERIZON);
-            } catch (system.CalloutException ex) {
-                system.debug('CallPartnerCaseProxyServiceFuture(): CalloutException - ' + ex);
-                // send error email
-                throw ex;
-            }
+            proxy.CreatePartnerCase(caseRequest, BILLING_GROUP_VERIZON);
+        }catch (system.CalloutException ex) {
+            system.debug('CallPartnerCaseProxyServiceFuture(): CalloutException - ' + ex);
+            // send error email
+            throw ex;
         }catch(system.Exception ex){
             system.debug('CallPartnerCaseProxyServiceFuture(): Exception - ' + ex);
             // send error email
