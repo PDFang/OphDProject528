@@ -12,7 +12,7 @@ public with sharing class DevelopmentReviewHandler {
     @Future(callout=true)
     public static void RunLocalTestsAsynchronous(){
 
-        String body =   '{"testLevel":"RunLocalTests"}';
+        String body = '{"testLevel":"RunLocalTests"}';
 
         HttpRequest request = new HttpRequest();
         request.setEndpoint('callout:Salesforce_QA/services/data/v38.0/tooling/runTestsAsynchronous');
