@@ -18,6 +18,7 @@ public with sharing class DevelopmentReviewHandler {
         request.setEndpoint('callout:Salesforce_QA/services/data/v38.0/tooling/runTestsAsynchronous');
         request.setMethod('POST');
         request.setHeader('Content-Type', 'application/json');
+        request.setHeader('Authorization ');
         request.setBody(body);
         HttpResponse response = new http().send(request);
         system.debug('RunLocalTestsAsynchronous(): response body - ' + response.getBody());
