@@ -1,10 +1,11 @@
 trigger CaseAfterInsert on Case (after insert, after update) 
 {
+    new CaseTriggerHandler().run();
+
     List<CaseComment> comments = new List<CaseComment>();
     Map<Id,String> eventCaseIds = new Map<Id,String>();
     Map<Id, Id> caseAccountIds = new Map<Id,Id>();
     Case[] autoEventCases = new Case[]{};
-    
     
     Schema.DescribeSObjectResult d = Schema.SObjectType.Case; 
     Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
@@ -113,6 +114,5 @@ trigger CaseAfterInsert on Case (after insert, after update)
         CaseAssignmentClass.InsertCaseTeamMembers(caseAccountIds, trigger.new);        
     }
 
-    new CaseTriggerHandler().run();
     
 }

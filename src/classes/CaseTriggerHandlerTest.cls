@@ -28,7 +28,6 @@ private class CaseTriggerHandlerTest {
                 Database__c = testEtmsCode[0].Reason__c,
                 Releases__c = testEtmsCode[0].Reason_Detail__c
         );
-
         insert testIncident;
 
         test.stopTest();

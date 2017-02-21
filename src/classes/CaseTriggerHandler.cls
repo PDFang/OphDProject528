@@ -128,8 +128,14 @@ public class CaseTriggerHandler extends TriggerHandler
             }
 
             PartnerCaseProxyService.PartnerCaseProxySoap proxy = new PartnerCaseProxyService.PartnerCaseProxySoap();
-            // TBD: add Named credentials
             proxy.endpoint_x = 'https://labproxy.ucn.net/PartnerProxyService/PartnerCaseProxy.asmx';
+
+            // TBD: add Named credentials
+            Map<String,String> httpHeader = new Map<String,String>();
+            String credentials = 'randomUserrandomPassword';
+            httpHeader.put('Authorization', 'Basic '+ EncodingUtil.base64Encode(Blob.valueOf(credentials)));
+            proxy.inputHttpHeaders_x = new Map<String,String>();
+
             PartnerCaseProxyService.ArrayOfSalesforceCase caseRequest = new PartnerCaseProxyService.ArrayOfSalesforceCase();
             caseRequest.SalesforceCase = caseArray;
             proxy.CreatePartnerCase(caseRequest, BILLING_GROUP_VERIZON);
