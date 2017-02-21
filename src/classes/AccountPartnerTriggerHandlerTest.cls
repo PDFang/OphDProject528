@@ -70,6 +70,7 @@ private class AccountPartnerTriggerHandlerTest {
         );
         insert partnerList;
         test.stopTest();
+
         // partner 1
         system.runAs(userList[0]){
             List<Account> accounts = [SELECT Id from Account where RecordType.Name = :ACCOUNT_TYPE_CUSTOMERS];
@@ -82,7 +83,7 @@ private class AccountPartnerTriggerHandlerTest {
             system.assertEquals(1, cases.size());
 
             List<Opportunity> opportunities = [SELECT Id from Opportunity where AccountId = :accounts[0].Id];
-            system.assertEquals(1, opportunities.size());
+            system.assertEquals(0, opportunities.size());
 
             // SaaS project
             List<Project__c> saasProjects = [
@@ -110,7 +111,7 @@ private class AccountPartnerTriggerHandlerTest {
             system.assertEquals(2, cases.size());
 
             List<Opportunity> opportunities = [SELECT Id from Opportunity where AccountId IN :accounts];
-            system.assertEquals(2, opportunities.size());
+            system.assertEquals(0, opportunities.size());
 
             // SaaS project
             List<Project__c> saasProjects = [
@@ -137,7 +138,7 @@ private class AccountPartnerTriggerHandlerTest {
             system.assertEquals(1, cases.size());
 
             List<Opportunity> opportunities = [SELECT Id from Opportunity where AccountId = :accounts[0].Id];
-            system.assertEquals(1, opportunities.size());
+            system.assertEquals(0, opportunities.size());
 
             // SaaS project
             List<Project__c> saasProjects = [

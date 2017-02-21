@@ -33,8 +33,8 @@ private class UserTriggerHandlerTest {
     static testMethod void testNewUser() {
 
         createTestData();
-        test.startTest();
 
+        test.startTest();
         Profile profile = [SELECT Id from Profile where Name = 'Partner Community User'];
 
         List<User> partnerUserList = new List<User>();
@@ -97,7 +97,7 @@ private class UserTriggerHandlerTest {
             system.assertEquals(2, cases.size());
 
             List<Opportunity> opportunities = [SELECT Id from Opportunity where AccountId = :accounts[0].Id];
-            system.assertEquals(2, opportunities.size());
+            system.assertEquals(0, opportunities.size());
 
             List<Project__c> projects = [SELECT Id from Project__c where RecordType.Name = :PROJECT_TYPE_PARENT_SAAS];
             system.assertEquals(2, projects.size());
@@ -117,7 +117,7 @@ private class UserTriggerHandlerTest {
             system.assertEquals(2, cases.size());
 
             List<Opportunity> opportunities = [SELECT Id from Opportunity where AccountId = :accounts[0].Id];
-            system.assertEquals(2, opportunities.size());
+            system.assertEquals(0, opportunities.size());
 
             List<Project__c> projects = [SELECT Id from Project__c where RecordType.Name = :PROJECT_TYPE_PARENT_SAAS];
             system.assertEquals(0, projects.size());
@@ -202,7 +202,7 @@ private class UserTriggerHandlerTest {
             system.assertEquals(2, cases.size());
 
             List<Opportunity> opportunities = [SELECT Id from Opportunity where AccountId = :accounts[0].Id];
-            system.assertEquals(2, opportunities.size());
+            system.assertEquals(0, opportunities.size());
 
             List<Project__c> projects = [SELECT Id from Project__c where RecordType.Name = :PROJECT_TYPE_PARENT_SAAS];
             system.assertEquals(2, projects.size());

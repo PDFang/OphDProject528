@@ -113,7 +113,7 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
                         AccountId = partner.Customer__c,
                         UserOrGroupId = partner.PublicGroupId__c,
                         AccountAccessLevel = 'Edit',
-                        OpportunityAccessLevel = 'Edit',
+                        OpportunityAccessLevel = 'None',
                         CaseAccessLevel = 'Edit'
                 );
                 shareList.add(share);
@@ -126,7 +126,7 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
                             AccountId = partner.Customer__c,
                             UserOrGroupId = u.Id,
                             AccountAccessLevel = 'Edit',
-                            OpportunityAccessLevel = 'Edit',
+                            OpportunityAccessLevel = 'None',
                             CaseAccessLevel = 'Edit'
                     );
                     shareList.add(share);

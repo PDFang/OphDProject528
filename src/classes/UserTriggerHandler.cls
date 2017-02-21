@@ -82,7 +82,7 @@ public class UserTriggerHandler extends TriggerHandler{
                         AccountId = partner.Customer__c,
                         UserOrGroupId = partnerUser.Id,
                         AccountAccessLevel = 'Edit',
-                        OpportunityAccessLevel = 'Edit',
+                        OpportunityAccessLevel = 'None',
                         CaseAccessLevel = 'Edit'
                 );
                 shareList.add(share);
