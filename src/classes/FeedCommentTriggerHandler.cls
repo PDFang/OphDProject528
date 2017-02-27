@@ -1,8 +1,11 @@
 public class FeedCommentTriggerHandler extends TriggerHandler 
 {
+
+    public static String DEVELOPMENT_REVIEW_CHATTER_GROUP = 'Salesforce Development Review';
+
     private Id developmentReviewGroup;
     private boolean qaTestsFired = false;
-    
+
     public FeedCommentTriggerHandler(){}
     
     public override void afterInsert()
@@ -19,7 +22,7 @@ public class FeedCommentTriggerHandler extends TriggerHandler
     {     
         try
         {
-            developmentReviewGroup = [SELECT Id FROM CollaborationGroup WHERE Name = 'Salesforce Development Review'].Id;
+            developmentReviewGroup = [SELECT Id FROM CollaborationGroup WHERE Name = :DEVELOPMENT_REVIEW_CHATTER_GROUP].Id;
         }
         catch(Exception ex)
         {
