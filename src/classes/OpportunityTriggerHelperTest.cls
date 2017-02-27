@@ -2,6 +2,7 @@
 public class OpportunityTriggerHelperTest {
 
     static final String ACCOUNT_TYPE_CUSTOMERS = 'Customers';
+    static final String ACCOUNT_TYPE_PARTNERS = 'Partners';
     static final String CONTACT_TYPE_PARTNER = 'Partner Contact';
     static final String PROJECT_TYPE_PARENT_SAAS = 'PS Parent Project - SaaS';
     static final String PROJECT_TYPE_PHASE_SAAS = 'PS Project Phase SaaS';
@@ -11,14 +12,16 @@ public class OpportunityTriggerHelperTest {
     static final Set<String> recordTypeSet = new Set<String>
     {
             ACCOUNT_TYPE_CUSTOMERS,
+            ACCOUNT_TYPE_PARTNERS,
             CONTACT_TYPE_PARTNER,
             OPPORTUNITY_TYPE_NEW,
             PROJECT_TYPE_PARENT_SAAS,
             PROJECT_TYPE_PHASE_SAAS
     };
     static Map<String, Id> recordTypeMap = null;
-    static Account testAccount = null;
+    static List<Account> accountList = null;
     static Contact testContact = null;
+    static User partnerUser = null;
     static Opportunity testOpp = null;
     static Project__c testPhase = null;
     static User impManagementUser = null;
@@ -91,6 +94,36 @@ public class OpportunityTriggerHelperTest {
 
     } // end of timestampHelperTest()
 
+    // Verify opportunity is shared with Partner Account user
+    static testMethod void partnerUserShareTest() {
+
+        createTestData();
+        test.starttest();
+        createOpportunity();
+        test.stopTest();
+
+        List<OpportunityShare> shareList = [
+                Select Id from OpportunityShare
+                where OpportunityId = :testOpp.Id
+                and UserOrGroupId = :partnerUser.Id
+                and RowCause = 'Manual'
+        ];
+        system.assertEquals(1, shareList.size(), 'Opportunity should have been shared with Partner User.');
+
+        // remove Partner Account
+        testOpp.Partner_Account__c = null;
+        update testOpp;
+        shareList = [
+                Select Id from OpportunityShare
+                where OpportunityId = :testOpp.Id
+                and UserOrGroupId = :partnerUser.Id
+                and RowCause = 'Manual'
+        ];
+        system.assertEquals(0, shareList.size(), 'Opportunity should no longer be shared with Partner User.');
+
+    } //
+
+
     /* Create the test data required to execute the tests successfully */
     static void createTestData(){
 
@@ -105,18 +138,26 @@ public class OpportunityTriggerHelperTest {
         impManagementUser = [Select Id from User where Profile.Name = 'Implementation Management' and isActive = true LIMIT 1][0];
         createAccount();
         createContact();
+        createPartnerUser();
 
     } // end of createTestData()
 
     static void createAccount()
     {
-        testAccount = new Account(
-                Name = 'OpportunityTriggerHelperTest Account',
+        accountList = new List<Account>();
+        accountList.add(new Account(
+                Name = 'OpportunityTriggerHelperTest Customer',
                 Type = 'Customer',
                 RecordTypeId = recordTypeMap.get(ACCOUNT_TYPE_CUSTOMERS)
-        );
+        ));
 
-        insert testAccount;
+        accountList.add(new Account(
+                Name = 'OpportunityTriggerHelperTest Partner',
+                Type = 'Partner',
+                RecordTypeId = recordTypeMap.get(ACCOUNT_TYPE_PARTNERS)
+        ));
+
+        insert accountList;
 
     } // end of createAccount()
 
@@ -126,16 +167,37 @@ public class OpportunityTriggerHelperTest {
                 LastName = 'OpportunityTriggerHelperTest Contact',
                 Email = 'contact1@incontact.com',
                 RecordTypeId = recordTypeMap.get(CONTACT_TYPE_PARTNER),
-                AccountId = testAccount.Id
+                AccountId = accountList[1].Id
         );
         insert testContact;
+    }
+
+    static void createPartnerUser(){
+
+        Profile partnerProfile = [SELECT Id from Profile where Name = 'Partner Community User'];
+        partnerUser = new User(
+                FirstName = 'Partner',
+                LastName = 'User1',
+                ContactId = testContact.Id,
+                Email = 'partner1@incontact.com',
+                Username = 'partner1@incontact.com',
+                Alias = 'test',
+                profileId = partnerProfile.Id,
+                EmailEncodingKey = 'UTF-8',
+                TimeZoneSidKey = 'America/Los_Angeles',
+                LocaleSidKey = 'en_US',
+                LanguageLocaleKey = 'en_US'
+        );
+        insert partnerUser;
+
     }
 
     static void createOpportunity(){
 
         testOpp = new Opportunity(
                 Name = 'ProjectTriggerHandlerTest Opp 1',
-                AccountId = testAccount.Id,
+                AccountId = accountList[0].Id,
+                Partner_Account__c = accountList[1].Id,
                 RecordTypeId = recordTypeMap.get(OPPORTUNITY_TYPE_NEW),
                 StageName = OpportunityTriggerHelper.OPPORTUNITY_STAGE_THREE,
                 CloseDate = Date.today(),
@@ -162,7 +224,7 @@ public class OpportunityTriggerHelperTest {
         Project__c parentProject = new Project__c();
         parentProject.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
         parentProject.Opportunity__c = testOpp.Id;
-        parentProject.Account__c = testAccount.Id;
+        parentProject.Account__c = accountList[0].Id;
         parentProject.Projected_Deadline__c = system.today().addDays(7);
         insert parentProject;
 

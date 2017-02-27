@@ -69,7 +69,7 @@ public with sharing class OpportunityShareHelper {
                 share.UserOrGroupId = partnerUser.Id;
                 share.OpportunityAccessLevel = 'Edit';
                 shareList.add(share);
-            } // end user iteration
+            }// end user iteration
         } // end opportunity iteration
 
         system.debug(' **** addShareFuture() : shareList - '+shareList);
