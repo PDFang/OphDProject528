@@ -99,7 +99,29 @@ public class OpportunityTriggerHelperTest {
 
         createTestData();
         test.starttest();
-        createOpportunity();
+        testOpp = new Opportunity(
+                Name = 'ProjectTriggerHandlerTest Opp 1',
+                AccountId = accountList[0].Id,
+                Partner_Account__c = accountList[1].Id,
+                RecordTypeId = recordTypeMap.get(OPPORTUNITY_TYPE_NEW),
+                StageName = OpportunityTriggerHelper.OPPORTUNITY_STAGE_TWO,
+                CloseDate = Date.today(),
+                Probability = 25,
+                Partner_Deal__c = 'NO',
+                Contract_Type__c = 'New Customer',
+                inContact__c = 'YES',
+                inContact_Setup_Fee__c = 1000,
+                inContact_Seats__c = 1,
+                inContact_MRC_Min__c = 1000,
+                inContact_Ports__c = 1,
+                inContact_MRC_Exp__c = 1000,
+                ECHO__c = 'NO',
+                eLearning__c = 'NO',
+                Hiring__c = 'NO',
+                WFM__c = 'NO',
+                ownerId = impManagementUser.Id
+        );
+        insert testOpp;
         test.stopTest();
 
         List<OpportunityShare> shareList = [
@@ -197,7 +219,6 @@ public class OpportunityTriggerHelperTest {
         testOpp = new Opportunity(
                 Name = 'ProjectTriggerHandlerTest Opp 1',
                 AccountId = accountList[0].Id,
-                Partner_Account__c = accountList[1].Id,
                 RecordTypeId = recordTypeMap.get(OPPORTUNITY_TYPE_NEW),
                 StageName = OpportunityTriggerHelper.OPPORTUNITY_STAGE_THREE,
                 CloseDate = Date.today(),
