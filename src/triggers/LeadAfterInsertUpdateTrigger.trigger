@@ -26,4 +26,6 @@ trigger LeadAfterInsertUpdateTrigger on Lead (after insert, after update)
 	{
 		LeadTriggerHelper.UpdatedLeadStatus(leadsWithStatusChange);
 	}
+
+	LeadTriggerHelper.sharePartnerLeadsWithPartnerUser(trigger.new, trigger.oldMap);
 }

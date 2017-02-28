@@ -61,5 +61,62 @@ public class LeadTriggerHelper {
 		}
  	
 	}
-       
+
+	// when a lead created by a Partner user is re-assigned, manually share the lead so that the user can access the Lead record even after it is re-assigned
+	public static void sharePartnerLeadsWithPartnerUser(List<Lead> newList, Map<Id, Lead> oldMap){
+
+		if(oldMap == null){
+			return;
+		}
+
+		Set<Id> ownerIdSet = new Set<Id>();
+		List<Lead> processList = new List<Lead>();
+		for(Lead newLead : newList){
+			Lead oldLead = oldMap.get(newLead.Id);
+			if(newLead.OwnerId != oldLead.OwnerId){
+				ownerIdSet.add(oldLead.OwnerId);
+				processList.add(newLead);
+			}
+		}
+
+		system.debug('**** shareWithPartnerUser(): processList - '+ processList);
+		system.debug('**** shareWithPartnerUser(): ownerIdSet - '+ ownerIdSet);
+		if(processList.isEmpty()){
+			return;
+		}
+
+		Map<Id, User> userMap = new  Map<Id, User>([
+				Select Id from User
+				where IsActive = true and IsPortalEnabled = true
+				and UserType IN ('Partner', 'PowerPartner')
+				and Id IN :ownerIdSet
+		]);
+
+		system.debug('**** shareWithPartnerUser(): userMap - '+ userMap);
+		if(userMap.isEmpty()){
+			return;
+		}
+
+		List<LeadShare> shareList = new List<LeadShare>();
+		for(Lead newLead : processList){
+			Lead oldLead = oldMap.get(newLead.Id);
+			// check if lead was previously assigned to a Partner User
+			if(userMap.containsKey(oldLead.OwnerId)){
+				LeadShare share = new LeadShare(
+						UserOrGroupId = oldLead.OwnerId,
+						LeadId = oldLead.Id,
+						LeadAccessLevel = 'Edit'
+				);
+				shareList.add(share);
+			}
+		}
+
+		system.debug('**** shareWithPartnerUser(): shareList - '+ shareList);
+
+		if(shareList.size() > 0){
+			insert shareList;
+		}
+
+	} // sharePartnerLeadsWithPartnerUser
+
 }
