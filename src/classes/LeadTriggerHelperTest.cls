@@ -65,11 +65,13 @@ private class LeadTriggerHelperTest {
         }
         test.stopTest();
 
-        List<Lead> leadList = [
-                Select Id from Lead
-                where Id = :partnerLead.Id
-        ];
-        system.assertEquals(1, leadList.size(), 'Partner User should have access to Lead even if it was re-assigned.');
+        system.runAs(partnerUser){
+            List<Lead> leadList = [
+                    Select Id from Lead
+                    where Id = :partnerLead.Id
+            ];
+            system.assertEquals(1, leadList.size(), 'Partner User should have access to Lead even if it was re-assigned.');
+        }
 
     } // end of testBehavior()
 }
