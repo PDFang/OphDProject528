@@ -24,7 +24,7 @@
                             </div>
                             <div style="margin:5px;padding:5px;">Internal Only &nbsp;<apex:inputCheckbox id="internalCheck" value="{!isFileInternal}" /></div>
                             <div>
-                                <apex:commandLink value="Submit" action="{!CreateAttachment}" styleClass="k-button" ></apex:commandLink>
+                                <apex:commandLink value="Submit" action="{!CreateAttachment}" styleClass="k-button" rerender="none;"></apex:commandLink>
                             </div>
                     </div>
                 </div>

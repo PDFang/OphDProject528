@@ -198,5 +198,25 @@ public with sharing class GanttChartTFSProjectControllerTest {
         Test.stopTest();
     }
 
+    static testMethod void KendoChartControllerTest()
+    {
+        setupData();
+        List<Project__c> projectList = new List<Project__c>();
+        for(Project__c proj : [select Name, ProjectStatus__c from Project__c]){
+            projectList.add(new Project__c(Id = proj.Id, ProjectStatus__c = 'In Queue'));
+        }
+        update projectList;
+
+        Test.startTest();
+        GanttChartTFSProjectController gc = new GanttChartTFSProjectController();
+        list<string> programName = new list<string>();
+        list<string> TeamName = new list<string>();
+
+       string kendoData = GanttChartTFSProjectController.kendoData(programName,TeamName);
+        system.assertNotEquals(0, kendoData.length());
+        string projName = [select Name from Project__c where Development_Team__c = 'Avengers' limit 1].Name;
+        GanttChartTFSProjectController.RedirectToProject(projName);
+        Test.stopTest();
+    }
 
 }

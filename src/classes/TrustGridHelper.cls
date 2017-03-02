@@ -194,6 +194,7 @@ public class TrustGridHelper {
         }
 
         Platforms = cn.customerNodes;
+        Platforms.sort();
         return lstCases;
 
 
