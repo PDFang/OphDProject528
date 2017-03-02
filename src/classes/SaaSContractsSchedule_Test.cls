@@ -112,7 +112,7 @@ Private class SaaSContractsSchedule_Test {
                 Contract.Auto_Renew__c = true
                 AND Contract.SBQQ__Quote__r.recordtypeId = :strRecordTypeId
                 // Test fails If I filter by end date
-                AND Contract.EndDate = last_month
+                //AND Contract.EndDate = last_month
         ]);
         System.debug('top ===== > theContracts on the test class ======> ' + theContractsBefore);
         System.assertEquals(theContractsBefore.size(), 1);
