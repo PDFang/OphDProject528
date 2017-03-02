@@ -111,7 +111,7 @@ public class CaseSendSurvey
         insert cc;
     }
     
-    private static void NoEmailAddressCommentPost (Case c) 
+    private static void NoEmailAddressCommentPost (Case c)
     {
         string commentBody = 'No survey was sent.  The contact associated to this case does not have an email address.';
         

@@ -1,7 +1,7 @@
 @isTest
 private class SurveyTestClass 
 {
-	//Test HelpDesk Survey
+    //Test HelpDesk Survey
    static testMethod void TestHelpDeskSurvey()
     {
         Case[] helpdeskCases = [Select Id, Status, Reason, Disposition__c, Owner.Name from Case where RecordType.Name = 'Help Desk'];
