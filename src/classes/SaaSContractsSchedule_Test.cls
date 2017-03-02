@@ -107,7 +107,7 @@ Private  class SaaSContractsSchedule_Test {
                                             where
                                             Contract.Auto_Renew__c = true
                                             AND Contract.SBQQ__Quote__r.recordtypeId  = :strRecordTypeId
-                                            AND Contract.EndDate  = last_month
+                                            //AND Contract.EndDate  = last_month
                                              ]);
       System.debug('top ===== > theContracts on the test class ======> ' +theContractsBefore );
       System.assertEquals(theContractsBefore.size(),1);
@@ -171,7 +171,7 @@ Private  class SaaSContractsSchedule_Test {
                                             where
                                             Contract.Auto_Renew__c = true
                                             AND Contract.SBQQ__Quote__r.recordtypeId  = :strRecordTypeId
-                                            AND Contract.EndDate  = last_month
+                                            //AND Contract.EndDate  = last_month
                                              ]);
       System.debug('top ===== > theContracts on the test class ======> ' +theContractsBefore );
       System.assertEquals(theContractsBefore.size(),100);
