@@ -165,19 +165,34 @@ public class CaseEventNotificationExtension
         List<Task> tasks = new List<Task>();
         Id internalEmailGroup;
         Set<Id> internalEmailGroupMembers = new Set<Id>();
-        
-        if(emailBody.contains('{') || emailBody.contains('}') || subject.contains('{') || subject.contains('}'))
+        string emailBodyCustomer, emailBodyPartner;
+
+
+        string platformImpacted = MergeFieldListFormat('{Platform Impacted}',c.PlatformsImpacted__c.replace(' - inContact',''), ';');
+        string platforms = '<b>Platform(s) Impacted:</b>\t ' + platformImpacted;
+        string htmlStringPartner = htmlString.replace('{Platform Impacted}','<br/><br/>' + platforms);
+        string textBodyPartner   = textBody.replace('{Platform Impacted}','\n\n' + platforms);
+        emailBodyPartner =  textBodyPartner;
+
+        htmlString = htmlString.replace('{Platform Impacted}','');
+        textBody   = textBody.replace('{Platform Impacted}','');
+        emailBodyCustomer = textBody;
+
+        system.debug('==== emailBodyPartner ====' + emailBodyPartner);
+        system.debug('==== emailBodyCustomer ====' + emailBodyCustomer);
+
+        if(emailBodyCustomer.contains('{') || emailBodyCustomer.contains('}') || emailBodyPartner.contains('{') || emailBodyPartner.contains('}') || subject.contains('{') || subject.contains('}'))
         {
             if(system.isFuture())
             {
                 inContactBaseClass.SendErrorEmail('Event Email cannot contain { or } characters.  Please update the place holder.', c.CaseNumber);
             }else
             {
-            	ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Email cannot contain { or } characters.  Please update the place holder.'));
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Email cannot contain { or } characters.  Please update the place holder.'));
             }
             return null;
         }
-        
+
         if(string.isBlank(emailBody) || string.isBlank(subject))
         {
             if(system.isFuture())
@@ -185,10 +200,11 @@ public class CaseEventNotificationExtension
                 inContactBaseClass.SendErrorEmail('The subject and body cannot be blank in an Event Email', c.CaseNumber);
             }else
             {
-            	ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'The subject and body cannot be blank.'));
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'The subject and body cannot be blank.'));
             }
             return null;
         }
+
         
         
         
@@ -208,36 +224,36 @@ public class CaseEventNotificationExtension
         
         string countquery = 'SELECT Id, Name, Email, Account.RecordTypeId FROM Contact WHERE Email != NULL AND AccountId IN :accountIds AND Deactivated__c = FALSE AND Contact_Role__c INCLUDES (\'' + contactRole + '\') ORDER BY Account.Name, Name' ;
         allContacts = Database.Query(countquery);
-        System.debug('allContacts arnab ==>' + allContacts);
-        System.debug('accountIds arnab ==>' + accountIds);
+        //System.debug('allContacts arnab ==>' + allContacts);
+        //System.debug('accountIds arnab ==>' + accountIds);
         if(!allContacts.isEmpty())
         {
             for(Contact con:allContacts)
             {
-                if(con.Account.RecordTypeId == '01270000000MATw')
-                {
-                    resellAndInternalAddresses.add(con.Email);   
-                }
-                else if(con.Email.containsIgnoreCase('incontact.com'))
-                {
-                    resellAndInternalAddresses.add(con.Email);
-                    
-                }
-                else
-                {
-                    setAddresses.add(con.Email);
-                }
-                
-                
-                
                 Task t = new Task();
                 t.Subject = subject;
                 t.Type = recordTypeName + ' Email';
                 t.WhoId = con.Id;
                 t.WhatId = c.Id;
-                t.Description = emailBody;
                 t.Status = 'Completed';
-                
+
+                if(con.Account.RecordTypeId == '01270000000MATw')
+                {
+                    resellAndInternalAddresses.add(con.Email);
+                    t.Description = emailBodyPartner;
+                }
+                else if(con.Email.containsIgnoreCase('incontact.com'))
+                {
+                    resellAndInternalAddresses.add(con.Email);
+                    t.Description = emailBodyPartner;
+                    
+                }
+                else
+                {
+                    setAddresses.add(con.Email);
+                    t.Description = emailBodyCustomer;
+                }
+
                 tasks.add(t);
             }
             
@@ -248,8 +264,9 @@ public class CaseEventNotificationExtension
             //add csms
             setAddresses.addAll(csmEmails);
             
-            addresses.addAll(setAddresses);           
-            
+            addresses.addAll(setAddresses);
+
+
             
            
             try
@@ -259,6 +276,7 @@ public class CaseEventNotificationExtension
                 
                 if(addresses.size() > 0)
                 {
+
                     NotificationHelperClass.EmailTemplate template = new NotificationHelperClass.EmailTemplate();
                     template.recipients = addresses;
                     template.subject = subject;
@@ -272,13 +290,12 @@ public class CaseEventNotificationExtension
                 if(!resellAndInternalAddresses.isEmpty())
                 {
                     //Platform(s) Impacted:\t{Platform Impacted}
-                    string platformImpacted = MergeFieldListFormat('{Platform Impacted}',c.PlatformsImpacted__c.replace(' - inContact',''), ';');
-                    string platforms = '<b>Platform(s) Impacted:</b>\t ' + platformImpacted;                    
+
                     NotificationHelperClass.EmailTemplate template = new NotificationHelperClass.EmailTemplate();
                     template.recipients = resellAndInternalAddresses;
                     template.subject = subject;
-                    template.htmlBody = htmlString + '<br/><br/>' + platforms; 
-                    template.textBody = textBody + '\n\n' + platforms; 
+                    template.htmlBody = htmlStringPartner ;
+                    template.textBody = textBodyPartner ;
                     template.templateId = 6;
                     listTemplates.add(template);
                 }
@@ -336,11 +353,11 @@ public class CaseEventNotificationExtension
         string buffer ='';
         lines = data.split(delimiter);
         System.debug(lines);
-        buffer = String.join(lines, '\n'); 
+        buffer = String.join(lines, '<br/>');
         buffer = '\n' + buffer; 
        System.debug(buffer);
-        //return buffer;
-         return emailBody = emailBody.replace(field, buffer);
+        return buffer;
+        // return emailBody = emailBody.replace(field, buffer);
         
     }
     public void MergeFieldUpdate()

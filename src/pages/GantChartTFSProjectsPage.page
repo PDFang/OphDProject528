@@ -526,7 +526,7 @@
 
             <div class="row">
 
-                <div class="col-md-9 col-md-push-3" id="kendochart">
+                <div class="col-md-12 col-sm-12" id="kendochart">
                     <div class="page-header">
                         <h1>Program Channel Roadmap</h1>
                     </div>
@@ -603,23 +603,21 @@
                     </div>
                     <div id="chart_div"></div>
                 </div>
-                <div class="col-md-3 col-md-pull-9" id="placeholder" >
-                    <div class="page-header">
-                        <h1>Global Priority</h1>
-                    </div>
-                    <div style="background-color: #e0e4e5; height: 1060px;">
-                        <label class="custom-control custom-radio">
-                            <input name="noidea" type="radio" value="program" class="custom-control-input" checked="true"/>
-                            <span class="custom-control-indicator"></span>
-                            <span class="custom-control-description">Program</span>
-                        </label>
+                <!--<div class="col-md-3 col-md-pull-9" id="placeholder" >-->
+                    <!--<div class="page-header">-->
+                        <!--<h1>Global Priority</h1>-->
+                    <!--</div>-->
+                    <!--<div style="background-color: #e0e4e5; height: 1060px;">-->
+                        <!--<label class="custom-control custom-radio">-->
+                            <!--<input name="noidea" type="radio" value="program" class="custom-control-input" checked="true"/>-->
+                            <!--<span class="custom-control-indicator"></span>-->
+                            <!--<span class="custom-control-description">Program</span>-->
+                        <!--</label>-->
 
-                    </div>
+                    <!--</div>-->
 
-                </div>
+                <!--</div>-->
             </div>
-
-
         </div>
     </apex:form>
 </apex:page>
