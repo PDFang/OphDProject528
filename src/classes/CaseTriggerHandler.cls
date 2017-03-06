@@ -70,7 +70,8 @@ public class CaseTriggerHandler extends TriggerHandler
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
             // Is new incident (or) 3rd Party vendor Ticket is null and Push To Partner is checked
-            if(newCase.RecordTypeId == incidentRecordType && (oldCase == null || (newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null)) ){
+            if(newCase.AccountId != null && newCase.RecordTypeId == incidentRecordType
+                    && (oldCase == null || (newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null)) ){
                 processList.add(newCase);
                 accountIdSet.add(newCase.AccountId);
             }
@@ -78,7 +79,7 @@ public class CaseTriggerHandler extends TriggerHandler
         if(accountIdSet.isEmpty()){
             return;
         }
-
+        system.debug('CallPartnerCaseProxyService(): processList - ' + processList);
         Map<Id, Account> accountMap = new Map<Id, Account>([
                 Select Id, Billing_Group__c from Account where Id IN :accountIdSet
         ]);

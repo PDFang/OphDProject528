@@ -19,7 +19,7 @@ public with sharing class PartnerCaseProxyServiceHelper {
             PartnerCaseProxyService.SalesforceCase[] caseArray = new PartnerCaseProxyService.SalesforceCase[]{};
             for (Case newCase : [
                     Select Id, CaseNumber, Priority, Description, CreatedDate, X3rdPartyVendorTicket__c,
-                            Product_or_Service__c, Request_Type__c, Database__c, Releases__c,
+                            status, Product_or_Service__c, Request_Type__c, Database__c, Releases__c,
                             Account.Name, Account.Billing_Group__c, Account.CadebillAccountNo__c,
                             Contact.Name, Contact.Phone, OwnerId, Owner.Name, Owner.Phone, Push_To_Partner__c
                     from Case
@@ -68,7 +68,7 @@ public with sharing class PartnerCaseProxyServiceHelper {
             PartnerCaseProxyService.PartnerCaseCommentUpdate[] caseCommentArray = new PartnerCaseProxyService.PartnerCaseCommentUpdate[]{};
             for (CaseComment newComment : [
                     Select Id, CommentBody, IsPublished, CreatedDate, CreatorName,
-                            Parent.CaseNumber, Parent.X3rdPartyVendorTicket__c,
+                            Parent.CaseNumber, Parent.Status, Parent.X3rdPartyVendorTicket__c,
                             Parent.Account.Name, Parent.Account.Billing_Group__c, Parent.Account.CadebillAccountNo__c
                     from CaseComment
                     where Id IN :commentIds
