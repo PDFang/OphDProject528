@@ -9,6 +9,11 @@ public with sharing class PartnerCaseProxyServiceHelper {
     public static final String DEFAULT_ETMS_TROUBLE_Description = 'Other';
 
     private static Map<String, List<ETMS_Codes__c>> requestTypeEtmsMap = null;
+    @TestVisible
+    private static boolean isCasePushed = false;
+    @TestVisible
+    private static boolean isCaseCommentPushed = false;
+
 
     public static void PushCaseToProxyService(Set<Id> caseIds){
 
@@ -43,6 +48,7 @@ public with sharing class PartnerCaseProxyServiceHelper {
             caseRequest.SalesforceCase = caseArray;
             system.debug('PushCaseToProxyService(): caseRequest - ' + caseRequest);
             proxy.CreatePartnerCase(caseRequest, BILLING_GROUP_VERIZON);
+            if(test.isRunningTest()) isCasePushed = true;
         }catch (system.CalloutException ex) {
             system.debug('PushCaseToProxyService(): CalloutException - ' + ex);
             String subject = String.join(new List<Id>(caseIds), ',');
@@ -84,6 +90,7 @@ public with sharing class PartnerCaseProxyServiceHelper {
             PartnerCaseProxyService.ArrayOfPartnerCaseCommentUpdate caseCommentRequest = new PartnerCaseProxyService.ArrayOfPartnerCaseCommentUpdate();
             caseCommentRequest.PartnerCaseCommentUpdate = caseCommentArray;
             proxy.UpdatePartnerCase(caseCommentRequest, BILLING_GROUP_VERIZON);
+            if(test.isRunningTest()) isCaseCommentPushed = true;
         }catch (system.CalloutException ex) {
             system.debug('PushCaseCommentToProxyService(): CalloutException - ' + ex);
             String subject = String.join(new List<Id>(commentIds), ',');
