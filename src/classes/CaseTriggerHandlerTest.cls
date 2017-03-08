@@ -25,6 +25,10 @@ private class CaseTriggerHandlerTest {
                 Database__c = testEtmsCode[0].Reason__c,
                 Releases__c = testEtmsCode[0].Reason_Detail__c
         );
+
+        Database.DMLOptions dmo = new Database.DMLOptions();
+        dmo.AssignmentRuleHeader.useDefaultRule = true;
+        testIncident.setOptions(dmo);
         insert testIncident;
         // Performing DML Before Mock Callouts to avoid uncommitted work pending error
         test.startTest();
@@ -54,7 +58,9 @@ private class CaseTriggerHandlerTest {
                 Database__c = testEtmsCode[0].Reason__c,
                 Releases__c = testEtmsCode[0].Reason_Detail__c
         );
-
+        Database.DMLOptions dmo = new Database.DMLOptions();
+        dmo.AssignmentRuleHeader.useDefaultRule = true;
+        testIncident.setOptions(dmo);
         insert testIncident;
 
         testIncident.Status = 'Assigned';

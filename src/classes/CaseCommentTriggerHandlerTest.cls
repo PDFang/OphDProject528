@@ -73,6 +73,9 @@ private class CaseCommentTriggerHandlerTest {
                 Releases__c = etmsCode.Reason_Detail__c,
                 X3rdPartyVendorTicket__c = '20170307'
         );
+        Database.DMLOptions dmo = new Database.DMLOptions();
+        dmo.AssignmentRuleHeader.useDefaultRule = true;
+        testIncident.setOptions(dmo);
         insert testIncident;
 
     } // createTestData()
