@@ -14,10 +14,14 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
 
         Set<Id> caseIdSet = new Set<Id>();
         for(CaseComment newComment : newList){
-            // Does it have to be published?
-            caseIdSet.add(newComment.ParentId);
+            if(newComment.IsPublished){
+                caseIdSet.add(newComment.ParentId);
+            }
         }
 
+        if(caseIdSet.isEmpty()){
+            return;
+        }
         Map<Id, Case> caseMap = new Map<Id, Case>([
                 Select Id, X3rdPartyVendorTicket__c, AccountId, RecordTypeId, Status from Case
                 where Id IN :caseIdSet

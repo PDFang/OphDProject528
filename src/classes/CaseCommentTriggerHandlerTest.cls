@@ -12,7 +12,8 @@ private class CaseCommentTriggerHandlerTest {
         // Performing DML Before Mock Callouts to avoid uncommitted work pending error
         CaseComment newComment = new CaseComment(
                 ParentId = testIncident.Id,
-                commentBody = 'New comment added'
+                commentBody = 'New comment added',
+                isPublished = true
         );
         insert newComment;
 
