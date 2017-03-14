@@ -18,18 +18,18 @@ public with sharing class ImpactCalculationImplementation implements ImpactCalcu
         return score * multiplier;
     }
 
-    public Double CalculatePercentBusinessImpactedScore(Decimal input, Double multiplier)
+    public Double CalculatePercentBusinessImpactedScore(String input, Double multiplier)
     {
         Double score;
-        if(input >= 0.75)
+        if(input == '>75%')
         {
             score = 1;
         }
-        else if(input >= 0.5)
+        else if(input == '50-75%')
         {
             score = 0.75;
         }
-        else if(input >= 0.25)
+        else if(input == '25-50%')
         {
             score = .5;
         }

@@ -5,7 +5,7 @@ public with sharing class ImpactCalculationStub implements ImpactCalculationInte
         return 1;
     }
 
-    public Double CalculatePercentBusinessImpactedScore(Decimal input, Double multiplier)
+    public Double CalculatePercentBusinessImpactedScore(String input, Double multiplier)
     {
         return 1;
     }
