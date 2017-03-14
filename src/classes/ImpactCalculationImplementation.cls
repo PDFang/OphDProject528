@@ -65,7 +65,7 @@ public with sharing class ImpactCalculationImplementation implements ImpactCalcu
         {
             score = 1;
         }
-        else if(quality = 'medium')
+        else if(quality == 'medium')
         {
             score = 0.5;
         }
