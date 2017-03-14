@@ -1,0 +1,9 @@
+<!--
+ - Created by arnab.karsarkar on 3/9/2017.
+ -->
+
+<aura:component description="FullCalendar" implements="force:appHostable,flexipage:availableForAllPageTypes,force:hasRecordId,forceCommunity:availableForAllPageTypes" access="global" >
+
+    <iframe src="https://incontact--lab--c.cs60.visual.force.com/apex/FullCalendar" width="100%" height="1000px;" frameBorder="0"/>
+
+</aura:component>

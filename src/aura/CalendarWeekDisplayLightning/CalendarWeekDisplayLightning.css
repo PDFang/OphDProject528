@@ -1,0 +1,41 @@
+/**
+ * Created by arnab.karsarkar on 3/3/2017.
+ */
+
+.THIS .tableHeader{
+    border-style:solid;
+    height:28px;
+    text-align:center;
+    position: relative;
+    min-height: 20px;
+    max-height: 100px;
+    margin: 0;
+    margin-bottom: -1px;
+    border: 1px solid rgb(216, 221, 230);
+    border-width: 0 0 1px 1px;
+    padding-top: 2px;
+    padding-bottom: 10px;
+    z-index: 2;
+    overflow: hidden;
+    -webkit-transition: 300ms ease-in-out;
+    transition: 300ms ease-in-out;
+}
+
+
+.THIS .calendar-week-body{
+        height: 500px;
+        overflow-y: scroll;
+}
+
+.THIS .calendar-time-block {
+          border-color: rgb(216, 221, 230);
+          border-style: solid;
+          border-width: 1px 1px 0 0;
+          height: 6%;
+          overflow: visible;
+          position: relative;
+}
+
+.THIS .calendar-half-hour {
+          border-top-style: dashed;
+      }

@@ -1,0 +1,39 @@
+<!--
+ - Created by arnab.karsarkar on 3/2/2017.
+ -->
+
+<aura:component description="CalendarWeekDisplayLightning" controller="CalendarLightningController">
+    <ltng:require scripts="{!join(',', $Resource.inContactResource + '/inContactResource/js/jquery-3.1.1.min.js',
+            $Resource.inContactResource + '/inContactResource/js/bootstrap.min.js')}"
+                  styles="{!join(',', $Resource.inContactResource + '/inContactResource/css/bootstrap.min.css',
+                          $Resource.inContactResource + '/inContactResource/css/bootstrap-theme.min.css')}"
+                  />
+    <aura:attribute name="hourStrings" type="string[]" default="[]"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-1 tableHeader" style="width:12.499999995%" >Time</div>
+            <div class="col-md-1 tableHeader" style="width:12.499999995%" ><strong class="calendarDayHeader " aria-hidden="true" >SUN 26</strong></div>
+            <div class="col-md-1 tableHeader" style="width:12.499999995%" ><strong class="calendarDayHeader " aria-hidden="true" >MON 27</strong></div>
+            <div class="col-md-1 tableHeader" style="width:12.499999995%" ><strong class="calendarDayHeader " aria-hidden="true" >TUE 28</strong></div>
+            <div class="col-md-1 tableHeader" style="width:12.499999995%" ><strong class="calendarDayHeader " aria-hidden="true" >WED 1</strong></div>
+            <div class="col-md-1 tableHeader" style="width:12.499999995%" ><strong class="calendarDayHeader " aria-hidden="true" >THU 2</strong></div>
+            <div class="col-md-1 tableHeader" style="width:12.499999995%" ><strong class="calendarDayHeader " aria-hidden="true" >FRI 3</strong></div>
+            <div class="col-md-1 tableHeader" style="width:12.499999995%" ><strong class="calendarDayHeader " aria-hidden="true" >SAT 4</strong></div>
+
+        </div>
+        <div class="row calendar-week-body" id="calendar-week-body">
+            <aura:iteration items="{!v.hourStrings}" var="row" indexVar="index">
+                <div class="calendar-time-block calendar-hour"  style="width:12.66%">
+                    <span>{!row}</span>
+                </div>
+                <div class="calendar-time-block calendar-half-hour" style="width:12.66%">
+                </div>
+            </aura:iteration>
+
+        </div>
+
+    </div>
+
+</aura:component>

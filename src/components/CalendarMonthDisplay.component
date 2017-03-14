@@ -1,0 +1,97 @@
+<!--
+ - Created by arnab.karsarkar on 3/2/2017.
+ -->
+
+<apex:component id="CalendarMonthDisplay">
+    <apex:attribute name="cal" description="The calendar to display" type="CalendarHandler" required="true" />
+
+    <style type="text/css">
+
+		/* month view */
+
+		.calendar-date-number {
+			text-align: left;
+			color: #ACACAC;
+			padding: 3px;
+		}
+
+		.calendar-day-cell {
+			border: solid 1px #DDDDDD;
+			margin: 0;
+			width: 14%;
+			overflow: hidden;
+		}
+
+		.calendar-day-cell > .calendar-day {
+			height: 100px;
+		}
+
+		.calendar-day-cell.selected-month .calendar-date-number {
+			color: #000000;
+		}
+
+		.calendar-day-cell.today {
+			background-color: #F2F2F2;
+			border: double 1px #000000;
+			z-index: 1;
+		}
+
+		.calendar-day-cell.today .calendar-date-number {
+			font-weight: bold;
+		}
+
+		.calendar-item-container {
+			height: 100%;
+			overflow: hidden;
+		}
+
+		.calendar-item-container:hover {
+			overflow: auto;
+		}
+
+		.calendar-item {
+			padding: 3px 5px;
+		}
+
+	</style>
+
+    <apex:outputPanel layout="block" styleClass="calendar-view month" id="calendarMonthView">
+
+        <table class="calendar-table month" cellpadding="0" cellspacing="0">
+            <thead>
+            <tr class="calendar-header-row">
+                <apex:repeat value="{!cal.WeekdayNames}" var="wd">
+                    <th class="calendar-header-cell">
+                        <apex:outputText value="{!wd}" />
+                    </th>
+                </apex:repeat>
+            </tr>
+            </thead>
+            <tbody>
+            <apex:repeat value="{!cal.Weeks}" var="week">
+                <tr class="calendar-row">
+                    <apex:repeat value="{!week.Days}" var="day">
+                        <td class="calendar-day-cell {!IF(day.CalendarDate == TODAY(), 'today', '')} {!IF(MONTH(day.CalendarDate) == MONTH(cal.ActiveDate), 'selected-month', '')}">
+                            <div class="calendar-day">
+                                <div class="calendar-date-number">
+                                    <apex:outputText value="{0,date,d}">
+                                        <apex:param value="{!day.CalendarDate}" />
+                                    </apex:outputText>
+                                </div>
+                                <div class="calendar-item-container">
+                                    <apex:repeat value="{!day.Items}" var="calItem">
+                                        <div class="calendar-item {!HTMLENCODE(calItem.CssClass)}" onclick="calendarClient.calendarItemClicked(event, '{!calItem.ItemId}');">
+                                            <apex:outputText value="{!calItem.Name}" />
+                                        </div>
+                                    </apex:repeat>
+                                </div>
+                            </div>
+                        </td>
+                    </apex:repeat>
+                </tr>
+            </apex:repeat>
+            </tbody>
+        </table>
+
+    </apex:outputPanel>
+</apex:component>
