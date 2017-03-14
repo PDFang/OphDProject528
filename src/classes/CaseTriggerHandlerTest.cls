@@ -7,12 +7,9 @@ private class CaseTriggerHandlerTest {
 
     static testMethod void testPartnerCaseProxyServiceCreate() {
 
-        createTestData();
-        Account verizonAccount = [Select Id from Account where Billing_Group__c = :CaseTriggerHandler.BILLING_GROUP_VERIZON LIMIT 1];
+        Account verizonAccount = [Select Id from Account where Billing_Group__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON LIMIT 1];
         Contact verizonContact = [Select Id from Contact where AccountId = :verizonAccount.Id LIMIT 1];
 
-        test.startTest();
-        Test.setMock(WebServiceMock.class, new PartnerCaseProxyServiceMockTest());
         ETMS_Codes__c[] testEtmsCode = ETMS_Codes__c.getAll().values();
 
         // create an incident
@@ -28,16 +25,23 @@ private class CaseTriggerHandlerTest {
                 Database__c = testEtmsCode[0].Reason__c,
                 Releases__c = testEtmsCode[0].Reason_Detail__c
         );
-        insert testIncident;
 
+        Database.DMLOptions dmo = new Database.DMLOptions();
+        dmo.AssignmentRuleHeader.useDefaultRule = true;
+        testIncident.setOptions(dmo);
+        insert testIncident;
+        // Performing DML Before Mock Callouts to avoid uncommitted work pending error
+        test.startTest();
+        Test.setMock(WebServiceMock.class, new PartnerCaseProxyServiceMockTest());
         test.stopTest();
+        // make sure the trigger makes a callout to proxy service
+        system.assertEquals(true, PartnerCaseProxyServiceHelper.isCasePushed);
 
     } // end of testPartnerCaseProxyServiceCreate()
 
     static testMethod void testPartnerCaseProxyServiceUpdate() {
 
-        createTestData();
-        Account verizonAccount = [Select Id from Account where Billing_Group__c = :CaseTriggerHandler.BILLING_GROUP_VERIZON LIMIT 1];
+        Account verizonAccount = [Select Id from Account where Billing_Group__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON LIMIT 1];
         Contact verizonContact = [Select Id from Contact where AccountId = :verizonAccount.Id LIMIT 1];
         ETMS_Codes__c[] testEtmsCode = ETMS_Codes__c.getAll().values();
 
@@ -54,20 +58,27 @@ private class CaseTriggerHandlerTest {
                 Database__c = testEtmsCode[0].Reason__c,
                 Releases__c = testEtmsCode[0].Reason_Detail__c
         );
-
+        Database.DMLOptions dmo = new Database.DMLOptions();
+        dmo.AssignmentRuleHeader.useDefaultRule = true;
+        testIncident.setOptions(dmo);
         insert testIncident;
 
-        test.startTest();
-        Test.setMock(WebServiceMock.class, new PartnerCaseProxyServiceMockTest());
         testIncident.Status = 'Assigned';
         testIncident.Push_To_Partner__c = true;
         update testIncident;
-
+        // Performing DML Before Mock Callouts to avoid uncommitted work pending error
+        test.startTest();
+        Test.setMock(WebServiceMock.class, new PartnerCaseProxyServiceMockTest());
         test.stopTest();
+
+        Case incident = [SELECT Push_To_Partner__c from Case where Id = :testIncident.Id LIMIT 1];
+        system.assertEquals(false, incident.Push_To_Partner__c, 'The field should be set to false after calling the Proxy Service.');
+        // make sure the trigger makes a callout to proxy service
+        system.assertEquals(true, PartnerCaseProxyServiceHelper.isCasePushed);
 
     } // end of testPartnerCaseProxyServiceUpdate()
 
-    //@TestSetup
+    @TestSetup
     private static void createTestData(){
 
         ETMS_Codes__c etmsCode = new ETMS_Codes__c(
@@ -83,7 +94,7 @@ private class CaseTriggerHandlerTest {
         Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
         Account verizonAccount = new Account(
                 Name = 'Verizon Test Account',
-                Billing_Group__c = CaseTriggerHandler.BILLING_GROUP_VERIZON,
+                Billing_Group__c = PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON,
                 Type = 'Partner',
                 RecordTypeId = accountRecordTypeMap.get('Partners').getRecordTypeId()
         );
