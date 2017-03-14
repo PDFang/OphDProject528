@@ -10,7 +10,7 @@ public with sharing class ImpactCalculationStub implements ImpactCalculationInte
         return 1;
     }
 
-    public Double CalculateWorkaroundAvailablePointsScore(Boolean hasWorkaround, Double multiplier)
+    public Double CalculateWorkaroundAvailablePointsScore(String workAround, Double multiplier)
     {
         return 1;
     }
@@ -20,12 +20,12 @@ public with sharing class ImpactCalculationStub implements ImpactCalculationInte
         return 1;
     }
 
-    public Double CalculateSecurityIssueScore(Boolean isSecurityIssue, Double multiplier)
+    public Double CalculateSecurityIssueScore(String securityIssue, Double multiplier)
     {
         return 1;
     }
 
-    public Double CalculateRelatedKnownIssueScore(Boolean isKnownIssue, Double multiplier)
+    public Double CalculateRelatedKnownIssueScore(String knownIssue, Double multiplier)
     {
         return 1;
     }

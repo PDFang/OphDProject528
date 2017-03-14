@@ -3,16 +3,14 @@ public with sharing class ImpactCalculationImplementation implements ImpactCalcu
     public Double CalculateIncidentSeverityScore(String severity, Double multiplier)
     {
         Double score;
-        severity = severity.toLowerCase();
-        if(severity == 'p1')
+
+        if (severity == 's1')
         {
             score = 1;
-        }
-        else if(severity == 'p2')
+        } else if (severity == 's2')
         {
             score = 0.5;
-        }
-        else
+        } else
         {
             score = 0;
         }
@@ -43,10 +41,11 @@ public with sharing class ImpactCalculationImplementation implements ImpactCalcu
         return score * multiplier;
     }
 
-    public Double CalculateWorkaroundAvailablePointsScore(Boolean hasWorkaround, Double multiplier)
+    public Double CalculateWorkaroundAvailablePointsScore(String workAround, Double multiplier)
     {
         Double score;
-        if(hasWorkaround)
+
+        if(workAround == 'yes')
         {
             score = 0;
         }
@@ -54,13 +53,14 @@ public with sharing class ImpactCalculationImplementation implements ImpactCalcu
         {
             score = 1;
         }
+
         return score * multiplier;
     }
 
     public Double CalculateWorkaroundQualityPointsScore(String quality, Double multiplier)
     {
         Double score;
-        quality = quality.toLowerCase();
+
         if(quality == 'low')
         {
             score = 1;
@@ -73,13 +73,15 @@ public with sharing class ImpactCalculationImplementation implements ImpactCalcu
         {
             score = 0;
         }
+
         return score * multiplier;
     }
 
-    public Double CalculateSecurityIssueScore(Boolean isSecurityIssue, Double multiplier)
+    public Double CalculateSecurityIssueScore(String securityIssue, Double multiplier)
     {
         Double score;
-        if(isSecurityIssue)
+
+        if(securityIssue == 'yes')
         {
             score = 1;
         }
@@ -87,13 +89,14 @@ public with sharing class ImpactCalculationImplementation implements ImpactCalcu
         {
             score = 0;
         }
+
         return score * multiplier;
     }
 
-    public Double CalculateRelatedKnownIssueScore(Boolean isKnownIssue, Double multiplier)
+    public Double CalculateRelatedKnownIssueScore(String knownIssue, Double multiplier)
     {
         Double score;
-        if(isKnownIssue)
+        if(knownIssue == 'yes')
         {
             score = 1;
         }
@@ -101,6 +104,7 @@ public with sharing class ImpactCalculationImplementation implements ImpactCalcu
         {
             score = 0;
         }
+
         return score * multiplier;
     }
 }
