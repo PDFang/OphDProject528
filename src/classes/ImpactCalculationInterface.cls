@@ -1,9 +1,9 @@
-/**
- * Created by mike.burkhard on 3/14/2017.
- * interface that will support the calculations needed to generate the Impact Score
- */
-
 public interface ImpactCalculationInterface
 {
-
+    Double CalculateIncidentSeverityScore(String severity, Double multiplier);
+    Double CalculatePercentBusinessImpactedScore(Decimal input, Double multiplier);
+    Double CalculateWorkaroundAvailablePointsScore(Boolean hasWorkaround, Double multiplier);
+    Double CalculateWorkaroundQualityPointsScore(String quality, Double multiplier);
+    Double CalculateSecurityIssueScore(Boolean isSecurityIssue, Double multiplier);
+    Double CalculateRelatedKnownIssueScore(Boolean isKnownIssue, Double multiplier);
 }
