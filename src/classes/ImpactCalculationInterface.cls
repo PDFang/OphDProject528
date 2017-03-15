@@ -6,4 +6,8 @@ public interface ImpactCalculationInterface
     Double CalculateWorkaroundQualityPointsScore(String quality, Double multiplier);
     Double CalculateSecurityIssueScore(Boolean isSecurityIssue, Double multiplier);
     Double CalculateRelatedKnownIssueScore(Boolean isKnownIssue, Double multiplier);
+    // Known Issue Methods
+    Decimal CalculateDaysIssuePresent(DateTime oldestDate, integer multiplier);
+    Decimal CalculateNumberIncidentsTiedToIssue (integer issueCount,  integer multiplier);
+    Decimal CalculateDollarAmountTiedToIssue(decimal accountSum,  integer multiplier);
 }
