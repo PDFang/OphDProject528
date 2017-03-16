@@ -25,6 +25,10 @@ public class CaseTriggerHandler extends TriggerHandler
         }
     }
 
+    protected override void beforeInsert(){
+        CalculateIncidentNetScore((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
+    }
+
     protected override void afterInsert(){
         CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
     }
@@ -61,9 +65,25 @@ public class CaseTriggerHandler extends TriggerHandler
         }
     }
 
+    private void CalculateIncidentNetScore(List<Case> newList, Map<Id, Case> oldMap){
+
+        List<Case> processList = new List<Case>();
+        for(Case newCase : newList){
+            Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
+            // Is new incident
+            if(newCase.RecordTypeId == incidentRecordType && oldCase == null){
+                processList.add(newCase);
+            }
+        }
+        if(processList.size() > 0){
+            ImpactCalculationService calculationService = new ImpactCalculationService(new IncidentImpactCalculationImplementation());
+            calculationService.CalculateIncidentNetScore(processList);
+        }
+
+    } // end of calculateIncidentNetScore()
 
     // push incidents to partner case proxy service
-    public static void CallPartnerCaseProxyService(List<Case> newList, Map<Id, Case> oldMap){
+    private void CallPartnerCaseProxyService(List<Case> newList, Map<Id, Case> oldMap){
 
         Set<Id> accountIdSet = new Set<Id>();
         List<Case> processList = new List<Case>();
