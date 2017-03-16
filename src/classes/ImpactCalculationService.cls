@@ -25,17 +25,23 @@ public with sharing class ImpactCalculationService
         for(Case caseRecord : caseList)
         {
             //calculate the net score
-
-            Double netScore = impactCalculator.CalculateIncidentSeverityScore(caseRecord.Severity__c, GetMultiplierValue('severity'));
-            netScore += impactCalculator.CalculatePercentBusinessImpactedScore(caseRecord.Business_Impacted__c, GetMultiplierValue('business impacted'));
-            netScore += impactCalculator.CalculateWorkaroundAvailablePointsScore(caseRecord.Workaround_Available__c, GetMultiplierValue('workaround'));
-            netScore += impactCalculator.CalculateWorkaroundQualityPointsScore(caseRecord.Quality_of_Workaround__c, GetMultiplierValue('workaround quality'));
-            netScore += impactCalculator.CalculateSecurityIssueScore(caseRecord.Security_Issue__c, GetMultiplierValue('is security issue'));
-            netScore += impactCalculator.CalculateRelatedKnownIssueScore(caseRecord.Related_to_Previous_Known_Issue__c, GetMultiplierValue('is known issue'));
-
+            Double severityScore = impactCalculator.CalculateIncidentSeverityScore(caseRecord.Severity__c, GetMultiplierValue('severity'));
+            system.debug('CalculateIncidentNetScore(): severityScore - ' + severityScore);
+            Double businessImpactScore = impactCalculator.CalculatePercentBusinessImpactedScore(caseRecord.Business_Impacted__c, GetMultiplierValue('business impacted'));
+            system.debug('CalculateIncidentNetScore(): businessImpactScore - ' + businessImpactScore);
+            Double workaroundScore = impactCalculator.CalculateWorkaroundAvailablePointsScore(caseRecord.Workaround_Available__c, GetMultiplierValue('workaround'));
+            system.debug('CalculateIncidentNetScore(): workaroundScore - ' + workaroundScore);
+            Double workaroundQualityScore = impactCalculator.CalculateWorkaroundQualityPointsScore(caseRecord.Quality_of_Workaround__c, GetMultiplierValue('workaround quality'));
+            system.debug('CalculateIncidentNetScore(): workaroundQualityScore - ' + workaroundQualityScore);
+            Double securityScore = impactCalculator.CalculateSecurityIssueScore(caseRecord.Security_Issue__c, GetMultiplierValue('is security issue'));
+            system.debug('CalculateIncidentNetScore(): securityScore - ' + securityScore);
+            Double knownIssueScore = impactCalculator.CalculateRelatedKnownIssueScore(caseRecord.Related_to_Previous_Known_Issue__c, GetMultiplierValue('is known issue'));
+            system.debug('CalculateIncidentNetScore(): knownIssueScore - ' + knownIssueScore);
+            Double netScore = severityScore + businessImpactScore + workaroundScore + workaroundQualityScore + securityScore + knownIssueScore;
+            system.debug('CalculateIncidentNetScore(): netScore - ' + netScore);
             //store the net score
             caseRecord.Incident_Net_Score__c = netScore;
-            system.debug('setting Incident_Net_Score__c to ' + netScore);
+
         }
     }
 
