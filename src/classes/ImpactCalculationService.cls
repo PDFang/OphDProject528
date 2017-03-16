@@ -1,9 +1,9 @@
 public with sharing class ImpactCalculationService
 {
-    private ImpactCalculationInterface impactCalculator;
+    private IncidentImpactCalculationInterface impactCalculator;
     private Map<String, Impact_Score_Multiplier__c> multiplierMap;
 
-    public ImpactCalculationService(ImpactCalculationInterface impactCalculator)
+    public ImpactCalculationService(IncidentImpactCalculationInterface impactCalculator)
     {
         //store the impactCalculator and the multiplier map for this.
         this.impactCalculator = impactCalculator;
