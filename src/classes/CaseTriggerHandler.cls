@@ -75,6 +75,8 @@ public class CaseTriggerHandler extends TriggerHandler
                 processList.add(newCase);
             }
         }
+        system.debug('CalculateIncidentNetScore(): processList - ' + processList);
+
         if(processList.size() > 0){
             ImpactCalculationService calculationService = new ImpactCalculationService(new IncidentImpactCalculationImplementation());
             calculationService.CalculateIncidentNetScore(processList);

@@ -7,7 +7,16 @@ public with sharing class ImpactCalculationService
     {
         //store the impactCalculator and the multiplier map for this.
         this.impactCalculator = impactCalculator;
-        this.multiplierMap = Impact_Score_Multiplier__c.getAll();
+        this.multiplierMap = new Map<String, Impact_Score_Multiplier__c>();
+
+        Map<String, Impact_Score_Multiplier__c> settingMap = Impact_Score_Multiplier__c.getAll();
+        // convert key values to lower case
+        if(settingMap != null && settingMap.size() > 0){
+            for(Impact_Score_Multiplier__c multiplier : settingMap.values()){
+                multiplierMap.put(multiplier.Name.toLowerCase(), multiplier);
+            }
+        }
+
         system.debug('ImpactCalculationService(): multiplierMap - ' + multiplierMap);
     }
 

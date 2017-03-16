@@ -1,9 +1,10 @@
 trigger CaseBeforeInsert on Case (before insert) 
 {
+    new CaseTriggerHandler().run();
     Schema.DescribeSObjectResult d = Schema.SObjectType.Case; 
     Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
     Map<ID,Schema.RecordTypeInfo> recordTypeMapById = d.getRecordTypeInfosByID();
-    
+
     //Get Event record type id
     Id eventRecordType = rtMapByName.get('Event').getRecordTypeId();
     Id maintenanceRecordType = rtMapByName.get('Maintenance Notification').getRecordTypeId();
