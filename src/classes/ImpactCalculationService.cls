@@ -8,6 +8,7 @@ public with sharing class ImpactCalculationService
         //store the impactCalculator and the multiplier map for this.
         this.impactCalculator = impactCalculator;
         this.multiplierMap = Impact_Score_Multiplier__c.getAll();
+        system.debug('ImpactCalculationService(): multiplierMap - ' + multiplierMap);
     }
 
     public void CalculateIncidentNetScore(Case[] caseList)
