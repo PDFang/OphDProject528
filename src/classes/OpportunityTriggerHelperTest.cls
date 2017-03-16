@@ -106,6 +106,8 @@ public class OpportunityTriggerHelperTest {
                 RecordTypeId = recordTypeMap.get(OPPORTUNITY_TYPE_NEW),
                 StageName = OpportunityTriggerHelper.OPPORTUNITY_STAGE_TWO,
                 CloseDate = Date.today(),
+                LeadSource = 'Partner',
+                Partner_Agent_Company__c = 'Startup',
                 Probability = 25,
                 Partner_Deal__c = 'NO',
                 Contract_Type__c = 'New Customer',
