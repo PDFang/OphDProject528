@@ -5,7 +5,7 @@ trigger reassignLeads on Lead (after update){
             lIds.add(l.Id);
         }    
     }    
-    if (AssignLeads.assignAlreadyCalled()==FALSE){
+    if (AssignLeads.assignAlreadyCalled()==FALSE && !System.isBatch() && !System.isFuture()){
             system.debug('Assign already called? '+AssignLeads.assignAlreadyCalled());        
             AssignLeads.Assign(lIds);
     }

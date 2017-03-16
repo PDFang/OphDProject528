@@ -107,4 +107,6 @@ public with sharing class ImpactCalculationImplementation implements ImpactCalcu
 
         return score * multiplier;
     }
+
+
 }

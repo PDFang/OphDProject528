@@ -37,4 +37,16 @@ public with sharing class ImpactCalculationStub implements ImpactCalculationInte
     {
         return this.RelatedKnownIssueScore;
     }
+    public Decimal CalculateDaysIssuePresent(integer numOfDays, integer multiplier){
+        return 1.0;
+    }
+    public Decimal CalculateNumberIncidentsTiedToIssue (integer issueCount,  integer multiplier){
+        return 1.0;
+    }
+    public Decimal CalculateDollarAmountTiedToIssue(decimal accountSum,  integer multiplier){
+        return 1.0;
+    }
+    public Decimal CalculateRecentReleaseBreak(boolean isRecentRelease,  integer multiplier){
+        return 1.0;
+    }
 }
