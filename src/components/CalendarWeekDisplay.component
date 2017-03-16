@@ -1,0 +1,190 @@
+<!--
+ - Created by arnab.karsarkar on 3/2/2017.
+ -->
+
+<apex:component id="CalendarWeekDisplay">
+    <apex:attribute name="cal" description="The calendar to display" type="CalendarHandler" required="true" />
+
+    <style type="text/css">
+
+		.calendar-day-cell {
+			width: 13%;
+		}
+
+		.calendar-time-cell {
+			width: 5%;
+		}
+
+		.calendar-header-row .calendar-day-cell {
+			text-align: center;
+			border-style: solid;
+			border-width: 1px;
+			border-color: #D3D3D3 #D3D3D3 #000000;
+		}
+
+		.calendar-today-cell {
+			background-color: #F1F1F1;
+		}
+
+		.calendar-header-row .calendar-today-cell {
+			font-weight: bold;
+		}
+
+		.calendar-hour-container {
+			height: 100%;
+			overflow: hidden;
+		}
+
+		.calendar-time-block {
+			border-color: #D3D3D3 #000000 #D3D3D3 #D3D3D3;
+			border-style: solid;
+			border-width: 1px 1px 0 0;
+			height: 2%;
+			overflow: visible;
+			position: relative;
+		}
+
+		.calendar-half-hour {
+			border-top-style: dashed;
+		}
+
+		.calendar-table.week tbody td {
+			height: 1600px;
+		}
+
+		.calendar-week-header {
+			overflow-y: scroll;
+		}
+
+		.calendar-week-body {
+			height: 500px;
+			overflow-y: scroll;
+		}
+
+		.calendar-item {
+			position: absolute;
+			padding: 5px;
+			z-index: 1;
+			border-radius: 2pt;
+			border: solid 1px #000000;
+		}
+
+		.calendar-item:hover {
+			z-index: 2;
+		}
+
+		.calendar-item.calendar-all-day {
+			position: relative;
+			width: 100%;
+			padding: 3px 0;
+			font-weight: normal;
+		}
+
+		.calendar-all-day-cell {
+			vertical-align: top;
+		}
+
+	</style>
+
+    <apex:outputPanel layout="block" styleClass="calendar-view week" id="calendarWeekView">
+
+        <div class="calendar-table-container calendar-week-header">
+
+            <table class="calendar-table week">
+                <thead>
+                <tr class="calendar-header-row">
+                    <td class="calendar-time-cell"></td>
+                    <apex:repeat value="{!cal.ActiveWeek.Days}" var="day">
+                        <td class="calendar-day-cell {!IF(day.CalendarDate == TODAY(), 'calendar-today-cell', '')}">
+                            <apex:outputText value="{0,date,E M/d}">
+                                <apex:param value="{!day.CalendarDate}" />
+                            </apex:outputText>
+                        </td>
+                    </apex:repeat>
+                </tr>
+                <tr class="calendar-header-row">
+                    <th class="calendar-time-cell"></th>
+                    <apex:repeat value="{!cal.ActiveWeek.Days}" var="day">
+                        <td class="calendar-day-cell calendar-all-day-cell {!IF(day.CalendarDate == TODAY(), 'calendar-today-cell', '')}">
+                            <apex:repeat value="{!day.Items}" var="calItem">
+                                <apex:outputPanel layout="block" rendered="{!calItem.IsAllDay}"
+                                                  title="{!calItem.Name}"
+                                                  styleClass="calendar-item calendar-all-day {!HTMLENCODE(calItem.CssClass)}"
+                                                  onclick="calendarClient.calendarItemClicked(event, '{!calItem.ItemId}');">
+
+                                    <a href="{!calItem.DetailUrl}" target="_blank" title="{!calItem.Name}">
+                                        <apex:outputText value="{!calItem.Name}" />
+                                    </a>
+
+                                </apex:outputPanel>
+                            </apex:repeat>
+                        </td>
+                    </apex:repeat>
+                </tr>
+                </thead>
+            </table>
+
+        </div>
+
+        <div id="calendar-week-body" class="calendar-table-container calendar-week-body">
+
+            <table class="calendar-table week">
+                <tbody>
+                <td class="calendar-time-cell">
+                    <div class="calendar-hour-container">
+                        <apex:repeat value="{!cal.DayHourBlocks}" var="hour">
+                            <div class="calendar-time-block calendar-hour">
+                                <apex:outputText value="{0,date,h a}">
+                                    <apex:param value="{!hour}" />
+                                </apex:outputText>
+                            </div>
+                            <div class="calendar-time-block calendar-half-hour">
+                            </div>
+                        </apex:repeat>
+                    </div>
+                </td>
+                <apex:repeat value="{!cal.ActiveWeek.Days}" var="day">
+                    <td class="calendar-day-cell {!IF(day.CalendarDate == TODAY(), 'calendar-today-cell', '')}">
+                        <div class="calendar-hour-container">
+                            <apex:repeat value="{!day.HalfHourItems}" var="halfHour">
+                                <apex:outputPanel layout="block"
+                                                  styleClass="calendar-time-block {!IF(halfHour.IsOnHour, 'calendar-hour', 'calendar-half-hour')}"
+                                                  onclick="calendarClient.emptySlotClicked(event);">
+                                    <apex:variable var="left" value="0" />
+                                    <apex:repeat value="{!halfHour.Items}" var="calItem">
+                                        <apex:outputPanel layout="block" rendered="{!NOT(calItem.IsAllDay)}"
+                                                          style="height: {!calItem.DurationPercent}%; left: {!left}%;"
+                                                          title="{!calItem.Name}"
+                                                          styleClass="calendar-item {!HTMLENCODE(calItem.CssClass)}"
+                                                          onclick="calendarClient.calendarItemClicked(event, '{!calItem.ItemId}');">
+
+                                            <a href="{!calItem.DetailUrl}" target="_blank" title="{!calItem.Name}" onclick="calendarClient.sfone.navigateToCalendarItem(event, '{!calItem.MobileUrl}', '{!calItem.ItemId}');">
+                                                <apex:outputText value="{!calItem.Name}" />
+                                            </a>
+
+                                        </apex:outputPanel>
+                                        <apex:variable var="left" value="{!VALUE(left)+10}" />
+                                    </apex:repeat>
+                                </apex:outputPanel>
+                            </apex:repeat>
+                        </div>
+                    </td>
+                </apex:repeat>
+                </tbody>
+            </table>
+
+        </div>
+
+        <script type="text/javascript">
+
+			(function() {
+				var calendarWeekBody = document.getElementById('calendar-week-body');
+				var hours = new Date().getHours();
+				hours = hours > 0 ? hours - 1 : hours;
+				calendarWeekBody.scrollTop = calendarWeekBody.children[0].offsetHeight * (hours / 24);
+			})();
+
+		</script>
+
+    </apex:outputPanel>
+</apex:component>

@@ -1,0 +1,121 @@
+<!--
+ - Created by arnab.karsarkar on 3/9/2017.
+ -->
+
+<apex:page id="FullCalendar" sideBar="false" controller="CalendarLightningController" standardStylesheets="false" showHeader="false" title="Calendar" applyHtmlTag="false" >
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.FullCalendar, '/fullcalendar-3.2.0/lib/moment.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.FullCalendar, '/fullcalendar-3.2.0/lib/jquery-ui.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.FullCalendar, '/fullcalendar-3.2.0/fullcalendar.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.FullCalendar, '/fullcalendar-3.2.0/fullcalendar.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+
+    <!-- Session TimeOut Modal -->
+    <div class="modal fade" id="inputEvent" tabindex="-1" role="dialog" aria-labelledby="inputEvent" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Create Event</h5>
+                </div>
+                <div class="modal-body" style="font-size:14px;" id="timeoutModal">
+                    <div class="form-group">
+                        <label for="exampleInputEvent">Subject</label>
+                        <input  class="form-control" id="exampleInputEvent" aria-describedby="emailHelp" placeholder="Enter Event Details"/>
+                        <small id="emailHelp" class="form-text text-muted">Enter your event details.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" onclick="addEvent(); return false;" >ok</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="calendar"></div>
+
+    <script>
+
+        $(document).ready(function(){
+          fetchEvents();
+        });
+        var startTime, endTime;
+
+        function fetchEvents() {
+            Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.CalendarLightningController.getEvents}',
+                    function(result, event){
+                        if(event.status){
+                            var eventArr = tranformToFullCalendarFormat(result);
+                            loadDataToCalendar(eventArr);
+                        }
+                    }, {escape:false}
+             );
+        }
+
+        function tranformToFullCalendarFormat(events) {
+            var eventArr = [];
+            for(var i = 0;i < events.length;i++){
+                eventArr.push({
+                    'id':events[i].Id,
+                    'start':events[i].StartDateTime__c,
+                    'end':events[i].EndDateTime__c,
+                    'title':events[i].Description__c
+                });
+            }
+            return eventArr;
+        }
+
+       function loadDataToCalendar(data){
+           var newDate = new Date();
+            $("div#calendar").fullCalendar({
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'month,agendaWeek,agendaDay'
+                },
+                defaultDate: newDate,
+                editable: true,
+                eventLimit: true,
+                businessHours:true,
+                selectable:true,
+                slotEventOverlap:false,
+                events:data,
+                select:function(start, end) {
+                     $('#inputEvent').modal('show');
+                     startTime = start;
+                     endTime = end;
+                },
+                eventDrop: function(event, jsEvent, ui, view) {
+                    console.log(event.title + " was dragged till  " + event.start.format());
+                    if (!confirm("Are you sure about this change?")) {
+                        revertFunc();
+                    }
+                },
+                eventDragStop: function(event, jsEvent, ui, view) {
+                    console.log(event.title + " was dragged till " + event.end.format());
+                 }
+            });
+       }
+
+       function addEvent(){
+            var title = $('#exampleInputEvent').val();
+            var eventData;
+            if (title) {
+              eventData = {
+                            title: title,
+                            start: startTime,
+                            end: endTime
+                          };
+              $('#calendar').fullCalendar('renderEvent', eventData, true); // stick? = true
+            }
+
+            $('#calendar').fullCalendar('unselect');
+            $('#exampleInputEvent').val('');
+       }
+
+
+    </script>
+
+</apex:page>
