@@ -4,9 +4,9 @@
 
 public interface KnownIssuesImpactCalculationInterface {
     // Known Issue related Methods
-    Decimal CalculateDaysIssuePresent(integer numOfDays, integer multiplier);
-    Decimal CalculateNumberIncidentsTiedToIssue (integer issueCount,  integer multiplier);
-    Decimal CalculateDollarAmountTiedToIssue(decimal accountSum,  integer multiplier);
-    Decimal CalculateRecentReleaseBreak(boolean isRecentRelease,  integer multiplier);
+    Decimal CalculateDaysIssuePresent(integer numOfDays, double multiplier);
+    Decimal CalculateNumberIncidentsTiedToIssue (integer issueCount,  double multiplier);
+    Decimal CalculateDollarAmountTiedToIssue(decimal accountSum,  double multiplier);
+    Decimal CalculateRecentReleaseBreak(boolean isRecentRelease,  double multiplier);
 
 }
