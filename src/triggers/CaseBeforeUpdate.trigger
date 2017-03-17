@@ -6,6 +6,7 @@
 **/
 trigger CaseBeforeUpdate on Case (before update)
 {
+    new CaseTriggerHandler().run();
     Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
     Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
     SiteConfiguration__c siteConfig = new SiteConfiguration__c();

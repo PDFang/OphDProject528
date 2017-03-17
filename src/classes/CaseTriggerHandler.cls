@@ -29,6 +29,10 @@ public class CaseTriggerHandler extends TriggerHandler
         CalculateIncidentNetScore((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
     }
 
+    protected override void beforeUpdate(){
+        CalculateIncidentNetScore((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
+    }
+
     protected override void afterInsert(){
 //        CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
     }
@@ -71,7 +75,7 @@ public class CaseTriggerHandler extends TriggerHandler
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
             // Is new incident
-            if(newCase.RecordTypeId == incidentRecordType && oldCase == null){
+            if(newCase.RecordTypeId == incidentRecordType && (oldCase == null || recalculateScore(newCase, oldCase)) ){
                 processList.add(newCase);
             }
         }
@@ -83,6 +87,15 @@ public class CaseTriggerHandler extends TriggerHandler
         }
 
     } // end of calculateIncidentNetScore()
+
+    private boolean recalculateScore(Case newRecord, Case oldRecord){
+        return newRecord.Severity__c != oldRecord.Severity__c
+                || newRecord.Business_Impacted__c != oldRecord.Business_Impacted__c
+                || newRecord.Quality_of_Workaround__c != oldRecord.Quality_of_Workaround__c
+                || newRecord.Related_to_Previous_Known_Issue__c != oldRecord.Related_to_Previous_Known_Issue__c
+                || newRecord.Security_Issue__c != oldRecord.Security_Issue__c
+                || newRecord.Workaround_Available__c != oldRecord.Workaround_Available__c;
+    }
 
     // push incidents to partner case proxy service
 //    private void CallPartnerCaseProxyService(List<Case> newList, Map<Id, Case> oldMap){

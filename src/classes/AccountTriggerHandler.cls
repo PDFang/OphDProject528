@@ -16,7 +16,7 @@ public class AccountTriggerHandler extends TriggerHandler  {
     }
 
     protected override void beforeUpdate(){
-        //CalculateAccountNetScore((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
+        CalculateAccountNetScore((List<Account>) trigger.new, (Map<Id, Account>) trigger.oldMap);
     }
 
     private void SetRecordTypeIds() {
@@ -33,9 +33,12 @@ public class AccountTriggerHandler extends TriggerHandler  {
         List<Account> accountList = new List<Account>();
 
         for(Account accountRecord : newList){
-            if(accountRecord.RecordTypeId == saasCustomerRecordType
+            Account oldAccount = (oldMap != null) ? oldMap.get(accountRecord.Id) : null;
+            // is new or dependent fields updated
+            if(oldAccount == null || recalculateScore(accountRecord, oldAccount)
+                    && (accountRecord.RecordTypeId == saasCustomerRecordType
                     || accountRecord.RecordTypeId == resellCustomerRecordType
-                    || accountRecord.RecordTypeId == resellPartnerRecordType) {
+                    || accountRecord.RecordTypeId == resellPartnerRecordType) ){
 
                 accountList.add(accountRecord);
             }
@@ -49,4 +52,16 @@ public class AccountTriggerHandler extends TriggerHandler  {
             calculationService.CalculateAccountNetScore(accountList);
         }
     }
+
+    private boolean recalculateScore(Account newRecord, Account oldRecord){
+        return newRecord.IsPartner__c != oldRecord.IsPartner__c
+                || (newRecord.CustomerSegment__c != oldRecord.CustomerSegment__c && (newRecord.CustomerSegment__c == 'Strategic' || oldRecord.CustomerSegment__c == 'Strategic') )
+                || newRecord.Brand_Visibility__c != oldRecord.Brand_Visibility__c
+                || newRecord.Industry_Leadership_Vocality__c != oldRecord.Industry_Leadership_Vocality__c
+                || newRecord.Social_Media_Presence__c != oldRecord.Social_Media_Presence__c
+                || newRecord.Risk_of_Leaving__c != oldRecord.Risk_of_Leaving__c
+                || newRecord.Referenceable__c != oldRecord.Referenceable__c
+                || newRecord.GYRStatus__c != oldRecord.GYRStatus__c;
+    }
+
 }
