@@ -3,6 +3,7 @@ public class ImpactCalculationService
     private IncidentImpactCalculationInterface impactCalculator;
     private Map<String, Impact_Score_Multiplier__c> multiplierMap;
     private GainsightImpactCalculationInterface gainsightImpactCalculation;
+    private AccountImpactCalculationInterface accountImpactCalculation;
 
     private ImpactCalculationService()
     {
@@ -28,6 +29,13 @@ public class ImpactCalculationService
         this();
 
         this.gainsightImpactCalculation = gainsightImpactCalculation                                           ;
+    }
+
+    public ImpactCalculationService(AccountImpactCalculationInterface accountImpactCalculation)
+    {
+        this();
+
+        this.accountImpactCalculation = accountImpactCalculation;
     }
 
     public void CalculateIncidentNetScore(Case[] caseList)
@@ -102,6 +110,7 @@ public class ImpactCalculationService
     } // end of CalculateGainsightNetScore()
 
     public void CalculateAccountNetScore(Account[] accountList){
+
 
     }
 
