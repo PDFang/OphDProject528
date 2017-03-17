@@ -44,7 +44,7 @@ public with sharing class KnownIssuesImpactCalcImplementation implements KnownIs
             return 1 * multiplier;
         else if (accountSum <  4 )
             return 4 * multiplier;
-        else if (accountSum <  6 )
+        else if (accountSum <= 5 )
             return 7 * multiplier;
         else
                 return 10 * multiplier;
