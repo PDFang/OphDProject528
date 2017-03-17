@@ -59,7 +59,7 @@ public with sharing class ImpactCalculationService
             caseRecord.Incident_Net_Score__c = netScore;
 
         }
-    }
+    } // end of CalculateIncidentNetScore()
 
     public void CalculateGainsightNetScore(JBCXM__CustomerInfo__c[] customInfoList){
         List<Account> accountUpdateList = new List<Account>();
@@ -96,9 +96,10 @@ public with sharing class ImpactCalculationService
 
         if(accountUpdateList.size() > 0)
         {
-            update accountUpdateList;
+            Database.update(accountUpdateList, false);
         }
-    }
+
+    } // end of CalculateGainsightNetScore()
 
     private Double GetMultiplierValue(String key)
     {
