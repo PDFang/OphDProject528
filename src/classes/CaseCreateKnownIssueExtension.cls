@@ -93,6 +93,8 @@ public with sharing class CaseCreateKnownIssueExtension
             try
             {
                 update c;
+
+
                 
             }
             catch(Exception ex)
@@ -144,10 +146,18 @@ public with sharing class CaseCreateKnownIssueExtension
             relatedCase.IsVisibleInSelfService = true;
             system.debug(relatedCase.TFSWorkItem__c);
             insert relatedCase;
-            
+
             c.put(recordTypeName.replace(' ', '') + '__c',relatedCase.Id);
             update c;
-            
+
+            // // Call the KNown Issue Impact Calculation Class
+            list<Case> listKnownIssues = new List<case>();
+            listKnownIssues.add(relatedCase);
+            KnownIssuesImpactCalcImplementation KIImpactCalc = new KnownIssuesImpactCalcImplementation();
+            KnownIssueImpactCalculationClass KICalc = new KnownIssueImpactCalculationClass(KIImpactCalc);
+            KICalc.CalculateKnownIssueScore(listKnownIssues);
+
+
             success = true;
             return;// null;//casePage;
         
