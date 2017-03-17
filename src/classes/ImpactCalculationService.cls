@@ -71,7 +71,7 @@ public class ImpactCalculationService
             system.debug('CalculateGainsightNetScore(): outStandingIncidentScore - ' + outStandingIncidentScore + ' , JBCXM_OpenCases__c - ' + customerInfoRecord.JBCXM_OpenCases__c);
 
             Double incidentsOpenedLastSixMonthsScore = this.gainsightImpactCalculation.CalculateIncidentsOpenedLastSixMonthsScore((Integer)customerInfoRecord.JBCXM_CreatedCases__c, GetMultiplierValue('incidents opened last six months'));
-            system.debug('CalculateGainsightNetScore(): outStandingIncidentScore - ' + incidentsOpenedLastSixMonthsScore + ' , 	JBCXM_CreatedCases__c - ' + customerInfoRecord.JBCXM_CreatedCases__c);
+            system.debug('CalculateGainsightNetScore(): incidentsOpenedLastSixMonthsScore - ' + incidentsOpenedLastSixMonthsScore + ' , 	JBCXM_CreatedCases__c - ' + customerInfoRecord.JBCXM_CreatedCases__c);
 
             Double mttrIncidentScore = this.gainsightImpactCalculation.CalculateMttrIncidentScore((Integer)customerInfoRecord.JBCXM_MTTR__c, GetMultiplierValue('mttr last six months') );
             system.debug('CalculateGainsightNetScore(): mttrIncidentScore - ' + mttrIncidentScore + ' ,JBCXM_MTTR__c - ' + customerInfoRecord.JBCXM_MTTR__c);
