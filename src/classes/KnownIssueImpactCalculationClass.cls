@@ -19,7 +19,7 @@ public with sharing class KnownIssueImpactCalculationClass {
         this.multiplierMap = Impact_Score_Multiplier__c.getAll();
         KnownIssueIncidentCounts  = new map<Id, integer>();
         KnownIssueIncidentAge = new map<Id, integer>();
-        KnownIssueIncidentMaxScore= new map<Id, integer>();
+        KnownIssueIncidentMaxScore= new map<Id, double>();
         KnownIssueASVMap = new map<Id, double>();
         accountIds = new set<id>();
     }
@@ -42,18 +42,31 @@ public with sharing class KnownIssueImpactCalculationClass {
             KnownIssueAccounts = GetAccountsAssociated(KnownIssueIds);
             GetAccountASVValue(KnownIssueAccounts);
 
+            /*system.debug('KnownIssueIncidentAge =>' + KnownIssueIncidentAge);
+            system.debug('KnownIssueIncidentAge =>' + KnownIssueIncidentCounts);
+            system.debug('KnownIssueIncidentAge =>' + KnownIssueASVMap);*/
+
             for(Case KnownIssuCase : knownIssueList){
                 Case newCase = new Case(Id = KnownIssuCase.Id);
+                newCase.TotalDaysBugPresent__c = KnownIssueIncidentAge.get(KnownIssuCase.Id);
+                newCase.NumberOfIncidents__c = KnownIssueIncidentCounts.get(KnownIssuCase.Id);
+                newCase.ASVValue__c = KnownIssueASVMap.get(KnownIssuCase.Id);
+
                 netKnownIssueScore = impactCalculator.CalculateNumberIncidentsTiedToIssue(KnownIssueIncidentCounts.get(KnownIssuCase.Id), GetMultiplierValue('IncidentCount'));
+                system.debug('netKnownIssueScore 1 =>' + netKnownIssueScore);
                 netKnownIssueScore += impactCalculator.CalculateDaysIssuePresent(KnownIssueIncidentAge.get(KnownIssuCase.Id), GetMultiplierValue('IncidentAge'));
-                netKnownIssueScore += KnownIssueIncidentAge.get(KnownIssuCase.Id);
+                system.debug('netKnownIssueScore 2 =>' + netKnownIssueScore);
+                netKnownIssueScore += KnownIssueIncidentMaxScore.get(KnownIssuCase.Id);
+                system.debug('netKnownIssueScore 3 =>' + netKnownIssueScore);
                 netKnownIssueScore += impactCalculator.CalculateDollarAmountTiedToIssue(KnownIssueASVMap.get(KnownIssuCase.Id), GetMultiplierValue('ASVMultiplier'));
+                system.debug('netKnownIssueScore 4 =>' + netKnownIssueScore);
                 netKnownIssueScore += impactCalculator.CalculateRecentReleaseBreak(GetBrokenByRelease(KnownIssuCase), GetMultiplierValue('BrokenByRelease'));
+                system.debug('netKnownIssueScore 5 =>' + netKnownIssueScore);
                 newCase.KIImpactScore__c = netKnownIssueScore;
                 updKnowIssueList.add(newCase);
             }
 
-            update knownIssueList;
+            update updKnowIssueList;
             string body = 'Successfully Updated ' + knownIssueList.size() + ' known issues';
             string subject = 'Success';
             SendEmail(subject, body);
@@ -81,12 +94,17 @@ public with sharing class KnownIssueImpactCalculationClass {
                 group by KnownIssue__c
         ];
         for (AggregateResult ar : groupedResults)  {
+            system.debug('Count =>' + ar.get('CNTID'));
             Id knownIssueId = (ID)ar.get('KnownIssue__c');
             KnownIssueIncidentCounts.put(knownIssueId, Integer.valueOf(ar.get('CNTID')));
             Date minimumDate = Date.valueOf(ar.get('MINDT'));
             integer incidentOpeDays = minimumDate.daysBetween(system.today());
             KnownIssueIncidentAge.put(knownIssueId, incidentOpeDays);
-            KnownIssueIncidentMaxScore.put(knownIssueId, double.valueOf(ar.get('MAXSCORE')));
+            double maxScore = 0.0;
+            if(ar.get('MAXSCORE') != null) {
+                maxScore = double.valueOf(ar.get('MAXSCORE'));
+            }
+            KnownIssueIncidentMaxScore.put(knownIssueId,maxScore);
         }
     }
 
@@ -127,16 +145,19 @@ public with sharing class KnownIssueImpactCalculationClass {
     }
 
 
-    private Double GetMultiplierValue(String key)
+    private Decimal GetMultiplierValue(String key)
     {
-        //if the key doesn't exist, return 1 as the multiplier.
+        //if the key doesn't exist, return 1 as the multiplier
+        decimal multiplier = 1.0;
         if(multiplierMap.containsKey(key))
         {
-            return multiplierMap.get(key).Multiplier__c;
+            multiplier = multiplier.setScale(2);
+            multiplier = multiplierMap.get(key).Multiplier__c;
+            return multiplier;
         }
         else
         {
-            return 1;
+            return 1.0;
         }
     }
 
