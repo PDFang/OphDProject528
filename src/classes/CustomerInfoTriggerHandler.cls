@@ -13,8 +13,8 @@ public class CustomerInfoTriggerHandler extends TriggerHandler {
         Set<Id> custInfoIdSet = new Set<Id>();
         for(JBCXM__CustomerInfo__c newRecord : newList){
             JBCXM__CustomerInfo__c oldRecord = (oldMap != null) ? oldMap.get(newRecord.Id) : null;
-            // Is new record
-            if(oldRecord == null){
+            // Is new record or dependent fields updated
+            if(oldRecord == null || recalculateScore(newRecord, oldRecord)){
                 custInfoIdSet.add(newRecord.Id);
             }
         }
@@ -24,6 +24,15 @@ public class CustomerInfoTriggerHandler extends TriggerHandler {
             system.debug('CalculateGainsightNetScore(): Calling CalculateGainsightNetScoreFuture');
             CalculateGainsightNetScoreFuture(custInfoIdSet);
         }
+    }
+
+    private boolean recalculateScore(JBCXM__CustomerInfo__c newRecord, JBCXM__CustomerInfo__c oldRecord){
+        return newRecord.JBCXM__CurScoreId__c != oldRecord.JBCXM__CurScoreId__c
+                || newRecord.JBCXM__ASV__c != oldRecord.JBCXM__ASV__c
+                || newRecord.JBCXM_CreatedCases__c != oldRecord.JBCXM_CreatedCases__c
+                || newRecord.JBCXM_OpenCases__c != oldRecord.JBCXM_OpenCases__c
+                || newRecord.JBCXM_Credits__c != oldRecord.JBCXM_Credits__c
+                || newRecord.JBCXM_MTTR__c != oldRecord.JBCXM_MTTR__c;
     }
 
     @Future
