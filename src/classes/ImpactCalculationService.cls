@@ -101,6 +101,10 @@ public class ImpactCalculationService
 
     } // end of CalculateGainsightNetScore()
 
+    public void CalculateAccountNetScore(Account[] accountList){
+
+    }
+
     private Double GetMultiplierValue(String key)
     {
         //if the key doesn't exist, return 1 as the multiplier.

@@ -1,5 +1,7 @@
 trigger AccountBeforeUpdateTrigger on Account (before update, before insert) 
 {
+    // This is the new method for calling trigger work, eventually this class will be migrated
+    new AccountTriggerHandler().Run();
 
 	// Refactored the ownerId change
 	integer tsize = trigger.new.size();
@@ -8,7 +10,7 @@ trigger AccountBeforeUpdateTrigger on Account (before update, before insert)
     if(trigger.isUpdate)
     {
         AccountTriggerHelper.accountPartnershipChange(Trigger.new, Trigger.old);
-       accountOwnerIdMap = AccountTriggerHelper.updateOwner(trigger.new, Trigger.oldMap);
+        accountOwnerIdMap = AccountTriggerHelper.updateOwner(trigger.new, Trigger.oldMap);
     }
     else if(trigger.isInsert)
     {
@@ -16,7 +18,6 @@ trigger AccountBeforeUpdateTrigger on Account (before update, before insert)
         accountOwnerIdMap = AccountTriggerHelper.updateOwner(trigger.new, null);
     }
 
-    
     for (Account act : trigger.new)
     {   
        if(accountOwnerIdMap.get(act.Id) != null) 
