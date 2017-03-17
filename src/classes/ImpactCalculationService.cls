@@ -117,7 +117,7 @@ public class ImpactCalculationService
            // Double ageOfCustomerInMonthsScore = this.accountImpactCalculation.CalculateAgeOfCustomerInMonthsScore((Integer)accountRecord.Age_of_Customer_in_Months__c, GetMultiplierValue('age of customer'));
            // system.debug('CalculateAccountNetScore(): ageOfCustomerInMonthsScore - ' + ageOfCustomerInMonthsScore + ' , Age_of_Customer_in_Months__c - ' + accountRecord.Age_of_Customer_in_Months__c);
 
-            Double riskOfLeavingScore = this.accountImpactCalculation.CalculateRiskOfLeavingScore(accountRecord.Risk_of_Leaving__c, GetMultiplierValue('risk of leaving'));
+            Double riskOfLeavingScore = this.accountImpactCalculation.CalculateRiskOfLeavingScore(accountRecord.Risk_of_Leaving__c , GetMultiplierValue('risk of leaving'));
             system.debug('CalculateAccountNetScore(): riskOfLeavingScore - ' + riskOfLeavingScore + ' , Risk_of_Leaving__c - ' + accountRecord.Risk_of_Leaving__c);
 
             Double gyrColor = this.accountImpactCalculation.CalculateGYRColor(accountRecord.GYRStatus__c);
@@ -140,6 +140,12 @@ public class ImpactCalculationService
 
             Double currentReferenceScore = this.accountImpactCalculation.CalculateCurrentReferenceScore(accountRecord.Referenceable__c, GetMultiplierValue('currently referenceable'));
             system.debug('CalculateAccountNetScore(): currentReferenceScore - ' + currentReferenceScore + ' , Referenceable__c ' + accountRecord.Referenceable__c);
+
+            Double netScore = riskOfLeavingScore + gyrColor + strategicAccountScore + partnerAccountScore + brandVisibilityScore + industryLeaderScore + industryLeaderScore + socialMediaPresenceScore + currentReferenceScore;
+
+            system.debug('CalculateAccountNetScore(): netScore - ' + netScore);
+
+            accountRecord.Account_Net_Score__c = netScore;
         }
     }
 
