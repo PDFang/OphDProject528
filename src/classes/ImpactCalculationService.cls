@@ -2,13 +2,11 @@ public with sharing class ImpactCalculationService
 {
     private IncidentImpactCalculationInterface impactCalculator;
     private Map<String, Impact_Score_Multiplier__c> multiplierMap;
+    private GainsightImpactCalculationInterface gainsightImpactCalculation;
 
-    public ImpactCalculationService(IncidentImpactCalculationInterface impactCalculator)
+    private ImpactCalculationService()
     {
-        //store the impactCalculator and the multiplier map for this.
-        this.impactCalculator = impactCalculator;
         this.multiplierMap = new Map<String, Impact_Score_Multiplier__c>();
-
         Map<String, Impact_Score_Multiplier__c> settingMap = Impact_Score_Multiplier__c.getAll();
         // convert key values to lower case
         if(settingMap != null && settingMap.size() > 0){
@@ -16,8 +14,20 @@ public with sharing class ImpactCalculationService
                 multiplierMap.put(multiplier.Name.toLowerCase(), multiplier);
             }
         }
+    }
 
-        system.debug('ImpactCalculationService(): multiplierMap - ' + multiplierMap);
+    public ImpactCalculationService(IncidentImpactCalculationInterface impactCalculator)
+    {
+        this();
+
+        this.impactCalculator = impactCalculator;
+    }
+
+    public ImpactCalculationService(GainsightImpactCalculationInterface gainsightImpactCalculation)
+    {
+        this();
+
+        this.gainsightImpactCalculation = gainsightImpactCalculation                                           ;
     }
 
     public void CalculateIncidentNetScore(Case[] caseList)
@@ -48,6 +58,45 @@ public with sharing class ImpactCalculationService
             //store the net score
             caseRecord.Incident_Net_Score__c = netScore;
 
+        }
+    }
+
+    public void CalculateGainsightNetScore(JBCXM__CustomerInfo__c[] customInfoList){
+        List<Account> accountUpdateList = new List<Account>();
+
+        for(JBCXM__CustomerInfo__c customerInfoRecord :customInfoList){
+
+            // Calculate the Gainsight Score
+            Double outStandingIncidentScore = this.gainsightImpactCalculation.CalculateOutstandingIncidentCaseScore((Integer)customerInfoRecord.JBCXM_OpenCases__c, GetMultiplierValue('Outstanding Incidents'));
+            system.debug('CalculateGainsightNetScore(): outStandingIncidentScore - ' + outStandingIncidentScore + ' , JBCXM_OpenCases__c - ' + customerInfoRecord.JBCXM_OpenCases__c);
+
+            Double incidentsOpenedLastSixMonthsScore = this.gainsightImpactCalculation.CalculateIncidentsOpenedLastSixMonthsScore((Integer)customerInfoRecord.JBCXM_CreatedCases__c, GetMultiplierValue('Incidents Opened Last Six Months'));
+            system.debug('CalculateIncidentsOpenedLastSixMonthsScore(): outStandingIncidentScore - ' + incidentsOpenedLastSixMonthsScore + ' , 	JBCXM_CreatedCases__c - ' + customerInfoRecord.JBCXM_CreatedCases__c);
+
+            Double mttrIncidentScore = this.gainsightImpactCalculation.CalculateMttrIncidentScore((Integer)customerInfoRecord.JBCXM_MTTR__c, GetMultiplierValue('MTTR Last Six Months') );
+            system.debug('CalculateGainsightNetScore(): mttrIncidentScore - ' + mttrIncidentScore + ' ,JBCXM_MTTR__c - ' + customerInfoRecord.JBCXM_MTTR__c);
+
+            Double annualContractValueScore = this.gainsightImpactCalculation.CalculateAnnualContractValueScore(customerInfoRecord.JBCXM__ASV__c, GetMultiplierValue('Annual Contract Value') );
+            system.debug('CalculateGainsightNetScore(): annualContractValueScore - ' + annualContractValueScore + ' , JBCXM__ASV__c - ' + customerInfoRecord.JBCXM__ASV__c);
+
+            Double creditGivenLastTwelveMonths = this.gainsightImpactCalculation.CalculateCreditGivenLastTwelveMonths(customerInfoRecord.JBCXM_Credits__c, GetMultiplierValue('Credits Last 12 Months') );
+            system.debug('CalculateGainsightNetScore(): creditGivenLastTwelveMonths - ' + creditGivenLastTwelveMonths + ' , JBCXM_Credits__c - ' + customerInfoRecord.JBCXM_Credits__c);
+
+            Double healthScore = this.gainsightImpactCalculation.CalculateHealthScore((Integer)customerInfoRecord.JBCXM__CurScoreId__r.JBCXM__Score__c, GetMultiplierValue('Health Score'));
+            system.debug('CalculateGainsightNetScore(): healthScore - ' + healthScore + ' , JBCXM__CurScoreId__r.Name - ' + customerInfoRecord.JBCXM__CurScoreId__r.Name);
+
+            Double netScore = outStandingIncidentScore + incidentsOpenedLastSixMonthsScore + mttrIncidentScore + annualContractValueScore + creditGivenLastTwelveMonths + healthScore;
+            system.debug('CalculateIncidentNetScore(): netScore - ' + netScore);
+
+            // Store the Gainsight score on the account record
+            Account accountUpdatedRecord = new Account(Id = customerInfoRecord.JBCXM__Account__c, Gainsight_Net_Score__c = netScore);
+
+            accountUpdateList.add(accountUpdatedRecord);
+        }
+
+        if(accountUpdateList.size() > 0)
+        {
+            update accountUpdateList;
         }
     }
 
