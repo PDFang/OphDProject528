@@ -31,7 +31,11 @@ public with sharing class IncidentImpactCalculationImplementation implements Inc
         }
         else if(input == '25-50%')
         {
-            score = .5;
+            score = .50;
+        }
+        else if(input == '1-25%')
+        {
+            score = .25;
         }
         else
         {

@@ -1,14 +1,14 @@
 public with sharing class GainsightImpactCalculationImpl implements GainsightImpactCalculationInterface {
 
-    Double CalculateOutstandingIncidentCaseScore(Integer openCaseCount, Double multiplier){
+    public Double CalculateOutstandingIncidentCaseScore(Integer openCaseCount, Double multiplier){
         Double score;
-        if(openCaseCount > 5){
+        if( openCaseCount > 5){
             score = 1;
         } else if(openCaseCount > 3){
             score = .75;
         } else if(openCaseCount > 1){
             score = .5;
-        } else if (openCaseCount = 1){
+        } else if (openCaseCount == 1){
             score = .25;
         } else {
             score = 0;
@@ -17,7 +17,7 @@ public with sharing class GainsightImpactCalculationImpl implements GainsightImp
         return score * multiplier;
     }
 
-    Double CalculateIncdentsOpenedLastSixMonthsScore(Integer openIssueCount, Double multiplier) {
+    public  Double CalculateIncidentsOpenedLastSixMonthsScore(Integer openIssueCount, Double multiplier) {
         Double score;
         if(openIssueCount >= 30){
             score = 1;
@@ -34,8 +34,7 @@ public with sharing class GainsightImpactCalculationImpl implements GainsightImp
         return score * multiplier;
     }
 
-    Double CalculateMttrIncidentScore(Integer openIssueCount, Double multiplier)
-    {
+    public Double CalculateMttrIncidentScore(Integer openIssueCount, Double multiplier) {
         Double score;
         if (openIssueCount >= 6) {
             score = 1;
@@ -52,7 +51,7 @@ public with sharing class GainsightImpactCalculationImpl implements GainsightImp
         return score * multiplier;
     }
 
-    Double CalculateAnnualContractValueScore(Decimal annualContractValue, Double multiplier){
+    public Double CalculateAnnualContractValueScore(Decimal annualContractValue, Double multiplier){
         Double score;
 
         if (annualContractValue >= 500000) {
@@ -70,7 +69,7 @@ public with sharing class GainsightImpactCalculationImpl implements GainsightImp
         return score * multiplier;
     }
 
-    Double CalculateCreditGivenLastTwelveMonths(Decimal creditGiven, Double multiplier){
+    public Double CalculateCreditGivenLastTwelveMonths(Decimal creditGiven, Double multiplier){
         Double score;
 
         if (creditGiven >= 5000) {
@@ -88,7 +87,7 @@ public with sharing class GainsightImpactCalculationImpl implements GainsightImp
         return score * multiplier;
     }
 
-    Double CalculateHealthScore(Integer healthScore, Double multiplier){
+    public Double CalculateHealthScore(Integer healthScore, Double multiplier){
         Double score;
 
         if (healthScore >= 75) {
