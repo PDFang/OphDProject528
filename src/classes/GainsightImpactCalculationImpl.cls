@@ -17,7 +17,7 @@ public with sharing class GainsightImpactCalculationImpl implements GainsightImp
         return score * multiplier;
     }
 
-    Double CalculateIncdentsOpenedLastSixMonthsScore(Integer openIssueCount, Double multiplier) {
+    Double CalculateIncidentsOpenedLastSixMonthsScore(Integer openIssueCount, Double multiplier) {
         Double score;
         if(openIssueCount >= 30){
             score = 1;
