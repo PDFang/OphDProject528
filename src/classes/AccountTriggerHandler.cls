@@ -48,7 +48,7 @@ public class AccountTriggerHandler extends TriggerHandler  {
 
         if(accountList.size() > 0){
 
-            ImpactCalculationService calculationService = new ImpactCalculationService(new IncidentImpactCalculationImplementation());
+            ImpactCalculationService calculationService = new ImpactCalculationService(new AccountImpactCalculationImpl());
             calculationService.CalculateAccountNetScore(accountList);
         }
     }
