@@ -33,7 +33,7 @@ public class AccountTriggerHandler extends TriggerHandler  {
         List<Account> accountList = new List<Account>();
 
         for(Account accountRecord : newList){
-            Account oldAccount = oldMap.get(accountRecord.Id);
+            Account oldAccount = (oldMap != null) ? oldMap.get(accountRecord.Id) : null;
             // is new or dependent fields updated
             if(oldAccount == null || recalculateScore(accountRecord, oldAccount)
                     && (accountRecord.RecordTypeId == saasCustomerRecordType
