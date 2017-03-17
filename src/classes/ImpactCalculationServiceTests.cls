@@ -15,7 +15,8 @@ public class ImpactCalculationServiceTests {
         };
 
         // Set stub methods to always return the same value
-        ImpactCalculationStub calculationStub = new ImpactCalculationStub();
+
+        IncidentImpactCalculationStub calculationStub = new IncidentImpactCalculationStub();
         calculationStub.IncidentIdentityScore = 1;
         calculationStub.PercentBusinessImpactScore = 1;
         calculationStub.WorkaroundAvailablePoints = 1;

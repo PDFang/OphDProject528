@@ -63,14 +63,10 @@ public with sharing class KnownIssueImpactCalculationClass {
             string subject = 'Error Occured';
             SendEmail(subject, body);
         }
-
-
-
-
     }
 
     private boolean GetBrokenByRelease(case c){
-        if(c.BrokenByRelease__c == 'Yes')
+        if(c.Broken_by_Recent_Release__c == 'Yes')
                 return true;
         else
                 return false;
