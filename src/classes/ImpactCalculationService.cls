@@ -1,4 +1,4 @@
-public with sharing class ImpactCalculationService
+public class ImpactCalculationService
 {
     private IncidentImpactCalculationInterface impactCalculator;
     private Map<String, Impact_Score_Multiplier__c> multiplierMap;
