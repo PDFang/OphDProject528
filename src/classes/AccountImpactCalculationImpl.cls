@@ -34,26 +34,26 @@ public class AccountImpactCalculationImpl implements AccountImpactCalculationInt
         return score * multiplier;
     }
 
-    public String CalculateGYRColor(Double score){
-        String color;
+    public Double CalculateGYRColor(String score){
+        Double calculatedScore;
 
-        if(score == 1) {
-            color = 'Red';
+        if(score == 'Red') {
+            calculatedScore = 1;
         }
-        else if(score == .5) {
-            color = 'Yellow';
+        else if(score == 'Yellow') {
+            calculatedScore = .5;
         }
         else {
-            color = 'Green';
+            calculatedScore = 0;
         }
 
-        return color;
+        return calculatedScore;
     }
 
     public Double CalculateStrategicAccountScore(String strategicAccount, Double multiplier){
         Double score;
 
-        if(strategicAccount == 'yes') {
+        if(strategicAccount == 'Strategic') {
             score = 1;
         }
         else {
@@ -63,10 +63,10 @@ public class AccountImpactCalculationImpl implements AccountImpactCalculationInt
         return score * multiplier;
     }
 
-    public Double CalculatePartnerAccountScore(String partnerAccount, Double multiplier){
+    public Double CalculatePartnerAccountScore(Boolean partnerAccount, Double multiplier){
         Double score;
 
-        if(partnerAccount == 'yes') {
+        if(partnerAccount == true) {
             score = 1;
         }
         else {
@@ -115,10 +115,10 @@ public class AccountImpactCalculationImpl implements AccountImpactCalculationInt
         return score * multiplier;
     }
 
-    public Double CalculateCurrentReferenceScore(String referencable, Double multiplier){
+    public Double CalculateCurrentReferenceScore(Boolean referencable, Double multiplier){
         Double score;
 
-        if(referencable == 'yes') {
+        if(referencable == true) {
             score = 1;
         }
         else {

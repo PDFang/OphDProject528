@@ -111,7 +111,36 @@ public class ImpactCalculationService
 
     public void CalculateAccountNetScore(Account[] accountList){
 
+        // Loop through the accounts and update the account net score
+        for(Account accountRecord : accountList){
 
+            Double ageOfCustomerInMonthsScore = this.accountImpactCalculation.CalculateAgeOfCustomerInMonthsScore((Integer)accountRecord.Age_of_Customer_in_Months__c, GetMultiplierValue('outstanding incidents'));
+            system.debug('CalculateAccountNetScore(): ageOfCustomerInMonthsScore - ' + ageOfCustomerInMonthsScore + ' , Age_of_Customer_in_Months__c - ' + accountRecord.Age_of_Customer_in_Months__c);
+
+            Double riskOfLeavingScore = this.accountImpactCalculation.CalculateRiskOfLeavingScore(accountRecord.Risk_of_Leaving__c, GetMultiplierValue('outstanding incidents'));
+            system.debug('CalculateAccountNetScore(): riskOfLeavingScore - ' + riskOfLeavingScore + ' , Risk_of_Leaving__c - ' + accountRecord.Risk_of_Leaving__c);
+
+            Double gyrColor = this.accountImpactCalculation.CalculateGYRColor(accountRecord.GYRStatus__c);
+            system.debug('CalculateAccountNetScore(): gyrColor - ' + gyrColor + ' , GYRStatus__c - ' + accountRecord.GYRStatus__c);
+
+            Double strategicAccountScore = this.accountImpactCalculation.CalculateStrategicAccountScore(accountRecord.CustomerSegment__c, GetMultiplierValue('outstanding incidents'));
+            system.debug('CalculateAccountNetScore(): strategicAccountScore - ' + strategicAccountScore + ' , CustomerSegment__c - ' + accountRecord.CustomerSegment__c);
+
+            Double partnerAccountScore = this.accountImpactCalculation.CalculatePartnerAccountScore(accountRecord.IsPartner__c, GetMultiplierValue('outstanding incidents'));
+            system.debug('CalculateAccountNetScore(): partnerAccountScore - ' + partnerAccountScore + ' , IsPartner__c - ' + accountRecord.IsPartner__c);
+
+            Double brandVisibilityScore = this.accountImpactCalculation.CalculateBrandVisibilityScore(accountRecord.Brand_Visibility__c, GetMultiplierValue('outstanding incidents'));
+            system.debug('CalculateAccountNetScore(): brandVisibilityScore - ' + brandVisibilityScore + ' , Brand_Visibility__c - ' + accountRecord.Brand_Visibility__c);
+
+            Double industryLeaderScore = this.accountImpactCalculation.CalculateIndustryLeaderScore(accountRecord.Industry_Leadership_Vocality__c, GetMultiplierValue('outstanding incidents'));
+            system.debug('CalculateAccountNetScore(): industryLeaderScore - ' + industryLeaderScore + ' , Industry_Leadership_Vocality__c- ' + accountRecord.Industry_Leadership_Vocality__c);
+
+            Double socialMediaPresenceScore = this.accountImpactCalculation.CalculateSocialMediaPresenceScore(accountRecord.Social_Media_Presence__c, GetMultiplierValue('outstanding incidents'));
+            system.debug('CalculateAccountNetScore(): socialMediaPresenceScore - ' + socialMediaPresenceScore + ' , Social_Media_Presence__c ' + accountRecord.Social_Media_Presence__c);
+
+            Double currentReferenceScore = this.accountImpactCalculation.CalculateCurrentReferenceScore(accountRecord.Referenceable__c, GetMultiplierValue('outstanding incidents'));
+            system.debug('CalculateAccountNetScore(): currentReferenceScore - ' + currentReferenceScore + ' , Referenceable__c ' + accountRecord.Referenceable__c);
+        }
     }
 
     private Double GetMultiplierValue(String key)
