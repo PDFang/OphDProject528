@@ -123,6 +123,7 @@ public with sharing class KnownIssueImpactCalculationClass {
 
     private void GetAccountASVValue( map<Id, set<Id>> KnownIssueAccounts){
         map<Id, Double> accountASVMap = new map<Id, Double>();
+
         for(JBCXM__CustomerInfo__c customerInfo : [select Id, JBCXM__ASV__c, JBCXM__Account__c
                                                    FROM JBCXM__CustomerInfo__c
                                                     where JBCXM__Account__c in : accountIds]){
@@ -135,10 +136,13 @@ public with sharing class KnownIssueImpactCalculationClass {
                 accountASVMap.put(customerInfo.JBCXM__Account__c, 0);
         }
 
+        system.debug('KnownIssueAccounts =>' + KnownIssueAccounts);
         for(Id kiId : KnownIssueAccounts.keySet()){
             double totalASVVal = 0.0;
             for(Id acctId : KnownIssueAccounts.get(kiId)){
-                totalASVVal += accountASVMap.get(acctId);
+                if(accountASVMap.containsKey(acctId)){
+                    totalASVVal += accountASVMap.get(acctId);
+                }
             }
             KnownIssueASVMap.put(kiId, totalASVVal);
         }

@@ -94,8 +94,10 @@ public with sharing class CaseCreateKnownIssueExtension
             {
                 update c;
 
-
-                
+                list<Case> listKnownIssues = [select Id,Broken_by_Recent_Release__c from Case where id = :c.KnownIssue__c];
+                KnownIssuesImpactCalcImplementation KIImpactCalc = new KnownIssuesImpactCalcImplementation();
+                KnownIssueImpactCalculationClass KICalc = new KnownIssueImpactCalculationClass(KIImpactCalc);
+                KICalc.CalculateKnownIssueScore(listKnownIssues);
             }
             catch(Exception ex)
             {

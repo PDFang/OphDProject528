@@ -24,6 +24,8 @@ global with sharing class CaseSearchKnownIssuesController
     {
         string knownIssueId = Apexpages.currentpage().getParameters().get('kIssue');
         c.put(recordTypeName.replace(' ', '') + '__c',knownIssueId);
+
+
     }
     
     public void ParseFilter()
