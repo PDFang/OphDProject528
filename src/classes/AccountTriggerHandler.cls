@@ -11,11 +11,11 @@ public class AccountTriggerHandler extends TriggerHandler  {
     }
 
     // Trigger Handler Overrides
-    protected override void beforeInsert(){
+    protected override void afterInsert(){
         CalculateAccountNetScore((List<Account>) trigger.new, (Map<Id, Account>) trigger.oldMap);
     }
 
-    protected override void beforeUpdate(){
+    protected override void afterUpdate(){
         CalculateAccountNetScore((List<Account>) trigger.new, (Map<Id, Account>) trigger.oldMap);
     }
 
@@ -30,8 +30,8 @@ public class AccountTriggerHandler extends TriggerHandler  {
 
 
     private void CalculateAccountNetScore(List<Account> newList, Map<Id, Account> oldMap){
-        List<Account> accountList = new List<Account>();
 
+        Set<Id> accountIdSet = new Set<Id>();
         for(Account accountRecord : newList){
             Account oldAccount = (oldMap != null) ? oldMap.get(accountRecord.Id) : null;
             // is new or dependent fields updated
@@ -40,17 +40,33 @@ public class AccountTriggerHandler extends TriggerHandler  {
                     || accountRecord.RecordTypeId == resellCustomerRecordType
                     || accountRecord.RecordTypeId == resellPartnerRecordType) ){
 
-                accountList.add(accountRecord);
+                accountIdSet.add(accountRecord.Id);
             }
         }
 
-        system.debug('CalculateAccountNetScore(): accountList - ' + accountList);
+        system.debug('CalculateAccountNetScore(): accountIdSet - ' + accountIdSet);
 
-        if(accountList.size() > 0){
-
-            ImpactCalculationService calculationService = new ImpactCalculationService(new AccountImpactCalculationImpl());
-            calculationService.CalculateAccountNetScore(accountList);
+        if(accountIdSet.size() > 0){
+            CalculateAccountNetScoreFuture(accountIdSet);
+            system.debug('CalculateAccountNetScore(): calling CalculateAccountNetScoreFuture');
         }
+
+    } // end of CalculateAccountNetScore()
+
+    private static void CalculateAccountNetScoreFuture(Set<Id> accountIdSet){
+
+        List<Account> accountList = new List<Account>();
+        for(Account accountRecord :[
+                Select Id, Social_Media_Presence__c, CustomerSegment__c, Brand_Visibility__c, Industry_Leadership_Vocality__c,
+                        Risk_of_Leaving__c, GYRStatus__c, Age_of_Customer_in_Months__c
+                from Account
+                where Id IN :accountIdSet
+        ]){
+            accountList.add(accountRecord);
+        }
+        ImpactCalculationService calculationService = new ImpactCalculationService(new AccountImpactCalculationImpl());
+        calculationService.CalculateAccountNetScore(accountList);
+
     }
 
     private boolean recalculateScore(Account newRecord, Account oldRecord){
