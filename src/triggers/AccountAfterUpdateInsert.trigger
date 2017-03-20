@@ -1,5 +1,7 @@
 trigger AccountAfterUpdateInsert on Account (after insert, after update) 
 {
+	// This is the new method for calling trigger work, eventually this class will be migrated
+	new AccountTriggerHandler().Run();
 	Map<Id, Account> mpActs = new Map<Id, Account>();
 	List<Account> acctsToSendToSharepoint = new List<Account>();
 	if(trigger.isUpdate){
