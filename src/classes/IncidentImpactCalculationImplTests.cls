@@ -19,11 +19,13 @@ public class IncidentImpactCalculationImplTests {
         double seventyFivePercentGreater = imp.CalculatePercentBusinessImpactedScore('>75%', 5);
         double fiftyToSeventyFive = imp.CalculatePercentBusinessImpactedScore('50-75%', 5);
         double twentyFiveToFifty = imp.CalculatePercentBusinessImpactedScore('25-50%', 5);
+        double oneToTwentyFive = imp.CalculatePercentBusinessImpactedScore('1-25%', 4);
         double defaultCase = imp.CalculatePercentBusinessImpactedScore('Unknown Percent', 5);
 
         system.assertEquals(5, seventyFivePercentGreater, '75 Percent or Greater Calculation is Incorrect');
         system.assertEquals(3.75, fiftyToSeventyFive, '50 - 75 percent calculation is Incorrect');
         system.assertEquals(2.5, twentyFiveToFifty, '25 - 50 Percent Calculation is Incorrect');
+        system.assertEquals(1, oneToTwentyFive, '1 - 25 Percent Calculation is Incorrect');
         system.assertEquals(0, defaultCase, 'Defauclt Percent Calculation is Incorrect');
     }
 
