@@ -189,6 +189,9 @@ public class ImpactCalculationService
 
             accountRecord.Account_Net_Score__c = netScore;
         }
+
+        Database.update(accountList, false);
+
     }
 
     private Double GetMultiplierValue(String key)
