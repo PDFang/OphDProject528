@@ -189,7 +189,7 @@ public class ImpactCalculationService
 
             accountRecord.Account_Net_Score__c = netScore;
         }
-
+        // update account net score
         Database.update(accountList, false);
 
     }
