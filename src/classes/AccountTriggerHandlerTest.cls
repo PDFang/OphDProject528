@@ -17,7 +17,7 @@ private class AccountTriggerHandlerTest {
                 Brand_Visibility__c = 'Medium',
                 Industry_Leadership_Vocality__c = 'Low',
                 Social_Media_Presence__c = 'Yes',
-                Risk_of_Leaving__c = null,
+                Risk_of_Leaving__c = '1',
                 Referenceable__c = false,
                 GYRStatus__c = 'Green'
         );
