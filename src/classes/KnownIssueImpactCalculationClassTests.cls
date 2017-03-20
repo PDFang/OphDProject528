@@ -72,6 +72,7 @@ public class KnownIssueImpactCalculationClassTests {
         test.startTest();
         KnownIssueImpactCalculationClass knownIssueImpactCalculation = new KnownIssueImpactCalculationClass(knownIssueCalculationStub);
 
+        knownIssueImpactCalculation.CalculateKnownIssueScore(new list<Case>());
         knownIssueImpactCalculation.CalculateKnownIssueScore(knownIssueList);
 
         test.stopTest();
