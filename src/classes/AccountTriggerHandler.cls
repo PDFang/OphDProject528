@@ -57,7 +57,7 @@ public class AccountTriggerHandler extends TriggerHandler  {
         List<Account> accountList = new List<Account>();
         for(Account accountRecord :[
                 Select Id, Social_Media_Presence__c, CustomerSegment__c, Brand_Visibility__c, Industry_Leadership_Vocality__c,
-                        Risk_of_Leaving__c, GYRStatus__c, Age_of_Customer_in_Months__c, IsPartner__c
+                        Risk_of_Leaving__c, GYRStatus__c, Age_of_Customer_in_Months__c, IsPartner__c, Referenceable__c
                 from Account
                 where Id IN :accountIdSet
         ]){
