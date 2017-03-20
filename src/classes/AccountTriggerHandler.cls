@@ -30,7 +30,6 @@ public class AccountTriggerHandler extends TriggerHandler  {
 
 
     private void CalculateAccountNetScore(List<Account> newList, Map<Id, Account> oldMap){
-
         Set<Id> accountIdSet = new Set<Id>();
         for(Account accountRecord : newList){
             Account oldAccount = (oldMap != null) ? oldMap.get(accountRecord.Id) : null;
@@ -50,9 +49,9 @@ public class AccountTriggerHandler extends TriggerHandler  {
             CalculateAccountNetScoreFuture(accountIdSet);
             system.debug('CalculateAccountNetScore(): calling CalculateAccountNetScoreFuture');
         }
-
     } // end of CalculateAccountNetScore()
 
+    @Future
     private static void CalculateAccountNetScoreFuture(Set<Id> accountIdSet){
 
         List<Account> accountList = new List<Account>();
@@ -64,9 +63,12 @@ public class AccountTriggerHandler extends TriggerHandler  {
         ]){
             accountList.add(accountRecord);
         }
-        ImpactCalculationService calculationService = new ImpactCalculationService(new AccountImpactCalculationImpl());
-        calculationService.CalculateAccountNetScore(accountList);
+        system.debug('CalculateAccountNetScore(): accountList - ' + accountList);
 
+        if(accountList.size() > 0) {
+            ImpactCalculationService calculationService = new ImpactCalculationService(new AccountImpactCalculationImpl());
+            calculationService.CalculateAccountNetScore(accountList);
+        }
     }
 
     private boolean recalculateScore(Account newRecord, Account oldRecord){
