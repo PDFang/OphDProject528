@@ -1,12 +1,15 @@
-/**
- * Created by mohandaas.rangaswamy on 3/17/2017.
- */
 
 @IsTest
 private class CustomerInfoTriggerHandlerTest {
     static testMethod void testBehavior() {
 
         Account customer = [Select Id from Account Limit 1];
+        JBCXM__ScoringScheme__c scoringScheme = new JBCXM__ScoringScheme__c(
+            Name = 'test'
+        );
+        JBCXM__ScoringSchemeDefinition__c scoringSchemeDefinition = new JBCXM__ScoringSchemeDefinition__c(
+                JBCXM__Score__c = 2.0
+        );
         JBCXM__CustomerInfo__c customerInfo = new JBCXM__CustomerInfo__c(
                 JBCXM__Account__c = customer.Id,
 //                JBCXM__CurScoreId__c,
@@ -18,12 +21,85 @@ private class CustomerInfoTriggerHandlerTest {
                 JBCXM_MTTR__c = 3
         );
 
+        insert scoringScheme;
+        scoringSchemeDefinition.JBCXM__SchemeId__c = scoringScheme.Id;
+
+        insert scoringSchemeDefinition;
+        customerInfo.JBCXM__CurScoreId__c = scoringSchemeDefinition.Id;
+
+        //create the impact score multiplier
+        GainsightImpactCalculationInterface impactCalculator = new GainsightImpactCalculationImpl();
+        Impact_Score_Multiplier__c[] multipliers = new Impact_Score_Multiplier__c[]{};
+
+        //outstanding incidents
+        Impact_Score_Multiplier__c outstandingIncidents = new Impact_Score_Multiplier__c(
+                Name = 'outstanding incidents',
+                Multiplier__c = 2.0
+        );
+        multipliers.add(outstandingIncidents);
+        Double outstandingIncidentScore = impactCalculator.CalculateOutstandingIncidentCaseScore((Integer)customerInfo.JBCXM_OpenCases__c, (Double)outstandingIncidents.Multiplier__c);
+        system.debug('CalculateOutstandingIncidentCaseScore: ' + customerInfo.JBCXM_OpenCases__c + ', ' + outstandingIncidents.Multiplier__c + ' = ' + outstandingIncidentScore);
+
+        //incidents opened in last six months
+        Impact_Score_Multiplier__c incidentsLastSixMonths = new Impact_Score_Multiplier__c(
+                Name = 'incidents opened last six months',
+                Multiplier__c = 3.0
+        );
+        multipliers.add(incidentsLastSixMonths);
+        Double incidentsLastSixMonthsScore = impactCalculator.CalculateIncidentsOpenedLastSixMonthsScore((Integer)customerInfo.JBCXM_CreatedCases__c, (Double)incidentsLastSixMonths.Multiplier__c);
+        system.debug('CalculateIncidentsOpenedLastSixMonthsScore: ' + customerInfo.JBCXM_CreatedCases__c + ', ' + incidentsLastSixMonths.Multiplier__c + ' = ' + incidentsLastSixMonthsScore);
+
+        //mttr last six months
+        Impact_Score_Multiplier__c mttrLastSixMonths = new Impact_Score_Multiplier__c(
+                Name = 'mttr last six months',
+                Multiplier__c = 4.0
+        );
+        multipliers.add(mttrLastSixMonths);
+        Double mttrScore = impactCalculator.CalculateMttrIncidentScore((Integer)customerInfo.JBCXM_MTTR__c, (Double)mttrLastSixMonths.Multiplier__c);
+        system.debug('CalculateMttrIncidentScore: ' + customerInfo.JBCXM_MTTR__c + ', ' + mttrLastSixMonths.Multiplier__c + ' = ' + mttrScore);
+
+        //annual contract value
+        Impact_Score_Multiplier__c annualValue = new Impact_Score_Multiplier__c(
+                Name = 'annual contract value',
+                Multiplier__c = 5.0
+        );
+        multipliers.add(annualValue);
+        Double annualContractValueScore = impactCalculator.CalculateAnnualContractValueScore((Integer)customerInfo.JBCXM__ASV__c, (Double)annualValue.Multiplier__c);
+        system.debug('CalculateAnnualContractValueScore: ' + customerInfo.JBCXM__ASV__c + ', ' + annualValue.Multiplier__c + ' = ' + annualContractValueScore);
+
+        //credits last 12 months
+        Impact_Score_Multiplier__c credits = new Impact_Score_Multiplier__c(
+                Name = 'credits last 12 months',
+                Multiplier__c = 6.0
+        );
+        multipliers.add(credits);
+        Double creditsScore = impactCalculator.CalculateCreditGivenLastTwelveMonths((Integer)customerInfo.JBCXM_Credits__c, (Double)credits.Multiplier__c);
+        system.debug('CalculateCreditGivenLastTwelveMonths: ' + customerInfo.JBCXM_Credits__c + ', ' + credits.Multiplier__c + ' = ' + creditsScore);
+
+        //health score
+        Impact_Score_Multiplier__c health = new Impact_Score_Multiplier__c(
+                Name = 'health score',
+                Multiplier__c = 7.0
+        );
+        multipliers.add(health);
+        Double healthScore = impactCalculator.CalculateHealthScore((Integer)customerInfo.JBCXM__CurScoreId__r.JBCXM__Score__c, (Double)health.Multiplier__c);
+        system.debug('CalculateHealthScore: ' + customerInfo.JBCXM__CurScoreId__r.JBCXM__Score__c + ', ' + health.Multiplier__c + ' = ' + healthScore);
+
+        insert multipliers;
+
         test.startTest();
         insert customerInfo;
         test.stopTest();
 
         customer = [Select GainSight_Net_Score__c from Account where Id = :customer.Id];
-        system.assert(customer.GainSight_Net_Score__c > 0);
+        Double netScore = outstandingIncidentScore
+                + incidentsLastSixMonthsScore
+                + mttrScore
+                + annualContractValueScore
+                + creditsScore
+                + healthScore;
+
+        system.assert(customer.GainSight_Net_Score__c == netScore, 'The GainSight_Net_Score__c value was not correct. expected: ' + netScore + ' actual: ' + customer.GainSight_Net_Score__c);
     }
 
     @TestSetup
