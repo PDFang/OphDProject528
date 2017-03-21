@@ -34,11 +34,11 @@ public class CaseTriggerHandler extends TriggerHandler
     }
 
     protected override void afterInsert(){
-//        CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
+        CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
     }
 
     protected override void afterUpdate(){
-//        CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
+        CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
     }
 
     private void SetRecordTypeIds()
@@ -97,50 +97,50 @@ public class CaseTriggerHandler extends TriggerHandler
                 || newRecord.Workaround_Available__c != oldRecord.Workaround_Available__c;
     }
 
-    // push incidents to partner case proxy service
-//    private void CallPartnerCaseProxyService(List<Case> newList, Map<Id, Case> oldMap){
-//
-//        Set<Id> accountIdSet = new Set<Id>();
-//        List<Case> processList = new List<Case>();
-//        for(Case newCase : newList){
-//            Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
-//            // Is new incident (or) 3rd Party vendor Ticket is null and Push To Partner is checked
-//            if(newCase.AccountId != null && newCase.RecordTypeId == incidentRecordType
-//                    && (oldCase == null || (newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null)) ){
-//                processList.add(newCase);
-//                accountIdSet.add(newCase.AccountId);
-//            }
-//        }
-//        if(accountIdSet.isEmpty()){
-//            return;
-//        }
-//        system.debug('CallPartnerCaseProxyService(): processList - ' + processList);
-//        Map<Id, Account> accountMap = new Map<Id, Account>([
-//                Select Id, Billing_Group__c from Account where Id IN :accountIdSet
-//        ]);
-//        system.debug('CallPartnerCaseProxyService(): accountMap - ' + accountMap);
-//
-//        Set<Id> createdIdSet = new Set<Id>();
-//        for(Case newCase: processList){
-//            Account acct = accountMap.get(newCase.AccountId);
-//            // Is account billing group 'Verizon'
-//            if(acct != null && acct.Billing_Group__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON){
-//                createdIdSet.add(newCase.Id);
-//            }
-//        }
-//        system.debug('CallPartnerCaseProxyService(): createdIdSet - ' + createdIdSet);
-//        if(createdIdSet.size() > 0){
-//            CallPartnerCaseProxyServiceFuture(createdIdSet);
-//        }
-//
-//    } // end of CallPartnerCaseProxyService()
-//
-//    @future(callout=true)
-//    private static void CallPartnerCaseProxyServiceFuture(Set<Id> caseIds){
-//
-//        PartnerCaseProxyServiceHelper.PushCaseToProxyService(caseIds);
-//
-//    }
+    //push incidents to partner case proxy service
+    private void CallPartnerCaseProxyService(List<Case> newList, Map<Id, Case> oldMap){
+
+        Set<Id> accountIdSet = new Set<Id>();
+        List<Case> processList = new List<Case>();
+        for(Case newCase : newList){
+            Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
+            // Is new incident (or) 3rd Party vendor Ticket is null and Push To Partner is checked
+            if(newCase.AccountId != null && newCase.RecordTypeId == incidentRecordType
+                    && (oldCase == null || (newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null)) ){
+                processList.add(newCase);
+                accountIdSet.add(newCase.AccountId);
+            }
+        }
+        if(accountIdSet.isEmpty()){
+            return;
+        }
+        system.debug('CallPartnerCaseProxyService(): processList - ' + processList);
+        Map<Id, Account> accountMap = new Map<Id, Account>([
+                Select Id, Billing_Group__c from Account where Id IN :accountIdSet
+        ]);
+        system.debug('CallPartnerCaseProxyService(): accountMap - ' + accountMap);
+
+        Set<Id> createdIdSet = new Set<Id>();
+        for(Case newCase: processList){
+            Account acct = accountMap.get(newCase.AccountId);
+            // Is account billing group 'Verizon'
+            if(acct != null && acct.Billing_Group__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON){
+                createdIdSet.add(newCase.Id);
+            }
+        }
+        system.debug('CallPartnerCaseProxyService(): createdIdSet - ' + createdIdSet);
+        if(createdIdSet.size() > 0){
+            CallPartnerCaseProxyServiceFuture(createdIdSet);
+        }
+
+    } // end of CallPartnerCaseProxyService()
+
+    @future(callout=true)
+    private static void CallPartnerCaseProxyServiceFuture(Set<Id> caseIds){
+
+        PartnerCaseProxyServiceHelper.PushCaseToProxyService(caseIds);
+
+    }
     
 
 
