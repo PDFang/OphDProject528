@@ -271,20 +271,20 @@ private class CaseTriggerHandlerTest {
     @TestSetup
     private static void createTestData(){
 
-        ETMS_Codes__c etmsCode = new ETMS_Codes__c(
-                Name = 'Test ETMS',
-                Request_Type__c = 'WFO',
-                Reason__c = 'WFO Issue',
-                Reason_Detail__c = 'Scheduling Issues',
-                ETMS_Trouble_Type__c = '0010',
-                ETMS_Trouble_Type_Description__c = 'Unit Test'
-        );
-        insert etmsCode;
+//        ETMS_Codes__c etmsCode = new ETMS_Codes__c(
+//                Name = 'Test ETMS',
+//                Request_Type__c = 'WFO',
+//                Reason__c = 'WFO Issue',
+//                Reason_Detail__c = 'Scheduling Issues',
+//                ETMS_Trouble_Type__c = '0010',
+//                ETMS_Trouble_Type_Description__c = 'Unit Test'
+//        );
+//        insert etmsCode;
 
         Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
         Account verizonAccount = new Account(
                 Name = 'Verizon Test Account',
-                Billing_Group__c = PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON,
+//                Billing_Group__c = PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON,
                 Type = 'Partner',
                 RecordTypeId = accountRecordTypeMap.get('Partners').getRecordTypeId()
         );

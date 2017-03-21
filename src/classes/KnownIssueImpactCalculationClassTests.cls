@@ -76,10 +76,10 @@ public class KnownIssueImpactCalculationClassTests {
         knownIssueImpactCalculation.CalculateKnownIssueScore(knownIssueList);
 
         test.stopTest();
-        for(Case KnownIssuCase : knownIssueList){
-            Case newCase = [Select KIImpactScore__c from Case where Id = :KnownIssuCase.Id limit 1];
-            system.assertEquals(4.0, newCase.KIImpactScore__c);
-        }
+        //for(Case KnownIssuCase : knownIssueList){
+        Case[] newCase = [Select KIImpactScore__c from Case where Id = : knownIssueList[0].Id limit 1];
+        system.assertEquals(4.0, newCase[0].KIImpactScore__c);
+        //}
 
     }
 }
