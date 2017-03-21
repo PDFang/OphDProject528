@@ -2,7 +2,7 @@
 private class AccountTriggerHandlerTest {
     static final String OPPORTUNITY_TYPE_NEW = 'New Opportunity';
 
-    static testMethod void testCalculateAccountNetScore() {
+    static testMethod void testCalculateAccountNetScore_Insert() {
 
         AccountImpactCalculationImpl accountScoreCalculator = new AccountImpactCalculationImpl();
 
@@ -125,37 +125,6 @@ private class AccountTriggerHandlerTest {
                 GYRStatus__c = 'Green'
         );
 
-        Date sixMonthsFromToday = system.Today().addMonths(-6);
-
-        Opportunity testOpp = new Opportunity(
-                Name = 'ProjectTriggerHandlerTest Opp 1',
-                AccountId = testAccount.Id,
-                RecordTypeId = opportunityRecordTypeMap.get(OPPORTUNITY_TYPE_NEW).getRecordTypeId(),
-                StageName = OpportunityTriggerHelper.OPPORTUNITY_STAGE_THREE,
-                CloseDate = Date.today(),
-                Probability = 25,
-                Partner_Deal__c = 'NO',
-                Contract_Type__c = 'New Customer',
-                inContact__c = 'YES',
-                inContact_Setup_Fee__c = 1000,
-                inContact_Seats__c = 1,
-                inContact_MRC_Min__c = 1000,
-                inContact_Ports__c = 1,
-                inContact_MRC_Exp__c = 1000,
-                ECHO__c = 'NO',
-                eLearning__c = 'NO',
-                Hiring__c = 'NO',
-                WFM__c = 'NO'
-        );
-
-        ImplementedProduct__c ip = new ImplementedProduct__c(
-                Account__c = testAccount.Id,
-                EstimatedGoLiveDate__c = sixMonthsFromToday,
-                GoLiveDate__c = sixMonthsFromToday,
-                Product__c = 'inContact',
-                Status__c = 'Implemented',
-                Opportunity__c = testOpp.Id);  //TODO: Should get the product dynamically?
-
         // Create Multiplier Records
         Impact_Score_Multiplier__c ageOfCustomerMultiplier = new Impact_Score_Multiplier__c(
                 Name = 'age of customer',
@@ -207,25 +176,40 @@ private class AccountTriggerHandlerTest {
         multipliers.add(socialMediaMultiplier);
         multipliers.add(referenceableMultiplier);
 
+        // Insert multipliers
+        insert multipliers;
+        insert testAccount;
+
+        Account testIncident = [Select Id, Risk_of_Leaving__c, GYRStatus__c, CustomerSegment__c, IsPartner__c, Brand_Visibility__c,Industry_Leadership_Vocality__c,Social_Media_Presence__c,Referenceable__c  from Account where Id = :testAccount.Id];
+
+        testIncident.Risk_of_Leaving__c = '2';
+        testIncident.CustomerSegment__c = 'Large';
+        testIncident.GYRStatus__c = 'Yellow';
+        testIncident.IsPartner__c = true;
+        testIncident.Brand_Visibility__c = 'Low';
+        testIncident.Industry_Leadership_Vocality__c = 'Medium';
+        testIncident.Social_Media_Presence__c = 'no';
+        testIncident.Referenceable__c = true;
+
+        test.startTest();
+        update testIncident;
+        test.stopTest();
+
+
+
         // Calculate Values
-        Double riskOfLeavingScore = accountScoreCalculator.CalculateRiskOfLeavingScore(testAccount.Risk_of_Leaving__c, (Double)riskOfLeavingMultiplier.Multiplier__c);
-        Double gyrStatusScore = accountScoreCalculator.CalculateGYRColor(testAccount.GYRStatus__c);
-        Double stategicAccountScore = accountScoreCalculator.CalculateStrategicAccountScore(testAccount.CustomerSegment__c, (Double)stategicAccountMultiplier.Multiplier__c);
-        Double partnerAccountScore = accountScoreCalculator.CalculatePartnerAccountScore(testAccount.IsPartner__c, (Double)partnerAccountMultiplier.Multiplier__c);
-        Double brandVisibilityScore = accountScoreCalculator.CalculateBrandVisibilityScore(testAccount.Brand_Visibility__c, (Double)brandVisibilityMultiplier.Multiplier__c);
-        Double industryLeaderScore = accountScoreCalculator.CalculateIndustryLeaderScore(testAccount.Industry_Leadership_Vocality__c, (Double)industryLeaderMultiplier.Multiplier__c);
-        Double socialMediaScore = accountScoreCalculator.CalculateSocialMediaPresenceScore(testAccount.Social_Media_Presence__c, (Double)socialMediaMultiplier.Multiplier__c);
-        Double referenceableScore = accountScoreCalculator.CalculateCurrentReferenceScore(testAccount.Referenceable__c, (Double)referenceableMultiplier.Multiplier__c);
+        Double riskOfLeavingScore = accountScoreCalculator.CalculateRiskOfLeavingScore(testIncident.Risk_of_Leaving__c, (Double)riskOfLeavingMultiplier.Multiplier__c);
+        Double gyrStatusScore = accountScoreCalculator.CalculateGYRColor(testIncident.GYRStatus__c);
+        Double stategicAccountScore = accountScoreCalculator.CalculateStrategicAccountScore(testIncident.CustomerSegment__c, (Double)stategicAccountMultiplier.Multiplier__c);
+        Double partnerAccountScore = accountScoreCalculator.CalculatePartnerAccountScore(testIncident.IsPartner__c, (Double)partnerAccountMultiplier.Multiplier__c);
+        Double brandVisibilityScore = accountScoreCalculator.CalculateBrandVisibilityScore(testIncident.Brand_Visibility__c, (Double)brandVisibilityMultiplier.Multiplier__c);
+        Double industryLeaderScore = accountScoreCalculator.CalculateIndustryLeaderScore(testIncident.Industry_Leadership_Vocality__c, (Double)industryLeaderMultiplier.Multiplier__c);
+        Double socialMediaScore = accountScoreCalculator.CalculateSocialMediaPresenceScore(testIncident.Social_Media_Presence__c, (Double)socialMediaMultiplier.Multiplier__c);
+        Double referenceableScore = accountScoreCalculator.CalculateCurrentReferenceScore(testIncident.Referenceable__c, (Double)referenceableMultiplier.Multiplier__c);
 
         Double accountNetScore = riskOfLeavingScore + gyrStatusScore + stategicAccountScore + partnerAccountScore
                 + brandVisibilityScore + industryLeaderScore + socialMediaScore + referenceableScore;
 
-        // Insert multipliers
-        insert multipliers;
-        test.startTest();
-
-        insert testAccount;
-        test.stopTest();
 
         Account customer = [Select Account_Net_Score__c from Account where Id = :testAccount.Id];
         system.assert(customer.Account_Net_Score__c == accountNetScore, 'Account Net Score did not match the expected value');
