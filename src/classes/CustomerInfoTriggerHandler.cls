@@ -4,7 +4,11 @@
 
 public class CustomerInfoTriggerHandler extends TriggerHandler {
 
-    protected override void afterInsert() {
+    protected override void afterInsert(){
+        CalculateGainsightNetScore((List<JBCXM__CustomerInfo__c>) trigger.new, (Map<Id, JBCXM__CustomerInfo__c>) trigger.oldMap);
+    }
+
+    protected override void afterUpdate(){
         CalculateGainsightNetScore((List<JBCXM__CustomerInfo__c>) trigger.new, (Map<Id, JBCXM__CustomerInfo__c>) trigger.oldMap);
     }
 
