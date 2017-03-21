@@ -7,11 +7,25 @@ global class AccountImpactCalculationBatch implements Database.Batchable<Sobject
     public String query;
     private Integer totalAccounts = 0;
 
+    static final Set<String> recordTypes = new Set<String>{
+            'Customers',
+            'Resell Customers',
+            'Resell Partner'
+    };
+
     public AccountImpactCalculationBatch(){
+
+        Map<String,Schema.RecordTypeInfo> rtMapByName  = Schema.SObjectType.Account.getRecordTypeInfosByName();
+        Set<Id> recordTypeIds = new Set<Id>();
+        recordTypeIds.add(rtMapByName.get('Customers').getRecordTypeId());
+        recordTypeIds.add(rtMapByName.get('Resell Customers').getRecordTypeId());
+        recordTypeIds.add(rtMapByName.get('Resell Partner').getRecordTypeId());
+
         this.query = 'Select Id, Social_Media_Presence__c, CustomerSegment__c, Brand_Visibility__c, '
             + 'Industry_Leadership_Vocality__c, Risk_of_Leaving__c, GYRStatus__c, '
             + 'Age_of_Customer_in_Months__c, IsPartner__c, Referenceable__c '
             + 'from Account where Age_of_Customer_in_Months__c != null '
+            + 'and RecordTypeId IN :recordTypeIds '
             + 'and (inContactGoLive__c = LAST_N_DAYS:365 or VCC_Go_Live__c = LAST_N_DAYS:365)';
     }
 
