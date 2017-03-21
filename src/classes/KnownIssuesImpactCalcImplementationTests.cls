@@ -20,7 +20,7 @@ public class KnownIssuesImpactCalcImplementationTests {
         system.assertEquals(issueCountLTSeven, 8, 'Issue Count Seven calculation is incorrect');
         system.assertEquals(issueCountLTTen, 21, 'Issue Count Ten calculation is incorrect');
         system.assertEquals(issueCountElse, 40, 'Issue Count Else calculation is incorrect');
-        system.assertEquals(issueCountNegative, -50, 'Negative Issue Count calculation is incorrect');
+        system.assertEquals(issueCountNegative, -5, 'Negative Issue Count calculation is incorrect');
     }
 
     static testMethod void CalculateDaysIssuePresent_ReturnsCorrectCalculatedScore() {
@@ -38,7 +38,7 @@ public class KnownIssuesImpactCalcImplementationTests {
         system.assertEquals(numOfDaysLTSeven, 8, 'Number Of Days less than seven calculation is incorrect');
         system.assertEquals(numOfDaysLTTen, 21, 'INumber Of Days less than ten calculation is incorrect');
         system.assertEquals(numOfDaysElse, 40, 'Number Of Days else calculation is incorrect');
-        system.assertEquals(numOfDaysNegative, -50, 'Negative Number Of Days calculation is incorrect');
+        system.assertEquals(numOfDaysNegative, 0, 'Negative Number Of Days calculation is incorrect');
     }
 
     static testMethod void CalculateDollarAmountTiedToIssue_ReturnsCorrectCalculatedScore(){
@@ -52,11 +52,11 @@ public class KnownIssuesImpactCalcImplementationTests {
         Decimal accountSumLTNegative = knownIssImpCalImplTest.CalculateDollarAmountTiedToIssue(-1, -5);
 
         system.assertEquals(accountSumLTOne, 0, 'Account Sum less than one calculation is incorrect');
-        system.assertEquals(accountSumLTOne, 1, 'Account Sum less than two calculation is incorrect');
-        system.assertEquals(accountSumLTOne, 8, 'Account Sum less than three calculation is incorrect');
-        system.assertEquals(accountSumLTOne, 21, 'Account Sum less than five calculation is incorrect');
+        system.assertEquals(accountSumLTTwo, 1, 'Account Sum less than two calculation is incorrect');
+        system.assertEquals(accountSumLTThree, 8, 'Account Sum less than three calculation is incorrect');
+        system.assertEquals(accountSumLTFive, 21, 'Account Sum less than five calculation is incorrect');
         system.assertEquals(accountSumLTElse, 40, 'Account Sum else calculation is incorrect');
-        system.assertEquals(accountSumLTNegative, -50, 'Negative Account Sum calculation is incorrect');
+        system.assertEquals(accountSumLTNegative, 0, 'Negative Account Sum calculation is incorrect');
     }
 
     static testMethod void CalculateRecentReleaseBreak_ReturnsCorrecCalculatedScore() {

@@ -115,7 +115,7 @@ public class ImpactCalculationService
             Double healthScore = customerInfoRecord.JBCXM__CurScoreId__r == null || customerInfoRecord.JBCXM__CurScoreId__r.JBCXM__Score__c == null
                     ? 0
                     : this.gainsightImpactCalculation.CalculateHealthScore((Integer)customerInfoRecord.JBCXM__CurScoreId__r.JBCXM__Score__c, GetMultiplierValue('health score'));
-            system.debug('CalculateGainsightNetScore(): healthScore - ' + healthScore + ' , JBCXM__CurScoreId__r.Name - ' + customerInfoRecord.JBCXM__CurScoreId__r.Name);
+            system.debug('CalculateGainsightNetScore(): healthScore - ' + healthScore + ' , JBCXM__CurScoreId__r.JBCXM__Score__c - ' + customerInfoRecord.JBCXM__CurScoreId__r.JBCXM__Score__c);
 
             Double netScore = outStandingIncidentScore + incidentsOpenedLastSixMonthsScore + mttrIncidentScore + annualContractValueScore + creditGivenLastTwelveMonths + healthScore;
             system.debug('CalculateGainsightNetScore(): netScore - ' + netScore);
