@@ -284,7 +284,7 @@ private class CaseTriggerHandlerTest {
         Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
         Account verizonAccount = new Account(
                 Name = 'Verizon Test Account',
-                Billing_Group__c = PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON,
+//                Billing_Group__c = PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON,
                 Type = 'Partner',
                 RecordTypeId = accountRecordTypeMap.get('Partners').getRecordTypeId()
         );
