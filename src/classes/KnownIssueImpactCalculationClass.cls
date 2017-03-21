@@ -69,7 +69,8 @@ public with sharing class KnownIssueImpactCalculationClass {
             update updKnowIssueList;
             string body = 'Successfully Updated ' + knownIssueList.size() + ' known issues';
             string subject = 'Success';
-            SendEmail(subject, body);
+            if(!Test.isRunningTest())
+                SendEmail(subject, body);
 
         }Catch(Exception ex){
             string body = 'There is an exception occured - ' + ex.getMessage() + ' at line number ' + ex.getLineNumber();

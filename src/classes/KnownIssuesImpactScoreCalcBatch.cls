@@ -48,7 +48,8 @@ global class KnownIssuesImpactScoreCalcBatch implements Database.Batchable<sObje
         mail.setToAddresses(toAddresses);
         mail.setSubject(subject);
         mail.setHtmlBody(body);
-        Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+        if(!Test.isRunningTest())
+            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
     }
 
 }

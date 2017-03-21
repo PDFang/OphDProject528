@@ -6,6 +6,35 @@
 public class KnownIssueImpactCalculationClassTests {
 
     static testMethod void CalculateKnownIssueScore_ReturnsSetScoreCorrectly(){
+
+
+
+        // Set stub methods to always return the same value
+        list<case> knownIssueList = new list<Case>();
+        knownIssueList = GetListOfCases();
+
+        KnownIssuesImpactCalcStub knownIssueCalculationStub = new KnownIssuesImpactCalcStub();
+        knownIssueCalculationStub.NumberIncidentsTiedToIssue = 1;
+        knownIssueCalculationStub.DaysIssuePresent = 1;
+        knownIssueCalculationStub.DollarAmountTiedToIssue = 1;
+        knownIssueCalculationStub.RecentReleaseBreak = 1;
+        // incident
+        test.startTest();
+        KnownIssueImpactCalculationClass knownIssueImpactCalculation = new KnownIssueImpactCalculationClass(knownIssueCalculationStub);
+
+        knownIssueImpactCalculation.CalculateKnownIssueScore(new list<Case>());
+        knownIssueImpactCalculation.CalculateKnownIssueScore(knownIssueList);
+
+        test.stopTest();
+        //for(Case KnownIssuCase : knownIssueList){
+        Case[] newCase = [Select KIImpactScore__c from Case where Id = : knownIssueList[0].Id limit 1];
+        system.assertEquals(4.0, newCase[0].KIImpactScore__c);
+        //}
+
+    }
+
+    public static list<Case> GetListOfCases()
+    {
         Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
         Account testAccount = new Account(
                 Name = 'testCalculateAccountNetScore Account',
@@ -13,8 +42,8 @@ public class KnownIssueImpactCalculationClassTests {
                 RecordTypeId = accountRecordTypeMap.get('Customers').getRecordTypeId(),
                 IsPartner__c = false,
                 CustomerSegment__c = 'Strategic',
-                Brand_Visibility__c = 'Medium',
-                Industry_Leadership_Vocality__c = 'Low',
+                Brand_Visibility__c = 'Yes',
+                Industry_Leadership_Vocality__c = 'Yes',
                 Social_Media_Presence__c = 'Yes',
                 Risk_of_Leaving__c = '1',
                 Referenceable__c = false,
@@ -58,28 +87,50 @@ public class KnownIssueImpactCalculationClassTests {
 
                 )
         };
+
         insert incidentList;
 
+        list<JBCXM__CustomerInfo__c> customerInfoList = new list<JBCXM__CustomerInfo__c>{
+                new JBCXM__CustomerInfo__c(
+                        JBCXM__Account__c = testAccount.Id,
+                        JBCXM__ASV__c = 2345678
+                )
+        };
 
-        // Set stub methods to always return the same value
+        insert customerInfoList;
 
-        KnownIssuesImpactCalcStub knownIssueCalculationStub = new KnownIssuesImpactCalcStub();
-        knownIssueCalculationStub.NumberIncidentsTiedToIssue = 1;
-        knownIssueCalculationStub.DaysIssuePresent = 1;
-        knownIssueCalculationStub.DollarAmountTiedToIssue = 1;
-        knownIssueCalculationStub.RecentReleaseBreak = 1;
+        return knownIssueList;
+
+    }
+
+    static testMethod void KnownIssuesImpactScoreCalcBatchTests ()
+    {
+        list<case> knownIssueList = new list<Case>();
+        knownIssueList = GetListOfCases();
+
         // incident
         test.startTest();
-        KnownIssueImpactCalculationClass knownIssueImpactCalculation = new KnownIssueImpactCalculationClass(knownIssueCalculationStub);
-
-        knownIssueImpactCalculation.CalculateKnownIssueScore(new list<Case>());
-        knownIssueImpactCalculation.CalculateKnownIssueScore(knownIssueList);
+        string knownIssueQuery = 'select Id,Broken_by_Recent_Release__c,Status, Subject from Case '
+                + 'WHERE RecordType.Name = \'Known Issue\' '
+                + 'AND isClosed = false and Status not in (\'Released - Confirm Resolution\',\'No Fix\')';
+        database.executeBatch(new KnownIssuesImpactScoreCalcBatch(knownIssueQuery), 500);
 
         test.stopTest();
         //for(Case KnownIssuCase : knownIssueList){
         Case[] newCase = [Select KIImpactScore__c from Case where Id = : knownIssueList[0].Id limit 1];
-        system.assertEquals(4.0, newCase[0].KIImpactScore__c);
+        system.assertEquals(10.0, newCase[0].KIImpactScore__c);
         //}
+    }
 
+    static testMethod void KnownIssuesImpactScoreSchedulerTests ()
+    {
+        Test.startTest();
+        KnownIssuesImpactScoreScheduler knownIssuesImpactScoreSchTest = new KnownIssuesImpactScoreScheduler();
+        String sch = '0 0 1 * * ?';
+
+        System.schedule('Test', sch, knownIssuesImpactScoreSchTest);
+
+
+        Test.stopTest();
     }
 }
