@@ -41,7 +41,7 @@ public class FeedCommentTriggerHandler extends TriggerHandler
         
         if(developmentReviewGroup != null && !qaTestsFired)
         {
-            if(fc.ParentId == developmentReviewGroup && fc.CommentBody.contains('~Run Tests~'))
+            if(fc.ParentId == developmentReviewGroup && fc.CommentBody.containsIgnoreCase('~Run Tests~'))
             {
                 DevelopmentReviewHandler.RunLocalTestsAsynchronous();
                 qaTestsFired = true;

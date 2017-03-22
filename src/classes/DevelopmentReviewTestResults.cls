@@ -4,47 +4,100 @@
 
 global class DevelopmentReviewTestResults implements Schedulable {
 
-    Id asyncJobId;
+    String asyncJobId;
 
     static final Integer INTERVAL = 15;
 
-    global DevelopmentReviewTestResults(Id asyncJobId) {
+    global DevelopmentReviewTestResults(String asyncJobId) {
         this.asyncJobId = asyncJobId;
+        system.debug('DevelopmentReviewTestResults(): asyncJobId - ' + asyncJobId);
     }
 
     global void execute(SchedulableContext sc) {
 
-//        ApexTestResult[] result = [
-//                Select ApexTestRunResultId, AsyncApexJobId, Outcome, Message, MethodName, ApexClass.Name
-//                from ApexTestResult
-//                where AsyncApexJobId = :asyncJobId
-//        ];
+        emailTestRunResult(asyncJobId);
 
-        ApexTestRunResult testRun = [
-                Select AsyncApexJobId, ClassesCompleted, MethodsCompleted, MethodsFailed,
-                        StartTime, Status, UserId, TestTime
-                from ApexTestRunResult
-                where AsyncApexJobId = :asyncJobId
-        ];
-        system.debug('execute(): testRun - ' + testRun);
+    } // end of execute()
 
-        if(testRun.Status == 'Queued' || testRun.status == 'Processing'){
-            Datetime nextRun = system.now().addMinutes(INTERVAL);
-            String dateTimeFormat = '0 {0} {1} {2} {3} ? {4}';
-            String scheduledTime = string.format(
-                    dateTimeFormat,
-                    new String[]{
-                            nextRun.minute().format(),
-                            nextRun.hour().format(),
-                            nextRun.day().format(),
-                            nextRun.month().format(),
-                            nextRun.year().format()
+    @future(callout=true)
+    private static void emailTestRunResult(String asyncJobId){
+
+        system.debug('getTestRunResult(): asyncJobId - ' + asyncJobId);
+        String query  = 'Select+AsyncApexJobId,ClassesEnqueued,ClassesCompleted,MethodsCompleted,MethodsFailed,StartTime,Status,UserId,TestTime+from+ApexTestRunResult+where'
+                +'+AsyncApexJobId=\''+asyncJobId+'\'';
+        HttpRequest request = new HttpRequest();
+        request.setEndpoint('callout:Salesforce_QA/services/data/v38.0/tooling/query/?q=' + query);
+        request.setMethod('GET');
+        request.setHeader('Content-Type', 'application/json');
+        HttpResponse response = new http().send(request);
+        system.debug('getTestRunResult(): response body - ' + response.getBody());
+
+        ApexTestRunResult testRunResult = null;
+        if(response.getStatusCode() == 200) {
+            JSONParser parser = JSON.createParser(response.getBody());
+            while (parser.nextToken() != null) {
+                if (parser.getCurrentToken() == JSONToken.START_ARRAY) {
+                    while (parser.nextToken() != null) {
+                        if (parser.getCurrentToken() == JSONToken.START_OBJECT) {
+                            testRunResult = (ApexTestRunResult) parser.readValueAs(ApexTestRunResult.class);
+                            system.debug('getTestRunResult(): ApexTestRunResult - ' + testRunResult);
+                        }
+
                     }
-            );
-            String scheduledJobId = system.schedule('Apex Test Results Emailer', scheduledTime, new DevelopmentReviewTestResults(asyncJobId));
-            system.debug('execute(): scheduledJobId - ' + scheduledJobId);
+                }
+            }
+        }
+
+        if(testRunResult != null && testRunResult.Status == 'Completed'){
+            sendSummaryEmail(testRunResult);
+        } else if(testRunResult != null && (testRunResult.Status == 'Queued' || testRunResult.status == 'Processing') ){
+            DevelopmentReviewHandler.scheduleJob(asyncJobId);
         }
 
     }
+
+    private static void sendSummaryEmail(ApexTestRunResult testRun){
+
+        Messaging.SingleEmailMessage message = new Messaging.SingleEmailMessage();
+        message.setSenderDisplayName('SalesforceAdmins');
+        message.setSubject('Salesforce Development Review Test Run Summary');
+        message.setToAddresses(new String[]{userInfo.getUserEmail()});
+
+        String thead = '<tr>'
+                + '<th>AsyncApexJobId</th>'
+                + '<th>Status</th>'
+                + '<th>StartTime</th>'
+                + '<th>ClassesEnqueued</th>'
+                + '<th>ClassesCompleted</th>'
+                + '<th>MethodsCompleted</th>'
+                + '<th>MethodsFailed</th>'
+                + '<th>TestTime</th>'
+                + '</tr>';
+        String tdetail = '<tr>'
+                + '<td>{0}</td>'
+                + '<td>{1}</td>'
+                + '<td>{2}</td>'
+                + '<td>{3}</td>'
+                + '<td>{4}</td>'
+                + '<td>{5}</td>'
+                + '<td>{6}</td>'
+                + '<td>{7}</td>'
+                + '</tr>';
+        tdetail = string.format(tdetail, new String[]{
+                testRun.AsyncApexJobId,
+                testRun.Status,
+                testRun.StartTime.format(),
+                testRun.ClassesEnqueued.format(),
+                testRun.ClassesCompleted.format(),
+                testRun.MethodsCompleted.format(),
+                testRun.MethodsFailed.format(),
+                testRun.TestTime.format()
+        });
+        String htmlBody = '<table border="1" cellpadding="5" cellspacing="0">'+thead+tdetail+'</table>';
+        message.setHtmlBody(htmlBody);
+        messaging.sendEmail(new  Messaging.SingleEmailMessage[]{message});
+
+    } // end sendSummaryEmail()
+
 
 }
