@@ -4,7 +4,7 @@
 // Development Review Automation
 public with sharing class DevelopmentReviewHandler {
 
-    static final Integer TIME_INTERVAL = 60;
+    static final Integer TIME_INTERVAL = 3;
 
     /*
     * Runs all local tests in the connected Org
@@ -14,7 +14,8 @@ public with sharing class DevelopmentReviewHandler {
     @Future(callout=true)
     public static void RunLocalTestsAsynchronous(){
 
-        String body = '{"testLevel":"RunLocalTests"}';
+//        String body = '{"testLevel":"RunLocalTests"}';
+        String body = '{"classNames":"SurveyTestClass,LeadTriggerHelperTest","testLevel":"RunSpecifiedTests"}';
 
         HttpRequest request = new HttpRequest();
         request.setEndpoint('callout:Salesforce_QA/services/data/v38.0/tooling/runTestsAsynchronous');
@@ -25,14 +26,14 @@ public with sharing class DevelopmentReviewHandler {
         system.debug('RunLocalTestsAsynchronous(): response body - ' + response.getBody());
         String asyncJobId = null;
         if(response.getStatusCode() == 200){
-            asyncJobId = response.getBody();
+            asyncJobId = response.getBody().remove('"');
             scheduleJob(asyncJobId);
         }
 
         system.debug('RunLocalTestsAsynchronous(): asyncJobId - ' + asyncJobId);
     }
 
-    private static void scheduleJob(String asyncJobId){
+    public static void scheduleJob(String asyncJobId){
 
         Datetime nextRun = system.now().addMinutes(TIME_INTERVAL);
         String dateTimeFormat = '0 {0} {1} {2} {3} ? {4}';
@@ -43,10 +44,11 @@ public with sharing class DevelopmentReviewHandler {
                         nextRun.hour().format(),
                         nextRun.day().format(),
                         nextRun.month().format(),
-                        nextRun.year().format()
+                        nextRun.year().format().remove(',')
                 }
         );
-        String scheduledJobId = system.schedule('Apex Test Results Emailer', scheduledTime, new DevelopmentReviewTestResults(asyncJobId));
+        system.debug('scheduleJob(): scheduledTime - ' + scheduledTime);
+        String scheduledJobId = system.schedule('Apex Test Results Emailer '+nextRun.format(), scheduledTime, new DevelopmentReviewTestResults(asyncJobId));
         system.debug('scheduleJob(): scheduledJobId - ' + scheduledJobId);
     }
 }
