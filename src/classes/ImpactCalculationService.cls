@@ -183,7 +183,7 @@ public class ImpactCalculationService
                     : this.accountImpactCalculation.CalculateCurrentReferenceScore(accountRecord.Referenceable__c, GetMultiplierValue('currently referenceable'));
             system.debug('CalculateAccountNetScore(): currentReferenceScore - ' + currentReferenceScore + ' , Referenceable__c ' + accountRecord.Referenceable__c);
 
-            Double netScore = riskOfLeavingScore + gyrColor + strategicAccountScore + partnerAccountScore + brandVisibilityScore + industryLeaderScore  + socialMediaPresenceScore + currentReferenceScore;
+            Double netScore = ageOfCustomerInMonthsScore + riskOfLeavingScore + gyrColor + strategicAccountScore + partnerAccountScore + brandVisibilityScore + industryLeaderScore  + socialMediaPresenceScore + currentReferenceScore;
 
             system.debug('CalculateAccountNetScore(): netScore - ' + netScore);
 
