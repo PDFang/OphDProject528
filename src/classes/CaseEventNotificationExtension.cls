@@ -369,7 +369,7 @@ public class CaseEventNotificationExtension
         formattedEventStartDate = formattedEventStartDate + ' (UTC)'; 
         
         String formattedEventEndDate = c.EndDateTimeUTC__c;
-        if(formattedEventStartDate != null)
+        if(formattedEventEndDate != null)
         {
             formattedEventEndDate = formattedEventEndDate.substringBeforeLast(':');
             formattedEventEndDate = formattedEventEndDate + ' (UTC)'; 
@@ -379,7 +379,7 @@ public class CaseEventNotificationExtension
         MergeField('{Subject}',c.Subject);
         MergeField('{Description}', c.Description);
        MergeField('{Start Time}', formattedEventStartDate);
-       MergeField('{End Time}', formattedEventStartDate);
+       MergeField('{End Time}', formattedEventEndDate);
         MergeField('{Product Impacted}', c.ProductImpacted__c);
         MergeField('{Service Impact}', c.CustomersMayExperienceTheFollowing__c);
         MergeField('{Case Status}', c.Status);
