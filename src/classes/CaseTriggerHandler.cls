@@ -45,7 +45,6 @@ public class CaseTriggerHandler extends TriggerHandler
     {
         Schema.DescribeSObjectResult d = Schema.SObjectType.Case; 
         Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
-        
         //Get Event record type id
         eventRecordType = rtMapByName.get('Event').getRecordTypeId();
         maintenanceRecordType = rtMapByName.get('Maintenance Notification').getRecordTypeId();   
@@ -129,7 +128,7 @@ public class CaseTriggerHandler extends TriggerHandler
             }
         }
         system.debug('CallPartnerCaseProxyService(): createdIdSet - ' + createdIdSet);
-        if(createdIdSet.size() > 0){
+        if(createdIdSet.size() > 0 && !system.isFuture() && !system.isBatch()){
             CallPartnerCaseProxyServiceFuture(createdIdSet);
         }
 

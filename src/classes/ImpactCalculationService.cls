@@ -97,10 +97,10 @@ public class ImpactCalculationService
                     : this.gainsightImpactCalculation.CalculateIncidentsOpenedLastSixMonthsScore((Integer)customerInfoRecord.JBCXM_CreatedCases__c, GetMultiplierValue('incidents opened last six months'));
             system.debug('CalculateGainsightNetScore(): incidentsOpenedLastSixMonthsScore - ' + incidentsOpenedLastSixMonthsScore + ' , 	JBCXM_CreatedCases__c - ' + customerInfoRecord.JBCXM_CreatedCases__c);
 
-            Double mttrIncidentScore = customerInfoRecord.JBCXM_MTTR__c == null
+            Double mttrIncidentScore = customerInfoRecord.JBCXM_MTTR_IN_Weeks__c == null
                     ? 0
-                    : this.gainsightImpactCalculation.CalculateMttrIncidentScore((Integer)customerInfoRecord.JBCXM_MTTR__c, GetMultiplierValue('mttr last six months') );
-            system.debug('CalculateGainsightNetScore(): mttrIncidentScore - ' + mttrIncidentScore + ' ,JBCXM_MTTR__c - ' + customerInfoRecord.JBCXM_MTTR__c);
+                    : this.gainsightImpactCalculation.CalculateMttrIncidentScore((Integer)customerInfoRecord.JBCXM_MTTR_IN_Weeks__c, GetMultiplierValue('mttr last six months') );
+            system.debug('CalculateGainsightNetScore(): mttrIncidentScore - ' + mttrIncidentScore + ' ,JBCXM_MTTR_IN_Weeks__c - ' + customerInfoRecord.JBCXM_MTTR_IN_Weeks__c);
 
             Double annualContractValueScore = customerInfoRecord.JBCXM__ASV__c == null
                     ? 0

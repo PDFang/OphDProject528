@@ -2,28 +2,32 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
 
     private string query;
     private ImpactCalculationConstants.ImpactScoreType scoreType;
-    private integer batchSizeRecordCount;
+    private integer recordCount = 0;
 
-    Set<String> recordTypes = ImpactCalculationConstants.recordTypes;
+    Set<String> accountRecordTypes = ImpactCalculationConstants.recordTypes;
 
     public ImpactScoreCalculationBatch(ImpactCalculationConstants.ImpactScoreType scoreType){
 
         this.scoreType = scoreType;
-
         if (scoreType == ImpactCalculationConstants.ImpactScoreType.AccountNetScore) { // Account object
             this.query = 'Select Id, Social_Media_Presence__c, CustomerSegment__c, Brand_Visibility__c, '
                     + 'Industry_Leadership_Vocality__c, Risk_of_Leaving__c, GYRStatus__c, '
                     + 'Age_of_Customer_in_Months__c, IsPartner__c, Referenceable__c '
-                    + 'from Account where RecordType.Name IN :recordTypes';
+                    + 'from Account where RecordType.Name IN :accountRecordTypes';
 
         } else if(scoreType == ImpactCalculationConstants.ImpactScoreType.IncidentNetScore) { // Case Object
-
-            //TODO: Mohan said he will fix this when he has time.
+            this.query = 'Select Id, Severity__c, Business_Impacted__c, Quality_of_Workaround__c, '
+                    + 'Related_to_Previous_Known_Issue__c, Security_Issue__c, Workaround_Available__c '
+                    + 'From Case '
+                    + 'Where RecordType.Name = \'Incident\' and (Status = \'Assigned to Known Issue\''
+                    + 'OR IsClosed = false)';
 
         } else if(scoreType == ImpactCalculationConstants.ImpactScoreType.GainsightNetScore) {  //Customer Info Gainsight
-            this.query = 'SELECT Id,JBCXM__Account__c,JBCXM__CurScoreId__c,JBCXM__CurScoreId__r.JBCXM__Score__c, '
-                    + 'JBCXM__ASV__c,JBCXM_CreatedCases__c,JBCXM_OpenCases__c,JBCXM_Credits__c, JBCXM_MTTR__c '
-                    + 'FROM JBCXM__CustomerInfo__c WHERE JBCXM__Account__r.RecordType.Name in :recordTypes';
+            this.query = 'SELECT Id, JBCXM__Account__c, JBCXM__CurScoreId__c, JBCXM__CurScoreId__r.JBCXM__Score__c, '
+                    + 'JBCXM__ASV__c, JBCXM_CreatedCases__c, JBCXM_OpenCases__c, JBCXM_Credits__c, '
+                    + 'JBCXM_MTTR_IN_Weeks__c, JBCXM_MTTR_IN_Hours__c '
+                    + 'FROM JBCXM__CustomerInfo__c '
+                    + 'WHERE JBCXM__Account__r.RecordType.Name in :accountRecordTypes';
         }
     }
 
@@ -41,12 +45,13 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
         } else if(scope[0] instanceof Case) {
             ImpactCalculationService service = new ImpactCalculationService(new IncidentImpactCalculationImplementation());
             service.CalculateIncidentNetScore(scope);
+            Database.update(scope, false);
         } else if (scope[0] instanceof JBCXM__CustomerInfo__c){
             ImpactCalculationService service = new ImpactCalculationService(new GainsightImpactCalculationImpl());
             service.CalculateGainsightNetScore(scope);
         }
 
-        this.batchSizeRecordCount += scope.size();
+        this.recordCount += scope.size();
     }
 
     global void finish(Database.BatchableContext BC) {
@@ -69,7 +74,7 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
                 + ' batches with '
                 + a.NumberOfErrors
                 + ' failures.' + '\n\n'
-                + 'The batch Apex job processed ' + this.batchSizeRecordCount + ' accounts.');
+                + 'The batch Apex job processed ' + this.recordCount + ' accounts.');
         try{
 
         } catch(System.EmailException ex){

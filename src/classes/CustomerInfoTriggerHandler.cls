@@ -24,7 +24,7 @@ public class CustomerInfoTriggerHandler extends TriggerHandler {
         }
         system.debug('CalculateGainsightNetScore(): custInfoIdSet - ' + custInfoIdSet);
 
-        if(custInfoIdSet.size() > 0){
+        if(custInfoIdSet.size() > 0 && !system.isFuture() && !system.isBatch()){
             system.debug('CalculateGainsightNetScore(): Calling CalculateGainsightNetScoreFuture');
             CalculateGainsightNetScoreFuture(custInfoIdSet);
         }
