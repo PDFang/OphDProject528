@@ -36,7 +36,7 @@ public class CustomerInfoTriggerHandler extends TriggerHandler {
                 || newRecord.JBCXM_CreatedCases__c != oldRecord.JBCXM_CreatedCases__c
                 || newRecord.JBCXM_OpenCases__c != oldRecord.JBCXM_OpenCases__c
                 || newRecord.JBCXM_Credits__c != oldRecord.JBCXM_Credits__c
-                || newRecord.JBCXM_MTTR__c != oldRecord.JBCXM_MTTR__c;
+                || newRecord.JBCXM_MTTR_IN_Hours__c != oldRecord.JBCXM_MTTR_IN_Hours__c;
     }
 
     @Future
@@ -45,7 +45,8 @@ public class CustomerInfoTriggerHandler extends TriggerHandler {
         List<JBCXM__CustomerInfo__c> custInfoList = new List<JBCXM__CustomerInfo__c>();
         for(JBCXM__CustomerInfo__c custInfo : [
                 SELECT Id, JBCXM__Account__c, JBCXM__CurScoreId__c, JBCXM__CurScoreId__r.JBCXM__Score__c,
-                        JBCXM__ASV__c, JBCXM_CreatedCases__c, JBCXM_OpenCases__c, JBCXM_Credits__c, JBCXM_MTTR__c
+                        JBCXM__ASV__c, JBCXM_CreatedCases__c, JBCXM_OpenCases__c, JBCXM_Credits__c,
+                        JBCXM_MTTR_IN_Weeks__c, JBCXM_MTTR_IN_Hours__c
                 FROM JBCXM__CustomerInfo__c
                 where Id IN :custInfoIdSet
         ]){
