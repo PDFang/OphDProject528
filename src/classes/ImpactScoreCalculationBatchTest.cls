@@ -99,6 +99,8 @@ private class ImpactScoreCalculationBatchTest {
         // create incidents
         Map<String,Schema.RecordTypeInfo> caseRecordTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
         Case[] caseList = new Case[]{};
+        Database.DMLOptions dmo = new Database.DMLOptions();
+        dmo.AssignmentRuleHeader.useDefaultRule = true;
         for(Integer i=0; i<accountList.size(); i++){
             Case testIncident = new Case(
                     RecordTypeId = caseRecordTypeMap.get('Incident').getRecordTypeId(),
@@ -116,6 +118,7 @@ private class ImpactScoreCalculationBatchTest {
                     Product_or_Service__c = 'Service Disruption',
                     Request_Type__c = 'Dialer'
             );
+            testIncident.setOptions(dmo);
             caseList.add(testIncident);
         }
         insert caseList;
