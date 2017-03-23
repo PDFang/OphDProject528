@@ -14,6 +14,7 @@ public with sharing class CaseCreateKnownIssueExtension
         recordTypeName = ApexPages.CurrentPage().getParameters().get('recordType');
         List<string> fields = new List<string>();
         fields.Add(recordTypeName.replace(' ', '') + '__c');
+        fields.Add('Priority');
         if(!Test.isRunningTest())
          {
              controller.addFields(fields);
@@ -94,10 +95,16 @@ public with sharing class CaseCreateKnownIssueExtension
             {
                 update c;
 
+                set<Id> incidentIds = new set<Id>{c.Id};
+                KnownIssueImpactCalculationClass.ChangeKIPriority(incidentIds);
+
                 list<Case> listKnownIssues = [select Id,Broken_by_Recent_Release__c from Case where id = :c.KnownIssue__c];
                 KnownIssuesImpactCalcImplementation KIImpactCalc = new KnownIssuesImpactCalcImplementation();
                 KnownIssueImpactCalculationClass KICalc = new KnownIssueImpactCalculationClass(KIImpactCalc);
                 KICalc.CalculateKnownIssueScore(listKnownIssues);
+
+
+
             }
             catch(Exception ex)
             {
@@ -143,31 +150,29 @@ public with sharing class CaseCreateKnownIssueExtension
                     relatedCase.TfsWorkItem__c = workItem.Id;
                     TfsAccess.CreateTfsItem(workItem.Id, relatedCase.Summary__c, relatedCase.InternalNotes__c,relatedCase.Steps_To_Recreate__c, tfsTeam.Team__c);
             }
-            
-            
             relatedCase.IsVisibleInSelfService = true;
             system.debug(relatedCase.TFSWorkItem__c);
+
+            string priorityString = [select Priority From Case where Id = :c.Id Limit 1].Priority;
+            if(priorityString == 'P1')
+                relatedCase.Priority = 'P1';
+
             insert relatedCase;
 
             c.put(recordTypeName.replace(' ', '') + '__c',relatedCase.Id);
             update c;
-
             // // Call the KNown Issue Impact Calculation Class
             list<Case> listKnownIssues = new List<case>();
             listKnownIssues.add(relatedCase);
             KnownIssuesImpactCalcImplementation KIImpactCalc = new KnownIssuesImpactCalcImplementation();
             KnownIssueImpactCalculationClass KICalc = new KnownIssueImpactCalculationClass(KIImpactCalc);
             KICalc.CalculateKnownIssueScore(listKnownIssues);
-
-
             success = true;
             return;// null;//casePage;
-        
-            
         }
         catch(Exception ex)
         {
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage() + ' - stack trace - ' + ex.getStackTraceString()));
             return;// null;
         }
         

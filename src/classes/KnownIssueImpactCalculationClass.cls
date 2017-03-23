@@ -69,13 +69,13 @@ public with sharing class KnownIssueImpactCalculationClass {
             update updKnowIssueList;
             string body = 'Successfully Updated ' + knownIssueList.size() + ' known issues';
             string subject = 'Success';
-            if(!Test.isRunningTest())
-                SendEmail(subject, body);
+            /*if(!Test.isRunningTest())
+                KnownIssueImpactCalculationClass.SendEmail(subject, body);*/ // turn on before prod deployment
 
         }Catch(Exception ex){
             string body = 'There is an exception occured - ' + ex.getMessage() + ' at line number ' + ex.getLineNumber();
             string subject = 'Error Occured';
-            SendEmail(subject, body);
+            KnownIssueImpactCalculationClass.SendEmail(subject, body);
         }
     }
 
@@ -166,7 +166,7 @@ public with sharing class KnownIssueImpactCalculationClass {
         }
     }
 
-    private void SendEmail(string subject, string body){
+    private static void SendEmail(string subject, string body){
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
         String[] toAddresses = new String[] {'Arnab.KarSarkar@incontact.com', 'Ravish.Chawla@incontact.com', 'William.Nelson@incontact.com'};
         mail.setToAddresses(toAddresses);
@@ -175,4 +175,26 @@ public with sharing class KnownIssueImpactCalculationClass {
         Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
     }
 
+    // Known issue priority change to P1
+
+    public static void ChangeKIPriority(set<id> incidentIds){
+        Case[] incidents = [select Id, KnownIssue__c from Case where Id in :incidentIds and Priority = 'P1'];
+        if(incidents.size() > 0){
+            list<case> knownIssueLists = new list<case>();
+            for(Case incident : incidents){
+                Case updateKnownIssueCase = new Case(Id = incident.KnownIssue__c, Priority = 'P1');
+                knownIssueLists.add(updateKnownIssueCase);
+            }
+            try{
+                system.debug('known issue List =>' + knownIssueLists);
+                update knownIssueLists;
+            }Catch(Exception ex){
+                string body = 'There is an exception occured - ' + ex.getMessage() + ' at line number ' + ex.getLineNumber();
+                string subject = 'Error Occured';
+                KnownIssueImpactCalculationClass.SendEmail(subject, body);
+            }finally {
+                return;
+            }
+        }
+    }
 }

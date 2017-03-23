@@ -25,6 +25,7 @@ public class KnownIssueImpactCalculationClassTests {
         knownIssueImpactCalculation.CalculateKnownIssueScore(new list<Case>());
         knownIssueImpactCalculation.CalculateKnownIssueScore(knownIssueList);
 
+
         test.stopTest();
         //for(Case KnownIssuCase : knownIssueList){
         Case[] newCase = [Select KIImpactScore__c from Case where Id = : knownIssueList[0].Id limit 1];
@@ -80,6 +81,7 @@ public class KnownIssueImpactCalculationClassTests {
                         Subject = 'KnowIssueImpactCalculationTest',
                         Description = 'Known Issue Calculation Test',
                         Origin = 'Web',
+                        Priority = 'P1',
                         KnownIssue__c = knownIssueList[0].Id,
                         KIImpactScore__c = knownIssueList[0].KIImpactScore__c
 
@@ -132,5 +134,22 @@ public class KnownIssueImpactCalculationClassTests {
 
 
         Test.stopTest();
+    }
+
+    static testMethod void KnownIssuesChangePriorityTests ()
+    {
+        Test.startTest();
+        set<id> incidentIds = new set<id>();
+        list<case> knownIssueList = new list<Case>();
+        knownIssueList = GetListOfCases();
+        for(Case incident : [select Id from Case where RecordType.Name = 'Incident']){
+         incidentIds.add(incident.Id);
+        }
+        KnownIssueImpactCalculationClass.ChangeKIPriority(incidentIds);
+
+        Test.stopTest();
+
+        Case[] newCase = [Select Priority from Case where Id = : knownIssueList[0].Id limit 1];
+        system.assertEquals('P1', newCase[0].Priority);
     }
 }

@@ -56,7 +56,7 @@ public with sharing class CaseIncidentPage
         for(Schema.FieldSetMember f : ActiveSet) {
             query += f.getFieldPath() + ', ';
         }
-        query += 'Id, AccountId FROM Case WHERE Id = \'' + c.Id + '\'';
+        query += 'Id,Escalate_to_incident__c,RF_Queue__c,AccountId FROM Case WHERE Id = \'' + c.Id + '\'';
         c =  Database.query(query);
     }
     
@@ -111,6 +111,17 @@ public with sharing class CaseIncidentPage
             {
                 c.Status = 'Assigned To Known Issue';
                 update c;
+
+                // update known issue score
+                list<Case> listKnownIssues = [select Id,Broken_by_Recent_Release__c from Case where id = :c.KnownIssue__c];
+                KnownIssuesImpactCalcImplementation KIImpactCalc = new KnownIssuesImpactCalcImplementation();
+                KnownIssueImpactCalculationClass KICalc = new KnownIssueImpactCalculationClass(KIImpactCalc);
+                KICalc.CalculateKnownIssueScore(listKnownIssues);
+
+                set<Id> incidentIds = new set<Id>{c.Id};
+                KnownIssueImpactCalculationClass.ChangeKIPriority(incidentIds);
+
+
             }
         }
         catch(DmlException ex)
