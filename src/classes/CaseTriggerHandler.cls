@@ -1,6 +1,7 @@
 public class CaseTriggerHandler extends TriggerHandler 
 {
     private static boolean staticValuesSet = false;
+    private static boolean isProxyServiceTurnedOff = false;
     private static Id eventRecordType;
     private static Id maintenanceRecordType;   
     private static Id knownIssueRecordType;
@@ -22,6 +23,10 @@ public class CaseTriggerHandler extends TriggerHandler
             SetRecordTypeIds();
             GetClosedCaseStatuses();
         	staticValuesSet = true;
+            AppConfiguration__c config = AppConfiguration__c.getInstance();
+            if(config != null) {
+                isProxyServiceTurnedOff = config.Turn_Off_Partner_Case_Proxy_Service__c;
+            }
         }
     }
 
@@ -34,18 +39,19 @@ public class CaseTriggerHandler extends TriggerHandler
     }
 
     protected override void afterInsert(){
-        CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
+        if(!isProxyServiceTurnedOff)
+            CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
     }
 
     protected override void afterUpdate(){
-        CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
+        if(!isProxyServiceTurnedOff)
+            CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
     }
 
     private void SetRecordTypeIds()
     {
         Schema.DescribeSObjectResult d = Schema.SObjectType.Case; 
         Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
-        
         //Get Event record type id
         eventRecordType = rtMapByName.get('Event').getRecordTypeId();
         maintenanceRecordType = rtMapByName.get('Maintenance Notification').getRecordTypeId();   
@@ -129,7 +135,7 @@ public class CaseTriggerHandler extends TriggerHandler
             }
         }
         system.debug('CallPartnerCaseProxyService(): createdIdSet - ' + createdIdSet);
-        if(createdIdSet.size() > 0){
+        if(createdIdSet.size() > 0 && !system.isFuture() && !system.isBatch()){
             CallPartnerCaseProxyServiceFuture(createdIdSet);
         }
 

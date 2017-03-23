@@ -18,7 +18,7 @@ private class CustomerInfoTriggerHandlerTest {
                 JBCXM_CreatedCases__c = 15,
                 JBCXM_OpenCases__c = 20,
                 JBCXM_Credits__c = 2500,
-                JBCXM_MTTR__c = 3
+                JBCXM_MTTR_IN_Hours__c = 504
         );
 
         insert scoringScheme;

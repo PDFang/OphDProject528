@@ -45,7 +45,7 @@ public class AccountTriggerHandler extends TriggerHandler  {
 
         system.debug('CalculateAccountNetScore(): accountIdSet - ' + accountIdSet);
 
-        if(accountIdSet.size() > 0){
+        if(accountIdSet.size() > 0 && !system.isFuture() && !system.isBatch()){
             CalculateAccountNetScoreFuture(accountIdSet);
             system.debug('CalculateAccountNetScore(): calling CalculateAccountNetScoreFuture');
         }
