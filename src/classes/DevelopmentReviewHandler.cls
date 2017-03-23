@@ -4,7 +4,7 @@
 // Development Review Automation
 public with sharing class DevelopmentReviewHandler {
 
-    static final Integer TIME_INTERVAL = 3;
+    static Integer TIME_INTERVAL = 60;
 
     /*
     * Runs all local tests in the connected Org
@@ -12,29 +12,41 @@ public with sharing class DevelopmentReviewHandler {
     * */
 
     @Future(callout=true)
-    public static void RunLocalTestsAsynchronous(){
+    public static void RunLocalTestsAsynchronous() {
 
-//        String body = '{"testLevel":"RunLocalTests"}';
-        String body = '{"classNames":"SurveyTestClass,LeadTriggerHelperTest","testLevel":"RunSpecifiedTests"}';
+        try {
+            //String body = '{"testLevel":"RunLocalTests"}';
+            String body = '{"classNames":"DevelopmentReviewDemoTestOne,DevelopmentReviewDemoTestTwo","testLevel":"RunSpecifiedTests"}';
 
-        HttpRequest request = new HttpRequest();
-        request.setEndpoint('callout:Salesforce_QA/services/data/v38.0/tooling/runTestsAsynchronous');
-        request.setMethod('POST');
-        request.setHeader('Content-Type', 'application/json');
-        request.setBody(body);
-        HttpResponse response = new http().send(request);
-        system.debug('RunLocalTestsAsynchronous(): response body - ' + response.getBody());
-        String asyncJobId = null;
-        if(response.getStatusCode() == 200){
-            asyncJobId = response.getBody().remove('"');
-            scheduleJob(asyncJobId);
+            HttpRequest request = new HttpRequest();
+            request.setEndpoint('callout:Salesforce_QA/services/data/v38.0/tooling/runTestsAsynchronous');
+            request.setMethod('POST');
+            request.setHeader('Content-Type', 'application/json');
+            request.setBody(body);
+            HttpResponse response = new http().send(request);
+            system.debug('RunLocalTestsAsynchronous(): response body - ' + response.getBody());
+            String asyncJobId = null;
+            system.debug('RunLocalTestsAsynchronous(): asyncJobId - ' + asyncJobId);
+            if (response.getStatusCode() == 200) {
+                asyncJobId = response.getBody().remove('"');
+                scheduleJob(asyncJobId);
+            } else {
+                inContactBaseClass.SendErrorEmail(response.getStatus(), response.getStatusCode().format());
+                return;
+            }
+        }catch(system.Exception ex){
+            system.debug('RunLocalTestsAsynchronous(): Exception - ' + ex);
+            inContactBaseClass.SendErrorEmail(ex, '');
         }
 
-        system.debug('RunLocalTestsAsynchronous(): asyncJobId - ' + asyncJobId);
     }
 
     public static void scheduleJob(String asyncJobId){
 
+        AppConfiguration__c config = AppConfiguration__c.getInstance();
+        if(config != null) {
+            TIME_INTERVAL = (Integer)config.Test_Run_Time__c;
+        }
         Datetime nextRun = system.now().addMinutes(TIME_INTERVAL);
         String dateTimeFormat = '0 {0} {1} {2} {3} ? {4}';
         String scheduledTime = string.format(
