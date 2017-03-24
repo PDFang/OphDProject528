@@ -55,7 +55,7 @@ private class CustomerInfoTriggerHandlerTest {
                 Multiplier__c = 4.0
         );
         multipliers.add(mttrLastSixMonths);
-        Double mttrScore = impactCalculator.CalculateMttrIncidentScore((Integer)customerInfo.JBCXM_MTTR__c, (Double)mttrLastSixMonths.Multiplier__c);
+        Double mttrScore = impactCalculator.CalculateMttrIncidentScore((Integer)(customerInfo.JBCXM_MTTR_IN_Hours__c/24/7), (Double)mttrLastSixMonths.Multiplier__c);
         system.debug('CalculateMttrIncidentScore: ' + customerInfo.JBCXM_MTTR__c + ', ' + mttrLastSixMonths.Multiplier__c + ' = ' + mttrScore);
 
         //annual contract value
@@ -118,7 +118,7 @@ private class CustomerInfoTriggerHandlerTest {
                 JBCXM_CreatedCases__c = 15,
                 JBCXM_OpenCases__c = 20,
                 JBCXM_Credits__c = 2500,
-                JBCXM_MTTR__c = 3
+                JBCXM_MTTR_IN_Hours__c = 504
         );
 
         insert scoringScheme;
@@ -157,8 +157,8 @@ private class CustomerInfoTriggerHandlerTest {
                 Multiplier__c = 4.0
         );
         multipliers.add(mttrLastSixMonths);
-        Double mttrScore = impactCalculator.CalculateMttrIncidentScore(((Integer)customerInfo.JBCXM_MTTR__c) * 2, (Double)mttrLastSixMonths.Multiplier__c);
-        system.debug('CalculateMttrIncidentScore: ' + (customerInfo.JBCXM_MTTR__c * 2) + ', ' + mttrLastSixMonths.Multiplier__c + ' = ' + mttrScore);
+        Double mttrScore = impactCalculator.CalculateMttrIncidentScore((Integer)(customerInfo.JBCXM_MTTR_IN_Hours__c/24/7) * 2, (Double)mttrLastSixMonths.Multiplier__c);
+        system.debug('CalculateMttrIncidentScore: ' + ((customerInfo.JBCXM_MTTR_IN_Hours__c/24/7) * 2) + ', ' + mttrLastSixMonths.Multiplier__c + ' = ' + mttrScore);
 
         //annual contract value
         Impact_Score_Multiplier__c annualValue = new Impact_Score_Multiplier__c(
@@ -195,7 +195,7 @@ private class CustomerInfoTriggerHandlerTest {
         //all of the values were doubled to get the expected score value
         customerInfo.JBCXM_OpenCases__c *= 2;
         customerInfo.JBCXM_CreatedCases__c *= 2;
-        customerInfo.JBCXM_MTTR__c *= 2;
+        customerInfo.JBCXM_MTTR_IN_Hours__c *= 2;
         customerInfo.JBCXM__ASV__c *= 2;
         customerInfo.JBCXM_Credits__c *= 2;
         scoringSchemeDefinition.JBCXM__Score__c *= 2;
