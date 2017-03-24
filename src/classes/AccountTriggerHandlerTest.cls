@@ -77,6 +77,7 @@ private class AccountTriggerHandlerTest {
         multipliers.add(referenceableMultiplier);
 
         // Calculate Values
+        Double ageOfCustomerScore = accountScoreCalculator.CalculateAgeOfCustomerInMonthsScore((Integer)testAccount.Age_of_Customer_in_Months__c, (Double)ageOfCustomerMultiplier.Multiplier__c);
         Double riskOfLeavingScore = accountScoreCalculator.CalculateRiskOfLeavingScore(testAccount.Risk_of_Leaving__c, (Double)riskOfLeavingMultiplier.Multiplier__c);
         Double gyrStatusScore = accountScoreCalculator.CalculateGYRColor(testAccount.GYRStatus__c);
         Double stategicAccountScore = accountScoreCalculator.CalculateStrategicAccountScore(testAccount.CustomerSegment__c, (Double)stategicAccountMultiplier.Multiplier__c);
@@ -86,7 +87,7 @@ private class AccountTriggerHandlerTest {
         Double socialMediaScore = accountScoreCalculator.CalculateSocialMediaPresenceScore(testAccount.Social_Media_Presence__c, (Double)socialMediaMultiplier.Multiplier__c);
         Double referenceableScore = accountScoreCalculator.CalculateCurrentReferenceScore(testAccount.Referenceable__c, (Double)referenceableMultiplier.Multiplier__c);
 
-        Double accountNetScore = riskOfLeavingScore + gyrStatusScore + stategicAccountScore + partnerAccountScore
+        Double accountNetScore = ageOfCustomerScore + riskOfLeavingScore + gyrStatusScore + stategicAccountScore + partnerAccountScore
                 + brandVisibilityScore + industryLeaderScore + socialMediaScore + referenceableScore;
 
         // Insert multipliers
@@ -185,8 +186,8 @@ private class AccountTriggerHandlerTest {
         testIncident.CustomerSegment__c = 'Large';
         testIncident.GYRStatus__c = 'Yellow';
         testIncident.IsPartner__c = true;
-        testIncident.Brand_Visibility__c = 'Low';
-        testIncident.Industry_Leadership_Vocality__c = 'Medium';
+        testIncident.Brand_Visibility__c = 'Yes';
+        testIncident.Industry_Leadership_Vocality__c = 'No';
         testIncident.Social_Media_Presence__c = 'no';
         testIncident.Referenceable__c = true;
 
@@ -197,6 +198,7 @@ private class AccountTriggerHandlerTest {
 
 
         // Calculate Values
+        Double ageOfCustomerScore = accountScoreCalculator.CalculateAgeOfCustomerInMonthsScore((Integer)testIncident.Age_of_Customer_in_Months__c, (Double)ageOfCustomerMultiplier.Multiplier__c);
         Double riskOfLeavingScore = accountScoreCalculator.CalculateRiskOfLeavingScore(testIncident.Risk_of_Leaving__c, (Double)riskOfLeavingMultiplier.Multiplier__c);
         Double gyrStatusScore = accountScoreCalculator.CalculateGYRColor(testIncident.GYRStatus__c);
         Double stategicAccountScore = accountScoreCalculator.CalculateStrategicAccountScore(testIncident.CustomerSegment__c, (Double)stategicAccountMultiplier.Multiplier__c);
@@ -206,7 +208,7 @@ private class AccountTriggerHandlerTest {
         Double socialMediaScore = accountScoreCalculator.CalculateSocialMediaPresenceScore(testIncident.Social_Media_Presence__c, (Double)socialMediaMultiplier.Multiplier__c);
         Double referenceableScore = accountScoreCalculator.CalculateCurrentReferenceScore(testIncident.Referenceable__c, (Double)referenceableMultiplier.Multiplier__c);
 
-        Double accountNetScore = riskOfLeavingScore + gyrStatusScore + stategicAccountScore + partnerAccountScore
+        Double accountNetScore = ageOfCustomerScore + riskOfLeavingScore + gyrStatusScore + stategicAccountScore + partnerAccountScore
                 + brandVisibilityScore + industryLeaderScore + socialMediaScore + referenceableScore;
 
 
@@ -295,6 +297,7 @@ private class AccountTriggerHandlerTest {
         multipliers.add(referenceableMultiplier);
 
         // Calculate Values
+        Double ageOfCustomerScore = accountScoreCalculator.CalculateAgeOfCustomerInMonthsScore((Integer)accountsToInsert[0].Age_of_Customer_in_Months__c, (Double)ageOfCustomerMultiplier.Multiplier__c);
         Double riskOfLeavingScore = accountScoreCalculator.CalculateRiskOfLeavingScore(accountsToInsert[0].Risk_of_Leaving__c, (Double)riskOfLeavingMultiplier.Multiplier__c);
         Double gyrStatusScore = accountScoreCalculator.CalculateGYRColor(accountsToInsert[0].GYRStatus__c);
         Double stategicAccountScore = accountScoreCalculator.CalculateStrategicAccountScore(accountsToInsert[0].CustomerSegment__c, (Double)stategicAccountMultiplier.Multiplier__c);
@@ -304,7 +307,7 @@ private class AccountTriggerHandlerTest {
         Double socialMediaScore = accountScoreCalculator.CalculateSocialMediaPresenceScore(accountsToInsert[0].Social_Media_Presence__c, (Double)socialMediaMultiplier.Multiplier__c);
         Double referenceableScore = accountScoreCalculator.CalculateCurrentReferenceScore(accountsToInsert[0].Referenceable__c, (Double)referenceableMultiplier.Multiplier__c);
 
-        Double accountNetScore = riskOfLeavingScore + gyrStatusScore + stategicAccountScore + partnerAccountScore
+        Double accountNetScore = ageOfCustomerScore + riskOfLeavingScore + gyrStatusScore + stategicAccountScore + partnerAccountScore
                 + brandVisibilityScore + industryLeaderScore + socialMediaScore + referenceableScore;
 
         // Insert multipliers
