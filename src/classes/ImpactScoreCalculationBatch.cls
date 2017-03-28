@@ -1,6 +1,6 @@
 global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>, Database.Stateful{
 
-    private string query;
+    public string query;
     private ImpactCalculationConstants.ImpactScoreType scoreType;
     private integer recordCount = 0;
 

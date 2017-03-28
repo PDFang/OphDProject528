@@ -88,8 +88,13 @@ public class CaseTriggerHandler extends TriggerHandler
         system.debug('CalculateIncidentNetScore(): processList - ' + processList);
 
         if(processList.size() > 0){
-            ImpactCalculationService calculationService = new ImpactCalculationService(new IncidentImpactCalculationImplementation());
-            calculationService.CalculateIncidentNetScore(processList);
+            try{
+                ImpactCalculationService calculationService = new ImpactCalculationService(new IncidentImpactCalculationImplementation());
+                calculationService.CalculateIncidentNetScore(processList);
+            }catch(System.Exception ex){
+                inContactBaseClass.SendErrorEmail(ex, processList[0].CaseNumber);
+            }
+
         }
 
     } // end of calculateIncidentNetScore()
