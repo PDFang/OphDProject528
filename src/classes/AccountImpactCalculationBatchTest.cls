@@ -20,6 +20,32 @@ private class AccountImpactCalculationBatchTest {
 
     }
 
+    static testMethod void testAccountImpactCalculationBatchScheduler() {
+
+        Datetime nextRun = system.now().addSeconds(5);
+        String dateTimeFormat = '{0} {1} {2} {3} {4} ? {5}';
+        String scheduledTime = string.format(
+                dateTimeFormat,
+                new String[]{
+                        nextRun.second().format(),
+                        nextRun.minute().format(),
+                        nextRun.hour().format(),
+                        nextRun.day().format(),
+                        nextRun.month().format(),
+                        nextRun.year().format().remove(',')
+                }
+        );
+        system.debug('scheduleJob(): scheduledTime - ' + scheduledTime);
+
+        test.startTest();
+        String scheduledJobId = system.schedule('AccountImpactCalculationBatchScheduler Test', scheduledTime, new AccountImpactCalculationBatchScheduler());
+        test.stopTest();
+
+        CronTrigger job = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
+        system.assertEquals(scheduledTime, job.CronExpression);
+
+    }
+
     @TestSetup
     static void createTestData(){
 
