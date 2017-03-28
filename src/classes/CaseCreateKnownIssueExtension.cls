@@ -95,9 +95,6 @@ public with sharing class CaseCreateKnownIssueExtension
             {
                 update c;
 
-                set<Id> incidentIds = new set<Id>{c.Id};
-                KnownIssueImpactCalculationClass.ChangeKIPriority(incidentIds);
-
                 list<Case> listKnownIssues = [select Id,Broken_by_Recent_Release__c from Case where id = :c.KnownIssue__c];
                 KnownIssuesImpactCalcImplementation KIImpactCalc = new KnownIssuesImpactCalcImplementation();
                 KnownIssueImpactCalculationClass KICalc = new KnownIssueImpactCalculationClass(KIImpactCalc);

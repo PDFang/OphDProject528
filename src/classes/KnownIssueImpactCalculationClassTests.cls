@@ -28,8 +28,9 @@ public class KnownIssueImpactCalculationClassTests {
 
         test.stopTest();
         //for(Case KnownIssuCase : knownIssueList){
-        Case[] newCase = [Select KIImpactScore__c from Case where Id = : knownIssueList[0].Id limit 1];
+        Case[] newCase = [Select KIImpactScore__c, Priority from Case where Id = : knownIssueList[0].Id limit 1];
         system.assertEquals(4.0, newCase[0].KIImpactScore__c);
+        system.assertEquals('P1', newCase[0].Priority);
         //}
 
     }
@@ -112,15 +113,15 @@ public class KnownIssueImpactCalculationClassTests {
 
         // incident
         test.startTest();
-        string knownIssueQuery = 'select Id,Broken_by_Recent_Release__c,Status, Subject from Case '
-                + 'WHERE RecordType.Name = \'Known Issue\' '
-                + 'AND isClosed = false and Status not in (\'Released - Confirm Resolution\',\'No Fix\')';
+        string knownIssueQuery =  'select KnownIssue__c,KnownIssue__r.Broken_by_Recent_Release__c,KnownIssue__r.Status, KnownIssue__r.Subject from Case '
+                + 'WHERE RecordType.Name = \'Incident\' '
+                + ' AND KnownIssue__c != null AND KnownIssue__r.isClosed = false and KnownIssue__r.Status not in (\'Released - Confirm Resolution\',\'No Fix\')';
         database.executeBatch(new KnownIssuesImpactScoreCalcBatch(knownIssueQuery), 500);
 
         test.stopTest();
         //for(Case KnownIssuCase : knownIssueList){
         Case[] newCase = [Select KIImpactScore__c from Case where Id = : knownIssueList[0].Id limit 1];
-        system.assertEquals(10.0, newCase[0].KIImpactScore__c);
+        system.assertEquals(11.0, newCase[0].KIImpactScore__c);
         //}
     }
 
@@ -134,22 +135,5 @@ public class KnownIssueImpactCalculationClassTests {
 
 
         Test.stopTest();
-    }
-
-    static testMethod void KnownIssuesChangePriorityTests ()
-    {
-        Test.startTest();
-        set<id> incidentIds = new set<id>();
-        list<case> knownIssueList = new list<Case>();
-        knownIssueList = GetListOfCases();
-        for(Case incident : [select Id from Case where RecordType.Name = 'Incident']){
-         incidentIds.add(incident.Id);
-        }
-        KnownIssueImpactCalculationClass.ChangeKIPriority(incidentIds);
-
-        Test.stopTest();
-
-        Case[] newCase = [Select Priority from Case where Id = : knownIssueList[0].Id limit 1];
-        system.assertEquals('P1', newCase[0].Priority);
     }
 }

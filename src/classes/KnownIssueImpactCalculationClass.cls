@@ -8,6 +8,7 @@ public with sharing class KnownIssueImpactCalculationClass {
     private Map<String, Impact_Score_Multiplier__c> multiplierMap;
     private map<Id, integer> KnownIssueIncidentCounts;
     private map<Id, double> KnownIssueIncidentMaxScore;
+    private map<Id, string> KnownIssueIncidentMaxPriority;
     private map<Id, integer> KnownIssueIncidentAge;
     private map<Id, double> KnownIssueASVMap;
     private set<id> accountIds;
@@ -21,6 +22,7 @@ public with sharing class KnownIssueImpactCalculationClass {
         KnownIssueIncidentAge = new map<Id, integer>();
         KnownIssueIncidentMaxScore= new map<Id, double>();
         KnownIssueASVMap = new map<Id, double>();
+        KnownIssueIncidentMaxPriority = new map<Id, string>();
         accountIds = new set<id>();
     }
 
@@ -47,30 +49,40 @@ public with sharing class KnownIssueImpactCalculationClass {
             system.debug('KnownIssueIncidentAge =>' + KnownIssueASVMap);*/
 
             for(Case KnownIssuCase : knownIssueList){
+                boolean isBrokenByRelease = GetBrokenByRelease(KnownIssuCase);
                 Case newCase = new Case(Id = KnownIssuCase.Id);
-                newCase.TotalDaysBugPresent__c = KnownIssueIncidentAge.get(KnownIssuCase.Id);
-                newCase.NumberOfIncidents__c = KnownIssueIncidentCounts.get(KnownIssuCase.Id);
-                newCase.ASVValue__c = KnownIssueASVMap.get(KnownIssuCase.Id);
+                newCase.TotalDaysBugPresent__c = KnownIssueIncidentAge.containsKey(KnownIssuCase.Id)
+                                    ?
+                                    KnownIssueIncidentAge.get(KnownIssuCase.Id)
+                                    : 0;
 
-                netKnownIssueScore = impactCalculator.CalculateNumberIncidentsTiedToIssue(KnownIssueIncidentCounts.get(KnownIssuCase.Id), GetMultiplierValue('IncidentCount'));
+                newCase.NumberOfIncidents__c = KnownIssueIncidentCounts.containsKey(KnownIssuCase.Id)
+                                    ?
+                                    KnownIssueIncidentCounts.get(KnownIssuCase.Id)
+                                    : 0;
+
+                newCase.ASVValue__c = KnownIssueASVMap.containsKey(KnownIssuCase.Id)
+                                    ?
+                                    KnownIssueASVMap.get(KnownIssuCase.Id)
+                                    :0.0;
+                netKnownIssueScore = impactCalculator.CalculateNumberIncidentsTiedToIssue(Integer.valueOf(newCase.NumberOfIncidents__c), GetMultiplierValue('IncidentCount'));
                 system.debug('netKnownIssueScore 1 =>' + netKnownIssueScore);
-                netKnownIssueScore += impactCalculator.CalculateDaysIssuePresent(KnownIssueIncidentAge.get(KnownIssuCase.Id), GetMultiplierValue('IncidentAge'));
+                netKnownIssueScore += impactCalculator.CalculateDaysIssuePresent(Integer.valueOf(newCase.TotalDaysBugPresent__c), GetMultiplierValue('IncidentAge'));
                 system.debug('netKnownIssueScore 2 =>' + netKnownIssueScore);
-                netKnownIssueScore += KnownIssueIncidentMaxScore.get(KnownIssuCase.Id);
+                netKnownIssueScore += KnownIssueIncidentMaxScore.containsKey(KnownIssuCase.Id) ? KnownIssueIncidentMaxScore.get(KnownIssuCase.Id) : 0;
                 system.debug('netKnownIssueScore 3 =>' + netKnownIssueScore);
-                netKnownIssueScore += impactCalculator.CalculateDollarAmountTiedToIssue(KnownIssueASVMap.get(KnownIssuCase.Id), GetMultiplierValue('ASVMultiplier'));
+                netKnownIssueScore += impactCalculator.CalculateDollarAmountTiedToIssue(newCase.ASVValue__c, GetMultiplierValue('ASVMultiplier'));
                 system.debug('netKnownIssueScore 4 =>' + netKnownIssueScore);
-                netKnownIssueScore += impactCalculator.CalculateRecentReleaseBreak(GetBrokenByRelease(KnownIssuCase), GetMultiplierValue('BrokenByRelease'));
+                netKnownIssueScore += impactCalculator.CalculateRecentReleaseBreak(isBrokenByRelease, GetMultiplierValue('BrokenByRelease'));
                 system.debug('netKnownIssueScore 5 =>' + netKnownIssueScore);
                 newCase.KIImpactScore__c = netKnownIssueScore;
+                newCase.Priority = KnownIssueIncidentMaxPriority.get(KnownIssuCase.Id);
                 updKnowIssueList.add(newCase);
             }
 
             update updKnowIssueList;
             string body = 'Successfully Updated ' + knownIssueList.size() + ' known issues';
             string subject = 'Success';
-            /*if(!Test.isRunningTest())
-                KnownIssueImpactCalculationClass.SendEmail(subject, body);*/ // turn on before prod deployment
 
         }Catch(Exception ex){
             string body = 'There is an exception occured - ' + ex.getMessage() + ' at line number ' + ex.getLineNumber();
@@ -88,7 +100,7 @@ public with sharing class KnownIssueImpactCalculationClass {
 
     private void GetIncidentValues(set<Id> knownIssueIds) {
         AggregateResult[] groupedResults = [
-                select KnownIssue__c, Min(CreatedDate) MINDT, Count(Id) CNTID, MAX(IncidentImpactScore__c) MAXSCORE
+                select KnownIssue__c, Min(CreatedDate) MINDT, Count(Id) CNTID, MAX(IncidentImpactScore__c) MAXSCORE, MAX(Priority) MAXPriority
                 from Case
                 where KnownIssue__c in :KnownIssueIds
                 and RecordType.Name = 'Incident'
@@ -106,6 +118,7 @@ public with sharing class KnownIssueImpactCalculationClass {
                 maxScore = double.valueOf(ar.get('MAXSCORE'));
             }
             KnownIssueIncidentMaxScore.put(knownIssueId,maxScore);
+            KnownIssueIncidentMaxPriority.put(knownIssueId, String.valueOf(ar.get('MAXPriority')));
         }
     }
 
@@ -172,29 +185,10 @@ public with sharing class KnownIssueImpactCalculationClass {
         mail.setToAddresses(toAddresses);
         mail.setSubject(subject);
         mail.setHtmlBody(body);
-        Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+        try{
+            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+        }Catch(Exception ex){}
     }
 
-    // Known issue priority change to P1
 
-    public static void ChangeKIPriority(set<id> incidentIds){
-        Case[] incidents = [select Id, KnownIssue__c from Case where Id in :incidentIds and Priority = 'P1'];
-        if(incidents.size() > 0){
-            list<case> knownIssueLists = new list<case>();
-            for(Case incident : incidents){
-                Case updateKnownIssueCase = new Case(Id = incident.KnownIssue__c, Priority = 'P1');
-                knownIssueLists.add(updateKnownIssueCase);
-            }
-            try{
-                system.debug('known issue List =>' + knownIssueLists);
-                update knownIssueLists;
-            }Catch(Exception ex){
-                string body = 'There is an exception occured - ' + ex.getMessage() + ' at line number ' + ex.getLineNumber();
-                string subject = 'Error Occured';
-                KnownIssueImpactCalculationClass.SendEmail(subject, body);
-            }finally {
-                return;
-            }
-        }
-    }
 }
