@@ -1,7 +1,3 @@
-/**
- * Created by mohandaas.rangaswamy on 3/17/2017.
- */
-
 public class CustomerInfoTriggerHandler extends TriggerHandler {
 
     protected override void afterInsert(){
@@ -44,7 +40,8 @@ public class CustomerInfoTriggerHandler extends TriggerHandler {
 
         List<JBCXM__CustomerInfo__c> custInfoList = new List<JBCXM__CustomerInfo__c>();
         for(JBCXM__CustomerInfo__c custInfo : [
-                SELECT Id, JBCXM__Account__c, JBCXM__CurScoreId__c, JBCXM__CurScoreId__r.JBCXM__Score__c,
+                SELECT Id, JBCXM__Account__c, JBCXM__Account__r.Gainsight_Net_Score__c,
+                        JBCXM__CurScoreId__c, JBCXM__CurScoreId__r.JBCXM__Score__c,
                         JBCXM__ASV__c, JBCXM_CreatedCases__c, JBCXM_OpenCases__c, JBCXM_Credits__c,
                         JBCXM_MTTR_IN_Weeks__c, JBCXM_MTTR_IN_Hours__c
                 FROM JBCXM__CustomerInfo__c

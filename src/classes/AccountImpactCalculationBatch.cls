@@ -1,7 +1,3 @@
-/**
- * Created by mohandaas.rangaswamy on 3/20/2017.
- */
-
 global class AccountImpactCalculationBatch implements Database.Batchable<Sobject>, Database.Stateful{
 
     public String query;
@@ -18,7 +14,7 @@ global class AccountImpactCalculationBatch implements Database.Batchable<Sobject
 
         this.query = 'Select Id, Social_Media_Presence__c, CustomerSegment__c, Brand_Visibility__c, '
             + 'Industry_Leadership_Vocality__c, Risk_of_Leaving__c, GYRStatus__c, '
-            + 'Age_of_Customer_in_Months__c, IsPartner__c, Referenceable__c '
+            + 'Age_of_Customer_in_Months__c, IsPartner__c, Referenceable__c, Account_Net_Score__c '
             + 'from Account where RecordType.Name IN :recordTypes '
             + 'and Age_of_Customer_in_Months__c != 0 '
             + 'and (inContactGoLive__c = LAST_N_MONTHS:' + lastNMonths + ' or VCC_Go_Live__c = LAST_N_MONTHS:' + lastNMonths + ')';
@@ -59,11 +55,11 @@ global class AccountImpactCalculationBatch implements Database.Batchable<Sobject
                 + ' failures.' + '\n\n'
                 + 'The batch Apex job processed ' + totalAccounts + ' accounts.');
         try{
-
-        } catch(System.EmailException ex){
             Messaging.sendEmail(new Messaging.SingleEmailMessage[]{
                     mail
             });
+        } catch(System.EmailException ex){
+            system.debug('finish() EmailException - ' + ex);
         }
 
     }
