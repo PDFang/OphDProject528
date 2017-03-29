@@ -5,7 +5,6 @@
 global class AccountImpactCalculationBatchScheduler implements Schedulable{
 
     global void execute(SchedulableContext sc) {
-        AccountImpactCalculationBatch batchable = new AccountImpactCalculationBatch();
         database.executebatch(new AccountImpactCalculationBatch());
     }
 
