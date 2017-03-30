@@ -130,7 +130,17 @@ public class ImpactCalculationService
 
         if(accountUpdateList.size() > 0)
         {
-            Database.update(accountUpdateList, false);
+            Database.SaveResult[] saveResults = Database.update(accountUpdateList, false);
+            for(Database.SaveResult result :saveResults){
+                if(result.isSuccess() == false){
+                    system.debug('CalculateGainsightNetScore(): error - '+ result.getErrors()[0]);
+                    try{
+                        inContactBaseClass.sendErrorEmail(result.getErrors()[0].getMessage(), result.getId());
+                    } catch(System.EmailException emailEx){
+                    }
+
+                }
+            }
         }
 
     } // end of CalculateGainsightNetScore()
@@ -199,9 +209,18 @@ public class ImpactCalculationService
         // update account net score
         if(accountUpdateList.size() > 0)
         {
-            Database.update(accountUpdateList, false);
-        }
+            Database.SaveResult[] saveResults = Database.update(accountUpdateList, false);
+            for(Database.SaveResult result :saveResults){
+                if(result.isSuccess() == false){
+                    system.debug('CalculateAccountNetScore(): error - '+ result.getErrors()[0]);
+                    try{
+                        inContactBaseClass.sendErrorEmail(result.getErrors()[0].getMessage(), result.getId());
+                    } catch(System.EmailException emailEx){
+                    }
 
+                }
+            }
+        }
 
     }
 

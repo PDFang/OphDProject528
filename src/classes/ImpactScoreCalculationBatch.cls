@@ -51,7 +51,13 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
                 ImpactCalculationService service = new ImpactCalculationService(new IncidentImpactCalculationImplementation());
                 service.CalculateIncidentNetScore(scope);
                 TriggerHandler.bypass('CaseTriggerHandler');
-                Database.update(scope, false);
+                Database.SaveResult[] saveResults = Database.update(scope, false);
+                for(Database.SaveResult result :saveResults){
+                    if(result.isSuccess() == false){
+                        system.debug('execute(): error - '+ result.getErrors()[0]);
+                        sendErrorEmail(result.getErrors()[0].getMessage(), result.getId());
+                    }
+                }
             } else if (scope[0] instanceof JBCXM__CustomerInfo__c){
                 ImpactCalculationService service = new ImpactCalculationService(new GainsightImpactCalculationImpl());
                 TriggerHandler.bypass('CustomerInfoTriggerHandler');
@@ -105,4 +111,13 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
             system.debug('sendErrorEmail() EmailException - ' + emailEx);
         }
     }
+
+    private void sendErrorEmail(String errorMessage, String recordId){
+        try{
+            inContactBaseClass.SendErrorEmail(errorMessage, recordId);
+        } catch(System.EmailException emailEx){
+            system.debug('sendErrorEmail() EmailException - ' + emailEx);
+        }
+    }
+
 }
