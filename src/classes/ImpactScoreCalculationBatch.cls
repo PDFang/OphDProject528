@@ -42,21 +42,27 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
     {
         try{
             recordType = scope[0].getSObjectType().getDescribe().getName();
+            system.debug('execute(): recordType - ' + recordType);
             if(scope[0] instanceof Account){
                 ImpactCalculationService service = new ImpactCalculationService(new AccountImpactCalculationImpl());
+                TriggerHandler.bypass('AccountTriggerHandler');
                 service.CalculateAccountNetScore(scope);
             } else if(scope[0] instanceof Case) {
                 ImpactCalculationService service = new ImpactCalculationService(new IncidentImpactCalculationImplementation());
                 service.CalculateIncidentNetScore(scope);
+                TriggerHandler.bypass('CaseTriggerHandler');
                 Database.update(scope, false);
             } else if (scope[0] instanceof JBCXM__CustomerInfo__c){
                 ImpactCalculationService service = new ImpactCalculationService(new GainsightImpactCalculationImpl());
+                TriggerHandler.bypass('CustomerInfoTriggerHandler');
                 service.CalculateGainsightNetScore(scope);
             }
             this.recordCount += scope.size();
         } catch(Exception ex){
             system.debug('execute(): Exception - ' + ex);
             SendErrorEmail(ex, recordType);
+        } finally{
+            TriggerHandler.clearAllBypasses();
         }
 
 

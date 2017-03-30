@@ -1,5 +1,9 @@
 trigger CaseAfterUpdate on Case (after update) 
 {
+	if(TriggerHandler.isBypassed('CaseTriggerHandler')){
+		system.debug('By passed CaseAfterUpdate trigger');
+		return;
+	}
 	Schema.DescribeSObjectResult d = Schema.SObjectType.Case; 
 	Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
 	
