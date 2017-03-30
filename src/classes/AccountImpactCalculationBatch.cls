@@ -35,9 +35,15 @@ global class AccountImpactCalculationBatch implements Database.Batchable<Sobject
 
     global void execute(Database.BatchableContext BC, List<Account> scope)
     {
-        ImpactCalculationService service = new ImpactCalculationService(new AccountImpactCalculationImpl());
-        service.CalculateAccountNetScore(scope);
-        totalAccounts += scope.size();
+        try{
+            ImpactCalculationService service = new ImpactCalculationService(new AccountImpactCalculationImpl());
+            service.CalculateAccountNetScore(scope);
+            totalAccounts += scope.size();
+        }catch(Exception ex){
+            system.debug('execute(): Exception - ' + ex);
+            SendErrorEmail(ex, null);
+        }
+
     }
 
     global void finish(Database.BatchableContext BC)
@@ -71,4 +77,13 @@ global class AccountImpactCalculationBatch implements Database.Batchable<Sobject
         }
 
     }
+
+    private void sendErrorEmail(Exception ex, String recordId){
+        try{
+            inContactBaseClass.SendErrorEmail(ex, recordId);
+        } catch(System.EmailException emailEx){
+            system.debug('sendErrorEmail() EmailException - ' + emailEx);
+        }
+    }
+
 }

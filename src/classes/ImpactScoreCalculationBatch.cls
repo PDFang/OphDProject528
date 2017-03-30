@@ -1,6 +1,7 @@
 global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>, Database.Stateful{
 
     public string query;
+    private string recordType;
     private ImpactCalculationConstants.ImpactScoreType scoreType;
     private integer recordCount = 0;
 
@@ -39,19 +40,26 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
 
     global void execute(Database.BatchableContext BC, List<SObject> scope)
     {
-        if(scope[0] instanceof Account){
-            ImpactCalculationService service = new ImpactCalculationService(new AccountImpactCalculationImpl());
-            service.CalculateAccountNetScore(scope);
-        } else if(scope[0] instanceof Case) {
-            ImpactCalculationService service = new ImpactCalculationService(new IncidentImpactCalculationImplementation());
-            service.CalculateIncidentNetScore(scope);
-            Database.update(scope, false);
-        } else if (scope[0] instanceof JBCXM__CustomerInfo__c){
-            ImpactCalculationService service = new ImpactCalculationService(new GainsightImpactCalculationImpl());
-            service.CalculateGainsightNetScore(scope);
+        try{
+            recordType = scope[0].getSObjectType().getDescribe().getName();
+            if(scope[0] instanceof Account){
+                ImpactCalculationService service = new ImpactCalculationService(new AccountImpactCalculationImpl());
+                service.CalculateAccountNetScore(scope);
+            } else if(scope[0] instanceof Case) {
+                ImpactCalculationService service = new ImpactCalculationService(new IncidentImpactCalculationImplementation());
+                service.CalculateIncidentNetScore(scope);
+                Database.update(scope, false);
+            } else if (scope[0] instanceof JBCXM__CustomerInfo__c){
+                ImpactCalculationService service = new ImpactCalculationService(new GainsightImpactCalculationImpl());
+                service.CalculateGainsightNetScore(scope);
+            }
+            this.recordCount += scope.size();
+        } catch(Exception ex){
+            system.debug('execute(): Exception - ' + ex);
+            SendErrorEmail(ex, recordType);
         }
 
-        this.recordCount += scope.size();
+
     }
 
     global void finish(Database.BatchableContext BC) {
@@ -74,13 +82,21 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
                 + ' batches with '
                 + a.NumberOfErrors
                 + ' failures.' + '\n\n'
-                + 'The batch Apex job processed ' + this.recordCount + ' accounts.');
+                + 'The batch Apex job processed ' + this.recordCount + ' ' + recordType + '.');
         try{
-
-        } catch(System.EmailException ex){
             Messaging.sendEmail(new Messaging.SingleEmailMessage[]{
                     mail
             });
+        } catch(System.EmailException ex){
+            system.debug('finish() EmailException - ' + ex);
+        }
+    }
+
+    private void sendErrorEmail(Exception ex, String recordType){
+        try{
+            inContactBaseClass.SendErrorEmail(ex, recordType);
+        } catch(System.EmailException emailEx){
+            system.debug('sendErrorEmail() EmailException - ' + emailEx);
         }
     }
 }
