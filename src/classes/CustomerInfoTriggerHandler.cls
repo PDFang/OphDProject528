@@ -1,6 +1,3 @@
-/**
- * Created by mohandaas.rangaswamy on 3/17/2017.
- */
 
 public class CustomerInfoTriggerHandler extends TriggerHandler {
 
