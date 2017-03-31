@@ -91,8 +91,8 @@ private class AccountImpactCalculationBatchTest {
         for(Integer i=0; i<oppList.size(); i++){
             ImplementedProduct__c product = new ImplementedProduct__c(
                     Account__c = oppList[i].AccountId,
-                    EstimatedGoLiveDate__c = Date.today().addYears(-2),
-                    GoLiveDate__c = Date.today().addYears(-2),
+                    EstimatedGoLiveDate__c = Date.today().addMonths(-6),
+                    GoLiveDate__c = Date.today().addMonths(-6),
                     Opportunity__c = oppList[i].Id,
                     Product__c = 'inContact',
                     Status__c = 'Implemented'
