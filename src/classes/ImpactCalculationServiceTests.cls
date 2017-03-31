@@ -67,4 +67,39 @@ public class ImpactCalculationServiceTests {
             system.assertEquals(8, accountRecord.Account_Net_Score__c);
         }
     }
+
+    static testMethod void CalculateGainsightNetScore_WillSetScoreCorrectly() {
+        Account[] accountList = new Account[]{
+                new Account(
+                        Name = 'My little Account'
+                )
+        };
+
+        insert accountList;
+
+        JBCXM__CustomerInfo__c[] customerInfoRecords = new JBCXM__CustomerInfo__c[]{
+                new JBCXM__CustomerInfo__c(
+                        JBCXM_CreatedCases__c = 2,
+                        JBCXM__ASV__c = 1,
+                        JBCXM_Credits__c = 2,
+                        JBCXM__Account__c = accountList[0].Id
+                )
+        };
+
+        GainsightImpactCalculationStub gainsightImpactCalculationStub = new  GainsightImpactCalculationStub();
+        gainsightImpactCalculationStub.AnnualContractValueScore = 1;
+        gainsightImpactCalculationStub.CreditGivenLastTwelveMonthsScore = 1;
+        gainsightImpactCalculationStub.HealthScore = 1;
+        gainsightImpactCalculationStub.IncidentsOpenedLastSixMonthsScore = 1;
+        gainsightImpactCalculationStub.MttrIncidentScore = 1;
+        gainsightImpactCalculationStub.OutstandingIncidentCaseScore = 1;
+
+        ImpactCalculationService impactService = new ImpactCalculationService(gainsightImpactCalculationStub);
+
+        impactService.CalculateGainsightNetScore(customerInfoRecords);
+
+        for(Account accountRecord :[Select Gainsight_Net_Score__c from Account]){
+            system.assertEquals(3, accountRecord.Gainsight_Net_Score__c);
+        }
+    }
 }
