@@ -1,5 +1,9 @@
 trigger CaseBeforeInsert on Case (before insert) 
 {
+    if(TriggerHandler.isBypassed('CaseTriggerHandler')){
+        system.debug('By passed CaseBeforeInsert trigger');
+        return;
+    }
     new CaseTriggerHandler().run();
     Schema.DescribeSObjectResult d = Schema.SObjectType.Case; 
     Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();

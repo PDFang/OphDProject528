@@ -84,57 +84,70 @@ public class ImpactCalculationService
     public void CalculateGainsightNetScore(JBCXM__CustomerInfo__c[] customInfoList){
         List<Account> accountUpdateList = new List<Account>();
 
-        for(JBCXM__CustomerInfo__c customerInfoRecord :customInfoList){
+        for(JBCXM__CustomerInfo__c customerInfoRecord :customInfoList) {
 
             // Calculate the Gainsight Score
             Double outStandingIncidentScore = customerInfoRecord.JBCXM_OpenCases__c == null
                     ? 0
-                    : this.gainsightImpactCalculation.CalculateOutstandingIncidentCaseScore((Integer)customerInfoRecord.JBCXM_OpenCases__c, GetMultiplierValue('outstanding incidents'));
+                    : this.gainsightImpactCalculation.CalculateOutstandingIncidentCaseScore((Integer) customerInfoRecord.JBCXM_OpenCases__c, GetMultiplierValue('outstanding incidents'));
             system.debug('CalculateGainsightNetScore(): outStandingIncidentScore - ' + outStandingIncidentScore + ' , JBCXM_OpenCases__c - ' + customerInfoRecord.JBCXM_OpenCases__c);
 
             Double incidentsOpenedLastSixMonthsScore = customerInfoRecord.JBCXM_CreatedCases__c == null
                     ? 0
-                    : this.gainsightImpactCalculation.CalculateIncidentsOpenedLastSixMonthsScore((Integer)customerInfoRecord.JBCXM_CreatedCases__c, GetMultiplierValue('incidents opened last six months'));
+                    : this.gainsightImpactCalculation.CalculateIncidentsOpenedLastSixMonthsScore((Integer) customerInfoRecord.JBCXM_CreatedCases__c, GetMultiplierValue('incidents opened last six months'));
             system.debug('CalculateGainsightNetScore(): incidentsOpenedLastSixMonthsScore - ' + incidentsOpenedLastSixMonthsScore + ' , 	JBCXM_CreatedCases__c - ' + customerInfoRecord.JBCXM_CreatedCases__c);
 
             Double mttrIncidentScore = customerInfoRecord.JBCXM_MTTR_IN_Weeks__c == null
                     ? 0
-                    : this.gainsightImpactCalculation.CalculateMttrIncidentScore((Integer)customerInfoRecord.JBCXM_MTTR_IN_Weeks__c, GetMultiplierValue('mttr last six months') );
+                    : this.gainsightImpactCalculation.CalculateMttrIncidentScore((Integer) customerInfoRecord.JBCXM_MTTR_IN_Weeks__c, GetMultiplierValue('mttr last six months'));
             system.debug('CalculateGainsightNetScore(): mttrIncidentScore - ' + mttrIncidentScore + ' ,JBCXM_MTTR_IN_Weeks__c - ' + customerInfoRecord.JBCXM_MTTR_IN_Weeks__c);
 
             Double annualContractValueScore = customerInfoRecord.JBCXM__ASV__c == null
                     ? 0
-                    : this.gainsightImpactCalculation.CalculateAnnualContractValueScore(customerInfoRecord.JBCXM__ASV__c, GetMultiplierValue('annual contract value') );
+                    : this.gainsightImpactCalculation.CalculateAnnualContractValueScore(customerInfoRecord.JBCXM__ASV__c, GetMultiplierValue('annual contract value'));
             system.debug('CalculateGainsightNetScore(): annualContractValueScore - ' + annualContractValueScore + ' , JBCXM__ASV__c - ' + customerInfoRecord.JBCXM__ASV__c);
 
             Double creditGivenLastTwelveMonths = customerInfoRecord.JBCXM_Credits__c == null
                     ? 0
-                    : this.gainsightImpactCalculation.CalculateCreditGivenLastTwelveMonths(customerInfoRecord.JBCXM_Credits__c, GetMultiplierValue('credits last 12 months') );
+                    : this.gainsightImpactCalculation.CalculateCreditGivenLastTwelveMonths(customerInfoRecord.JBCXM_Credits__c, GetMultiplierValue('credits last 12 months'));
             system.debug('CalculateGainsightNetScore(): creditGivenLastTwelveMonths - ' + creditGivenLastTwelveMonths + ' , JBCXM_Credits__c - ' + customerInfoRecord.JBCXM_Credits__c);
 
             Double healthScore = customerInfoRecord.JBCXM__CurScoreId__r == null || customerInfoRecord.JBCXM__CurScoreId__r.JBCXM__Score__c == null
                     ? 0
-                    : this.gainsightImpactCalculation.CalculateHealthScore((Integer)customerInfoRecord.JBCXM__CurScoreId__r.JBCXM__Score__c, GetMultiplierValue('health score'));
+                    : this.gainsightImpactCalculation.CalculateHealthScore((Integer) customerInfoRecord.JBCXM__CurScoreId__r.JBCXM__Score__c, GetMultiplierValue('health score'));
             system.debug('CalculateGainsightNetScore(): healthScore - ' + healthScore + ' , JBCXM__CurScoreId__r.JBCXM__Score__c - ' + customerInfoRecord.JBCXM__CurScoreId__r.JBCXM__Score__c);
 
             Double netScore = outStandingIncidentScore + incidentsOpenedLastSixMonthsScore + mttrIncidentScore + annualContractValueScore + creditGivenLastTwelveMonths + healthScore;
             system.debug('CalculateGainsightNetScore(): netScore - ' + netScore);
 
             // Store the Gainsight score on the account record
-            Account accountUpdatedRecord = new Account(Id = customerInfoRecord.JBCXM__Account__c, Gainsight_Net_Score__c = netScore);
+            if (customerInfoRecord.JBCXM__Account__r.Gainsight_Net_Score__c != netScore) {
+                Account accountUpdatedRecord = new Account(Id = customerInfoRecord.JBCXM__Account__c, Gainsight_Net_Score__c = netScore);
 
-            accountUpdateList.add(accountUpdatedRecord);
+                accountUpdateList.add(accountUpdatedRecord);
+            }
         }
 
         if(accountUpdateList.size() > 0)
         {
-            Database.update(accountUpdateList, false);
+            Database.SaveResult[] saveResults = Database.update(accountUpdateList, false);
+            for(Database.SaveResult result :saveResults){
+                if(result.isSuccess() == false){
+                    system.debug('CalculateGainsightNetScore(): error - '+ result.getErrors()[0]);
+                    try{
+                        inContactBaseClass.sendErrorEmail(result.getErrors()[0].getMessage(), result.getId());
+                    } catch(System.EmailException emailEx){
+                    }
+
+                }
+            }
         }
 
     } // end of CalculateGainsightNetScore()
 
     public void CalculateAccountNetScore(Account[] accountList){
 
+        List<Account> accountUpdateList = new List<Account>();
         // Loop through the accounts and update the account net score
         for(Account accountRecord : accountList){
 
@@ -187,10 +200,27 @@ public class ImpactCalculationService
 
             system.debug('CalculateAccountNetScore(): netScore - ' + netScore);
 
-            accountRecord.Account_Net_Score__c = netScore;
+            // Store the account net score on the account record
+            if (accountRecord.Account_Net_Score__c  != netScore) {
+                accountRecord.Account_Net_Score__c = netScore;
+                accountUpdateList.add(accountRecord);
+            }
         }
         // update account net score
-        Database.update(accountList, false);
+        if(accountUpdateList.size() > 0)
+        {
+            Database.SaveResult[] saveResults = Database.update(accountUpdateList, false);
+            for(Database.SaveResult result :saveResults){
+                if(result.isSuccess() == false){
+                    system.debug('CalculateAccountNetScore(): error - '+ result.getErrors()[0]);
+                    try{
+                        inContactBaseClass.sendErrorEmail(result.getErrors()[0].getMessage(), result.getId());
+                    } catch(System.EmailException emailEx){
+                    }
+
+                }
+            }
+        }
 
     }
 

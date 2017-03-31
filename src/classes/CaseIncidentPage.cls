@@ -117,11 +117,6 @@ public with sharing class CaseIncidentPage
                 KnownIssuesImpactCalcImplementation KIImpactCalc = new KnownIssuesImpactCalcImplementation();
                 KnownIssueImpactCalculationClass KICalc = new KnownIssueImpactCalculationClass(KIImpactCalc);
                 KICalc.CalculateKnownIssueScore(listKnownIssues);
-
-                set<Id> incidentIds = new set<Id>{c.Id};
-                KnownIssueImpactCalculationClass.ChangeKIPriority(incidentIds);
-
-
             }
         }
         catch(DmlException ex)
