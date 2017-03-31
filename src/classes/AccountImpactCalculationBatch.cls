@@ -73,7 +73,7 @@ global class AccountImpactCalculationBatch implements Database.Batchable<Sobject
                     mail
             });
         } catch(System.EmailException ex){
-            // Just eat it
+            system.debug('finish() EmailException - ' + ex);
         }
 
     }
