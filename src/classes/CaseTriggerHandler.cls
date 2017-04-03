@@ -14,6 +14,7 @@ public class CaseTriggerHandler extends TriggerHandler
     private static Id helpDeskRCTypeId;
     private static Set<String> closedStatuses;
     private static SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(inContactBaseClass.OrgId15Digit);
+    public static boolean callActionHub = true;
 
 
     public CaseTriggerHandler()

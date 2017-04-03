@@ -6,7 +6,7 @@
     <!--<c:CreateTFSWorkItemComp/> -->
 	<!--<aura:dependency resource="c:CanvasAppTest"/>-->
 <!--<c:TrustGridStatusComponent /> -->
-   <c:FullCalendar />
+   <!--<c:FullCalendar /> -->
 
   <!--  <div class="slds sldsCustom">
         <div class="slds-form">
@@ -16,4 +16,5 @@
         </div>
     </div>
 -->
+    <c:FullCalendar />
 </aura:application>

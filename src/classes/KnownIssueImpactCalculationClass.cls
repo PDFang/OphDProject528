@@ -111,7 +111,7 @@ public with sharing class KnownIssueImpactCalculationClass {
 
     private void GetIncidentValues(set<Id> knownIssueIds) {
         AggregateResult[] groupedResults = [
-                select KnownIssue__c, Min(CreatedDate) MINDT, Count(Id) CNTID, MAX(IncidentImpactScore__c) MAXSCORE, MAX(Priority) MAXPriority
+                select KnownIssue__c, Min(CreatedDate) MINDT, Count(Id) CNTID, MAX(IncidentImpactScore__c) MAXSCORE, MIN(Priority) MAXPriority
                 from Case
                 where KnownIssue__c in :KnownIssueIds
                 and RecordType.Name = 'Incident'
