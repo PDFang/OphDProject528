@@ -6,6 +6,7 @@
 private class ImpactScoreCalculationBatchTest {
     static testMethod void testAccountNetScoreCalculationBatch() {
 
+        createAccounts();
         test.startTest();
         Id asyncJobId = Database.executeBatch(new ImpactScoreCalculationBatch(ImpactCalculationConstants.ImpactScoreType.AccountNetScore));
         test.stopTest();
@@ -16,6 +17,7 @@ private class ImpactScoreCalculationBatchTest {
 
     static testMethod void testIncidentNetScoreCalculationBatch() {
 
+        createIncidents();
         test.startTest();
         Id asyncJobId = Database.executeBatch(new ImpactScoreCalculationBatch(ImpactCalculationConstants.ImpactScoreType.IncidentNetScore));
         test.stopTest();
@@ -26,6 +28,7 @@ private class ImpactScoreCalculationBatchTest {
 
     static testMethod void testGainsightNetScoreCalculationBatch() {
 
+        createCustomerInfo();
         test.startTest();
         Id asyncJobId = Database.executeBatch(new ImpactScoreCalculationBatch(ImpactCalculationConstants.ImpactScoreType.GainsightNetScore));
         test.stopTest();
@@ -34,14 +37,14 @@ private class ImpactScoreCalculationBatchTest {
 
     }
 
-    @TestSetup
-    private static void createTestData(){
+    private static Account[] createAccounts() {
         // create accounts
-        Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
-        Account[] accountList = new Account[]{};
-        for(Integer i=0; i<100; i++){
+        Map<String, Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
+        Account[] accountList = new Account[]{
+        };
+        for (Integer i = 0; i < 100; i++) {
             Account testAccount = new Account(
-                    Name = 'ImpactScoreCalculationBatchTest Account '+ i,
+                    Name = 'ImpactScoreCalculationBatchTest Account ' + i,
                     Type = 'Customer',
                     RecordTypeId = accountRecordTypeMap.get('Customers').getRecordTypeId(),
                     IsPartner__c = false,
@@ -56,21 +59,13 @@ private class ImpactScoreCalculationBatchTest {
             accountList.add(testAccount);
         }
         insert accountList;
-        // create contacts
-        Map<String,Schema.RecordTypeInfo> contactRecordTypeMap = Schema.SObjectType.Contact.getRecordTypeInfosByName();
-        Contact[] contactList = new Contact[]{};
-        for(Integer i=0; i<accountList.size(); i++){
-            Contact testContact = new Contact(
-                    LastName = 'Contact '+ i,
-                    FirstName = 'Test',
-                    Email = 'contact' + i + '@test.com',
-                    RecordTypeId = contactRecordTypeMap.get('Partner Contact').getRecordTypeId(),
-                    AccountId = accountList[i].Id
-            );
-            contactList.add(testContact);
-        }
-        insert contactList;
-        // create customer info
+        return accountList;
+    }
+
+    private static void createCustomerInfo() {
+
+        Account[] accountList = createAccounts();
+                // create customer info
         JBCXM__ScoringScheme__c scoringScheme = new JBCXM__ScoringScheme__c(
                 Name = 'test'
         );
@@ -96,6 +91,28 @@ private class ImpactScoreCalculationBatchTest {
             customerInfoList.add(customerInfo);
         }
         insert customerInfoList;
+
+    }
+
+
+    private static void createIncidents(){
+
+        Account[] accountList = createAccounts();
+        // create contacts
+        Map<String,Schema.RecordTypeInfo> contactRecordTypeMap = Schema.SObjectType.Contact.getRecordTypeInfosByName();
+        Contact[] contactList = new Contact[]{};
+        for(Integer i=0; i<accountList.size(); i++){
+            Contact testContact = new Contact(
+                    LastName = 'Contact '+ i,
+                    FirstName = 'Test',
+                    Email = 'contact' + i + '@test.com',
+                    RecordTypeId = contactRecordTypeMap.get('Partner Contact').getRecordTypeId(),
+                    AccountId = accountList[i].Id
+            );
+            contactList.add(testContact);
+        }
+        insert contactList;
+
         // create incidents
         Map<String,Schema.RecordTypeInfo> caseRecordTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
         Case[] caseList = new Case[]{};

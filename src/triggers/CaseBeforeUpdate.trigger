@@ -6,6 +6,10 @@
 **/
 trigger CaseBeforeUpdate on Case (before update)
 {
+    if(TriggerHandler.isBypassed('CaseTriggerHandler')){
+        system.debug('By passed CaseBeforeUpdate trigger');
+        return;
+    }
     new CaseTriggerHandler().run();
     Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
     Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();

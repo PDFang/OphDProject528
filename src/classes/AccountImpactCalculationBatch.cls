@@ -1,11 +1,7 @@
-/**
- * Created by mohandaas.rangaswamy on 3/20/2017.
- */
-
 global class AccountImpactCalculationBatch implements Database.Batchable<Sobject>, Database.Stateful{
 
     public String query;
-    public Integer lastNMonths = 13;
+    private Integer lastNMonths = 13;
     private Integer totalAccounts = 0;
 
     static final Set<String> recordTypes = new Set<String>{
@@ -18,10 +14,18 @@ global class AccountImpactCalculationBatch implements Database.Batchable<Sobject
 
         this.query = 'Select Id, Social_Media_Presence__c, CustomerSegment__c, Brand_Visibility__c, '
             + 'Industry_Leadership_Vocality__c, Risk_of_Leaving__c, GYRStatus__c, '
-            + 'Age_of_Customer_in_Months__c, IsPartner__c, Referenceable__c '
+            + 'Age_of_Customer_in_Months__c, IsPartner__c, Referenceable__c, Account_Net_Score__c '
             + 'from Account where RecordType.Name IN :recordTypes '
             + 'and Age_of_Customer_in_Months__c != 0 '
             + 'and (inContactGoLive__c = LAST_N_MONTHS:' + lastNMonths + ' or VCC_Go_Live__c = LAST_N_MONTHS:' + lastNMonths + ')';
+        system.debug('AccountImpactCalculationBatch(): query - '+ query);
+
+        AppConfiguration__c config = AppConfiguration__c.getInstance();
+        if(config != null && config.Go_Live_Last_N_Months__c != null) {
+            lastNMonths = (Integer)config.Go_Live_Last_N_Months__c;
+        }
+        system.debug('AccountImpactCalculationBatch(): lastNMonths - '+ lastNMonths);
+
     }
 
     global Database.QueryLocator start(Database.BatchableContext BC)
@@ -31,9 +35,15 @@ global class AccountImpactCalculationBatch implements Database.Batchable<Sobject
 
     global void execute(Database.BatchableContext BC, List<Account> scope)
     {
-        ImpactCalculationService service = new ImpactCalculationService(new AccountImpactCalculationImpl());
-        service.CalculateAccountNetScore(scope);
-        totalAccounts += scope.size();
+        try{
+            ImpactCalculationService service = new ImpactCalculationService(new AccountImpactCalculationImpl());
+            service.CalculateAccountNetScore(scope);
+            totalAccounts += scope.size();
+        }catch(Exception ex){
+            system.debug('execute(): Exception - ' + ex);
+            SendErrorEmail(ex, null);
+        }
+
     }
 
     global void finish(Database.BatchableContext BC)
@@ -59,12 +69,21 @@ global class AccountImpactCalculationBatch implements Database.Batchable<Sobject
                 + ' failures.' + '\n\n'
                 + 'The batch Apex job processed ' + totalAccounts + ' accounts.');
         try{
-
-        } catch(System.EmailException ex){
             Messaging.sendEmail(new Messaging.SingleEmailMessage[]{
                     mail
             });
+        } catch(System.EmailException ex){
+            system.debug('finish() EmailException - ' + ex);
         }
 
     }
+
+    private void sendErrorEmail(Exception ex, String recordId){
+        try{
+            inContactBaseClass.SendErrorEmail(ex, recordId);
+        } catch(System.EmailException emailEx){
+            system.debug('sendErrorEmail() EmailException - ' + emailEx);
+        }
+    }
+
 }

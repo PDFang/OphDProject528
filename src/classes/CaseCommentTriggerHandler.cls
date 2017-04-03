@@ -4,8 +4,24 @@
 
 public class CaseCommentTriggerHandler extends TriggerHandler {
 
+    private static boolean staticValuesSet = false;
+    private static boolean isProxyServiceTurnedOff = false;
+
+    public CaseCommentTriggerHandler()
+    {
+        if(!staticValuesSet)
+        {
+            staticValuesSet = true;
+            AppConfiguration__c config = AppConfiguration__c.getInstance();
+            if(config != null) {
+                isProxyServiceTurnedOff = config.Turn_Off_Partner_Case_Proxy_Service__c;
+            }
+        }
+    }
+
     protected override void afterInsert(){
-        CallPartnerCaseProxyService((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
+        if(!isProxyServiceTurnedOff)
+            CallPartnerCaseProxyService((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
     }
 
     // push case comments to partner case proxy service

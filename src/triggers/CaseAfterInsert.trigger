@@ -1,5 +1,9 @@
 trigger CaseAfterInsert on Case (after insert, after update) 
 {
+    if(TriggerHandler.isBypassed('CaseTriggerHandler')){
+        system.debug('By passed CaseAfterInsert trigger');
+        return;
+    }
     new CaseTriggerHandler().run();
 
     if(CaseTriggerHandler.callActionHub){

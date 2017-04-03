@@ -75,6 +75,12 @@ public with sharing class KnownIssueImpactCalculationClass {
                 system.debug('netKnownIssueScore 4 =>' + netKnownIssueScore);
                 netKnownIssueScore += impactCalculator.CalculateRecentReleaseBreak(isBrokenByRelease, GetMultiplierValue('BrokenByRelease'));
                 system.debug('netKnownIssueScore 5 =>' + netKnownIssueScore);
+
+                //track the old value
+                if(system.isBatch() || test.isRunningTest()) {
+                    newCase.KIImpactScoreHistorical__c = KnownIssuCase.KIImpactScore__c;
+                }
+
                 newCase.KIImpactScore__c = netKnownIssueScore;
                 newCase.Priority = KnownIssueIncidentMaxPriority.get(KnownIssuCase.Id);
                 updKnowIssueList.add(newCase);
