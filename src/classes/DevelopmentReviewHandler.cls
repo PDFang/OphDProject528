@@ -4,7 +4,7 @@
 // Development Review Automation
 public with sharing class DevelopmentReviewHandler {
 
-    static Integer TIME_INTERVAL = 60;
+    private static Integer TIME_INTERVAL = 60;
 
     /*
     * Runs all local tests in the connected Org
@@ -15,20 +15,28 @@ public with sharing class DevelopmentReviewHandler {
     public static void RunLocalTestsAsynchronous() {
 
         try {
-            //String body = '{"testLevel":"RunLocalTests"}';
-            String body = '{"classNames":"DevelopmentReviewDemoTestOne,DevelopmentReviewDemoTestTwo","testLevel":"RunSpecifiedTests"}';
+            String body = '{"testLevel":"RunLocalTests"}';
+            //String body = '{"classNames":"DevelopmentReviewDemoTestOne,DevelopmentReviewDemoTestTwo","testLevel":"RunSpecifiedTests"}';
 
             HttpRequest request = new HttpRequest();
             request.setEndpoint('callout:Salesforce_QA/services/data/v38.0/tooling/runTestsAsynchronous');
             request.setMethod('POST');
             request.setHeader('Content-Type', 'application/json');
             request.setBody(body);
-            HttpResponse response = new http().send(request);
+            HttpResponse response;
+            if(test.isRunningTest()){
+                // explicitly call response method to avoid uncommited work pending exception
+                FeedCommentTriggerHandlerTest.RunTestsAsynchronousMock newMock = new FeedCommentTriggerHandlerTest.RunTestsAsynchronousMock();
+                response = newMock.respond(request);
+            } else{
+                response = new http().send(request);
+            }
+
             system.debug('RunLocalTestsAsynchronous(): response body - ' + response.getBody());
             String asyncJobId = null;
-            system.debug('RunLocalTestsAsynchronous(): asyncJobId - ' + asyncJobId);
             if (response.getStatusCode() == 200) {
                 asyncJobId = response.getBody().remove('"');
+                system.debug('RunLocalTestsAsynchronous(): asyncJobId - ' + asyncJobId);
                 scheduleJob(asyncJobId);
             } else {
                 inContactBaseClass.SendErrorEmail(response.getStatus(), response.getStatusCode().format());
@@ -44,9 +52,10 @@ public with sharing class DevelopmentReviewHandler {
     public static void scheduleJob(String asyncJobId){
 
         AppConfiguration__c config = AppConfiguration__c.getInstance();
-        if(config != null) {
+        if(config != null && config.Test_Run_Time__c != null) {
             TIME_INTERVAL = (Integer)config.Test_Run_Time__c;
         }
+        system.debug('scheduleJob(): TIME_INTERVAL - ' + TIME_INTERVAL);
         Datetime nextRun = system.now().addMinutes(TIME_INTERVAL);
         String dateTimeFormat = '0 {0} {1} {2} {3} ? {4}';
         String scheduledTime = string.format(

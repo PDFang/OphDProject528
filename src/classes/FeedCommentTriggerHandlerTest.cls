@@ -39,6 +39,11 @@ public class FeedCommentTriggerHandlerTest {
         );
         insert newPost;
 
+        AppConfiguration__c config = new AppConfiguration__c(
+                Test_Run_Time__c = 5
+        );
+        insert config;
+
         test.setMock(HttpCalloutMock.class, new RunTestsAsynchronousMock());
 
         test.startTest();
@@ -49,6 +54,11 @@ public class FeedCommentTriggerHandlerTest {
         );
         insert reviewComment;
         test.stopTest();
+
+        String datetimeString = system.now().addMinutes((Integer)config.Test_Run_Time__c).format();
+        String jobName = 'Apex Test Results Emailer ' + datetimeString;
+        CronTrigger[] jobs = [Select Id From CronTrigger where CronJobDetail.Name = :jobName];
+        system.assertEquals(1, jobs.size());
 
     }
 }
