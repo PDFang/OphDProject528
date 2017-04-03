@@ -64,8 +64,8 @@ public class KnownIssueImpactCalculationClassTests {
                         KB_Attached__c = false,
                         Subject = 'KnowIssueImpactCalculationTest',
                         Description = 'Known Issue Calculation Test',
-                        Origin = 'Web'
-
+                        Origin = 'Web',
+                        KIImpactScore__c = 1000
 
                 )
         };
@@ -113,15 +113,15 @@ public class KnownIssueImpactCalculationClassTests {
 
         // incident
         test.startTest();
-        string knownIssueQuery =  'select KnownIssue__c,KnownIssue__r.Broken_by_Recent_Release__c,KnownIssue__r.Status, KnownIssue__r.Subject from Case '
-                + 'WHERE RecordType.Name = \'Incident\' '
-                + ' AND KnownIssue__c != null AND KnownIssue__r.isClosed = false and KnownIssue__r.Status not in (\'Released - Confirm Resolution\',\'No Fix\')';
+        string knownIssueQuery = 'select Broken_by_Recent_Release__c,Status, Subject, KIImpactScore__c from Case '
+                + 'WHERE RecordType.Name = \'Known Issue\' ';
         database.executeBatch(new KnownIssuesImpactScoreCalcBatch(knownIssueQuery), 500);
 
         test.stopTest();
         //for(Case KnownIssuCase : knownIssueList){
-        Case[] newCase = [Select KIImpactScore__c from Case where Id = : knownIssueList[0].Id limit 1];
+        Case[] newCase = [Select KIImpactScore__c, KIImpactScoreHistorical__c from Case where Id = : knownIssueList[0].Id limit 1];
         system.assertEquals(11.0, newCase[0].KIImpactScore__c);
+        system.assertEquals(1000, newCase[0].KIImpactScoreHistorical__c);
         //}
     }
 
