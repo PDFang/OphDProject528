@@ -27,6 +27,7 @@
         var filterData = '';
         var offSet = 0;
         var pageSize = 0;
+        var records = '';
         var kiDataSource =new kendo.data.DataSource({
                     autosync:true,
                      serverPaging: true,
@@ -38,11 +39,11 @@
                                       function(result,event)
                                       {
                                           if (event.status) {
-                                              var records = JSON.parse(result);
+                                              records = JSON.parse(result);
                                               console.log('records => ' + JSON.stringify(records));
                                               options.success(records.KIDataItems);
-                                              pageSize = records.pageSize;
-                                              console.log('pageSize =>' + pageSize);
+                                              pageSize = JSON.stringify(records.pageSize);
+
                                             } else if (event.type === 'exception') {
                                                 console.log('exception => ' + event.message);
                                             } else {
@@ -72,7 +73,12 @@
                             incidentCount: { from: "KINumOfIncidents", type: "number" },
                             priority: { from: "KIPriority", type: "number" },
                         },
-                       total : pageSize
+                       data : {
+                           json: JSON.stringify({
+                                data : records.KIDataItems,
+                                total : 13
+                                })
+                       }
                     }
                   },
 

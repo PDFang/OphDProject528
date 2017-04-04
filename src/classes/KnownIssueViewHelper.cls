@@ -78,7 +78,7 @@ public with sharing class KnownIssueViewHelper {
 
     private static list<case> QueryCases(Map<string,string> filterData,  integer offsetIntger){
         string knownIssueQuery =  FormQueryString(filterData);
-        knownIssueQuery += ' Limit 100 Offset ' + offsetIntger;
+        knownIssueQuery += ' Limit 10 Offset ' + offsetIntger;
         List<Case> listresult = Database.query(knownIssueQuery);
         return listresult;
     }
