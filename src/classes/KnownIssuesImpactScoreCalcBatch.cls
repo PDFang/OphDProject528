@@ -11,6 +11,7 @@ global class KnownIssuesImpactScoreCalcBatch implements Database.Batchable<sObje
     global KnownIssuesImpactScoreCalcBatch(string query){
         this.queryString = query;
         exceptionOccured = false;
+        CaseTriggerHandler.callActionHub = false;
     }
 
     //

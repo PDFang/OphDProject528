@@ -27,8 +27,11 @@ public with sharing class KnownIssueImpactCalculationClass {
     }
 
     public void CalculateKnownIssueScore(list<Case> knownIssueList){
-        if(knownIssueList.isEmpty())
+        if(knownIssueList.isEmpty()) {
+            system.debug('Known Issue List is empty');
             return;
+        }
+
 
         set<Id> KnownIssueIds = new set<Id>();
         map<Id, set<Id>> KnownIssueAccounts = new map<Id, set<Id>>();
@@ -40,6 +43,7 @@ public with sharing class KnownIssueImpactCalculationClass {
         }
 
         Try{
+            system.debug('CalculateKnownIssueScore in Try');
             GetIncidentValues(KnownIssueIds);
             KnownIssueAccounts = GetAccountsAssociated(KnownIssueIds);
             GetAccountASVValue(KnownIssueAccounts);
@@ -75,6 +79,13 @@ public with sharing class KnownIssueImpactCalculationClass {
                 system.debug('netKnownIssueScore 4 =>' + netKnownIssueScore);
                 netKnownIssueScore += impactCalculator.CalculateRecentReleaseBreak(isBrokenByRelease, GetMultiplierValue('BrokenByRelease'));
                 system.debug('netKnownIssueScore 5 =>' + netKnownIssueScore);
+
+                //track the old value
+                if(system.isBatch()) {
+                    system.debug('KIImpactScoreHistorical__c set to ' + KnownIssuCase.KIImpactScore__c);
+                    newCase.KIImpactScoreHistorical__c = KnownIssuCase.KIImpactScore__c;
+                }
+
                 newCase.KIImpactScore__c = netKnownIssueScore;
                 newCase.Priority = KnownIssueIncidentMaxPriority.get(KnownIssuCase.Id);
                 updKnowIssueList.add(newCase);
@@ -100,7 +111,7 @@ public with sharing class KnownIssueImpactCalculationClass {
 
     private void GetIncidentValues(set<Id> knownIssueIds) {
         AggregateResult[] groupedResults = [
-                select KnownIssue__c, Min(CreatedDate) MINDT, Count(Id) CNTID, MAX(IncidentImpactScore__c) MAXSCORE, MAX(Priority) MAXPriority
+                select KnownIssue__c, Min(CreatedDate) MINDT, Count(Id) CNTID, MAX(IncidentImpactScore__c) MAXSCORE, MIN(Priority) MAXPriority
                 from Case
                 where KnownIssue__c in :KnownIssueIds
                 and RecordType.Name = 'Incident'

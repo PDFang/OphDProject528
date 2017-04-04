@@ -4,6 +4,7 @@
 
 <aura:component description="FullCalendar" implements="force:appHostable,flexipage:availableForAllPageTypes,force:hasRecordId,forceCommunity:availableForAllPageTypes" access="global" >
 
-    <iframe src="https://incontact--lab--c.cs60.visual.force.com/apex/FullCalendar" width="100%" height="1000px;" frameBorder="0"/>
-
+    <!--<iframe src="https://incontact&#45;&#45;lab&#45;&#45;c.cs60.visual.force.com/apex/FullCalendar" width="100%" height="1000px;" frameBorder="0"/>-->
+    <aura:attribute name="contentId" type="String" default="0683C000000H1Hp"/>
+    <ui:button label="Preview Reciept" press="{!c.preview }" />
 </aura:component>
