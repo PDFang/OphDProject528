@@ -41,7 +41,7 @@
                                           if (event.status) {
                                               records = JSON.parse(result);
                                               console.log('records => ' + JSON.stringify(records));
-                                              options.success(records.KIDataItems);
+                                              options.success(records);
                                               pageSize = JSON.stringify(records.total);
 
                                             } else if (event.type === 'exception') {
@@ -52,16 +52,12 @@
                                       },
                                       {escape: false}
                                );
+                      }
 
-                            },
-                          data : {
-                                  json:  JSON.stringify({
-                                        data : records.KIDataItems,
-                                        total : 13
-                                    })
-                               }
+
                       },
                     schema:{
+                        total : 13,
                         model: {
                             id: "Id",
                            fields: {
@@ -79,11 +75,7 @@
                             ASV: { from: "KIASVValue", defaultValue: "", type: "number" },
                             incidentCount: { from: "KINumOfIncidents", type: "number" },
                             priority: { from: "KIPriority", type: "number" },
-                        },
-                        data : "data",
-                        total : "total"
-
-
+                        }
                     }
                   },
 
