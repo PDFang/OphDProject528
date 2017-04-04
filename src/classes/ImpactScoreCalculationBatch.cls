@@ -52,14 +52,18 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
                 service.CalculateIncidentNetScore(scope);
                 TriggerHandler.bypass('CaseTriggerHandler');
                 Database.SaveResult[] saveResults = Database.update(scope, false);
+                Database.Error[] errors = new Database.Error[]{};
                 for(Database.SaveResult result :saveResults){
                     if(result.isSuccess() == false){
                         system.debug('execute(): error - '+ result.getErrors()[0]);
-                        sendErrorEmail(
-                                result.getErrors()[0].getMessage() + ' ' + 'Class.ImpactScoreCalculationBatch.execute',
-                                result.getId()
-                        );
+                        errors.addAll(result.getErrors());
                     }
+                }
+                if(errors.size() > 0){
+                    sendErrorEmail(
+                            errors[0].getMessage() + ' ' + 'No of errors ' +  errors.size() + ' ' + 'Class.ImpactScoreCalculationBatch.execute',
+                            null
+                    );
                 }
             } else if (scope[0] instanceof JBCXM__CustomerInfo__c){
                 ImpactCalculationService service = new ImpactCalculationService(new GainsightImpactCalculationImpl());

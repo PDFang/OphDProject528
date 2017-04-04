@@ -131,18 +131,20 @@ public class ImpactCalculationService
         if(accountUpdateList.size() > 0)
         {
             Database.SaveResult[] saveResults = Database.update(accountUpdateList, false);
+            Database.Error[] errors = new Database.Error[]{};
             for(Database.SaveResult result :saveResults){
                 if(result.isSuccess() == false){
                     system.debug('CalculateGainsightNetScore(): error - '+ result.getErrors()[0]);
-                    try{
-                        inContactBaseClass.sendErrorEmail(
-                                result.getErrors()[0].getMessage() + ' ' + 'Class.ImpactCalculationService.CalculateGainsightNetScore',
-                                result.getId()
-                        );
-                    } catch(System.EmailException emailEx){
-                    }
-
+                    errors.addAll(result.getErrors());
                 }
+            }
+            if(errors.size() > 0) {
+                try {
+                    inContactBaseClass.sendErrorEmail(
+                            errors[0].getMessage() + ' ' + 'No of errors ' +  errors.size() + ' ' + 'Class.ImpactCalculationService.CalculateGainsightNetScore',
+                            null
+                    );
+                } catch (System.EmailException emailEx) {}
             }
         }
 
@@ -213,18 +215,20 @@ public class ImpactCalculationService
         if(accountUpdateList.size() > 0)
         {
             Database.SaveResult[] saveResults = Database.update(accountUpdateList, false);
+            Database.Error[] errors = new Database.Error[]{};
             for(Database.SaveResult result :saveResults){
                 if(result.isSuccess() == false){
                     system.debug('CalculateAccountNetScore(): error - '+ result.getErrors()[0]);
-                    try{
-                        inContactBaseClass.sendErrorEmail(
-                                result.getErrors()[0].getMessage() + ' ' + 'Class.ImpactCalculationService.CalculateAccountNetScore',
-                                result.getId()
-                        );
-                    } catch(System.EmailException emailEx){
-                    }
-
+                    errors.addAll(result.getErrors());
                 }
+            }
+            if(errors.size() > 0) {
+                try {
+                    inContactBaseClass.sendErrorEmail(
+                            errors[0].getMessage() + ' ' + 'No of errors ' +  errors.size() + ' ' + 'Class.ImpactCalculationService.CalculateAccountNetScore',
+                            null
+                    );
+                } catch (System.EmailException emailEx) {}
             }
         }
 
