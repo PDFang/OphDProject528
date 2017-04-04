@@ -118,7 +118,7 @@ private class ImpactScoreCalculationBatchTest {
         Case[] caseList = new Case[]{};
         Database.DMLOptions dmo = new Database.DMLOptions();
         dmo.AssignmentRuleHeader.useDefaultRule = true;
-        for(Integer i=0; i<accountList.size(); i++){
+        for(Integer i=0; i<10; i++){
             Case testIncident = new Case(
                     RecordTypeId = caseRecordTypeMap.get('Incident').getRecordTypeId(),
                     Subject = 'CalculateIncidentNetScore Test',
