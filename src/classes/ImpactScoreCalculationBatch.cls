@@ -41,7 +41,7 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
     global void execute(Database.BatchableContext BC, List<SObject> scope)
     {
         try{
-            recordType = scope[0].getSObjectType().getDescribe().getName();
+            recordType = scope[0].getSObjectType().getDescribe().getLabelPlural();
             system.debug('execute(): recordType - ' + recordType);
             if(scope[0] instanceof Account){
                 ImpactCalculationService service = new ImpactCalculationService(new AccountImpactCalculationImpl());
