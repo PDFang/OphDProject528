@@ -42,7 +42,7 @@
                                               records = JSON.parse(result);
                                               console.log('records => ' + JSON.stringify(records));
                                               options.success(records.KIDataItems);
-                                              pageSize = JSON.stringify(records.pageSize);
+                                              pageSize = JSON.stringify(records.total);
 
                                             } else if (event.type === 'exception') {
                                                 console.log('exception => ' + event.message);
@@ -52,7 +52,14 @@
                                       },
                                       {escape: false}
                                );
-                            }
+
+                            },
+                          data : {
+                                  json:  JSON.stringify({
+                                        data : records.KIDataItems,
+                                        total : 13
+                                    })
+                               }
                       },
                     schema:{
                         model: {
@@ -73,12 +80,10 @@
                             incidentCount: { from: "KINumOfIncidents", type: "number" },
                             priority: { from: "KIPriority", type: "number" },
                         },
-                       data : {
-                           json: JSON.stringify({
-                                data : records.KIDataItems,
-                                total : 13
-                                })
-                       }
+                        data : "data",
+                        total : "total"
+
+
                     }
                   },
 

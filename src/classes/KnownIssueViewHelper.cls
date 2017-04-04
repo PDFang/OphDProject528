@@ -47,7 +47,7 @@ public with sharing class KnownIssueViewHelper {
 
         KnownIssuDataWrapper kiDataWrapper = new KnownIssuDataWrapper();
         kiDataWrapper.KIDataItems = dataItems;
-        kiDataWrapper.pageSize = GetCountOfCases(filterDataMap);
+        kiDataWrapper.total = GetCountOfCases(filterDataMap);
 
         return JSON.serialize(kiDataWrapper);
     }
@@ -126,11 +126,11 @@ public with sharing class KnownIssueViewHelper {
     //Wrapper Class
     public class KnownIssuDataWrapper{
         public list<KIDataItemClass> KIDataItems{get; set;}
-        public integer pageSize{get; set;}
+        public integer total{get; set;}
 
         public KnownIssuDataWrapper(){
             KIDataItems = new list<KIDataItemClass>();
-            pageSize = 0;
+            total = 0;
         }
     }
 
