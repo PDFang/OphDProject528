@@ -85,68 +85,69 @@ public class CaseAssignmentClass
 		}
 	}
 
-	public static void setCasePriority(Case c, Boolean isUpdate)
-	{
-		string severity = c.Severity__c;
-		//string frequency = c.Freqeuncy__c;
-		
-		if(c.Status != 'New' || !isUpdate)
-		{
-			
-			if(c.Origin == 'Web')
-			{
-				//set priority if came from support site
-				if(severity != NULL)
-				{
-					c.Priority = severity.replace('S','P');
-					
-					if(severity == 'S2')
-					{
-						c.Urgency__c = 'Medium';
-						c.Impact__c = 'Medium';
-					}
-					else if(severity == 'S3')
-					{
-						c.Urgency__c = 'Low';
-						c.Impact__c = 'Medium';
-					}
-					else
-					{
-						c.Urgency__c = 'Low';
-						c.Impact__c = 'Low';
-					}
-				}
-			}
-			else
-			{
-				if(c.Impact__c == 'High' && c.Urgency__c == 'High')
-				{
-					c.Priority = 'P1';
-					c.Severity__c = 'S1';
-				}
-				else if((c.Impact__c == 'High' &  c.Urgency__c == 'Medium') || (c.Impact__c == 'Medium' && c.Urgency__c == 'High'))
-				{
-					c.Priority = 'P2';
-					c.Severity__c = 'S2';
-				}
-				else if((c.Impact__c == 'High' &  c.Urgency__c == 'Low') || (c.Impact__c == 'Medium' && c.Urgency__c == 'Medium') || (c.Impact__c == 'Low' && c.Urgency__c == 'High'))
-				{
-					c.Priority = 'P3';
-					c.Severity__c = 'S3';
-				}
-				else if((c.Impact__c == 'Medium' &  c.Urgency__c == 'Low') || (c.Impact__c == 'Low' && c.Urgency__c == 'Medium'))
-				{
-					c.Priority = 'P4';
-					c.Severity__c = 'S4';
-				}
-				else
-				{
-					c.Priority = 'P4';
-					c.Severity__c = 'S4';
-				}
-			}
-		}
-	}
+	// cleanup the below method in the next release
+//	public static void setCasePriority(Case c, Boolean isUpdate)
+//	{
+//		string severity = c.Severity__c;
+//		//string frequency = c.Freqeuncy__c;
+//
+//		if(c.Status != 'New' || !isUpdate)
+//		{
+//
+//			if(c.Origin == 'Web')
+//			{
+//				//set priority if came from support site
+//				if(severity != NULL)
+//				{
+//					c.Priority = severity.replace('S','P');
+//
+//					if(severity == 'S2')
+//					{
+//						c.Urgency__c = 'Medium';
+//						c.Impact__c = 'Medium';
+//					}
+//					else if(severity == 'S3')
+//					{
+//						c.Urgency__c = 'Low';
+//						c.Impact__c = 'Medium';
+//					}
+//					else
+//					{
+//						c.Urgency__c = 'Low';
+//						c.Impact__c = 'Low';
+//					}
+//				}
+//			}
+//			else
+//			{
+//				if(c.Impact__c == 'High' && c.Urgency__c == 'High')
+//				{
+//					c.Priority = 'P1';
+//					c.Severity__c = 'S1';
+//				}
+//				else if((c.Impact__c == 'High' &  c.Urgency__c == 'Medium') || (c.Impact__c == 'Medium' && c.Urgency__c == 'High'))
+//				{
+//					c.Priority = 'P2';
+//					c.Severity__c = 'S2';
+//				}
+//				else if((c.Impact__c == 'High' &  c.Urgency__c == 'Low') || (c.Impact__c == 'Medium' && c.Urgency__c == 'Medium') || (c.Impact__c == 'Low' && c.Urgency__c == 'High'))
+//				{
+//					c.Priority = 'P3';
+//					c.Severity__c = 'S3';
+//				}
+//				else if((c.Impact__c == 'Medium' &  c.Urgency__c == 'Low') || (c.Impact__c == 'Low' && c.Urgency__c == 'Medium'))
+//				{
+//					c.Priority = 'P4';
+//					c.Severity__c = 'S4';
+//				}
+//				else
+//				{
+//					c.Priority = 'P4';
+//					c.Severity__c = 'S4';
+//				}
+//			}
+//		}
+//	}
 	
 	public static void AssignToCsAm (Case c, string recordTypeName, Account a)
 	{

@@ -41,7 +41,7 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
     global void execute(Database.BatchableContext BC, List<SObject> scope)
     {
         try{
-            recordType = scope[0].getSObjectType().getDescribe().getName();
+            recordType = scope[0].getSObjectType().getDescribe().getLabelPlural();
             system.debug('execute(): recordType - ' + recordType);
             if(scope[0] instanceof Account){
                 ImpactCalculationService service = new ImpactCalculationService(new AccountImpactCalculationImpl());
@@ -55,7 +55,10 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
                 for(Database.SaveResult result :saveResults){
                     if(result.isSuccess() == false){
                         system.debug('execute(): error - '+ result.getErrors()[0]);
-                        sendErrorEmail(result.getErrors()[0].getMessage(), result.getId());
+                        sendErrorEmail(
+                                result.getErrors()[0].getMessage() + ' ' + 'Class.ImpactScoreCalculationBatch.execute',
+                                result.getId()
+                        );
                     }
                 }
             } else if (scope[0] instanceof JBCXM__CustomerInfo__c){

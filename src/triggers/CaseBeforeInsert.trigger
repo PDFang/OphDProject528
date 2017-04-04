@@ -96,13 +96,17 @@ trigger CaseBeforeInsert on Case (before insert)
             // Set the acknowledged by field
             c.Acknowledge_By__c = System.now().addHours(2);
             //Set Case Priority
+            // Incident or Incident - Premise
             if(c.RecordTypeId == '01270000000LuEp' || c.RecordTypeId == '01270000000MzcW' )
             {
                 //Web origin is for service site only
                 //if(c.Origin != 'Web')
                 //{
-                    CaseAssignmentClass.setCasePriority(c,false);
+                    //CaseAssignmentClass.setCasePriority(c,false);
                 //}
+                if(c.Severity__c != null && c.Severity__c.startsWith('S')){
+                    c.Priority = c.Severity__c.replace('S','P');
+                }
                 
                 //GET ENTITLEMENT FROM ACCOUNT
                 if(c.AccountId != null)
