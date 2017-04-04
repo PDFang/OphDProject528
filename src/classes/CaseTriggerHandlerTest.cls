@@ -5,6 +5,80 @@
 @IsTest
 private class CaseTriggerHandlerTest {
 
+    // test priority, severity assignment
+    static testMethod void testIncidentPriorityAssignment(){
+
+        SiteConfiguration__c sbx = new SiteConfiguration__c();
+        sbx.Name = inContactBaseClass.OrgId15Digit;
+        sbx.AutoEventEmails__c = false;
+        sbx.DaysToDisplayKnownIssues__c = 30;
+        sbx.OrgId__c = inContactBaseClass.OrgId15Digit;
+        sbx.EventResolvedPriorities__c = 'P1;P2;';
+        sbx.EventResolvedEmails__c = false;
+        insert sbx;
+
+        AppConfiguration__c config = new AppConfiguration__c(
+                Turn_Off_Partner_Case_Proxy_Service__c = true
+        );
+        insert config;
+
+        Account testAccount = [Select Id from Account LIMIT 1]; // from setup method
+        Contact testContact = [Select Id from Contact where AccountId = :testAccount.Id LIMIT 1]; // from setup method
+
+        // create an incident
+        Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
+        Case[] caseList = new Case[]{};
+        Case testIncident = new Case(
+                RecordTypeId = recordTypeMap.get('Incident').getRecordTypeId(),
+                Subject = 'testIncidentPriorityAssignment Test',
+                Description = 'testIncidentPriorityAssignment Test',
+                Status = 'New',
+                AccountId = testAccount.Id,
+                ContactId = testContact.Id,
+                Severity__c = 'S2',
+                Related_to_Previous_Known_Issue__c = 'No',
+                Security_Issue__c = 'No',
+                Product_or_Service__c = 'Service Disruption',
+                Request_Type__c = 'Dialer'
+        );
+        caseList.add(testIncident);
+
+        Case testEvent = new Case(
+                RecordTypeId = recordTypeMap.get('Event').getRecordTypeId(),
+                Subject = 'testIncidentPriorityAssignment Event',
+                Description = 'testIncidentPriorityAssignment Event',
+                Status = 'New',
+                EventType__c = 'Service Disruption',
+                PlatformsImpacted__c = 'C6 - inContact',
+                ProductImpacted__c = 'ACD',
+                InternalEvent__c = true,
+                Priority = 'P1'
+        );
+        caseList.add(testEvent);
+
+        test.startTest();
+        Database.DMLOptions dmo = new Database.DMLOptions();
+        dmo.AssignmentRuleHeader.useDefaultRule = true;
+        testIncident.setOptions(dmo);
+        testEvent.setOptions(dmo);
+        insert caseList;
+        test.stopTest();
+
+        // verify Priority value is set to match Severity
+        Case incident = [Select Priority from Case where Id = :testIncident.Id];
+        system.assertEquals(testIncident.Severity__c.replace('S', 'P'), incident.Priority, 'Priority is not assigned correctly.');
+
+        // attach to an event
+        testIncident.ParentId = testEvent.Id;
+        testIncident.Status = 'Assigned';
+        update testIncident;
+        // verify incident inherits the Event priority
+        incident = [Select Priority from Case where Id = :testIncident.Id];
+        system.assertEquals(testEvent.Priority, incident.Priority, 'Incident priority does not match Event priority.');
+
+
+    }
+
     // initial score
     static testMethod void testCalculateIncidentNetScore(){
 

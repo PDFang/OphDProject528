@@ -10,7 +10,6 @@ trigger CaseBeforeUpdate on Case (before update)
         system.debug('By passed CaseBeforeUpdate trigger');
         return;
     }
-    new CaseTriggerHandler().run();
     Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
     Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
     SiteConfiguration__c siteConfig = new SiteConfiguration__c();
@@ -137,11 +136,18 @@ trigger CaseBeforeUpdate on Case (before update)
         {
             if(!eventCasePriorities.isEmpty() && eventCasePriorities.containsKey(cn.ParentId))
             {
+                // set to Event priority
                 cn.Priority = eventCasePriorities.get(cn.ParentId);
+                if(cn.Priority != null && cn.Priority.startsWith('P')){
+                    cn.Severity__c = cn.Priority.replace('P','S');
+                }
             }
             else
             {
-                CaseAssignmentClass.setCasePriority(cn,true);
+                //CaseAssignmentClass.setCasePriority(cn,true);
+                if(cn.Severity__c != null && cn.Severity__c.startsWith('S')){
+                    cn.Priority = cn.Severity__c.replace('S','P');
+                }
             }
         }
 
@@ -360,6 +366,8 @@ trigger CaseBeforeUpdate on Case (before update)
         }
 
     }
+
+    new CaseTriggerHandler().run();
 
     //update CaseOwnership
     /* SFDC test begin */
