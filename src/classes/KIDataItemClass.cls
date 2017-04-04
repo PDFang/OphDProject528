@@ -12,7 +12,7 @@ public with sharing class KIDataItemClass {
     public String  KITFSTeam{get; set;}
     public String  KIPriority{get; set;}
     public String  KITFSStatus{get; set;}
-    public Date    KICreatedDate {get; set;}
+    public DateTime    KICreatedDate {get; set;}
     public string  KIFormattedCreatedDt{get;set;}
     public integer KIAge{get;set;}
     public string  KITFSIteration{get;set;}

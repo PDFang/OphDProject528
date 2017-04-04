@@ -1,0 +1,126 @@
+<!--
+ - Created by arnab.karsarkar on 4/4/2017.
+ -->
+
+<apex:page id="KnownIssueScoreReportPage" sideBar="false" controller="KnownIssueScoreReportController" standardStylesheets="false" showHeader="true" title="Known Issue Report">
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+
+
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.common.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.rtl.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
+
+
+
+    <div id="kIGrid"></div>
+
+
+    <script>
+        $(document).ready(function(e){
+            setupSearchGrid();
+        });
+        var filterData = '';
+        var offSet = 0;
+        var pageSize = 0;
+        var kiDataSource =new kendo.data.DataSource({
+                    autosync:true,
+                     serverPaging: true,
+                    transport:{
+                      read: function(options){
+                          	   KnownIssueScoreReportController.GetKnownIssues(
+                                      filterData,
+                                      offSet,
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                              var records = JSON.parse(result);
+                                              console.log('records => ' + JSON.stringify(records));
+                                              options.success(records.KIDataItems);
+                                              pageSize = records.pageSize;
+                                              console.log('pageSize =>' + pageSize);
+                                            } else if (event.type === 'exception') {
+                                                console.log('exception => ' + event.message);
+                                            } else {
+                                                 console.log('Error => ' + event.message);
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                            }
+                      },
+                    schema:{
+                        model: {
+                            id: "Id",
+                           fields: {
+                            Id : {from: "KICaseId", type: "string" },
+                            kiNum: { from: "KINumber", type: "string" },
+                            tfsId: { from: "KITFSId", type: "number" },
+                            subject: { from: "KISubject", type: "string"},
+                            status: { from: "KIStatus", type: "string" },
+                            score: { from: "KIScore", type: "number" },
+                            team: { from: "KITFSTeam", type: "string" },
+                            tfsStatus: { from: "KITFSStatus", type: "string" },
+                            createdDate: { from: "KIFormattedCreatedDt", defaultValue: "", type: "string" },
+                            age: { from: "KIAge", defaultValue: "", type: "number" },
+                            tfsIteration: { from: "KITFSIteration", defaultValue: "", type: "string" },
+                            ASV: { from: "KIASVValue", defaultValue: "", type: "number" },
+                            incidentCount: { from: "KINumOfIncidents", type: "number" },
+                            priority: { from: "KIPriority", type: "number" },
+                        },
+                       total : pageSize
+                    }
+                  },
+
+            	pageSize: 10
+
+              });
+
+
+          function setupSearchGrid(){
+    	    $("#kIGrid").kendoGrid({
+                  dataSource: kiDataSource,
+                  scrollable: true,
+            	  pageable: true,
+                  dataBound: onDataBound,
+                  columns: [{
+                                field:"kiNum",
+                                title : "KI",
+                                 template: '#{ #<a href="/#: Id #" target="_blank" >#= kiNum #</a># } #'
+                            },
+                            {
+                                field: "tfsId",
+                                title:"TFS Id"
+
+                            },
+                            {
+                                field: "subject",
+                                title:"Subject",
+                                width: 300
+                            },
+                            {
+                                field:"score",
+                                title:"Score"
+                            },
+                            {
+                                field: "priority",
+                                title: "Priority"
+                            }
+                  ]
+            });
+          }
+
+    function onDataBound(){
+        var pageIndex = $("#kIGrid").data("kendoGrid").dataSource.page();
+        offSet = pageIndex  * 10;
+        console.log('offSet =>' + offSet);
+    }
+
+    </script>
+
+
+</apex:page>

@@ -94,14 +94,15 @@
                 });
         }
     
-    	var caseDataSource =new kendo.data.DataSource({
+
+    var caseDataSource =new kendo.data.DataSource({
                     autosync:true,
                   transport:{
                       read: function(options){
                           	   var searchText = $("#searchText").val();
                           	   var prodImpact = document.getElementById('{!$Component.prodForm.prod}');
                                var prodValue = $(prodImpact).val();
-                          
+
                                CaseSearchKnownIssuesController.FindCases(
                                       searchText,prodValue,'{!recordTypeName}',
                                       function(result,event)
@@ -127,13 +128,12 @@
                                 "Subject": { type: "string"},
                                 "ProductImpacted__c" : {type: "string"},
                                 "PlatformsImpacted__c" : {type: "string"}
-                            
+
                         }
                     }
                   },
             	pageSize: 10
               });
-    
     	
         function setupSearchGrid(){
     	$("#searchGrid").kendoGrid({
