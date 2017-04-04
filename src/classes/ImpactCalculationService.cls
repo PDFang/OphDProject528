@@ -135,7 +135,10 @@ public class ImpactCalculationService
                 if(result.isSuccess() == false){
                     system.debug('CalculateGainsightNetScore(): error - '+ result.getErrors()[0]);
                     try{
-                        inContactBaseClass.sendErrorEmail(result.getErrors()[0].getMessage(), result.getId());
+                        inContactBaseClass.sendErrorEmail(
+                                result.getErrors()[0].getMessage() + ' ' + 'Class.ImpactCalculationService.CalculateGainsightNetScore',
+                                result.getId()
+                        );
                     } catch(System.EmailException emailEx){
                     }
 
@@ -214,7 +217,10 @@ public class ImpactCalculationService
                 if(result.isSuccess() == false){
                     system.debug('CalculateAccountNetScore(): error - '+ result.getErrors()[0]);
                     try{
-                        inContactBaseClass.sendErrorEmail(result.getErrors()[0].getMessage(), result.getId());
+                        inContactBaseClass.sendErrorEmail(
+                                result.getErrors()[0].getMessage() + ' ' + 'Class.ImpactCalculationService.CalculateAccountNetScore',
+                                result.getId()
+                        );
                     } catch(System.EmailException emailEx){
                     }
 

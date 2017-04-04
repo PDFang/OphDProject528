@@ -55,7 +55,10 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
                 for(Database.SaveResult result :saveResults){
                     if(result.isSuccess() == false){
                         system.debug('execute(): error - '+ result.getErrors()[0]);
-                        sendErrorEmail(result.getErrors()[0].getMessage(), result.getId());
+                        sendErrorEmail(
+                                result.getErrors()[0].getMessage() + ' ' + 'Class.ImpactScoreCalculationBatch.execute',
+                                result.getId()
+                        );
                     }
                 }
             } else if (scope[0] instanceof JBCXM__CustomerInfo__c){
