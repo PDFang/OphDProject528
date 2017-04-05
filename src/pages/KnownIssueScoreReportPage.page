@@ -41,8 +41,7 @@
                                           if (event.status) {
                                               records = JSON.parse(result);
                                               console.log('records => ' + JSON.stringify(records));
-                                              options.success(records);
-                                              pageSize = JSON.stringify(records.total);
+                                              options.success(records.KIDataItems);
 
                                             } else if (event.type === 'exception') {
                                                 console.log('exception => ' + event.message);
@@ -57,7 +56,10 @@
 
                       },
                     schema:{
-                        total : 13,
+                        total : function(){
+                            console.log('records.total =>' + records.total);
+                            return records.total;
+                        },
                         model: {
                             id: "Id",
                            fields: {
@@ -89,7 +91,7 @@
                   dataSource: kiDataSource,
                   scrollable: true,
             	  pageable: true,
-                  dataBound: onDataBound,
+                  dataBinding: onDataBinding,
                   columns: [{
                                 field:"kiNum",
                                 title : "KI",
@@ -117,7 +119,9 @@
             });
           }
 
-    function onDataBound(){
+   
+
+    function onDataBinding(){
         var pageIndex = $("#kIGrid").data("kendoGrid").dataSource.page();
         offSet = pageIndex  * 10;
         console.log('offSet =>' + offSet);
