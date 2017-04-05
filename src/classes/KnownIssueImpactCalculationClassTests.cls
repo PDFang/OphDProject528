@@ -55,6 +55,10 @@ public class KnownIssueImpactCalculationClassTests {
         insert testAccount;
         Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SobjectType.Case.getRecordTypeInfosByName();
         // known issue
+        //set default assignment rule
+        database.DMLOptions dmo = new database.DMLOptions();
+        dmo.assignmentRuleHeader.useDefaultRule = true;
+
         list<Case> knownIssueList = new list<Case>{
                 new Case(
                         //AccountId = testAccount.Id,
@@ -69,6 +73,11 @@ public class KnownIssueImpactCalculationClassTests {
 
                 )
         };
+
+        for(Case c : knownIssueList){
+            c.setOptions(dmo);
+        }
+
         insert knownIssueList;
 
 
@@ -90,6 +99,10 @@ public class KnownIssueImpactCalculationClassTests {
 
                 )
         };
+
+        for(Case c : incidentList){
+            c.setOptions(dmo);
+        }
 
         insert incidentList;
 

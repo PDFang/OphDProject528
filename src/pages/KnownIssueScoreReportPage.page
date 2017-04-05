@@ -23,11 +23,37 @@
     <br/>
     <div id="kIGrid"></div>
 
+    <!-- Information Modal -->
+    <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="infolabel">Account Details For Known Issue - <span id="knownIssueId"/></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="font-size:14px;" id="infoModal">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            Total ASV value (Million) : <span id="ASV" style="font-weight:bold;"></span>
+                        </div>
+                    </div>
+
+                    <div id="kiAcctDetails"></div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         $(document).ready(function(e){
             setupSearchGrid();
-
         });
         var filterData = '';
         var offSet = 0;
@@ -81,12 +107,13 @@
                             tfsIteration: { from: "KITFSIteration", defaultValue: "", type: "string" },
                             ASV: { from: "KIASVValue", defaultValue: "", type: "number" },
                             incidentCount: { from: "KINumOfIncidents", type: "number" },
-                            priority: { from: "KIPriority", type: "number" },
+                            priority: { from: "KIPriority", type: "string" },
+                            tfsLink :{from: "KITFSLink", type: "string" }
                         }
                     }
                   },
 
-            	pageSize: 10
+            	pageSize: {!pageSize}
 
               });
 
@@ -95,8 +122,15 @@
     	    $("#kIGrid").kendoGrid({
                   dataSource: kiDataSource,
                   scrollable: true,
-            	  pageable: true,
-                  dataBinding: onDataBinding,
+                  resizable: true,
+            	  pageable: {
+                    refresh: false,
+                    pageSizes: false,
+                    buttonCount: 5
+                  },
+                  page: onPaging,
+                  dataBound: onDataBind,
+                  height : 550,
                   columns: [{
                                 field:"kiNum",
                                 title : "KI",
@@ -105,7 +139,7 @@
                             {
                                 field: "tfsId",
                                 title:"TFS Id",
-                                template: '#{ #<a href="/#:  #" target="_blank" >#= tfsId #</a># } #'
+                                template: '#{ #<a href="#: tfsLink #" target="_blank" >#= tfsId != null? tfsId : "" #</a># } #'
 
                             },
                             {
@@ -120,7 +154,7 @@
                             {
                                 field:"score",
                                 title:"Score",
-                                template: '#{ #<a href="/#: #" target="_blank" >#= score #</a># } #'
+                                 template: '<a href="" onClick="OpenModal(this); return false;">#= score != null? score : "" #</a>'
                             },
                             {
                                 field:"team",
@@ -152,13 +186,162 @@
             });
           }
 
-    function onDataBinding(){
-        var pageIndex = $("#kIGrid").data("kendoGrid").dataSource.page();
-        offSet = pageIndex  * 10;
+     function onPaging(arg) {
+        console.log("Paging to page index:" + arg.page);
+        var pageIndex = arg.page;
+        offSet = (pageIndex - 1) * {!pageSize};
         console.log('offSet =>' + offSet);
+     }
+
+     function onDataBind(e){
+        var rows = e.sender.tbody.children();
+        for (var j = 0; j < rows.length; j++) {
+            var row = $(rows[j]);
+            var dataItem = e.sender.dataItem(row);
+            var Priority = dataItem.get("priority");
+            if (Priority == 'P1'){
+                row.addClass("HiglightPriority");
+                for (var x = 0; x < row.children().length; x++){
+                    var cell = row.children().eq(x);
+                    cell.addClass("HiglightPriority");
+                }
+            }
+            var createdDate = dataItem.get("createdDate");
+            var isToday = checkDate(createdDate)
+            if (isToday == true){
+                row.addClass("newItemOnList");
+            }
+        }
     }
 
+    function checkDate(inputDate){
+      var createDate = new Date(inputDate);
+      var todaysDate = new Date();
+      var val =  (createDate.setHours(0,0,0,0) == todaysDate.setHours(0,0,0,0));
+      return val;
+    }
+
+     function OpenModal(sender ){
+         var kiId, kiNum, valASV;
+        var grid = $('#kIGrid').data('kendoGrid');
+        if (grid){
+            var data = grid.dataItem($(sender).closest("tr"));
+            if (data){
+             kiId = data.Id;
+             kiNum = data.kiNum;
+              valASV = data.ASV + 'M';
+            }
+        }
+
+        $("span#ASV").text(valASV );
+        $("span#knownIssueId").text(kiNum );
+
+        var accountDataSource = new kendo.data.DataSource({
+            		autosync:true,
+                    transport:{
+                      read: function(options){
+                          	   KnownIssueScoreReportController.GetAccounts(
+                                      kiId,
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                              records = JSON.parse(result);
+                                              console.log('Account records => ' + JSON.stringify(records));
+                                              options.success(records);
+                                            } else if (event.type === 'exception') {
+                                                console.log('exception => ' + event.message);
+                                            } else {
+                                                 console.log('Error => ' + event.message);
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                      }
+                   },
+                    schema:{
+                        model: {
+                           id: "Id",
+                           fields: {
+                                Id : {from: "AccountId", type: "string" },
+                                ActName: { from: "AccountName", type: "string" },
+                                ActCadeBillNum: { from: "CadeBillNum", type: "number" },
+                                ActRecrdTyp: { from: "AccountRecordType", type: "string"}
+                           }
+                        }
+                    },
+            	pageSize: 10
+        });
+        $("#kiAcctDetails").kendoGrid({
+                dataSource: accountDataSource,
+                sortable: true,
+                pageable: true,
+                columns: [{
+                    field: "ActName",
+                    title: "Account Name",
+                    width: 240
+                }, {
+                    field: "ActCadeBillNum",
+                    title: "Cadebill Account #"
+                }, {
+                    field: "ActRecrdTyp",
+                    title: "Account Type"
+                }]
+        });
+
+        $('#info').modal('show');
+     }
     </script>
 
+    <style>
+        .button-cancel{
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid rgb(216, 221, 230) !important;
+        background-color: rgb(255, 255, 255) !important;
+        color: #0275d8 !important;
+        display: inline-block;
+        height:33px;
+        font-weight:200 !importnat;
+        font-size : 12px !important;
+    }
+
+    ul li, ol li {
+    margin-left: 1px;
+    }
+
+    li a.k-link{
+        background-color: #ceced2;
+    }
+
+     tr.HiglightPriority {
+        font-weight: bold;
+        color: red !important;
+    }
+    td.HiglightPriority {
+        font-weight: bold;
+        color: red !important;
+    }
+    td.HiglightPriority a {
+        font-weight: bold;
+        color: red !important;
+    }
+    .newItemOnList{
+        background-color: #fafcad;
+    }
+
+    div{
+       font-size:11.11px;
+        }
+	.k-grid td{
+    	white-space: nowrap;
+    	text-overflow: ellipsis;
+	}
+    .k-grid table {
+   		table-layout: fixed;
+	}
+
+    </style>
 
 </apex:page>

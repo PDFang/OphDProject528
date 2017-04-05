@@ -6,9 +6,7 @@
 
 public with sharing class KnownIssueViewHelper {
 
-
-
-
+    public static final integer PageSize = 10;
     public static String GetKnownIsssues(string filterData, integer offsetInteger){
         map<string, string> filterDataMap = new map<string, string>();
         if(filterData != '' && filterData != null){
@@ -34,8 +32,9 @@ public with sharing class KnownIssueViewHelper {
             dataItem.KIScore = ki.KIImpactScore__c;
             dataItem.KICreatedDate = ki.CreatedDate;
             dataItem.KINumOfIncidents = Integer.valueOf(ki.NumberOfIncidents__c);
-            dataItem.KIASVValue = ki.ASVValue__c;
+            dataItem.KIASVValue = ki.ASVValue__c == null ? null : ki.ASVValue__c.setScale(2);
             dataItem.KITFSId = string.valueOf(ki.TfsWorkItem__r.TFSExternalID__c);
+            dataItem.KITFSLink = 'http://corptfsapp01.ucn.net:8080/tfs/DefaultCollection/inContact/_workitems#_a=edit&id=' + dataItem.KITFSId;
             dataItem.KITFSIteration = ki.TfsWorkItem__r.Release__c;
             dataItem.KITFSTeam = ki.TfsWorkItem__r.Team__c;
             dataItem.KITFSStatus = ki.TfsWorkItem__r.State__c;
@@ -71,24 +70,27 @@ public with sharing class KnownIssueViewHelper {
 
 
     private static integer GetCountOfCases(Map<string,string> filterData){
-        string knownIssueQuery =  FormQueryString(filterData);
-        List<Case> listresult = Database.query(knownIssueQuery);
-        return listresult.size();
+        string knownIssueQuery = 'select Count() from Case ';
+        knownIssueQuery += FormQueryString(filterData);
+        integer listresultSize = Database.countQuery(knownIssueQuery);
+        return listresultSize;
     }
 
     private static list<case> QueryCases(Map<string,string> filterData,  integer offsetIntger){
-        string knownIssueQuery =  FormQueryString(filterData);
-        knownIssueQuery += ' Limit 10 Offset ' + offsetIntger;
+
+        string knownIssueQuery = 'Select Id,Broken_by_Recent_Release__c, CaseNumber, KIImpactScore__c,NumberOfIncidents__c,ASVValue__c,  '
+                                + ' Status, Subject,Priority, CreatedDate,TfsWorkItem__r.Release__c, TfsWorkItem__r.TFSItemLink__c, '
+                                + ' TfsWorkItem__r.TFSExternalID__c, TfsWorkItem__r.Team__c, TfsWorkItem__r.State__c'
+                                + ' From Case '  ;
+        knownIssueQuery  +=  FormQueryString(filterData);
+        knownIssueQuery += ' Order BY KIImpactScore__c desc NULLS LAST ' + ' Limit ' + PageSize +' Offset ' + offsetIntger ;
+
         List<Case> listresult = Database.query(knownIssueQuery);
         return listresult;
     }
 
     private static string FormQueryString(Map<string,string> filterData){
-        string knownIssueQuery = 'Select Id,Broken_by_Recent_Release__c, CaseNumber, KIImpactScore__c,NumberOfIncidents__c,ASVValue__c,  '
-                + ' KIImpactScoreHistorical__c, Status, Subject,Priority, CreatedDate,TfsWorkItem__r.Release__c,'
-                + ' TfsWorkItem__r.TFSExternalID__c, TfsWorkItem__r.Team__c, TfsWorkItem__r.State__c'
-                + ' From Case '
-                + ' WHERE RecordType.Name = \'Known Issue\' '
+        string knownIssueQuery = ' WHERE RecordType.Name = \'Known Issue\' '
                 + ' AND isClosed = false and Status not in (\'Released - Confirm Resolution\',\'No Fix\')';
 
         if(filterData.size() > 0)
