@@ -40,7 +40,8 @@ public with sharing class KnownIssueViewHelper {
             dataItem.KITFSStatus = ki.TfsWorkItem__r.State__c;
             dataItem.KIAge = date.valueOf(ki.CreatedDate).daysBetween(system.today());
             dataItem.KIFormattedCreatedDt = GetformattedDate(date.valueOf(ki.CreatedDate));
-
+            dataItem.KIScoreChange = ki.KIImpactScore__c > ki.KIImpactScoreHistorical__c ? 'Up'
+                                        : ki.KIImpactScore__c < ki.KIImpactScoreHistorical__c ? 'Down' : 'NoChnage';
             dataItems.add(dataItem);
         }
 
@@ -79,7 +80,7 @@ public with sharing class KnownIssueViewHelper {
     private static list<case> QueryCases(Map<string,string> filterData,  integer offsetIntger){
 
         string knownIssueQuery = 'Select Id,Broken_by_Recent_Release__c, CaseNumber, KIImpactScore__c,NumberOfIncidents__c,ASVValue__c,  '
-                                + ' Status, Subject,Priority, CreatedDate,TfsWorkItem__r.Release__c, TfsWorkItem__r.TFSItemLink__c, '
+                                + ' KIImpactScoreHistorical__c, Status, Subject,Priority, CreatedDate,TfsWorkItem__r.Release__c, TfsWorkItem__r.TFSItemLink__c, '
                                 + ' TfsWorkItem__r.TFSExternalID__c, TfsWorkItem__r.Team__c, TfsWorkItem__r.State__c'
                                 + ' From Case '  ;
         knownIssueQuery  +=  FormQueryString(filterData);
