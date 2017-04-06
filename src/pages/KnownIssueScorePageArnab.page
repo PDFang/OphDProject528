@@ -16,44 +16,40 @@
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
 
 
-    <div class="container-fluid">
-        <div class="alert alert-danger" role="alert" id="errorAlert" style="display:none;">
-        </div>
-        <div style="float:right;">
-            <label id="lastLoadDate">Last Update : {!currentDateTime}</label>
-        </div>
+    <div style="float:right;">
+        <label id="lastLoadDate">Last Update : {!currentDateTime}</label>
+    </div>
+    <br/>
+    <br/>
+    <div id="kIGrid"></div>
 
-        <br/>
-        <br/>
-        <div id="kIGrid"></div>
-
-        <!-- Information Modal -->
-        <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="infolabel">Account Details For Known Issue - <span id="knownIssueId"/></h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body" style="font-size:14px;" id="infoModal">
-                        <div class="panel panel-info">
-                            <div class="panel-heading">
-                                Total ASV value (Million) : <span id="ASV" style="font-weight:bold;"></span>
-                            </div>
+    <!-- Information Modal -->
+    <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="infolabel">Account Details For Known Issue - <span id="knownIssueId"/></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="font-size:14px;" id="infoModal">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            Total ASV value (Million) : <span id="ASV" style="font-weight:bold;"></span>
                         </div>
-
-                        <div id="kiAcctDetails"></div>
-
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Close</button>
-                    </div>
+
+                    <div id="kiAcctDetails"></div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Close</button>
                 </div>
             </div>
         </div>
     </div>
+
 
     <script>
         $(document).ready(function(e){
@@ -80,11 +76,8 @@
 
                                             } else if (event.type === 'exception') {
                                                 console.log('exception => ' + event.message);
-                                                $("div#errorAlert").css({"display":"block"});
-                                                $("div#errorAlert").html('Cannot load the table. Please contact Sys admins. The error message says - <strong>' + event.message + '</strong>');
                                             } else {
-                                                  $("div#errorAlert").css({"display":"block"});
-                                                 $("div#errorAlert").html('Cannot load the table. Please contact Sys admins. The error message says - <strong>' + event.message + '</strong>');
+                                                 console.log('Error => ' + event.message);
                                             }
                                       },
                                       {escape: false}
@@ -120,22 +113,16 @@
                         }
                     }
                   },
-                sort: [
 
-                    { field: "score", dir: "desc" }
-
-                  ],
             	pageSize: {!pageSize}
 
               });
 
 
           function setupSearchGrid(){
-              $("div#errorAlert").css({"display":"none"});
     	    $("#kIGrid").kendoGrid({
                   dataSource: kiDataSource,
                   scrollable: true,
-                   sortable: true,
                   resizable: true,
             	  pageable: {
                     refresh: false,
@@ -159,7 +146,7 @@
                             {
                                 field: "subject",
                                 title:"Subject",
-                                width: 400
+                                width: 300
                             },
                             {
                               field: "status",
@@ -168,7 +155,7 @@
                             {
                                 field:"score",
                                 title:"Score",
-                                 template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">#= score != null? score : "" #</a>'
+                                 template: '<a href="" onClick="OpenModal(this); return false;">#= score != null? score : "" #</a>'
                             },
                             {
                                 field:"team",
@@ -189,7 +176,8 @@
                             },
                             {
                                 field: "age",
-                                title:"Age"
+                                title:"Age",
+                                width: 300
                             },
                             {
                                 field:"tfsIteration",
@@ -214,9 +202,10 @@
             var Priority = dataItem.get("priority");
             if (Priority == 'P1'){
                 row.addClass("HiglightPriority");
-            }
-            if (Priority == 'P2'){
-                row.addClass("MediumPriority");
+                for (var x = 0; x < row.children().length; x++){
+                    var cell = row.children().eq(x);
+                    cell.addClass("HiglightPriority");
+                }
             }
             var createdDate = dataItem.get("createdDate");
             var isToday = checkDate(createdDate)
@@ -229,7 +218,6 @@
                 $( scoreCell ).append( "<span class='glyphicon glyphicon-triangle-top' style='color:red; padding-left: 3px;'/>" );
             else if(ScoreChange == 'Down')
                  $( scoreCell ).append( "<span class='glyphicon glyphicon-triangle-bottom'  style='color:green; padding-left: 3px;'/>" );
-
         }
     }
 
@@ -269,12 +257,8 @@
                                               options.success(records);
                                             } else if (event.type === 'exception') {
                                                 console.log('exception => ' + event.message);
-                                                $("div#errorAlert").css({"display":"block"});
-                                                $("div#errorAlert").html('Cannot load Accounts. Please contact Sys admins. The error message says - <strong>' + event.message + '</strong>');
                                             } else {
-                                                 console.log('exception => ' + event.message);
-                                                $("div#errorAlert").css({"display":"block"});
-                                                $("div#errorAlert").html('Cannot load Accounts. Please contact Sys admins. The error message says - <strong>' + event.message + '</strong>');
+                                                 console.log('Error => ' + event.message);
                                             }
                                       },
                                       {escape: false}
@@ -338,27 +322,20 @@
         background-color: #ceced2;
     }
 
-    tr.HiglightPriority {
-        background-color: rgb(220, 175, 175) !important;
+     tr.HiglightPriority {
+        font-weight: bold;
+        color: red !important;
     }
     td.HiglightPriority {
-       background-color: rgb(220, 175, 175) !important;
+        font-weight: bold;
+        color: red !important;
     }
-    tr.HiglightPriority a {
-        color: black !important;
-    }
-    tr.MediumPriority a {
-        color: black !important;
+    td.HiglightPriority a {
+        font-weight: bold;
+        color: red !important;
     }
     .newItemOnList{
         background-color: #fafcad;
-    }
-
-    tr.MediumPriority {
-        background-color: rgb(227, 210, 195) !important;
-    }
-    td.MediumPriority{
-        background-color: rgb(227, 210, 195) !important;
     }
 
     div{
