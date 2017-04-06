@@ -16,9 +16,12 @@
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
 
 
-
+    <div style="float:right;">
+        <label id="lastLoadDate">Last Update : {!currentDateTime}</label>
+    </div>
+    <br/>
+    <br/>
     <div id="kIGrid"></div>
-
 
     <!-- Information Modal -->
     <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
@@ -82,7 +85,7 @@
                       }
 
 
-                    },
+                      },
                     schema:{
                         total : function(){
                             console.log('records.total =>' + records.total);
@@ -91,24 +94,27 @@
                         model: {
                             id: "Id",
                            fields: {
-                                Id : {from: "KICaseId", type: "string" },
-                                kiNum: { from: "KINumber", type: "string" },
-                                tfsId: { from: "KITFSId", type: "number" },
-                                subject: { from: "KISubject", type: "string"},
-                                status: { from: "KIStatus", type: "string" },
-                                score: { from: "KIScore", type: "number" },
-                                team: { from: "KITFSTeam", type: "string" },
-                                tfsStatus: { from: "KITFSStatus", type: "string" },
-                                createdDate: { from: "KIFormattedCreatedDt", defaultValue: "", type: "string" },
-                                age: { from: "KIAge", defaultValue: "", type: "number" },
-                                tfsIteration: { from: "KITFSIteration", defaultValue: "", type: "string" },
-                                ASV: { from: "KIASVValue", defaultValue: "", type: "number" },
-                                incidentCount: { from: "KINumOfIncidents", type: "number" },
-                                priority: { from: "KIPriority", type: "string" }
-                           }
+                            Id : {from: "KICaseId", type: "string" },
+                            kiNum: { from: "KINumber", type: "string" },
+                            tfsId: { from: "KITFSId", type: "number" },
+                            subject: { from: "KISubject", type: "string"},
+                            status: { from: "KIStatus", type: "string" },
+                            score: { from: "KIScore", type: "number" },
+                            team: { from: "KITFSTeam", type: "string" },
+                            tfsStatus: { from: "KITFSStatus", type: "string" },
+                            createdDate: { from: "KIFormattedCreatedDt", defaultValue: "", type: "string" },
+                            age: { from: "KIAge", defaultValue: "", type: "number" },
+                            tfsIteration: { from: "KITFSIteration", defaultValue: "", type: "string" },
+                            ASV: { from: "KIASVValue", defaultValue: "", type: "number" },
+                            incidentCount: { from: "KINumOfIncidents", type: "number" },
+                            priority: { from: "KIPriority", type: "string" },
+                            tfsLink :{from: "KITFSLink", type: "string" },
+                            scoreChange :{from : "KIScoreChange", type:"string", defaultValue:"NoChange"}
                         }
-                    },
-            	pageSize: 10
+                    }
+                  },
+
+            	pageSize: {!pageSize}
 
               });
 
@@ -117,20 +123,24 @@
     	    $("#kIGrid").kendoGrid({
                   dataSource: kiDataSource,
                   scrollable: true,
+                  resizable: true,
             	  pageable: {
                     refresh: false,
                     pageSizes: false,
                     buttonCount: 5
                   },
                   page: onPaging,
+                  dataBound: onDataBind,
+                  height : 550,
                   columns: [{
                                 field:"kiNum",
                                 title : "KI",
-                                template: '#{ #<a href="/#: Id #" target="_blank" >#= kiNum #</a># } #'
+                                 template: '#{ #<a href="/#: Id #" target="_blank" >#= kiNum #</a># } #'
                             },
                             {
                                 field: "tfsId",
-                                title:"TFS Id"
+                                title:"TFS Id",
+                                template: '#{ #<a href="#: tfsLink #" target="_blank" >#= tfsId != null? tfsId : "" #</a># } #'
 
                             },
                             {
@@ -139,23 +149,84 @@
                                 width: 300
                             },
                             {
+                              field: "status",
+                              title: "KI Status"
+                            },
+                            {
                                 field:"score",
                                 title:"Score",
                                  template: '<a href="" onClick="OpenModal(this); return false;">#= score != null? score : "" #</a>'
                             },
                             {
+                                field:"team",
+                                title:"Team"
+                            },
+                            {
                                 field: "priority",
                                 title: "Priority"
+                            },
+                            {
+                                field:"tfsStatus",
+                                title : "TFS Status"
+                            },
+                            {
+                                field: "createdDate",
+                                title:"Created"
+
+                            },
+                            {
+                                field: "age",
+                                title:"Age",
+                                width: 300
+                            },
+                            {
+                                field:"tfsIteration",
+                                title:"Iteration"
                             }
                   ]
             });
           }
+
      function onPaging(arg) {
         console.log("Paging to page index:" + arg.page);
         var pageIndex = arg.page;
-        offSet = (pageIndex - 1) * 10;
+        offSet = (pageIndex - 1) * {!pageSize};
         console.log('offSet =>' + offSet);
      }
+
+     function onDataBind(e){
+        var rows = e.sender.tbody.children();
+        for (var j = 0; j < rows.length; j++) {
+            var row = $(rows[j]);
+            var dataItem = e.sender.dataItem(row);
+            var Priority = dataItem.get("priority");
+            if (Priority == 'P1'){
+                row.addClass("HiglightPriority");
+                for (var x = 0; x < row.children().length; x++){
+                    var cell = row.children().eq(x);
+                    cell.addClass("HiglightPriority");
+                }
+            }
+            var createdDate = dataItem.get("createdDate");
+            var isToday = checkDate(createdDate)
+            if (isToday == true){
+                row.addClass("newItemOnList");
+            }
+            var ScoreChange = dataItem.get("scoreChange");
+            var scoreCell = row.children().eq(4);
+            if(ScoreChange == 'Up')
+                $( scoreCell ).append( "<span class='glyphicon glyphicon-triangle-top' style='color:red; padding-left: 3px;'/>" );
+            else if(ScoreChange == 'Down')
+                 $( scoreCell ).append( "<span class='glyphicon glyphicon-triangle-bottom'  style='color:green; padding-left: 3px;'/>" );
+        }
+    }
+
+    function checkDate(inputDate){
+      var createDate = new Date(inputDate);
+      var todaysDate = new Date();
+      var val =  (createDate.setHours(0,0,0,0) == todaysDate.setHours(0,0,0,0));
+      return val;
+    }
 
      function OpenModal(sender ){
          var kiId, kiNum, valASV;
@@ -173,6 +244,7 @@
         $("span#knownIssueId").text(kiNum );
 
         var accountDataSource = new kendo.data.DataSource({
+            		autosync:true,
                     transport:{
                       read: function(options){
                           	   KnownIssueScoreReportController.GetAccounts(
@@ -216,7 +288,7 @@
                     width: 240
                 }, {
                     field: "ActCadeBillNum",
-                    title: "Cade Bill Number"
+                    title: "Cadebill Account #"
                 }, {
                     field: "ActRecrdTyp",
                     title: "Account Type"
@@ -225,8 +297,6 @@
 
         $('#info').modal('show');
      }
-
-
     </script>
 
     <style>
@@ -251,6 +321,34 @@
     li a.k-link{
         background-color: #ceced2;
     }
+
+     tr.HiglightPriority {
+        font-weight: bold;
+        color: red !important;
+    }
+    td.HiglightPriority {
+        font-weight: bold;
+        color: red !important;
+    }
+    td.HiglightPriority a {
+        font-weight: bold;
+        color: red !important;
+    }
+    .newItemOnList{
+        background-color: #fafcad;
+    }
+
+    div{
+       font-size:11.11px;
+        }
+	.k-grid td{
+    	white-space: nowrap;
+    	text-overflow: ellipsis;
+	}
+    .k-grid table {
+   		table-layout: fixed;
+	}
+
     </style>
 
 </apex:page>

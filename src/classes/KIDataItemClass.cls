@@ -18,6 +18,7 @@ public with sharing class KIDataItemClass {
     public integer  KIAge{get;set;}
     public string   KITFSIteration{get;set;}
     public decimal  KIASVValue{get;set;}
+    public string   KIScoreChange{get;set;}
     public integer  KINumOfIncidents{get;set;}
 
 }
