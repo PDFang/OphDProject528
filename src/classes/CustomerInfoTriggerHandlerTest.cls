@@ -20,7 +20,7 @@ private class CustomerInfoTriggerHandlerTest {
                 JBCXM_Credits__c = 2500,
                 JBCXM_MTTR_IN_Hours__c = 504
         );
-
+        customerInfo.recalculateFormulas();
         insert scoringScheme;
         scoringSchemeDefinition.JBCXM__SchemeId__c = scoringScheme.Id;
 
@@ -55,8 +55,8 @@ private class CustomerInfoTriggerHandlerTest {
                 Multiplier__c = 4.0
         );
         multipliers.add(mttrLastSixMonths);
-        Double mttrScore = impactCalculator.CalculateMttrIncidentScore((Integer)(customerInfo.JBCXM_MTTR_IN_Hours__c/24/7), (Double)mttrLastSixMonths.Multiplier__c);
-        system.debug('CalculateMttrIncidentScore: ' + customerInfo.JBCXM_MTTR__c + ', ' + mttrLastSixMonths.Multiplier__c + ' = ' + mttrScore);
+        Double mttrScore = impactCalculator.CalculateMttrIncidentScore((Integer)(customerInfo.JBCXM_MTTR_IN_Weeks__c), (Double)mttrLastSixMonths.Multiplier__c);
+        system.debug('CalculateMttrIncidentScore: ' + customerInfo.JBCXM_MTTR_IN_Weeks__c + ', ' + mttrLastSixMonths.Multiplier__c + ' = ' + mttrScore);
 
         //annual contract value
         Impact_Score_Multiplier__c annualValue = new Impact_Score_Multiplier__c(

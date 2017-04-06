@@ -38,7 +38,7 @@ private class AccountImpactCalculationBatchTest {
         system.debug('scheduleJob(): scheduledTime - ' + scheduledTime);
 
         test.startTest();
-        String scheduledJobId = system.schedule('AccountImpactCalculationBatchScheduler Test', scheduledTime, new AccountImpactCalculationBatchScheduler());
+        String scheduledJobId = system.schedule('testAccountImpactCalculationBatchScheduler', scheduledTime, new AccountImpactCalculationBatchScheduler());
         test.stopTest();
 
         CronTrigger job = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
@@ -52,7 +52,7 @@ private class AccountImpactCalculationBatchTest {
         // create accounts
         Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
         Account[] accountList = new Account[]{};
-        for(Integer i=0; i<100; i++){
+        for(Integer i=0; i<25; i++){
             Account testAccount = new Account(
                     Name = 'AccountImpactCalculationBatch Account '+ i,
                     Type = 'Customer',
