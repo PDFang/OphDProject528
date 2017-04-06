@@ -201,17 +201,9 @@
             var Priority = dataItem.get("priority");
             if (Priority == 'P1'){
                 row.addClass("HiglightPriority");
-                for (var x = 0; x < row.children().length; x++){
-                    var cell = row.children().eq(x);
-                    cell.addClass("HiglightPriority");
-                }
             }
             if (Priority == 'P2'){
                 row.addClass("MediumPriority");
-                    for (var x = 0; x < row.children().length; x++){
-                    var cell = row.children().eq(x);
-                    cell.addClass("MediumPriority");
-                }
             }
             var createdDate = dataItem.get("createdDate");
             var isToday = checkDate(createdDate)
@@ -323,15 +315,15 @@
     }
 
     tr.HiglightPriority {
-        background-color: #d07b7b !important;
+        background-color: rgb(220, 175, 175) !important;
     }
     td.HiglightPriority {
-       background-color: #d07b7b !important;
+       background-color: rgb(220, 175, 175) !important;
     }
-    td.HiglightPriority a {
+    tr.HiglightPriority a {
         color: black !important;
     }
-    td.MediumPriority a {
+    tr.MediumPriority a {
         color: black !important;
     }
     .newItemOnList{
@@ -339,12 +331,11 @@
     }
 
     tr.MediumPriority {
-        background-color: #d4935b !important;
+        background-color: rgb(227, 210, 195) !important;
     }
     td.MediumPriority{
-        background-color: #d4935b !important;
+        background-color: rgb(227, 210, 195) !important;
     }
-
 
     div{
        font-size:11.11px;
