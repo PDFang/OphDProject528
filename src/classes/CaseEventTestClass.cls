@@ -1022,7 +1022,6 @@ private class CaseEventTestClass {
         inContactTrustWebService.EventNodeList nodeList = inContactTrustWebService.SelectEventsByNodeAndDate('inContact', system.today() - 7);
         inContactTrustWebService.CustomerNodeEvents testNodeEvents = inContactTrustWebService.SelectTrustNodesByCustomerAndDaysBack(100001, 30);
         testNodeEvents = inContactTrustWebService.SelectTrustNodesByCustomerAndDaysBack(100002, 30);
-        inContactTrustWebService.TrustNode[] tNode = inContactTrustWebService.SelectIntelligentNetworkEvents(30);
         List<Case> knonwIssues = inContactTrustWebService.SelectKnownIssuesByCustomer(100001, '');
 
         inContactTrustWebService.TrustNode trustNode = new inContactTrustWebService.TrustNode(system.now(), system.now(), 'case-id', 'node', 'type');
