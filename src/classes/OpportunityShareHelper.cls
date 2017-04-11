@@ -27,6 +27,10 @@ public class OpportunityShareHelper {
             else if(record.iCE_Partner__c != null && record.iCE_Partner_Status__c == 'Accepted' && ( oldRecord == null || oldRecord.iCE_Partner__c != record.iCE_Partner__c ) ){
                 recordIdSet.add(record.Id);
             }
+            // owner change
+            else if(oldRecord != null && oldRecord.OwnerId != record.OwnerId && (record.Partner_Account__c != null || (record.iCE_Partner__c != null && record.iCE_Partner_Status__c == 'Accepted')) ){
+                recordIdSet.add(record.Id);
+            }
         }
         system.debug(' **** addShare() : recordIdSet - '+recordIdSet);
 
