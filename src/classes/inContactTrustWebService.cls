@@ -100,34 +100,18 @@ global class inContactTrustWebService
         }
         
         ProductNode prodNodes = inContactTrustWebService.SelectTrustNodeByCustomer(account_no);
-        ProductNode allCustomerNodes = inContactTrustWebService.SelectAllCustomerNodes();
-        nodes = prodNodes.nodes;
-        
-        if(nodes != null)
+        if(prodNodes != null && prodNodes.nodes != null && prodNodes.nodes.size() > 0)
         {
-        	nodes.addAll(allCustomerNodes.nodes);
-        }
-        else
-        {
-            nodes = allCustomerNodes.nodes;
-        }
-        
-        if(nodes != null)
-        {
+            nodes = prodNodes.nodes;
             nodeString = QueryFilterParse(nodes);
         }
         
         Set<string> products = new Set<string>();
-        if(prodNodes.products != null)
+        if(prodNodes != null && prodNodes.products != null && prodNodes.products.size() > 0)
         {
             products.addAll(prodNodes.products);
         }
-        
-        if(allCustomerNodes.products != null)
-        {
-            products.addAll(allCustomerNodes.products);
-        }
-        
+
         if(!products.isEmpty())
         {
             productString = QueryFilterParse(new List<string>(products));
@@ -166,30 +150,6 @@ global class inContactTrustWebService
         */
         return knownIssueCases;
     }
-    
-    webservice static ProductNode SelectAllCustomerNodes()
-    {
-        Set<String> platforms = new Set<String>();
-        Set<String> products = new Set<String>();
-        String[] nodes = new String[]{};
-        String[] productList = new String[]{};
-        Map<String,ProductEventMap__c> nodeMap = ProductEventMap__c.getAll();
-        
-        for(ProductEventMap__c pem:nodeMap.values())
-        {
-            if(pem.AllCustomers__c)
-            {
-                products.add(pem.Product__c);
-                platforms.add(pem.Platform__c);
-            }
-        }
-        
-        nodes.addAll(platforms);
-        productList.addAll(products);
-        ProductNode pn = new ProductNode(productList, nodes);
-        return pn;
-    }
-    
 
     webservice static ProductNode SelectTrustNodeByCustomer(integer account_no)
     {
@@ -398,59 +358,16 @@ global class inContactTrustWebService
         return enl;
     }
     
-    webservice static TrustNode[] SelectIntelligentNetworkEvents(integer daysBack)
-    {
-        Case[] events = new Case[]{};
-        TrustNode[] trustNodes = new TrustNode[]{};
-        Map<String,ProductEventMap__c> nodeMap = ProductEventMap__c.getAll();
-        
-        
-        String products = '';
-        String queryString;
-        
-        for(ProductEventMap__c pem:nodeMap.values())
-        {
-            if(pem.AllCustomers__c)
-            {
-                if(products == '')
-                {
-                    products = '\'' + pem.Product__c + '\'';
-                }
-                else
-                {
-                    products = products + ',' + '\'' + pem.Product__c + '\'';
-                }
-            }
-        }
-        
-        queryString = 'SELECT Id, Subject, EventStartDateTime__c, EventEndDateTime__c, EventType__c, PlatformsImpacted__c FROM Case WHERE NonEvent__c = false AND InternalEvent__c = false AND ProductImpacted__c IN (' + products + ') AND (EventStartDateTime__c >= LAST_N_DAYS:' + string.valueOf(daysBack) + ' OR EventEndDateTime__c >= LAST_N_DAYS:' + string.valueOf(daysBack) + ' OR EventEndDateTime__c = NULL) AND RecordType.Name = \'Event\'';
-        system.debug(queryString);
-        events = Database.Query(queryString);
-        
-        if(!events.isEmpty())
-        {
-            for(Case e:events)
-            {
-                TrustNode tn = new TrustNode(e.EventStartDateTime__c,e.EventEndDateTime__c, e.Id, e.PlatformsImpacted__c,e.EventType__c);
-                trustNodes.add(tn);
-            }
-        }
-        
-        return trustNodes;
-    }
-    
-    
-    
    // New added method - Arnab
-     webservice static List<Event_Platform_Definition__c>  getPlatformDefinitions (Integer account_no){
-		
-		ProductNode pn = inContactTrustWebService.SelectTrustNodeByCustomer(account_no);
+    webservice static List<Event_Platform_Definition__c>  getPlatformDefinitions (Integer account_no){
+
+        ProductNode pn = inContactTrustWebService.SelectTrustNodeByCustomer(account_no);
         Map<String,Event_Platform_Definition__c> definitionsMap = Event_Platform_Definition__c.getAll();
         List<Event_Platform_Definition__c> lstPlatformDef = new List<Event_Platform_Definition__c>();
- 
-         if(pn.nodes != null && pn.nodes.size() > 0)
-         {
-                        for (string platformName : pn.nodes) // loop though all the platforms
+
+        if(pn.nodes != null && pn.nodes.size() > 0)
+        {
+            for (string platformName : pn.nodes) // loop though all the platforms
             {
                 for (Event_Platform_Definition__c epd : definitionsMap.values()) // Go through the custom settings
                 {
@@ -459,18 +376,14 @@ global class inContactTrustWebService
                         // add to the list
                         lstPlatformDef.add(epd);
                     }
-                    else if(epd.Name == 'Intelligent Network')
-                        lstPlatformDef.add(epd);
-    
+
                 }
             }
-                
-         }
-         else {
-             lstPlatformDef.add(definitionsMap.get('Intelligent Network'));
-         }
-       return lstPlatformDef;
-	   }
+
+        }
+
+        return lstPlatformDef;
+    }
     
     private static Map<String,Set<String>> ResellCustomerClusterMap(Map<String,Set<String>> rcClusterMap, String clusterField, string platform)
     {
@@ -571,21 +484,21 @@ global class inContactTrustWebService
             
         }
     }
-    
-global class ProductNode
+
+    global class ProductNode
     {
         webservice String[] products;
         webservice String[] nodes;
-        
+
         public ProductNode(String[] productList, String[] nodeList)
         {
             products = productList;
             nodes = nodeList;
         }
-        
+
         public ProductNode()
         {
-            
+
         }
     }
     
