@@ -6,21 +6,14 @@
 
 public with sharing class KnownIssueViewHelper {
 
-    public static final integer PageSize = 10;
-    public static String GetKnownIsssues(string filterData, integer offsetInteger){
-        map<string, string> filterDataMap = new map<string, string>();
-        if(filterData != '' && filterData != null){
-            JSONParser parser = JSON.createParser(filterData);
-            while (parser.nextToken() != null) {
-                if (parser.getCurrentToken() == JSONToken.START_OBJECT) {
-                    FilterDataClass fd = (FilterDataClass) parser.readValueAs(FilterDataClass.class);
-                    string fieldName = GetFieldMaps(fd.fieldName);
-                    filterDataMap.put(fieldName, fd.fieldValue);
-                }
-            }
-        }
+    public static final integer PageSize = 50000;
+    public static map<string, string> filterDataMap;
+    public static map<string, string> searchDataMap;
 
-        list<Case> knownIssueLists = QueryCases(filterDataMap, offsetInteger);
+
+    public static String GetKnownIsssues(){
+
+        list<Case> knownIssueLists = QueryCases();
         list<KIDataItemClass> dataItems = new list<KIDataItemClass>();
         for(Case ki : knownIssueLists){
             KIDataItemClass dataItem = new KIDataItemClass();
@@ -41,15 +34,41 @@ public with sharing class KnownIssueViewHelper {
             dataItem.KIAge = date.valueOf(ki.CreatedDate).daysBetween(system.today());
             dataItem.KIFormattedCreatedDt = GetformattedDate(date.valueOf(ki.CreatedDate));
             dataItem.KIScoreChange = ki.KIImpactScore__c > ki.KIImpactScoreHistorical__c ? 'Up'
-                                        : ki.KIImpactScore__c < ki.KIImpactScoreHistorical__c ? 'Down' : 'NoChnage';
+                    : ki.KIImpactScore__c < ki.KIImpactScoreHistorical__c ? 'Down' : 'NoChnage';
             dataItems.add(dataItem);
         }
 
         KnownIssuDataWrapper kiDataWrapper = new KnownIssuDataWrapper();
         kiDataWrapper.KIDataItems = dataItems;
-        kiDataWrapper.total = GetCountOfCases(filterDataMap);
+
 
         return JSON.serialize(kiDataWrapper);
+    }
+
+    public static string GetSpecificFieldValue(string fieldName, string fieldValue){
+        filterDataMap = new map<string, string>();
+        searchDataMap = new map<string, string>();
+        string knownIssueQuery;
+        string thisFieldName = GetFieldMaps(fieldName);
+        knownIssueQuery = 'Select Id, ' + thisFieldName  + ' FROM Case ';
+        filterDataMap.put(thisFieldName, fieldValue);
+        searchDataMap.put(thisFieldName, 'Like');
+        knownIssueQuery  +=  FormQueryString(filterDataMap);
+        knownIssueQuery  += ' order by ' + thisFieldName + ' desc Limit 20 ';
+        system.debug('knownIssue query => ' + knownIssueQuery);
+        list<Case> knownIssueLists = Database.query(knownIssueQuery);
+        set<string> valueset = new set<string>();
+        for(Case ki : knownIssueLists){
+            string value;
+            if(!valueset.contains(value)){
+                value = (string) ki.get(thisFieldName);
+                valueset.add(value);
+            }
+
+            //options.add(new DropDownValues(ki.Id, value));
+        }
+
+        return JSON.serialize(valueset);
     }
 
 
@@ -70,22 +89,17 @@ public with sharing class KnownIssueViewHelper {
     }
 
 
-    private static integer GetCountOfCases(Map<string,string> filterData){
-        string knownIssueQuery = 'select Count() from Case ';
-        knownIssueQuery += FormQueryString(filterData);
-        integer listresultSize = Database.countQuery(knownIssueQuery);
-        return listresultSize;
-    }
 
-    private static list<case> QueryCases(Map<string,string> filterData,  integer offsetIntger){
+    private static list<case> QueryCases(){
 
         string knownIssueQuery = 'Select Id,Broken_by_Recent_Release__c, CaseNumber, KIImpactScore__c,NumberOfIncidents__c,ASVValue__c,  '
-                                + ' KIImpactScoreHistorical__c, Status, Subject,Priority, CreatedDate,TfsWorkItem__r.Release__c, TfsWorkItem__r.TFSItemLink__c, '
-                                + ' TfsWorkItem__r.TFSExternalID__c, TfsWorkItem__r.Team__c, TfsWorkItem__r.State__c'
-                                + ' From Case '  ;
-        knownIssueQuery  +=  FormQueryString(filterData);
-        knownIssueQuery += ' Order BY KIImpactScore__c desc NULLS LAST ' + ' Limit ' + PageSize +' Offset ' + offsetIntger ;
+                + ' KIImpactScoreHistorical__c, Status, Subject,Priority, CreatedDate,TfsWorkItem__r.Release__c, TfsWorkItem__r.TFSItemLink__c, '
+                + ' TfsWorkItem__r.TFSExternalID__c, TfsWorkItem__r.Team__c, TfsWorkItem__r.State__c'
+                + ' From Case   WHERE RecordType.Name = \'Known Issue\' '
+                + ' AND isClosed = false and Status not in (\'Released - Confirm Resolution\',\'No Fix\')'
+                + ' Order BY KIImpactScore__c desc NULLS LAST ';
 
+        system.debug('knownIssueQuery =>' + knownIssueQuery);
         List<Case> listresult = Database.query(knownIssueQuery);
         return listresult;
     }
@@ -95,53 +109,61 @@ public with sharing class KnownIssueViewHelper {
                 + ' AND isClosed = false and Status not in (\'Released - Confirm Resolution\',\'No Fix\')';
 
         if(filterData.size() > 0)
-            knownIssueQuery += GetFilterString(filterData);
+            knownIssueQuery += GetFilterString(filterData, searchDataMap);
         return knownIssueQuery;
     }
 
-    private static string GetFilterString(Map<string,string> filterData){
-        string query;
+    private static string GetFilterString(Map<string,string> filterData, map<string, string> searchType){
+        string query = '';
         for(string fieldName : filterData.keySet()) {
-            query += ' And ' +  fieldName + ' like %'  + filterData.get(fieldName)  + '% ';
+            string fieldValue = filterData.get(fieldName);
+            if(searchType.get(fieldName) == 'Like')
+                query += ' And ' +  fieldName + ' like \'%'  +  fieldValue + '%\' ';
+
         }
         return query;
     }
 
     private static string GetFieldMaps(string fieldName){
-        if(fieldName == 'KINumber')
+        if(fieldName == 'KI')
             return 'CaseNumber';
-        if(fieldName == 'KITFSId')
+        if(fieldName == 'TFS Id')
             return 'TfsWorkItem__r.TFSExternalID__c';
-        if(fieldName == 'KISubject')
+        if(fieldName == 'Subject')
             return 'Subject';
-        if(fieldName == 'KITFSTeam')
+        if(fieldName == 'KI Status')
+            return 'Status';
+        if(fieldName == 'Team')
             return 'TfsWorkItem__r.Team__c';
-        if(fieldName == 'KIPriority')
+        if(fieldName == 'Priority')
             return 'Priority';
-        if(fieldName == 'KITFSStatus')
+        if(fieldName == 'TFS Status')
             return 'TfsWorkItem__r.State__c';
-        if(fieldName == 'KITFSIteration')
+        if(fieldName == 'Iteration')
             return 'TfsWorkItem__r.Release__c';
+        if(fieldName == 'Age')
+            return 'CreatedDate';
+        if(fieldName == 'Created')
+            return 'CreatedDate';
 
-        return null;
+        return fieldName;
     }
-
     //Wrapper Class
     public class KnownIssuDataWrapper{
         public list<KIDataItemClass> KIDataItems{get; set;}
-        public integer total{get; set;}
 
         public KnownIssuDataWrapper(){
             KIDataItems = new list<KIDataItemClass>();
-            total = 0;
-        }
+         }
     }
 
     //Filter Data Class
     public class FilterDataClass{
         public string FieldName{get; set;}
         public string FieldValue{get; set;}
+        public string SearchType{get;set;}
 
     }
+
 
 }
