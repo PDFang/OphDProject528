@@ -24,8 +24,10 @@
             </div>
             <div class ="col-md-2" style="padding-right:0px;">
                 <div style="float:right;">
-                    <label id="lastLoadDate" style="padding-right:10px;">Last Update : {!currentDateTime}</label>
-                    <apex:commandButton styleClass="btn button-edit" value="Refresh"/>
+                    <apex:outputPanel id="lastLoadDate" >
+                        <apex:outputLabel style="padding-right:10px;">Last Update : {!currentDateTime}</apex:outputLabel>
+                    </apex:outputPanel>
+                    <apex:commandButton styleClass="btn button-edit" rerender="lastLoadDate" action="{!refreshDateTime}" onclick="setupSearchGrid();" value="Refresh"/>
                 </div>
             </div>
         </div>
@@ -245,22 +247,39 @@
                   columns: [{
                                 field:"kiNum",
                                 title : "KI",
-                                template: '#{ #<a href="/#: Id #" target="_blank" >#= kiNum #</a># } #'
+                                template: '#{ #<a href="/#: Id #" target="_blank" >#= kiNum #</a># } #',
+                                filterable :
+                                {
+                                    ui: filterKI
+                                }
                             },
                             {
                                 field: "tfsId",
                                 title:"TFS Id",
-                                template: '#{ #<a href="#: tfsLink #" target="_blank" >#= tfsId != null? tfsId : "" #</a># } #'
+                                template: '#{ #<a href="#: tfsLink #" target="_blank" >#= tfsId != null? tfsId : "" #</a># } #',
+                                filterable :
+                                {
+                                    ui: filterTfsId
+                                }
+
 
                             },
                             {
                                 field: "subject",
                                 title:"Subject",
-                                width: 400
+                                width: 400,
+                                filterable :
+                                {
+                                    ui: filterSubject
+                                }
                             },
                             {
                               field: "status",
-                              title: "KI Status"
+                              title: "KI Status",
+                                filterable :
+                                {
+                                    ui: filterKIStatus
+                                }
                             },
                             {
                                 field:"score",
@@ -270,15 +289,27 @@
                             },
                             {
                                 field:"team",
-                                title:"Team"
+                                title:"Team",
+                                filterable :
+                                {
+                                    ui: filterTeam
+                                }
                             },
                             {
                                 field: "priority",
-                                title: "Priority"
+                                title: "Priority",
+                                filterable :
+                                {
+                                    ui: filterPriority
+                                }
                             },
                             {
                                 field:"tfsStatus",
-                                title : "TFS Status"
+                                title : "TFS Status",
+                                filterable :
+                                {
+                                    ui: filterTfsStatus
+                                }
                             },
                             {
                                 field: "createdDate",
@@ -326,6 +357,216 @@
 
         }
     }
+
+     function filterPriority(element){
+
+          console.log(JSON.stringify(element));
+
+             element.kendoAutoComplete({
+                       dataSource: ['P1', 'P2', 'P3', 'P4']
+            });
+
+     }
+
+     function filterKI(element){
+
+          console.log(JSON.stringify(element));
+
+             element.kendoAutoComplete({
+                       dataSource: {
+                       serverFiltering:true,
+                      transport:{
+                      read: function(e){
+                           value = "00" + $(element).val();
+                          console.log('value =>' + value);
+                               var result =  GetFilter(value, "KI", e);
+
+                            }
+                       },
+
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"}
+                            }
+                        }
+                    }
+                    }
+            });
+
+     }
+
+     function filterTfsId(element){
+
+          console.log(JSON.stringify(element));
+
+             element.kendoAutoComplete({
+                       dataSource: {
+                       serverFiltering:true,
+                      transport:{
+                      read: function(e){
+                           value = $(element).val();
+                          console.log('value =>' + value);
+                               var result =  GetFilter(value, "TFS Id", e);
+
+                            }
+                       },
+
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"}
+                            }
+                        }
+                    }
+                    }
+            });
+
+     }
+
+     function filterSubject(element){
+
+          console.log(JSON.stringify(element));
+
+             element.kendoAutoComplete({
+                       dataSource: {
+                       serverFiltering:true,
+                      transport:{
+                      read: function(e){
+                           value = $(element).val();
+                          console.log('value =>' + value);
+                               var result =  GetFilter(value, "Subject", e);
+
+                            }
+                       },
+
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"}
+                            }
+                        }
+                    }
+                    }
+            });
+
+     }
+
+     function filterKIStatus(element){
+
+          console.log(JSON.stringify(element));
+
+             element.kendoAutoComplete({
+                       dataSource: {
+                       serverFiltering:true,
+                      transport:{
+                      read: function(e){
+                           value = $(element).val();
+                          console.log('value =>' + value);
+                               var result =  GetFilter(value, "KI Status", e);
+
+                            }
+                       },
+
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"}
+                            }
+                        }
+                    }
+                    }
+            });
+
+     }
+
+     function filterTeam(element){
+
+          console.log(JSON.stringify(element));
+
+             element.kendoAutoComplete({
+                       dataSource: {
+                       serverFiltering:true,
+                      transport:{
+                      read: function(e){
+                           value = $(element).val();
+                          console.log('value =>' + value);
+                               var result =  GetFilter(value, "Team", e);
+
+                            }
+                       },
+
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"}
+                            }
+                        }
+                    }
+                    }
+            });
+
+     }
+
+     function filterTfsStatus(element){
+
+          console.log(JSON.stringify(element));
+
+             element.kendoAutoComplete({
+                       dataSource: {
+                       serverFiltering:true,
+                      transport:{
+                      read: function(e){
+                           value = $(element).val();
+                          console.log('value =>' + value);
+                               var result =  GetFilter(value, "TFS Status", e);
+
+                            }
+                       },
+
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"}
+                            }
+                        }
+                    }
+                    }
+            });
+
+     }
+
+     function GetFilter(val, field, element){
+         var records = '';
+            KnownIssueScoreReportController.GetFilterString(
+                                    field,
+                                    val,
+                                      function(result,event)
+                                      {
+
+                                          if (event.status) {
+                                               records = JSON.parse(result);
+                                                element.success(records);
+                                              console.log('filter result => ' + JSON.stringify(records));
+
+                                            } else if (event.type === 'exception') {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+
+                                            } else {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+
+                               return records;
+     }
 
     function checkDate(inputDate){
       var createDate = new Date(inputDate);

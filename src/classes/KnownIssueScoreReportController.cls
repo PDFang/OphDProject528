@@ -8,9 +8,14 @@ public with sharing class KnownIssueScoreReportController {
     public integer pageSize {get; set;}
 
     public KnownIssueScoreReportController(){
+        refreshDateTime();
+        pageSize = KnownIssueViewHelper.PageSize;
+    }
+
+    public void refreshDateTime()
+    {
         Datetime myDT = Datetime.now();
         currentDateTime = myDT.format('MM/dd/yyyy - h:mm a');
-        pageSize = KnownIssueViewHelper.PageSize;
     }
 
     @RemoteAction
