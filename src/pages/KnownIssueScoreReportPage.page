@@ -589,6 +589,10 @@
               valASV = '$' + data.ASV + 'M';
             }
         }
+                  
+        var accountgrid =  $("#kiAcctDetails").data('kendoGrid');
+		if(accountgrid)
+         	accountgrid.destroy();
 
         $("span#ASV").text(valASV );
         $("span#knownIssueId").text(kiNum );
