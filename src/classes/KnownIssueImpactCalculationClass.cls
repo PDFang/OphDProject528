@@ -2,7 +2,7 @@
  * Created by arnab.karsarkar on 3/15/2017.
  */
 
-public with sharing class KnownIssueImpactCalculationClass {
+public without sharing class KnownIssueImpactCalculationClass {
 
     private KnownIssuesImpactCalculationInterface impactCalculator;
     private Map<String, Impact_Score_Multiplier__c> multiplierMap;
@@ -190,9 +190,12 @@ public with sharing class KnownIssueImpactCalculationClass {
         }
     }
 
+
     private static void SendEmail(string subject, string body){
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-        String[] toAddresses = new String[] {'Arnab.KarSarkar@incontact.com', 'Ravish.Chawla@incontact.com', 'William.Nelson@incontact.com'};
+        String OrgId15Digit = UserInfo.getOrganizationId().left(15);
+        SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(OrgId15Digit);
+        String[] toAddresses = new String[]{siteConfig.DeveloperErrorEmail__c};
         mail.setToAddresses(toAddresses);
         mail.setSubject(subject);
         mail.setHtmlBody(body);
