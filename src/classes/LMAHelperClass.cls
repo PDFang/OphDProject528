@@ -35,12 +35,14 @@ public class LMAHelperClass {
             if(!mpCustomerOrgIds.containsKey(lic.sfLma__Subscriber_Org_ID__c))
             {
                 CHANNEL_ORDERS__Customer__c cust = new CHANNEL_ORDERS__Customer__c();
-                cust.CHANNEL_ORDERS__Customer_City__c = mpAccounts.get(lic.sfLma__Account__c).BillingCity;
-                cust.CHANNEL_ORDERS__Customer_State__c = mpAccounts.get(lic.sfLma__Account__c).BillingState;
-                cust.CHANNEL_ORDERS__Customer_Country__c = mpAccounts.get(lic.sfLma__Account__c).BillingCountry.substring(0,2);
-                cust.CHANNEL_ORDERS__Customer_ZIP_Postal_Code__c = mpAccounts.get(lic.sfLma__Account__c).BillingPostalCode;
-                cust.CHANNEL_ORDERS__Customer_Company_Name__c = mpAccounts.get(lic.sfLma__Account__c).Name;
-                cust.CHANNEL_ORDERS__Customer_Street__c = mpAccounts.get(lic.sfLma__Account__c).BillingStreet;
+                Account customer = mpAccounts.get(lic.sfLma__Account__c);
+                cust.CHANNEL_ORDERS__Customer_City__c = customer.BillingCity;
+                cust.CHANNEL_ORDERS__Customer_State__c = customer.BillingState;
+                if(String.isNotBlank(customer.BillingCountry))
+                    cust.CHANNEL_ORDERS__Customer_Country__c = customer.BillingCountry.substring(0,2).toUpperCase();
+                cust.CHANNEL_ORDERS__Customer_ZIP_Postal_Code__c = customer.BillingPostalCode;
+                cust.CHANNEL_ORDERS__Customer_Company_Name__c = customer.Name;
+                cust.CHANNEL_ORDERS__Customer_Street__c = customer.BillingStreet;
                 cust.CHANNEL_ORDERS__Customer_Org_ID__c = lic.sfLma__Subscriber_Org_ID__c;
                 lstCusts.add(cust);
                 
