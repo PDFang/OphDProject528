@@ -11,12 +11,17 @@ public with sharing class KnownIssueScoreReportController {
         Datetime myDT = Datetime.now();
         currentDateTime = myDT.format('MM/dd/yyyy - h:mm a');
         pageSize = KnownIssueViewHelper.PageSize;
-
     }
 
     @RemoteAction
-    public static string GetKnownIssues (string filterData, integer offsetInteger ){
-        string result = KnownIssueViewHelper.GetKnownIsssues(filterData, offsetInteger);
+    public static string GetKnownIssues (){
+        string result = KnownIssueViewHelper.GetKnownIsssues();
+        return result;
+    }
+
+    @RemoteAction
+    public static string GetFilterString (string fieldName, string fieldValue ) {
+        string result = KnownIssueViewHelper.GetSpecificFieldValue(fieldName, fieldValue);
         return result;
     }
 
@@ -27,7 +32,7 @@ public with sharing class KnownIssueScoreReportController {
         list<AccountLists> accounts = new list<AccountLists>();
         for(Case incident : [select Id, AccountId, Account.Name, Account.CadebillAccountNoText__c, Account.RecordType.name
                              From Case
-                             where KnownIssue__c = :KICaseId ]){
+                             where KnownIssue__c = :KICaseId and AccountId != null ]){
 
             if(!accountIds.contains(incident.AccountId)){
                 accountIds.add(incident.AccountId);
