@@ -61,12 +61,21 @@ public with sharing class KnownIssueViewHelper {
         for(Case ki : knownIssueLists){
             string value;
             if(!valueset.contains(value)){
-                value = (string) ki.get(thisFieldName);
-                valueset.add(value);
+                if(thisFieldName == 'TfsWorkItem__r.TFSExternalID__c')
+                    valueset.add(string.valueOf(ki.TfsWorkItem__r.TFSExternalID__c));
+                else if (thisFieldName == 'TfsWorkItem__r.State__c')
+                    valueset.add(ki.TfsWorkItem__r.State__c);
+                else if (thisFieldName == 'TfsWorkItem__r.Team__c')
+                    valueset.add(ki.TfsWorkItem__r.Team__c);
+                else if (thisFieldName == 'TfsWorkItem__r.Release__c')
+                    valueset.add(ki.TfsWorkItem__r.Release__c);
+                else{
+                    value = (string) ki.get(thisFieldName);
+                    valueset.add(value);
+                }
             }
-
-            //options.add(new DropDownValues(ki.Id, value));
         }
+
 
         return JSON.serialize(valueset);
     }
