@@ -16,40 +16,44 @@
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
 
 
-    <div style="float:right;">
-        <label id="lastLoadDate">Last Update : {!currentDateTime}</label>
-    </div>
-    <br/>
-    <br/>
-    <div id="kIGrid"></div>
+    <div class="container-fluid">
+        <div class="alert alert-danger" role="alert" id="errorAlert" style="display:none;">
+        </div>
+        <div style="float:right;">
+            <label id="lastLoadDate">Last Update : {!currentDateTime}</label>
+        </div>
 
-    <!-- Information Modal -->
-    <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="infolabel">Account Details For Known Issue - <span id="knownIssueId"/></h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" style="font-size:14px;" id="infoModal">
-                    <div class="panel panel-info">
-                        <div class="panel-heading">
-                            Total ASV value (Million) : <span id="ASV" style="font-weight:bold;"></span>
-                        </div>
+        <br/>
+        <br/>
+        <div id="kIGrid"></div>
+
+        <!-- Information Modal -->
+        <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="infolabel">Account Details For Known Issue - <span id="knownIssueId"/></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
+                    <div class="modal-body" style="font-size:14px;" id="infoModal">
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                Total ASV value (Million) : <span id="ASV" style="font-weight:bold;"></span>
+                            </div>
+                        </div>
 
-                    <div id="kiAcctDetails"></div>
+                        <div id="kiAcctDetails"></div>
 
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Close</button>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Close</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
 
     <script>
         $(document).ready(function(e){
@@ -61,7 +65,6 @@
         var records = '';
         var kiDataSource =new kendo.data.DataSource({
                     autosync:true,
-                     serverPaging: true,
                     transport:{
                       read: function(options){
                           	   KnownIssueScoreReportController.GetKnownIssues(
@@ -76,8 +79,11 @@
 
                                             } else if (event.type === 'exception') {
                                                 console.log('exception => ' + event.message);
+                                                $("div#errorAlert").css({"display":"block"});
+                                                $("div#errorAlert").html('Cannot load the table. Please contact Sys admins. The error message says - <strong>' + event.message + '</strong>');
                                             } else {
-                                                 console.log('Error => ' + event.message);
+                                                  $("div#errorAlert").css({"display":"block"});
+                                                 $("div#errorAlert").html('Cannot load the table. Please contact Sys admins. The error message says - <strong>' + event.message + '</strong>');
                                             }
                                       },
                                       {escape: false}
@@ -87,10 +93,7 @@
 
                       },
                     schema:{
-                        total : function(){
-                            console.log('records.total =>' + records.total);
-                            return records.total;
-                        },
+
                         model: {
                             id: "Id",
                            fields: {
@@ -113,23 +116,39 @@
                         }
                     }
                   },
+                sort: [
 
-            	pageSize: {!pageSize}
+                    { field: "score", dir: "desc" }
+
+                  ],
+            	pageSize: 100
 
               });
 
 
           function setupSearchGrid(){
+              $("div#errorAlert").css({"display":"none"});
     	    $("#kIGrid").kendoGrid({
                   dataSource: kiDataSource,
                   scrollable: true,
+                   sortable: true,
                   resizable: true,
+                  filterable: {
+                                    extra: false,
+                                    operators: {
+                                        string: {
+                                            contains: "Contains",
+                                            eq: "Is equal to",
+                                            neq: "Is not equal to"
+                                        }
+                                    }
+                                },
             	  pageable: {
                     refresh: false,
                     pageSizes: false,
                     buttonCount: 5
                   },
-                  page: onPaging,
+
                   dataBound: onDataBind,
                   height : 550,
                   columns: [{
@@ -146,7 +165,7 @@
                             {
                                 field: "subject",
                                 title:"Subject",
-                                width: 300
+                                width: 400
                             },
                             {
                               field: "status",
@@ -155,7 +174,7 @@
                             {
                                 field:"score",
                                 title:"Score",
-                                 template: '<a href="" onClick="OpenModal(this); return false;">#= score != null? score : "" #</a>'
+                                 template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">#= score != null? score : "" #</a>'
                             },
                             {
                                 field:"team",
@@ -176,8 +195,7 @@
                             },
                             {
                                 field: "age",
-                                title:"Age",
-                                width: 300
+                                title:"Age"
                             },
                             {
                                 field:"tfsIteration",
@@ -202,10 +220,9 @@
             var Priority = dataItem.get("priority");
             if (Priority == 'P1'){
                 row.addClass("HiglightPriority");
-                for (var x = 0; x < row.children().length; x++){
-                    var cell = row.children().eq(x);
-                    cell.addClass("HiglightPriority");
-                }
+            }
+            if (Priority == 'P2'){
+                row.addClass("MediumPriority");
             }
             var createdDate = dataItem.get("createdDate");
             var isToday = checkDate(createdDate)
@@ -218,6 +235,7 @@
                 $( scoreCell ).append( "<span class='glyphicon glyphicon-triangle-top' style='color:red; padding-left: 3px;'/>" );
             else if(ScoreChange == 'Down')
                  $( scoreCell ).append( "<span class='glyphicon glyphicon-triangle-bottom'  style='color:green; padding-left: 3px;'/>" );
+
         }
     }
 
@@ -257,8 +275,12 @@
                                               options.success(records);
                                             } else if (event.type === 'exception') {
                                                 console.log('exception => ' + event.message);
+                                                $("div#errorAlert").css({"display":"block"});
+                                                $("div#errorAlert").html('Cannot load Accounts. Please contact Sys admins. The error message says - <strong>' + event.message + '</strong>');
                                             } else {
-                                                 console.log('Error => ' + event.message);
+                                                 console.log('exception => ' + event.message);
+                                                $("div#errorAlert").css({"display":"block"});
+                                                $("div#errorAlert").html('Cannot load Accounts. Please contact Sys admins. The error message says - <strong>' + event.message + '</strong>');
                                             }
                                       },
                                       {escape: false}
@@ -322,20 +344,27 @@
         background-color: #ceced2;
     }
 
-     tr.HiglightPriority {
-        font-weight: bold;
-        color: red !important;
+    tr.HiglightPriority {
+        background-color: rgb(220, 175, 175) !important;
     }
     td.HiglightPriority {
-        font-weight: bold;
-        color: red !important;
+       background-color: rgb(220, 175, 175) !important;
     }
-    td.HiglightPriority a {
-        font-weight: bold;
-        color: red !important;
+    tr.HiglightPriority a {
+        color: black !important;
+    }
+    tr.MediumPriority a {
+        color: black !important;
     }
     .newItemOnList{
         background-color: #fafcad;
+    }
+
+    tr.MediumPriority {
+        background-color: rgb(227, 210, 195) !important;
+    }
+    td.MediumPriority{
+        background-color: rgb(227, 210, 195) !important;
     }
 
     div{
