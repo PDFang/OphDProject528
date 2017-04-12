@@ -26,7 +26,7 @@ public with sharing class KnownIssueViewHelper {
             dataItem.KICreatedDate = ki.CreatedDate;
             dataItem.KINumOfIncidents = Integer.valueOf(ki.NumberOfIncidents__c);
             dataItem.KIASVValue = ki.ASVValue__c == null ? null : ki.ASVValue__c.setScale(2);
-            dataItem.KITFSId = string.valueOf(ki.TfsWorkItem__r.TFSExternalID__c);
+            dataItem.KITFSId = string.valueOf(ki.KITFSIDText__c);
             dataItem.KITFSLink = 'http://corptfsapp01.ucn.net:8080/tfs/DefaultCollection/inContact/_workitems#_a=edit&id=' + dataItem.KITFSId;
             dataItem.KITFSIteration = ki.TfsWorkItem__r.Release__c;
             dataItem.KITFSTeam = ki.TfsWorkItem__r.Team__c;
@@ -61,8 +61,8 @@ public with sharing class KnownIssueViewHelper {
         for(Case ki : knownIssueLists){
             string value;
             if(!valueset.contains(value)){
-                if(thisFieldName == 'TfsWorkItem__r.TFSExternalID__c')
-                    valueset.add(string.valueOf(ki.TfsWorkItem__r.TFSExternalID__c));
+                if(thisFieldName == 'KITFSIDText__c')
+                    valueset.add(string.valueOf(ki.KITFSIDText__c));
                 else if (thisFieldName == 'TfsWorkItem__r.State__c')
                     valueset.add(ki.TfsWorkItem__r.State__c);
                 else if (thisFieldName == 'TfsWorkItem__r.Team__c')
@@ -103,7 +103,7 @@ public with sharing class KnownIssueViewHelper {
 
         string knownIssueQuery = 'Select Id,Broken_by_Recent_Release__c, CaseNumber, KIImpactScore__c,NumberOfIncidents__c,ASVValue__c,  '
                 + ' KIImpactScoreHistorical__c, Status, Subject,Priority, CreatedDate,TfsWorkItem__r.Release__c, TfsWorkItem__r.TFSItemLink__c, '
-                + ' TfsWorkItem__r.TFSExternalID__c, TfsWorkItem__r.Team__c, TfsWorkItem__r.State__c'
+                + ' KITFSIDText__c, TfsWorkItem__r.Team__c, TfsWorkItem__r.State__c'
                 + ' From Case   WHERE RecordType.Name = \'Known Issue\' '
                 + ' AND isClosed = false and Status not in (\'Released - Confirm Resolution\',\'No Fix\')'
                 + ' Order BY KIImpactScore__c desc NULLS LAST ';
@@ -137,7 +137,7 @@ public with sharing class KnownIssueViewHelper {
         if(fieldName == 'KI')
             return 'CaseNumber';
         if(fieldName == 'TFS Id')
-            return 'TfsWorkItem__r.TFSExternalID__c';
+            return 'KITFSIDText__c';
         if(fieldName == 'Subject')
             return 'Subject';
         if(fieldName == 'KI Status')
