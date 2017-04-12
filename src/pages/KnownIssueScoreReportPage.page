@@ -15,18 +15,42 @@
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
 
-
+    <apex:form>
     <div class="container-fluid">
-        <div class="alert alert-danger" role="alert" id="errorAlert" style="display:none;">
+        <div class="row">
+            <div class ="col-md-10">
+                <div class="alert alert-danger" role="alert" id="errorAlert" style="display:none;">
+                </div>
+            </div>
+            <div class ="col-md-2" style="padding-right:0px;">
+                <div style="float:right;">
+                    <label id="lastLoadDate" style="padding-right:10px;">Last Update : {!currentDateTime}</label>
+                    <apex:commandButton styleClass="btn button-edit" value="Refresh"/>
+                </div>
+            </div>
         </div>
-        <div style="float:right;">
-            <label id="lastLoadDate">Last Update : {!currentDateTime}</label>
-        </div>
+        <div class="row">
+        <div class="panel panel-info hiddenClass" style="width:60%" id="filterPanel">
+            <div class="panel-heading" >
+                <div class="row">
+                    <div class ="col-md-1" style="white-space:nowrap;font:size:14px;">
+                        Filters Applied:
+                    </div>
+                    <div class ="col-md-10">
+                        <ul class="inline-list" id="filterlists">
 
-        <br/>
-        <br/>
+                        </ul>
+                    </div>
+                    <div class ="col-md-1">
+                        <a href="" onclick="clearFilter()" style="float:right;cursor:pointer;">Clear All</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+        <div class="row">
         <div id="kIGrid"></div>
-
+        </div>
         <!-- Information Modal -->
         <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
             <div class="modal-dialog" role="document">
@@ -54,29 +78,105 @@
             </div>
         </div>
     </div>
-
+    </apex:form>
     <script>
         $(document).ready(function(e){
             setupSearchGrid();
+            var grid = $("#kIGrid").data("kendoGrid");
+            grid.dataSource.originalFilter = grid.dataSource.filter;
+            grid.dataSource.filter = function(e) {
+                // If a column is about to be filtered, then raise a new "filtering" event.
+                if (arguments.length > 0) {
+                        this.trigger("filtering", [e, $(this)]);
+                }
+                // Call the original filter function.
+                var result = grid.dataSource.originalFilter.apply(this, arguments);
+                return result;
+            }
+            // Bind to the dataSource filtering event.
+            $("#kIGrid").data("kendoGrid").dataSource.bind("filtering", function(event) {
+              if(event[0] != null){
+                  $("ul#filterlists").empty();
+                  var filters = event[0]["filters"];
+                  if(typeof filters == 'undefined'){
+                        $("#filterPanel").addClass('hiddenClass');
+                        return;
+                  }
+
+                  var filterString = '';
+                  for(var i = 0; i < filters.length; ++i){
+                      var field = capitalizeFirstLetter(filters[i]["field"]);
+                      var operators =  GetOperatorNames(filters[i]["operator"]);
+                      var val =   filters[i]["value"];
+                      filterString += '<li class="filterList" ><span> ' + field + ' ' +  operators + '  <b>' + val +
+                                         '</b></span></li>';
+                  }
+                 if(filterString.length > 1){
+                     $("#filterPanel").removeClass('hiddenClass');
+                    $("ul#filterlists").append(filterString);
+                 }
+                 else{
+                       $("#filterPanel").addClass('hiddenClass');
+                 }
+
+              }
+              else{
+                   $("#filterPanel").addClass('hiddenClass');
+              }
+            });
         });
-        var filterData = '';
-        var offSet = 0;
-        var pageSize = 0;
+
+        function GetOperatorNames(operator){
+            switch (operator){
+                case 'contains' :
+                    return 'Contains';
+                    break;
+                case 'eq' :
+                     return 'is Equal To';
+                     break;
+                case 'neq' :
+                     return 'is Not Equal To';
+                     break;
+                case 'lt' :
+                     return 'is Less Than';
+                     break;
+                case 'gt' :
+                     return 'is Greater Than';
+                     break;
+                case 'gte' :
+                     return 'is Greater Than or Equal to';
+                     break;
+                case 'lte' :
+                     return 'is Less Than or Equal to';
+                     break;
+                default :
+                      return ' Is Equal To ';
+            }
+
+        }
+
+       function capitalizeFirstLetter(string) {
+         return string.charAt(0).toUpperCase() + string.slice(1);
+       }
+
+       function clearFilter(){
+            var grid = $("#kIGrid").data("kendoGrid");
+            grid.dataSource.filter({});
+       }
+
         var records = '';
-        var kiDataSource =new kendo.data.DataSource({
+
+        function setupSearchGrid(){
+            var kiDataSource =new kendo.data.DataSource({
                     autosync:true,
                     transport:{
-                      read: function(options){
-                          	   KnownIssueScoreReportController.GetKnownIssues(
-                                      filterData,
-                                      offSet,
-                                      function(result,event)
-                                      {
+                    read: function(options){
+                       	   KnownIssueScoreReportController.GetKnownIssues(
+                                     function(result,event){
                                           if (event.status) {
                                               records = JSON.parse(result);
-                                              console.log('records => ' + JSON.stringify(records));
+                                             // console.log('records => ' + JSON.stringify(records));
                                               options.success(records.KIDataItems);
-
                                             } else if (event.type === 'exception') {
                                                 console.log('exception => ' + event.message);
                                                 $("div#errorAlert").css({"display":"block"});
@@ -88,73 +188,64 @@
                                       },
                                       {escape: false}
                                );
-                      }
-
-
-                      },
+                           }
+                    },
                     schema:{
-
                         model: {
                             id: "Id",
-                           fields: {
-                            Id : {from: "KICaseId", type: "string" },
-                            kiNum: { from: "KINumber", type: "string" },
-                            tfsId: { from: "KITFSId", type: "number" },
-                            subject: { from: "KISubject", type: "string"},
-                            status: { from: "KIStatus", type: "string" },
-                            score: { from: "KIScore", type: "number" },
-                            team: { from: "KITFSTeam", type: "string" },
-                            tfsStatus: { from: "KITFSStatus", type: "string" },
-                            createdDate: { from: "KIFormattedCreatedDt", defaultValue: "", type: "string" },
-                            age: { from: "KIAge", defaultValue: "", type: "number" },
-                            tfsIteration: { from: "KITFSIteration", defaultValue: "", type: "string" },
-                            ASV: { from: "KIASVValue", defaultValue: "", type: "number" },
-                            incidentCount: { from: "KINumOfIncidents", type: "number" },
-                            priority: { from: "KIPriority", type: "string" },
-                            tfsLink :{from: "KITFSLink", type: "string" },
-                            scoreChange :{from : "KIScoreChange", type:"string", defaultValue:"NoChange"}
+                            fields: {
+                                Id : {from: "KICaseId", type: "string" },
+                                kiNum: { from: "KINumber", type: "string" },
+                                tfsId: { from: "KITFSId", type: "number" },
+                                subject: { from: "KISubject", type: "string"},
+                                status: { from: "KIStatus", type: "string" },
+                                score: { from: "KIScore", type: "number" },
+                                team: { from: "KITFSTeam", type: "string" },
+                                tfsStatus: { from: "KITFSStatus", type: "string" },
+                                createdDate: { from: "KIFormattedCreatedDt", defaultValue: "", type: "string" },
+                                age: { from: "KIAge", defaultValue: "", type: "number" },
+                                tfsIteration: { from: "KITFSIteration", defaultValue: "", type: "string" },
+                                ASV: { from: "KIASVValue", defaultValue: "", type: "number" },
+                                incidentCount: { from: "KINumOfIncidents", type: "number" },
+                                priority: { from: "KIPriority", type: "string" },
+                                tfsLink :{from: "KITFSLink", type: "string" },
+                                scoreChange :{from : "KIScoreChange", type:"string", defaultValue:"NoChange"}
                         }
                     }
                   },
                 sort: [
-
-                    { field: "score", dir: "desc" }
-
-                  ],
+                        { field: "score", dir: "desc" }
+                      ],
             	pageSize: 100
+            });
 
-              });
-
-
-          function setupSearchGrid(){
-              $("div#errorAlert").css({"display":"none"});
+            $("div#errorAlert").css({"display":"none"});
     	    $("#kIGrid").kendoGrid({
-                  dataSource: kiDataSource,
-                  scrollable: true,
-                   sortable: true,
-                  resizable: true,
-                  filterable: {
-                                    extra: false,
-                                    operators: {
-                                        string: {
-                                            contains: "Contains",
-                                            eq: "Is equal to",
-                                            neq: "Is not equal to"
-                                        }
-                                    }
-                                },
-            	  pageable: {
+                dataSource: kiDataSource,
+                scrollable: true,
+                sortable: true,
+                resizable: true,
+                filterable: {
+                           extra: false,
+                           operators: {
+                                  string: {
+                                        contains: "Contains",
+                                        eq: "Is equal to",
+                                        neq: "Is not equal to"
+                                  }
+                           }
+                         },
+            	pageable: {
                     refresh: false,
                     pageSizes: false,
                     buttonCount: 5
                   },
-
                   dataBound: onDataBind,
                   height : 550,
                   columns: [{
                                 field:"kiNum",
                                 title : "KI",
-                                 template: '#{ #<a href="/#: Id #" target="_blank" >#= kiNum #</a># } #'
+                                template: '#{ #<a href="/#: Id #" target="_blank" >#= kiNum #</a># } #'
                             },
                             {
                                 field: "tfsId",
@@ -174,7 +265,8 @@
                             {
                                 field:"score",
                                 title:"Score",
-                                 template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">#= score != null? score : "" #</a>'
+                                template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">#= score != null? score : "" #</a>',
+                                filterable:false
                             },
                             {
                                 field:"team",
@@ -190,7 +282,9 @@
                             },
                             {
                                 field: "createdDate",
-                                title:"Created"
+                                title:"Created",
+                                filterable:false,
+                                sortable:false
 
                             },
                             {
@@ -199,18 +293,12 @@
                             },
                             {
                                 field:"tfsIteration",
-                                title:"Iteration"
+                                title:"Iteration",
+                                filterable:false
                             }
                   ]
             });
           }
-
-     function onPaging(arg) {
-        console.log("Paging to page index:" + arg.page);
-        var pageIndex = arg.page;
-        offSet = (pageIndex - 1) * {!pageSize};
-        console.log('offSet =>' + offSet);
-     }
 
      function onDataBind(e){
         var rows = e.sender.tbody.children();
@@ -254,7 +342,7 @@
             if (data){
              kiId = data.Id;
              kiNum = data.kiNum;
-              valASV = data.ASV + 'M';
+              valASV = '$' + data.ASV + 'M';
             }
         }
 
@@ -377,6 +465,39 @@
     .k-grid table {
    		table-layout: fixed;
 	}
+
+	.filterList{
+        margin-left: 9px;
+        border-color: #357ebd;
+        background-color: #428bca;
+        color : white;
+        border-radius: 4px;
+        margin: 1px 0 1px 1px;
+        padding: .1em 0.6em .1em .4em;
+        border: 1px solid;
+        display:inline;
+        font-size:14px;
+    }
+
+    .hiddenClass{
+        display:none;
+    }
+
+    ul{
+        padding-left : 0px;
+    }
+
+    .button-edit {
+        padding: 6px 12px !important;
+        margin-bottom: 5px !important;
+        font-weight: 400;
+        color: #fff !important;
+        background: none !important;
+        background-color: #0275d8 !important;
+        border-color: #2e6da4 !important;
+        font-size: 12px !important;
+        font-weight: 200 !importnat;
+    }
 
     </style>
 
