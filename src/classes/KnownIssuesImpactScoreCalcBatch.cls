@@ -6,7 +6,7 @@ global class KnownIssuesImpactScoreCalcBatch implements Database.Batchable<sObje
 
     private string queryString = '';
     private boolean exceptionOccured;
-    private integer numOfKI;
+    private integer numOfKI = 0;
     //constructor
     global KnownIssuesImpactScoreCalcBatch(string query){
         this.queryString = query;
@@ -23,7 +23,7 @@ global class KnownIssuesImpactScoreCalcBatch implements Database.Batchable<sObje
     global void execute(Database.BatchableContext BC, List<Case> scope) {
       try{
           if(scope.size() > 0){
-              numOfKI = scope.size();
+              numOfKI += scope.size();
               KnownIssuesImpactCalcImplementation KIImpactCalc = new KnownIssuesImpactCalcImplementation();
               KnownIssueImpactCalculationClass KICalc = new KnownIssueImpactCalculationClass(KIImpactCalc);
               KICalc.CalculateKnownIssueScore(scope);
@@ -45,12 +45,15 @@ global class KnownIssuesImpactScoreCalcBatch implements Database.Batchable<sObje
 
     private void SendEmail(string subject, string body){
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-        String[] toAddresses = new String[] {'Arnab.KarSarkar@incontact.com', 'Ravish.Chawla@incontact.com', 'William.Nelson@incontact.com'};
+        String OrgId15Digit = UserInfo.getOrganizationId().left(15);
+        SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(OrgId15Digit);
+        String[] toAddresses = new String[]{siteConfig.DeveloperErrorEmail__c};
         mail.setToAddresses(toAddresses);
         mail.setSubject(subject);
         mail.setHtmlBody(body);
         if(!Test.isRunningTest())
             Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
     }
+
 
 }
