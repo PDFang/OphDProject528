@@ -25,13 +25,15 @@
             <div class ="col-md-2" style="padding-right:0px;">
                 <div style="float:right;">
                     <apex:outputPanel id="lastLoadDate" >
-                        <apex:outputLabel style="padding-right:10px;">Last Update : {!currentDateTime}</apex:outputLabel>
+                        <apex:outputLabel>Last Update : {!currentDateTime}</apex:outputLabel>
                     </apex:outputPanel>
-                    <apex:commandButton styleClass="btn button-edit" rerender="lastLoadDate" action="{!refreshDateTime}" onclick="setupSearchGrid();" value="Refresh"/>
                 </div>
             </div>
         </div>
         <div class="row">
+        <div style="float:right;">
+            <apex:commandButton styleClass="btn button-edit" rerender="lastLoadDate" action="{!refreshDateTime}" onclick="setupSearchGrid();" value="Refresh"/>
+        </div>
         <div class="panel panel-info hiddenClass" style="width:60%" id="filterPanel">
             <div class="panel-heading" >
                 <div class="row">
