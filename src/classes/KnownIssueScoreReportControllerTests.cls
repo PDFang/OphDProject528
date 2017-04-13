@@ -31,6 +31,14 @@ public class KnownIssueScoreReportControllerTests {
         list<string> KiScoreFilterTest = (list<string>)JSON.deserialize(result,list<string>.class);
         system.debug('KiScoreFilterTest =>' + KiScoreFilterTest.size());
         system.assertEquals(15, KiScoreFilterTest.size());
+
+        result = KnownIssueScoreReportController.GetFilterString('KI', 'Test');
+        result = KnownIssueScoreReportController.GetFilterString('TFS Id', 'Test');
+        result = KnownIssueScoreReportController.GetFilterString('KI Status', 'Test');
+        result = KnownIssueScoreReportController.GetFilterString('Team', 'Test');
+        result = KnownIssueScoreReportController.GetFilterString('Priority', 'Test');
+        result = KnownIssueScoreReportController.GetFilterString('TFS Status', 'Test');
+        result = KnownIssueScoreReportController.GetFilterString('Iteration', 'Test');
     }
 
     static testMethod void GetKnownIssueAccounts_ReturnsAccounts()
