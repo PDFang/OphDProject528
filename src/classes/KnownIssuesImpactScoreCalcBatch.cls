@@ -44,15 +44,23 @@ global class KnownIssuesImpactScoreCalcBatch implements Database.Batchable<sObje
     }
 
     private void SendEmail(string subject, string body){
-        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-        String OrgId15Digit = UserInfo.getOrganizationId().left(15);
-        SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(OrgId15Digit);
-        String[] toAddresses = new String[]{siteConfig.DeveloperErrorEmail__c};
-        mail.setToAddresses(toAddresses);
-        mail.setSubject(subject);
-        mail.setHtmlBody(body);
-        if(!Test.isRunningTest())
-            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+        try
+        {
+            Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+            String OrgId15Digit = UserInfo.getOrganizationId().left(15);
+            SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(OrgId15Digit);
+            String[] toAddresses = new String[]{siteConfig.DeveloperErrorEmail__c};
+            mail.setToAddresses(toAddresses);
+            mail.setSubject(subject);
+            mail.setHtmlBody(body);
+            if(!Test.isRunningTest())
+                Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+        }
+
+        catch (Exception ex)
+        {
+
+        }
     }
 
 
