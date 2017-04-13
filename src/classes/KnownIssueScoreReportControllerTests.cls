@@ -13,15 +13,46 @@ public class KnownIssueScoreReportControllerTests {
         string result;
 
         system.debug('knownIssueList =>' + knownIssueList.size());
-        result = KnownIssueScoreReportController.GetKnownIssues(null, 0);
+        result = KnownIssueScoreReportController.GetKnownIssues();
         KnownIssueViewHelper.KnownIssuDataWrapper kiDiClsObj = (KnownIssueViewHelper.KnownIssuDataWrapper)JSON.deserialize(result,KnownIssueViewHelper.KnownIssuDataWrapper.class);
         system.debug('kiDiClsObj =>' + kiDiClsObj.KIDataItems.size());
-        system.assertEquals(10, kiDiClsObj.KIDataItems.size());
-        result= KnownIssueScoreReportController.GetKnownIssues(null, 10);
-        kiDiClsObj = (KnownIssueViewHelper.KnownIssuDataWrapper)JSON.deserialize(result,KnownIssueViewHelper.KnownIssuDataWrapper.class);
-        system.assertEquals(5, kiDiClsObj.KIDataItems.size());
+        system.assertEquals(15, kiDiClsObj.KIDataItems.size());
+    }
 
+    static testMethod void GetKnownIssueScoreFilter_ReturnsFilterViewCorrectly()
+    {
+        list<case> knownIssueList = new list<Case>();
+        knownIssueList = GetListOfCases();
 
+        string result;
+
+        system.debug('knownIssueList =>' + knownIssueList.size());
+        result = KnownIssueScoreReportController.GetFilterString('Subject', 'Test');
+        list<string> KiScoreFilterTest = (list<string>)JSON.deserialize(result,list<string>.class);
+        system.debug('KiScoreFilterTest =>' + KiScoreFilterTest.size());
+        system.assertEquals(15, KiScoreFilterTest.size());
+    }
+
+    static testMethod void GetKnownIssueAccounts_ReturnsAccounts()
+    {
+        list<case> knownIssueList = new list<Case>();
+        knownIssueList = GetListOfCases();
+
+        string result;
+
+        system.debug('knownIssueList =>' + knownIssueList.size());
+        result = KnownIssueScoreReportController.GetAccounts(knownIssueList[0].id);
+        list<KnownIssueScoreReportController.AccountLists> kiAccountList =
+                (list<KnownIssueScoreReportController.AccountLists>)JSON.deserialize(result, list<KnownIssueScoreReportController.AccountLists>.class);
+        system.debug('KiScoreFilterTest =>' + kiAccountList[0].AccountName);
+        system.assertEquals('testCalculateAccountNetScore Account', kiAccountList[0].AccountName);
+    }
+
+    static testMethod void GetKnownIssueRefreshDateTime()
+    {
+        KnownIssueScoreReportController kiIssueSRControllerObj = new KnownIssueScoreReportController();
+
+        kiIssueSRControllerObj.refreshDateTime();
     }
 
 
