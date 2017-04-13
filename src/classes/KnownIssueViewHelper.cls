@@ -149,10 +149,6 @@ public with sharing class KnownIssueViewHelper {
             return 'TfsWorkItem__r.State__c';
         if(fieldName == 'Iteration')
             return 'TfsWorkItem__r.Release__c';
-        if(fieldName == 'Age')
-            return 'CreatedDate';
-        if(fieldName == 'Created')
-            return 'CreatedDate';
 
         return fieldName;
     }
