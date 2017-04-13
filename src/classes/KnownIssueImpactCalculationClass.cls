@@ -190,7 +190,7 @@ public without sharing class KnownIssueImpactCalculationClass {
         }
     }
 
-
+    @TestVisible
     private static void SendEmail(string subject, string body){
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
         String OrgId15Digit = UserInfo.getOrganizationId().left(15);

@@ -25,6 +25,8 @@ public class KnownIssueImpactCalculationClassTests {
         knownIssueImpactCalculation.CalculateKnownIssueScore(new list<Case>());
         knownIssueImpactCalculation.CalculateKnownIssueScore(knownIssueList);
 
+        KnownIssueImpactCalculationClass.SendEmail('Test', 'Test');
+
 
         test.stopTest();
         //for(Case KnownIssuCase : knownIssueList){
@@ -122,7 +124,7 @@ public class KnownIssueImpactCalculationClassTests {
         sbx.OrgId__c = inContactBaseClass.OrgId15Digit;
         sbx.EventResolvedPriorities__c = 'P1;P2;';
         sbx.EventResolvedEmails__c = false;
-        sbx.DeveloperErrorEmail__c = 'test.com';
+        sbx.DeveloperErrorEmail__c = 'test@Arnabtest.com';
         insert sbx;
 
 
