@@ -122,7 +122,7 @@ public without sharing class KnownIssueImpactCalculationClass {
             Id knownIssueId = (ID)ar.get('KnownIssue__c');
             KnownIssueIncidentCounts.put(knownIssueId, Integer.valueOf(ar.get('CNTID')));
             Date minimumDate = Date.valueOf(ar.get('MINDT'));
-            integer incidentOpeDays = minimumDate.daysBetween(system.today());
+            integer incidentOpeDays = minimumDate.daysBetween(system.today().dateGMT());
             KnownIssueIncidentAge.put(knownIssueId, incidentOpeDays);
             double maxScore = 0.0;
             if(ar.get('MAXSCORE') != null) {
