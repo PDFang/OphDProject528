@@ -86,7 +86,11 @@
     <script>
         $(document).ready(function(e){
             setupSearchGrid();
-            var grid = $("#kIGrid").data("kendoGrid");
+
+        });
+
+        function bindFilterEvent(){
+             var grid = $("#kIGrid").data("kendoGrid");
             grid.dataSource.originalFilter = grid.dataSource.filter;
             grid.dataSource.filter = function(e) {
                 // If a column is about to be filtered, then raise a new "filtering" event.
@@ -128,7 +132,7 @@
                    $("#filterPanel").addClass('hiddenClass');
               }
             });
-        });
+        }
 
         function GetOperatorNames(operator){
             switch (operator){
@@ -331,6 +335,8 @@
                             }
                   ]
             });
+
+            bindFilterEvent();
           }
 
      function onDataBind(e){
@@ -589,7 +595,7 @@
               valASV = '$' + data.ASV + 'M';
             }
         }
-                  
+
         var accountgrid =  $("#kiAcctDetails").data('kendoGrid');
 		if(accountgrid)
          	accountgrid.destroy();

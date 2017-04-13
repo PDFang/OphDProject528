@@ -12,7 +12,6 @@ public with sharing class KnownIssueViewHelper {
 
 
     public static String GetKnownIsssues(){
-
         list<Case> knownIssueLists = QueryCases();
         list<KIDataItemClass> dataItems = new list<KIDataItemClass>();
         for(Case ki : knownIssueLists){
@@ -48,6 +47,7 @@ public with sharing class KnownIssueViewHelper {
     public static string GetSpecificFieldValue(string fieldName, string fieldValue){
         filterDataMap = new map<string, string>();
         searchDataMap = new map<string, string>();
+        set<string> valueset = new set<string>();
         string knownIssueQuery;
         string thisFieldName = GetFieldMaps(fieldName);
         knownIssueQuery = 'Select Id, ' + thisFieldName  + ' FROM Case ';
@@ -57,7 +57,7 @@ public with sharing class KnownIssueViewHelper {
         knownIssueQuery  += ' order by ' + thisFieldName + ' desc Limit 20 ';
         system.debug('knownIssue query => ' + knownIssueQuery);
         list<Case> knownIssueLists = Database.query(knownIssueQuery);
-        set<string> valueset = new set<string>();
+
         for(Case ki : knownIssueLists){
             string value;
             if(!valueset.contains(value)){
@@ -75,8 +75,6 @@ public with sharing class KnownIssueViewHelper {
                 }
             }
         }
-
-
         return JSON.serialize(valueset);
     }
 
@@ -104,9 +102,10 @@ public with sharing class KnownIssueViewHelper {
         string knownIssueQuery = 'Select Id,Broken_by_Recent_Release__c, CaseNumber, KIImpactScore__c,NumberOfIncidents__c,ASVValue__c,  '
                 + ' KIImpactScoreHistorical__c, Status, Subject,Priority, CreatedDate,TfsWorkItem__r.Release__c, TfsWorkItem__r.TFSItemLink__c, '
                 + ' KITFSIDText__c, TfsWorkItem__r.Team__c, TfsWorkItem__r.State__c'
-                + ' From Case   WHERE RecordType.Name = \'Known Issue\' '
-                + ' AND isClosed = false and Status not in (\'Released - Confirm Resolution\',\'No Fix\')'
-                + ' Order BY KIImpactScore__c desc NULLS LAST ';
+                + ' From Case ';
+
+                knownIssueQuery += FormQueryString(new map<string, string>());
+                knownIssueQuery += ' Order BY KIImpactScore__c desc NULLS LAST ';
 
         system.debug('knownIssueQuery =>' + knownIssueQuery);
         List<Case> listresult = Database.query(knownIssueQuery);
@@ -165,14 +164,5 @@ public with sharing class KnownIssueViewHelper {
             KIDataItems = new list<KIDataItemClass>();
          }
     }
-
-    //Filter Data Class
-    public class FilterDataClass{
-        public string FieldName{get; set;}
-        public string FieldValue{get; set;}
-        public string SearchType{get;set;}
-
-    }
-
 
 }
