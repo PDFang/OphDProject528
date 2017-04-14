@@ -331,7 +331,10 @@
                             {
                                 field:"tfsIteration",
                                 title:"Iteration",
-                                filterable:false
+                                 filterable :
+                                {
+                                    ui: filterTfsIteration
+                                }
                             }
                   ]
             });
@@ -404,6 +407,36 @@
             });
 
      }
+
+
+      function filterTfsIteration(element){
+
+          console.log(JSON.stringify(element));
+
+             element.kendoAutoComplete({
+                      dataSource: {
+                      serverFiltering:true,
+                      transport:{
+                      read: function(e){
+                           value = $(element).val();
+                          console.log('value =>' + value);
+                               var result =  GetFilter(value, "Iteration", e);
+                            }
+                       },
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"}
+                            }
+                        }
+                    }
+                    }
+            });
+
+     }
+
+
 
      function filterTfsId(element){
 
@@ -579,8 +612,7 @@
     function checkDate(inputDate){
       var createDate = new Date(inputDate);
       var compareDate = new Date();
-      compareDate.setDate(compareDate.getDate() - 3)
-      var val =  (createDate.setHours(0,0,0,0) > compareDate.setHours(0,0,0,0));
+      var val =  (createDate.setHours(0,0,0,0) == compareDate.setHours(0,0,0,0));
       return val;
     }
 
@@ -705,14 +737,14 @@
         color: black !important;
     }
     .newItemOnList{
-        background-color: #fafcad;
+        background-color: #A9F5A9;
     }
 
     tr.MediumPriority {
-        background-color: rgb(227, 210, 195) !important;
+        background-color: #fadf7f !important;
     }
     td.MediumPriority{
-        background-color: rgb(227, 210, 195) !important;
+        background-color: #fadf7f !important;
     }
 
     div{
