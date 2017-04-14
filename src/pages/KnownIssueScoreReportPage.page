@@ -731,14 +731,14 @@
         color: black !important;
     }
     .newItemOnList{
-        background-color: #fafcad;
+        background-color: #A9F5A9;
     }
 
     tr.MediumPriority {
-        background-color: rgb(227, 210, 195) !important;
+        background-color: #fadf7f !important;
     }
     td.MediumPriority{
-        background-color: rgb(227, 210, 195) !important;
+        background-color: #fadf7f !important;
     }
 
     div{
