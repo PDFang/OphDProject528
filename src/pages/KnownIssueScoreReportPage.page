@@ -579,7 +579,7 @@
     function checkDate(inputDate){
       var createDate = new Date(inputDate);
       var compareDate = new Date();
-      var val =  (createDate.setHours(0,0,0,0) == todaysDate.setHours(0,0,0,0));
+      var val =  (createDate.setHours(0,0,0,0) == compareDate.setHours(0,0,0,0));
       return val;
     }
 
