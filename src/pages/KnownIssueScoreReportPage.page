@@ -162,6 +162,9 @@
                 case 'lte' :
                      return 'is Less Than or Equal to';
                      break;
+                case 'isnull':
+                     return 'is blank';
+                     break;
                 default :
                       return ' Is Equal To ';
             }
