@@ -68,7 +68,7 @@
                     <div class="modal-body" style="font-size:14px;" id="infoModal">
                         <div class="panel panel-info">
                             <div class="panel-heading">
-                                Total ASV value (Million) : <span id="ASV" style="font-weight:bold;"></span>
+                                Total Account Contract Value(ACV) (in Million) : <span id="ASV" style="font-weight:bold;"></span>
                             </div>
                         </div>
 
@@ -636,7 +636,8 @@
                                 Id : {from: "AccountId", type: "string" },
                                 ActName: { from: "AccountName", type: "string" },
                                 ActCadeBillNum: { from: "CadeBillNum", type: "number" },
-                                ActRecrdTyp: { from: "AccountRecordType", type: "string"}
+                                ActRecrdTyp: { from: "AccountRecordType", type: "string"},
+                                ACV: { from: "ACVValue", type: "number"}
                            }
                         }
                     },
@@ -656,7 +657,12 @@
                 }, {
                     field: "ActRecrdTyp",
                     title: "Account Type"
-                }]
+                }, {
+                    field: "ACV",
+                    title: "ACV Value",
+                    format: "{0:c}"
+                }
+                ]
         });
 
         $('#info').modal('show');

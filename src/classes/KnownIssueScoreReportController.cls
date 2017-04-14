@@ -2,7 +2,7 @@
  * Created by arnab.karsarkar on 4/3/2017.
  */
 
-public with sharing class KnownIssueScoreReportController {
+public without sharing class KnownIssueScoreReportController {
 
     public string currentDateTime {get; set;}
     public integer pageSize {get; set;}
@@ -35,20 +35,30 @@ public with sharing class KnownIssueScoreReportController {
 
         set<Id> accountIds = new set<Id>();
         list<AccountLists> accounts = new list<AccountLists>();
-        for(Case incident : [select Id, AccountId, Account.Name, Account.CadebillAccountNoText__c, Account.RecordType.name
+        for(Case incident : [select Id, AccountId
                              From Case
                              where KnownIssue__c = :KICaseId and AccountId != null ]){
 
             if(!accountIds.contains(incident.AccountId)){
                 accountIds.add(incident.AccountId);
-                // Add to the list
-                AccountLists newAccount = new AccountLists();
-                newAccount.AccountId = incident.AccountId;
-                newAccount.AccountName = incident.Account.Name;
-                newAccount.AccountRecordType = incident.Account.RecordType.Name;
-                newAccount.CadeBillNum = incident.Account.CadebillAccountNoText__c;
-                accounts.add(newAccount);
             }
+        }
+
+
+        for(JBCXM__CustomerInfo__c CustInfo :
+                            [select Id, JBCXM__ASV__c,JBCXM__Account__c, JBCXM__Account__r.Name, JBCXM__Account__r.RecordType.Name,JBCXM__Account__r.CadebillAccountNoText__c
+                             From JBCXM__CustomerInfo__c
+                             WHERE JBCXM__Account__c in :accountIds order by JBCXM__ASV__c desc]){
+
+            // Add to the list
+            AccountLists newAccount = new AccountLists();
+            newAccount.AccountId = CustInfo.JBCXM__Account__c;
+            newAccount.AccountName = CustInfo.JBCXM__Account__r.Name;
+            newAccount.AccountRecordType = CustInfo.JBCXM__Account__r.RecordType.Name;
+            newAccount.CadeBillNum = CustInfo.JBCXM__Account__r.CadebillAccountNoText__c;
+            newAccount.ACVValue =  CustInfo.JBCXM__ASV__c;
+            accounts.add(newAccount);
+
         }
 
         return JSON.serialize(accounts);
@@ -59,6 +69,7 @@ public with sharing class KnownIssueScoreReportController {
         public string  AccountName {get; set;}
         public string  CadeBillNum {get; set;}
         public string  AccountRecordType {get; set;}
+        public double  ACVValue {get; set;}
     }
 
 
