@@ -331,7 +331,10 @@
                             {
                                 field:"tfsIteration",
                                 title:"Iteration",
-                                filterable:false
+                                 filterable :
+                                {
+                                    ui: filterTfsIteration
+                                }
                             }
                   ]
             });
@@ -404,6 +407,36 @@
             });
 
      }
+
+
+      function filterTfsIteration(element){
+
+          console.log(JSON.stringify(element));
+
+             element.kendoAutoComplete({
+                      dataSource: {
+                      serverFiltering:true,
+                      transport:{
+                      read: function(e){
+                           value = $(element).val();
+                          console.log('value =>' + value);
+                               var result =  GetFilter(value, "Iteration", e);
+                            }
+                       },
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"}
+                            }
+                        }
+                    }
+                    }
+            });
+
+     }
+
+
 
      function filterTfsId(element){
 
