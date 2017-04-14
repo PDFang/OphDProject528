@@ -354,7 +354,15 @@
                                 title:"Iteration",
                                  filterable :
                                 {
-                                    ui: filterTfsIteration
+                                    ui: filterTfsIteration,
+                                    operators: {
+                                            string: {
+                                            contains: "Contains",
+                                            eq: "Is equal to",
+                                            neq: "Is not equal to",
+                                            isnull: "Is blank"
+                                            }
+                                    }
                                 }
                             }
                   ]
