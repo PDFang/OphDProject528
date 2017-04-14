@@ -26,7 +26,7 @@ public with sharing class KnownIssueViewHelper {
             dataItem.KINumOfIncidents = Integer.valueOf(ki.NumberOfIncidents__c);
             dataItem.KIASVValue = ki.ASVValue__c == null ? null : ki.ASVValue__c.setScale(2);
             dataItem.KITFSId = string.valueOf(ki.KITFSIDText__c);
-            dataItem.KITFSLink = 'http://corptfsapp01.ucn.net:8080/tfs/DefaultCollection/inContact/_workitems#_a=edit&id=' + dataItem.KITFSId;
+            dataItem.KITFSLink = 'http://corptfsapp01.ucn.net:8080/tfs/DefaultCollection/inContact/_workitems#_a=edit&id=' + dataItem.KITFSId; // use AppConfiguration custom settings
             dataItem.KITFSIteration = ki.TfsWorkItem__r.Release__c;
             dataItem.KITFSTeam = ki.TfsWorkItem__r.Team__c;
             dataItem.KITFSStatus = ki.TfsWorkItem__r.State__c;
@@ -114,7 +114,7 @@ public with sharing class KnownIssueViewHelper {
 
     private static string FormQueryString(Map<string,string> filterData){
         string knownIssueQuery = ' WHERE RecordType.Name = \'Known Issue\' '
-                + ' AND isClosed = false and Status not in (\'Released - Confirm Resolution\',\'No Fix\')';
+        + ' AND isClosed = false and Status not in (\'Released - Confirm Resolution\',\'No Fix\')';
 
         if(filterData.size() > 0)
             knownIssueQuery += GetFilterString(filterData, searchDataMap);
