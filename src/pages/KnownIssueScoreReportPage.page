@@ -52,6 +52,11 @@
             </div>
         </div>
         </div>
+        <label class="switch">
+            <input id="team" name="colorfilter" type="checkbox" value="team" data-toggle="toggle" class="custom-control-input" onClick="toggleTFSStatus(this);" checked="true"/>
+            <div class="slider round"></div>
+        </label>
+        <span style="font-size:12px; font-weight:600;">Show TFS Closed Items</span>
         <div class="row">
         <div id="kIGrid"></div>
         </div>
@@ -170,6 +175,22 @@
        function clearFilter(){
             var grid = $("#kIGrid").data("kendoGrid");
             grid.dataSource.filter({});
+       }
+
+       function toggleTFSStatus(obj){
+          var grid = $("#kIGrid").data("kendoGrid");
+           if(!obj.checked){
+                grid.dataSource.filter({
+                 field: "tfsStatus",
+                 operator: "neq",
+                 value:"Closed"
+                });
+           }
+           else{
+                 grid.dataSource.filter({});
+           }
+
+
        }
 
         var records = '';
@@ -790,6 +811,65 @@
         font-size: 12px !important;
         font-weight: 200 !importnat;
     }
+
+     .switch {
+      position: relative;
+      display: inline-block;
+      width: 49px;
+      height: 21px;
+      vertical-align: middle;
+    }
+
+    .switch input {display:none;}
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      -webkit-transition: .4s;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 17px;
+      width: 17px;
+      left: 1px;
+      bottom: 2px;
+      background-color: white;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+
+    input:checked + .slider {
+      background-color: #0275d8;
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px #0275d8;
+    }
+
+    input:checked + .slider:before {
+      -webkit-transform: translateX(26px);
+      -ms-transform: translateX(26px);
+      transform: translateX(26px);
+    }
+
+    /* Rounded sliders */
+    .slider.round {
+      border-radius: 34px;
+    }
+
+    .slider.round:before {
+      border-radius: 50%;
+    }
+
 
     </style>
 
