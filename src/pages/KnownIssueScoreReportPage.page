@@ -15,73 +15,78 @@
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
 
-    <apex:form>
-    <div class="container-fluid">
-        <div class="row">
-            <div class ="col-md-10">
-                <div class="alert alert-danger" role="alert" id="errorAlert" style="display:none;">
+    <apex:form >
+        <div class="container-fluid">
+            <div class="row">
+                <div class ="col-md-10">
+                    <div class="alert alert-danger" role="alert" id="errorAlert" style="display:none;">
+                    </div>
+                </div>
+                <div class ="col-md-2" style="padding-right:0px;">
+                    <div style="float:right;">
+                        <apex:outputPanel id="lastLoadDate" >
+                            <apex:outputLabel >Last Update : {!currentDateTime}</apex:outputLabel>
+                        </apex:outputPanel>
+                    </div>
                 </div>
             </div>
-            <div class ="col-md-2" style="padding-right:0px;">
+            <div class="row">
                 <div style="float:right;">
-                    <apex:outputPanel id="lastLoadDate" >
-                        <apex:outputLabel>Last Update : {!currentDateTime}</apex:outputLabel>
-                    </apex:outputPanel>
+                    <apex:commandButton styleClass="btn button-edit" rerender="lastLoadDate" action="{!refreshDateTime}" onclick="setupSearchGrid();" value="Refresh"/>
                 </div>
-            </div>
-        </div>
-        <div class="row">
-        <div style="float:right;">
-            <apex:commandButton styleClass="btn button-edit" rerender="lastLoadDate" action="{!refreshDateTime}" onclick="setupSearchGrid();" value="Refresh"/>
-        </div>
-        <div class="panel panel-info hiddenClass" style="width:60%" id="filterPanel">
-            <div class="panel-heading" >
-                <div class="row">
-                    <div class ="col-md-1" style="white-space:nowrap;font:size:14px;">
-                        Filters Applied:
-                    </div>
-                    <div class ="col-md-10">
-                        <ul class="inline-list" id="filterlists">
+                <div class="panel panel-info hiddenClass" style="width:60%" id="filterPanel">
+                    <div class="panel-heading" >
+                        <div class="row">
+                            <div class ="col-md-1" style="white-space:nowrap;font:size:14px;">
+                                Filters Applied:
+                            </div>
+                            <div class ="col-md-10">
+                                <ul class="inline-list" id="filterlists">
 
-                        </ul>
-                    </div>
-                    <div class ="col-md-1">
-                        <a href="" onclick="clearFilter()" style="float:right;cursor:pointer;">Clear All</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        </div>
-        <div class="row">
-        <div id="kIGrid"></div>
-        </div>
-        <!-- Information Modal -->
-        <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="infolabel">Account Details For Known Issue - <span id="knownIssueId"/></h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body" style="font-size:14px;" id="infoModal">
-                        <div class="panel panel-info">
-                            <div class="panel-heading">
-                                Total ASV value (Million) : <span id="ASV" style="font-weight:bold;"></span>
+                                </ul>
+                            </div>
+                            <div class ="col-md-1">
+                                <a href="" onclick="clearFilter()" style="float:right;cursor:pointer;">Clear All</a>
                             </div>
                         </div>
-
-                        <div id="kiAcctDetails"></div>
-
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Close</button>
+                </div>
+            </div>
+            <label class="switch">
+                <input id="tfsClosed" type="checkbox" value="tfsClosed" data-toggle="toggle" class="custom-control-input" onClick="toggleTFSStatus(this);" checked="true"/>
+                <div class="slider round"></div>
+            </label>
+            <span style="font-size:12px; font-weight:600;">Show TFS Closed Items</span>
+            <div class="row">
+                <div id="kIGrid"></div>
+            </div>
+            <!-- Information Modal -->
+            <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="infolabel">Account Details For Known Issue - <span id="knownIssueId"/></h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body" style="font-size:14px;" id="infoModal">
+                            <div class="panel panel-info">
+                                <div class="panel-heading">
+                                    Total Account Contract Value(ACV) (in Million) : <span id="ASV" style="font-weight:bold;"></span>
+                                </div>
+                            </div>
+
+                            <div id="kiAcctDetails"></div>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Close</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
     </apex:form>
     <script>
         $(document).ready(function(e){
@@ -107,8 +112,22 @@
                   $("ul#filterlists").empty();
                   var filters = event[0]["filters"];
                   if(typeof filters == 'undefined'){
+                      	if(typeof event[0]["field"] != 'undefined'){
+
+
+                                      var field = capitalizeFirstLetter(event[0]["field"]);
+                                      var operators =  GetOperatorNames(event[0]["operator"]);
+                                      var val =   event[0]["value"];
+                                      var filterString = '<li class="filterList" ><span> ' + field + ' ' +  operators + '  <b>' + val +
+                                                         '</b></span></li>';
+                                 $("#filterPanel").removeClass('hiddenClass');
+                                 $("ul#filterlists").append(filterString);
+                        }
+                  		else{
                         $("#filterPanel").addClass('hiddenClass');
-                        return;
+
+                        }
+                  	return;
                   }
 
                   var filterString = '';
@@ -157,6 +176,9 @@
                 case 'lte' :
                      return 'is Less Than or Equal to';
                      break;
+                case 'isnull':
+                     return 'is blank';
+                     break;
                 default :
                       return ' Is Equal To ';
             }
@@ -170,6 +192,24 @@
        function clearFilter(){
             var grid = $("#kIGrid").data("kendoGrid");
             grid.dataSource.filter({});
+           $('#tfsClosed').prop( "checked" , true );
+       }
+
+       function toggleTFSStatus(obj){
+          var grid = $("#kIGrid").data("kendoGrid");
+           if(!obj.checked){
+                grid.dataSource.filter({
+                 field: "tfsStatus",
+                 operator: "neq",
+                 value:"Closed"
+                });
+
+           }
+           else{
+                 grid.dataSource.filter({});
+           }
+
+
        }
 
         var records = '';
@@ -331,7 +371,18 @@
                             {
                                 field:"tfsIteration",
                                 title:"Iteration",
-                                filterable:false
+                                 filterable :
+                                {
+                                    ui: filterTfsIteration,
+                                    operators: {
+                                            string: {
+                                            contains: "Contains",
+                                            eq: "Is equal to",
+                                            neq: "Is not equal to",
+                                            isnull: "Is blank"
+                                            }
+                                    }
+                                }
                             }
                   ]
             });
@@ -404,6 +455,36 @@
             });
 
      }
+
+
+      function filterTfsIteration(element){
+
+          console.log(JSON.stringify(element));
+
+             element.kendoAutoComplete({
+                      dataSource: {
+                      serverFiltering:true,
+                      transport:{
+                      read: function(e){
+                           value = $(element).val();
+                          console.log('value =>' + value);
+                               var result =  GetFilter(value, "Iteration", e);
+                            }
+                       },
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"}
+                            }
+                        }
+                    }
+                    }
+            });
+
+     }
+
+
 
      function filterTfsId(element){
 
@@ -579,8 +660,7 @@
     function checkDate(inputDate){
       var createDate = new Date(inputDate);
       var compareDate = new Date();
-      compareDate.setDate(compareDate.getDate() - 3)
-      var val =  (createDate.setHours(0,0,0,0) > compareDate.setHours(0,0,0,0));
+      var val =  (createDate.setHours(0,0,0,0) == compareDate.setHours(0,0,0,0));
       return val;
     }
 
@@ -636,7 +716,8 @@
                                 Id : {from: "AccountId", type: "string" },
                                 ActName: { from: "AccountName", type: "string" },
                                 ActCadeBillNum: { from: "CadeBillNum", type: "number" },
-                                ActRecrdTyp: { from: "AccountRecordType", type: "string"}
+                                ActRecrdTyp: { from: "AccountRecordType", type: "string"},
+                                ACV: { from: "ACVValue", type: "number"}
                            }
                         }
                     },
@@ -656,7 +737,12 @@
                 }, {
                     field: "ActRecrdTyp",
                     title: "Account Type"
-                }]
+                }, {
+                    field: "ACV",
+                    title: "ACV Value",
+                    format: "{0:c}"
+                }
+                ]
         });
 
         $('#info').modal('show');
@@ -699,14 +785,14 @@
         color: black !important;
     }
     .newItemOnList{
-        background-color: #fafcad;
+        background-color: #A9F5A9;
     }
 
     tr.MediumPriority {
-        background-color: rgb(227, 210, 195) !important;
+        background-color: #fadf7f !important;
     }
     td.MediumPriority{
-        background-color: rgb(227, 210, 195) !important;
+        background-color: #fadf7f !important;
     }
 
     div{
@@ -752,6 +838,65 @@
         font-size: 12px !important;
         font-weight: 200 !importnat;
     }
+
+     .switch {
+      position: relative;
+      display: inline-block;
+      width: 49px;
+      height: 21px;
+      vertical-align: middle;
+    }
+
+    .switch input {display:none;}
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      -webkit-transition: .4s;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 17px;
+      width: 17px;
+      left: 1px;
+      bottom: 2px;
+      background-color: white;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+
+    input:checked + .slider {
+      background-color: #0275d8;
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px #0275d8;
+    }
+
+    input:checked + .slider:before {
+      -webkit-transform: translateX(26px);
+      -ms-transform: translateX(26px);
+      transform: translateX(26px);
+    }
+
+    /* Rounded sliders */
+    .slider.round {
+      border-radius: 34px;
+    }
+
+    .slider.round:before {
+      border-radius: 50%;
+    }
+
 
     </style>
 

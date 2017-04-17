@@ -25,6 +25,8 @@ public class KnownIssueImpactCalculationClassTests {
         knownIssueImpactCalculation.CalculateKnownIssueScore(new list<Case>());
         knownIssueImpactCalculation.CalculateKnownIssueScore(knownIssueList);
 
+        KnownIssueImpactCalculationClass.SendEmail('Test', 'Test');
+
 
         test.stopTest();
         //for(Case KnownIssuCase : knownIssueList){
@@ -114,6 +116,17 @@ public class KnownIssueImpactCalculationClassTests {
         };
 
         insert customerInfoList;
+
+        SiteConfiguration__c sbx = new SiteConfiguration__c();
+        sbx.Name = inContactBaseClass.OrgId15Digit;
+        sbx.AutoEventEmails__c = false;
+        sbx.DaysToDisplayKnownIssues__c = 30;
+        sbx.OrgId__c = inContactBaseClass.OrgId15Digit;
+        sbx.EventResolvedPriorities__c = 'P1;P2;';
+        sbx.EventResolvedEmails__c = false;
+        sbx.DeveloperErrorEmail__c = 'test@Arnabtest.com';
+        insert sbx;
+
 
         return knownIssueList;
 

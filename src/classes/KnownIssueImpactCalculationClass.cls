@@ -86,11 +86,12 @@ public without sharing class KnownIssueImpactCalculationClass {
                     newCase.KIImpactScoreHistorical__c = KnownIssuCase.KIImpactScore__c;
                 }
 
+
                 newCase.KIImpactScore__c = netKnownIssueScore;
                 newCase.Priority = KnownIssueIncidentMaxPriority.get(KnownIssuCase.Id);
                 updKnowIssueList.add(newCase);
             }
-
+            CaseTriggerHandler.callActionHub = false;
             update updKnowIssueList;
             string body = 'Successfully Updated ' + knownIssueList.size() + ' known issues';
             string subject = 'Success';
@@ -122,7 +123,7 @@ public without sharing class KnownIssueImpactCalculationClass {
             Id knownIssueId = (ID)ar.get('KnownIssue__c');
             KnownIssueIncidentCounts.put(knownIssueId, Integer.valueOf(ar.get('CNTID')));
             Date minimumDate = Date.valueOf(ar.get('MINDT'));
-            integer incidentOpeDays = minimumDate.daysBetween(system.today());
+            integer incidentOpeDays = minimumDate.daysBetween(system.now().dateGMT());
             KnownIssueIncidentAge.put(knownIssueId, incidentOpeDays);
             double maxScore = 0.0;
             if(ar.get('MAXSCORE') != null) {
@@ -190,7 +191,7 @@ public without sharing class KnownIssueImpactCalculationClass {
         }
     }
 
-
+    @TestVisible
     private static void SendEmail(string subject, string body){
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
         String OrgId15Digit = UserInfo.getOrganizationId().left(15);
