@@ -1,0 +1,6 @@
+<apex:page Controller="PartnerDocumentPreviewController"  sidebar="false" showHeader="true" > <!-- action="{!URLFOR('/sfc/servlet.shepherd/version/renditionDownload?rendition=THUMB720BY480&versionId=0683C000000Cj7J')}"> -->
+    <!-- <apex:iframe src="/sfc/p/#3C000000H6tI/a/3C0000004FFy/zRzVDQGHCFz1CfV_gHgmhIt1voz.B9moYdbeXA0rFy4" scrolling="false"/> -->
+    '{!documentUrl}'
+    <apex:iframe src="{!documentUrl}" scrolling="false"/>
+    <!-- <apex:iframe src="/sfc/servlet.shepherd/version/renditionDownload?rendition=THUMB720BY480&versionId=0683C000000Cj7J" scrolling="false"/> -->
+</apex:page>
