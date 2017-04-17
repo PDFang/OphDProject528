@@ -27,25 +27,26 @@ public class PartnerDocumentManagerTriggerHandler extends TriggerHandler{
                 Where Id IN :documentIds
 
         ]);
-//        for(ContentVersion version : [SELECT Id, ContentDocumentId FROM ContentVersion where ContentDocumentId IN :documentIds]){
-//            documentVersionMap.put(version.ContentDocumentId, version);
-//        }
 
         List<ContentVersion> versionsList= new List<ContentVersion>();
         for(Partner_Document_Manager__c record :newList){
-            if(documentMap.containsKey(record.ContentDocumentId__c)){
+            ContentDocument document = documentMap.get(record.ContentDocumentId__c);
+            if(document != null && document.LatestPublishedVersionId != null){
                 ContentVersion version = new ContentVersion(
                         Id = documentMap.get(record.ContentDocumentId__c).LatestPublishedVersionId,
                         Partner_Document_Manager__c = record.Id
                 );
                 versionsList.add(version);
+            } else{
+                record.addError('A version has not been published.');
             }
         }
 
-        if(versionsList.size() > 0)
+        if(versionsList.size() > 0){
             update versionsList;
+            CreateContentDelivery(documentIds);
+        }
 
-        CreateContentDelivery(documentIds);
 
     }
 
@@ -73,6 +74,7 @@ public class PartnerDocumentManagerTriggerHandler extends TriggerHandler{
         ]);
 
         List<ContentDistribution> distributionList = new List<ContentDistribution>();
+        Map<Id, ContentDistribution> documentDistributionMap = new Map<Id, ContentDistribution>();
         for(ContentDocument document :documentMap.values()){
             ContentDistribution cd = new ContentDistribution();
             cd.name = document.Title;
@@ -85,17 +87,19 @@ public class PartnerDocumentManagerTriggerHandler extends TriggerHandler{
             cd.PreferencesNotifyOnVisit = documentManagerMap.get(document.Id).Notify_On_Visit__c;
             cd.ExpiryDate = system.now().addMinutes(expiresInMinutes);
             distributionList.add(cd);
+            documentDistributionMap.put(document.Id, cd);
         }
         insert distributionList;
 
         List<Partner_Document_Manager__c> managerList = new List<Partner_Document_Manager__c>();
         for(ContentDistribution distribution : [
-                Select Id, ContentDocumentId, DistributionPublicUrl from ContentDistribution
+                Select Id, ContentDocumentId, ExpiryDate, DistributionPublicUrl from ContentDistribution
                 where ContentDocumentId IN :documentIds
         ]){
             Partner_Document_Manager__c record = new Partner_Document_Manager__c(
                     Id = documentManagerMap.get(distribution.ContentDocumentId).Id,
-                    Content_Delivery_URL__c = distribution.DistributionPublicUrl
+                    Content_Delivery_URL__c = distribution.DistributionPublicUrl,
+                    Expiration_Date__c = distribution.ExpiryDate
             );
             managerList.add(record);
 
