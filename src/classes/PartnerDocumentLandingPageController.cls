@@ -1,0 +1,82 @@
+public without sharing class PartnerDocumentLandingPageController {
+    public class DocumentDetail {
+        public String Title { get; private set; }
+        public String Url { get; private set; }
+    }
+
+    public List<DocumentDetail> DocumentDetailList { get; private set; }
+
+    private final String downloadUrl = '/sfc/servlet.shepherd/version/download/';
+    private Set<String> partnerTypeNames = new Set<String>();
+
+    public PartnerDocumentLandingPageController() {
+        //set up the partnerTypeNames
+        setAllowedPartnerTypesForUser();
+
+        //retrieve the list of documents
+        DocumentDetailList = new List<DocumentDetail>();
+        //documents visible to all accounts
+        loadDocumentsVisibleToAllAccounts();
+
+        //documents visible to the user's partner type(s)
+        loadDocumentsVisibleToPartnerType();
+
+        //documents visible to the user
+        loadDocumentsVisibleToUserAccount();
+    }
+
+    private void setAllowedPartnerTypesForUser() {
+        Set<String> userPermissionSetNames = new Set<String>();
+        //load the permission set names for the user
+        for(PermissionSetAssignment assignment : [SELECT PermissionSet.Name FROM PermissionSetAssignment WHERE AssigneeId = :userinfo.getUserId()]) {
+            userPermissionSetNames.add(assignment.PermissionSet.Name);
+        }
+
+        for(Partner_Permission_Sets__c pps : [SELECT Partner_Type__c FROM Partner_Permission_Sets__c WHERE Permission_Set__c in :userPermissionSetNames]) {
+            partnerTypeNames.add(pps.Partner_Type__c);
+        }
+    }
+
+    private void loadDocumentsVisibleToAllAccounts() {
+        for(Partner_Document_Manager__c pdm : [SELECT Title__c, ContentDocumentId__c
+                                                FROM Partner_Document_Manager__c
+                                                WHERE All_Accounts__c = true AND (Partner_Type__c = null OR Partner_Type__c in :partnerTypeNames)]) {
+
+            DocumentDetail detail = new DocumentDetail();
+            detail.Title = pdm.Title__c;
+            detail.Url = downloadUrl + pdm.ContentDocumentId__c;
+            DocumentDetailList.add(detail);
+        }
+    }
+
+    private void loadDocumentsVisibleToPartnerType() {
+        for(Partner_Document_Manager__c pdm : [SELECT Title__c
+                                               FROM Partner_Document_Manager__c
+                                               WHERE All_Accounts__c = false AND Partner_Type__c in :partnerTypeNames]) {
+            DocumentDetail detail = new DocumentDetail();
+            detail.Title = pdm.Title__c;
+            detail.Url = downloadUrl + pdm.ContentDocumentId__c;
+            DocumentDetailList.add(detail);
+        }
+    }
+
+    private void loadDocumentsVisibleToUserAccount() {
+        //get the account id of the user
+        List<User> currentUserList = [SELECT AccountId FROM User WHERE Id = :userinfo.getUserId()];
+        if(currentUserList.size() == 0) {
+            return;
+        }
+
+        Id accountId = currentUserList[0].AccountId;
+
+        for(Partner_Document_Access__c pda : [SELECT Partner_Document_Manager__r.Title__c, Partner_Document_Manager__r.ContentDocumentId__c
+                                              FROM Partner_Document_Access__c
+                                              WHERE Partner_Document_Manager__r.All_Accounts__c = false
+                                                AND Account__r.Id = :accountId]) {
+            DocumentDetail detail = new DocumentDetail();
+            detail.Title = pda.Partner_Document_Manager__r.Title__c;
+            detail.Url = downloadUrl + pda.Partner_Document_Manager__r.ContentDocumentId__c;
+            DocumentDetailList.add(detail);
+        }
+    }
+}
