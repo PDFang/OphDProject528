@@ -18,9 +18,6 @@ public without sharing class PartnerDocumentLandingPageController {
         //documents visible to all accounts
         loadDocumentsVisibleToAllAccounts();
 
-        //documents visible to the user's partner type(s)
-        loadDocumentsVisibleToPartnerType();
-
         //documents visible to the user
         loadDocumentsVisibleToUserAccount();
     }
@@ -38,24 +35,16 @@ public without sharing class PartnerDocumentLandingPageController {
     }
 
     private void loadDocumentsVisibleToAllAccounts() {
-        for(Partner_Document_Manager__c pdm : [SELECT Title__c, ContentDocumentId__c
+        //load all documents that are visible to all accounts and if the partner type is set it matches the user's partner type
+        for(Partner_Document_Manager__c pdm : [SELECT Title__c, LatestVersionId__c
                                                 FROM Partner_Document_Manager__c
-                                                WHERE All_Accounts__c = true AND (Partner_Type__c = null OR Partner_Type__c in :partnerTypeNames)]) {
+                                                WHERE All_Accounts__c = true
+                                                AND Active__c = true
+                                                AND (Partner_Type__c = null OR Partner_Type__c in :partnerTypeNames)]) {
 
             DocumentDetail detail = new DocumentDetail();
             detail.Title = pdm.Title__c;
-            detail.Url = downloadUrl + pdm.ContentDocumentId__c;
-            DocumentDetailList.add(detail);
-        }
-    }
-
-    private void loadDocumentsVisibleToPartnerType() {
-        for(Partner_Document_Manager__c pdm : [SELECT Title__c
-                                               FROM Partner_Document_Manager__c
-                                               WHERE All_Accounts__c = false AND Partner_Type__c in :partnerTypeNames]) {
-            DocumentDetail detail = new DocumentDetail();
-            detail.Title = pdm.Title__c;
-            detail.Url = downloadUrl + pdm.ContentDocumentId__c;
+            detail.Url = downloadUrl + pdm.LatestVersionId__c;
             DocumentDetailList.add(detail);
         }
     }
@@ -69,13 +58,15 @@ public without sharing class PartnerDocumentLandingPageController {
 
         Id accountId = currentUserList[0].AccountId;
 
-        for(Partner_Document_Access__c pda : [SELECT Partner_Document_Manager__r.Title__c, Partner_Document_Manager__r.ContentDocumentId__c
+        for(Partner_Document_Access__c pda : [SELECT Partner_Document_Manager__r.Title__c, Partner_Document_Manager__r.LatestVersionId__c
                                               FROM Partner_Document_Access__c
                                               WHERE Partner_Document_Manager__r.All_Accounts__c = false
+                                                AND Partner_Document_Manager__r.Active__c = true
+                                                AND (Partner_Document_Manager__r.Partner_Type__c = null OR Partner_Document_Manager__r.Partner_Type__c in :partnerTypeNames)
                                                 AND Account__r.Id = :accountId]) {
             DocumentDetail detail = new DocumentDetail();
             detail.Title = pda.Partner_Document_Manager__r.Title__c;
-            detail.Url = downloadUrl + pda.Partner_Document_Manager__r.ContentDocumentId__c;
+            detail.Url = downloadUrl + pda.Partner_Document_Manager__r.LatestVersionId__c;
             DocumentDetailList.add(detail);
         }
     }
