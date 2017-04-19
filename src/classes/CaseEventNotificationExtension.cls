@@ -170,18 +170,14 @@ public class CaseEventNotificationExtension
 
         string platformImpacted = MergeFieldListFormat('{Platform Impacted}',c.PlatformsImpacted__c.replace(' - inContact',''), ';');
         string platforms = '<b>Platform(s) Impacted:</b>\t ' + platformImpacted;
-        string htmlStringPartner = htmlString.replace('{Platform Impacted}','<br/><br/>' + platforms);
-        string textBodyPartner   = textBody.replace('{Platform Impacted}','\n\n' + platforms);
-        emailBodyPartner =  textBodyPartner;
-
-        htmlString = htmlString.replace('{Platform Impacted}','');
-        textBody   = textBody.replace('{Platform Impacted}','');
-        emailBodyCustomer = textBody;
+        htmlString = htmlString.replace('{Platform Impacted}','<br/><br/>' + platforms);
+        textBody   = textBody.replace('{Platform Impacted}','\n\n' + platforms);
+        emailBody = textBody;
 
         system.debug('==== emailBodyPartner ====' + emailBodyPartner);
         system.debug('==== emailBodyCustomer ====' + emailBodyCustomer);
 
-        if(emailBodyCustomer.contains('{') || emailBodyCustomer.contains('}') || emailBodyPartner.contains('{') || emailBodyPartner.contains('}') || subject.contains('{') || subject.contains('}'))
+        if(emailBody.contains('{') || emailBody.contains('}')  || subject.contains('{') || subject.contains('}'))
         {
             if(system.isFuture())
             {
@@ -210,11 +206,11 @@ public class CaseEventNotificationExtension
         
         if(recordTypeName == 'Event')
         {
-            resellAndInternalAddresses.add(InContactConfiguration.EventEmailGroup);// changed this to internal & resell Addresses too
+            setAddresses.add(InContactConfiguration.EventEmailGroup);
         }
         else if(recordTypeName == 'Maintenance Notification')
         {
-            resellAndInternalAddresses.add(InContactConfiguration.MaintenanceEmailGroup);// changed this to internal & resell Addresses too
+            setAddresses.add(InContactConfiguration.MaintenanceEmailGroup);
         }
         
         system.debug(setAddresses);
@@ -230,29 +226,15 @@ public class CaseEventNotificationExtension
         {
             for(Contact con:allContacts)
             {
+                setAddresses.add(con.Email);
+
                 Task t = new Task();
                 t.Subject = subject;
                 t.Type = recordTypeName + ' Email';
                 t.WhoId = con.Id;
                 t.WhatId = c.Id;
                 t.Status = 'Completed';
-
-                if(con.Account.RecordTypeId == '01270000000MATw')
-                {
-                    resellAndInternalAddresses.add(con.Email);
-                    t.Description = emailBodyPartner;
-                }
-                else if(con.Email.containsIgnoreCase('incontact.com'))
-                {
-                    resellAndInternalAddresses.add(con.Email);
-                    t.Description = emailBodyPartner;
-                    
-                }
-                else
-                {
-                    setAddresses.add(con.Email);
-                    t.Description = emailBodyCustomer;
-                }
+                t.Description = emailBodyCustomer;
 
                 tasks.add(t);
             }
@@ -263,11 +245,7 @@ public class CaseEventNotificationExtension
             
             //add csms
             setAddresses.addAll(csmEmails);
-            
             addresses.addAll(setAddresses);
-
-
-            
            
             try
             {
@@ -276,7 +254,6 @@ public class CaseEventNotificationExtension
                 
                 if(addresses.size() > 0)
                 {
-
                     NotificationHelperClass.EmailTemplate template = new NotificationHelperClass.EmailTemplate();
                     template.recipients = addresses;
                     template.subject = subject;
@@ -284,22 +261,7 @@ public class CaseEventNotificationExtension
                     template.textBody = textBody; 
                     template.templateId = 6;
                     listTemplates.add(template);
-                }    
-                
-                // keeping resell partners separate in case they ask for different email template later
-                if(!resellAndInternalAddresses.isEmpty())
-                {
-                    //Platform(s) Impacted:\t{Platform Impacted}
-
-                    NotificationHelperClass.EmailTemplate template = new NotificationHelperClass.EmailTemplate();
-                    template.recipients = resellAndInternalAddresses;
-                    template.subject = subject;
-                    template.htmlBody = htmlStringPartner ;
-                    template.textBody = textBodyPartner ;
-                    template.templateId = 6;
-                    listTemplates.add(template);
                 }
-                
                 System.enqueueJob(new NotificationQueableClass(listTemplates,''));               
            
                 insert tasks;

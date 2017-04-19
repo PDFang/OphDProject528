@@ -1,7 +1,3 @@
-/**
- * Created by mohandaas.rangaswamy on 3/28/2017.
- */
-
 @IsTest
 private class AccountImpactCalculationBatchTest {
 
@@ -62,7 +58,7 @@ private class AccountImpactCalculationBatchTest {
                     Brand_Visibility__c = 'No',
                     Industry_Leadership_Vocality__c = 'Yes',
                     Social_Media_Presence__c = 'Yes',
-                    Risk_of_Leaving__c = '1',
+                    Risk_of_Leaving__c = 'Low',
                     Referenceable__c = false,
                     GYRStatus__c = 'Green'
             );

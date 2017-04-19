@@ -37,7 +37,7 @@ public class ImpactCalculationServiceTests {
         Account[] accountList = new Account[]{
                 new Account(
                         Name = 'My little Account',
-                        Risk_of_Leaving__c = '3', // 3
+                        Risk_of_Leaving__c = 'High', // High
                         GYRStatus__c = 'Red',  // 1,
                         CustomerSegment__c = 'Strategic', // 1
                         IsPartner__c = false, //0,

@@ -37,15 +37,15 @@
                 <div class="panel panel-info hiddenClass" style="width:60%" id="filterPanel">
                     <div class="panel-heading" >
                         <div class="row">
-                            <div class ="col-md-1" style="white-space:nowrap;font:size:14px;">
+                            <div class ="col-sm-1" style="padding-right:0px;">
                                 Filters Applied:
                             </div>
-                            <div class ="col-md-10">
+                            <div class ="col-sm-10">
                                 <ul class="inline-list" id="filterlists">
 
                                 </ul>
                             </div>
-                            <div class ="col-md-1">
+                            <div class ="col-sm-1">
                                 <a href="" onclick="clearFilter()" style="float:right;cursor:pointer;">Clear All</a>
                             </div>
                         </div>
@@ -176,8 +176,8 @@
                 case 'lte' :
                      return 'is Less Than or Equal to';
                      break;
-                case 'isnull':
-                     return 'is blank';
+                case 'isnotnull' :
+                     return 'is Not Equal to';
                      break;
                 default :
                       return ' Is Equal To ';
@@ -191,8 +191,11 @@
 
        function clearFilter(){
             var grid = $("#kIGrid").data("kendoGrid");
-            grid.dataSource.filter({});
-           $('#tfsClosed').prop( "checked" , true );
+           if(grid){
+               grid.dataSource.filter({});
+           		$('#tfsClosed').prop( "checked" , true );
+               }
+
        }
 
        function toggleTFSStatus(obj){
@@ -215,6 +218,7 @@
         var records = '';
 
         function setupSearchGrid(){
+            clearFilter();
             var kiDataSource =new kendo.data.DataSource({
                     autosync:true,
                     transport:{
@@ -373,15 +377,7 @@
                                 title:"Iteration",
                                  filterable :
                                 {
-                                    ui: filterTfsIteration,
-                                    operators: {
-                                            string: {
-                                            contains: "Contains",
-                                            eq: "Is equal to",
-                                            neq: "Is not equal to",
-                                            isnull: "Is blank"
-                                            }
-                                    }
+                                    ui: filterTfsIteration
                                 }
                             }
                   ]
