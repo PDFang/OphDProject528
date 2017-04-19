@@ -27,9 +27,9 @@ public class InContactConfiguration
 	public static String EducationTripReportEchoSurveyURL = 'http://edev.echosurvey.com/ucn/ucn/edu_launcher.taf?customer_email={Email1}&case_id={CustomerAcctNumber}&customer_name={customerName}&CSM={CSM}&send_email=true&Subject={subject}';
     
     //Event notification Engine
-    public static String NotificationEndPoint = 'https://corpnotifications.incontact.com/NotificationProxy.asmx';
-    public static String NotificationUserName = 'sfUser';
-    public static String NotificationPassword = 'T3XRi1wHG2';
+    public static String NotificationEndPoint = 'https://labproxy.ucn.net/Notifications/NotificationProxy.asmx ';
+    public static String NotificationUserName = '';
+    public static String NotificationPassword = '';
     public static String SharepointEndPoint = 'http://199.172.9.115:40443/KBProxy.asmx';
     public static String SharepointUserName = 'test';
     public static String SharepointPassword = 'pw';

@@ -20,7 +20,7 @@ private class AccountTriggerHandlerTest {
                 Brand_Visibility__c = 'Yes',
                 Industry_Leadership_Vocality__c = 'No',
                 Social_Media_Presence__c = 'Yes',
-                Risk_of_Leaving__c = '1',
+                Risk_of_Leaving__c = 'Low',
                 Referenceable__c = false,
                 GYRStatus__c = 'Green'
         );
@@ -120,7 +120,7 @@ private class AccountTriggerHandlerTest {
                 Brand_Visibility__c = 'No',
                 Industry_Leadership_Vocality__c = 'Yes',
                 Social_Media_Presence__c = 'Yes',
-                Risk_of_Leaving__c = '1',
+                Risk_of_Leaving__c = 'Low',
                 Referenceable__c = false,
                 GYRStatus__c = 'Green'
         );
@@ -182,7 +182,7 @@ private class AccountTriggerHandlerTest {
 
         Account testIncident = [Select Id, Risk_of_Leaving__c, GYRStatus__c, CustomerSegment__c, IsPartner__c, Brand_Visibility__c,Industry_Leadership_Vocality__c,Social_Media_Presence__c,Referenceable__c  from Account where Id = :testAccount.Id];
 
-        testIncident.Risk_of_Leaving__c = '2';
+        testIncident.Risk_of_Leaving__c = 'Medium';
         testIncident.CustomerSegment__c = 'Large';
         testIncident.GYRStatus__c = 'Yellow';
         testIncident.IsPartner__c = true;
@@ -236,7 +236,7 @@ private class AccountTriggerHandlerTest {
                     Brand_Visibility__c = 'No',
                     Industry_Leadership_Vocality__c = 'Yes',
                     Social_Media_Presence__c = 'Yes',
-                    Risk_of_Leaving__c = '1',
+                    Risk_of_Leaving__c = 'Low',
                     Referenceable__c = false,
                     GYRStatus__c = 'Green'
             );
