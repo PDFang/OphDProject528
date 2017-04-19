@@ -18,12 +18,12 @@ public class AccountImpactCalculationImplTests {
     public static testMethod void CalculateRiskOfLeavingScore_WillReturnCorrectScore(){
         AccountImpactCalculationImpl imp = new AccountImpactCalculationImpl();
 
-        Double riskOfLeavingThree = imp.CalculateRiskOfLeavingScore('3', 5);
-        Double riskOfLeavingTwo = imp.CalculateRiskOfLeavingScore('2', 5);
-        Double riskOfLeavingDefault = imp.CalculateRiskOfLeavingScore('0', 5);
+        Double riskOfLeavingThree = imp.CalculateRiskOfLeavingScore('High', 5);
+        Double riskOfLeavingTwo = imp.CalculateRiskOfLeavingScore('Medium', 5);
+        Double riskOfLeavingDefault = imp.CalculateRiskOfLeavingScore('Low', 5);
 
-        system.assertEquals(5, riskOfLeavingThree, 'CalculateRiskOfLeavingScore = 3 calculation is Incorrect');
-        system.assertEquals(2.5, riskOfLeavingTwo, 'CalculateRiskOfLeavingScore =  2 calculation is Incorrect');
+        system.assertEquals(5, riskOfLeavingThree, 'CalculateRiskOfLeavingScore = High calculation is Incorrect');
+        system.assertEquals(2.5, riskOfLeavingTwo, 'CalculateRiskOfLeavingScore =  Medium calculation is Incorrect');
         system.assertEquals(0, riskOfLeavingDefault, 'CalculateRiskOfLeavingScore = default calculation is Incorrect');
     }
 

@@ -11,7 +11,7 @@ public class AccountImpactCalculationImpl implements AccountImpactCalculationInt
         else if(months > 3) {
             score = .75;
         }
-        else {
+        else {               
             score = 1;
         }
 
@@ -21,10 +21,10 @@ public class AccountImpactCalculationImpl implements AccountImpactCalculationInt
     public Double CalculateRiskOfLeavingScore(String risk, Double multiplier){
         Double score;
 
-        if(risk == '3') {
+        if(risk == 'High') {
             score = 1;
         }
-        else if(risk == '2') {
+        else if(risk == 'Medium') {
             score = .5;
         }
         else {

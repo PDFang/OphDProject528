@@ -17,7 +17,7 @@ private class SubscriptionTriggerHandlerTest {
                 Brand_Visibility__c = 'Yes',
                 Industry_Leadership_Vocality__c = 'Yes',
                 Social_Media_Presence__c = 'Yes',
-                Risk_of_Leaving__c = '1',
+                Risk_of_Leaving__c = 'Low',
                 Referenceable__c = false,
                 GYRStatus__c = 'Green'
         );
