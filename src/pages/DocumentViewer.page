@@ -1,0 +1,3 @@
+<apex:page id="DocumentViewer" sideBar="false">
+    <apex:iframe src="/servlet/servlet.FileDownload?file=0153C000000DjU8" scrolling="false"/>
+</apex:page>

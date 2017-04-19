@@ -12,6 +12,9 @@ public class PartnerDocumentPreviewController {
 
         try{
             documentId = ApexPages.currentPage().getParameters().get('id');
+            if(string.isBlank(documentId)){
+                documentId = '0693C000000CjEqQAK';
+            }
             List<Partner_Document_Manager__c> records = [
             Select Id, Title__c, Expiration_Date__c, Generate_URL__c, Content_Delivery_URL__c from Partner_Document_Manager__c
             where ContentDocumentId__c = :documentId and Content_Delivery_URL__c != null and Active__c = true
@@ -28,17 +31,17 @@ public class PartnerDocumentPreviewController {
 
     }
 
-    public void CreateContentDelivery(){
-
-        record.Generate_URL__c = true;
-        update record;
-
-        List<Partner_Document_Manager__c> records = [
-                Select Id, Title__c, Expiration_Date__c, Generate_URL__c, Content_Delivery_URL__c from Partner_Document_Manager__c
-                where ContentDocumentId__c = :documentId and Content_Delivery_URL__c != null and Active__c = true
-        ];
-        documentUrl = records[0].Content_Delivery_URL__c;
-
-    }
+//    public void CreateContentDelivery(){
+//
+//        record.Generate_URL__c = true;
+//        update record;
+//
+//        List<Partner_Document_Manager__c> records = [
+//                Select Id, Title__c, Expiration_Date__c, Generate_URL__c, Content_Delivery_URL__c from Partner_Document_Manager__c
+//                where ContentDocumentId__c = :documentId and Content_Delivery_URL__c != null and Active__c = true
+//        ];
+//        documentUrl = records[0].Content_Delivery_URL__c;
+//
+//    }
 
 }
