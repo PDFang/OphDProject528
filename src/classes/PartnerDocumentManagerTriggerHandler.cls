@@ -2,13 +2,24 @@
  * Created by mohandaas.rangaswamy on 4/17/2017.
  */
 
-public class PartnerDocumentManagerTriggerHandler extends TriggerHandler{
+public without sharing class PartnerDocumentManagerTriggerHandler extends TriggerHandler{
 
     private static Integer expiresInMinutes = 120;
 
 
     protected override void afterInsert(){
         RelateToContentVersion((List<Partner_Document_Manager__c>) trigger.new);
+    }
+
+    protected override void afterUpdate(){
+
+        Set<Id> documentIds = new Set<Id>();
+        for(Partner_Document_Manager__c record :(List<Partner_Document_Manager__c>) trigger.new){
+            if(record.Generate_URL__c)
+                documentIds.add(record.ContentDocumentId__c);
+        }
+        CreateContentDelivery(documentIds);
+
     }
 
     private void RelateToContentVersion(List<Partner_Document_Manager__c> newList){
@@ -50,7 +61,7 @@ public class PartnerDocumentManagerTriggerHandler extends TriggerHandler{
 
     }
 
-    @Future
+//    @Future
     private static void CreateContentDelivery(Set<Id> documentIds){
 
         AppConfiguration__c config = AppConfiguration__c.getInstance();
@@ -94,12 +105,14 @@ public class PartnerDocumentManagerTriggerHandler extends TriggerHandler{
         List<Partner_Document_Manager__c> managerList = new List<Partner_Document_Manager__c>();
         for(ContentDistribution distribution : [
                 Select Id, ContentDocumentId, ExpiryDate, DistributionPublicUrl from ContentDistribution
-                where ContentDocumentId IN :documentIds
+//                where ContentDocumentId IN :documentIds
+                where Id IN :distributionList
         ]){
             Partner_Document_Manager__c record = new Partner_Document_Manager__c(
                     Id = documentManagerMap.get(distribution.ContentDocumentId).Id,
                     Content_Delivery_URL__c = distribution.DistributionPublicUrl,
-                    Expiration_Date__c = distribution.ExpiryDate
+                    Expiration_Date__c = distribution.ExpiryDate,
+                    Generate_URL__c = false
             );
             managerList.add(record);
 
