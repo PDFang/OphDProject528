@@ -82,6 +82,20 @@ public class KnownIssueScoreReportControllerTests {
         );
 
         insert testAccount;
+
+        JBCXM__CustomerInfo__c customerInfo = new JBCXM__CustomerInfo__c(
+                JBCXM__Account__c = testAccount.Id,
+//                JBCXM__CurScoreId__c,
+//                JBCXM__CurScoreId__r.JBCXM__Score__c,
+                JBCXM__ASV__c = 1800000,
+                JBCXM_CreatedCases__c = 15,
+                JBCXM_OpenCases__c = 20,
+                JBCXM_Credits__c = 2500,
+                JBCXM_MTTR_IN_Hours__c = 504
+        );
+
+        insert customerInfo;
+
         Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SobjectType.Case.getRecordTypeInfosByName();
         // known issue
         //set default assignment rule
@@ -134,6 +148,27 @@ public class KnownIssueScoreReportControllerTests {
             }
 
             insert incidentList;
+
+
+        list<JBCXM__CustomerInfo__c> customerInfoList = new list<JBCXM__CustomerInfo__c>{
+                new JBCXM__CustomerInfo__c(
+                        JBCXM__Account__c = testAccount.Id,
+                        JBCXM__ASV__c = 2345678
+                )
+        };
+
+        insert customerInfoList;
+
+        SiteConfiguration__c sbx = new SiteConfiguration__c();
+        sbx.Name = inContactBaseClass.OrgId15Digit;
+        sbx.AutoEventEmails__c = false;
+        sbx.DaysToDisplayKnownIssues__c = 30;
+        sbx.OrgId__c = inContactBaseClass.OrgId15Digit;
+        sbx.EventResolvedPriorities__c = 'P1;P2;';
+        sbx.EventResolvedEmails__c = false;
+        sbx.DeveloperErrorEmail__c = 'test@Arnabtest.com';
+        insert sbx;
+
 
         return knownIssueList;
 

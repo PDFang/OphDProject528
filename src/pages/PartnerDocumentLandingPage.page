@@ -1,0 +1,10 @@
+
+<apex:page id="PartnerDocumentLandingPage" controller="PartnerDocumentLandingPageController">
+    <ul style="list-style: none;">
+        <apex:repeat value="{!DocumentDetailList}" var="d">
+            <li>
+                <a href="{!d.Url}">{!d.Title}</a>
+            </li>
+        </apex:repeat>
+    </ul>
+</apex:page>
