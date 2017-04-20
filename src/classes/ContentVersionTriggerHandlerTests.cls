@@ -1,10 +1,15 @@
 @isTest
 public class ContentVersionTriggerHandlerTests 
 {
-    static ID setup()
+    private static ID supportSiteRecordTypeId;
+    private static ID partnerDocRecordTypeId;
+
+    static void setup()
     {
-        RecordType supportSiteRecordType = [SELECT Id FROM RecordType WHERE Name = 'Support Site Link'];
-        ID supportSiteRecordTypeId = supportSiteRecordType.Id;
+        Map<String,Schema.RecordTypeInfo> rtMapByName = Schema.SObjectType.ContentVersion.getRecordTypeInfosByName();
+
+        supportSiteRecordTypeId = rtMapByName.get('Support Site Link').getRecordTypeId();
+        partnerDocRecordTypeId = rtMapByName.get('Partner Document').getRecordTypeId();
         
         //add test records
         List<ContentVersion> existingContentList = new List<ContentVersion>();
@@ -12,12 +17,38 @@ public class ContentVersionTriggerHandlerTests
                                                    Title = 'Title Test', PathOnClient = 'Test', VersionData = Blob.valueOf('Testing'), 
                                                    RecordTypeId = supportSiteRecordTypeId));
         existingContentList.add(new ContentVersion(SupportSiteKey__c = 'TEST1', SupportSiteRedirectKeys__c = 'Colocation', SupportSiteLinkOrder__c = 20,
-                                                   Title = 'Title Test 1', PathOnClient = 'Test1', VersionData = Blob.valueOf('Testing1'), 
+                                                   Title = 'Title Test 1', PathOnClient = 'Test1', VersionData = Blob.valueOf('Testing1'),
                                                    RecordTypeId = supportSiteRecordTypeId));
-        
+        existingContentList.add(new ContentVersion(
+                Title = 'Test Partner Doc', PathOnClient = 'Test1',
+                VersionData = Blob.valueOf('Test Partner Doc'),
+                RecordTypeId = partnerDocRecordTypeId)
+        );
+
         insert existingContentList;
-        
-        return supportSiteRecordTypeId;
+
+    }
+
+    // verify Partner Document Manager record is created
+    static testmethod void upsertPartnerDocManagerTest(){
+
+        setup();
+        List<ContentVersion> contentList = [
+                SELECT Id, Title FROM ContentVersion
+                WHERE RecordTypeId = :partnerDocRecordTypeId LIMIT 1
+        ];
+        test.startTest();
+        contentList[0].Title = 'Test Partner Doc 1';
+        update contentList;
+        test.stopTest();
+
+
+        List<Partner_Document_Manager__c> managerList = [
+                Select ContentDocumentId__c, LatestVersionId__c
+                from Partner_Document_Manager__c
+        ];
+        system.assertEquals(contentList.size(), managerList.size(), 'Partner Document Manager record should have been created.');
+
     }
     
     static void verifyRecordNotInserted(ID idOfInsertedRecord)
@@ -31,7 +62,8 @@ public class ContentVersionTriggerHandlerTests
         
         //ensure the previous records still exist
         existingContentList = [SELECT SupportSiteKey__c, SupportSiteRedirectKeys__c, SupportSiteLinkOrder__c
-                              FROM ContentVersion];
+                              FROM ContentVersion
+                              where RecordTypeId = :supportSiteRecordTypeId];
         System.assertEquals(2, existingContentList.size());
     }
     
@@ -46,7 +78,8 @@ public class ContentVersionTriggerHandlerTests
         
         //ensure the previous records still exist
         existingContentList = [SELECT SupportSiteKey__c, SupportSiteRedirectKeys__c, SupportSiteLinkOrder__c
-                              FROM ContentVersion];
+                                FROM ContentVersion
+                                where RecordTypeId = :supportSiteRecordTypeId];
         System.assertEquals(expectedRecordCount, existingContentList.size());
     }	    
     
@@ -54,7 +87,7 @@ public class ContentVersionTriggerHandlerTests
     static void BeforeInsert_FailsWithSupportSiteKeyWithDifferentCasing()
     {
         //the support site key should be unique, regardless of the casing
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion testContent = new ContentVersion(SupportSiteKey__c = 'Test', SupportSiteRedirectKeys__c = NULL, SupportSiteLinkOrder__c = 15,
                                                        Title = 'Title Test 2', PathOnClient = 'Test2', VersionData = Blob.valueOf('Testing2'), 
                                                        RecordTypeId = supportSiteRecordTypeId);
@@ -69,7 +102,7 @@ public class ContentVersionTriggerHandlerTests
     @isTest
     static void BeforeInsert_SucceedsWithUniqueSupportSiteKey()
     {
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion testContent = new ContentVersion(SupportSiteKey__c = 'TEST2', SupportSiteRedirectKeys__c = NULL, SupportSiteLinkOrder__c = 15,
                                                        Title = 'Title Test 2', PathOnClient = 'Test2', VersionData = Blob.valueOf('Testing2'), RecordTypeId = supportSiteRecordTypeId);
         
@@ -79,7 +112,7 @@ public class ContentVersionTriggerHandlerTests
         
         List<ContentVersion> existingContentList = [SELECT SupportSiteKey__c, SupportSiteRedirectKeys__c, SupportSiteLinkOrder__c
                                                     FROM ContentVersion
-                                                    WHERE Id = :testContent.Id];
+                                                    WHERE Id = :testContent.Id and RecordTypeId = :supportSiteRecordTypeId];
         
         System.assertEquals(1, existingContentList.size());
         ContentVersion actualContent = existingContentList.get(0);
@@ -92,7 +125,7 @@ public class ContentVersionTriggerHandlerTests
     static void BeforeInsert_SucceedsWhenNotSupportSiteRecordType()
     {
         
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion testContent = new ContentVersion(SupportSiteKey__c = NULL, SupportSiteRedirectKeys__c = NULL, SupportSiteLinkOrder__c = NULL,
                                                        Title = 'Title Test 2', PathOnClient = 'Test2', VersionData = Blob.valueOf('Testing2'));
         
@@ -114,7 +147,7 @@ public class ContentVersionTriggerHandlerTests
     @isTest
     static void BeforeInsert_FailsWithNonUniqueSupportSiteKey()
     {
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion testContent = new ContentVersion(SupportSiteKey__c = 'TEST', SupportSiteRedirectKeys__c = NULL, SupportSiteLinkOrder__c = 15,
                                                        Title = 'Title Test 2', PathOnClient = 'Test2', VersionData = Blob.valueOf('Testing2'), 
                                                        RecordTypeId = supportSiteRecordTypeId);
@@ -129,7 +162,7 @@ public class ContentVersionTriggerHandlerTests
     @isTest
     static void BeforeInsert_FailsWithSupportSiteKeyMatchingSupportSiteRedirectKeys()
     {
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion testContent = new ContentVersion(SupportSiteKey__c = 'VOIPe911', SupportSiteRedirectKeys__c = NULL, SupportSiteLinkOrder__c = 15,
                                                        Title = 'Title Test 2', PathOnClient = 'Test2', VersionData = Blob.valueOf('Testing2'), 
                                                        RecordTypeId = supportSiteRecordTypeId);
@@ -144,7 +177,7 @@ public class ContentVersionTriggerHandlerTests
     @isTest
     static void BeforeInsert_FailsWithDuplicateSupportSiteRedirectKeys()
     {
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion testContent = new ContentVersion(SupportSiteKey__c = 'Test 2', SupportSiteRedirectKeys__c = 'VOIPe911', SupportSiteLinkOrder__c = 15,
                                                        Title = 'Title Test 2', PathOnClient = 'Test2', VersionData = Blob.valueOf('Testing2'), 
                                                        RecordTypeId = supportSiteRecordTypeId);
@@ -159,7 +192,7 @@ public class ContentVersionTriggerHandlerTests
     @isTest
     static void BeforeInsert_FailsWithDuplicateSupportSiteLinkOrder()
     {
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion testContent = new ContentVersion(SupportSiteKey__c = 'Test 2', SupportSiteRedirectKeys__c = NULL, SupportSiteLinkOrder__c = 10,
                                                        Title = 'Title Test 2', PathOnClient = 'Test2', VersionData = Blob.valueOf('Testing2'), 
                                                        RecordTypeId = supportSiteRecordTypeId);
@@ -174,7 +207,7 @@ public class ContentVersionTriggerHandlerTests
     @isTest
     static void BeforeInsert_FailswithNullSupportSiteLinkOrder()
     {
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion testContent = new ContentVersion(SupportSiteKey__c = 'Test 2', SupportSiteRedirectKeys__c = NULL, SupportSiteLinkOrder__c = NULL,
                                                        Title = 'Title Test 2', PathOnClient = 'Test2', VersionData = Blob.valueOf('Testing2'), 
                                                        RecordTypeId = supportSiteRecordTypeId);
@@ -189,7 +222,7 @@ public class ContentVersionTriggerHandlerTests
     @isTest
     static void BeforeInsert_FailsWithNullSupportSiteKey()
     {
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion testContent = new ContentVersion(SupportSiteKey__c = NULL, SupportSiteRedirectKeys__c = NULL, SupportSiteLinkOrder__c = 15,
                                                        Title = 'Title Test 2', PathOnClient = 'Test2', VersionData = Blob.valueOf('Testing2'), 
                                                        RecordTypeId = supportSiteRecordTypeId);
@@ -204,7 +237,7 @@ public class ContentVersionTriggerHandlerTests
     @isTest
     static void BeforeInsert_SucceedsWithDuplicateSupportSiteKeyWhenSameContentDocumentId()
     {
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion existingContent = [SELECT Id, SupportSiteKey__c, SupportSiteRedirectKeys__c, SupportSiteLinkOrder__c, ContentDocumentId
                                       	  FROM ContentVersion
                                           WHERE SupportSiteKey__c = 'TEST'];
@@ -237,7 +270,7 @@ public class ContentVersionTriggerHandlerTests
         //will fail
         //the first two records have matching SupportSiteKey__c and should fail to insert.  The last
         //record should insert
-        ID supportSiteRecordTypeId = setup();
+        setup();
         List<ContentVersion> testContents = new List<ContentVersion>();
         testContents.add(new ContentVersion(SupportSiteKey__c = 'VOIPe911', SupportSiteRedirectKeys__c = 'VOIPe911', SupportSiteLinkOrder__c = 15,
                                                        Title = 'Title Test 2', PathOnClient = 'Test2', VersionData = Blob.valueOf('Testing2'), 
@@ -273,7 +306,7 @@ public class ContentVersionTriggerHandlerTests
     @isTest
     static void BeforeUpdate_SucceedsWhenSupportSiteFieldsNotUpdated()
     {
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion testContent = [SELECT Id, SupportSiteKey__c, SupportSiteRedirectKeys__c, SupportSiteLinkOrder__c
                                       FROM ContentVersion
                                       WHERE SupportSiteKey__c = 'TEST'];
@@ -298,7 +331,7 @@ public class ContentVersionTriggerHandlerTests
     @isTest
     static void BeforeUpdate_FailsWithNonUniqueSupportSiteKey()
     {
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion testContent = [SELECT Id, SupportSiteKey__c, SupportSiteRedirectKeys__c, SupportSiteLinkOrder__c
                                       FROM ContentVersion
                                       WHERE SupportSiteKey__c = 'TEST'];
@@ -320,7 +353,7 @@ public class ContentVersionTriggerHandlerTests
     @isTest
     static void BeforeUpdate_FailWithSupportSiteKeyMatchingSupportSiteRedirectKeys()
     {
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion testContent = [SELECT Id, SupportSiteKey__c, SupportSiteRedirectKeys__c, SupportSiteLinkOrder__c
                                       FROM ContentVersion
                                       WHERE SupportSiteKey__c = 'TEST'];
@@ -342,7 +375,7 @@ public class ContentVersionTriggerHandlerTests
     @isTest
     static void BeforeUpdate_FailWithDuplicateSupportSiteLinkOrder()
     {
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion testContent = [SELECT Id, SupportSiteKey__c, SupportSiteRedirectKeys__c, SupportSiteLinkOrder__c
                                       FROM ContentVersion
                                       WHERE SupportSiteKey__c = 'TEST'];
@@ -364,7 +397,7 @@ public class ContentVersionTriggerHandlerTests
     @isTest
     static void BeforeUpdate_FailWithNullSupportSiteLinkOrder()
     {
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion testContent = [SELECT Id, SupportSiteKey__c, SupportSiteRedirectKeys__c, SupportSiteLinkOrder__c
                                       FROM ContentVersion
                                       WHERE SupportSiteKey__c = 'TEST'];
@@ -386,7 +419,7 @@ public class ContentVersionTriggerHandlerTests
     @isTest
     static void BeforeUpdate_FailsWithNullSupportSiteKey()
     {
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion testContent = [SELECT Id, SupportSiteKey__c, SupportSiteRedirectKeys__c, SupportSiteLinkOrder__c
                                       FROM ContentVersion
                                       WHERE SupportSiteKey__c = 'TEST'];
@@ -408,7 +441,7 @@ public class ContentVersionTriggerHandlerTests
     @isTest
     static void BeforeUpdate_SucceedsWhenNotSupportSiteRecordType()
     {
-        ID supportSiteRecordTypeId = setup();
+        setup();
         ContentVersion testContent = new ContentVersion(SupportSiteKey__c = NULL, SupportSiteRedirectKeys__c = NULL, SupportSiteLinkOrder__c = NULL,
                                                        Title = 'Title Test 2', PathOnClient = 'Test2', VersionData = Blob.valueOf('Testing2'));
         insert testContent;
@@ -437,7 +470,7 @@ public class ContentVersionTriggerHandlerTests
     @isTest
     static void BeforeUpdate_MultipleRecords()
     {
-        ID supportSiteRecordTypeId = setup();
+        setup();
         List<ContentVersion> testContents = [SELECT Id, SupportSiteLinkOrder__c
                                             FROM ContentVersion
                                             WHERE RecordTypeId = :supportSiteRecordTypeId];
