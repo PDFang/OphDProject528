@@ -3,8 +3,15 @@ public class ContentVersionTriggerHandler extends TriggerHandler
     private Map<String, Id> supportSiteKeyMap;
     private Map<Decimal, Id> supportSiteOrderMap;
     private ID supportSiteRecordTypeId;
+    private static Map<String,Schema.RecordTypeInfo> rtMapByName = null;
     private static final String supportSiteTermsRecordType = 'Support Site Link';
-    
+
+    public ContentVersionTriggerHandler(){
+        if(rtMapByName == null){
+            rtMapByName = Schema.SObjectType.ContentVersion.getRecordTypeInfosByName();
+        }
+    }
+
     public override void beforeInsert()
     {
         //verify that SupportSiteKey__c, SupportSiteRedirectKeys__c, and SupportSiteLinkOrder__c are unique
@@ -16,7 +23,36 @@ public class ContentVersionTriggerHandler extends TriggerHandler
         //verify that SupportSiteKey__c, SupportSiteRedirectKeys__c, and SupportSiteLinkOrder__c are unique
         validateUniqueSupportSiteFields();
     }
-    
+
+    protected override void afterUpdate()
+    {
+        system.debug('**** after update ****');
+        upsertPartnerDocManager((List<ContentVersion>)Trigger.new);
+    }
+
+    // creates a partner document manager record if there isn't one already for a document and just updates latest version ID if there is one
+    private void upsertPartnerDocManager(List<ContentVersion> newList){
+        List<Partner_Document_Manager__c> managerList = new List<Partner_Document_Manager__c>();
+        for(ContentVersion version : newList){
+            system.debug('upsertPartnerDocManager(): version - '+ version);
+            if(version.RecordTypeId == rtMapByName.get('Partner Document').getRecordTypeId() && version.IsLatest){
+                Partner_Document_Manager__c manager = new Partner_Document_Manager__c(
+                        ContentDocumentId__c = version.ContentDocumentId,
+                        LatestVersionId__c = version.Id,
+                        Title__c = version.Title
+                );
+                managerList.add(manager);
+            }
+
+        }
+        system.debug('upsertPartnerDocManager(): managerList - '+ managerList);
+
+        if(managerList.size() > 0){
+            upsert managerList ContentDocumentId__c;
+        }
+
+    }
+
     private List<ContentVersion> getListWithSupportSiteFieldChanges()
     {
         List<ContentVersion> changedList = new List<ContentVersion>();

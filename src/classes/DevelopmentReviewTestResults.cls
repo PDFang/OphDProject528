@@ -19,7 +19,8 @@ global class DevelopmentReviewTestResults implements Schedulable {
 
     } // end of execute()
 
-    @future(callout=true)
+    // emails apex test results to the submitter of this scheduler job
+    @future(callout=true) @TestVisible
     private static void emailTestRunResult(String asyncJobId){
 
         system.debug('getTestRunResult(): asyncJobId - ' + asyncJobId);
@@ -52,15 +53,18 @@ global class DevelopmentReviewTestResults implements Schedulable {
                 return;
             }
 
+            // schedule the job to run again if the apex tests have not completed
             if (testRunResult != null && (testRunResult.Status == 'Queued' || testRunResult.status == 'Processing')) {
                 DevelopmentReviewHandler.scheduleJob(asyncJobId);
                 return;
             }
 
+            // email details of the apex tests that failure
             if (testRunResult != null && (testRunResult.MethodsFailed > 0 || testRunResult.ClassesEnqueued != testRunResult.ClassesCompleted)) {
                 emailTestFailures(asyncJobId);
             }
 
+            // email apex test run summary
             if (testRunResult != null && testRunResult.Status == 'Completed') {
                 sendSummaryEmail(testRunResult);
             }
@@ -74,6 +78,7 @@ global class DevelopmentReviewTestResults implements Schedulable {
 
     }
 
+    @TestVisible
     private static void emailTestFailures(String asyncJobId){
 
         system.debug('emailTestFailures(): asyncJobId - ' + asyncJobId);

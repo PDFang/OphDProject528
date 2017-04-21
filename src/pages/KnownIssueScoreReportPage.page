@@ -16,7 +16,10 @@
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
 
     <apex:form >
-        <div class="container-fluid">
+        <div class="container-fluid" style="padding-left: 0px;">
+            <div class="page-header">
+                <h1>Known Issue DashBoard</h1>
+            </div>
             <div class="row">
                 <div class ="col-md-10">
                     <div class="alert alert-danger" role="alert" id="errorAlert" style="display:none;">
@@ -202,7 +205,7 @@
           var grid = $("#kIGrid").data("kendoGrid");
            if(!obj.checked){
                 grid.dataSource.filter({
-                 field: "tfsStatus",
+                 field: "TFSStatus",
                  operator: "neq",
                  value:"Closed"
                 });
@@ -247,20 +250,20 @@
                             id: "Id",
                             fields: {
                                 Id : {from: "KICaseId", type: "string" },
-                                kiNum: { from: "KINumber", type: "string" },
-                                tfsId: { from: "KITFSId", type: "number" },
+                                KINum: { from: "KINumber", type: "string" },
+                                TFSId: { from: "KITFSId", type: "number" },
                                 subject: { from: "KISubject", type: "string"},
                                 status: { from: "KIStatus", type: "string" },
                                 score: { from: "KIScore", type: "number" },
                                 team: { from: "KITFSTeam", type: "string" },
-                                tfsStatus: { from: "KITFSStatus", type: "string" },
+                                TFSStatus: { from: "KITFSStatus", type: "string" },
                                 createdDate: { from: "KIFormattedCreatedDt", defaultValue: "", type: "string" },
                                 age: { from: "KIAge", defaultValue: "", type: "number" },
-                                tfsIteration: { from: "KITFSIteration", defaultValue: "", type: "string" },
+                                TFSIteration: { from: "KITFSIteration", defaultValue: "", type: "string" },
                                 ASV: { from: "KIASVValue", defaultValue: "", type: "number" },
                                 incidentCount: { from: "KINumOfIncidents", type: "number" },
                                 priority: { from: "KIPriority", type: "string" },
-                                tfsLink :{from: "KITFSLink", type: "string" },
+                                TFSLink :{from: "KITFSLink", type: "string" },
                                 scoreChange :{from : "KIScoreChange", type:"string", defaultValue:"NoChange"}
                         }
                     }
@@ -295,18 +298,18 @@
                   dataBound: onDataBind,
                   height : 550,
                   columns: [{
-                                field:"kiNum",
+                                field:"KINum",
                                 title : "KI",
-                                template: '#{ #<a href="/#: Id #" target="_blank" >#= kiNum #</a># } #',
+                                template: '#{ #<a href="/#: Id #" target="_blank" >#= KINum #</a># } #',
                                 filterable :
                                 {
                                     ui: filterKI
                                 }
                             },
                             {
-                                field: "tfsId",
+                                field: "TFSId",
                                 title:"TFS Id",
-                                template: '#{ #<a href="#: tfsLink #" target="_blank" >#= tfsId != null? tfsId : "" #</a># } #',
+                                template: '#{ #<a href="#: TFSLink #" target="_blank" >#= TFSId != null? TFSId : "" #</a># } #',
                                 filterable :
                                 {
                                     ui: filterTfsId
@@ -354,11 +357,12 @@
                                 }
                             },
                             {
-                                field:"tfsStatus",
+                                field:"TFSStatus",
                                 title : "TFS Status",
                                 filterable :
                                 {
-                                    ui: filterTfsStatus
+                                    ui: filterTfsStatus,
+                                    extra:true
                                 }
                             },
                             {
@@ -373,7 +377,7 @@
                                 title:"Age"
                             },
                             {
-                                field:"tfsIteration",
+                                field:"TFSIteration",
                                 title:"Iteration",
                                  filterable :
                                 {
@@ -892,6 +896,22 @@
     .slider.round:before {
       border-radius: 50%;
     }
+	.page-header {
+        padding-bottom: 4px !important;
+        margin: 0px 0 1px !important;
+        border-bottom: none;
+	}
+    .page-header h1 {
+        font-size: 20px;
+        text-decoration: none;
+        color: #767474;
+        font-family: Segoe UI;
+        font-weight: 300;
+}
+
+    .row{
+        	padding-left: 15px;
+        }
 
 
     </style>
