@@ -1,10 +1,26 @@
 
 <apex:page id="PartnerDocumentLandingPage" controller="PartnerDocumentLandingPageController">
-    <ul style="list-style: none;">
-        <apex:repeat value="{!DocumentDetailList}" var="d">
-            <li>
-                <a href="{!d.Url}">{!d.Title}</a>
-            </li>
-        </apex:repeat>
-    </ul>
+    <div style="width: 100%;">
+        <div style="width: 20%; float: left;">
+            <apex:form>
+                <ul style="list-style: none;">
+                    <apex:repeat value="{!DocumentDetailList}" var="d">
+                        <li>
+                            <apex:commandLink value="{!d.Title}" reRender="previewPanel" action="{!setSelectedDocumentId}" style="text-decoration: none;">
+                                <apex:param name="documentId" value="{!d.DocumentId}" />
+                            </apex:commandLink>
+                        </li>
+                    </apex:repeat>
+                </ul>
+            </apex:form>
+        </div>
+        <div style="width: 80%; float: right;">
+            <apex:outputPanel id="previewPanel">
+                <apex:outputPanel rendered="{!ShowCanvasApp}">
+                    <apex:canvasApp applicationName="inContact Document Viewer"  parameters="{salesforceDocumentId: '{!SelectedDocumentId}'}" height="500px" width="500px">
+                    </apex:canvasApp>
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </div>
+    </div>
 </apex:page>
