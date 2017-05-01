@@ -90,7 +90,7 @@ public class ContactTriggerHandler extends TriggerHandler{
     {
         //get accounts that need referenced
         Account[] accts = [SELECT Id, Referenceable__c, (select Id from Contacts where Referenceable__c = true)
-        FROM Account WHERE Id IN :acctRemoveRef AND ReferenceStor__Import_into_ReferenceStor__c = false];
+        FROM Account WHERE Id IN :acctRemoveRef];
 
         //make sure accounts are returned
         if(accts.size()>0)
