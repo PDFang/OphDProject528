@@ -42,4 +42,35 @@ private class SubscriptionTriggerHandlerTest {
             system.assertEquals(2.05, newReplica.AdditionalDisc__c);
 
     }
+
+    static testMethod void testSubscriptionAcceptanceFailure() {
+
+        Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
+        Account testAccount = new Account(
+                Name = 'testCalculateAccountNetScore Account',
+                Type = 'Customer',
+                RecordTypeId = accountRecordTypeMap.get('Customers').getRecordTypeId(),
+                IsPartner__c = false,
+                CustomerSegment__c = 'Strategic',
+                Brand_Visibility__c = 'Yes',
+                Industry_Leadership_Vocality__c = 'Yes',
+                Social_Media_Presence__c = 'Yes',
+                Risk_of_Leaving__c = 'Low',
+                Referenceable__c = false,
+                GYRStatus__c = 'Green'
+        );
+
+        insert testAccount;
+
+        list<SBQQ__Subscription__c> lstSubscriptions = new list<SBQQ__Subscription__c>{
+                new SBQQ__Subscription__c()
+        };
+
+
+        Test.startTest();
+
+        SubscriptionTriggerHandler.InsertSubscriptionReplica(lstSubscriptions);
+        Test.stopTest();
+
+    }
 }
