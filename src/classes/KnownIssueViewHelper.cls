@@ -27,7 +27,7 @@ public with sharing class KnownIssueViewHelper {
             dataItem.KIASVValue = ki.ASVValue__c == null ? null : ki.ASVValue__c.setScale(2);
             dataItem.KITFSId = string.valueOf(ki.KITFSIDText__c);
             dataItem.KITFSLink = 'http://corptfsapp01.ucn.net:8080/tfs/DefaultCollection/inContact/_workitems#_a=edit&id=' + dataItem.KITFSId; // use AppConfiguration custom settings
-            dataItem.KITFSIteration = ki.TfsWorkItem__r.Release__c;
+            dataItem.KITFSIteration = ki.TfsWorkItem__r.Iteration__c;
             dataItem.KITFSTeam = ki.TfsWorkItem__r.Team__c;
             dataItem.KITFSStatus = ki.TfsWorkItem__r.State__c;
             dataItem.KIAge = date.valueOf(ki.CreatedDate).daysBetween(system.today());
@@ -67,8 +67,8 @@ public with sharing class KnownIssueViewHelper {
                     valueset.add(ki.TfsWorkItem__r.State__c);
                 else if (thisFieldName == 'TfsWorkItem__r.Team__c')
                     valueset.add(ki.TfsWorkItem__r.Team__c);
-                else if (thisFieldName == 'TfsWorkItem__r.Release__c')
-                    valueset.add(ki.TfsWorkItem__r.Release__c);
+                else if (thisFieldName == 'TfsWorkItem__r.Iteration__c')
+                    valueset.add(ki.TfsWorkItem__r.Iteration__c);
                 else{
                     value = (string) ki.get(thisFieldName);
                     valueset.add(value);
@@ -100,7 +100,7 @@ public with sharing class KnownIssueViewHelper {
     private static list<case> QueryCases(){
 
         string knownIssueQuery = 'Select Id,Broken_by_Recent_Release__c, CaseNumber, KIImpactScore__c,NumberOfIncidents__c,ASVValue__c,  '
-                + ' KIImpactScoreHistorical__c, Status, Subject,Priority, CreatedDate,TfsWorkItem__r.Release__c, TfsWorkItem__r.TFSItemLink__c, '
+                + ' KIImpactScoreHistorical__c, Status, Subject,Priority, CreatedDate,TfsWorkItem__r.Iteration__c, TfsWorkItem__r.TFSItemLink__c, '
                 + ' KITFSIDText__c, TfsWorkItem__r.Team__c, TfsWorkItem__r.State__c'
                 + ' From Case ';
 
@@ -148,7 +148,7 @@ public with sharing class KnownIssueViewHelper {
         if(fieldName == 'TFS Status')
             return 'TfsWorkItem__r.State__c';
         if(fieldName == 'Iteration')
-            return 'TfsWorkItem__r.Release__c';
+            return 'TfsWorkItem__r.Iteration__c';
 
         return fieldName;
     }
