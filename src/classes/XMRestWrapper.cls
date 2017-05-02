@@ -1,4 +1,4 @@
-public class XMRestService {
+public class XMRestWrapper {
 
     private final String GroupUrl = 'groups/';
 
