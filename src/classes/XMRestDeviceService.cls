@@ -1,11 +1,11 @@
 public class XMRestDeviceService {
     private final String XMDeviceEndpoint = 'devices/';
 
-    public XMDeviceModel createDeviceForPerson(XMDeviceModel createDevice){
+    public XMDeviceModel createDeviceForPerson(XMDeviceModel deviceModel){
 
         XMDeviceModel createdDevice = null;
 
-        String deviceToCreateJson = JSON.serialize(createdDevice);
+        String deviceToCreateJson = JSON.serialize(deviceModel);
 
         system.debug('createDeviceForPerson(): Attempting to create device' + deviceToCreateJson);
 
@@ -13,7 +13,7 @@ public class XMRestDeviceService {
 
         String jsonDevice = wrapper.performCallOut(this.XMDeviceEndpoint, 'POST', deviceToCreateJson);
 
-        system.debug('createDeviceForPerson(): Device Crated ' + jsonDevice);
+        system.debug('createDeviceForPerson(): Device Created ' + jsonDevice);
 
         createdDevice = (XMDeviceModel)JSON.deserialize(jsonDevice, XMDeviceModel.class);
 
@@ -27,6 +27,8 @@ public class XMRestDeviceService {
         XMRestWrapper wrapper = new XMRestWrapper();
 
         String deviceEndpoint = '/people/' + userGUid + '/devices';
+
+        system.debug('getAllDevicesByxMattersUserId(): Attempting to call ' + deviceEndpoint);
 
         String jsonDevices = wrapper.performCallOut(deviceEndpoint, 'GET', null);
 

@@ -1,4 +1,4 @@
-public class XMDeviceModel {
+public virtual class XMDeviceModel {
 
     public final String recipientType = 'DEVICE';
 
@@ -12,4 +12,8 @@ public class XMDeviceModel {
     public String priorityThreshold = 'MEDIUM';
 
     public String name {get;set;}
+
+    public final boolean externallyOwned = true;
+
+    public String description {get;set;}
 }
