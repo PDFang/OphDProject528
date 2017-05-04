@@ -7,4 +7,6 @@ public with sharing class XMPersonModel {
     public String timezone {get;set;}
     public String[] roles {get;set;}
     public String status {get;set;}
+    public boolean externallyOwned {get;set;}
+    public String externalKey {get;set;}
 }
