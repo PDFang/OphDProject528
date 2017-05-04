@@ -34,7 +34,6 @@ public with sharing class XMRestGroup {
         //need to get a friendly name for these defaulting to product name
         return null;
     }
-
     //
     //need to add support for devices -- so type of subscription
     public List<XMGroupModel> GetXMPersonGroupsById (string personId){
@@ -52,6 +51,7 @@ public with sharing class XMRestGroup {
                 while (parser.nextToken() != null) {
                     if (parser.getCurrentToken() == JSONToken.START_OBJECT) {
                         groupList.Add((XMGroupModel) parser.readValueAs(XMGroupModel.class));
+                        system.debug(groupList);
                     }
                 }
             }
@@ -73,18 +73,6 @@ public with sharing class XMRestGroup {
        System.Debug(jsonResponse);
     }
 
-    //temporary class to be moved to own file
-    public class XMPersonGroupData {
-        public string Description {get;set;}
-        public string GroupCode {get;set;}
-
-    }
-
-
-
-
-
-
-}
+ }
 
 
