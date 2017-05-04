@@ -34,6 +34,9 @@ public with sharing class XMRestGroup {
         //need to get a friendly name for these defaulting to product name
         return null;
     }
+
+    //
+    //need to add support for devices -- so type of subscription
     public List<XMGroupModel> GetXMPersonGroupsById (string personId){
         XMRestWrapper wrapper = new XMRestWrapper();
         string jsonList;
@@ -55,13 +58,19 @@ public with sharing class XMRestGroup {
         }
         system.debug('GetAllGroups(): groupList - ' + groupList);
         return groupList;
-
     }
 
-    public void AddUserToGroup(string groupName,  string PersonID){
-
-
-
+    //need to modify this to support devices and shifts -- this method needs to be heavily modified see adding user to shifts
+    //remove hardcoded person type
+    public void AddUserToGroup(string groupName,  string PersonID,  string type){
+       string body;
+       string url;
+       string jsonResponse;
+       XMRestWrapper wrapper = new XMRestWrapper();
+       body = '{"id": "'+ PersonID +'", "recipientType": "PERSON"}';
+       url = this.GroupUrl + '/' + groupName +  '/members';
+       jsonResponse = wrapper.performCallOut(url, 'POST', body);
+       System.Debug(jsonResponse);
     }
 
     //temporary class to be moved to own file
