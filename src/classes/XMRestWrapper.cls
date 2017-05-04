@@ -4,7 +4,10 @@ public class XMRestWrapper {
 
         HttpRequest request = new HttpRequest();
 
-        request.setBody(body);
+        if(body != null)
+        {
+             request.setBody(body);
+        }
 
         request.setEndpoint('callout:xMatters_NP/' + url);
         request.setHeader('Authorization', '{!$Credential.AuthorizationMethod} {!$Credential.AuthorizationHeaderValue}');

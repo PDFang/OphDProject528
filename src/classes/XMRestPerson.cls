@@ -29,4 +29,19 @@ public class XMRestPerson {
 
         return createdPerson;
     }
+
+    public XMPersonModel GetXmPersonModelByXmattersId(String personId){
+
+        XMPersonModel personModel = null;
+
+        XMRestWrapper wrapper = new XMRestWrapper();
+
+        String urlWithParameters = this.PersonUrl + personId;
+
+        system.debug('GetXmPersonModelByXmattersId() - Attempting to call xmatters Api ==> ' + urlWithParameters);
+
+        String userJson =  wrapper.performCallOut(urlWithParameters, 'GET', null);
+
+        return personModel;
+    }
 }
