@@ -5,7 +5,7 @@ public class XMRestPerson {
 
         XMRestWrapper wrapper = new XMRestWrapper();
 
-        String requestBody = JSON.serialize(person);
+        String requestBody = JSON.serialize(person, true);
 
         system.debug('createPerson() ====> requestBody' + requestBody);
 
@@ -13,24 +13,12 @@ public class XMRestPerson {
 
         XMPersonModel createdPerson = null;
 
-        JSONParser parser = JSON.createParser(jsonString);
-
-        while (parser.nextToken() != null) {
-            if (parser.getCurrentToken() == JSONToken.START_ARRAY) {
-                while (parser.nextToken() != null) {
-                    if (parser.getCurrentToken() == JSONToken.START_OBJECT) {
-                        createdPerson = (XMPersonModel) parser.readValueAs(XMGroupModel.class);
-                        system.debug('createPerson(): createdPerson - ' + createdPerson);
-                    }
-
-                }
-            }
-        }
+        createdPerson = (XMPersonModel) JSON.deserialize(jsonString, XMPersonModel.class);
 
         return createdPerson;
     }
 
-    public XMPersonModel GetXmPersonModelByXmattersId(String personId){
+    public XMPersonModel getXmPersonModelByXmattersId(String personId) {
 
         XMPersonModel personModel = null;
 
@@ -38,9 +26,13 @@ public class XMRestPerson {
 
         String urlWithParameters = this.PersonUrl + personId;
 
-        system.debug('GetXmPersonModelByXmattersId() - Attempting to call xmatters Api ==> ' + urlWithParameters);
+        system.debug('getXmPersonModelByXmattersId(): - Attempting to call xmatters Api ==> ' + urlWithParameters);
 
-        String userJson =  wrapper.performCallOut(urlWithParameters, 'GET', null);
+        String userJson = wrapper.performCallOut(urlWithParameters, 'GET', null);
+
+        system.debug('getXmPersonModelByXmattersId(): - Found User data ===> ' + userJson);
+
+        personModel = (XMPersonModel) JSON.deserialize(userJson, XMPersonModel.class);
 
         return personModel;
     }

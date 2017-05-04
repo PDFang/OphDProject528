@@ -3,10 +3,11 @@ public with sharing class XMPersonModel {
     public XMPersonModel(){
         this.roles = new String[]{'No Access User'};
         this.recipientType = 'PERSON';
+        this.externallyOwned = true;
     }
 
     // This is the Xmatters Unique Id Don't set on create
-    public transient String id {get;set;}
+    public String id {get;set;}
     public String targetName {get;set;}
     public String firstName {get;set;}
     public String lastName {get;set;}
