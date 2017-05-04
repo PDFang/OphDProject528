@@ -54,7 +54,7 @@ public with sharing class XMRestGroup {
                 while (parser.nextToken() != null) {
                     if (parser.getCurrentToken() == JSONToken.START_OBJECT) {
                         XMGroupModel model = (XMGroupModel) parser.readValueAs(XMGroupModel.class);
-                        //groupList.Add((XMGroupModel) parser.readValueAs(XMGroupModel.class));
+                        groupList.Add(model);
                         system.debug(model);
                     }
                 }
