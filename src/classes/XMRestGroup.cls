@@ -19,8 +19,10 @@ public with sharing class XMRestGroup {
             if (parser.getCurrentToken() == JSONToken.START_ARRAY) {
                 while (parser.nextToken() != null) {
                     if (parser.getCurrentToken() == JSONToken.START_OBJECT) {
-                        groupList.Add((XMGroupModel) parser.readValueAs(XMGroupModel.class));
-                        system.debug('GetAllGroups(): groupList - ' + groupList);
+                        XMGroupModel model = (XMGroupModel) parser.readValueAs(XMGroupModel.class);
+                        //groupList.Add((XMGroupModel) parser.readValueAs(XMGroupModel.class));
+                        groupList.Add((model));
+                        system.debug(model);
                     }
                 }
             }
@@ -41,6 +43,7 @@ public with sharing class XMRestGroup {
         string jsonList;
 
         string url = 'people/' + personId + '/group-memberships';
+        system.debug ( 'url --> ' + url);
 
         jsonList = wrapper.performCallOut(url, 'GET', null);
 
@@ -50,8 +53,9 @@ public with sharing class XMRestGroup {
             if (parser.getCurrentToken() == JSONToken.START_ARRAY) {
                 while (parser.nextToken() != null) {
                     if (parser.getCurrentToken() == JSONToken.START_OBJECT) {
-                        groupList.Add((XMGroupModel) parser.readValueAs(XMGroupModel.class));
-                        system.debug(groupList);
+                        XMGroupModel model = (XMGroupModel) parser.readValueAs(XMGroupModel.class);
+                        //groupList.Add((XMGroupModel) parser.readValueAs(XMGroupModel.class));
+                        system.debug(model);
                     }
                 }
             }
