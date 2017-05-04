@@ -24,6 +24,26 @@ public class XMRestDeviceService {
 
         List<XMDeviceModel> userDevices = new List<XMDeviceModel>();
 
+        XMRestWrapper wrapper = new XMRestWrapper();
+
+        String deviceEndpoint = '/people/' + userGUid + '/devices';
+
+        String jsonDevices = wrapper.performCallOut(deviceEndpoint, 'GET', null);
+
+        JSONParser parser = JSON.createParser(jsonDevices);
+
+        while (parser.nextToken() != null) {
+            if (parser.getCurrentToken() == JSONToken.START_ARRAY) {
+                while (parser.nextToken() != null) {
+                    if (parser.getCurrentToken() == JSONToken.START_OBJECT) {
+                        XMDeviceModel userDevice = (XMDeviceModel) parser.readValueAs(XMDeviceModel.class);
+                         userDevices.add(userDevice);
+                        system.debug('getAllDevicesByxMattersUserId(): userDevice - ' + userDevice);
+                    }
+
+                }
+            }
+        }
 
         return userDevices;
     }
