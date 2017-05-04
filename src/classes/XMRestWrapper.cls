@@ -17,11 +17,13 @@ public class XMRestWrapper {
 
         Http h = new Http();
 
-        HttpResponse response = h.send(request);
+        if(!Test.isRunningTest()) {
+             HttpResponse response = h.send(request);
+             system.debug(response.getBody());
+             return response.getBody();
+        }
 
-        system.debug(response.getBody());
-
-        return response.getBody();
+        return null;
     }
 
 }
