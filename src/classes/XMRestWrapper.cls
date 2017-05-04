@@ -23,6 +23,8 @@ public class XMRestWrapper {
              return response.getBody();
         }
 
+        // TODO: Add better error handling for 409 and 404.
+
         return null;
     }
 
