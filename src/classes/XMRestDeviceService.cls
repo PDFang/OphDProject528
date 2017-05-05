@@ -1,7 +1,7 @@
 public class XMRestDeviceService {
     private final String XMDeviceEndpoint = 'devices/';
 
-    public XMDeviceModel createDeviceForPerson(XMDeviceModel deviceModel){
+    public XMDeviceModel createDeviceForPerson(XMDeviceModel deviceModel) {
 
         XMDeviceModel createdDevice = null;
 
@@ -15,12 +15,12 @@ public class XMRestDeviceService {
 
         system.debug('createDeviceForPerson(): Device Created ' + jsonDevice);
 
-        createdDevice = (XMDeviceModel)JSON.deserialize(jsonDevice, XMDeviceModel.class);
+        createdDevice = (XMDeviceModel) JSON.deserialize(jsonDevice, XMDeviceModel.class);
 
         return createdDevice;
     }
 
-    public List<XMDeviceModel> getAllDevicesByxMattersUserId(String userGuid){
+    public List<XMDeviceModel> getAllDevicesByxMattersUserId(String userGuid) {
 
         List<XMDeviceModel> userDevices = new List<XMDeviceModel>();
 
@@ -28,24 +28,38 @@ public class XMRestDeviceService {
 
         String deviceEndpoint = '/people/' + userGUid + '/devices';
 
-        system.debug('getAllDevicesByxMattersUserId(): Attempting to call ' + deviceEndpoint);
+        //  system.debug('getAllDevicesByxMattersUserId(): Attempting to call ' + deviceEndpoint);
 
         String jsonDevices = wrapper.performCallOut(deviceEndpoint, 'GET', null);
 
-        JSONParser parser = JSON.createParser(jsonDevices);
+        Map <String, Object> root = (Map <String, Object>) JSON.deserializeUntyped(jsonDevices);
+        List<Object> items = (List<Object>)root.get('data');
 
-        while (parser.nextToken() != null) {
-            if (parser.getCurrentToken() == JSONToken.START_ARRAY) {
-                while (parser.nextToken() != null) {
-                    if (parser.getCurrentToken() == JSONToken.START_OBJECT) {
-                        XMDeviceModel userDevice = (XMDeviceModel) parser.readValueAs(XMDeviceModel.class);
-                         userDevices.add(userDevice);
-                        system.debug('getAllDevicesByxMattersUserId(): userDevice - ' + userDevice);
-                    }
+        for(Object item : items){
+            Map<String, Object> i = (Map<String, Object>)item;
 
-                }
+            XMDeviceModel device = null;
+
+            if(String.valueOf(i.get('deviceType')) == 'TEXT_PHONE'){
+               device = new XMSmsDevice();
+                ((XMSmsDevice)device).phoneNumber = String.valueOf(i.get('phoneNumber'));
+            } else if(String.valueOf(i.get('deviceType')) == 'EMAIL') {
+                device = new XMEmailDevice();
+                ((XMEmailDevice)device).emailAddress = String.valueOf(i.get('emailAddress'));
+            } else{
+                continue; // Unsupported Type for now
             }
+
+            device.name = String.valueOf(i.get('name'));
+            device.deviceType = String.valueOf(i.get('deviceType'));
+            device.description = String.valueOf(i.get('description'));
+            device.targetName = String.valueOf(i.get('targetName'));
+
+            system.debug('Found Deivce  ==> ' + device);
+
+            userDevices.add(device);
         }
+
 
         return userDevices;
     }

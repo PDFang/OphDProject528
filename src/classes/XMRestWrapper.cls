@@ -27,5 +27,4 @@ public class XMRestWrapper {
 
         return null;
     }
-
 }
