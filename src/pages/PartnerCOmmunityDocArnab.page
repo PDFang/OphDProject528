@@ -1,0 +1,28 @@
+<apex:page id="PartnerCommunityDocArnab" controller="PartnerDocumentController" sidebar="false" showHeader="false" readOnly="true">
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
+ 
+    <iframe id ="pdfIFrame" >
+        
+    </iframe>
+    
+    <script type="text/javascript">
+ 
+    $(document).ready(function() {
+        //  alert('something happened');
+        PartnerDocumentController.CallMySuperSecretWebService(
+        			  function(result,event){
+                                          if (event.status) {    
+                                              var src="data:application/pdf;base64," + result;
+                                              $("#pdfIFrame").prop( "src", src );
+                                            } else if (event.type === 'exception') {
+                                                console.log('exception => ' + event.message);                                                
+                                            } else {
+                                                 console.log('other error  => ' + event.message);                                   
+                                            }
+                                      },
+                                      {escape: false, buffer:false}
+        						);
+     });
+      </script>
+    
+</apex:page>
