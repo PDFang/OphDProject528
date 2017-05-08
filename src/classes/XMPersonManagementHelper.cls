@@ -41,14 +41,14 @@ public class XMPersonManagementHelper {
         return options;
     }
 
-    public string createXmPerson(Contact cont){
+    public string createXmPerson(XMPersonManagementController.XMPerson person){
 
         XMPersonModel newPerson = new XMPersonModel();
-        newPerson.targetName = cont.Id;
-        newPerson.firstName = cont.FirstName;
-        newPerson.lastName = cont.LastName;
-        newPerson.externalKey = cont.Id;
-
+        newPerson.targetName = person.contactId;
+        newPerson.firstName = person.FirstName;
+        newPerson.lastName = person.LastName;
+        newPerson.externalKey = person.contactId;
+        newPerson.timezone = person.timezone;
         XMRestPerson restService = new XMRestPerson();
         XMPersonModel response = restService.createPerson(newPerson);
         return response != null ? response.id : null;
