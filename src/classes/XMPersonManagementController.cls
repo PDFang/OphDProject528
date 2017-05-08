@@ -61,7 +61,6 @@ public class XMPersonManagementController {
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ex.getMessage()));
             return;
         }
-
     }
 
     // inserts a record in Notification Profile object and then calls out xMatters to create a Person
