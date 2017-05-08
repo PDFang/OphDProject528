@@ -1,0 +1,85 @@
+<!--
+ - Created by arnab.karsarkar on 5/4/2017.
+ -->
+
+<apex:page id="XMPersonManagement" standardController="Contact" extensions="XMPersonManagementController">
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+
+
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.common.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.rtl.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
+
+
+    <apex:form >
+            <div class="page-header">
+                <h1>Xmatters Person Management Page</h1>
+            </div>
+            <div class="container-fluid">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <apex:outputPanel >
+                                <apex:outputPanel rendered="{!isPersonMatch}">
+                                 <p>We found a match for this Contact in Xmatters; Please click on Associate button to associate this contact with the Xmatters Person.</p>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!IF(isPersonMatch, False, True)}">
+                                    <p>No Matching Person record Found in Xmatters for this contact. Please click Add to create a record in Xmatters</p>
+
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <apex:dataTable value="{!personLists}" var="person" id="contactList" styleClass="table table-bordered table-condensed">
+                <apex:facet name="caption">Contact Lists</apex:facet>
+                <apex:column>
+                    <apex:facet name="header">Account Name</apex:facet>
+                    <apex:outputLink value="/{!person.AccountId}">{!person.AccountName}</apex:outputLink>
+                </apex:column>
+                <apex:column>
+                    <apex:facet name="header">First Name</apex:facet>
+                    <apex:outputLink value="/{!person.ContactId}">{!person.FirstName}</apex:outputLink>
+                </apex:column>
+                <apex:column>
+                    <apex:facet name="header">Last Name</apex:facet>
+                    <apex:outputLink value="/{!person.ContactId}">{!person.LastName}</apex:outputLink>
+                </apex:column>
+                <apex:column>
+                    <apex:facet name="header">Email</apex:facet>
+                    <apex:outputText>{!person.Email}</apex:outputText>
+                </apex:column>
+                <apex:column>
+                    <apex:facet name="header">Phone</apex:facet>
+                    <apex:outputText>{!person.Phone}</apex:outputText>
+                </apex:column>
+            </apex:dataTable>
+
+        <!-- Session TimeOut Modal -->
+        <div class="modal fade" id="timeout" tabindex="-1" role="dialog" aria-labelledby="timeout" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">!!Warning!!</h5>
+                    </div>
+                    <div class="modal-body" style="font-size:14px;" id="timeoutModal">
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" onclick="ContinueSession();return false;" >Yes</button>
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" onclick="cancelEdit(this);return false;" style="color:black !important;">No</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </apex:form>
+
+
+</apex:page>
