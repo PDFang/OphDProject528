@@ -12,10 +12,11 @@ public class XMPersonManagementController {
     }
 
     public boolean getIsDuplicate(){
-        return contactList != null && contactList.size() > 0;
+        return contactList != null && contactList.size() > 1;
     }
 
     public Contact currentContact{get;private set;}
+    public Contact primaryContact{get;private set;}
     private XMPersonManagementHelper helper;
 
     // constructor
@@ -34,27 +35,31 @@ public class XMPersonManagementController {
             String contactEmail = currentContact.Email;
 
             // get duplicate contacts
+            Map<Id, Contact> contactMap = new Map<Id, Contact>();
             if(string.isNotBlank(contactEmail)){
-                Map<Id, Contact> contactMap = helper.getContactsByEmail(emailString);
-                contactMap.remove(contactId);
-                contactList.addAll(contactMap.values());
+                contactMap = helper.getContactsByEmail(emailString);
+//                contactMap.remove(contactId);
+//                contactList.addAll(contactMap.values());
             }
 
             // find the person record
             if(currentContact.xmPerson__c != null) {
                 // current contact has person record
                 xmPersonId = currentContact.xmPerson__c;
-                XMPerson person = new XMPerson(currentContact);
-                personLists.add(person);
+                primaryContact = contactMap.get(currentContact.xmPerson__r.PrimaryContact__c);
             } else{
                 for(Contact cont : contactList){
                     if(cont.xmPerson__c != null && !isPersonMatch) {
                         isPersonMatch = true;
                         xmPersonId = cont.xmPerson__c;
-                        XMPerson person = new XMPerson(cont);
-                        personLists.add(person);
+                        primaryContact = contactMap.get(cont.xmPerson__r.PrimaryContact__c);
                     }
                 }
+            }
+
+            if(primaryContact != null){
+                XMPerson person = new XMPerson(primaryContact);
+                personLists.add(person);
             }
 
         } catch(Exception ex){
