@@ -1,0 +1,10 @@
+<apex:page controller="PartnerDocumentViewController">
+    <apex:pageBlock title="Partner Documents">
+    	<apex:pageBlockTable value="{!documentList}" var="doc">
+            <apex:column headerValue="Title">
+                <apex:outputText value="{!doc.title}"/>
+            </apex:column>
+        </apex:pageBlockTable>
+    </apex:pageBlock>
+    
+</apex:page>

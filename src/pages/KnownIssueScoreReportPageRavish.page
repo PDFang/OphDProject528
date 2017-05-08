@@ -1,0 +1,683 @@
+<!--
+ - Created by ravish.chawla on 4/10/2017.
+ -->
+<apex:page id="KnownIssueScoreReportPage" sideBar="false" controller="KnownIssueScoreReportController" standardStylesheets="false" showHeader="true" title="Known Issue Report">
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+
+
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.common.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.rtl.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
+
+
+    <div style="float:right;">
+        <label id="lastLoadDate">Last Update : {!currentDateTime}</label>
+    </div>
+    <br/>
+    <br/>
+    <div id="kIGrid"></div>
+
+    <!-- Information Modal -->
+    <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="infolabel">Account Details For Known Issue - <span id="knownIssueId"/></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="font-size:14px;" id="infoModal">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            Total ASV value (Million) : <span id="ASV" style="font-weight:bold;"></span>
+                        </div>
+                    </div>
+
+                    <div id="kiAcctDetails"></div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+
+        $(document).ready(function(e){
+            setupSearchGrid();
+                var grid = $("#kIGrid").data("kendoGrid");
+                console.log('dataGrid : ' + grid);
+                grid.dataSource.originalFilter = grid.dataSource.filter;
+                // Replace the original filter function.
+                grid.dataSource.filter = function(e) {
+                // If a column is about to be filtered, then raise a new "filtering" event.
+                if (arguments.length > 0) {
+                    console.log('argumnets =>' + arguments);
+                    this.trigger("filtering", [e, $(this)]);
+                }
+                // Call the original filter function.
+                var result = grid.dataSource.originalFilter.apply(this, arguments);
+                return result;
+                }
+                 // Bind to the dataSource filtering event.
+            $("#kIGrid").data("kendoGrid").dataSource.bind("filtering", function(event, params, dataSource) {
+              filterDataMap = [];
+              if(event.length > 0){
+                   console.log('clicked the filter');
+                  console.log("filters: "+ JSON.stringify(event[0]));
+                  var filters = event[0]["filters"];
+                  for(var i = 0; i < filters.length; ++i){
+                      var field = filters[i]["field"];
+                      var operators =   filters[i]["operator"];
+                      var val =   filters[i]["value"];
+                      filterDataMap.push({"FieldName" : field, "FieldValue" : val, "SearchType" : operators});
+                  }
+
+                 console.log("filterDataMap  =>" + JSON.stringify(filterDataMap));
+                 setTimeout(function() {
+
+                    setupSearchGrid();
+
+                }, 10);
+              }
+
+            });
+
+        });
+
+
+
+        //hard wired for the moment
+        var priorities = ['P1', 'P2', 'P3', 'P4' ];
+        var teams = ['Team 1', 'Team 2', 'Team 3', 'Team 4'];
+
+
+
+        var filterData = '';
+        var filterDataMap = [];
+        var offSet = 0;
+        var pageSize = 0;
+        var records = '';
+
+
+
+
+          function setupSearchGrid(){
+
+             var kiDataSource =new kendo.data.DataSource({
+                    autosync:true,
+                     serverPaging: true,
+                    transport:{
+                      read: function(options){
+                              KnownIssueScoreReportController.GetKnownIssues(
+                                      JSON.stringify(filterDataMap),
+                                      offSet,
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                              records = JSON.parse(result);
+                                              console.log('records => ' + JSON.stringify(records));
+                                              options.success(records.KIDataItems);
+
+                                            } else if (event.type === 'exception') {
+                                                console.log('exception => ' + event.message);
+                                            } else {
+                                                 console.log('Error => ' + event.message);
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                      }
+
+
+                      },
+                    schema:{
+                        total : function(){
+                            console.log('records.total =>' + records.total);
+                            return records.total;
+                        },
+                        model: {
+                            id: "Id",
+                           fields: {
+                            Id : {from: "KICaseId", type: "string" },
+                            kiNum: { from: "KINumber", type: "string" },
+                            tfsId: { from: "KITFSId", type: "number" },
+                            subject: { from: "KISubject", type: "string"},
+                            status: { from: "KIStatus", type: "string" },
+                            score: { from: "KIScore", type: "number" },
+                            team: { from: "KITFSTeam", type: "string" },
+                            tfsStatus: { from: "KITFSStatus", type: "string" },
+                            createdDate: { from: "KIFormattedCreatedDt", defaultValue: "", type: "string" },
+                            age: { from: "KIAge", defaultValue: "", type: "number" },
+                            tfsIteration: { from: "KITFSIteration", defaultValue: "", type: "string" },
+                            ASV: { from: "KIASVValue", defaultValue: "", type: "number" },
+                            incidentCount: { from: "KINumOfIncidents", type: "number" },
+                            priority: { from: "KIPriority", type: "string" },
+                            tfsLink :{from: "KITFSLink", type: "string" }
+                        }
+                    }
+                  },
+
+               pageSize: {!pageSize}
+
+              });
+
+            console.log('inside setupSearchGrid  JSON.stringify(filterDataMap)=>    ' + JSON.stringify(filterDataMap) );
+           $("#kIGrid").kendoGrid({
+                  dataSource: kiDataSource,
+                  scrollable: true,
+                  resizable: true,
+                  filterable:true,
+                 pageable: {
+                    refresh: false,
+                    pageSizes: false,
+                    buttonCount: 5
+                  },
+                  page: onPaging,
+                  dataBound: onDataBind,
+                  height : 550,
+                  columns: [{
+                                field:"kiNum",
+                                title : "KI",
+                                 template: '#{ #<a href="/#: Id #" target="_blank" >#= kiNum #</a># } #',
+                                filterable: false
+                            },
+                            {
+                                field: "tfsId",
+                                title:"TFS Id",
+                                template: '#{ #<a href="#: tfsLink #" target="_blank" >#= tfsId != null? tfsId : "" #</a># } #',
+                                filterable:false
+                            },
+                            {
+                                field: "subject",
+                                title:"Subject",
+                                width: 300,
+                                filterable: {
+                                    extra: false,
+                                    operators: {
+                                        string: {
+                                            contains: "Contains",
+                                            eq: "Is equal to",
+                                            neq: "Is not equal to"
+                                        }
+                                    },
+                                    ui: filterSubject
+                                }
+                            },
+                            {
+                              field: "status",
+                              title: "KI Status",
+                              filterable: {
+                                    extra: false,
+                                    operators: {
+                                        string: {
+                                            contains: "Contains",
+                                            eq: "Is equal to",
+                                            neq: "Is not equal to"
+                                        }
+                                    },
+                                    ui: filterKIStatus
+                                }
+                            },
+                            {
+                                field:"score",
+                                title:"Score",
+                                template: '<a href="" onClick="OpenModal(this); return false;">#= score != null? score : "" #</a>',
+                                 filterable:false
+                            },
+                            {
+                                field:"team",
+                                title:"Team",
+                                filterable: {
+                                    extra: false,
+                                    operators: {
+                                        string: {
+                                            contains: "Contains",
+                                            eq: "Is equal to",
+                                            neq: "Is not equal to"
+                                        }
+                                    },
+                                    ui: filterTeam
+                                }
+
+                            },
+                            {
+                                field: "priority",
+                                title: "Priority",
+                                filterable: {
+                                    extra: false,
+                                    operators: {
+                                        string: {
+                                            contains: "Contains",
+                                            eq: "Is equal to",
+                                            neq: "Is not equal to"
+                                        }
+                                    },
+                                    ui: filterPriority
+                                }
+
+                            },
+                            {
+                                field:"tfsStatus",
+                                title : "TFS Status",
+                                filterable: {
+                                    extra: false,
+                                    operators: {
+                                        string: {
+                                            contains: "Contains",
+                                            eq: "Is equal to",
+                                            neq: "Is not equal to"
+                                        }
+                                    },
+                                    ui: filterTFSStatus
+                                }
+                            },
+                            {
+                                field: "createdDate",
+                                title:"Created"
+
+                            },
+                            {
+                                field: "age",
+                                title:"Age",
+                                width: 300
+                            },
+                            {
+                                field:"tfsIteration",
+                                title:"Iteration"
+                            }
+                  ]
+            });
+
+          }
+
+
+     function onPaging(arg) {
+        console.log("Paging to page index:" + arg.page);
+        var pageIndex = arg.page;
+        offSet = (pageIndex - 1) * {!pageSize};
+        console.log('offSet =>' + offSet);
+     }
+
+
+          function filterKIStatus(element){
+
+              console.log(JSON.stringify(element));
+              var parent = element.parent();
+              var firstInputVal = $(parent).children()[1].value;
+              var value;
+
+              console.log('firstInputVal =>' + firstInputVal);
+              element.kendoAutoComplete({
+                       dataSource: {
+                       serverFiltering:true,
+                      transport:{
+                      read: function(e){
+                           value =  $(element).val();
+                          console.log('value =>' + value);
+                               var result =  GetFilter(value, "KI Status", e);
+
+                            }
+                       },
+
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"}
+                            }
+                        }
+                    }
+                    }
+            });
+
+     }
+
+               function filterTFSStatus(element){
+
+                  console.log(JSON.stringify(element));
+                  var parent = element.parent();
+                  var firstInputVal = $(parent).children()[1].value;
+                  var value;
+
+                  console.log('firstInputVal =>' + firstInputVal);
+                    element.kendoAutoComplete({
+                               dataSource: {
+                               serverFiltering:true,
+                              transport:{
+                              read: function(e){
+                                   value =  $(element).val();
+                                  console.log('value =>' + value);
+                                       var result =  GetFilter(value, "TFS Status", e);
+
+                                    }
+                               },
+
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"}
+                            }
+                        }
+                    }
+                    }
+            });
+
+     }
+
+     function filterTeam (element){
+
+         element.kendoAutoComplete({
+                       dataSource: {
+                       serverFiltering:true,
+                      transport:{
+                      read: function(e){
+                                KnownIssueScoreReportController.GetKnownIssues(
+                                    "KITeam",
+                                     $(element).val(),
+                                      function(result,event)
+                                      {
+
+                                          if (event.status) {
+                                              e.success(JSON.parse(result));
+                                            } else if (event.type === 'exception') {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                            } else {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                            }
+                                      },
+                                      {escape: true}
+                               );
+                            }
+                        },
+
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"},
+                                label: {type: "string", editable: false, nullable: false, validation: { required: true } }
+                            }
+                        }
+                    }
+                    }
+            });
+     }
+     function filterPriority(element){
+
+          console.log(JSON.stringify(element));
+          var parent = element.parent();
+          var firstInputVal = $(parent).children()[1].value;
+           var value;
+
+            console.log('firstInputVal =>' + firstInputVal);
+             element.kendoAutoComplete({
+                       dataSource: {
+                       serverFiltering:true,
+                      transport:{
+                      read: function(e){
+                           value =  $(element).val();
+                          console.log('value =>' + value);
+                               var result =  GetFilter(value, "Priority", e);
+
+                            }
+                       },
+
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"}
+                            }
+                        }
+                    }
+                    }
+            });
+
+     }
+
+     $("button.k-button").click(function() {
+         var parent = $(this).parent().parent();
+          var firstInputVal = $(parent).children()[1].value;
+          console.log('firstInputVal =>' + firstInputVal);
+     });
+
+     function filterSubject(element){
+
+          console.log(JSON.stringify(element));
+          var parent = element.parent();
+          var firstInputVal = $(parent).children()[1].value;
+
+
+            console.log('firstInputVal =>' + firstInputVal);
+             element.kendoAutoComplete({
+                       dataSource: {
+                       serverFiltering:true,
+                      transport:{
+                      read: function(e){
+                          var value =  $(element).val();
+                          console.log('value =>' + value);
+                           var result =  GetFilter(value, "Subject", e);
+
+                            }
+                       },
+
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"}
+                            }
+                        }
+                    }
+                    }
+            });
+
+     }
+
+
+
+     function GetFilter(val, field, element){
+         var records = '';
+            KnownIssueScoreReportController.GetFilterString(
+                                    field,
+                                    val,
+                                      function(result,event)
+                                      {
+
+                                          if (event.status) {
+                                               records = JSON.parse(result);
+                                                element.success(records);
+                                              console.log('filter result => ' + JSON.stringify(records));
+
+                                            } else if (event.type === 'exception') {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+
+                                            } else {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+
+                               return records;
+     }
+
+
+     function onDataBind(e){
+        var rows = e.sender.tbody.children();
+        for (var j = 0; j < rows.length; j++) {
+            var row = $(rows[j]);
+            var dataItem = e.sender.dataItem(row);
+            var Priority = dataItem.get("priority");
+            if (Priority == 'P1'){
+                row.addClass("HiglightPriority");
+                for (var x = 0; x < row.children().length; x++){
+                    var cell = row.children().eq(x);
+                    cell.addClass("HiglightPriority");
+                }
+            }
+            if (Priority == 'P2'){
+                row.addClass("MediumPriority");
+                    for (var x = 0; x < row.children().length; x++){
+                    var cell = row.children().eq(x);
+                    cell.addClass("MediumPriority");
+                }
+            }
+            var createdDate = dataItem.get("createdDate");
+            var isToday = checkDate(createdDate)
+            if (isToday == true){
+                row.addClass("newItemOnList");
+            }
+        }
+    }
+
+    function checkDate(inputDate){
+      var createDate = new Date(inputDate);
+      var todaysDate = new Date();
+      var val =  (createDate.setHours(0,0,0,0) == todaysDate.setHours(0,0,0,0));
+      return val;
+    }
+
+     function OpenModal(sender ){
+         var kiId, kiNum, valASV;
+        var grid = $('#kIGrid').data('kendoGrid');
+        if (grid){
+            var data = grid.dataItem($(sender).closest("tr"));
+            if (data){
+             kiId = data.Id;
+             kiNum = data.kiNum;
+              valASV = data.ASV + 'M';
+            }
+        }
+
+        $("span#ASV").text(valASV );
+        $("span#knownIssueId").text(kiNum );
+
+        var accountDataSource = new kendo.data.DataSource({
+                  autosync:true,
+                    transport:{
+                      read: function(options){
+                              KnownIssueScoreReportController.GetAccounts(
+                                      kiId,
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                              records = JSON.parse(result);
+                                              console.log('Account records => ' + JSON.stringify(records));
+                                              options.success(records);
+                                            } else if (event.type === 'exception') {
+                                                console.log('exception => ' + event.message);
+                                            } else {
+                                                 console.log('Error => ' + event.message);
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                      }
+                   },
+                    schema:{
+                        model: {
+                           id: "Id",
+                           fields: {
+                                Id : {from: "AccountId", type: "string" },
+                                ActName: { from: "AccountName", type: "string" },
+                                ActCadeBillNum: { from: "CadeBillNum", type: "number" },
+                                ActRecrdTyp: { from: "AccountRecordType", type: "string"}
+                           }
+                        }
+                    },
+               pageSize: 10
+        });
+        $("#kiAcctDetails").kendoGrid({
+                dataSource: accountDataSource,
+                sortable: true,
+                pageable: true,
+                columns: [{
+                    field: "ActName",
+                    title: "Account Name",
+                    width: 240
+                }, {
+                    field: "ActCadeBillNum",
+                    title: "Cadebill Account #"
+                }, {
+                    field: "ActRecrdTyp",
+                    title: "Account Type"
+                }]
+        });
+
+        $('#info').modal('show');
+     }
+    </script>
+
+    <style>
+        .button-cancel{
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid rgb(216, 221, 230) !important;
+        background-color: rgb(255, 255, 255) !important;
+        color: #0275d8 !important;
+        display: inline-block;
+        height:33px;
+        font-weight:200 !importnat;
+        font-size : 12px !important;
+    }
+
+    ul li, ol li {
+    margin-left: 1px;
+    }
+
+    li a.k-link{
+        background-color: #ceced2;
+    }
+
+    tr.HiglightPriority {
+        background-color: #d07b7b !important;
+    }
+    td.HiglightPriority {
+       background-color: #d07b7b !important;
+    }
+    td.HiglightPriority a {
+        color: black !important;
+    }
+    td.MediumPriority a {
+        color: black !important;
+    }
+    .newItemOnList{
+        background-color: #fafcad;
+    }
+
+    tr.MediumPriority {
+        background-color: #d4935b !important;
+    }
+    td.MediumPriority{
+        background-color: #d4935b !important;
+    }
+
+
+    div{
+       font-size:11.11px;
+        }
+   .k-grid td{
+       white-space: nowrap;
+       text-overflow: ellipsis;
+   }
+    .k-grid table {
+          table-layout: fixed;
+   }
+
+    </style>
+
+</apex:page>
