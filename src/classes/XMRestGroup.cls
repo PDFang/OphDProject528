@@ -3,6 +3,9 @@ public with sharing class XMRestGroup {
     private final String GroupUrl = 'groups/';
     private final String GroupURLWithSearch = 'groups?search = ';
 
+
+    //***  need to determine the reponse object and replace the void responses ***
+
     public List<XMGroupModel> GetAllGroupsByPrefix(string prefix) {
 
         XMRestWrapper wrapper = new XMRestWrapper();
@@ -63,9 +66,8 @@ public with sharing class XMRestGroup {
         system.debug('GetAllGroups(): groupList - ' + groupList);
         return groupList;
     }
-
+    //remove person from a group
     public void RemoveUserFromAGroup(string groupName, string PersonId){
-        string body;
         string url;
         string jsonResponse;
         XMRestWrapper wrapper = new XMRestWrapper();
@@ -73,9 +75,7 @@ public with sharing class XMRestGroup {
         url = this.GroupUrl + 'groups/' + groupName +  '/members/' + PersonId;
         jsonResponse = wrapper.performCallOut(url, 'DELETE', '');
         System.Debug(jsonResponse);
-
     }
-
     //need to modify this to support devices and shifts -- this method needs to be heavily modified see adding user to shifts
     //remove hardcoded person type
     public void AddUserToGroup(string groupName,  string PersonId,  string type){
@@ -87,6 +87,17 @@ public with sharing class XMRestGroup {
        url = this.GroupUrl + '/' + groupName +  '/members';
        jsonResponse = wrapper.performCallOut(url, 'POST', body);
        System.Debug(jsonResponse);
+    }
+
+    //delete a group
+    public void DeleteAGroup(string groupName){
+        string url;
+        string jsonResponse;
+        XMRestWrapper wrapper = new XMRestWrapper();
+        //body = '{"id": "'+ PersonId +'", "recipientType": "PERSON"}';
+        url = this.GroupUrl + 'groups/' + groupName;
+        jsonResponse = wrapper.performCallOut(url, 'DELETE', '');
+        System.Debug(jsonResponse);
     }
 
  }
