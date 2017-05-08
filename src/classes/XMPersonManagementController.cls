@@ -75,7 +75,7 @@ public class XMPersonManagementController {
     public pagereference addPerson(){
 
         try{
-            String xmGuid = helper.createXmPerson(currentContact);
+            String xmGuid = '';//helper.createXmPerson(person);
             if(xmGuid != null){
                 xmPerson__c newPerson = new xmPerson__c(
                         PrimaryContact__c = currentContact.Id,
