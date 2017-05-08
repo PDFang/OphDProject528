@@ -20,7 +20,7 @@ public class XMPersonManagementHelper {
 
         return [
                 select FirstName, LastName, Email, Phone, Id, AccountId,
-                        Account.Name, xmPerson__c, xmPerson__r.xmPersonUID__c
+                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
                 from Contact where Id =: contactId
         ];
     }
@@ -29,7 +29,7 @@ public class XMPersonManagementHelper {
 
         return new Map<Id, Contact>([
                 select FirstName, LastName, Email, Phone, Id, AccountId,
-                        Account.Name, xmPerson__c, xmPerson__r.xmPersonUID__c
+                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
                 from Contact where Email =: email
         ]);
     }

@@ -96,7 +96,7 @@ public with sharing class XMRestGroup {
         string jsonResponse;
         XMRestWrapper wrapper = new XMRestWrapper();
         //body = '{"id": "'+ PersonId +'", "recipientType": "PERSON"}';
-        url = this.GroupUrl + 'groups/' + groupName;
+        url = this.GroupUrl +  groupName;
         jsonResponse = wrapper.performCallOut(url, 'DELETE', '');
         System.Debug(jsonResponse);
     }
