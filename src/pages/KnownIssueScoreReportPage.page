@@ -118,7 +118,7 @@
                       	if(typeof event[0]["field"] != 'undefined'){
 
 
-                                      var field = capitalizeFirstLetter(event[0]["field"]);
+                                      var field = GETFieldNames(event[0]["field"]);
                                       var operators =  GetOperatorNames(event[0]["operator"]);
                                       var val =   event[0]["value"];
                                       var filterString = '<li class="filterList" ><span> ' + field + ' ' +  operators + '  <b>' + val +
@@ -135,7 +135,7 @@
 
                   var filterString = '';
                   for(var i = 0; i < filters.length; ++i){
-                      var field = capitalizeFirstLetter(filters[i]["field"]);
+                      var field = GETFieldNames(filters[i]["field"]);
                       var operators =  GetOperatorNames(filters[i]["operator"]);
                       var val =   filters[i]["value"];
                       filterString += '<li class="filterList" ><span> ' + field + ' ' +  operators + '  <b>' + val +
@@ -188,9 +188,41 @@
 
         }
 
-       function capitalizeFirstLetter(string) {
-         return string.charAt(0).toUpperCase() + string.slice(1);
-       }
+        function GETFieldNames(fieldName){
+            switch (fieldName){
+                case 'KINum' :
+                    return 'KI#';
+                    break;
+                case 'TFSId' :
+                     return 'TFS Id';
+                     break;
+                case 'subject' :
+                     return 'Subject';
+                     break;
+                case 'status' :
+                     return 'Status';
+                     break;
+                case 'team' :
+                     return 'Team';
+                     break;
+                case 'TFSStatus' :
+                     return 'TFS Status';
+                     break;
+                case 'priority' :
+                     return 'Priority';
+                     break;
+                case 'age' :
+                     return 'Age';
+                     break;
+                 case 'TFSIteration' :
+                     return 'Iteration';
+                     break;
+                default :
+                      return fieldName;
+            }
+
+        }
+
 
        function clearFilter(){
             var grid = $("#kIGrid").data("kendoGrid");
