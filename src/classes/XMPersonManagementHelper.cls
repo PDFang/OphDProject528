@@ -1,7 +1,3 @@
-/**
- * Created by mohandaas.rangaswamy on 5/4/2017.
- */
-
 public class XMPersonManagementHelper {
 
     public static final Set<String> xmDeviceTypes = new Set<String>{
@@ -20,7 +16,7 @@ public class XMPersonManagementHelper {
 
         return [
                 select FirstName, LastName, Email, Phone, Id, AccountId,
-                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
+                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c, xmPerson__r.Timezone__c
                 from Contact where Id =: contactId
         ];
     }
@@ -29,7 +25,7 @@ public class XMPersonManagementHelper {
 
         return new Map<Id, Contact>([
                 select FirstName, LastName, Email, Phone, Id, AccountId,
-                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
+                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c, xmPerson__r.Timezone__c
                 from Contact where Email =: email
         ]);
     }

@@ -83,9 +83,9 @@ public with sharing class XMRestGroup {
        string url;
        string jsonResponse;
        XMRestWrapper wrapper = new XMRestWrapper();
-       body = '{"id": "'+ PersonId +'", "recipientType":"' + type +'"}';
-        System.Debug('body = ' + body);
-       url = this.GroupUrl + groupName +  '/members';
+       body =  '{"position" : 1,"recipient":{"id": "'+ PersonId +'", "recipientType":"' + type +'"}}';
+       System.Debug('body = ' + body);
+       url = this.GroupUrl + groupName +  '/shifts/24x7/members';
        System.Debug('url = ' + url);
        jsonResponse = wrapper.performCallOut(url, 'POST', body);
        System.Debug(jsonResponse);
