@@ -1,0 +1,5 @@
+<apex:page standardController="Account">
+        <apex:outputField value="{!Account.CadebillAccountNo__c}"/>
+       <apex:canvasApp applicationName="JeremyCanvas" height="9000" parameters="{AccountNumber:'123456'}"/>
+
+</apex:page>

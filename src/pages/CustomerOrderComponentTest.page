@@ -1,0 +1,3 @@
+<apex:page standardController="CustomerOrder__c">
+    <c:CustomerOrderComponent OrderId="aEp3C000000CaSU"/>
+</apex:page>

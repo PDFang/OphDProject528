@@ -1,0 +1,5 @@
+<apex:page >
+	<apex:canvasApp applicationName="inContact Document Viewer"  parameters="{param1: 'test'}">
+    </apex:canvasApp>
+
+</apex:page>

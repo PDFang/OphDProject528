@@ -1,0 +1,23 @@
+<apex:component controller="CustomerOrderController" access="global">
+    <apex:attribute name="OrderId" description="OrderId that the email is about" type="string" assignTo="{!customerOrderId}"/>
+    <table border="0" align="center" width="470" cellpadding="0" cellspacing="0" style="font-family: Arial, Helvetica, sans-serif;font-size:10;background-color:white;">
+        <tr>
+            <td style="text-align:left;font-weight:bold;">Product</td>
+            <td style="text-align:left;font-weight:bold;">Quantity</td>
+            <td style="text-align:left;font-weight:bold;">Order Type</td>
+        </tr>
+        <apex:repeat value="{!orderItems}" var="item">
+            <tr>
+                <td style="text-align:left">
+                    {!item.Name}
+                </td>
+                <td style="text-align:left">
+                    {!item.Quantity}
+                </td>
+                <td style="text-align:left">
+                    {!If(item.OrderType == 'Add' || item.OrderType == 'none','Added','Removed')}
+                </td>
+            </tr>
+        </apex:repeat>
+    </table>
+</apex:component>
