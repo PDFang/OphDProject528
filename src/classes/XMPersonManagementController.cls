@@ -79,8 +79,8 @@ public class XMPersonManagementController {
             if(xmGuid != null){
                 xmPerson__c newPerson = new xmPerson__c(
                         PrimaryContact__c = currentContact.Id,
-                        xmPersonUID__c = xmGuid
-
+                        xmPersonUID__c = xmGuid,
+                        Timezone__c = person.timezone
                 );
                 insert newPerson;
                 xmPersonId = newPerson.Id;
