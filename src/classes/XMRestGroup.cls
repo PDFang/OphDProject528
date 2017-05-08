@@ -73,6 +73,7 @@ public with sharing class XMRestGroup {
         url = this.GroupUrl + 'groups/' + groupName +  '/members/' + PersonId;
         jsonResponse = wrapper.performCallOut(url, 'DELETE', '');
         System.Debug(jsonResponse);
+
     }
 
     //need to modify this to support devices and shifts -- this method needs to be heavily modified see adding user to shifts
@@ -82,7 +83,7 @@ public with sharing class XMRestGroup {
        string url;
        string jsonResponse;
        XMRestWrapper wrapper = new XMRestWrapper();
-       body = '{"id": "'+ PersonId +'", "recipientType": "PERSON"}';
+       body = '{"id": "'+ PersonId +'", "recipientType":' + type +'}';
        url = this.GroupUrl + '/' + groupName +  '/members';
        jsonResponse = wrapper.performCallOut(url, 'POST', body);
        System.Debug(jsonResponse);
