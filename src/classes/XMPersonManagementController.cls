@@ -16,6 +16,10 @@ public class XMPersonManagementController {
         return contactList != null && contactList.size() > 0;
     }
 
+    public List<SelectOption> getTimezones(){
+        return XMPersonManagementHelper.getTimezones();
+    }
+
     private Contact primaryContact;
     private XMPersonManagementHelper helper;
 

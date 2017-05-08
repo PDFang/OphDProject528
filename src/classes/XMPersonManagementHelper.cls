@@ -30,6 +30,17 @@ public class XMPersonManagementHelper {
         ]);
     }
 
+    public static List<SelectOption> getTimezones(){
+        List<SelectOption> options = new List<SelectOption>();
+        options.add(new SelectOption('- Select - ', ''));
+        Schema.PickListEntry[] values = Schema.xmPerson__c.Timezone__c.getDescribe().getPicklistValues();
+        for(Schema.PickListEntry entry : values){
+            options.add(new SelectOption( entry.getLabel(), entry.getValue()));
+        }
+
+        return options;
+    }
+
     public string createXmPerson(Contact cont){
 
         XMPersonModel newPerson = new XMPersonModel();
