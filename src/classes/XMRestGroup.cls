@@ -64,14 +64,25 @@ public with sharing class XMRestGroup {
         return groupList;
     }
 
+    public void RemoveUserFromAGroup(string groupName, string PersonId){
+        string body;
+        string url;
+        string jsonResponse;
+        XMRestWrapper wrapper = new XMRestWrapper();
+        //body = '{"id": "'+ PersonId +'", "recipientType": "PERSON"}';
+        url = this.GroupUrl + 'groups/' + groupName +  '/members/' + PersonId;
+        jsonResponse = wrapper.performCallOut(url, 'DELETE', '');
+        System.Debug(jsonResponse);
+    }
+
     //need to modify this to support devices and shifts -- this method needs to be heavily modified see adding user to shifts
     //remove hardcoded person type
-    public void AddUserToGroup(string groupName,  string PersonID,  string type){
+    public void AddUserToGroup(string groupName,  string PersonId,  string type){
        string body;
        string url;
        string jsonResponse;
        XMRestWrapper wrapper = new XMRestWrapper();
-       body = '{"id": "'+ PersonID +'", "recipientType": "PERSON"}';
+       body = '{"id": "'+ PersonId +'", "recipientType": "PERSON"}';
        url = this.GroupUrl + '/' + groupName +  '/members';
        jsonResponse = wrapper.performCallOut(url, 'POST', body);
        System.Debug(jsonResponse);
