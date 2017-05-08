@@ -111,7 +111,8 @@ public static void updateVariousAccountTypes(Map<Id, Account> mpNewAccts, Map<Id
 			{
 				for(GYR__c gyr:gyrs)
 				{
-					gyr.GYREndDate__c = system.today();
+					if(gyr.GYRStatus__c != 'Black')
+						gyr.GYREndDate__c = system.today();
 				}
 			
 				update gyrs;
