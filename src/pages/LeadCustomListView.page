@@ -1,0 +1,37 @@
+<!--
+ - Created by arnab.karsarkar on 3/1/2017.
+ -->
+
+<apex:page id="LeadCustomListView">
+        <apex:enhancedList type="Lead" height="550" rowsPerPage="25" id="LeadList" customizable="false" />
+    <style>
+        input[type='submit'][value='Accept']{
+            display:none;
+        }
+        input[type='submit'][value='Change Status']{
+            display:none;
+        }
+        input[type='submit'][value='Change Owner']{
+            display:none;
+        }
+        input[type='button'][value='Mass Delete']{
+            display:none;
+        }
+        input[type='button'][value='Create List']{
+            display:none;
+        }
+        input[type='button'][value='Manage Lists']{
+            display:none;
+        }
+        input[type='button'][value='Create Tasks']{
+            display:none;
+        }
+        input[type='button'][value='Push to Tout']{
+            display:none;
+        }
+        input[type='button'][value='Add to Tout Campaign']{
+            display:none;
+        }
+        
+    </style>
+</apex:page>

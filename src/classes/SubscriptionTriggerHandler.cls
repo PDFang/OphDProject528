@@ -7,7 +7,12 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
         InsertSubscriptionReplica((List<SBQQ__Subscription__c>)trigger.new);
     }
 
+
+    private static boolean throwExceptionBollean = false;
+
+    @TestVisible
     private static void InsertSubscriptionReplica(list<SBQQ__Subscription__c> lstSubscriptions){
+
         try{
             List<SubscriptionReplica__c> lstSubscriptionReplicas = new list<SubscriptionReplica__c>();
             for(SBQQ__Subscription__c subscription : lstSubscriptions){
@@ -26,4 +31,7 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
             }
         }
     }
+
+    public class triggerException extends Exception{}
+
 }

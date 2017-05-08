@@ -1,12 +1,13 @@
 public without sharing class PartnerDocumentLandingPageController {
     public class DocumentDetail {
         public String Title { get; private set; }
-        public String Url { get; private set; }
+        public String DocumentId { get; private set; }
     }
 
     public List<DocumentDetail> DocumentDetailList { get; private set; }
+    public String SelectedDocumentId { get; private set; }
+    public Boolean ShowCanvasApp { get; private set; }
 
-    private final String downloadUrl = '/sfc/servlet.shepherd/version/download/';
     private Set<String> partnerTypeNames = new Set<String>();
 
     public PartnerDocumentLandingPageController() {
@@ -24,6 +25,13 @@ public without sharing class PartnerDocumentLandingPageController {
         //documents visible to the user
         system.debug('loading documents visible to account associated to user');
         loadDocumentsVisibleToUserAccount();
+
+        ShowCanvasApp = false;
+    }
+
+    public void setSelectedDocumentId() {
+        SelectedDocumentId = ApexPages.currentPage().getParameters().get('documentId');
+        ShowCanvasApp = true;
     }
 
     private void setAllowedPartnerTypesForUser() {
@@ -51,7 +59,7 @@ public without sharing class PartnerDocumentLandingPageController {
 
             DocumentDetail detail = new DocumentDetail();
             detail.Title = pdm.Title__c;
-            detail.Url = downloadUrl + pdm.LatestVersionId__c;
+            detail.DocumentId = pdm.LatestVersionId__c;
             DocumentDetailList.add(detail);
         }
         system.debug('after loading documents visible to all accounts ' + DocumentDetailList.size());
@@ -75,7 +83,7 @@ public without sharing class PartnerDocumentLandingPageController {
                                                 AND Account__r.Id = :accountId]) {
             DocumentDetail detail = new DocumentDetail();
             detail.Title = pda.Partner_Document_Manager__r.Title__c;
-            detail.Url = downloadUrl + pda.Partner_Document_Manager__r.LatestVersionId__c;
+            detail.DocumentId = pda.Partner_Document_Manager__r.LatestVersionId__c;
             DocumentDetailList.add(detail);
         }
 

@@ -196,13 +196,16 @@ public without sharing class KnownIssueImpactCalculationClass {
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
         String OrgId15Digit = UserInfo.getOrganizationId().left(15);
         SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(OrgId15Digit);
-        String[] toAddresses = new String[]{siteConfig.DeveloperErrorEmail__c};
-        mail.setToAddresses(toAddresses);
-        mail.setSubject(subject);
-        mail.setHtmlBody(body);
-        try{
-            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
-        }Catch(Exception ex){}
+        if(siteConfig != null){
+            String[] toAddresses = new String[]{siteConfig.DeveloperErrorEmail__c};
+            mail.setToAddresses(toAddresses);
+            mail.setSubject(subject);
+            mail.setHtmlBody(body);
+            try{
+                Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+            }Catch(Exception ex){}
+        }
+
     }
 
 

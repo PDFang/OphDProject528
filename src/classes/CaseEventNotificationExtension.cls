@@ -234,7 +234,7 @@ public class CaseEventNotificationExtension
                 t.WhoId = con.Id;
                 t.WhatId = c.Id;
                 t.Status = 'Completed';
-                t.Description = emailBodyCustomer;
+                t.Description = emailBody;
 
                 tasks.add(t);
             }
