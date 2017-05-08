@@ -32,6 +32,7 @@ public class XMPersonManagementHelper {
                         Account.Name, xmPerson__c, xmPerson__r.xmPersonUID__c
                 from Contact where Email =: email
         ]);
+
     }
 
     public string createXmPerson(Contact cont){
