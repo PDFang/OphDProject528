@@ -4,7 +4,7 @@ public class XMPersonManagementController {
     public string emailString{get;set;}
     public string xmPersonId{get;set;}
     public Contact currentContact{get;private set;}
-    public list<XMPerson> personLists{get;set;}
+    public XMPerson person{get;set;}
     public List<Contact> contactList{get;private set;}
     public boolean isPersonMatch{get;private set;}
 
@@ -25,7 +25,6 @@ public class XMPersonManagementController {
         try{
             // initialization
             isPersonMatch = false;
-            personLists = new list<XMPerson>();
             contactList = new List<Contact>();
             helper = new XMPersonManagementHelper();
 
@@ -60,8 +59,7 @@ public class XMPersonManagementController {
             if(primaryContact == null){
                 primaryContact = currentContact;
             }
-            XMPerson person = new XMPerson(primaryContact);
-            personLists.add(person);
+            person = new XMPerson(primaryContact);
 
         } catch(Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ex.getMessage()));
@@ -109,20 +107,20 @@ public class XMPersonManagementController {
         return null;
     }
 
-    public void getContact(String contactId){
-
-        personLists = new list<XMPerson>();
-
-        for(Contact cont : [
-                select FirstName, LastName, Email, Phone, Id, AccountId,
-                        Account.Name, xmPerson__c
-                from Contact where id =: contactId
-        ]){
-            XMPerson person = new XMPerson(cont);
-            personLists.add(person);
-        }
-
-    }
+//    public void getContact(String contactId){
+//
+//        personLists = new list<XMPerson>();
+//
+//        for(Contact cont : [
+//                select FirstName, LastName, Email, Phone, Id, AccountId,
+//                        Account.Name, xmPerson__c
+//                from Contact where id =: contactId
+//        ]){
+//            XMPerson person = new XMPerson(cont);
+//            personLists.add(person);
+//        }
+//
+//    }
 
     public string getDeviceTypes()
     {
