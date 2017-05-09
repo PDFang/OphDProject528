@@ -21,6 +21,16 @@ public class XMPersonManagementHelper {
         ];
     }
 
+    public Map<Id, Contact> getContactsByXmPerson(String xmPersonId){
+
+        return new Map<Id, Contact>([
+                select FirstName, LastName, Email, Phone, Id, AccountId,
+                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c, xmPerson__r.Timezone__c
+                from Contact where xmPerson__c =: xmPersonId
+        ]);
+
+    }
+
     public Map<Id, Contact> getContactsByEmail(String email){
 
         return new Map<Id, Contact>([

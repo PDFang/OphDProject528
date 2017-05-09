@@ -37,21 +37,16 @@ public class XMPersonManagementController {
             currentContact = helper.getContactById(contactId);
             String contactEmail = currentContact.Email;
 
-            // get duplicate contacts
-            Map<Id, Contact> contactMap = new Map<Id, Contact>();
-            if(string.isNotBlank(contactEmail)){
-                contactMap = helper.getContactsByEmail(emailString);
-                contactMap.remove(contactId);
-                contactList.addAll(contactMap.values());
-            }
-
             // find the person record and its associated primary contact
             if(currentContact.xmPerson__c != null) {
                 // current contact has person record
                 xmPersonId = currentContact.xmPerson__c;
                 primaryContact = helper.getContactById(currentContact.xmPerson__r.PrimaryContact__c);
-            } else{
-                for(Contact cont : contactList){
+            } else if(string.isNotBlank(contactEmail)){
+                // if any of the duplicate contacts has a person record
+                Map<Id, Contact> contactMap = helper.getContactsByEmail(contactEmail);
+                contactMap.remove(contactId);
+                for(Contact cont : contactMap.values()){
                     if(cont.xmPerson__c != null && !isPersonMatch) {
                         isPersonMatch = true;
                         xmPersonId = cont.xmPerson__c;
@@ -65,29 +60,39 @@ public class XMPersonManagementController {
             }
             person = new XMPerson(primaryContact);
 
+            findAssociatedContacts();
         } catch(Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ex.getMessage()));
             return;
         }
     }
 
+    private void findAssociatedContacts(){
+
+        contactList = new List<Contact>();
+        if(string.isNotBlank(xmPersonId)){
+            Map<Id, Contact> contactMap = helper.getContactsByXmPerson(xmPersonId);
+            contactMap.remove(contactId);
+            contactList.addAll(contactMap.values());
+        }
+
+    }
+
     // inserts a record in Notification Profile object and then calls out xMatters to create a Person
     public pagereference addPerson(){
 
         try{
-            String xmGuid = '';//helper.createXmPerson(person);
+            String xmGuid = helper.createXmPerson(person);
             if(xmGuid != null){
                 xmPerson__c newPerson = new xmPerson__c(
                         PrimaryContact__c = currentContact.Id,
-                        xmPersonUID__c = xmGuid
-
+                        xmPersonUID__c = xmGuid,
+                        Timezone__c = person.timezone
                 );
                 insert newPerson;
                 xmPersonId = newPerson.Id;
                 currentContact.xmPerson__c = newPerson.Id;
                 update currentContact;
-//                XMPerson person = new XMPerson(currentContact);
-//                personLists.add(person);
             }
         }
         catch(Exception ex){
@@ -111,21 +116,6 @@ public class XMPersonManagementController {
         return null;
     }
 
-//    public void getContact(String contactId){
-//
-//        personLists = new list<XMPerson>();
-//
-//        for(Contact cont : [
-//                select FirstName, LastName, Email, Phone, Id, AccountId,
-//                        Account.Name, xmPerson__c
-//                from Contact where id =: contactId
-//        ]){
-//            XMPerson person = new XMPerson(cont);
-//            personLists.add(person);
-//        }
-//
-//    }
-
     public string getDeviceTypes()
     {
         return JSON.Serialize(XMPersonManagementHelper.deviceTypes);
@@ -134,12 +124,15 @@ public class XMPersonManagementController {
     @RemoteAction
     public static string getUserDevices(String xmPersionId)
     {
-
+        XMDevice[] newDeviceList = new XMDevice[]{};
         List<xmPerson__c> persons = [Select xmPersonUID__c from xmPerson__c where Id = :xmPersionId];
+        if(persons.isEmpty()){
+            return null;
+        }
 
         XMRestDeviceService service = new XMRestDeviceService();
         List<XMDeviceModel> deviceList = service.getAllDevicesByxMattersUserId(persons[0].xmPersonUID__c);
-        XMDevice[] newDeviceList = new XMDevice[]{};
+
         for(XMDeviceModel device: deviceList){
             XMDevice newDevice = new XMDevice();
             newDevice.DeviceType = device.name;
@@ -149,6 +142,7 @@ public class XMPersonManagementController {
             if(device instanceof XMEmailDevice){
                 newDevice.DeviceValue = ((XMEmailDevice)device).emailAddress;
             }
+            //newDevice.deviceId = device.id;
             newDeviceList.add(newDevice);
         }
         return JSON.Serialize(newDeviceList);
@@ -169,7 +163,7 @@ public class XMPersonManagementController {
 
             } else if(deviceType.contains('Phone')){
                 XMSmsDevice smsDevice = new XMSmsDevice();
-                smsDevice.phoneNumber = deviceValue;
+                smsDevice.phoneNumber = '+1' + deviceValue;
                 device = smsDevice;
             }
             device.name = deviceType;
