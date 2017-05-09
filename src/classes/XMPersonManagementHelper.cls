@@ -1,7 +1,3 @@
-/**
- * Created by mohandaas.rangaswamy on 5/4/2017.
- */
-
 public class XMPersonManagementHelper {
 
     public static final Set<String> xmDeviceTypes = new Set<String>{
@@ -20,29 +16,49 @@ public class XMPersonManagementHelper {
 
         return [
                 select FirstName, LastName, Email, Phone, Id, AccountId,
-                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
+                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c, xmPerson__r.Timezone__c
                 from Contact where Id =: contactId
         ];
+    }
+
+    public Map<Id, Contact> getContactsByXmPerson(String xmPersonId){
+
+        return new Map<Id, Contact>([
+                select FirstName, LastName, Email, Phone, Id, AccountId,
+                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c, xmPerson__r.Timezone__c
+                from Contact where xmPerson__c =: xmPersonId
+        ]);
+
     }
 
     public Map<Id, Contact> getContactsByEmail(String email){
 
         return new Map<Id, Contact>([
                 select FirstName, LastName, Email, Phone, Id, AccountId,
-                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
+                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c, xmPerson__r.Timezone__c
                 from Contact where Email =: email
         ]);
-
     }
 
-    public string createXmPerson(Contact cont){
+    public static List<SelectOption> getTimezones(){
+        List<SelectOption> options = new List<SelectOption>();
+        options.add(new SelectOption('- Select - ', ''));
+        Schema.PickListEntry[] values = Schema.xmPerson__c.Timezone__c.getDescribe().getPicklistValues();
+        for(Schema.PickListEntry entry : values){
+            options.add(new SelectOption( entry.getLabel(), entry.getValue()));
+        }
+
+        return options;
+    }
+
+    public string createXmPerson(XMPersonManagementController.XMPerson person){
 
         XMPersonModel newPerson = new XMPersonModel();
-        newPerson.targetName = cont.Id;
-        newPerson.firstName = cont.FirstName;
-        newPerson.lastName = cont.LastName;
-        newPerson.externalKey = cont.Id;
-
+        newPerson.targetName = person.contactId;
+        newPerson.firstName = person.FirstName;
+        newPerson.lastName = person.LastName;
+        newPerson.externalKey = person.contactId;
+        newPerson.timezone = person.timezone;
         XMRestPerson restService = new XMRestPerson();
         XMPersonModel response = restService.createPerson(newPerson);
         return response != null ? response.id : null;

@@ -15,71 +15,433 @@
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
 
+    <style>
+         .page-header{
+                padding-bottom: 4px !important;
+                margin: 0px 0 1px !important;
+                border-bottom : none;
+            }
+            .page-header h1{
+                font-size: 20px;
+                text-decoration: none;
+                color: #767474;
+                font-family: Segoe UI;
+                font-weight: 300;
+               }
+
+             .message-alert{
+                padding-top: 6px;
+                padding-right: 5px;
+             }
+
+         .weekDays-selector input {
+              display: none!important;
+            }
+
+            .weekDays-selector input[type=checkbox] + label {
+              display: inline-block;
+              border-radius: 6px;
+              background: #dddddd;
+              height: 40px;
+              width: 43px;
+              margin-right: 3px;
+              line-height: 40px;
+              text-align: center;
+              cursor: pointer;
+            }
+
+            .weekDays-selector input[type=checkbox]:checked + label {
+              background: #5270c7;
+              color: #ffffff;
+            }
+
+           .col-10 .k-timepicker{
+                width:30% !important;
+            }
+
+    </style>
 
     <apex:form >
             <div class="page-header">
-                <h1>Xmatters Person Management Page</h1>
+                <h1>Xmatters Person Management Page - Contact - {!currentContact.FirstName} {!currentContact.LastName}</h1>
             </div>
-            <div class="container-fluid">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">
-                            <apex:outputPanel >
-                                <apex:outputPanel rendered="{!isPersonMatch}">
-                                 <p>We found a match for this Contact in Xmatters; Please click on Associate button to associate this contact with the Xmatters Person.</p>
-                                </apex:outputPanel>
-                                <apex:outputPanel rendered="{!IF(isPersonMatch, False, True)}">
-                                    <p>No Matching Person record Found in Xmatters for this contact. Please click Add to create a record in Xmatters</p>
 
-                                </apex:outputPanel>
+            <div class="container-fluid">
+                <div class="row">
+                    <div id="java-errors" class=" alert alert-danger message-alert" style="margin-left:15px;width:30%; display:none;"></div>
+                    <apex:pageMessages id="errorMessages"/>
+
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading"><label>Primary Contact Details</label>
+
+                        <apex:outputPanel id="alertmessage">
+                            <apex:outputPanel rendered="{!(isPersonMatch && !IsXmPerson)}">
+                                <div class="alert alert-info message-alert">
+                                    <p style="float:left;padding-right:10px;padding-top:5px;">
+                                        We found a match for this Contact in Xmatters; Please click on Associate button to associate this contact with the Xmatters Person
+                                    </p>
+                                    <apex:actionStatus id="associateContact" >
+                                        <apex:facet name="stop">
+                                            <apex:commandButton value="Asociate Contact" onClick="associateContactCall(); return false;" status="associateContact"/>
+
+                                        </apex:facet>
+                                        <apex:facet name="start">
+                                            <apex:outputPanel >
+                                                <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                                                <apex:commandButton styleClass="k-button"  value="Adding..." status="associateContact" disabled="true"/>
+                                            </apex:outputPanel>
+                                        </apex:facet>
+                                    </apex:actionStatus>
+                                </div>
+
                             </apex:outputPanel>
-                        </h4>
+                            <apex:outputPanel rendered="{!(IF(isPersonMatch, False, True) && !IsXmPerson)}">
+                                <div class="alert alert-info message-alert">
+                                    <p style="float:left; padding-right:10px;padding-top:5px;">
+                                        No Matching Person record Found in Xmatters for this contact. Please click Add to create a record in Xmatters
+                                    </p>
+                                    <apex:actionStatus id="addPersonStatus" >
+                                        <apex:facet name="stop">
+                                            <apex:commandButton value="Add Person" onClick="AddPerson();"  status="addPersonStatus"/>
+                                        </apex:facet>
+                                        <apex:facet name="start">
+                                            <apex:outputPanel >
+                                                <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                                                <apex:commandButton styleClass="k-button"  value="Adding..." status="addPersonStatus" disabled="true"/>
+                                            </apex:outputPanel>
+                                        </apex:facet>
+                                    </apex:actionStatus>
+
+                                </div>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+
+                        <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,errorMessages" status="associateContact"/>
+
+                        <apex:actionFunction name="callNotificationManage" action="{!addPerson}" reRender="contactList,alertmessage,errorMessages" status="addPersonStatus"/>
+
+                    </div>
+                    <div class="panel-body">
+
+                    <div class="form-group">
+                        <label for="firstName" class="col-2 col-form-label">First Name </label>
+                        <div class="col-10" style="width:30%">
+                            <apex:outputText value="{!person.firstName}" id="firstName" styleClass="form-control" style="background-color: lightgray;"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName" class="col-2 col-form-label">Last Name </label>
+                        <div class="col-10" style="width:30%">
+                            <apex:outputText value="{!person.lastName}" id="lastName" styleClass="form-control" style="background-color: lightgray;"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email" class="col-2 col-form-label">Email </label>
+                         <div class="col-10">
+                             <apex:outputText value="{!person.email}" id="email" styleClass="form-control" style="background-color: lightgray;width:30%"/>
+                         </div>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="timezone" class="col-2 col-form-label">Time Zone </label>
+                        <div class="col-10">
+                            <apex:selectList styleClass="form-control" value="{!person.timezone}" id="timezone" size="0" style="width:30%" disabled="{!IsXmPerson}">
+                                <apex:selectOptions value="{!Timezones}"/>
+                            </apex:selectList>
+                        </div>
+                    </div>
                     </div>
                 </div>
-            </div>
 
-            <apex:dataTable value="{!personLists}" var="person" id="contactList" styleClass="table table-bordered table-condensed">
-                <apex:facet name="caption">Contact Lists</apex:facet>
-                <apex:column>
+
+
+        <apex:pageBlock >
+        <apex:pageBlockSection collapsible="true" id="contactList" columns="1" showHeader="true" title="Contact List">
+
+            <apex:dataTable value="{!contactList}" var="con"  styleClass="table table-bordered table-condensed" rendered="{!contactList.size > 0}">
+
+                <apex:column >
                     <apex:facet name="header">Account Name</apex:facet>
-                    <apex:outputLink value="/{!person.AccountId}">{!person.AccountName}</apex:outputLink>
+                    <apex:outputLink value="/{!con.AccountId}">{!con.Account.Name}</apex:outputLink>
                 </apex:column>
-                <apex:column>
+                <apex:column >
                     <apex:facet name="header">First Name</apex:facet>
-                    <apex:outputLink value="/{!person.ContactId}">{!person.FirstName}</apex:outputLink>
+                    <apex:outputLink value="/{!con.Id}">{!con.FirstName}</apex:outputLink>
                 </apex:column>
-                <apex:column>
+                <apex:column >
                     <apex:facet name="header">Last Name</apex:facet>
-                    <apex:outputLink value="/{!person.ContactId}">{!person.LastName}</apex:outputLink>
+                    <apex:outputLink value="/{!con.Id}">{!con.LastName}</apex:outputLink>
                 </apex:column>
-                <apex:column>
+                <apex:column >
                     <apex:facet name="header">Email</apex:facet>
-                    <apex:outputText>{!person.Email}</apex:outputText>
+                    <apex:outputText >{!con.Email}</apex:outputText>
                 </apex:column>
-                <apex:column>
+                <apex:column >
                     <apex:facet name="header">Phone</apex:facet>
-                    <apex:outputText>{!person.Phone}</apex:outputText>
+                    <apex:outputText >{!con.Phone}</apex:outputText>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">XMPerson Id</apex:facet>
+                    <apex:outputLink value="/{!con.xmPerson__c}">{!con.xmPerson__c}</apex:outputLink>
                 </apex:column>
             </apex:dataTable>
-
-        <!-- Session TimeOut Modal -->
-        <div class="modal fade" id="timeout" tabindex="-1" role="dialog" aria-labelledby="timeout" aria-hidden="true">
+        </apex:pageBlockSection>
+        </apex:pageBlock>
+        <div id="deviceList"></div>
+            </div>
+        <!-- Information Modal -->
+        <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">!!Warning!!</h5>
+                        <h5 class="modal-title" id="infolabel">Add timeFrams</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
-                    <div class="modal-body" style="font-size:14px;" id="timeoutModal">
+                    <div class="modal-body" style="font-size:14px;" id="infoModal">
 
+                        <div class="form-group">
+                            <label for="nameInput" class="col-2 col-form-label">Name </label>
+                            <div class="col-10">
+                                <input class="form-control" type="text" id="nameInput" style="width:30%;" required="true"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="startTimeInput" class="col-2 col-form-label">Start Time</label>
+                            <div class="col-10">
+                                <input class="form-control" id="startTimeInput"  style="width:15%;"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="endTimeInput" class="col-2 col-form-label">End Time</label>
+                            <div class="col-10">
+                                <input class="form-control" type="email" id="endTimeInput"  style="width:15%;"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="DaysInput" class="col-2 col-form-label">Days</label>
+                            <div class="col-10 weekDays-selector">
+                                <input type="checkbox" id="weekday-mon" class="weekday" />
+                                <label for="weekday-mon">Mon</label>
+                                <input type="checkbox" id="weekday-tue" class="weekday" />
+                                <label for="weekday-tue">Tue</label>
+                                <input type="checkbox" id="weekday-wed" class="weekday" />
+                                <label for="weekday-wed">Wed</label>
+                                <input type="checkbox" id="weekday-thu" class="weekday" />
+                                <label for="weekday-thu">Thu</label>
+                                <input type="checkbox" id="weekday-fri" class="weekday" />
+                                <label for="weekday-fri">Fri</label>
+                                <input type="checkbox" id="weekday-sat" class="weekday" />
+                                <label for="weekday-sat">Sat</label>
+                                <input type="checkbox" id="weekday-sun" class="weekday" />
+                                <label for="weekday-sun">Sun</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+
+                            <div class="col-10">
+                                <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Save</button>
+                                <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" onclick="ContinueSession();return false;" >Yes</button>
-                        <button type="button" class="btn button-cancel" data-dismiss="modal" onclick="cancelEdit(this);return false;" style="color:black !important;">No</button>
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Close</button>
                     </div>
                 </div>
             </div>
         </div>
+
     </apex:form>
+
+<script>
+
+
+     $(document).ready(function() {
+            setupDeviceList();
+         });
+
+
+    function AddPerson(){
+        callNotificationManage();
+        setupDeviceList();
+    }
+
+    function associateContactCall(){
+        callAssociateContact();
+        setupDeviceList();
+    }
+    function setupDeviceList(){
+               var device =new kendo.data.DataSource({
+                    autosync:true,
+                    transport:{
+                      read: function(options){
+                               XMPersonManagementController.getUserDevices(
+                                      '{!XmPersonId}',
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                              options.success(JSON.parse(result));
+                                              console.log('results =>' + JSON.stringify(result));
+                                            } else if (event.type === 'exception') {
+                                                $("div#java-errors").css("display", "block");
+                                                document.getElementById("java-errors").innerHTML = '<strong>Snap!!</strong>Couldnt load the device list. Error occured - ' + event.message;
+                                                console.log('error =>' + event.message);
+                                            } else {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                                console.log('error =>' + event.message);
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                            },
+                        update: function(options){
+                              XMPersonManagementController.addNewDevice(
+                                      '{!XmPersonId}',
+                                      options.data.DeviceType,
+                                      options.data.DeviceValue,
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                              options.success();
+                                              console.log('results =>' + JSON.stringify(result));
+                                            } else if (event.type === 'exception') {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                                console.log('error =>' + event.message);
+                                            } else {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                                console.log('error =>' + event.message);
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                        },
+                        create: function(options){
+                              XMPersonManagementController.addNewDevice(
+                                      '{!XmPersonId}',
+                                      options.data.DeviceType,
+                                      options.data.DeviceValue,
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                              options.success();
+                                              console.log('results =>' + JSON.stringify(result));
+                                            } else if (event.type === 'exception') {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                                console.log('error =>' + event.message);
+                                            } else {
+                                                document.getElementById("java-errors").innerHTML = event.message;
+                                                console.log('error =>' + event.message);
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                        },
+                        destroy: function(options){
+                            options.success();
+                        }
+                      },
+                    schema:{
+                        model: {
+                            id: "Id",
+                            fields: {
+                                "Id": {from:"DeviceId", type: "string"},
+                                "DeviceType": { type: "string", },
+                                "PriorityThreshold":{type:"string"},
+                                "DeviceValue" : {type: "string"},
+                                "TimeFrame":{editable: false, nullable: true}
+
+                        }
+                    }
+                  }
+              });
+
+              $("#deviceList").kendoGrid({
+                  dataSource: device,
+                  editable: "inline",
+                  scrollable: true,
+                  noRecords: true,
+                  height: 150,
+                  toolbar: ["create"],
+                  columns: [{
+                                field:"Id",
+                                filterable: false,
+                                hidden: true
+                            },
+                            {
+                                field:"DeviceType",
+                                title:"Device Type",
+                                editor: DeviceTypePicklistEditor
+                            },
+                            {
+                                field: "DeviceValue",
+                                title: "Value"
+                            },
+ {
+                                field:"TimeFrame",
+                                title:"Time Frames",
+                                editable:false,
+                                template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">Add TimeFrames</a>'
+
+                            },
+                            {command: ["edit","destroy"]}
+
+                  ],
+                    dataBound: function () {
+                                    if (this.dataSource == null) {
+                     this.tbody.append($("<tr class='no-drag' colspan='2'><td>No records to display</td></tr>"));
+                   }
+                  }
+              });
+       }
+
+        function DeviceTypePicklistEditor(container, options) {
+            $('<input style="width:95%" required  id="DeviceType" name="DeviceType"  data-bind="value:' + options.field + '"/>')
+                .appendTo(container)
+                .kendoDropDownList({
+                    autobind: false,
+                    dataSource: {
+                        data: {!DeviceTypes}
+                    },
+                    value: options.model.DeviceType
+                  });
+            }
+
+        var start, end;
+        function OpenModal(sender){
+             //init start timepicker
+                    start = $("#startTimeInput").kendoTimePicker({
+                        change: startChange
+                    }).data("kendoTimePicker");
+
+                    //init end timepicker
+                    end = $("#endTimeInput").kendoTimePicker().data("kendoTimePicker");
+
+            $('#info').modal('show');
+        }
+
+
+        function startChange() {
+                        var startTime = start.value();
+
+                        if (startTime) {
+                            startTime = new Date(startTime);
+
+                            end.max(startTime);
+
+                            startTime.setMinutes(startTime.getMinutes() + this.options.interval);
+
+                            end.min(startTime);
+                            end.value(startTime);
+                        }
+             }
+
+
+
+</script>
 
 
 </apex:page>
