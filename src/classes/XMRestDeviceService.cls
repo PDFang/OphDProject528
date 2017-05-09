@@ -32,6 +32,10 @@ public class XMRestDeviceService {
 
         String jsonDevices = wrapper.performCallOut(deviceEndpoint, 'GET', null);
 
+        /* Returning this into a map because Owner when it comes back is an
+            object and doesn't deserialize correctly. It was easier to just pick the properties out
+         */
+
         Map <String, Object> root = (Map <String, Object>) JSON.deserializeUntyped(jsonDevices);
         List<Object> items = (List<Object>)root.get('data');
 
