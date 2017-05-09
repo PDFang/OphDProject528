@@ -284,8 +284,11 @@
                                       function(result,event)
                                       {
                                           if (event.status) {
-                                              options.success(JSON.parse(result));
+                                              if(result.length > 1){
+                                                   options.success(JSON.parse(result));
                                               console.log('results =>' + JSON.stringify(result));
+                                              }
+
                                             } else if (event.type === 'exception') {
                                                 $("div#java-errors").css("display", "block");
                                                 document.getElementById("java-errors").innerHTML = '<strong>Snap!!</strong>Couldnt load the device list. Error occured - ' + event.message;
@@ -299,10 +302,11 @@
                                );
                             },
                         update: function(options){
+
                               XMPersonManagementController.addNewDevice(
                                       '{!XmPersonId}',
-                                      options.data.DeviceType,
-                                      options.data.DeviceValue,
+                                      options.data.deviceType,
+                                      options.data.deviceValue,
                                       function(result,event)
                                       {
                                           if (event.status) {
@@ -320,10 +324,11 @@
                                );
                         },
                         create: function(options){
+
                               XMPersonManagementController.addNewDevice(
-                                      '{!XmPersonId}',
-                                      options.data.DeviceType,
-                                      options.data.DeviceValue,
+                                      '{!xmPersonId}',
+                                      options.data.deviceType,
+                                      options.data.deviceValue,
                                       function(result,event)
                                       {
                                           if (event.status) {
@@ -348,10 +353,10 @@
                         model: {
                             id: "Id",
                             fields: {
-                                "Id": {from:"DeviceId", type: "string"},
-                                "DeviceType": { type: "string", },
-                                "PriorityThreshold":{type:"string"},
-                                "DeviceValue" : {type: "string"},
+                                "Id": {from:"deviceId", type: "string"},
+                                "DeviceType": { from: "deviceType", type: "string", },
+                                "PriorityThreshold":{from:"priorityThreshold",type:"string"},
+                                "DeviceValue" : {from:"deviceValue",type: "string"},
                                 "TimeFrame":{editable: false, nullable: true}
 
                         }
@@ -380,7 +385,7 @@
                                 field: "DeviceValue",
                                 title: "Value"
                             },
- {
+                            {
                                 field:"TimeFrame",
                                 title:"Time Frames",
                                 editable:false,
@@ -389,14 +394,16 @@
                             },
                             {command: ["edit","destroy"]}
 
-                  ],
-                    dataBound: function () {
-                                    if (this.dataSource == null) {
-                     this.tbody.append($("<tr class='no-drag' colspan='2'><td>No records to display</td></tr>"));
-                   }
-                  }
+                  ]
+
               });
        }
+
+           /*dataBound: function () {
+                                    if (this.dataSource.data().length <= 1) {
+                                        this.tbody.
+                     this.tbody.append($("<tr class='no-drag' colspan='2'><td>No records to display</td></tr>"));
+                   }*/
 
         function DeviceTypePicklistEditor(container, options) {
             $('<input style="width:95%" required  id="DeviceType" name="DeviceType"  data-bind="value:' + options.field + '"/>')
