@@ -12,6 +12,28 @@ public class XMPersonManagementHelper {
         'Secondary SMS Phone'
     };
 
+    public static List<SelectOption> getTimezones(){
+        List<SelectOption> options = new List<SelectOption>();
+        //options.add(new SelectOption( '', '- Select - '));
+        Schema.PickListEntry[] values = Schema.xmPerson__c.Timezone__c.getDescribe().getPicklistValues();
+        for(Schema.PickListEntry entry : values){
+            options.add(new SelectOption( entry.getValue(), entry.getLabel()));
+        }
+
+        return options;
+    }
+
+    public Contact getCurrentContact(){
+        return currentContact;
+    }
+
+    private Contact currentContact;
+
+    // constructor
+    public XMPersonManagementHelper(String contactId){
+        this.currentContact = getContactById(contactId);
+    }
+
     public Contact getContactById(String contactId){
 
         return [
@@ -40,18 +62,8 @@ public class XMPersonManagementHelper {
         ]);
     }
 
-    public static List<SelectOption> getTimezones(){
-        List<SelectOption> options = new List<SelectOption>();
-        options.add(new SelectOption('- Select - ', ''));
-        Schema.PickListEntry[] values = Schema.xmPerson__c.Timezone__c.getDescribe().getPicklistValues();
-        for(Schema.PickListEntry entry : values){
-            options.add(new SelectOption( entry.getLabel(), entry.getValue()));
-        }
-
-        return options;
-    }
-
-    public string createXmPerson(XMPersonManagementController.XMPerson person){
+    // calls out xMatters to create a Person and then inserts a record in Notification Profile object
+    public string createXmPerson(XMPersonWrapper person){
 
         XMPersonModel newPerson = new XMPersonModel();
         newPerson.targetName = person.contactId;
@@ -61,13 +73,25 @@ public class XMPersonManagementHelper {
         newPerson.timezone = person.timezone;
         XMRestPerson restService = new XMRestPerson();
         XMPersonModel response = restService.createPerson(newPerson);
-        return response != null ? response.id : null;
+
+        String xmGuid = response.Id;
+        xmPerson__c profile;
+        if(xmGuid != null){
+            profile = new xmPerson__c(
+                    PrimaryContact__c = currentContact.Id,
+                    xmPersonUID__c = xmGuid,
+                    Timezone__c = person.timezone
+            );
+            insert profile;
+
+            currentContact.xmPerson__c = profile.Id;
+            update currentContact;
+
+        }
+
+        return profile != null ? profile.Id : null;
 
     }
 
-//    public List<XMDeviceModel> getAllDevicesByxMattersUserId(String userGuid){
-////        XMRestDeviceService service = new XMRestDeviceService();
-////        List<XMDeviceModel> response = service.getAllDevicesByxMattersUserId();
-//    }
 
 }

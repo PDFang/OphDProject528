@@ -9,3 +9,4 @@ public with sharing class XMGroupModel {
         public boolean observedByAll {get;set;}
         public string description {get;set;}
 }
+
