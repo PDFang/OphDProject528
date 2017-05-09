@@ -4,6 +4,7 @@ public with sharing class XMPersonModel {
         this.roles = new String[]{'No Access User'};
         this.recipientType = 'PERSON';
         this.externallyOwned = true;
+        this.timezone = null;
     }
 
     // This is the Xmatters Unique Id Don't set on create

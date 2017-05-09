@@ -60,7 +60,6 @@ public class XMPersonManagementHelper {
                         Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c, xmPerson__r.Timezone__c
                 from Contact where Email =: email
         ]);
-
     }
 
     // calls out xMatters to create a Person and then inserts a record in Notification Profile object

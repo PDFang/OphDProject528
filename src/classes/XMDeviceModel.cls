@@ -5,6 +5,8 @@ public virtual class XMDeviceModel {
         priorityThreshold = 'MEDIUM';
     }
 
+    public String id = null;
+
     public final String recipientType = 'DEVICE';
 
     public String testStatus {get;set;}
