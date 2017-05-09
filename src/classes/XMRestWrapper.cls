@@ -20,10 +20,16 @@ public class XMRestWrapper {
         if(!Test.isRunningTest()) {
              HttpResponse response = h.send(request);
              system.debug(response.getBody());
-             return response.getBody();
-        }
 
-        // TODO: Add better error handling for 409 and 404.
+             if(response.getStatusCode() == 200 || response.getStatusCode() == 201 || response.getStatusCode() == 204){
+                  return response.getBody();
+             } else {
+                 CalloutException calloutException = new CalloutException(); // TODO: Poor mans error handling for now
+                  calloutException.setMessage(response.getBody());
+
+                  throw calloutException;
+             }
+        }
 
         return null;
     }

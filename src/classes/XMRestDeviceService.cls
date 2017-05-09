@@ -5,7 +5,7 @@ public class XMRestDeviceService {
 
         XMDeviceModel createdDevice = null;
 
-        String deviceToCreateJson = JSON.serialize(deviceModel);
+        String deviceToCreateJson = JSON.serialize(deviceModel, true);
 
         system.debug('createDeviceForPerson(): Attempting to create device' + deviceToCreateJson);
 
@@ -28,7 +28,7 @@ public class XMRestDeviceService {
 
         String deviceEndpoint = '/people/' + userGUid + '/devices';
 
-        //  system.debug('getAllDevicesByxMattersUserId(): Attempting to call ' + deviceEndpoint);
+        system.debug('getAllDevicesByxMattersUserId(): Attempting to call ' + deviceEndpoint);
 
         String jsonDevices = wrapper.performCallOut(deviceEndpoint, 'GET', null);
 
@@ -53,7 +53,8 @@ public class XMRestDeviceService {
             device.name = String.valueOf(i.get('name'));
             device.deviceType = String.valueOf(i.get('deviceType'));
             device.description = String.valueOf(i.get('description'));
-            device.targetName = String.valueOf(i.get('targetName'));
+
+            device.id = String.valueOf(i.get('id'));
 
             system.debug('Found Deivce  ==> ' + device);
 
@@ -62,5 +63,28 @@ public class XMRestDeviceService {
 
 
         return userDevices;
+    }
+
+    public void updateDeviceInformation(XMDeviceModel device){
+
+        String serializedDevice;
+
+        if( device instanceOf XMSmsDevice){
+            serializedDevice = JSON.serialize((XMSmsDevice)device, true);
+        } else if(device instanceOf XMSmsDevice) {
+            serializedDevice = JSON.serialize((XMSmsDevice)device, true);
+        } else{
+            TypeException unknownDeviceTypeException = new  TypeException(); // TODO: Create a custom exception?
+            unknownDeviceTypeException.setMessage('Unknown Device type');
+            throw unknownDeviceTypeException;
+        }
+
+        XMRestWrapper wrapper = new XMRestWrapper();
+
+        system.debug('updateDeviceInformation(): Attempting to call ' + XMDeviceEndpoint);
+
+        String jsonDevice = wrapper.performCallOut(XMDeviceEndpoint, 'POST', serializedDevice);
+
+        system.debug('updateDeviceInformation(): response ===> ' + jsonDevice);
     }
 }
