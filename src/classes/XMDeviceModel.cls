@@ -25,4 +25,6 @@ public virtual class XMDeviceModel {
     public String description {get;set;}
 
     public String targetName {get;set;}
+
+    public List<XMDeviceTimeframe> timeframes {get;set;}
 }
