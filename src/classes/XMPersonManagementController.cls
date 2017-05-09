@@ -170,11 +170,7 @@ public class XMPersonManagementController {
             message = ex.getMessage();
         }
 
-        System.JSONGenerator generator = Json.createGenerator(true);
-        generator.writeStartObject();
-        generator.writeStringField('result', result);
-        generator.writeStringField('message', message);
-        return generator.getAsString();
+        return sendResponse(result, message);
 
     }
 
@@ -206,6 +202,29 @@ public class XMPersonManagementController {
             message = ex.getMessage();
         }
 
+        return sendResponse(result, message);
+
+    }
+
+    @RemoteAction
+    public static string deleteDevice(String deviceId){
+
+        String result;
+        String message = null;
+        try{
+            XMRestDeviceService service = new XMRestDeviceService();
+            service.deleteDevice(deviceId);
+            result = 'Success';
+        }catch(Exception ex){
+            result = 'Failed';
+            message = ex.getMessage();
+        }
+
+        return sendResponse(result, message);
+    }
+
+    private static string sendResponse(String result, string message){
+
         System.JSONGenerator generator = Json.createGenerator(true);
         generator.writeStartObject();
         generator.writeStringField('result', result);
@@ -213,15 +232,5 @@ public class XMPersonManagementController {
         return generator.getAsString();
 
     }
-
-//    @RemoteAction
-//    public static string deleteDevice(String deviceJson){
-//
-//        String result;
-//        String message = null;
-//        try{
-//
-//        }
-//    }
 
 }
