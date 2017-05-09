@@ -91,4 +91,14 @@ public class XMRestDeviceService {
 
         system.debug('updateDeviceInformation(): response ===> ' + jsonDevice);
     }
+
+    public void deleteDevice(String xMattersDeviceId){
+        XMRestWrapper wrapper = new XMRestWrapper();
+
+        system.debug('deleteDevice(): Attempting to call Delete Endpoint for device id :  ' + xMattersDeviceId);
+
+        String jsonDevice = wrapper.performCallOut(XMDeviceEndpoint + xMattersDeviceId, 'DELETE', null);
+
+        system.debug('deleteDevice(): Succeeded! Response: ' + jsonDevice);
+    }
 }
