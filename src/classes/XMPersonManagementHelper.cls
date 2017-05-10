@@ -28,6 +28,7 @@ public class XMPersonManagementHelper {
     }
 
     private Contact currentContact;
+    private static Map<String, List<XMDeviceTimeframe>> deviceTimeframeMap;
 
     // constructor
     public XMPersonManagementHelper(String contactId){
@@ -96,6 +97,8 @@ public class XMPersonManagementHelper {
     public static XMDeviceWrapper[] getUserDevices(String xmPersionId){
 
         XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
+        deviceTimeframeMap = new Map<String, List<XMDeviceTimeframe>>();
+
         if(string.isNotBlank(xmPersionId)) {
             XMRestDeviceService service = new XMRestDeviceService();
             List<XMDeviceModel> deviceList = service.getAllDevicesByxMattersUserId(xmPersionId);
@@ -111,9 +114,23 @@ public class XMPersonManagementHelper {
                 }
                 newDevice.deviceId = device.id;
                 newDeviceList.add(newDevice);
+
+                List<XMDeviceTimeframe> timeframeList = device.timeframes;
+                deviceTimeframeMap.put(device.id, timeframeList);
+
             }
         }
         return newDeviceList;
+
+    }
+
+    public static XMDeviceTimeframe[] getDeviceTimeframes(String deviceId){
+
+        XMDeviceTimeframe[] timeframes = new XMDeviceTimeframe[]{};
+        if(deviceTimeframeMap != null && deviceTimeframeMap.containsKey(deviceId)){
+            timeframes = deviceTimeframeMap.get(deviceId);
+        }
+        return timeframes;
 
     }
 
