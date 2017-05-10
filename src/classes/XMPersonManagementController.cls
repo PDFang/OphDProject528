@@ -128,7 +128,7 @@ public class XMPersonManagementController {
     public static string addNewDevice(String xmPersionId, String deviceType, String deviceValue)
     {
         String result;
-        String message = null;
+        String message = '';
 
         try{
             List<xmPerson__c> persons = [Select xmPersonUID__c from xmPerson__c where Id = :xmPersionId];
@@ -150,7 +150,6 @@ public class XMPersonManagementController {
             XMRestDeviceService service = new XMRestDeviceService();
             XMDeviceModel response = service.createDeviceForPerson(device);
             result = response != null ? 'Success' : 'Failed';
-            message = '';
         }catch(Exception ex){
             result = 'Failed';
             message = ex.getMessage();
@@ -164,7 +163,7 @@ public class XMPersonManagementController {
     public static string updateDevice(String deviceJson){
 
         String result;
-        String message = null;
+        String message = '';
         try{
             system.debug('updateDevice(): deviceJson - '+deviceJson);
 
@@ -187,7 +186,6 @@ public class XMPersonManagementController {
             XMRestDeviceService service = new XMRestDeviceService();
             service.updateDeviceInformation(device);
             result = 'Success';
-            message = '';
         }catch(Exception ex){
             result = 'Failed';
             message = ex.getMessage();
@@ -201,7 +199,7 @@ public class XMPersonManagementController {
     public static string deleteDevice(String deviceId){
 
         String result;
-        String message = null;
+        String message = '';
         try{
             XMRestDeviceService service = new XMRestDeviceService();
             service.deleteDevice(deviceId);
