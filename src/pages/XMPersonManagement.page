@@ -302,20 +302,34 @@
                                );
                             },
                         update: function(options){
-
-                              XMPersonManagementController.addNewDevice(
-                                      '{!XmPersonId}',
-                                      options.data.deviceType,
-                                      options.data.deviceValue,
+                               var objResult = new Object();
+                                objResult.deviceType = options.data.deviceType ;
+                                objResult.deviceValue = options.data.deviceValue ;
+                                objResult.priorityThreshold = "Medium";
+                                objResult.deviceId = options.data.deviceId ;
+                                var deviceUpdateList = new Object();
+                                deviceUpdateList.XMDeviceWrapper = objResult;
+                                           console.log('JSON obj ' + JSON.stringify(deviceUpdateList));
+                             XMPersonManagementController.updateDevice (
+                                     JSON.stringify(objResult),
                                       function(result,event)
                                       {
                                           if (event.status) {
-                                              options.success();
-                                              console.log('results =>' + JSON.stringify(result));
+                                               var returnResult = JSON.parse(result);
+                                               if(returnResult.result != 'Failed'){
+                                                   options.success();
+                                               }
+                                               else{
+                                                     $("div#java-errors").css("display", "block");
+                                                     document.getElementById("java-errors").innerHTML = '<strong>Snap!!</strong>Couldnt update the device list. Error occured - ' + returnResult.message;
+                                               }
+                                              console.log('results =>' + result.result);
                                             } else if (event.type === 'exception') {
+                                                $("div#java-errors").css("display", "block");
                                                 document.getElementById("java-errors").innerHTML = event.message;
                                                 console.log('error =>' + event.message);
                                             } else {
+                                                 $("div#java-errors").css("display", "block");
                                                 document.getElementById("java-errors").innerHTML = event.message;
                                                 console.log('error =>' + event.message);
                                             }

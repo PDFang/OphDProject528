@@ -46,8 +46,8 @@ public class XMRestDeviceService {
 
         if( device instanceOf XMSmsDevice){
             serializedDevice = JSON.serialize((XMSmsDevice)device, true);
-        } else if(device instanceOf XMSmsDevice) {
-            serializedDevice = JSON.serialize((XMSmsDevice)device, true);
+        } else if(device instanceOf XMEmailDevice) {
+            serializedDevice = JSON.serialize((XMEmailDevice)device, true);
         } else{
             TypeException unknownDeviceTypeException = new  TypeException(); // TODO: Create a custom exception?
             unknownDeviceTypeException.setMessage('Unknown Device type');

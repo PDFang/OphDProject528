@@ -166,7 +166,9 @@ public class XMPersonManagementController {
         String message = null;
         try{
             system.debug('updateDevice(): deviceJson - '+deviceJson);
+
             XMDeviceWrapper deviceWrapper = (XMDeviceWrapper)JSON.deserialize(deviceJson, XMDeviceWrapper.class);
+
             system.debug('updateDevice(): deviceWrapper - '+deviceWrapper);
             XMDeviceModel device;
             if(deviceWrapper.deviceType.contains('Email')){
