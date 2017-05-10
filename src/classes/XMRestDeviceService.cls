@@ -160,9 +160,10 @@ public class XMRestDeviceService {
      */
     private XMDeviceModel parseSingleDeviceModel(String jsonDevice){
         Map <String, Object> root = (Map <String, Object>)JSON.deserializeUntyped(jsonDevice);
+
         XMDeviceModel deviceModel = new XMDeviceModel();
 
-        XMDeviceModel singleDevice = null;
+        //XMDeviceModel singleDevice = null;
         if(String.valueOf(root.get('deviceType')) == 'TEXT_PHONE'){
             deviceModel = new XMSmsDevice();
             ((XMSmsDevice)deviceModel).phoneNumber = String.valueOf(root.get('phoneNumber'));

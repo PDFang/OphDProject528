@@ -1,4 +1,4 @@
-public class XMPersonManagementController {
+public class XMPersonManagementController{
 
     public string contactId{get;set;}
     public string emailString{get;set;}
@@ -116,10 +116,16 @@ public class XMPersonManagementController {
     public static string getUserDevices(String xmPersionId)
     {
         XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
-        List<xmPerson__c> persons = [Select xmPersonUID__c from xmPerson__c where Id = :xmPersionId];
-        if(persons.size() > 0){
-            newDeviceList = XMPersonManagementHelper.getUserDevices(persons[0].xmPersonUID__c);
+        try{
+            List<xmPerson__c> persons = [Select xmPersonUID__c from xmPerson__c where Id = :xmPersionId];
+            if(persons.size() > 0){
+                newDeviceList = XMPersonManagementHelper.getUserDevices(persons[0].xmPersonUID__c);
+            }
+        }catch(Exception ex){
+            system.debug('getUserDevices(): exception - '+ex);
+            newDeviceList = new XMDeviceWrapper[]{};
         }
+
         return JSON.Serialize(newDeviceList);
 
     }
@@ -128,7 +134,7 @@ public class XMPersonManagementController {
     public static string addNewDevice(String xmPersionId, String deviceType, String deviceValue)
     {
         String result;
-        String message = null;
+        String message = '';
 
         try{
             List<xmPerson__c> persons = [Select xmPersonUID__c from xmPerson__c where Id = :xmPersionId];
@@ -163,10 +169,12 @@ public class XMPersonManagementController {
     public static string updateDevice(String deviceJson){
 
         String result;
-        String message = null;
+        String message = '';
         try{
             system.debug('updateDevice(): deviceJson - '+deviceJson);
+
             XMDeviceWrapper deviceWrapper = (XMDeviceWrapper)JSON.deserialize(deviceJson, XMDeviceWrapper.class);
+
             system.debug('updateDevice(): deviceWrapper - '+deviceWrapper);
             XMDeviceModel device;
             if(deviceWrapper.deviceType.contains('Email')){
@@ -197,7 +205,7 @@ public class XMPersonManagementController {
     public static string deleteDevice(String deviceId){
 
         String result;
-        String message = null;
+        String message = '';
         try{
             XMRestDeviceService service = new XMRestDeviceService();
             service.deleteDevice(deviceId);
@@ -209,6 +217,20 @@ public class XMPersonManagementController {
 
         return sendResponse(result, message);
     }
+
+//    @RemoteAction
+//    public static string getDeviceTimeframe(String deviceId){
+//
+//        XMDeviceTimeframeWrapper[] timeframes;
+//        try{
+//            timeframes = XMPersonManagementHelper.getDeviceTimeframes(deviceId);
+//        }catch(Exception ex){
+//            timeframes = new XMDeviceTimeframeWrapper[]{};
+//            system.debug('getDeviceTimeframe(): exception - '+ex);
+//        }
+//
+//        return JSON.Serialize(timeframes);
+//    }
 
     private static string sendResponse(String result, string message){
 

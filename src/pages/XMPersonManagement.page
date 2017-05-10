@@ -123,35 +123,37 @@
 
                     </div>
                     <div class="panel-body">
+                    <div class="row">
+                        <div class="form-group col-md-3">
 
-                    <div class="form-group">
-                        <label for="firstName" class="col-2 col-form-label">First Name </label>
-                        <div class="col-10" style="width:30%">
-                            <apex:outputText value="{!person.firstName}" id="firstName" styleClass="form-control" style="background-color: lightgray;"/>
+                            <label for="firstName" class="col-2 col-form-label">First Name </label>
+                            <div class="col-10" >
+                                <apex:outputText value="{!person.firstName}" id="firstName" styleClass="form-control" style="background-color: lightgray;"/>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="lastName" class="col-2 col-form-label">Last Name </label>
+                            <div class="col-10">
+                                <apex:outputText value="{!person.lastName}" id="lastName" styleClass="form-control" style="background-color: lightgray;"/>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="email" class="col-2 col-form-label">Email </label>
+                            <div class="col-10">
+                                <apex:outputText value="{!person.email}" id="email" styleClass="form-control" style="background-color: lightgray;"/>
+                            </div>
+                        </div>
+
+                        <div class="form-group col-md-3">
+                            <label for="timezone" class="col-2 col-form-label">Time Zone </label>
+                            <div class="col-10">
+                                <apex:selectList styleClass="form-control" value="{!person.timezone}" id="timezone" size="0" disabled="{!IsXmPerson}">
+                                    <apex:selectOptions value="{!Timezones}"/>
+                                </apex:selectList>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="lastName" class="col-2 col-form-label">Last Name </label>
-                        <div class="col-10" style="width:30%">
-                            <apex:outputText value="{!person.lastName}" id="lastName" styleClass="form-control" style="background-color: lightgray;"/>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="email" class="col-2 col-form-label">Email </label>
-                         <div class="col-10">
-                             <apex:outputText value="{!person.email}" id="email" styleClass="form-control" style="background-color: lightgray;width:30%"/>
-                         </div>
-                    </div>
 
-
-                    <div class="form-group">
-                        <label for="timezone" class="col-2 col-form-label">Time Zone </label>
-                        <div class="col-10">
-                            <apex:selectList styleClass="form-control" value="{!person.timezone}" id="timezone" size="0" style="width:30%" disabled="{!IsXmPerson}">
-                                <apex:selectOptions value="{!Timezones}"/>
-                            </apex:selectList>
-                        </div>
-                    </div>
                     </div>
                 </div>
 
@@ -290,12 +292,9 @@
                                               }
 
                                             } else if (event.type === 'exception') {
-                                                $("div#java-errors").css("display", "block");
-                                                document.getElementById("java-errors").innerHTML = '<strong>Snap!!</strong>Couldnt load the device list. Error occured - ' + event.message;
-                                                console.log('error =>' + event.message);
+                                                   displayError(event.message);
                                             } else {
-                                                document.getElementById("java-errors").innerHTML = event.message;
-                                                console.log('error =>' + event.message);
+                                                displayError(event.message);
                                             }
                                       },
                                       {escape: false}
@@ -305,13 +304,13 @@
                                var objResult = new Object();
                                 objResult.deviceType = options.data.deviceType ;
                                 objResult.deviceValue = options.data.deviceValue ;
+                                objResult.priorityThreshold = "Medium";
                                 objResult.deviceId = options.data.deviceId ;
-                                objResult.priorityThreshold = "";
                                 var deviceUpdateList = new Object();
                                 deviceUpdateList.XMDeviceWrapper = objResult;
                                            console.log('JSON obj ' + JSON.stringify(deviceUpdateList));
                              XMPersonManagementController.updateDevice (
-                                     JSON.stringify(deviceUpdateList),
+                                     JSON.stringify(objResult),
                                       function(result,event)
                                       {
                                           if (event.status) {
@@ -320,18 +319,13 @@
                                                    options.success();
                                                }
                                                else{
-                                                     $("div#java-errors").css("display", "block");
-                                                     document.getElementById("java-errors").innerHTML = '<strong>Snap!!</strong>Couldnt update the device list. Error occured - ' + returnResult.message;
+                                                   displayError(returnResult.message);
                                                }
                                               console.log('results =>' + result.result);
                                             } else if (event.type === 'exception') {
-                                                $("div#java-errors").css("display", "block");
-                                                document.getElementById("java-errors").innerHTML = event.message;
-                                                console.log('error =>' + event.message);
+                                                  displayError(event.message);
                                             } else {
-                                                 $("div#java-errors").css("display", "block");
-                                                document.getElementById("java-errors").innerHTML = event.message;
-                                                console.log('error =>' + event.message);
+                                                 displayError(event.message);
                                             }
                                       },
                                       {escape: false}
@@ -346,21 +340,45 @@
                                       function(result,event)
                                       {
                                           if (event.status) {
-                                              options.success();
-                                              console.log('results =>' + JSON.stringify(result));
+                                                 var returnResult = JSON.parse(result);
+                                              if(returnResult.result != 'Failed'){
+                                                   options.success();
+                                               }
+                                               else{
+                                                   displayError(returnResult.message);
+                                               }
+
                                             } else if (event.type === 'exception') {
-                                                document.getElementById("java-errors").innerHTML = event.message;
-                                                console.log('error =>' + event.message);
+                                              displayError(event.message);
                                             } else {
-                                                document.getElementById("java-errors").innerHTML = event.message;
-                                                console.log('error =>' + event.message);
+                                                 displayError(event.message);
                                             }
                                       },
                                       {escape: false}
                                );
                         },
                         destroy: function(options){
-                            options.success();
+                             XMPersonManagementController.deleteDevice(
+                                       options.data.deviceId,
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                                 var returnResult = JSON.parse(result);
+                                              if(returnResult.result != 'Failed'){
+                                                   options.success();
+                                               }
+                                               else{
+                                                   displayError(returnResult.message);
+                                               }
+
+                                            } else if (event.type === 'exception') {
+                                              displayError(event.message);
+                                            } else {
+                                                 displayError(event.message);
+                                            }
+                                      },
+                                      {escape: false}
+                               );
                         }
                       },
                     schema:{
@@ -370,7 +388,31 @@
                                 "Id": {from:"deviceId", type: "string"},
                                 "DeviceType": { from: "deviceType", type: "string", },
                                 "PriorityThreshold":{from:"priorityThreshold",type:"string"},
-                                "DeviceValue" : {from:"deviceValue",type: "string"},
+                                "DeviceValue" : {from:"deviceValue",
+                                                 type: "string",
+                                                 validation: {
+                                                    required: true,
+                                                    deviceValueValidation: function (input) {
+                                                        if (input.is("[name='DeviceValue']") && input.val() != "") {
+                                                            var deviceType = $("[name='DeviceType']").val();
+                                                            if(deviceType.includes("Email")){
+                                                                 input.attr("data-deviceValueValidation-msg", "Invalid email address");
+                                                                 var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                                                                 return re.test(input.val());
+                                                            }
+                                                            else{
+                                                                input.attr("data-deviceValueValidation-msg", "Invalid Phone number");
+                                                                var re = /^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-\s\./0-9]*$/g;
+                                                                return re.test(input.val());
+
+                                                            }
+
+                                                        }
+
+                                                        return true;
+                                                    }
+                                                 }
+                                                 },
                                 "TimeFrame":{editable: false, nullable: true}
 
                         }
@@ -417,18 +459,43 @@
                                     if (this.dataSource.data().length <= 1) {
                                         this.tbody.
                      this.tbody.append($("<tr class='no-drag' colspan='2'><td>No records to display</td></tr>"));
-                   }*/
+
+                           }*/
+
+        function displayError(message){
+             $("div#java-errors").css("display", "block");
+             document.getElementById("java-errors").innerHTML = '<strong>Snap!!</strong>Couldnt update the device list. Error occured - ' + message;
+             console.log('error =>' + message);
+        }
 
         function DeviceTypePicklistEditor(container, options) {
+            var gridData = $("#deviceList").data("kendoGrid").dataSource.data();
+            var griddeviceTypes = [];
+            var originaldeviceTypes = {!DeviceTypes};
+            var filteredDeviceTypes = [];
+            for(var i = 0; i < gridData.length; i++){
+                griddeviceTypes.push(gridData[i].DeviceType);
+            }
+
+            originaldeviceTypes.forEach(function(a,i){
+                console.log(a);
+                if(griddeviceTypes.indexOf(a) == -1){
+                    filteredDeviceTypes.push(a);
+                }
+                });
+
+
             $('<input style="width:95%" required  id="DeviceType" name="DeviceType"  data-bind="value:' + options.field + '"/>')
                 .appendTo(container)
                 .kendoDropDownList({
                     autobind: false,
                     dataSource: {
-                        data: {!DeviceTypes}
+                        data:filteredDeviceTypes
                     },
                     value: options.model.DeviceType
                   });
+
+
             }
 
         var start, end;
