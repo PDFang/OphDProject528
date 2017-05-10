@@ -93,5 +93,29 @@ public class XMPersonManagementHelper {
 
     }
 
+    public static XMDeviceWrapper[] getUserDevices(String xmPersionId){
+
+        XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
+        if(string.isNotBlank(xmPersionId)) {
+            XMRestDeviceService service = new XMRestDeviceService();
+            List<XMDeviceModel> deviceList = service.getAllDevicesByxMattersUserId(xmPersionId);
+
+            for (XMDeviceModel device: deviceList) {
+                XMDeviceWrapper newDevice = new XMDeviceWrapper();
+                newDevice.deviceType = device.name;
+                if (device instanceof XMSmsDevice) {
+                    newDevice.deviceValue = ((XMSmsDevice) device).phoneNumber;
+                }
+                if (device instanceof XMEmailDevice) {
+                    newDevice.deviceValue = ((XMEmailDevice) device).emailAddress;
+                }
+                newDevice.deviceId = device.id;
+                newDeviceList.add(newDevice);
+            }
+        }
+        return newDeviceList;
+
+    }
+
 
 }
