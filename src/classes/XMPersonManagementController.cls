@@ -221,11 +221,11 @@ public class XMPersonManagementController{
     @RemoteAction
     public static string getDeviceTimeframe(String deviceId){
 
-        XMDeviceTimeframe[] timeframes;
+        XMDeviceTimeframeWrapper[] timeframes;
         try{
             timeframes = XMPersonManagementHelper.getDeviceTimeframes(deviceId);
         }catch(Exception ex){
-            timeframes = new XMDeviceTimeframe[]{};
+            timeframes = new XMDeviceTimeframeWrapper[]{};
             system.debug('getDeviceTimeframe(): exception - '+ex);
         }
 

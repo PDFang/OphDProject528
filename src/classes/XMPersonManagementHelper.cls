@@ -124,13 +124,17 @@ public class XMPersonManagementHelper {
 
     }
 
-    public static XMDeviceTimeframe[] getDeviceTimeframes(String deviceId){
+    public static XMDeviceTimeframeWrapper[] getDeviceTimeframes(String deviceId){
 
-        XMDeviceTimeframe[] timeframes = new XMDeviceTimeframe[]{};
+        XMDeviceTimeframeWrapper[] wrapperList = new XMDeviceTimeframeWrapper[]{};
         if(deviceTimeframeMap != null && deviceTimeframeMap.containsKey(deviceId)){
-            timeframes = deviceTimeframeMap.get(deviceId);
+            XMDeviceTimeframe[] timeframes = deviceTimeframeMap.get(deviceId);
+            for(XMDeviceTimeframe timeframe : timeframes){
+                XMDeviceTimeframeWrapper wrapper = new XMDeviceTimeframeWrapper(timeframe);
+                wrapperList.add(wrapper);
+            }
         }
-        return timeframes;
+        return wrapperList;
 
     }
 
