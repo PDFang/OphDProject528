@@ -8,16 +8,18 @@
                         <li>
                             <apex:commandLink value="{!d.Title}" reRender="previewPanel" action="{!setSelectedDocumentId}" style="text-decoration: none;">
                                 <apex:param name="documentId" value="{!d.DocumentId}" />
+                                <apex:param name="documentTitle" value="{!d.Title}" />
+                                <apex:param name="documentExtension" value="{!d.DocumentExtension}" />
                             </apex:commandLink>
                         </li>
                     </apex:repeat>
                 </ul>
             </apex:form>
         </div>
-        <div style="width: 80%; float: right;">
+        <div style="width: 90%; float: right;">
             <apex:outputPanel id="previewPanel">
                 <apex:outputPanel rendered="{!ShowCanvasApp}">
-                    <apex:canvasApp applicationName="inContact Document Viewer"  parameters="{salesforceDocumentId: '{!SelectedDocumentId}'}" height="500px" width="500px">
+                    <apex:canvasApp applicationName="inContact Document Viewer"  parameters="{salesforceDocumentId: '{!SelectedDocumentId}', documentType: '{!SelectedDocumentExtension}', documentTitle: '{!SelectedDocumentTitle}'}" height="500px" width="500px">
                     </apex:canvasApp>
                 </apex:outputPanel>
             </apex:outputPanel>
