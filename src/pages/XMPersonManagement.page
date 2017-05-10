@@ -305,13 +305,13 @@
                                var objResult = new Object();
                                 objResult.deviceType = options.data.deviceType ;
                                 objResult.deviceValue = options.data.deviceValue ;
+                                objResult.priorityThreshold = "Medium";
                                 objResult.deviceId = options.data.deviceId ;
-                                objResult.priorityThreshold = "";
                                 var deviceUpdateList = new Object();
                                 deviceUpdateList.XMDeviceWrapper = objResult;
                                            console.log('JSON obj ' + JSON.stringify(deviceUpdateList));
                              XMPersonManagementController.updateDevice (
-                                     JSON.stringify(deviceUpdateList),
+                                     JSON.stringify(objResult),
                                       function(result,event)
                                       {
                                           if (event.status) {
