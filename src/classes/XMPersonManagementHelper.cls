@@ -114,29 +114,34 @@ public class XMPersonManagementHelper {
                 }
                 newDevice.deviceId = device.id;
                 newDeviceList.add(newDevice);
-
+                if(device.timeframes == null || device.timeframes.isEmpty()){
+                    continue;
+                }
                 List<XMDeviceTimeframe> timeframeList = device.timeframes;
-                deviceTimeframeMap.put(device.id, timeframeList);
-
+                for(XMDeviceTimeframe timeframe : timeframeList){
+                    XMDeviceTimeframeWrapper wrapper = new XMDeviceTimeframeWrapper(timeframe);
+                    newDevice.timeframes.add(wrapper);
+                }
             }
         }
+
         return newDeviceList;
 
     }
 
-    public static XMDeviceTimeframeWrapper[] getDeviceTimeframes(String deviceId){
-
-        XMDeviceTimeframeWrapper[] wrapperList = new XMDeviceTimeframeWrapper[]{};
-        if(deviceTimeframeMap != null && deviceTimeframeMap.containsKey(deviceId)){
-            XMDeviceTimeframe[] timeframes = deviceTimeframeMap.get(deviceId);
-            for(XMDeviceTimeframe timeframe : timeframes){
-                XMDeviceTimeframeWrapper wrapper = new XMDeviceTimeframeWrapper(timeframe);
-                wrapperList.add(wrapper);
-            }
-        }
-        return wrapperList;
-
-    }
+//    public static XMDeviceTimeframeWrapper[] getDeviceTimeframes(String deviceId){
+//
+//        XMDeviceTimeframeWrapper[] wrapperList = new XMDeviceTimeframeWrapper[]{};
+//        if(deviceTimeframeMap != null && deviceTimeframeMap.containsKey(deviceId)){
+//            XMDeviceTimeframe[] timeframes = deviceTimeframeMap.get(deviceId);
+//            for(XMDeviceTimeframe timeframe : timeframes){
+//                XMDeviceTimeframeWrapper wrapper = new XMDeviceTimeframeWrapper(timeframe);
+//                wrapperList.add(wrapper);
+//            }
+//        }
+//        return wrapperList;
+//
+//    }
 
 
 }

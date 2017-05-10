@@ -5,7 +5,9 @@ public class XMDeviceWrapper {
     public string priorityThreshold{get;set;}
     public string deviceId{get;set;}
 
-    public XMDeviceWrapper(){
+    public List<XMDeviceTimeframeWrapper> timeframes{get;set;}
 
+    public XMDeviceWrapper(){
+        timeframes = new List<XMDeviceTimeframeWrapper>();
     }
 }

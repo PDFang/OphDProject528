@@ -218,19 +218,19 @@ public class XMPersonManagementController{
         return sendResponse(result, message);
     }
 
-    @RemoteAction
-    public static string getDeviceTimeframe(String deviceId){
-
-        XMDeviceTimeframeWrapper[] timeframes;
-        try{
-            timeframes = XMPersonManagementHelper.getDeviceTimeframes(deviceId);
-        }catch(Exception ex){
-            timeframes = new XMDeviceTimeframeWrapper[]{};
-            system.debug('getDeviceTimeframe(): exception - '+ex);
-        }
-
-        return JSON.Serialize(timeframes);
-    }
+//    @RemoteAction
+//    public static string getDeviceTimeframe(String deviceId){
+//
+//        XMDeviceTimeframeWrapper[] timeframes;
+//        try{
+//            timeframes = XMPersonManagementHelper.getDeviceTimeframes(deviceId);
+//        }catch(Exception ex){
+//            timeframes = new XMDeviceTimeframeWrapper[]{};
+//            system.debug('getDeviceTimeframe(): exception - '+ex);
+//        }
+//
+//        return JSON.Serialize(timeframes);
+//    }
 
     private static string sendResponse(String result, string message){
 

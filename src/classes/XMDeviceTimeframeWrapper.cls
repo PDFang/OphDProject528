@@ -40,6 +40,7 @@ public class XMDeviceTimeframeWrapper {
         tempDate = Datetime.newInstance(system.today(), endTime);
         this.endTime = tempDate.format('h:mm a');
 
+        days = new Week();
         for(String day : timeframe.days){
             if(day == 'SU'){
                 days.sunday = true;
