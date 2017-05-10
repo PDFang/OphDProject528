@@ -13,4 +13,23 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
         throw new CalloutException();
     }
 
+    private List<XMGroupProductCluster> GetGroupProductClusterByGroupList(List<XMGroupMemberModel> groupList)
+    {
+        List<XMGroupProductCluster> xmGroupClusterObjList = new List<XMGroupProductCluster>();
+        for (XMGroupMemberModel groupObj : groupList)
+        {
+            XMGroupProductCluster xmGroupClusterObj = new XMGroupProductCluster();
+            if(groupObj.group1.targetName.substring(0,2) == 'IP')
+            {
+
+                List<String> splitTargetName = groupObj.group1.targetName.split('_');
+                xmGroupClusterObj.Product = splitTargetName[2];
+                xmGroupClusterObj.Cluster = splitTargetName[3];
+                xmGroupClusterObjList.add(xmGroupClusterObj);
+            }
+        }
+        return xmGroupClusterObjList;
+    }
+
+
 }
