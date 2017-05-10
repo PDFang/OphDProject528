@@ -39,7 +39,8 @@ public class ContentVersionTriggerHandler extends TriggerHandler
                 Partner_Document_Manager__c manager = new Partner_Document_Manager__c(
                         ContentDocumentId__c = version.ContentDocumentId,
                         LatestVersionId__c = version.Id,
-                        Title__c = version.Title
+                        Title__c = version.Title,
+                        FileType__c = version.FileType
                 );
                 managerList.add(manager);
             }
