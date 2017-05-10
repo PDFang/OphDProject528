@@ -150,6 +150,7 @@ public class XMPersonManagementController {
             XMRestDeviceService service = new XMRestDeviceService();
             XMDeviceModel response = service.createDeviceForPerson(device);
             result = response != null ? 'Success' : 'Failed';
+            message = '';
         }catch(Exception ex){
             result = 'Failed';
             message = ex.getMessage();
@@ -186,6 +187,7 @@ public class XMPersonManagementController {
             XMRestDeviceService service = new XMRestDeviceService();
             service.updateDeviceInformation(device);
             result = 'Success';
+            message = '';
         }catch(Exception ex){
             result = 'Failed';
             message = ex.getMessage();
