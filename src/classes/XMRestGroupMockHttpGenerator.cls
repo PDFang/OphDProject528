@@ -4,6 +4,12 @@
 @IsTest
 public class XMRestGroupMockHttpGenerator implements HttpCalloutMock {
 
+    public XMRestGroupMockHttpGenerator(Integer code, String status, String body,
+    Map<String, String> responseHeaders){}
+
+
+
+
     public HTTPResponse respond(HTTPRequest req) {
 
         system.debug('calling response');
