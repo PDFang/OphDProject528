@@ -2,12 +2,14 @@
  * Created by william.nelson on 5/8/2017.
  */
 @isTest
-public class XMRestGroupTest {
+public  class XMRestGroupTest {
 //set up the mock class
 
     public static testmethod void TestGetXMPersonGroupsById() {
 
-        XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator();
+        XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+
+
         test.startTest();
 
         Test.setMock(HttpCalloutMock.class, fakeResponse);
@@ -17,6 +19,8 @@ public class XMRestGroupTest {
         system.debug(d);
 
     }
+
+
 }
 
 
