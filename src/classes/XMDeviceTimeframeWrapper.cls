@@ -1,7 +1,7 @@
 public class XMDeviceTimeframeWrapper {
 
     public String name {get;set;}
-    public string timezone {get;set;}
+    //public string timezone {get;set;}
     public String startTime {get;set;}
     public String endTime {get;set;}
     public Week days {get;set;}
