@@ -23,7 +23,7 @@
 
         h3{
             margin-left:5%;
-            color:#E68000;;
+            color:#51606E;
             font:normal normal 600 normal 16px / 27px effra, 'Open Sans', sans-serif;
             outline: #E68000;
         }
@@ -32,9 +32,10 @@
             font-size:1.5em;
             text-transform: uppercase;
             text-rendering: optimizeLegibility;
+            text-align:center;
             color: #E68000;
             display:block;
-            padding-left: 20%;
+
             padding-top: .5em;
         }
 
@@ -43,18 +44,22 @@
         }
 
         .side-bar{
-            border-left: 1px solid #A1A1A1;
-            width: 280px;
-            padding-right:15em;
+            width: 200px;
+            padding-left:2em;
             margin-bottom:10px;
+            min-height:30em;
         }
 
         li > a {
             text-decoration: none;
             cursor: pointer;
-            color: #428bca;
+            color: #51606E;
             line-height:1.5em;
             font-size:11px;
+        }
+
+        .document-viewer{
+            padding-left:15em;
         }
 
 
@@ -62,32 +67,43 @@
 
     <div style="width: 100%;">
 
-        <h2 class ="page-title">Partner Document Library</h2>
+       <!-- <h2 class ="page-title">Partner Document Library</h2>-->
 
-        <div class="document-content" style="width: 30%; float: right;">
+        <div class="document-content" style="width: 10%; float: left;">
             <aside class ="side-bar">
                 <apex:form>
-                    <h3>Available Documents</h3>
-                        <ul>
+                    <div class="side-bar-header" style="background-color:#1797C0; color:white; padding:5px 9px; padding-bottom:5px">
+                        <h2 style="font-weight:bold; font-size:100%">Available Documents</h2>
+                    </div>
+                    <div class="side-bar-content" style="padding-top:2px;background-color:#F1F3F5;padding-top:5px; padding-bottom:5px;font-size:1.5em">
                             <apex:repeat value="{!DocumentDetailList}" var="d">
-                                <li>
+                              <div style="color: #333435; font-size:75%;font-family:Arial,Helvetica,sans-serif;padding-top: 4px;padding-right: 5px; padding-bottom: 3px; padding-left:9px">
                                     <apex:commandLink value="{!d.Title}" reRender="previewPanel" action="{!setSelectedDocumentId}" style="text-decoration: none;">
                                         <apex:param name="documentId" value="{!d.DocumentId}" />
                                         <apex:param name="documentTitle" value="{!d.Title}" />
                                         <apex:param name="documentExtension" value="{!d.DocumentExtension}" />
                                     </apex:commandLink>
-                                </li>
+                               </div>
                             </apex:repeat>
-                        </ul>
+                    </div>
                 </apex:form>
             </aside>
         </div>
-        <div style="width: 50%; float: left;" class="document-content document-viewer">
+
+        <div style="width: 75%; float: left;" class="document-content document-viewer">
             <apex:outputPanel id="previewPanel">
+
                 <apex:outputPanel rendered="{!ShowCanvasApp}">
-                    <apex:canvasApp applicationName="inContact Document Viewer"  parameters="{salesforceDocumentId: '{!SelectedDocumentId}', documentType: '{!SelectedDocumentExtension}', documentTitle: '{!SelectedDocumentTitle}'}" height="7500px" width="750px">
+                    <apex:canvasApp applicationName="inContact Document Viewer"  parameters="{salesforceDocumentId: '{!SelectedDocumentId}', documentType: '{!SelectedDocumentExtension}', documentTitle: '{!SelectedDocumentTitle}'}" height="750px" width="850px">
                     </apex:canvasApp>
                 </apex:outputPanel>
+
+                <apex:outputPanel rendered="{!IF(ShowCanvasApp == true, false, true)}" layout="block">
+                    <div style="background-color:#1797C0; color: white; width: 28em; margin: 1em 0 .5em 0; padding:10px">
+                        <p>Please select a document from the available document list</p>
+                    </div>
+                </apex:outputPanel>
+
             </apex:outputPanel>
         </div>
     </div>
