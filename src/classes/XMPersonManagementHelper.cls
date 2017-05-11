@@ -129,19 +129,21 @@ public class XMPersonManagementHelper {
 
     }
 
-//    public static XMDeviceTimeframeWrapper[] getDeviceTimeframes(String deviceId){
-//
-//        XMDeviceTimeframeWrapper[] wrapperList = new XMDeviceTimeframeWrapper[]{};
-//        if(deviceTimeframeMap != null && deviceTimeframeMap.containsKey(deviceId)){
-//            XMDeviceTimeframe[] timeframes = deviceTimeframeMap.get(deviceId);
-//            for(XMDeviceTimeframe timeframe : timeframes){
-//                XMDeviceTimeframeWrapper wrapper = new XMDeviceTimeframeWrapper(timeframe);
-//                wrapperList.add(wrapper);
-//            }
-//        }
-//        return wrapperList;
-//
-//    }
+    public static void updateDevice(XMDeviceWrapper deviceWrapper) {
+
+        XMDeviceModel device = deviceWrapper.createModel();
+
+        XMRestDeviceService service = new XMRestDeviceService();
+        service.updateDeviceInformation(device);
+
+    }
+
+    public static void deleteDevice(String deviceId){
+
+        XMRestDeviceService service = new XMRestDeviceService();
+        service.deleteDevice(deviceId);
+
+    }
 
 
 }
