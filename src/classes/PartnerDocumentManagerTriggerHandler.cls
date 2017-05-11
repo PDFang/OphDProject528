@@ -27,17 +27,17 @@ public without sharing class PartnerDocumentManagerTriggerHandler extends Trigge
             return;
         }
 
-        List<ContentVersion> versionsList= new List<ContentVersion>();
+        Map<Id, ContentVersion> versionsMap = new Map<Id, ContentVersion>();
         for(Partner_Document_Manager__c record :newList){
             ContentVersion version = new ContentVersion(
                     Id = record.LatestVersionId__c,
                     Partner_Document_Manager__c = record.Id
             );
-            versionsList.add(version);
+            versionsMap.put(record.LatestVersionId__c, version);
         }
 
-        if(versionsList.size() > 0){
-            update versionsList;
+        if(versionsMap.size() > 0){
+            update versionsMap.values();
         }
 
     }
