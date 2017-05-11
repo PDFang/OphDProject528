@@ -2,10 +2,13 @@ public without sharing class PartnerDocumentLandingPageController {
     public class DocumentDetail {
         public String Title { get; private set; }
         public String DocumentId { get; private set; }
+        public String DocumentExtension { get; private set; }
     }
 
     public List<DocumentDetail> DocumentDetailList { get; private set; }
     public String SelectedDocumentId { get; private set; }
+    public String SelectedDocumentExtension { get; private set; }
+    public String SelectedDocumentTitle{get;set;}
     public Boolean ShowCanvasApp { get; private set; }
 
     private Set<String> partnerTypeNames = new Set<String>();
@@ -31,6 +34,8 @@ public without sharing class PartnerDocumentLandingPageController {
 
     public void setSelectedDocumentId() {
         SelectedDocumentId = ApexPages.currentPage().getParameters().get('documentId');
+        SelectedDocumentExtension = ApexPages.currentPage().getParameters().get('documentExtension');
+        SelectedDocumentTitle = ApexPages.currentPage().getParameters().get('documentTitle');
         ShowCanvasApp = true;
     }
 
@@ -50,16 +55,17 @@ public without sharing class PartnerDocumentLandingPageController {
 
     private void loadDocumentsVisibleToAllAccounts() {
         //load all documents that are visible to all accounts and if the partner type is set it matches the user's partner type
-        for(Partner_Document_Manager__c pdm : [SELECT Title__c, LatestVersionId__c
-                                                FROM Partner_Document_Manager__c
-                                                WHERE All_Accounts__c = true
-                                                AND Active__c = true
-                                                AND LatestVersionId__c != null
-                                                AND (Partner_Type__c = null OR Partner_Type__c in :partnerTypeNames)]) {
+        for(Partner_Document_Manager__c pdm : [SELECT Title__c, LatestVersionId__c, FileType__c
+        FROM Partner_Document_Manager__c
+        WHERE All_Accounts__c = true
+        AND Active__c = true
+        AND LatestVersionId__c != null
+        AND (Partner_Type__c = null OR Partner_Type__c in :partnerTypeNames)]) {
 
             DocumentDetail detail = new DocumentDetail();
             detail.Title = pdm.Title__c;
             detail.DocumentId = pdm.LatestVersionId__c;
+            detail.DocumentExtension = pdm.FileType__c;
             DocumentDetailList.add(detail);
         }
         system.debug('after loading documents visible to all accounts ' + DocumentDetailList.size());
@@ -74,16 +80,17 @@ public without sharing class PartnerDocumentLandingPageController {
 
         Id accountId = currentUserList[0].AccountId;
 
-        for(Partner_Document_Access__c pda : [SELECT Partner_Document_Manager__r.Title__c, Partner_Document_Manager__r.LatestVersionId__c
-                                              FROM Partner_Document_Access__c
-                                              WHERE Partner_Document_Manager__r.All_Accounts__c = false
-                                                AND Partner_Document_Manager__r.Active__c = true
-                                                AND Partner_Document_Manager__r.LatestVersionId__c != null
-                                                AND (Partner_Document_Manager__r.Partner_Type__c = null OR Partner_Document_Manager__r.Partner_Type__c in :partnerTypeNames)
-                                                AND Account__r.Id = :accountId]) {
+        for(Partner_Document_Access__c pda : [SELECT Partner_Document_Manager__r.Title__c, Partner_Document_Manager__r.LatestVersionId__c,  Partner_Document_Manager__r.FileType__c
+        FROM Partner_Document_Access__c
+        WHERE Partner_Document_Manager__r.All_Accounts__c = false
+        AND Partner_Document_Manager__r.Active__c = true
+        AND Partner_Document_Manager__r.LatestVersionId__c != null
+        AND (Partner_Document_Manager__r.Partner_Type__c = null OR Partner_Document_Manager__r.Partner_Type__c in :partnerTypeNames)
+        AND Account__r.Id = :accountId]) {
             DocumentDetail detail = new DocumentDetail();
             detail.Title = pda.Partner_Document_Manager__r.Title__c;
             detail.DocumentId = pda.Partner_Document_Manager__r.LatestVersionId__c;
+            detail.DocumentExtension = pda.Partner_Document_Manager__r.FileType__c;
             DocumentDetailList.add(detail);
         }
 
