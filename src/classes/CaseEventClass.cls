@@ -7,7 +7,7 @@ public with sharing class CaseEventClass
 	public integer counter = 0;
 	public integer totalSize = 0;
 	private string recordTypeName;
-    public list<string> lstClusters = new list<string>(); 
+	public list<string> lstClusters = new list<string>();
 
 	public CaseEventClass(Case eventCase)
 	{
@@ -24,7 +24,7 @@ public with sharing class CaseEventClass
 		childIncidents = new List<Case> ();
 
 		if (event != null)
-		childIncidents = SelectChildIncidents(event.Id);
+			childIncidents = SelectChildIncidents(event.Id);
 	}
 
 	@future
@@ -138,14 +138,14 @@ public with sharing class CaseEventClass
 		String implementedProduct = '';
 
 		String product = event.ProductImpacted__c;
-        //String[] platforms = event.PlatformsImpacted__c.split(';');
-        String[] platforms = String.isNotBlank(event.PlatformsImpacted__c) ? event.PlatformsImpacted__c.split(';') : new String[]{};
-		
-        // Added by Arnab - if there are clusters predefined dont look for everything
-        if(lstClusters.size() > 0) 
-            platforms = lstClusters; 
-        
-        
+		//String[] platforms = event.PlatformsImpacted__c.split(';');
+		String[] platforms = String.isNotBlank(event.PlatformsImpacted__c) ? event.PlatformsImpacted__c.split(';') : new String[]{};
+
+		// Added by Arnab - if there are clusters predefined dont look for everything
+		if(lstClusters.size() > 0)
+			platforms = lstClusters;
+
+
 		//ProductEventMap__c productMap = nodeMap.get(product);
 		ProductEventMap__c productMap = nodeMap.get(product);
 
@@ -220,8 +220,8 @@ public with sharing class CaseEventClass
 				for (String s : platforms)
 				{
 
-					clusterProducts.put(s.left(s.indexOf(' - ')).trim(), implementedProduct);
-					system.debug('s ==> ' + s.left(s.indexOf(' - ')).trim());
+					clusterProducts.put(s.left(s.indexOf('-')).trim(), implementedProduct);
+					system.debug('s ==> ' + s.left(s.indexOf('-')).trim());
 
 				}
 				system.debug('clusterProducts ==> ' + clusterProducts);
@@ -230,28 +230,28 @@ public with sharing class CaseEventClass
 				{
 					// Added the Verint cluster in where clause
 					includedProducts = [SELECT Account__c
-					                    FROM ImplementedProduct__c
-					                    WHERE Account__r.CG_Disconnect_Date__c = NULL
-					                    AND(Account__r.inContact_Cluster__c IN :clusterProducts.keySet()
-					                        OR Account__r.Verint_Cluster__c IN :clusterProducts.keySet()
-                                            OR Account__r.NICE_WFM_Cluster__c IN :clusterProducts.keySet()
-                                            OR Account__r.NICE_QM_Cluster__c IN :clusterProducts.keySet())
-					                    AND Product__c IN :clusterProducts.values()
-					                    AND(GoLiveDate__c <= TODAY
-					                        OR(EstimatedGoLiveDate__c <= NEXT_N_DAYS : 14
-					                           AND Status__c != 'Canceled'))];
+					FROM ImplementedProduct__c
+					WHERE Account__r.CG_Disconnect_Date__c = NULL
+					AND(Account__r.inContact_Cluster__c IN :clusterProducts.keySet()
+					OR Account__r.Verint_Cluster__c IN :clusterProducts.keySet()
+					OR Account__r.NICE_WFM_Cluster__c IN :clusterProducts.keySet()
+					OR Account__r.NICE_QM_Cluster__c IN :clusterProducts.keySet())
+							AND Product__c IN :clusterProducts.values()
+							AND(GoLiveDate__c <= TODAY
+							OR(EstimatedGoLiveDate__c <= NEXT_N_DAYS : 14
+							AND Status__c != 'Canceled'))];
 				}
 				else
 				{
 					includedProducts = [SELECT Account__c
-					                    FROM ImplementedProduct__c
-					                    WHERE Account__r.CG_Disconnect_Date__c = NULL
-					                    AND(Account__r.inContact_Cluster__c IN :clusterProducts.keySet()
-					                        OR Account__r.Verint_Cluster__c IN :clusterProducts.keySet()
-                                            OR Account__r.NICE_WFM_Cluster__c IN :clusterProducts.keySet()
-                                            OR Account__r.NICE_QM_Cluster__c IN :clusterProducts.keySet())
-					                    AND Product__c IN :clusterProducts.values()
-					                    AND GoLiveDate__c <= TODAY];
+					FROM ImplementedProduct__c
+					WHERE Account__r.CG_Disconnect_Date__c = NULL
+					AND(Account__r.inContact_Cluster__c IN :clusterProducts.keySet()
+					OR Account__r.Verint_Cluster__c IN :clusterProducts.keySet()
+					OR Account__r.NICE_WFM_Cluster__c IN :clusterProducts.keySet()
+					OR Account__r.NICE_QM_Cluster__c IN :clusterProducts.keySet())
+					AND Product__c IN :clusterProducts.values()
+					AND GoLiveDate__c <= TODAY];
 
 				}
 			}
@@ -267,20 +267,20 @@ public with sharing class CaseEventClass
 				if (recordTypeName == 'Maintenance Notification')
 				{
 					includedProducts = [SELECT Account__c
-					                    FROM ImplementedProduct__c
-					                    WHERE Account__r.CG_Disconnect_Date__c = NULL
-					                    AND Product__c IN :nonClusterProducts
-					                    AND(GoLiveDate__c <= TODAY
-					                        OR(EstimatedGoLiveDate__c <= NEXT_N_DAYS : 14
-					                           AND Status__c != 'Canceled'))];
+					FROM ImplementedProduct__c
+					WHERE Account__r.CG_Disconnect_Date__c = NULL
+					AND Product__c IN :nonClusterProducts
+					AND(GoLiveDate__c <= TODAY
+					OR(EstimatedGoLiveDate__c <= NEXT_N_DAYS : 14
+					AND Status__c != 'Canceled'))];
 				}
 				else
 				{
 					// change the query format
 					includedProducts = [SELECT Account__c
-					                    FROM ImplementedProduct__c
-					                    WHERE Account__r.CG_Disconnect_Date__c = NULL
-					                    AND Product__c IN :nonClusterProducts AND GoLiveDate__c <= TODAY];
+					FROM ImplementedProduct__c
+					WHERE Account__r.CG_Disconnect_Date__c = NULL
+					AND Product__c IN :nonClusterProducts AND GoLiveDate__c <= TODAY];
 				}
 			}
 
@@ -298,8 +298,8 @@ public with sharing class CaseEventClass
 
 
 			Account[] resellPartners = [SELECT ParentId FROM Account WHERE Parent.RecordType.Name = 'Resell Partner' AND(Id IN :implementedAccounts
-			                                                                                                             OR ID IN :addedAccounts
-			                                                                                                             OR ID IN :incidentAccounts)];
+			OR ID IN :addedAccounts
+			OR ID IN :incidentAccounts)];
 			if (!resellPartners.isEmpty())
 			{
 				for (Account partner : resellPartners)
@@ -309,29 +309,30 @@ public with sharing class CaseEventClass
 			}
 
 			accounts = [SELECT Id, Name, CadebillAccountNo__c, inContact_Cluster__c, Verint_Cluster__c, CSM__r.Email, ParentId FROM Account
-			            WHERE
-			            CG_Disconnect_Date__c = NULL
-			            AND(
-			                Id IN :implementedAccounts
-			                OR ID IN :addedAccounts
-			                OR ID IN :incidentAccounts
-			                OR ID IN :resellPartnerIds
+			WHERE
+			CG_Disconnect_Date__c = NULL
+			AND(
+					Id IN :implementedAccounts
+					OR ID IN :addedAccounts
+					OR ID IN :incidentAccounts
+					OR ID IN :resellPartnerIds
 			)
-			            AND ID NOT IN :excludedAccounts
-			            ORDER BY Name
-			            LIMIT :listSize OFFSET :counter
-			           ];
+			AND ID NOT IN :excludedAccounts
+			ORDER BY Name
+			LIMIT :listSize OFFSET :counter
+			];
 
 			totalSize = [SELECT COUNT() FROM Account
-			             WHERE
-			             CG_Disconnect_Date__c = NULL
-			             AND(
-			                 Id IN :implementedAccounts
-			                 OR ID IN :addedAccounts
-			                 OR ID IN :incidentAccounts
+			WHERE
+			CG_Disconnect_Date__c = NULL
+			AND(
+					Id IN :implementedAccounts
+					OR ID IN :addedAccounts
+					OR ID IN :incidentAccounts
+					OR ID IN :resellPartnerIds
 			)
-			             AND ID NOT IN :excludedAccounts
-			            ];
+			AND ID NOT IN :excludedAccounts
+			];
 			//accounts.addAll([SELECT Id, Name, CostGuard_Acct__c, inContact_Cluster__c  FROM Account WHERE CG_Disconnect_Date__c = NULL AND inContact_Cluster__c IN :clusterProducts.keySet() AND Id IN(SELECT Account__c FROM ImplementedProduct__c WHERE Product__c IN :clusterProducts.values() AND GoLiveDate__c <= TODAY) AND ID NOT IN(SELECT Account__c FROM EventAccount__c WHERE Event__c = :event.Id AND Excluded__c = true) ORDER BY Name]);
 			//accounts.addAll([SELECT Id, Name, CostGuard_Acct__c, inContact_Cluster__c  FROM Account WHERE CG_Disconnect_Date__c = NULL AND ID IN(SELECT Account__c FROM EventAccount__c WHERE Event__c = :event.Id AND Excluded__c = false) ORDER BY Name]);
 		}
@@ -385,7 +386,47 @@ public with sharing class CaseEventClass
 		return cases;
 	}
 
-	/* methods and properties for the pagination*/
+   /** Below future method to insert values into Event account object **/
+	@future
+	public static void insertAssociatedAccounts(Id eventId)
+	{
+		list<EventAssociatedAccount__c> associatedAccounts = new list<EventAssociatedAccount__c>();
+
+		case event = [Select Id, RecordTypeId, ProductImpacted__c, PlatformsImpacted__c from Case where id =: eventId];
+		CaseEventClass cec = new CaseEventClass(event);
+		cec.listSize = 4000;
+		list<CaseEventClass.AccountIncident> acctIncidents = new list<CaseEventClass.AccountIncident>();
+		acctIncidents = cec.AccountIncidentList();
+		system.debug('acctIncidents ==> ' + acctIncidents.size());
+		associatedAccounts = [select Id from EventAssociatedAccount__c where Case__c =: eventId];
+		if(associatedAccounts.size() > 0)
+		{
+			delete associatedAccounts;
+		}
+
+		if(!acctIncidents.isEmpty())
+		{
+
+			associatedAccounts = new list<EventAssociatedAccount__c>();
+
+			for(CaseEventClass.AccountIncident ai : acctIncidents)
+			{
+				EventAssociatedAccount__c ea = new EventAssociatedAccount__c();
+				ea.Account__c = ai.acct.Id;
+				ea.Case__c = eventId;
+				associatedAccounts.add(ea);
+			}
+
+			if(associatedAccounts.size() > 0)
+			{
+				insert associatedAccounts;
+			}
+
+		}
+
+	}
+
+    /* methods and properties for the pagination*/
 
 
 	public void Beginning()
