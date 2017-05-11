@@ -425,6 +425,7 @@
                   editable: "inline",
                   scrollable: true,
                   noRecords: true,
+                  selectable: "single, row",
                   height: 150,
                   toolbar: ["create"],
                   columns: [{
@@ -445,7 +446,7 @@
                                 field:"TimeFrame",
                                 title:"Time Frames",
                                 editable:false,
-                                template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">Add TimeFrames</a>'
+                                template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">Manage TimeFrames</a>'
 
                             },
                             {command: ["edit","destroy"]}
@@ -469,10 +470,13 @@
         }
 
         function DeviceTypePicklistEditor(container, options) {
+
+
+            var filteredDeviceTypes = [];
+            if(options.model.id == ''){
             var gridData = $("#deviceList").data("kendoGrid").dataSource.data();
             var griddeviceTypes = [];
             var originaldeviceTypes = {!DeviceTypes};
-            var filteredDeviceTypes = [];
             for(var i = 0; i < gridData.length; i++){
                 griddeviceTypes.push(gridData[i].DeviceType);
             }
@@ -483,6 +487,10 @@
                     filteredDeviceTypes.push(a);
                 }
                 });
+            }else{
+                filteredDeviceTypes = {!DeviceTypes};
+            }
+
 
 
             $('<input style="width:95%" required  id="DeviceType" name="DeviceType"  data-bind="value:' + options.field + '"/>')
@@ -500,6 +508,28 @@
 
         var start, end;
         function OpenModal(sender){
+
+            var selectedRow = $(sender).parent().parent();
+            var rowData = $('#deviceList').data("kendoGrid").dataItem(selectedRow);
+            var deviceId = rowData.Id;
+            XMPersonManagementController.getDeviceTimeframe (
+                                      deviceId,
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                                 var returnResult = JSON.parse(result);
+                                                    console.log('returnResult =>' + returnResult);
+
+                                            } else if (event.type === 'exception') {
+                                              displayError(event.message);
+                                            } else {
+                                                 displayError(event.message);
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+
+
              //init start timepicker
                     start = $("#startTimeInput").kendoTimePicker({
                         change: startChange
