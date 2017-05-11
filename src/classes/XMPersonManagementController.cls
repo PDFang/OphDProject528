@@ -3,6 +3,7 @@ public class XMPersonManagementController{
     public string contactId{get;set;}
     public string emailString{get;set;}
     public string xmPersonId{get;set;}
+    public string timezone{get;set;}
     public Contact currentContact{get;private set;}
     public XMPersonWrapper person{get;set;}
     public List<Contact> contactList{get;private set;}
@@ -42,6 +43,7 @@ public class XMPersonManagementController{
             if(currentContact.xmPerson__c != null) {
                 // current contact has person record
                 xmPersonId = currentContact.xmPerson__c;
+                timezone = currentContact.xmPerson__r.Timezone__c;
                 primaryContact = helper.getContactById(currentContact.xmPerson__r.PrimaryContact__c);
             } else if(string.isNotBlank(contactEmail)){
                 // if any of the duplicate contacts has a person record
@@ -51,6 +53,7 @@ public class XMPersonManagementController{
                     if(cont.xmPerson__c != null && !isPersonMatch) {
                         isPersonMatch = true;
                         xmPersonId = cont.xmPerson__c;
+                        timezone = cont.xmPerson__r.Timezone__c;
                         primaryContact = helper.getContactById(cont.xmPerson__r.PrimaryContact__c);
                     }
                 }
@@ -84,6 +87,7 @@ public class XMPersonManagementController{
 
         try{
             xmPersonId = helper.createXmPerson(person);
+            timezone = person.timezone;
             findAssociatedContacts();
         }
         catch(Exception ex){
@@ -172,25 +176,10 @@ public class XMPersonManagementController{
         String message = '';
         try{
             system.debug('updateDevice(): deviceJson - '+deviceJson);
-
             XMDeviceWrapper deviceWrapper = (XMDeviceWrapper)JSON.deserialize(deviceJson, XMDeviceWrapper.class);
-
             system.debug('updateDevice(): deviceWrapper - '+deviceWrapper);
-            XMDeviceModel device;
-            if(deviceWrapper.deviceType.contains('Email')){
-                XMEmailDevice emailDevice = new XMEmailDevice();
-                emailDevice.emailAddress = deviceWrapper.deviceValue;
-                device = emailDevice;
 
-            } else if(deviceWrapper.deviceType.contains('Phone')){
-                XMSmsDevice smsDevice = new XMSmsDevice();
-                smsDevice.phoneNumber = '+1' + deviceWrapper.deviceValue;
-                device = smsDevice;
-            }
-            device.name = deviceWrapper.deviceType;
-            device.id = deviceWrapper.deviceId;
-            XMRestDeviceService service = new XMRestDeviceService();
-            service.updateDeviceInformation(device);
+            XMPersonManagementHelper.updateDevice(deviceWrapper);
             result = 'Success';
         }catch(Exception ex){
             result = 'Failed';
@@ -207,8 +196,7 @@ public class XMPersonManagementController{
         String result;
         String message = '';
         try{
-            XMRestDeviceService service = new XMRestDeviceService();
-            service.deleteDevice(deviceId);
+            XMPersonManagementHelper.deleteDevice(deviceId);
             result = 'Success';
         }catch(Exception ex){
             result = 'Failed';
@@ -217,20 +205,6 @@ public class XMPersonManagementController{
 
         return sendResponse(result, message);
     }
-
-//    @RemoteAction
-//    public static string getDeviceTimeframe(String deviceId){
-//
-//        XMDeviceTimeframeWrapper[] timeframes;
-//        try{
-//            timeframes = XMPersonManagementHelper.getDeviceTimeframes(deviceId);
-//        }catch(Exception ex){
-//            timeframes = new XMDeviceTimeframeWrapper[]{};
-//            system.debug('getDeviceTimeframe(): exception - '+ex);
-//        }
-//
-//        return JSON.Serialize(timeframes);
-//    }
 
     private static string sendResponse(String result, string message){
 
