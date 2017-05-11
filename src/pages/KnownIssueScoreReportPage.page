@@ -200,7 +200,7 @@
                      return 'Subject';
                      break;
                 case 'status' :
-                     return 'Status';
+                     return 'KI Status';
                      break;
                 case 'team' :
                      return 'Team';

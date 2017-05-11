@@ -41,6 +41,10 @@ public class ContentVersionTriggerHandler extends TriggerHandler
                         LatestVersionId__c = version.Id,
                         Title__c = version.Title
                 );
+                String path = version.PathOnClient;
+                if(path != null && path.indexOf('.') > 0){
+                    manager.FileType__c = path.substring(path.lastIndexOf('.')+1);
+                }
                 managerList.add(manager);
             }
 

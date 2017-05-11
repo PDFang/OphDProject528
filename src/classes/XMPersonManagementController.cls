@@ -1,10 +1,10 @@
-public class XMPersonManagementController {
+public class XMPersonManagementController{
 
     public string contactId{get;set;}
     public string emailString{get;set;}
     public string xmPersonId{get;set;}
     public Contact currentContact{get;private set;}
-    public XMPerson person{get;set;}
+    public XMPersonWrapper person{get;set;}
     public List<Contact> contactList{get;private set;}
     public boolean isPersonMatch{get;private set;}
 
@@ -30,11 +30,12 @@ public class XMPersonManagementController {
             // initialization
             isPersonMatch = false;
             contactList = new List<Contact>();
-            helper = new XMPersonManagementHelper();
+
 
             // get contact info
             contactId = (string)controller.getId();
-            currentContact = helper.getContactById(contactId);
+            helper = new XMPersonManagementHelper(contactId);
+            currentContact = helper.getCurrentContact();
             String contactEmail = currentContact.Email;
 
             // find the person record and its associated primary contact
@@ -58,7 +59,7 @@ public class XMPersonManagementController {
             if(primaryContact == null){
                 primaryContact = currentContact;
             }
-            person = new XMPerson(primaryContact);
+            person = new XMPersonWrapper(primaryContact);
 
             findAssociatedContacts();
         } catch(Exception ex){
@@ -72,28 +73,18 @@ public class XMPersonManagementController {
         contactList = new List<Contact>();
         if(string.isNotBlank(xmPersonId)){
             Map<Id, Contact> contactMap = helper.getContactsByXmPerson(xmPersonId);
-            contactMap.remove(contactId);
+            //contactMap.remove(contactId);
             contactList.addAll(contactMap.values());
         }
 
     }
 
-    // inserts a record in Notification Profile object and then calls out xMatters to create a Person
+    // calls out xMatters to create a Person and then inserts a record in Notification Profile object
     public pagereference addPerson(){
 
         try{
-            String xmGuid = helper.createXmPerson(person);
-            if(xmGuid != null){
-                xmPerson__c newPerson = new xmPerson__c(
-                        PrimaryContact__c = currentContact.Id,
-                        xmPersonUID__c = xmGuid,
-                        Timezone__c = person.timezone
-                );
-                insert newPerson;
-                xmPersonId = newPerson.Id;
-                currentContact.xmPerson__c = newPerson.Id;
-                update currentContact;
-            }
+            xmPersonId = helper.createXmPerson(person);
+            findAssociatedContacts();
         }
         catch(Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ex.getMessage()));
@@ -124,34 +115,27 @@ public class XMPersonManagementController {
     @RemoteAction
     public static string getUserDevices(String xmPersionId)
     {
-        XMDevice[] newDeviceList = new XMDevice[]{};
-        List<xmPerson__c> persons = [Select xmPersonUID__c from xmPerson__c where Id = :xmPersionId];
-        if(persons.isEmpty()){
-            return null;
+        XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
+        try{
+            List<xmPerson__c> persons = [Select xmPersonUID__c from xmPerson__c where Id = :xmPersionId];
+            if(persons.size() > 0){
+                newDeviceList = XMPersonManagementHelper.getUserDevices(persons[0].xmPersonUID__c);
+            }
+        }catch(Exception ex){
+            system.debug('getUserDevices(): exception - '+ex);
+            newDeviceList = new XMDeviceWrapper[]{};
         }
 
-        XMRestDeviceService service = new XMRestDeviceService();
-        List<XMDeviceModel> deviceList = service.getAllDevicesByxMattersUserId(persons[0].xmPersonUID__c);
-
-        for(XMDeviceModel device: deviceList){
-            XMDevice newDevice = new XMDevice();
-            newDevice.DeviceType = device.name;
-            if(device instanceof XMSmsDevice){
-                newDevice.DeviceValue = ((XMSmsDevice)device).phoneNumber;
-            }
-            if(device instanceof XMEmailDevice){
-                newDevice.DeviceValue = ((XMEmailDevice)device).emailAddress;
-            }
-            //newDevice.deviceId = device.id;
-            newDeviceList.add(newDevice);
-        }
         return JSON.Serialize(newDeviceList);
+
     }
 
     @RemoteAction
     public static string addNewDevice(String xmPersionId, String deviceType, String deviceValue)
     {
         String result;
+        String message = '';
+
         try{
             List<xmPerson__c> persons = [Select xmPersonUID__c from xmPerson__c where Id = :xmPersionId];
 
@@ -174,45 +158,88 @@ public class XMPersonManagementController {
             result = response != null ? 'Success' : 'Failed';
         }catch(Exception ex){
             result = 'Failed';
+            message = ex.getMessage();
         }
 
-        return result;
+        return sendResponse(result, message);
+
     }
 
-    public class XMPerson{
-        public string firstName{get;set;}
-        public string lastName{get;set;}
-        public string email{get;set;}
-        public string phone{get;set;}
-        public string accountId{get;set;}
-        public string accountName{get;set;}
-        public string contactId{get;set;}
-        public string xmPersonId{get;set;}
-        public string timezone{get;set;}
+    @RemoteAction
+    public static string updateDevice(String deviceJson){
 
-        public XMPerson(Contact cont){
-            this.firstName = cont.FirstName;
-            this.lastName = cont.LastName;
-            this.email = cont.Email;
-            this.phone = cont.Phone;
-            this.accountId = cont.AccountId;
-            this.accountName = cont.Account.Name;
-            this.contactId = cont.Id;
-            this.xmPersonId = cont.xmPerson__c;
-            this.timezone = (cont.xmPerson__c != null && cont.xmPerson__r.Timezone__c != null) ? cont.xmPerson__r.Timezone__c : '';
+        String result;
+        String message = '';
+        try{
+            system.debug('updateDevice(): deviceJson - '+deviceJson);
+
+            XMDeviceWrapper deviceWrapper = (XMDeviceWrapper)JSON.deserialize(deviceJson, XMDeviceWrapper.class);
+
+            system.debug('updateDevice(): deviceWrapper - '+deviceWrapper);
+            XMDeviceModel device;
+            if(deviceWrapper.deviceType.contains('Email')){
+                XMEmailDevice emailDevice = new XMEmailDevice();
+                emailDevice.emailAddress = deviceWrapper.deviceValue;
+                device = emailDevice;
+
+            } else if(deviceWrapper.deviceType.contains('Phone')){
+                XMSmsDevice smsDevice = new XMSmsDevice();
+                smsDevice.phoneNumber = '+1' + deviceWrapper.deviceValue;
+                device = smsDevice;
+            }
+            device.name = deviceWrapper.deviceType;
+            device.id = deviceWrapper.deviceId;
+            XMRestDeviceService service = new XMRestDeviceService();
+            service.updateDeviceInformation(device);
+            result = 'Success';
+        }catch(Exception ex){
+            result = 'Failed';
+            message = ex.getMessage();
         }
+
+        return sendResponse(result, message);
+
     }
 
+    @RemoteAction
+    public static string deleteDevice(String deviceId){
 
-    public class XMDevice{
-        public string deviceType{get;set;}
-        public string deviceValue{get;set;}
-        public string priorityThreshold{get;set;}
-        public string deviceId{get;set;}
-
-        public XMDevice(){
-
+        String result;
+        String message = '';
+        try{
+            XMRestDeviceService service = new XMRestDeviceService();
+            service.deleteDevice(deviceId);
+            result = 'Success';
+        }catch(Exception ex){
+            result = 'Failed';
+            message = ex.getMessage();
         }
+
+        return sendResponse(result, message);
+    }
+
+//    @RemoteAction
+//    public static string getDeviceTimeframe(String deviceId){
+//
+//        XMDeviceTimeframeWrapper[] timeframes;
+//        try{
+//            timeframes = XMPersonManagementHelper.getDeviceTimeframes(deviceId);
+//        }catch(Exception ex){
+//            timeframes = new XMDeviceTimeframeWrapper[]{};
+//            system.debug('getDeviceTimeframe(): exception - '+ex);
+//        }
+//
+//        return JSON.Serialize(timeframes);
+//    }
+
+    private static string sendResponse(String result, string message){
+
+        System.JSONGenerator generator = Json.createGenerator(true);
+        generator.writeStartObject();
+        generator.writeStringField('result', result);
+        generator.writeStringField('message', message);
+        return generator.getAsString();
+
     }
 
 }

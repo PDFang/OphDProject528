@@ -12,6 +12,29 @@ public class XMPersonManagementHelper {
         'Secondary SMS Phone'
     };
 
+    public static List<SelectOption> getTimezones(){
+        List<SelectOption> options = new List<SelectOption>();
+        //options.add(new SelectOption( '', '- Select - '));
+        Schema.PickListEntry[] values = Schema.xmPerson__c.Timezone__c.getDescribe().getPicklistValues();
+        for(Schema.PickListEntry entry : values){
+            options.add(new SelectOption( entry.getValue(), entry.getLabel()));
+        }
+
+        return options;
+    }
+
+    public Contact getCurrentContact(){
+        return currentContact;
+    }
+
+    private Contact currentContact;
+    private static Map<String, List<XMDeviceTimeframe>> deviceTimeframeMap;
+
+    // constructor
+    public XMPersonManagementHelper(String contactId){
+        this.currentContact = getContactById(contactId);
+    }
+
     public Contact getContactById(String contactId){
 
         return [
@@ -40,18 +63,8 @@ public class XMPersonManagementHelper {
         ]);
     }
 
-    public static List<SelectOption> getTimezones(){
-        List<SelectOption> options = new List<SelectOption>();
-        options.add(new SelectOption('- Select - ', ''));
-        Schema.PickListEntry[] values = Schema.xmPerson__c.Timezone__c.getDescribe().getPicklistValues();
-        for(Schema.PickListEntry entry : values){
-            options.add(new SelectOption( entry.getLabel(), entry.getValue()));
-        }
-
-        return options;
-    }
-
-    public string createXmPerson(XMPersonManagementController.XMPerson person){
+    // calls out xMatters to create a Person and then inserts a record in Notification Profile object
+    public string createXmPerson(XMPersonWrapper person){
 
         XMPersonModel newPerson = new XMPersonModel();
         newPerson.targetName = person.contactId;
@@ -61,13 +74,74 @@ public class XMPersonManagementHelper {
         newPerson.timezone = person.timezone;
         XMRestPerson restService = new XMRestPerson();
         XMPersonModel response = restService.createPerson(newPerson);
-        return response != null ? response.id : null;
+
+        String xmGuid = response.Id;
+        xmPerson__c profile;
+        if(xmGuid != null){
+            profile = new xmPerson__c(
+                    PrimaryContact__c = currentContact.Id,
+                    xmPersonUID__c = xmGuid,
+                    Timezone__c = person.timezone
+            );
+            insert profile;
+
+            currentContact.xmPerson__c = profile.Id;
+            update currentContact;
+
+        }
+
+        return profile != null ? profile.Id : null;
 
     }
 
-//    public List<XMDeviceModel> getAllDevicesByxMattersUserId(String userGuid){
-////        XMRestDeviceService service = new XMRestDeviceService();
-////        List<XMDeviceModel> response = service.getAllDevicesByxMattersUserId();
+    public static XMDeviceWrapper[] getUserDevices(String xmPersionId){
+
+        XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
+        deviceTimeframeMap = new Map<String, List<XMDeviceTimeframe>>();
+
+        if(string.isNotBlank(xmPersionId)) {
+            XMRestDeviceService service = new XMRestDeviceService();
+            List<XMDeviceModel> deviceList = service.getAllDevicesByxMattersUserId(xmPersionId);
+
+            for (XMDeviceModel device: deviceList) {
+                XMDeviceWrapper newDevice = new XMDeviceWrapper();
+                newDevice.deviceType = device.name;
+                if (device instanceof XMSmsDevice) {
+                    newDevice.deviceValue = ((XMSmsDevice) device).phoneNumber;
+                }
+                if (device instanceof XMEmailDevice) {
+                    newDevice.deviceValue = ((XMEmailDevice) device).emailAddress;
+                }
+                newDevice.deviceId = device.id;
+                newDeviceList.add(newDevice);
+                if(device.timeframes == null || device.timeframes.isEmpty()){
+                    continue;
+                }
+                List<XMDeviceTimeframe> timeframeList = device.timeframes;
+                for(XMDeviceTimeframe timeframe : timeframeList){
+                    XMDeviceTimeframeWrapper wrapper = new XMDeviceTimeframeWrapper(timeframe);
+                    newDevice.timeframes.add(wrapper);
+                }
+            }
+        }
+
+        return newDeviceList;
+
+    }
+
+//    public static XMDeviceTimeframeWrapper[] getDeviceTimeframes(String deviceId){
+//
+//        XMDeviceTimeframeWrapper[] wrapperList = new XMDeviceTimeframeWrapper[]{};
+//        if(deviceTimeframeMap != null && deviceTimeframeMap.containsKey(deviceId)){
+//            XMDeviceTimeframe[] timeframes = deviceTimeframeMap.get(deviceId);
+//            for(XMDeviceTimeframe timeframe : timeframes){
+//                XMDeviceTimeframeWrapper wrapper = new XMDeviceTimeframeWrapper(timeframe);
+//                wrapperList.add(wrapper);
+//            }
+//        }
+//        return wrapperList;
+//
 //    }
+
 
 }
