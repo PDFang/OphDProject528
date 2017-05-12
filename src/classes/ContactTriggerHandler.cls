@@ -70,7 +70,7 @@ public class ContactTriggerHandler extends TriggerHandler{
     private static void addAccountRef(set<id> acctAddRef)
     {
         //get accounts that need referenced
-        Account[] accts = [SELECT Id, Referenceable__c FROM Account WHERE Id IN :acctAddRef AND ReferenceStor__Import_into_ReferenceStor__c = false];
+        Account[] accts = [SELECT Id, Referenceable__c FROM Account WHERE Id IN :acctAddRef AND Referenceable__c = false];
 
         //make sure accounts are returned
         if(accts.size()>0)
