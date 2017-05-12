@@ -26,7 +26,8 @@ public class PartnerDocumentLandingPageControllerTest {
             PartnerDocumentLandingPageController testController = new PartnerDocumentLandingPageController();
             List<PartnerDocumentLandingPageController.DocumentDetail> documentList = testController.DocumentDetailList;
 
-            system.assertEquals(3, documentList.size(), 'User should have access to three active documents.');
+            system.assertEquals(3, documentList.size(), 'User should have access to all three active documents.');
+            testController.setSelectedDocumentId();
         }
 
         test.stopTest();
@@ -180,9 +181,10 @@ public class PartnerDocumentLandingPageControllerTest {
         Partner_Document_Manager__c pdmReferral = new Partner_Document_Manager__c(
                 ContentDocumentId__c = '069xxxxxxxxxxxxx03',
                 Title__c = 'Test Partner Doc - Referral Partner',
+                LatestVersionId__c = partnerDocVersion.Id,
                 FileType__c = 'xslx',
                 Active__c = true,
-                All_Accounts__c = false,
+                All_Accounts__c = true,
                 Partner_Type__c = 'Referral'
         );
         pdmList.add(pdmReferral);
