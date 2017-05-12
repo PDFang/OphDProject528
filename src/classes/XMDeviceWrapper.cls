@@ -13,20 +13,28 @@ public class XMDeviceWrapper {
 
     public XMDeviceModel createModel(){
 
-        XMDeviceModel device;
+        XMDeviceModel deviceModel;
         if(this.deviceType.contains('Email')){
             XMEmailDevice emailDevice = new XMEmailDevice();
             emailDevice.emailAddress = this.deviceValue;
-            device = emailDevice;
+            deviceModel = emailDevice;
 
         } else if(this.deviceType.contains('Phone')){
             XMSmsDevice smsDevice = new XMSmsDevice();
             smsDevice.phoneNumber = '+1' + this.deviceValue;
-            device = smsDevice;
+            deviceModel = smsDevice;
         }
-        device.name = this.deviceType;
-        device.id = this.deviceId;
+        deviceModel.name = this.deviceType;
+        deviceModel.id = this.deviceId;
 
-        return device;
+        deviceModel.timeframes = new XMDeviceTimeframe[]{};
+        for(XMDeviceTimeframeWrapper wrapper : this.timeframes){
+            XMDeviceTimeframe timeframeModel = wrapper.createModel();
+            deviceModel.timeframes.add(timeframeModel);
+        }
+
+        system.debug('createModel(): - ' + deviceModel);
+        return deviceModel;
+
     }
 }
