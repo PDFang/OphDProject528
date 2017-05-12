@@ -40,24 +40,67 @@ public class XMDeviceTimeframeWrapper {
         tempDate = Datetime.newInstance(system.today(), endTime);
         this.endTime = tempDate.format('h:mm a');
 
-        days = new Week();
+        this.days = new Week();
+        system.debug('XMDeviceTimeframeWrapper:  timeframe.days - '+ timeframe.days);
         for(String day : timeframe.days){
-            if(day == 'SU'){
-                days.sunday = true;
-            } else if(day == 'MO'){
-                days.monday = true;
-            } else if(day == 'TU'){
-                days.tuesday = true;
-            } else if(day == 'WE'){
-                days.wednesday = true;
-            } else if(day == 'TH'){
-                days.thursday = true;
-            } else if(day == 'FR'){
-                days.friday = true;
-            } else if(day == 'SA'){
-                days.saturday = true;
+            system.debug(' day  - '+day);
+            if(day.containsIgnoreCase('SU')){
+                this.days.sunday = true;
+            } else if(day.containsIgnoreCase('MO')){
+                this.days.monday = true;
+            } else if(day.containsIgnoreCase('TU')){
+                this.days.tuesday = true;
+            } else if(day.containsIgnoreCase('WE')){
+                this.days.wednesday = true;
+            } else if(day.containsIgnoreCase('TH')){
+                this.days.thursday = true;
+            } else if(day.containsIgnoreCase('FR')){
+                this.days.friday = true;
+            } else if(day.containsIgnoreCase('SA')){
+                this.days.saturday = true;
             }
         }
+
+        system.debug('XMDeviceTimeframeWrapper:  timeframe - '+ this);
+
+    }
+
+    public XMDeviceTimeframe createModel(){
+
+        XMDeviceTimeframe timeframeModel = new XMDeviceTimeframe();
+
+        Integer hours = Integer.valueOf(this.startTime.left(2));
+        Integer minutes = Integer.valueOf(this.startTime.right(2));
+        Time startTime = Time.newInstance(hours, minutes, 0, 0);
+        Datetime startDateTime = Datetime.newInstance(system.today(), startTime);
+
+        hours = Integer.valueOf(this.endTime.left(2));
+        minutes = Integer.valueOf(this.endTime.right(2));
+        Time endTime = Time.newInstance(hours, minutes, 0, 0);
+        Datetime endDateTime = Datetime.newInstance(system.today(), endTime);
+
+        timeframeModel.name = this.name;
+        timeframeModel.startTime =  startDateTime.format('h:mm');
+        timeframeModel.durationInMinutes = (Integer)(endDateTime.getTime() - startDateTime.getTime()) / 60 / 1000;
+        List<String> days = new List<string>();
+        timeframeModel.days = days;
+        if(this.days.sunday){
+            days.add('SU');
+        } else if(this.days.monday){
+            days.add('MO');
+        } else if(this.days.tuesday){
+            days.add('TU');
+        } else if(this.days.wednesday){
+            days.add('WE');
+        } else if(this.days.thursday){
+            days.add('TH');
+        } else if(this.days.friday){
+            days.add('FR');
+        } else if(this.days.saturday){
+            days.add('SA');
+        }
+
+        return timeframeModel;
 
     }
 
