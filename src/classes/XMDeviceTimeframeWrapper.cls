@@ -69,13 +69,24 @@ public class XMDeviceTimeframeWrapper {
 
         XMDeviceTimeframe timeframeModel = new XMDeviceTimeframe();
 
-        Integer hours = Integer.valueOf(this.startTime.left(2));
-        Integer minutes = Integer.valueOf(this.startTime.right(2));
+        String startTimeText = this.startTime;
+        Integer hours = Integer.valueOf(startTimeText.left(2));
+        Integer minutes;
+        if(startTimeText.right(2) == 'AM'){
+            minutes = Integer.valueOf(startTimeText.substring(startTimeText.lastIndexOf(':')+1, startTimeText.lastIndexOf(':')+2));
+        } else{
+            minutes = Integer.valueOf(startTimeText.substring(startTimeText.lastIndexOf(':')+1, startTimeText.lastIndexOf(':')+2));
+        }
         Time startTime = Time.newInstance(hours, minutes, 0, 0);
         Datetime startDateTime = Datetime.newInstance(system.today(), startTime);
 
-        hours = Integer.valueOf(this.endTime.left(2));
-        minutes = Integer.valueOf(this.endTime.right(2));
+        String endTimeText = this.endTime;
+        hours = Integer.valueOf(endTimeText.left(2));
+        if(endTimeText.right(2) == 'AM'){
+            minutes = Integer.valueOf(endTimeText.substring(endTimeText.lastIndexOf(':')+1, endTimeText.lastIndexOf(':')+2));
+        } else{
+            minutes = Integer.valueOf(endTimeText.substring(endTimeText.lastIndexOf(':')+1, endTimeText.lastIndexOf(':')+2));
+        }
         Time endTime = Time.newInstance(hours, minutes, 0, 0);
         Datetime endDateTime = Datetime.newInstance(system.today(), endTime);
 
@@ -99,6 +110,8 @@ public class XMDeviceTimeframeWrapper {
         } else if(this.days.saturday){
             days.add('SA');
         }
+
+        system.debug('createModel:  timeframeModel - '+ timeframeModel);
 
         return timeframeModel;
 

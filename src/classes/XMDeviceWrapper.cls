@@ -30,10 +30,10 @@ public class XMDeviceWrapper {
         deviceModel.timeframes = new XMDeviceTimeframe[]{};
         for(XMDeviceTimeframeWrapper wrapper : this.timeframes){
             XMDeviceTimeframe timeframeModel = wrapper.createModel();
-            deviceModel.timeframes.add(timeframeModel);
+            //deviceModel.timeframes.add(timeframeModel);
         }
 
-        system.debug('createModel(): - ' + deviceModel);
+        system.debug('createModel(): deviceModel - ' + deviceModel);
         return deviceModel;
 
     }
