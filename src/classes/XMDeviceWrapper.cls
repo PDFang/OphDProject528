@@ -10,4 +10,23 @@ public class XMDeviceWrapper {
     public XMDeviceWrapper(){
         timeframes = new List<XMDeviceTimeframeWrapper>();
     }
+
+    public XMDeviceModel createModel(){
+
+        XMDeviceModel device;
+        if(this.deviceType.contains('Email')){
+            XMEmailDevice emailDevice = new XMEmailDevice();
+            emailDevice.emailAddress = this.deviceValue;
+            device = emailDevice;
+
+        } else if(this.deviceType.contains('Phone')){
+            XMSmsDevice smsDevice = new XMSmsDevice();
+            smsDevice.phoneNumber = '+1' + this.deviceValue;
+            device = smsDevice;
+        }
+        device.name = this.deviceType;
+        device.id = this.deviceId;
+
+        return device;
+    }
 }
