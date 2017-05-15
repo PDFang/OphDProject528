@@ -38,31 +38,39 @@ public class XMPersonManagementController{
             helper = new XMPersonManagementHelper(contactId);
             currentContact = helper.getCurrentContact();
             String contactEmail = currentContact.Email;
-
+            String xmPersonGuid = null;
+            system.debug('XMPersonManagementController(): currentContact - '+currentContact);
             // find the person record and its associated primary contact
-            if(currentContact.xmPerson__c != null) {
+            if(currentContact.xmPerson__c != null && currentContact.xmPerson__r.xmPersonUID__c != null) {
                 // current contact has person record
                 xmPersonId = currentContact.xmPerson__c;
                 timezone = currentContact.xmPerson__r.Timezone__c;
                 primaryContact = helper.getContactById(currentContact.xmPerson__r.PrimaryContact__c);
+                xmPersonGuid = currentContact.xmPerson__r.xmPersonUID__c;
             } else if(string.isNotBlank(contactEmail)){
                 // if any of the duplicate contacts has a person record
                 Map<Id, Contact> contactMap = helper.getContactsByEmail(contactEmail);
-                contactMap.remove(contactId);
+                //contactMap.remove(contactId);
                 for(Contact cont : contactMap.values()){
                     if(cont.xmPerson__c != null && !isPersonMatch) {
                         isPersonMatch = true;
                         xmPersonId = cont.xmPerson__c;
+                        xmPersonGuid = cont.xmPerson__r.xmPersonUID__c;
                         timezone = cont.xmPerson__r.Timezone__c;
                         primaryContact = helper.getContactById(cont.xmPerson__r.PrimaryContact__c);
                     }
                 }
             }
 
+            if(string.isNotBlank(xmPersonGuid)){
+                person = helper.getXmPersonByGuid(xmPersonGuid);
+            } else{
+                person = new XMPersonWrapper(currentContact);
+            }
             if(primaryContact == null){
                 primaryContact = currentContact;
             }
-            person = new XMPersonWrapper(primaryContact);
+
 
             findAssociatedContacts();
         } catch(Exception ex){
@@ -87,6 +95,7 @@ public class XMPersonManagementController{
 
         try{
             xmPersonId = helper.createXmPerson(person);
+            system.debug('addPerson(): currentContact - '+currentContact);
             timezone = person.timezone;
             findAssociatedContacts();
         }
