@@ -65,6 +65,38 @@
                 width:30% !important;
             }
 
+            .has-error {
+            border-color: #a94442 !important;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+            box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+        }
+
+        .button-timeframe{
+            padding: 6px 12px !important;
+            margin-bottom: 0 !important;
+            font-weight: 400;
+            color: #fff !important;
+            background: none !important;
+            background-color: #0275d8 !important;
+            border-color: #2e6da4 !important;
+            font-size: 12px !important;
+            font-weight:200 !importnat;
+        }
+
+        .button-timeframe-cancel{
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid rgb(216, 221, 230) !important;
+            background-color: rgb(255, 255, 255) !important;
+            color: #0275d8 !important;
+            display: inline-block;
+            height:33px;
+            font-weight:200 !importnat;
+            font-size : 12px !important;
+    }
+
     </style>
 
     <apex:form >
@@ -75,6 +107,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <div id="java-errors" class=" alert alert-danger message-alert" style="margin-left:15px;width:30%; display:none;"></div>
+                    <div id="success" class=" alert alert-success message-alert" style="margin-left:15px;width:30%; display:none;"></div>
                     <apex:pageMessages id="errorMessages"/>
 
                 </div>
@@ -211,14 +244,17 @@
                     </div>
 
                     <div class="modal-body" style="font-size:14px;" id="infoModal">
-                        <a href="#" id="btnAdd" onclick="addNewTab();" style="float:right;"><i class="glyphicon glyphicon-plus"></i> Add New TimeFrame</a>
-
+                        <div class="row">
+                            <a href="#" id="btnAdd" onclick="addNewTab();" style="float:right;"><i class="glyphicon glyphicon-plus"></i> Add New TimeFrame</a>
+                        </div>
+                        <div id="validation-errors" class=" alert alert-danger message-alert" style="margin-top:15px;"></div>
                         <ul class="nav nav-tabs" id="tabs">
 
                         </ul>
                         <div class="tab-content">
 
                         </div>
+
                     </div>
 
 
@@ -239,6 +275,7 @@
          });
 
     var timeframes = [];
+    var deviceData = new Object();
     function AddPerson(){
         callNotificationManage();
         setupDeviceList();
@@ -259,6 +296,7 @@
                                       {
                                           if (event.status) {
                                               if(result.length > 1){
+                                                  timeframes = [];
                                                    options.success(JSON.parse(result));
                                                    var resturnedResult = JSON.parse(result);
                                                     for(var i = 0; i< resturnedResult.length; i++){
@@ -291,9 +329,6 @@
                                 objResult.deviceValue = options.data.deviceValue ;
                                 objResult.priorityThreshold = "Medium";
                                 objResult.deviceId = options.data.deviceId ;
-                                var deviceUpdateList = new Object();
-                                deviceUpdateList.XMDeviceWrapper = objResult;
-                                           console.log('JSON obj ' + JSON.stringify(deviceUpdateList));
                              XMPersonManagementController.updateDevice (
                                      JSON.stringify(objResult),
                                       function(result,event)
@@ -410,7 +445,6 @@
                   editable: "inline",
                   scrollable: true,
                   noRecords: true,
-                  selectable: "single, row",
                   height: 150,
                   toolbar: ["create"],
                   columns: [{
@@ -497,6 +531,11 @@
             var selectedRow = $(sender).parent().parent();
             var rowData = $('#deviceList').data("kendoGrid").dataItem(selectedRow);
             var deviceId = rowData.Id;
+            deviceData = new Object();
+            deviceData.deviceId = rowData.Id;
+            deviceData.deviceType = rowData.DeviceType;
+            deviceData.deviceValue = rowData.DeviceValue ;
+
             addExistingTab(deviceId);
             $('#info').modal('show');
         }
@@ -518,13 +557,14 @@
              }
 
         function addNewTab(){
+
             var nextTab = $('#tabs li').length+1;
-            $('<li><a href="#tab'+nextTab+'" data-toggle="tab">New</a></li>').appendTo('ul#tabs');
-            var divContent = '<div id="tab'+nextTab+'" class="tab-pane fade">'
+            $('<li><a href="#'+nextTab+'" data-toggle="tab">New</a></li>').appendTo('ul#tabs');
+            var divContent = '<div id="'+nextTab+'" class="tab-pane fade">'
                             + ' <div class="form-group">'
-                            + '<label for="nameInput" class="col-2 col-form-label">Name </label>'
+                            + '<label for="nameInput'+nextTab+'" class="col-2 col-form-label">Name </label>'
                             + '<div class="col-10">'
-                            + '<input class="form-control" type="text" id="nameInput" style="width:30%;" required="true"/>'
+                            + '<input class="form-control" type="text" id="nameInput'+nextTab+'" style="width:30%;" required="true"/>'
                             + '</div></div>'
                             + '<div class="form-group">'
                             + '<label for="startTimeInput'+nextTab+'" class="col-2 col-form-label">Start Time</label>'
@@ -539,25 +579,25 @@
                             + '<div class="form-group">'
                             + '<label for="DaysInput" class="col-2 col-form-label">Days</label>'
                             + '<div class="weekDays-selector weekDays-selectorNew">'
-                            + '<input type="checkbox" id="weekday-mon-new'+nextTab+'" class="weekday" />'
+                            + '<input type="checkbox" id="weekday-mon-new'+nextTab+'" class="weekday monday" checked="true"/>'
                             + '<label for="weekday-mon-new'+nextTab+'">Mon</label>'
-                            + '<input type="checkbox" id="weekday-tue-new'+nextTab+'" class="weekday" />'
+                            + '<input type="checkbox" id="weekday-tue-new'+nextTab+'" class="weekday tuesday" checked="true"/>'
                             + '<label for="weekday-tue-new'+nextTab+'">Tue</label>'
-                            + '<input type="checkbox" id="weekday-wed-new'+nextTab+'" class="weekday" />'
+                            + '<input type="checkbox" id="weekday-wed-new'+nextTab+'" class="weekday wednesday" checked="true" />'
                             + '<label for="weekday-wed-new'+nextTab+'">Wed</label>'
-                            + '<input type="checkbox" id="weekday-thu-new'+nextTab+'" class="weekday" />'
+                            + '<input type="checkbox" id="weekday-thu-new'+nextTab+'" class="weekday thursday" checked="true"/>'
                             + '<label for="weekday-thu-new'+nextTab+'">Thu</label>'
-                            + '<input type="checkbox" id="weekday-fri-new'+nextTab+'" class="weekday" />'
+                            + '<input type="checkbox" id="weekday-fri-new'+nextTab+'" class="weekday friday" checked="true"/>'
                             + '<label for="weekday-fri-new'+nextTab+'">Fri</label>'
-                            + '<input type="checkbox" id="weekday-sat-new'+nextTab+'" class="weekday" />'
+                            + '<input type="checkbox" id="weekday-sat-new'+nextTab+'" class="weekday saturday" checked="true"/>'
                             + '<label for="weekday-sat-new'+nextTab+'">Sat</label>'
-                            + '<input type="checkbox" id="weekday-sun-new'+nextTab+'" class="weekday" />'
+                            + '<input type="checkbox" id="weekday-sun-new'+nextTab+'" class="weekday sunday" checked="true"/>'
                             + '<label for="weekday-sun-new'+nextTab+'">Sun</label>'
                             + '</div> </div>'
                             + '<div class="form-group">'
                             + '<div class="col-10">'
-                            + '<button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Save</button>'
-                            + '<button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>'
+                            + '<button type="button" class="btn button-timeframe" style="color:black !important;" onclick = "saveTimeFrames(); return false;">Save</button>'
+                            + '<button type="button" class="btn button-timeframe-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>'
                             + '</div></div></div>';
 
            $(divContent).appendTo('div.tab-content');
@@ -569,86 +609,211 @@
         }
 
       function addExistingTab(deviceId){
+            $('div.tab-content').empty();
+            $('ul#tabs').empty();
+            $("div#validation-errors").css("display", "none");
+             $("div#validation-errors").empty();
+            for(var i = 0; i < timeframes.length; i++){
+                 if(deviceId === timeframes[i].deviceId){
+                      $('<li class="active"><a href="#'+timeframes[i].name+'" data-toggle="tab">'+timeframes[i].name+'</a></li>').appendTo('ul#tabs');
+                      divContent = '<div id="'+timeframes[i].name+'" class="tab-pane fade in active">'
+                                   + ' <div class="form-group">'
+                                    + '<label for="nameInput'+timeframes[i].name+'" class="col-2 col-form-label">Name </label>'
+                                    + '<div class="col-10">'
+                                    + '<input class="form-control" type="text" id="nameInput'+timeframes[i].name+'" style="width:30%;" value="'+ timeframes[i].name +'"/>'
+                                    + '</div></div>'
+                                    + '<div class="form-group">'
+                                    + '<label for="startTimeInput" class="col-2 col-form-label">Start Time</label>'
+                                    + '<div class="col-10">'
+                                    + '<input class="form-control" id="startTimeInput'+timeframes[i].name+'"  style="width:15%;" value="'+ timeframes[i].startTime +'"/>'
+                                    + '</div></div>'
+                                    + '<div class="form-group">'
+                                    + '<label for="endTimeInput'+timeframes[i].name+'" class="col-2 col-form-label">End Time</label>'
+                                    + '<div class="col-10">'
+                                    + '<input class="form-control" type="email" id="endTimeInput'+timeframes[i].name+'" style="width:15%;" value="'+ timeframes[i].endTime +'"/>'
+                                    + '</div></div>'
+                                    + '<div class="form-group">'
+                                    + '<label for="DaysInput" class="col-2 col-form-label">Days</label>'
+                                    + '<div class="weekDays-selector">'
+                                    + '<input type="checkbox" id="weekday-mon'+timeframes[i].name+'" class="weekday monday"/>'
+                                    + '<label for="weekday-mon'+timeframes[i].name+'">Mon</label>'
+                                    + '<input type="checkbox" id="weekday-tue'+timeframes[i].name+'" class="weekday tuesday"/>'
+                                    + '<label for="weekday-tue'+timeframes[i].name+'">Tue</label>'
+                                    + '<input type="checkbox" id="weekday-wed'+timeframes[i].name+'" class="weekday wednesday"/>'
+                                    + '<label for="weekday-wed'+timeframes[i].name+'">Wed</label>'
+                                    + '<input type="checkbox" id="weekday-thu'+timeframes[i].name+'" class="weekday thursday"/>'
+                                    + '<label for="weekday-thu'+timeframes[i].name+'">Thu</label>'
+                                    + '<input type="checkbox" id="weekday-fri'+timeframes[i].name+'" class="weekday friday"/>'
+                                    + '<label for="weekday-fri'+timeframes[i].name+'">Fri</label>'
+                                    + '<input type="checkbox" id="weekday-sat'+timeframes[i].name+'" class="weekday saturday"/>'
+                                    + '<label for="weekday-sat'+timeframes[i].name+'">Sat</label>'
+                                    + '<input type="checkbox" id="weekday-sun'+timeframes[i].name+'" class="weekday sunday"/>'
+                                    + '<label for="weekday-sun'+timeframes[i].name+'">Sun</label>'
+                                    + '</div> </div>'
+                                    + '<div class="form-group">'
+                                    + '<div class="col-10">'
+                                    + '<button type="button" class="btn button-timeframe" onclick = "saveTimeFrames(); return false;">Save</button>'
+                                    + '<button type="button" class="btn button-timeframe-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>'
+                                    + '</div></div></div>';
 
-        if($('div.tab-content div.tab-pane').length <= 0){
-              for(var i = 0; i < timeframes.length; i++){
-              $('<li class="active"><a href="#'+timeframes[i].name+'" data-toggle="tab">'+timeframes[i].name+'</a></li>').appendTo('ul#tabs');
-              divContent = '<div id="'+timeframes[i].name+'" class="tab-pane fade in active">'
-                           + ' <div class="form-group">'
-                            + '<label for="nameInput" class="col-2 col-form-label">Name </label>'
-                            + '<div class="col-10">'
-                            + '<input class="form-control" type="text" id="nameInput" style="width:30%;" value="'+ timeframes[i].name +'"/>'
-                            + '</div></div>'
-                            + '<div class="form-group">'
-                            + '<label for="startTimeInput" class="col-2 col-form-label">Start Time</label>'
-                            + '<div class="col-10">'
-                            + '<input class="form-control" id="startTimeInput'+timeframes[i].name+'"  style="width:15%;" value="'+ timeframes[i].startTime +'"/>'
-                            + '</div></div>'
-                            + '<div class="form-group">'
-                            + '<label for="endTimeInput'+timeframes[i].name+'" class="col-2 col-form-label">End Time</label>'
-                            + '<div class="col-10">'
-                            + '<input class="form-control" type="email" id="endTimeInput'+timeframes[i].name+'" style="width:15%;" value="'+ timeframes[i].endTime +'"/>'
-                            + '</div></div>'
-                            + '<div class="form-group">'
-                            + '<label for="DaysInput" class="col-2 col-form-label">Days</label>'
-                            + '<div class="weekDays-selector">'
-                            + '<input type="checkbox" id="weekday-mon'+timeframes[i].name+'" class="weekday monday"/>'
-                            + '<label for="weekday-mon'+timeframes[i].name+'">Mon</label>'
-                            + '<input type="checkbox" id="weekday-tue'+timeframes[i].name+'" class="weekday tuesday"/>'
-                            + '<label for="weekday-tue'+timeframes[i].name+'">Tue</label>'
-                            + '<input type="checkbox" id="weekday-wed'+timeframes[i].name+'" class="weekday wednesday"/>'
-                            + '<label for="weekday-wed'+timeframes[i].name+'">Wed</label>'
-                            + '<input type="checkbox" id="weekday-thu'+timeframes[i].name+'" class="weekday thursday"/>'
-                            + '<label for="weekday-thu'+timeframes[i].name+'">Thu</label>'
-                            + '<input type="checkbox" id="weekday-fri'+timeframes[i].name+'" class="weekday friday"/>'
-                            + '<label for="weekday-fri'+timeframes[i].name+'">Fri</label>'
-                            + '<input type="checkbox" id="weekday-sat'+timeframes[i].name+'" class="weekday saturday"/>'
-                            + '<label for="weekday-sat'+timeframes[i].name+'">Sat</label>'
-                            + '<input type="checkbox" id="weekday-sun'+timeframes[i].name+'" class="weekday sunday"/>'
-                            + '<label for="weekday-sun'+timeframes[i].name+'">Sun</label>'
-                            + '</div> </div>'
-                            + '<div class="form-group">'
-                            + '<div class="col-10">'
-                            + '<button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Save</button>'
-                            + '<button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>'
-                            + '</div></div></div>';
+                      $(divContent).appendTo('div.tab-content');
+                      var startId = '#startTimeInput' + timeframes[i].name;
+                      var endId = '#endTimeInput' + timeframes[i].name;
+                       addKendoTimePicker(startId, endId);
 
-                  $(divContent).appendTo('div.tab-content');
-                  var startId = '#startTimeInput' + timeframes[i].name;
-                  var endId = '#endTimeInput' + timeframes[i].name;
-                   addKendoTimePicker(startId, endId);
+                       $("div.weekDays-selector input[type=checkbox]").each(function(){
+                             if($(this).hasClass("monday"))
+                                    this.checked = timeframes[i].days["monday"];
+                             if($(this).hasClass("tuesday"))
+                                    this.checked = timeframes[i].days["tuesday"];
+                             if($(this).hasClass("wednesday"))
+                                    this.checked = timeframes[i].days["wednesday"];
+                             if($(this).hasClass("thursday"))
+                                    this.checked = timeframes[i].days["thursday"];
+                             if($(this).hasClass("friday"))
+                                    this.checked = timeframes[i].days["friday"];
+                             if($(this).hasClass("saturday"))
+                                    this.checked = timeframes[i].days["saturday"];
+                             if($(this).hasClass("sunday"))
+                                    this.checked = timeframes[i].days["sunday"];
+                       });
+                 }
+            }
 
-                   $("div.weekDays-selector input[type=checkbox]").each(function(){
-                         if($(this).hasClass("monday"))
-                                this.checked = timeframes[i].days["monday"];
-                         if($(this).hasClass("tuesday"))
-                                this.checked = timeframes[i].days["tuesday"];
-                         if($(this).hasClass("wednesday"))
-                                this.checked = timeframes[i].days["wednesday"];
-                         if($(this).hasClass("thursday"))
-                                this.checked = timeframes[i].days["thursday"];
-                         if($(this).hasClass("friday"))
-                                this.checked = timeframes[i].days["friday"];
-                         if($(this).hasClass("saturday"))
-                                this.checked = timeframes[i].days["saturday"];
-                         if($(this).hasClass("sunday"))
-                                this.checked = timeframes[i].days["sunday"];
-                   });
-
-          }
-
-        }
       }
 
      function addKendoTimePicker(startId, endId){
-             //init start timepicker
-                    start = $(startId).kendoTimePicker({
-                        change: startChange
-                    }).data("kendoTimePicker");
+            //init start timepicker
+            start = $(startId).kendoTimePicker({
+                change: startChange
+            }).data("kendoTimePicker");
 
-                    //init end timepicker
-                    end = $(endId).kendoTimePicker().data("kendoTimePicker");
-        }
+            //init end timepicker
+            end = $(endId).kendoTimePicker().data("kendoTimePicker");
+     }
+
+     function saveTimeFrames(){
+        var timeframesUpdate = [];
+        var isError = false;
+         $("div.tab-content div.tab-pane").each(function(){
+             var days = new Object();
+             var thisId = $(this).attr('id');
+             var nameId = 'input#nameInput' + thisId ;
+             var nameVal = $(this).find(nameId).val();
+             isError = validateInput(nameVal, nameId);
+             var startTimeId = 'input#startTimeInput' + thisId;
+             var startTimeVal = $(this).find(startTimeId).val();
+             var startTimepicker = $(startTimeId).data("kendoTimePicker");
+             startTimepicker.destroy();
+             if(!isError)
+               isError = validateInput(startTimeVal, startTimeId);
+             var endTimeId = 'input#endTimeInput' + thisId;
+             var endTimeVal = $(this).find(endTimeId).val();
+             var endTimepicker = $(endTimeId).data("kendoTimePicker");
+             endTimepicker.destroy();
+             if(!isError)
+               isError = validateInput(endTimeVal, endTimeId);
+             $(this).find("div.weekDays-selector input[type=checkbox]").each(function(){
+                 if($(this).hasClass("monday") && this.checked)
+                    days.monday = true;
+                 if($(this).hasClass("tuesday") && this.checked)
+                    days.tuesday = true;
+                 if($(this).hasClass("wednesday") && this.checked)
+                    days.wednesday = true;
+                 if($(this).hasClass("thursday") && this.checked)
+                    days.thursday = true;
+                 if($(this).hasClass("friday") && this.checked)
+                     days.friday = true;
+                 if($(this).hasClass("saturday") && this.checked)
+                    days.saturday = true;
+                 if($(this).hasClass("sunday") && this.checked)
+                     days.sunday = true;
+
+             });
+                timeframesUpdate.push({
+                            days : days,
+                            endTime : endTimeVal,
+                            startTime : startTimeVal,
+                            name : nameVal
+                           });
+         });
+
+
+         if(!isError){
+             removeError();
+             var deviceUpdate = new Object();
+             deviceUpdate.deviceType = deviceData.deviceType ;
+             deviceUpdate.deviceValue = deviceData.deviceValue ;
+             deviceUpdate.priorityThreshold = "Medium";
+             deviceUpdate.deviceId = deviceData.deviceId ;
+             deviceUpdate.timeframes = timeframesUpdate;
+               $('#info').modal('hide');
+             console.log('deviceupdate ==>' + JSON.stringify(deviceUpdate));
+             XMPersonManagementController.updateDevice (
+                    JSON.stringify(deviceUpdate),
+                    function(result,event){
+                        if (event.status) {
+                             var returnResult = JSON.parse(result);
+                             if(returnResult.result != 'Failed'){
+                                  $("div#success").css("display", "block");
+                                  $('<strong>TimeFrames were updated successfully</strong>').appendTo("div#success");
+                                  var grid = $("#deviceList").data("kendoGrid");
+                                  grid.destroy();
+                                  setupDeviceList();
+                                 }
+                                 else{
+                                     displayError(returnResult.message);
+                                 }
+                        } else if (event.type === 'exception') {
+                           displayError(event.message);
+                        } else {
+                           displayError(event.message);
+                        }
+                    },
+                    {escape: false}
+             );
+         }
+
+
+
+
+
+
+     }
+
+    function validateInput(val, input){
+         if(val == ''){
+             removeError();
+             $("div#validation-errors").css("display", "block");
+             var errorString = '<ul>'
+             if(input.includes('nameInput')){
+                errorString += '<li>Name is a required field</li>';
+                $(input).addClass('has-error');
+             }
+             else if(input.includes('startTime')){
+                 errorString += '<li>Start Time is a required field</li>';
+                  $(input).parent().addClass('has-error');
+             }
+             else if(input.includes('endTime')){
+                 errorString += '<li>End Time is a required field</li>';
+                 $(input).parent().addClass('has-error');
+             }
+              errorString += '</ul>'
+
+             $(errorString).appendTo("div#validation-errors");
+             return true;
+         }
+     }
+
+    function removeError(){
+
+             $("div#validation-errors").css("display", "none");
+             $("div#validation-errors").empty();
+             $('.has-error').each(function(){
+                 $(this).removeClass('has-error');
+             })
+
+    }
 
 </script>
 
