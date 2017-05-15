@@ -156,9 +156,9 @@
                             </apex:outputPanel>
                         </apex:outputPanel>
 
-                        <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,errorMessages" status="associateContact"/>
+                        <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,contactList,errorMessages" status="associateContact"/>
 
-                        <apex:actionFunction name="callNotificationManage" action="{!addPerson}" reRender="contactList,alertmessage,errorMessages" status="addPersonStatus"/>
+                        <apex:actionFunction name="callNotificationManage" action="{!addPerson}" reRender="contactList,alertmessage,contactList,errorMessages" status="addPersonStatus"/>
 
                     </div>
                     <div class="panel-body">
