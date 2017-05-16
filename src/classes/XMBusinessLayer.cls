@@ -1,12 +1,15 @@
 
 public with sharing class XMBusinessLayer implements XMiBusiness {
 
-    public List<XMGroupProductCluster> GetGroupListByUserid(string guid){
+    public List<XMGroupProductCluster> GetGroupListByUserid(string guid, Account acc){
         XMRestGroup xmRest = new XMRestGroup();
+        List<XMGroupProductCluster> xmSalesForceGroup = GetSalesForceGroupData(acc);
         List<XMGroupProductCluster> xmFinalList = new List<XMGroupProductCluster>();
         List<XMGroupMemberModel> xmGrouplist  = xmRest.GetXMPersonGroupsById(guid);
         system.debug(xmGrouplist);
         xmFinalList = GetXMGroupList(xmGrouplist);
+
+
         return xmFinalList;
     }
     public boolean SetGroupListForUser(string guid, List<XMGroupProductCluster> grouplist){
@@ -22,13 +25,19 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
             if(groupObj.group1.targetName.substring(0,2) == 'IP')
             {
                 List<String> splitTargetName = groupObj.group1.targetName.split('_');
+                xmGroupClusterObj.PartnerPrefix = splitTargetName[1];
                 xmGroupClusterObj.Product = splitTargetName[2];
                 xmGroupClusterObj.Cluster = splitTargetName[3];
+                xmGroupClusterObj.selected = true;
                 xmGroupClusterObjList.add(xmGroupClusterObj);
             }
+
         }
         return xmGroupClusterObjList;
     }
+
+
+
 
     public List<XMGroupProductCluster> GetSalesForceGroupData(Account acc){
 
@@ -48,14 +57,29 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
         OR(EstimatedGoLiveDate__c <= NEXT_N_DAYS : 14
         AND Status__c != 'Canceled'))];
 
-        system.debug (includedProducts);
-
+        //system.debug (includedProducts);
+        List<XMGroupProductCluster> groupList = new List<XMGroupProductCluster>();
         for (ImplementedProduct__c product : includedProducts ){
+
+            XMGroupProductCluster groupData = new XMGroupProductCluster();
             ProductEventMap__c productMap = nodeMap.get(product.Product__c);
             system.debug (productMap);
+            if (productMap != null) {
+                groupData.Product = productMap.Name;
+                if (productMap.HasClusters__c == true)
+                    groupData.Cluster = acc.Cluster__c; else {
+                    groupData.Cluster = 'NONE';
+                }
+
+                //determine the partner
+
+                groupData.XmattersGroupName = 'IP_INC_' + groupData.Product + '_'  + groupData.Cluster;
+                groupList.add(groupData);
+            }
+            system.debug (groupData);
 
         }
-        return null;
+        return groupList;
     }
 
 }
