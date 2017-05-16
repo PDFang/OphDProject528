@@ -44,16 +44,6 @@ public class XMPersonManagementHelper {
         ];
     }
 
-    public Map<Id, Contact> getContactsByXmPerson(String xmPersonId){
-
-        return new Map<Id, Contact>([
-                select FirstName, LastName, Email, Phone, Id, AccountId,
-                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c, xmPerson__r.Timezone__c
-                from Contact where xmPerson__c =: xmPersonId
-        ]);
-
-    }
-
     public Map<Id, Contact> getContactsByEmail(String email){
 
         return new Map<Id, Contact>([
@@ -61,6 +51,20 @@ public class XMPersonManagementHelper {
                         Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c, xmPerson__r.Timezone__c
                 from Contact where Email =: email //and xmPerson__c != null
         ]);
+    }
+
+    public void associateContact(String contactId, String xmPersonId){
+
+        if(string.isNotBlank(contactId)){
+            update new Contact(
+                    Id = contactId,
+                    xmPerson__c = xmPersonId
+            );
+        } else{
+            currentContact.xmPerson__c = xmPersonId;
+            update currentContact;
+        }
+
     }
 
     public XMPersonWrapper getXmPersonByGuid(String xmPersonGuid){

@@ -102,6 +102,7 @@
     <apex:form >
             <div class="page-header">
                 <h1>Manage Notification Profile for Contact - {!currentContact.FirstName} {!currentContact.LastName}</h1>
+                <apex:commandLink action="{!goBack}" value="Go Back" style="float:right;"/>
             </div>
 
             <div class="container-fluid">

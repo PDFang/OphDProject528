@@ -1,9 +1,7 @@
 public class XMPersonManagementController{
 
-    public string contactId{get;set;}
-    public string emailString{get;set;}
+
     public string xmPersonId{get;set;}
-//    public string timezone{get;set;}
     public Contact currentContact{get;private set;}
     public XMPersonWrapper person{get;set;}
     public List<Contact> contactList{get;private set;}
@@ -21,7 +19,7 @@ public class XMPersonManagementController{
         return XMPersonManagementHelper.getTimezones();
     }
 
-    private Contact primaryContact;
+    private string contactId;
     private String contactEmail;
     private XMPersonManagementHelper helper;
 
@@ -33,35 +31,32 @@ public class XMPersonManagementController{
             isPersonMatch = false;
             contactList = new List<Contact>();
 
-
-            // get contact info
+            // get current contact info
             contactId = (string)controller.getId();
             helper = new XMPersonManagementHelper(contactId);
             currentContact = helper.getCurrentContact();
             contactEmail = currentContact.Email;
-            String xmPersonGuid = null;
             system.debug('XMPersonManagementController(): currentContact - '+currentContact);
-            // find the person record and its associated primary contact
+
+            String xmPersonGuid = null;
+            // find the associated person record
             if(currentContact.xmPerson__c != null && currentContact.xmPerson__r.xmPersonUID__c != null) {
                 // current contact has person record
                 xmPersonId = currentContact.xmPerson__c;
-//                timezone = currentContact.xmPerson__r.Timezone__c;
-                primaryContact = helper.getContactById(currentContact.xmPerson__r.PrimaryContact__c);
                 xmPersonGuid = currentContact.xmPerson__r.xmPersonUID__c;
             }
 
             if(string.isNotBlank(contactEmail)){
-                // if any of the duplicate contacts has a person record
+                // get duplicate contacts
                 Map<Id, Contact> contactMap = helper.getContactsByEmail(contactEmail);
                 contactMap.remove(contactId);
                 contactList.addAll(contactMap.values());
                 for(Contact cont : contactMap.values()){
                     if(cont.xmPerson__c != null && !isPersonMatch) {
+                        // duplicate contact is associated with a person record
                         isPersonMatch = true;
                         xmPersonId = cont.xmPerson__c;
                         xmPersonGuid = cont.xmPerson__r.xmPersonUID__c;
-//                        timezone = cont.xmPerson__r.Timezone__c;
-                        primaryContact = helper.getContactById(cont.xmPerson__r.PrimaryContact__c);
                     }
                 }
             }
@@ -71,10 +66,6 @@ public class XMPersonManagementController{
             } else{
                 person = new XMPersonWrapper(currentContact);
             }
-            if(primaryContact == null){
-                primaryContact = currentContact;
-            }
-
 
             //findAssociatedContacts();
         } catch(Exception ex){
@@ -83,19 +74,22 @@ public class XMPersonManagementController{
         }
     }
 
-    private void findAssociatedContacts(){
+    // contacts with same email
+    private void findDuplicateContacts(){
 
         contactList = new List<Contact>();
-//        if(string.isNotBlank(xmPersonId)){
-//            Map<Id, Contact> contactMap = helper.getContactsByXmPerson(xmPersonId);
-//            contactMap.remove(contactId);
-//            contactList.addAll(contactMap.values());
-//        }
         if(string.isNotBlank(contactEmail)){
             Map<Id, Contact> contactMap = helper.getContactsByEmail(contactEmail);
             contactMap.remove(contactId);
             contactList.addAll(contactMap.values());
         }
+
+    }
+
+    // go back to contact details
+    public pagereference goBack(){
+
+        return new ApexPages.StandardController(currentContact).view();
 
     }
 
@@ -105,8 +99,7 @@ public class XMPersonManagementController{
         try{
             xmPersonId = helper.createXmPerson(person);
             system.debug('addPerson(): currentContact - '+currentContact);
-//            timezone = person.timezone;
-            findAssociatedContacts();
+            //findDuplicateContacts();
         }
         catch(Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ex.getMessage()));
@@ -120,16 +113,9 @@ public class XMPersonManagementController{
 
         try{
             String contactRowId = ApexPages.currentPage().getParameters().get('rowId');
-            if(string.isNotBlank(contactRowId)){
-                update new Contact(
-                        Id = contactRowId,
-                        xmPerson__c = xmPersonId
-                );
-            } else{
-                currentContact.xmPerson__c = xmPersonId;
-                update currentContact;
-            }
-            findAssociatedContacts();
+            helper.associateContact(contactRowId, xmPersonId);
+            ApexPages.currentPage().getParameters().put('rowId', '');
+            findDuplicateContacts();
         }
         catch(Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ex.getMessage()));
