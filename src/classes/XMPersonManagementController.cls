@@ -2,6 +2,7 @@ public class XMPersonManagementController{
 
 
     public string xmPersonId{get;set;}
+    public string timezone{get;private set;}
     public Contact currentContact{get;private set;}
     public XMPersonWrapper person{get;set;}
     public List<Contact> contactList{get;private set;}
@@ -129,11 +130,11 @@ public class XMPersonManagementController{
     }
 
     @RemoteAction
-    public static string getUserDevices(String xmPersionId)
+    public static string getUserDevices(String xmPersonId)
     {
         XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
         try{
-            List<xmPerson__c> persons = [Select xmPersonUID__c from xmPerson__c where Id = :xmPersionId];
+            List<xmPerson__c> persons = [Select xmPersonUID__c from xmPerson__c where Id = :xmPersonId];
             if(persons.size() > 0){
                 newDeviceList = XMPersonManagementHelper.getUserDevices(persons[0].xmPersonUID__c);
             }

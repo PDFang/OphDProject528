@@ -28,7 +28,6 @@ public class XMPersonManagementHelper {
     }
 
     private Contact currentContact;
-    private static Map<String, List<XMDeviceTimeframe>> deviceTimeframeMap;
 
     // constructor
     public XMPersonManagementHelper(String contactId){
@@ -109,18 +108,18 @@ public class XMPersonManagementHelper {
 
     }
 
-    public static XMDeviceWrapper[] getUserDevices(String xmPersionId){
+    public static XMDeviceWrapper[] getUserDevices(String xmPersonGuid){
 
         XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
-        deviceTimeframeMap = new Map<String, List<XMDeviceTimeframe>>();
 
-        if(string.isNotBlank(xmPersionId)) {
+        if(string.isNotBlank(xmPersonGuid)) {
             XMRestDeviceService service = new XMRestDeviceService();
-            List<XMDeviceModel> deviceList = service.getAllDevicesByxMattersUserId(xmPersionId);
+            List<XMDeviceModel> deviceList = service.getAllDevicesByxMattersUserId(xmPersonGuid);
 
             for (XMDeviceModel device: deviceList) {
                 XMDeviceWrapper newDevice = new XMDeviceWrapper();
-                newDevice.deviceType = device.name;
+                newDevice.name = device.name;
+                newDevice.deviceType = device.deviceType;
                 if (device instanceof XMSmsDevice) {
                     newDevice.deviceValue = ((XMSmsDevice) device).phoneNumber;
                 }
@@ -139,6 +138,8 @@ public class XMPersonManagementHelper {
                 }
             }
         }
+
+        system.debug('getUserDevices(): newDeviceList - ' + newDeviceList);
 
         return newDeviceList;
 
