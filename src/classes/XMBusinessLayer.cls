@@ -6,8 +6,32 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
         List<XMGroupProductCluster> xmSalesForceGroup = GetSalesForceGroupData(acc);
         List<XMGroupProductCluster> xmFinalList = new List<XMGroupProductCluster>();
         List<XMGroupMemberModel> xmGrouplist  = xmRest.GetXMPersonGroupsById(guid);
-        system.debug(xmGrouplist);
-        xmFinalList = GetXMGroupList(xmGrouplist);
+        system.debug('XMGroupList -->' + xmGrouplist);
+        if(xmGrouplist != null)
+        {
+            xmFinalList = GetXMGroupList(xmGrouplist);
+//        for (XMGroupProductCluster salesForceGroupObj : xmSalesForceGroup)
+//        {
+//            if(sales)
+//            xmFinalList.add(salesForceGroupObj);
+//        }
+
+        }
+
+
+        Set<XMGroupProductCluster> setXMFinalProductClusterList = new Set<XMGroupProductCluster>();
+        setXMFinalProductClusterList.addAll(xmSalesForceGroup);
+        System.debug('FirstList -> ' + setXMFinalProductClusterList);
+        setXMFinalProductClusterList.addAll(xmFinalList);
+        System.debug('SecondList -> ' + setXMFinalProductClusterList);
+
+        List<XMGroupProductCluster> returnXMFinalProductClusterList = new List<XMGroupProductCluster>();
+        returnXMFinalProductClusterList.addAll(setXMFinalProductClusterList);
+
+        //returnXMFinalProductClusterList.sort();
+        System.debug('FinalList -> ' + returnXMFinalProductClusterList);
+
+
 
 
         return xmFinalList;
@@ -22,15 +46,19 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
         for (XMGroupMemberModel groupObj : groupList)
         {
             XMGroupProductCluster xmGroupClusterObj = new XMGroupProductCluster();
-            if(groupObj.group1.targetName.substring(0,2) == 'IP')
+            if(groupObj.group1 != null)
             {
-                List<String> splitTargetName = groupObj.group1.targetName.split('_');
-                xmGroupClusterObj.PartnerPrefix = splitTargetName[1];
-                xmGroupClusterObj.Product = splitTargetName[2];
-                xmGroupClusterObj.Cluster = splitTargetName[3];
-                xmGroupClusterObj.selected = true;
-                xmGroupClusterObjList.add(xmGroupClusterObj);
+                if(groupObj.group1.targetName.substring(0,2) == 'IP')
+                {
+                    List<String> splitTargetName = groupObj.group1.targetName.split('_');
+                    xmGroupClusterObj.PartnerPrefix = splitTargetName[1];
+                    xmGroupClusterObj.Product = splitTargetName[2];
+                    xmGroupClusterObj.Cluster = splitTargetName[3];
+                    xmGroupClusterObj.selected = true;
+                    xmGroupClusterObjList.add(xmGroupClusterObj);
+                }
             }
+
 
         }
         return xmGroupClusterObjList;
