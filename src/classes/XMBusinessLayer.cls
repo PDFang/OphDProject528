@@ -1,4 +1,3 @@
-
 public with sharing class XMBusinessLayer implements XMiBusiness {
 
     public List<XMGroupProductCluster> GetGroupListByUserid(string guid, Account acc){
@@ -10,14 +9,7 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
         if(xmGrouplist != null)
         {
             xmFinalList = GetXMGroupList(xmGrouplist);
-//        for (XMGroupProductCluster salesForceGroupObj : xmSalesForceGroup)
-//        {
-//            if(sales)
-//            xmFinalList.add(salesForceGroupObj);
-//        }
-
         }
-
 
         Set<XMGroupProductCluster> setXMFinalProductClusterList = new Set<XMGroupProductCluster>();
         setXMFinalProductClusterList.addAll(xmSalesForceGroup);
@@ -30,10 +22,6 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
 
         //returnXMFinalProductClusterList.sort();
         System.debug('FinalList -> ' + returnXMFinalProductClusterList);
-
-
-
-
         return xmFinalList;
     }
     public boolean SetGroupListForUser(string guid, List<XMGroupProductCluster> grouplist){
@@ -72,6 +60,7 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
         Map<String, ProductEventMap__c> nodeMap;
         nodeMap = ProductEventMap__c.getAll();
         List<XMGroupProductCluster> availableProducts = new List<XMGroupProductCluster>();
+        string partnerPrefix;
 
         //get account assocaited products
         //Get reference to the product map
@@ -94,17 +83,26 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
             system.debug (productMap);
             if (productMap != null) {
                 groupData.Product = productMap.Name;
-                if (productMap.HasClusters__c == true)
-                    groupData.Cluster = acc.Cluster__c; else {
+                if (productMap.HasClusters__c == true){
+                    groupData.Cluster = acc.Cluster__c;
+                }
+                if (groupData.Cluster == null || groupData.Cluster == ''){
                     groupData.Cluster = 'NONE';
                 }
-
-                //determine the partner
-
-                groupData.XmattersGroupName = 'IP_INC_' + groupData.Product + '_'  + groupData.Cluster;
+                if (acc.Parent != null)
+                {
+                    groupData.PartnerPrefix =  acc.Parent.XMPartnerPrefix__c;
+                }
+                if (groupData.PartnerPrefix == null)
+                {
+                    //default partner designation
+                    groupData.PartnerPrefix = 'INC';
+                }
+                groupData.XmattersGroupName = 'IP_'+ groupData.PartnerPrefix + '_' + groupData.Product + '_'  + groupData.Cluster;
+                system.debug(groupData);
                 groupList.add(groupData);
             }
-            system.debug (groupData);
+
 
         }
         return groupList;
