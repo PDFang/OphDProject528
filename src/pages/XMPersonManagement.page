@@ -101,7 +101,7 @@
 
     <apex:form >
             <div class="page-header">
-                <h1>Xmatters Person Management Page - Contact - {!currentContact.FirstName} {!currentContact.LastName}</h1>
+                <h1>Manage Notification Profile for Contact - {!currentContact.FirstName} {!currentContact.LastName}</h1>
             </div>
 
             <div class="container-fluid">
@@ -112,7 +112,7 @@
 
                 </div>
                 <div class="panel panel-default">
-                    <div class="panel-heading"><label>Primary Contact Details</label>
+                    <div class="panel-heading"><label>XMatters Person Details</label>
 
                         <apex:outputPanel id="alertmessage">
                             <apex:outputPanel rendered="{!(isPersonMatch && !IsXmPerson)}">
@@ -122,7 +122,7 @@
                                     </p>
                                     <apex:actionStatus id="associateContact" >
                                         <apex:facet name="stop">
-                                            <apex:commandButton value="Asociate Contact" onClick="associateContactCall(); return false;" status="associateContact"/>
+                                            <apex:commandButton value="Associate Contact" onClick="associateContactCall(); return false;" status="associateContact"/>
 
                                         </apex:facet>
                                         <apex:facet name="start">
@@ -142,7 +142,7 @@
                                     </p>
                                     <apex:actionStatus id="addPersonStatus" >
                                         <apex:facet name="stop">
-                                            <apex:commandButton value="Add Person" onClick="AddPerson();"  status="addPersonStatus"/>
+                                            <apex:commandButton value="Add Person" onClick="AddPerson();return false;"  status="addPersonStatus"/>
                                         </apex:facet>
                                         <apex:facet name="start">
                                             <apex:outputPanel >
@@ -156,9 +156,11 @@
                             </apex:outputPanel>
                         </apex:outputPanel>
 
-                        <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,contactList,errorMessages" status="associateContact"/>
+                        <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,errorMessages, timezone" status="associateContact">
+                            <apex:param id="rowId" name="rowId" value="" />
+                        </apex:actionFunction>
 
-                        <apex:actionFunction name="callNotificationManage" action="{!addPerson}" reRender="contactList,alertmessage,contactList,errorMessages" status="addPersonStatus"/>
+                        <apex:actionFunction name="callNotificationManage" action="{!addPerson}" reRender="contactList,alertmessage,errorMessages,timezone" status="addPersonStatus"/>
 
                     </div>
                     <div class="panel-body">
@@ -177,16 +179,16 @@
                             </div>
                         </div>
                         <div class="form-group col-md-3">
-                            <label for="email" class="col-2 col-form-label">Email </label>
+                            <label for="status" class="col-2 col-form-label">Status </label>
                             <div class="col-10">
-                                <apex:outputText value="{!person.email}" id="email" styleClass="form-control" style="background-color: lightgray;"/>
+                                <apex:outputText value="{!person.status}" id="status" styleClass="form-control" style="background-color: lightgray;"/>
                             </div>
                         </div>
 
                         <div class="form-group col-md-3">
                             <label for="timezone" class="col-2 col-form-label">Time Zone </label>
                             <div class="col-10">
-                                <apex:selectList styleClass="form-control" value="{!person.timezone}" id="timezone" size="0" disabled="{!IsXmPerson}">
+                                <apex:selectList styleClass="form-control" value="{!person.timezone}" id="timezone" size="0" disabled="{!(isPersonMatch || IsXmPerson)}">
                                     <apex:selectOptions value="{!Timezones}"/>
                                 </apex:selectList>
                             </div>
@@ -198,8 +200,8 @@
 
 
 
-        <apex:pageBlock >
-        <apex:pageBlockSection collapsible="true" id="contactList" columns="1" showHeader="true" title="Contact List">
+        <apex:pageBlock id="contactList">
+        <apex:pageBlockSection collapsible="true"  columns="1" showHeader="true" title="Duplicate Contacts">
 
             <apex:dataTable value="{!contactList}" var="con"  styleClass="table table-bordered table-condensed" rendered="{!contactList.size > 0}">
 
@@ -224,13 +226,26 @@
                     <apex:outputText >{!con.Phone}</apex:outputText>
                 </apex:column>
                 <apex:column >
-                    <apex:facet name="header">XMPerson Id</apex:facet>
-                    <apex:outputLink value="/{!con.xmPerson__c}">{!con.xmPerson__c}</apex:outputLink>
+                    <apex:facet name="header">Action</apex:facet>
+                    <apex:outputPanel rendered="{!IF(con.xmPerson__c == null, true, false)}">
+                        <apex:actionStatus id="associatePersons" >
+                            <apex:facet name="stop">
+                                <apex:commandButton value="Associate" onClick="callAssociateContact('{!con.Id}'); return false;"  status="associatePersons"/>
+                            </apex:facet>
+                            <apex:facet name="start">
+                                <apex:outputPanel >
+                                    <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                                    <apex:commandButton styleClass="k-button"  value="Adding..." status="associatePersons" disabled="true"/>
+                                </apex:outputPanel>
+                            </apex:facet>
+                        </apex:actionStatus>
+                    </apex:outputPanel>
                 </apex:column>
             </apex:dataTable>
         </apex:pageBlockSection>
+
         </apex:pageBlock>
-        <div id="deviceList"></div>
+                <div id="deviceList"></div>
             </div>
         <!-- Information Modal -->
         <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
@@ -278,7 +293,7 @@
     var deviceData = new Object();
     function AddPerson(){
         callNotificationManage();
-        setupDeviceList();
+       // setupDeviceList();
     }
 
     function associateContactCall(){
