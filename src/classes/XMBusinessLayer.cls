@@ -77,7 +77,7 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
         //system.debug (includedProducts);
         List<XMGroupProductCluster> groupList = new List<XMGroupProductCluster>();
         for (ImplementedProduct__c product : includedProducts ){
-
+            system.debug ( 'product -->' + product);
             XMGroupProductCluster groupData = new XMGroupProductCluster();
             ProductEventMap__c productMap = nodeMap.get(product.Product__c);
             system.debug (productMap);
@@ -87,6 +87,7 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
                     groupData.Cluster = acc.Cluster__c;
                 }
                 if (groupData.Cluster == null || groupData.Cluster == ''){
+                    //default cluster description
                     groupData.Cluster = 'NONE';
                 }
                 if (acc.Parent != null)
@@ -102,8 +103,6 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
                 system.debug(groupData);
                 groupList.add(groupData);
             }
-
-
         }
         return groupList;
     }
