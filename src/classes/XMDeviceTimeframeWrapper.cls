@@ -79,18 +79,14 @@ public class XMDeviceTimeframeWrapper {
 
         XMDeviceTimeframe timeframeModel = new XMDeviceTimeframe();
         timeframeModel.name = this.name;
-        timeframeModel.excludeHolidays = true;
 
         Datetime startDateTime = convertTextToDateTime(this.startTime);
-        if(this.timezone == null){
-            this.timezone = 'US/Pacific';
-        }
-        timeframeModel.startTime =  startDateTime.format('h:mm', timezoneMap.get(this.timezone));
+        timeframeModel.startTime =  startDateTime.format('hh:mm', timezoneMap.get(this.timezone));
 
         system.debug('createModel:  timeframeModel.startTime - '+ timeframeModel.startTime);
 
         Datetime endDateTime = convertTextToDateTime(this.endTime);
-        system.debug('createModel:  endDateTime - '+ endDateTime.format('h:mm', timezoneMap.get(this.timezone)) );
+        system.debug('createModel:  endDateTime - '+ endDateTime.format('hh:mm', timezoneMap.get(this.timezone)) );
 
         timeframeModel.durationInMinutes = (Integer)(endDateTime.getTime() - startDateTime.getTime()) / 60 / 1000;
         system.debug('createModel:  durationInMinutes - ' +  timeframeModel.durationInMinutes);
@@ -99,17 +95,23 @@ public class XMDeviceTimeframeWrapper {
         system.debug('createModel: days - ' +  this.days);
         if(this.days.sunday != null && this.days.sunday){
             dayList.add('SU');
-        } else if(this.days.monday != null && this.days.monday){
+        }
+        if(this.days.monday != null && this.days.monday){
             dayList.add('MO');
-        } else if(this.days.tuesday != null && this.days.tuesday){
+        }
+        if(this.days.tuesday != null && this.days.tuesday){
             dayList.add('TU');
-        } else if(this.days.wednesday != null && this.days.wednesday){
+        }
+        if(this.days.wednesday != null && this.days.wednesday){
             dayList.add('WE');
-        } else if(this.days.thursday != null && this.days.thursday){
+        }
+        if(this.days.thursday != null && this.days.thursday){
             dayList.add('TH');
-        } else if(this.days.friday != null && this.days.friday){
+        }
+        if(this.days.friday != null && this.days.friday){
             dayList.add('FR');
-        } else if(this.days.saturday != null && this.days.saturday){
+        }
+        if(this.days.saturday != null && this.days.saturday){
             dayList.add('SA');
         }
         timeframeModel.days = dayList;

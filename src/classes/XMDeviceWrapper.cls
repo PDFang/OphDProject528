@@ -21,7 +21,7 @@ public class XMDeviceWrapper {
 
         } else if(this.name.contains('Phone')){
             XMSmsDevice smsDevice = new XMSmsDevice();
-            smsDevice.phoneNumber = '+1' + this.deviceValue;
+            smsDevice.phoneNumber = this.deviceValue;
             deviceModel = smsDevice;
         }
         deviceModel.name = this.name;

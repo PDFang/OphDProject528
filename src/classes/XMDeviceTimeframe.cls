@@ -4,4 +4,8 @@ public class XMDeviceTimeframe {
     public Integer durationInMinutes {get;set;}
     public Boolean excludeHolidays {get;set;}
     public List<string> days {get;set;}
+
+    public XMDeviceTimeframe(){
+        this.excludeHolidays = false;
+    }
 }

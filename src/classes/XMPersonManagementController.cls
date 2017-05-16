@@ -2,11 +2,14 @@ public class XMPersonManagementController{
 
 
     public string xmPersonId{get;set;}
-    public string timezone{get;private set;}
     public Contact currentContact{get;private set;}
     public XMPersonWrapper person{get;set;}
     public List<Contact> contactList{get;private set;}
     public boolean isPersonMatch{get;private set;}
+
+    public string getTimezone(){
+        return person != null ? person.timezone : null;
+    }
 
     public boolean getIsXmPerson(){
         return currentContact != null && currentContact.xmPerson__c != null;
