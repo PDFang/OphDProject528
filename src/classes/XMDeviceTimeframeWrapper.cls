@@ -1,7 +1,7 @@
 public class XMDeviceTimeframeWrapper {
 
     public String name {get;set;}
-    //public string timezone {get;set;}
+    public string timezone {get;set;}
     public String startTime {get;set;}
     public String endTime {get;set;}
     public Week days {get;set;}
@@ -25,6 +25,13 @@ public class XMDeviceTimeframeWrapper {
             this.saturday = false;
         }
     }
+
+    private transient static final Map<String, String> timezoneMap = new Map<String, String>{
+            'US/Eastern' => 'America/New_York',
+            'US/Central' => 'America/Chicago',
+            'US/Mountain' => 'America/Denver',
+            'US/Pacific' => 'America/Los_Angeles'
+    };
 
     public XMDeviceTimeframeWrapper(XMDeviceTimeframe timeframe){
 
@@ -67,53 +74,72 @@ public class XMDeviceTimeframeWrapper {
 
     public XMDeviceTimeframe createModel(){
 
+        system.debug('createModel:  name - '+ this.name);
+        system.debug('createModel:  timezone - '+ this.timezone);
+
         XMDeviceTimeframe timeframeModel = new XMDeviceTimeframe();
-
-        String startTimeText = this.startTime;
-        Integer hours = Integer.valueOf(startTimeText.left(2));
-        Integer minutes;
-        if(startTimeText.right(2) == 'AM'){
-            minutes = Integer.valueOf(startTimeText.substring(startTimeText.lastIndexOf(':')+1, startTimeText.lastIndexOf(':')+2));
-        } else{
-            minutes = Integer.valueOf(startTimeText.substring(startTimeText.lastIndexOf(':')+1, startTimeText.lastIndexOf(':')+2));
-        }
-        Time startTime = Time.newInstance(hours, minutes, 0, 0);
-        Datetime startDateTime = Datetime.newInstance(system.today(), startTime);
-
-        String endTimeText = this.endTime;
-        hours = Integer.valueOf(endTimeText.left(2));
-        if(endTimeText.right(2) == 'AM'){
-            minutes = Integer.valueOf(endTimeText.substring(endTimeText.lastIndexOf(':')+1, endTimeText.lastIndexOf(':')+2));
-        } else{
-            minutes = Integer.valueOf(endTimeText.substring(endTimeText.lastIndexOf(':')+1, endTimeText.lastIndexOf(':')+2));
-        }
-        Time endTime = Time.newInstance(hours, minutes, 0, 0);
-        Datetime endDateTime = Datetime.newInstance(system.today(), endTime);
-
         timeframeModel.name = this.name;
-        timeframeModel.startTime =  startDateTime.format('h:mm');
-        timeframeModel.durationInMinutes = (Integer)(endDateTime.getTime() - startDateTime.getTime()) / 60 / 1000;
-        List<String> days = new List<string>();
-        timeframeModel.days = days;
-        if(this.days.sunday){
-            days.add('SU');
-        } else if(this.days.monday){
-            days.add('MO');
-        } else if(this.days.tuesday){
-            days.add('TU');
-        } else if(this.days.wednesday){
-            days.add('WE');
-        } else if(this.days.thursday){
-            days.add('TH');
-        } else if(this.days.friday){
-            days.add('FR');
-        } else if(this.days.saturday){
-            days.add('SA');
-        }
 
+        Datetime startDateTime = convertTextToDateTime(this.startTime);
+        timeframeModel.startTime =  startDateTime.format('hh:mm', timezoneMap.get(this.timezone));
+
+        system.debug('createModel:  timeframeModel.startTime - '+ timeframeModel.startTime);
+
+        Datetime endDateTime = convertTextToDateTime(this.endTime);
+        system.debug('createModel:  endDateTime - '+ endDateTime.format('hh:mm', timezoneMap.get(this.timezone)) );
+
+        timeframeModel.durationInMinutes = (Integer)(endDateTime.getTime() - startDateTime.getTime()) / 60 / 1000;
+        system.debug('createModel:  durationInMinutes - ' +  timeframeModel.durationInMinutes);
+
+        List<String> dayList = new List<string>();
+        system.debug('createModel: days - ' +  this.days);
+        if(this.days.sunday != null && this.days.sunday){
+            dayList.add('SU');
+        }
+        if(this.days.monday != null && this.days.monday){
+            dayList.add('MO');
+        }
+        if(this.days.tuesday != null && this.days.tuesday){
+            dayList.add('TU');
+        }
+        if(this.days.wednesday != null && this.days.wednesday){
+            dayList.add('WE');
+        }
+        if(this.days.thursday != null && this.days.thursday){
+            dayList.add('TH');
+        }
+        if(this.days.friday != null && this.days.friday){
+            dayList.add('FR');
+        }
+        if(this.days.saturday != null && this.days.saturday){
+            dayList.add('SA');
+        }
+        timeframeModel.days = dayList;
+
+        system.debug('createModel:  dayList - '+ dayList);
         system.debug('createModel:  timeframeModel - '+ timeframeModel);
 
         return timeframeModel;
+
+    }
+
+    private DateTime convertTextToDateTime(String timeText){
+
+        system.debug('convertTextToDateTime:  timeText - '+ timeText);
+
+        Integer hours = Integer.valueOf(timeText.substring(0, timeText.indexOf(':')));
+        Integer minutes = Integer.valueOf(timeText.substring(timeText.lastIndexOf(':')+1, timeText.lastIndexOf(':')+3));
+        if(timeText.right(2) == 'PM' && hours != 12){
+            hours = hours + 12;
+        }else if(timeText.right(2) == 'AM' && hours == 12){
+            hours = 0;
+        }
+
+        Time newTime = Time.newInstance(hours, minutes, 0, 0);
+        Datetime newDateTime = Datetime.newInstance(system.today(), newTime);
+        system.debug('convertTextToDateTime:  newDateTime - '+ newDateTime);
+
+        return newDateTime;
 
     }
 
