@@ -38,7 +38,7 @@ public class XMRestPersonTests {
         Test.setMock(HttpCalloutMock.class, httpMock);
         XMRestPerson service = new XMRestPerson();
 
-        XMPersonModel createdRecord = service.createPerson(person);
+        XMPersonModel createdRecord = service.getXmPersonModelByXmattersId('testId');
 
         test.stopTest();
 
