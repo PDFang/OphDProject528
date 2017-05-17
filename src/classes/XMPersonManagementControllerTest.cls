@@ -4,7 +4,7 @@ private class XMPersonManagementControllerTest {
     static final String CUSTOMER_ACCOUNT = 'Customers';
     static final String CUSTOMER_CONTACT = 'Customer-Other';
 
-    static testMethod void testBehavior() {
+    static testMethod void testNewContact() {
 
         Account testAccount = createAccount();
 
