@@ -24,6 +24,7 @@ public class XMRestPersonTests {
         system.assert(createdRecord.recipientType == 'PERSON');
     }
 
+    // Testing getting a record
     public static testMethod void getXmPersonModelByXmattersId_ReturnsCorrectPerson(){
         XMRestPeopleMockHttpGenerator httpMock = new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
 
@@ -37,7 +38,7 @@ public class XMRestPersonTests {
         Test.setMock(HttpCalloutMock.class, httpMock);
         XMRestPerson service = new XMRestPerson();
 
-        XMPersonModel createdRecord = service.createPerson(person);
+        XMPersonModel createdRecord = service.getXmPersonModelByXmattersId('testId');
 
         test.stopTest();
 
