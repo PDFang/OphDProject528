@@ -1,28 +1,30 @@
 public with sharing class XMBusinessLayer implements XMiBusiness {
 
-    public List<XMGroupProductCluster> GetGroupListByUserid(string guid, Account acc){
+    public Map<String, XMGroupProductCluster> GetGroupListByUserid(string guid, Account acc){
         XMRestGroup xmRest = new XMRestGroup();
-        List<XMGroupProductCluster> xmSalesForceGroup = GetSalesForceGroupData(acc);
+        Map<String, XMGroupProductCluster> xmSalesForceGroupMap = GetSalesForceGroupData(acc);
+        System.debug('xmSalesForceGroupMap -- >' + xmSalesForceGroupMap);
         List<XMGroupProductCluster> xmFinalList = new List<XMGroupProductCluster>();
         List<XMGroupMemberModel> xmGrouplist  = xmRest.GetXMPersonGroupsById(guid);
         system.debug('XMGroupList -->' + xmGrouplist);
         if(xmGrouplist != null)
         {
             xmFinalList = GetXMGroupList(xmGrouplist);
+            System.debug('xmFinalList-->' + xmFinalList);
         }
-
-        Set<XMGroupProductCluster> setXMFinalProductClusterList = new Set<XMGroupProductCluster>();
-        setXMFinalProductClusterList.addAll(xmSalesForceGroup);
-        System.debug('FirstList -> ' + setXMFinalProductClusterList);
-        setXMFinalProductClusterList.addAll(xmFinalList);
-        System.debug('SecondList -> ' + setXMFinalProductClusterList);
-
         List<XMGroupProductCluster> returnXMFinalProductClusterList = new List<XMGroupProductCluster>();
-        returnXMFinalProductClusterList.addAll(setXMFinalProductClusterList);
+        for(XMGroupProductCluster xmFinalListObj: xmFinalList)
+        {
+            XMGroupProductCluster returnXMFinalProductCluster = new XMGroupProductCluster();
+            String xmFinalListObjKey = 'IP_'+ xmFinalListObj.PartnerPrefix + '_' + xmFinalListObj.Product + '_' + xmFinalListObj.Cluster;
+            if(xmSalesForceGroupMap.containsKey(xmFinalListObjKey))
+            {
+                xmSalesForceGroupMap.put(xmFinalListObjKey, xmFinalListObj);
+            }
 
-        //returnXMFinalProductClusterList.sort();
-        System.debug('FinalList -> ' + returnXMFinalProductClusterList);
-        return xmFinalList;
+            System.debug('xmSalesForceGroupMap -->' + xmSalesForceGroupMap);
+        }
+        return xmSalesForceGroupMap;
     }
     public boolean SetGroupListForUser(string guid, List<XMGroupProductCluster> grouplist){
         throw new CalloutException();
@@ -31,8 +33,10 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
     private List<XMGroupProductCluster> GetXMGroupList(List<XMGroupMemberModel> groupList)
     {
         List<XMGroupProductCluster> xmGroupClusterObjList = new List<XMGroupProductCluster>();
+        Integer i = 0;
         for (XMGroupMemberModel groupObj : groupList)
         {
+            i++;
             XMGroupProductCluster xmGroupClusterObj = new XMGroupProductCluster();
             if(groupObj.group1 != null)
             {
@@ -45,6 +49,9 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
                     xmGroupClusterObj.selected = true;
                     xmGroupClusterObjList.add(xmGroupClusterObj);
                 }
+                String testName = 'xmGroupClusterObj' + String.valueOf(i);
+
+                System.debug(testName + ':' + xmGroupClusterObj);
             }
 
 
@@ -55,7 +62,7 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
 
 
 
-    public List<XMGroupProductCluster> GetSalesForceGroupData(Account acc){
+    public Map<String, XMGroupProductCluster> GetSalesForceGroupData(Account acc){
 
         Map<String, ProductEventMap__c> nodeMap;
         nodeMap = ProductEventMap__c.getAll();
@@ -74,8 +81,8 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
         OR(EstimatedGoLiveDate__c <= NEXT_N_DAYS : 14
         AND Status__c != 'Canceled'))];
 
-        //system.debug (includedProducts);
-        List<XMGroupProductCluster> groupList = new List<XMGroupProductCluster>();
+        //systXMem.debug (includedProducts);
+        Map<String, XMGroupProductCluster> groupListMap = new Map<String, XMGroupProductCluster>();
         for (ImplementedProduct__c product : includedProducts ){
             system.debug ( 'product -->' + product);
             XMGroupProductCluster groupData = new XMGroupProductCluster();
@@ -101,10 +108,10 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
                 }
                 groupData.XmattersGroupName = 'IP_'+ groupData.PartnerPrefix + '_' + groupData.Product + '_'  + groupData.Cluster;
                 system.debug(groupData);
-                groupList.add(groupData);
+                groupListMap.put(groupData.XmattersGroupName,groupData);
             }
         }
-        return groupList;
+        return groupListMap;
     }
 
 }
