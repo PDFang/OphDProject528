@@ -13,6 +13,7 @@ public with sharing class XMRestGroup {
         else{
             jsonList = wrapper.performCallOut(this.GroupUrl + prefix, 'GET', null);
         }
+        system.debug('raw data -> ' + jsonList);
         List<XMGroupModel> groupList = new List<XMGroupModel>();
         JSONParser parser = JSON.createParser(jsonList);
         while (parser.nextToken() != null) {
@@ -44,7 +45,9 @@ public with sharing class XMRestGroup {
         system.debug ( 'url --> ' + url);
 
         jsonList = wrapper.performCallOut(url, 'GET', null);
+        system.debug('PreTestData ->' + jsonList);
         jsonList = jsonList.replace('"group"', '"group1"');
+        system.debug('TestData ->' + jsonList);
 
         List<XMGroupMemberModel> groupList = new List<XMGroupMemberModel>();
         JSONParser parser = JSON.createParser(jsonList);
@@ -81,28 +84,38 @@ public with sharing class XMRestGroup {
     //remove hardcoded person type
 
     public void AddUserToGroup(string groupName, string PersonId, string type){
-       string body;
-       string url;
-       string jsonResponse;
-       XMRestWrapper wrapper = new XMRestWrapper();
-       body =  '{"position" : 1,"recipient":{"id": "'+ PersonId +'", "recipientType":"' + type +'"}}';
-       System.Debug('body = ' + body);
-       url = this.GroupUrl + groupName +  '/shifts/24x7/members';  //always add to the default 24x7 shift for now
-       System.Debug('url = ' + url);
-       jsonResponse = wrapper.performCallOut(url, 'POST', body);
-       System.Debug(jsonResponse);
+        string body;
+        string url;
+        string jsonResponse;
+        XMRestWrapper wrapper = new XMRestWrapper();
+        body =  '{"position" : 1,"recipient":{"id": "'+ PersonId +'", "recipientType":"' + type +'"}}';
+        System.Debug('body = ' + body);
+        url = this.GroupUrl + groupName +  '/shifts/24x7/members';  //always add to the default 24x7 shift for now
+        System.Debug('url = ' + url);
+        jsonResponse = wrapper.performCallOut(url, 'POST', body);
+        System.Debug(jsonResponse);
     }
 
+    public boolean CreateNewGroup(string groupName){
+        string body  = '{"recipientType": "GROUP",  "status": "ACTIVE", "allowDuplicates" : false,"useDefaultDevices" : true,"observedByAll" : true, "description": "inContact Product Cluster Group","targetName": "' + groupName +'"}';
+        string url;
+        string jsonResponse;
+        url = this.GroupUrl;
+        System.Debug('body = ' + body);
+        System.Debug(url);
+        XMRestWrapper wrapper = new XMRestWrapper();
+        jsonResponse = wrapper.performCallOut(url, 'POST', body);
+        return true;
+    }
     //Delete a group
-    public void DeleteAGroup(string groupName){
+    public boolean DeleteAGroup(string groupName){
         string url;
         string jsonResponse;
         XMRestWrapper wrapper = new XMRestWrapper();
         url = this.GroupUrl +  groupName;
         jsonResponse = wrapper.performCallOut(url, 'DELETE', '');
         System.Debug(jsonResponse);
+        return true;
     }
 
- }
-
-
+}

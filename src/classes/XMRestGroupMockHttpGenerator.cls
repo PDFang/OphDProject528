@@ -32,7 +32,7 @@ public class XMRestGroupMockHttpGenerator implements HttpCalloutMock {
          }
          else{
              system.debug('group list');
-             res.setBody(buildGroupMembershipResponseBody());
+             res.setBody(buildGroupListResponseBody());
         }
         return res;
         //
