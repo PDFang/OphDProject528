@@ -250,7 +250,7 @@
                 </apex:column>
                 <apex:column >
                     <apex:facet name="header">Action</apex:facet>
-                    <apex:outputPanel rendered="{!IF(con.xmPerson__c == null, true, false)}">
+                    <apex:outputPanel rendered="{!AND(isXmPerson, ISBLANK(con.xmPerson__c))}">
                         <apex:actionStatus id="associatePersons" >
                             <apex:facet name="stop">
                                 <apex:commandButton value="Associate" onClick="callAssociateContact('{!con.Id}'); return false;"  status="associatePersons"/>

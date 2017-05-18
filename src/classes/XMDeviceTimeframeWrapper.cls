@@ -26,12 +26,13 @@ public class XMDeviceTimeframeWrapper {
         }
     }
 
-    private transient static final Map<String, String> timezoneMap = new Map<String, String>{
+    private transient static  Map<String, XmTimezones__c> timezoneMap = XmTimezones__c.getAll();
+    /*new Map<String, String>{
             'US/Eastern' => 'America/New_York',
             'US/Central' => 'America/Chicago',
             'US/Mountain' => 'America/Denver',
             'US/Pacific' => 'America/Los_Angeles'
-    };
+    };*/
 
     public XMDeviceTimeframeWrapper(XMDeviceTimeframe timeframe){
 
@@ -81,12 +82,12 @@ public class XMDeviceTimeframeWrapper {
         timeframeModel.name = this.name;
 
         Datetime startDateTime = convertTextToDateTime(this.startTime);
-        timeframeModel.startTime =  startDateTime.format('hh:mm', timezoneMap.get(this.timezone));
+        timeframeModel.startTime =  startDateTime.format('hh:mm', timezoneMap.get(this.timezone).Location__c);
 
         system.debug('createModel:  timeframeModel.startTime - '+ timeframeModel.startTime);
 
         Datetime endDateTime = convertTextToDateTime(this.endTime);
-        system.debug('createModel:  endDateTime - '+ endDateTime.format('hh:mm', timezoneMap.get(this.timezone)) );
+        system.debug('createModel:  endDateTime - '+ endDateTime.format('hh:mm', timezoneMap.get(this.timezone).Location__c) );
 
         timeframeModel.durationInMinutes = (Integer)(endDateTime.getTime() - startDateTime.getTime()) / 60 / 1000;
         system.debug('createModel:  durationInMinutes - ' +  timeframeModel.durationInMinutes);

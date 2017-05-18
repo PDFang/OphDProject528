@@ -15,9 +15,10 @@ public class XMPersonManagementHelper {
     public static List<SelectOption> getTimezones(){
         List<SelectOption> options = new List<SelectOption>();
         //options.add(new SelectOption( '', '- Select - '));
-        Schema.PickListEntry[] values = Schema.xmPerson__c.Timezone__c.getDescribe().getPicklistValues();
-        for(Schema.PickListEntry entry : values){
-            options.add(new SelectOption( entry.getValue(), entry.getLabel()));
+        XmTimezones__c[] values = XmTimezones__c.getAll().values();
+
+        for(XmTimezones__c entry : values){
+            options.add(new SelectOption( entry.Name, entry.Name));
         }
 
         return options;
@@ -38,7 +39,7 @@ public class XMPersonManagementHelper {
 
         return [
                 select Name, FirstName, LastName, Email, Phone, Id, AccountId, Account.CadebillAccountNoText__c,
-                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c, xmPerson__r.Timezone__c
+                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
                 from Contact where Id =: contactId
         ];
     }
@@ -47,7 +48,7 @@ public class XMPersonManagementHelper {
 
         return new Map<Id, Contact>([
                 select FirstName, LastName, Email, Phone, Id, AccountId, Account.CadebillAccountNoText__c,
-                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c, xmPerson__r.Timezone__c
+                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
                 from Contact where Email =: email //and xmPerson__c != null
         ]);
     }
@@ -94,8 +95,7 @@ public class XMPersonManagementHelper {
         if(xmGuid != null){
             profile = new xmPerson__c(
                     PrimaryContact__c = currentContact.Id,
-                    xmPersonUID__c = xmGuid,
-                    Timezone__c = person.timezone
+                    xmPersonUID__c = xmGuid
             );
             insert profile;
 
