@@ -37,7 +37,7 @@ public class XMPersonManagementHelper {
     public Contact getContactById(String contactId){
 
         return [
-                select FirstName, LastName, Email, Phone, Id, AccountId,
+                select Name, FirstName, LastName, Email, Phone, Id, AccountId, Account.CadebillAccountNoText__c,
                         Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c, xmPerson__r.Timezone__c
                 from Contact where Id =: contactId
         ];
@@ -46,7 +46,7 @@ public class XMPersonManagementHelper {
     public Map<Id, Contact> getContactsByEmail(String email){
 
         return new Map<Id, Contact>([
-                select FirstName, LastName, Email, Phone, Id, AccountId,
+                select FirstName, LastName, Email, Phone, Id, AccountId, Account.CadebillAccountNoText__c,
                         Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c, xmPerson__r.Timezone__c
                 from Contact where Email =: email //and xmPerson__c != null
         ]);
