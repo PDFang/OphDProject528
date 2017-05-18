@@ -15,7 +15,9 @@
        #category-list{
            float:right;
            padding-right:5em;
-
+       }
+       #pdf-preview-modal{
+           padding-right:25em !important;
        }
     </style>
 
@@ -58,25 +60,38 @@
                         <div class="panel panel-default">
                             <!-- Default panel contents -->
                             <div class="panel-heading">{!SelectedDocumentCategory} - Available Document(s)</div>
+                            <apex:form>
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>Document Title</th>
+                                        <th>Document Type</th>
+                                        <th>Action</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                        <apex:repeat value="{!CategoryToDocumentMap[SelectedDocumentCategory]}" var="item">
+                                            <tr>
+                                                <td>{!item.Title}</td>
+                                                <td>{!item.DocumentExtension}</td>
+                                                <td>
+                                                    <apex:commandLink value="Download " reRender="canvas-download" action="{!setSelectedDocumentId}" style="text-decoration: none;">
+                                                        <apex:param name="documentId" value="{!item.DocumentId}" />
+                                                        <apex:param name="documentTitle" value="{!item.Title}" />
+                                                        <apex:param name="documentExtension" value="{!item.DocumentExtension}" />
+                                                    </apex:commandLink>
 
-                            <table class="table">
-                                <thead>
-                                <tr>
-                                    <th>Document Title</th>
-                                    <th>Document Type</th>
-                                    <th>Action</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                    <apex:repeat value="{!CategoryToDocumentMap[SelectedDocumentCategory]}" var="item">
-                                        <tr>
-                                            <td>{!item.Title}</td>
-                                            <td>{!item.DocumentExtension}</td>
-                                            <td> Download | Preview</td>
-                                        </tr>
-                                    </apex:repeat>
-                                </tbody>
-                            </table>
+                                                    <apex:commandLink value="| Preview" rendered="{!IF(item.DocumentExtension == 'pdf', true, false)}" reRender="canvas-previewer" action="{!setSelectedDocumentId}" style="text-decoration: none;" html-data-toggle="modal" html-data-target="#pdf-preview-modal">
+                                                        <apex:param name="documentId" value="{!item.DocumentId}" />
+                                                        <apex:param name="documentTitle" value="{!item.Title}" />
+                                                        <apex:param name="documentExtension" value="{!item.DocumentExtension}" />
+                                                    </apex:commandLink>
+                                                </td>
+                                            </tr>
+                                        </apex:repeat>
+                                    </tbody>
+                                </table>
+                            </apex:form>
                         </div>
                     </div>
 
@@ -91,7 +106,38 @@
         </div>
 
         <!-- Document Viewer -->
-        <div class="col-sm-4"></div>
+        <div class="col-sm-4" style="opacity:0">
+            <apex:outputPanel id="canvas-download">
+                <apex:outputPanel rendered="{!ShowCanvasApp}">
+                    <apex:canvasApp applicationName="inContact Document Viewer"  parameters="{salesforceDocumentId: '{!SelectedDocumentId}', documentType: '{!SelectedDocumentExtension}', documentTitle: '{!SelectedDocumentTitle}', download:'true'}" height="0px" width="0px">
+                    </apex:canvasApp>
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </div>
     </div>
 
+    <!-- Modal -->
+    <div class="modal fade" id="pdf-preview-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="width:900px">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Preview File</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <apex:outputPanel id="canvas-previewer">
+                        <apex:outputPanel rendered="{!ShowCanvasApp}">
+                            <apex:canvasApp applicationName="inContact Document Viewer"  parameters="{salesforceDocumentId: '{!SelectedDocumentId}', documentType: '{!SelectedDocumentExtension}', documentTitle: '{!SelectedDocumentTitle}', download:'false'}" height="500px" width="850px">
+                            </apex:canvasApp>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </apex:page>
