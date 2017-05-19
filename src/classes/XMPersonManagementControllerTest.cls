@@ -4,7 +4,7 @@ private class XMPersonManagementControllerTest {
     static final String CUSTOMER_ACCOUNT = 'Customers';
     static final String CUSTOMER_CONTACT = 'Customer-Other';
 
-    static testMethod void testNewContact() {
+    static testMethod void testContactNoXmPerson() {
 
         Account testAccount = createAccount();
 
@@ -39,6 +39,42 @@ private class XMPersonManagementControllerTest {
 
     }
 
+    static testMethod void testContactWithXmPerson() {
+
+        Account testAccount = createAccount();
+
+        xmPerson__c person = new xmPerson__c(
+                xmPersonUID__c = 'aefgh-1234-cdeft'
+        );
+        insert person;
+
+        Map<String, RecordTypeInfo> recordTypeMap = Schema.SObjectType.Contact.getRecordTypeInfosByName();
+        Contact testContact = new Contact(
+                FirstName = 'XMPersonManagementControllerTest',
+                LastName = 'Contact',
+                Email = 'contact1@incontact.com',
+                RecordTypeId = recordTypeMap.get(CUSTOMER_CONTACT).getRecordTypeId(),
+                AccountId = testAccount.Id,
+                xmPerson__c = person.Id
+        );
+
+        insert testContact;
+
+
+
+        test.startTest();
+        XMPersonManagementController testController = new XMPersonManagementController(new ApexPages.StandardController(testContact));
+        system.assertEquals( true, testController.getIsXmPerson(), 'Contact should have an xmPerson.');
+        system.assertEquals( false, testController.getIsDuplicate(), 'Contact should not have any duplicates.');
+        system.assertEquals( false, testController.isPersonMatch, 'Contact should not have a matching xmPerson.');
+
+        XMPersonWrapper personWrapper = testController.person;
+        system.assertNotEquals( null, personWrapper, 'xMatters should return an XM Person.');
+
+        test.stopTest();
+
+    }
+
     static Account createAccount(){
 
         Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
@@ -54,4 +90,6 @@ private class XMPersonManagementControllerTest {
         return testAccount;
 
     }
+
+
 }
