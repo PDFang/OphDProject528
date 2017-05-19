@@ -19,6 +19,14 @@
        #pdf-preview-modal{
            padding-right:25em !important;
        }
+       .bPageHeader{
+           font-size:12px;
+       }
+
+       /* This is a hack to fix the toolbar because it was changing size on me */
+       body{
+       font-size:12px;
+       }
     </style>
 
 
@@ -28,24 +36,24 @@
 
         <!--- Tab Categories and Document grids-->
         <div class="col-sm-4">
-            <apex:form>
+            <apex:form >
                 <div class="panel panel-default" style="float:right">
                     <div class="panel-heading">Available Categories</div>
-                      <div class="panel-body">
+                    <div class="panel-body">
 
-                          <!--- Category Navigation -->
+                        <!--- Category Navigation -->
                         <div class="tabbable" id="category-list">
                             <ul class="nav nav-pills nav-stacked">
-                                    <apex:repeat value="{!CategoryToDocumentMap}" var="category">
-                                        <li style="margin-left:0px">
-                                            <apex:commandLink value="{!category}" reRender="previewPanel" action="{!setSelectedCategory}" style="text-decoration: none;" html-data-toggle="pill">
-                                                <apex:param name="selectedCategory" value="{!category}" />
-                                            </apex:commandLink>
-                                        </li>
-                                    </apex:repeat>
+                                <apex:repeat value="{!CategoryToDocumentMap}" var="category">
+                                    <li style="margin-left:0px">
+                                        <apex:commandLink value="{!category}" reRender="previewPanel" action="{!setSelectedCategory}" style="text-decoration: none;" html-data-toggle="pill">
+                                            <apex:param name="selectedCategory" value="{!category}" />
+                                        </apex:commandLink>
+                                    </li>
+                                </apex:repeat>
                             </ul>
-                     </div>
-                  </div>
+                        </div>
+                    </div>
                 </div>
             </apex:form>
         </div>
@@ -60,7 +68,7 @@
                         <div class="panel panel-default">
                             <!-- Default panel contents -->
                             <div class="panel-heading">{!SelectedDocumentCategory} - Available Document(s)</div>
-                            <apex:form>
+                            <apex:form >
                                 <table class="table">
                                     <thead>
                                     <tr>
@@ -70,25 +78,25 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                        <apex:repeat value="{!CategoryToDocumentMap[SelectedDocumentCategory]}" var="item">
-                                            <tr>
-                                                <td>{!item.Title}</td>
-                                                <td>{!item.DocumentExtension}</td>
-                                                <td>
-                                                    <apex:commandLink value="Download " reRender="canvas-download" action="{!setSelectedDocumentId}" style="text-decoration: none;">
-                                                        <apex:param name="documentId" value="{!item.DocumentId}" />
-                                                        <apex:param name="documentTitle" value="{!item.Title}" />
-                                                        <apex:param name="documentExtension" value="{!item.DocumentExtension}" />
-                                                    </apex:commandLink>
+                                    <apex:repeat value="{!CategoryToDocumentMap[SelectedDocumentCategory]}" var="item">
+                                        <tr>
+                                            <td>{!item.Title}</td>
+                                            <td>{!item.DocumentExtension}</td>
+                                            <td>
+                                                <apex:commandLink value="Download " reRender="canvas-download" action="{!setSelectedDocumentId}" style="text-decoration: none;">
+                                                    <apex:param name="documentId" value="{!item.DocumentId}" />
+                                                    <apex:param name="documentTitle" value="{!item.Title}" />
+                                                    <apex:param name="documentExtension" value="{!item.DocumentExtension}" />
+                                                </apex:commandLink>
 
-                                                    <apex:commandLink value="| Preview" rendered="{!IF(item.DocumentExtension == 'pdf', true, false)}" reRender="canvas-previewer" action="{!setSelectedDocumentId}" style="text-decoration: none;" html-data-toggle="modal" html-data-target="#pdf-preview-modal">
-                                                        <apex:param name="documentId" value="{!item.DocumentId}" />
-                                                        <apex:param name="documentTitle" value="{!item.Title}" />
-                                                        <apex:param name="documentExtension" value="{!item.DocumentExtension}" />
-                                                    </apex:commandLink>
-                                                </td>
-                                            </tr>
-                                        </apex:repeat>
+                                                <apex:commandLink value="| Preview" rendered="{!IF(item.DocumentExtension == 'pdf', true, false)}" reRender="canvas-previewer" action="{!setSelectedDocumentId}" style="text-decoration: none;" html-data-toggle="modal" html-data-target="#pdf-preview-modal">
+                                                    <apex:param name="documentId" value="{!item.DocumentId}" />
+                                                    <apex:param name="documentTitle" value="{!item.Title}" />
+                                                    <apex:param name="documentExtension" value="{!item.DocumentExtension}" />
+                                                </apex:commandLink>
+                                            </td>
+                                        </tr>
+                                    </apex:repeat>
                                     </tbody>
                                 </table>
                             </apex:form>
@@ -133,7 +141,7 @@
                             </apex:canvasApp>
                         </apex:outputPanel>
                     </apex:outputPanel>
-                    </div>
+                </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
