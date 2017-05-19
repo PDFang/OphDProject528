@@ -114,4 +114,45 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
         return groupListMap;
     }
 
+    private String SetXMUserToGrouops(List<String> groupList, String userID)
+    {
+        List<XMGroupModel> xmGroupModelList = new List<XMGroupModel>();
+        XMRestGroup xmRestGroupObj = new XMRestGroup();
+        String successMessage;
+
+        for(String groupObj:groupList)
+        {
+            xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj);
+
+            if(xmGroupModelList.size() > 0)
+            {
+                xmRestGroupObj.AddUserToGroup(groupObj, userID, 'Person');
+                successMessage = 'User has been successfully added to the selected groups.';
+            }
+
+            else
+            {
+                Boolean isGroupCreated;
+                isGroupCreated = xmRestGroupObj.CreateNewGroup(groupObj);
+
+                if(isGroupCreated)
+                {
+                    xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj);
+                    if(xmGroupModelList.size() > 0)
+                    {
+                        xmRestGroupObj.AddUserToGroup(groupObj, userID, 'Person');
+                        successMessage = 'User has been successfully added to the selected groups.';
+                    }
+                }
+
+            }
+        }
+
+        if(successMessage != '' && successMessage != null)
+            return successMessage;
+        else
+            return 'There are some issues in adding user to the selected group, please try again or call administrator.';
+    }
+
+
 }

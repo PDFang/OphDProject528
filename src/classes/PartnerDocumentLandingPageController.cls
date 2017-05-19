@@ -65,14 +65,16 @@ public without sharing class PartnerDocumentLandingPageController {
 
     private void loadDocumentsVisibleToAllAccounts() {
         //load all documents that are visible to all accounts and if the partner type is set it matches the user's partner type
-        for(Partner_Document_Manager__c pdm : [SELECT Title__c, LatestVersionId__c, FileType__c,Category__c
-        FROM Partner_Document_Manager__c
-        WHERE All_Accounts__c = true
-        AND Active__c = true
-        AND LatestVersionId__c != null
-        AND (Partner_Type__c = null OR Partner_Type__c in :partnerTypeNames)
-        AND FileType__c  != null
-        AND Category__c  != null]) {
+        for(Partner_Document_Manager__c pdm : [
+                SELECT Title__c, LatestVersionId__c, FileType__c,Category__c
+                FROM Partner_Document_Manager__c
+                WHERE All_Accounts__c = true
+                AND Active__c = true
+                AND LatestVersionId__c != null
+                AND (Partner_Type__c = null OR Partner_Type__c in :partnerTypeNames)
+                AND FileType__c  != null
+                AND Category__c  != null
+        ]) {
 
             DocumentDetail detail = new DocumentDetail();
             detail.Title = pdm.Title__c;
@@ -104,15 +106,18 @@ public without sharing class PartnerDocumentLandingPageController {
 
         Id accountId = currentUserList[0].AccountId;
 
-        for(Partner_Document_Access__c pda : [SELECT Partner_Document_Manager__r.Title__c, Partner_Document_Manager__r.LatestVersionId__c,  Partner_Document_Manager__r.FileType__c
-        FROM Partner_Document_Access__c
-        WHERE Partner_Document_Manager__r.All_Accounts__c = false
-        AND Partner_Document_Manager__r.Active__c = true
-        AND Partner_Document_Manager__r.LatestVersionId__c != null
-        AND (Partner_Document_Manager__r.Partner_Type__c = null OR Partner_Document_Manager__r.Partner_Type__c in :partnerTypeNames)
-        AND Account__r.Id = :accountId
-        AND Partner_Document_Manager__r.FileType__c  != null
-        AND Partner_Document_Manager__r.Category__c  != null]) {
+        for(Partner_Document_Access__c pda : [
+                SELECT Partner_Document_Manager__r.Title__c, Partner_Document_Manager__r.LatestVersionId__c,
+                Partner_Document_Manager__r.FileType__c, Partner_Document_Manager__r.Category__c
+                FROM Partner_Document_Access__c
+                WHERE Partner_Document_Manager__r.All_Accounts__c = false
+                AND Partner_Document_Manager__r.Active__c = true
+                AND Partner_Document_Manager__r.LatestVersionId__c != null
+                AND (Partner_Document_Manager__r.Partner_Type__c = null OR Partner_Document_Manager__r.Partner_Type__c in :partnerTypeNames)
+                AND Account__r.Id = :accountId
+                AND Partner_Document_Manager__r.FileType__c  != null
+                AND Partner_Document_Manager__r.Category__c  != null
+        ]) {
             DocumentDetail detail = new DocumentDetail();
             detail.Title = pda.Partner_Document_Manager__r.Title__c;
             detail.DocumentId = pda.Partner_Document_Manager__r.LatestVersionId__c;

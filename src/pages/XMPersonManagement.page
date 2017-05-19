@@ -2,7 +2,7 @@
  - Created by arnab.karsarkar on 5/4/2017.
  -->
 
-<apex:page id="XMPersonManagement" standardController="Contact" extensions="XMPersonManagementController">
+<apex:page id="XMPersonManagement" standardController="Contact" tabStyle="Contact" title="Notification Profile - {!currentContact.Name}" extensions="XMPersonManagementController">
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
@@ -97,13 +97,22 @@
             font-size : 12px !important;
     }
 
+    .k-multiselect-wrap li {
+        color: #fff !important;
+        border-color: #357ebd !important;
+        background-color: #428bca !important;
+    }
+
     </style>
 
     <apex:form >
-            <div class="page-header">
-                <h1>Manage Notification Profile for Contact - {!currentContact.FirstName} {!currentContact.LastName}</h1>
-                <apex:commandLink action="{!goBack}" value="Go Back" style="float:right;"/>
-            </div>
+            <apex:sectionHeader title="Notification Profile" subtitle="{!currentContact.Name}"/>
+
+            <apex:commandLink action="{!goBack}" value="Go Back" style="float:right;"/>
+            <!--<div class="page-header">-->
+                <!--<h1>Manage Notification Profile for Contact - {!currentContact.FirstName} {!currentContact.LastName}</h1>-->
+                <!--<apex:commandLink action="{!goBack}" value="Go Back" style="float:right;"/>-->
+            <!--</div>-->
 
             <div class="container-fluid">
                 <div class="row">
@@ -113,6 +122,15 @@
 
                 </div>
                 <div class="panel panel-default">
+
+                    <apex:pageBlock id="contactDetail" >
+                        <apex:pageBlockSection  title="Contact Detail" collapsible="false" columns="1">
+                            <apex:outputField value="{!currentContact.Name}"/>
+                            <apex:outputField value="{!currentContact.AccountId}"/>
+                            <apex:outputField value="{!currentContact.Account.CadebillAccountNoText__c}"/>
+                        </apex:pageBlockSection>
+                    </apex:pageBlock>
+
                     <div class="panel-heading"><label>XMatters Person Details</label>
 
                         <apex:outputPanel id="alertmessage">
@@ -211,6 +229,10 @@
                     <apex:outputLink value="/{!con.AccountId}">{!con.Account.Name}</apex:outputLink>
                 </apex:column>
                 <apex:column >
+                    <apex:facet name="header">Cadebill Account #</apex:facet>
+                    <apex:outputText value="{!con.Account.CadebillAccountNoText__c}"></apex:outputText>
+                </apex:column>
+                <apex:column >
                     <apex:facet name="header">First Name</apex:facet>
                     <apex:outputLink value="/{!con.Id}">{!con.FirstName}</apex:outputLink>
                 </apex:column>
@@ -228,7 +250,7 @@
                 </apex:column>
                 <apex:column >
                     <apex:facet name="header">Action</apex:facet>
-                    <apex:outputPanel rendered="{!IF(con.xmPerson__c == null, true, false)}">
+                    <apex:outputPanel rendered="{!AND(isXmPerson, ISBLANK(con.xmPerson__c))}">
                         <apex:actionStatus id="associatePersons" >
                             <apex:facet name="stop">
                                 <apex:commandButton value="Associate" onClick="callAssociateContact('{!con.Id}'); return false;"  status="associatePersons"/>
@@ -328,6 +350,7 @@
                                                         }
                                                     }
                                               console.log('results =>' + JSON.stringify(result));
+                                              hideError();
                                               }
 
                                             } else if (event.type === 'exception') {
@@ -341,7 +364,7 @@
                             },
                         update: function(options){
                                var objResult = new Object();
-                                objResult.deviceType = options.data.deviceType ;
+                                objResult.name = options.data.name ;
                                 objResult.deviceValue = options.data.deviceValue ;
                                 objResult.priorityThreshold = "Medium";
                                 objResult.deviceId = options.data.deviceId ;
@@ -371,7 +394,7 @@
 
                               XMPersonManagementController.addNewDevice(
                                       '{!xmPersonId}',
-                                      options.data.deviceType,
+                                      options.data.name,
                                       options.data.deviceValue,
                                       function(result,event)
                                       {
@@ -379,6 +402,8 @@
                                                  var returnResult = JSON.parse(result);
                                               if(returnResult.result != 'Failed'){
                                                    options.success();
+                                                   setupDeviceList();
+                                                   hideError();
                                                }
                                                else{
                                                    displayError(returnResult.message);
@@ -402,6 +427,7 @@
                                                  var returnResult = JSON.parse(result);
                                               if(returnResult.result != 'Failed'){
                                                    options.success();
+                                                   hideError();
                                                }
                                                else{
                                                    displayError(returnResult.message);
@@ -422,7 +448,7 @@
                             id: "Id",
                             fields: {
                                 "Id": {from:"deviceId", type: "string"},
-                                "DeviceType": { from: "deviceType", type: "string", },
+                                "DeviceType": { from: "name", type: "string", },
                                 "PriorityThreshold":{from:"priorityThreshold",type:"string"},
                                 "DeviceValue" : {from:"deviceValue",
                                                  type: "string",
@@ -461,7 +487,7 @@
                   editable: "inline",
                   scrollable: true,
                   noRecords: true,
-                  height: 150,
+                  height: 400,
                   toolbar: ["create"],
                   columns: [{
                                 field:"Id",
@@ -502,6 +528,12 @@
              $("div#java-errors").css("display", "block");
              document.getElementById("java-errors").innerHTML = '<strong>Snap!!</strong>Couldnt update the device list. Error occured - ' + message;
              console.log('error =>' + message);
+        }
+
+         function hideError(){
+             $("div#java-errors").css("display", "none");
+             document.getElementById("java-errors").innerHTML = ' ';
+
         }
 
         function DeviceTypePicklistEditor(container, options) {
@@ -549,7 +581,7 @@
             var deviceId = rowData.Id;
             deviceData = new Object();
             deviceData.deviceId = rowData.Id;
-            deviceData.deviceType = rowData.DeviceType;
+            deviceData.name = rowData.DeviceType;
             deviceData.deviceValue = rowData.DeviceValue ;
 
             addExistingTab(deviceId);
@@ -750,7 +782,8 @@
                             days : days,
                             endTime : endTimeVal,
                             startTime : startTimeVal,
-                            name : nameVal
+                            name : nameVal,
+                            timezone : "{!timezone}"
                            });
          });
 
@@ -758,7 +791,7 @@
          if(!isError){
              removeError();
              var deviceUpdate = new Object();
-             deviceUpdate.deviceType = deviceData.deviceType ;
+             deviceUpdate.name = deviceData.name ;
              deviceUpdate.deviceValue = deviceData.deviceValue ;
              deviceUpdate.priorityThreshold = "Medium";
              deviceUpdate.deviceId = deviceData.deviceId ;

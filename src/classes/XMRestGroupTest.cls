@@ -21,8 +21,82 @@ public  class XMRestGroupTest {
     }
 
 
+    public static testmethod void TestAddUserToGroup() {
+
+        XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+        test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, fakeResponse);
+        XMRestGroup xm = new XMRestGroup();
+        xm.AddUserToGroup('GroupTest01', 'Test02', 'TypeTest01');
+        test.stopTest();
+    }
+
+    public static testmethod void TestDeleteAGroup() {
+
+        XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+        test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, fakeResponse);
+        XMRestGroup xm = new XMRestGroup();
+        xm.DeleteAGroup('GroupTest01');
+        test.stopTest();
+    }
+
+    public static testmethod void TestRemoveUserFromAGroup() {
+
+        XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+        test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, fakeResponse);
+        XMRestGroup xm = new XMRestGroup();
+        xm.RemoveUserFromAGroup('GroupTest01', 'Test02');
+        test.stopTest();
+    }
+
+
+    public static testmethod void TestGetAllGroupsByPrefix() {
+
+        XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+        test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, fakeResponse);
+        XMRestGroup xm = new XMRestGroup();
+        List<XMGroupModel> xmGroupModelTest =  xm.GetAllGroupsByPrefix('Test01');
+        test.stopTest();
+        System.debug('xmGroupModelTest -->' + xmGroupModelTest);
+    }
+
+    public static testmethod void TestGetMyCustomerGroups() {
+
+        XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+        test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, fakeResponse);
+        XMRestGroup xm = new XMRestGroup();
+//        Account acc = new Account();
+        //Create a new Account object
+        Account acct = inContactBaseClass.CreateAccount('Test Account');
+        acct.CadebillAccountNo__c = 9999999;
+        acct.inContact_Cluster__c = 'C6';
+        insert acct;
+
+        List<XMPersonGroupData> xmPersonGroupDataTest =  xm.GetMyCustomerGroups(acct);
+        test.stopTest();
+        System.debug('xmPersonGroupDataTest -->' + xmPersonGroupDataTest);
+    }
+
+    public static testmethod void TestCreateNewGroup() {
+
+        XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+        test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, fakeResponse);
+        XMRestGroup xm = new XMRestGroup();
+        Boolean isGroupCreated =  xm.CreateNewGroup('Test01');
+        test.stopTest();
+        System.debug('isGroupCreated -->' + isGroupCreated);
+    }
+
+
 }
-
-
-
-
