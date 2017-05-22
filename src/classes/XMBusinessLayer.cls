@@ -1,5 +1,6 @@
 public with sharing class XMBusinessLayer implements XMiBusiness {
 
+    //Return full list of groups that an account can have
     public Map<String, XMGroupProductCluster> GetGroupListByUserid(string guid, Account acc){
         XMRestGroup xmRest = new XMRestGroup();
         Map<String, XMGroupProductCluster> xmSalesForceGroupMap = GetSalesForceGroupData(acc);
@@ -30,6 +31,7 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
         throw new CalloutException();
     }
 
+    //Parses ist of XM low level models into one that is used by the business layer
     private List<XMGroupProductCluster> GetXMGroupList(List<XMGroupMemberModel> groupList)
     {
         List<XMGroupProductCluster> xmGroupClusterObjList = new List<XMGroupProductCluster>();
@@ -61,8 +63,8 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
 
 
 
-
-    public Map<String, XMGroupProductCluster> GetSalesForceGroupData(Account acc){
+    //Returns a list of salesforce product based groups an account belongs to
+    private Map<String, XMGroupProductCluster> GetSalesForceGroupData(Account acc){
 
         Map<String, ProductEventMap__c> nodeMap;
         nodeMap = ProductEventMap__c.getAll();
@@ -114,37 +116,37 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
         return groupListMap;
     }
 
-    private String SetXMUserToGrouops(List<String> groupList, String userID)
+    //Update the contacts xmatters group memebership
+    public String UpdateXMUserToGrouops(List<XMGroupProductCluster> groupList, String userID)
     {
         List<XMGroupModel> xmGroupModelList = new List<XMGroupModel>();
         XMRestGroup xmRestGroupObj = new XMRestGroup();
         String successMessage;
 
-        for(String groupObj:groupList)
+        for(XMGroupProductCluster groupObj:groupList)
         {
-            xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj);
-
-            if(xmGroupModelList.size() > 0)
-            {
-                xmRestGroupObj.AddUserToGroup(groupObj, userID, 'Person');
-                successMessage = 'User has been successfully added to the selected groups.';
-            }
-
-            else
-            {
-                Boolean isGroupCreated;
-                isGroupCreated = xmRestGroupObj.CreateNewGroup(groupObj);
-
-                if(isGroupCreated)
-                {
-                    xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj);
-                    if(xmGroupModelList.size() > 0)
-                    {
-                        xmRestGroupObj.AddUserToGroup(groupObj, userID, 'Person');
-                        successMessage = 'User has been successfully added to the selected groups.';
-                    }
+            if (groupObj.selected == true) {
+                xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
+                if (xmGroupModelList.size() > 0) {
+                    xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, userID, 'Person');
+                    successMessage = 'User information updated in xMatters.';
                 }
+                else {
+                    //build the group on the fly
+                    Boolean isGroupCreated;
+                    isGroupCreated = xmRestGroupObj.CreateNewGroup(groupObj.XmattersGroupName);
+                    if (isGroupCreated) {
+                        xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
+                        if (xmGroupModelList.size() > 0) {
+                            xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, userID, 'Person');
+                            successMessage = 'User has been successfully added to the selected groups.';
+                        }
+                    }
 
+                }
+            }
+            else{
+                xmRestGroupObj.RemoveUserFromAGroup(groupObj.XmattersGroupName, userID);
             }
         }
 
