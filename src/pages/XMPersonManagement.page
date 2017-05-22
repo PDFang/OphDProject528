@@ -282,7 +282,7 @@
 
                     <div class="modal-body" style="font-size:14px;" id="infoModal">
                         <div class="row">
-                            <a href="#" id="btnAdd" onclick="addNewTab();" style="float:right;"><i class="glyphicon glyphicon-plus"></i> Add New TimeFrame</a>
+                            <a href="#" id="btnAdd" onclick="addNewTab();" style="float:right;"><i class="glyphicon glyphicon-plus"></i> Add New</a>
                         </div>
                         <div id="validation-errors" class=" alert alert-danger message-alert" style="margin-top:15px;"></div>
                         <ul class="nav nav-tabs" id="tabs">
@@ -507,8 +507,8 @@
                                 field:"TimeFrame",
                                 title:"Time Frames",
                                 editable:false,
-                                template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">Manage TimeFrames</a>'
-
+                                //template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">Manage TimeFrames</a>'
+                                template: '<a href="" onClick="OpenModal(this); return false;" class="k-button k-button-icontext">Manage</a>'
                             },
                             {command: ["edit","destroy"]}
 

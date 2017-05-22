@@ -134,6 +134,7 @@ public class XMRestDeviceService {
 
             XMDeviceTimeframe deviceTime = new XMDeviceTimeframe();
             deviceTime.name = String.valueOf(i.get('name'));
+            deviceTime.timezone = String.valueOf(i.get('timezone'));
             deviceTime.startTime = String.valueOf(i.get('startTime'));
             deviceTime.durationInMinutes = Integer.valueOf(i.get('durationInMinutes'));
             deviceTime.excludeHolidays = Boolean.valueOf(i.get('excludeHolidays'));

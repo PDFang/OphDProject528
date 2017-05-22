@@ -3,6 +3,7 @@ public class XMDeviceTimeframe {
     public String startTime {get;set;}
     public Integer durationInMinutes {get;set;}
     public Boolean excludeHolidays {get;set;}
+    public String timezone {get;set;}
     public List<string> days {get;set;}
 
     public XMDeviceTimeframe(){
