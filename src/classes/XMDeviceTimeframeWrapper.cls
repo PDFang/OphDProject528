@@ -34,20 +34,21 @@ public class XMDeviceTimeframeWrapper {
             'US/Pacific' => 'America/Los_Angeles'
     };*/
 
-    public XMDeviceTimeframeWrapper(XMDeviceTimeframe timeframe, String timezone){
+    public XMDeviceTimeframeWrapper(XMDeviceTimeframe timeframe, String userTimezone){
 
-        this.timezone = timezone;
+        //this.timezone = timezone;
+        this.timezone = timeframe.timezone;
         this.name = timeframe.name;
 
         Integer hours = Integer.valueOf(timeframe.startTime.left(2));
         Integer minutes = Integer.valueOf(timeframe.startTime.right(2));
         Time startTime = Time.newInstance(hours, minutes, 0, 0);
         Datetime tempDate = Datetime.newInstance(system.today(), startTime);
-        this.startTime = tempDate.format('h:mm a');
+        this.startTime = tempDate.format('h:mm a', timezoneMap.get(this.timezone).Location__c);
 
         Time endTime = startTime.addMinutes(timeframe.durationInMinutes);
         tempDate = Datetime.newInstance(system.today(), endTime);
-        this.endTime = tempDate.format('h:mm a');
+        this.endTime = tempDate.format('h:mm a', timezoneMap.get(this.timezone).Location__c);
 
         this.days = new Week();
         system.debug('XMDeviceTimeframeWrapper:  timeframe.days - '+ timeframe.days);
@@ -81,6 +82,7 @@ public class XMDeviceTimeframeWrapper {
 
         XMDeviceTimeframe timeframeModel = new XMDeviceTimeframe();
         timeframeModel.name = this.name;
+        timeframeModel.timezone = this.timezone;
 
         Datetime startDateTime = convertTextToDateTime(this.startTime);
         timeframeModel.startTime =  startDateTime.format('hh:mm', timezoneMap.get(this.timezone).Location__c);
