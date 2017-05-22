@@ -176,9 +176,9 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
        system.debug('**** Abandoned Set ' + orderIds.Size() + ' records.');
   
        List<Case> CaseList = new List<Case>(); 
-       for (case caseId : [SELECT Id FROM Case WHERE CustomerOrder__c IN :orderIds]) {
-           		caseId.DateTimeOfAbandonedNotification__c = datetime.now();
-          		CaseList.add(caseId);
+       for (case uCase : [SELECT Id FROM Case WHERE CustomerOrder__c IN :orderIds]) {
+           		uCase.DateTimeOfAbandonedNotification__c = datetime.now();
+          		CaseList.add(uCase);
         }       
        update CaseList;
 
