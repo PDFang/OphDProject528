@@ -66,7 +66,7 @@ public class XMPersonManagementController{
             }
 
             if(string.isNotBlank(xmPersonGuid)){
-                person = helper.getXmPersonByGuid(xmPersonGuid);
+                person = XMPersonManagementHelper.getXmPersonByGuid(xmPersonGuid);
             } else{
                 person = new XMPersonWrapper(currentContact);
             }

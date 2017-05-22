@@ -67,7 +67,7 @@ public class XMPersonManagementHelper {
 
     }
 
-    public XMPersonWrapper getXmPersonByGuid(String xmPersonGuid){
+    public static XMPersonWrapper getXmPersonByGuid(String xmPersonGuid){
 
         XMRestPerson restService = new XMRestPerson();
         XMPersonModel response = restService.getXmPersonModelByXmattersId(xmPersonGuid);
@@ -110,6 +110,8 @@ public class XMPersonManagementHelper {
 
     public static XMDeviceWrapper[] getUserDevices(String xmPersonGuid){
 
+        XMPersonWrapper person = getXmPersonByGuid(xmPersonGuid);
+
         XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
 
         if(string.isNotBlank(xmPersonGuid)) {
@@ -133,7 +135,7 @@ public class XMPersonManagementHelper {
                 }
                 List<XMDeviceTimeframe> timeframeList = device.timeframes;
                 for(XMDeviceTimeframe timeframe : timeframeList){
-                    XMDeviceTimeframeWrapper wrapper = new XMDeviceTimeframeWrapper(timeframe);
+                    XMDeviceTimeframeWrapper wrapper = new XMDeviceTimeframeWrapper(timeframe, person.timezone);
                     newDevice.timeframes.add(wrapper);
                 }
             }

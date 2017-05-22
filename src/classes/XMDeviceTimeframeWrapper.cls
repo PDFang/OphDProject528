@@ -34,8 +34,9 @@ public class XMDeviceTimeframeWrapper {
             'US/Pacific' => 'America/Los_Angeles'
     };*/
 
-    public XMDeviceTimeframeWrapper(XMDeviceTimeframe timeframe){
+    public XMDeviceTimeframeWrapper(XMDeviceTimeframe timeframe, String timezone){
 
+        this.timezone = timezone;
         this.name = timeframe.name;
 
         Integer hours = Integer.valueOf(timeframe.startTime.left(2));

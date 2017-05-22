@@ -1,7 +1,6 @@
 <!--
  - Created by arnab.karsarkar on 5/4/2017.
  -->
-
 <apex:page id="XMPersonManagement" standardController="Contact" tabStyle="Contact" title="Notification Profile - {!currentContact.Name}" extensions="XMPersonManagementController">
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
@@ -275,7 +274,7 @@
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="infolabel">Manage TimeFrams</h5>
+                        <h5 class="modal-title" id="infolabel">Manage Time Frames</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -363,32 +362,33 @@
                                );
                             },
                         update: function(options){
-                               var objResult = new Object();
-                                objResult.name = options.data.name ;
-                                objResult.deviceValue = options.data.deviceValue ;
-                                objResult.priorityThreshold = "Medium";
-                                objResult.deviceId = options.data.deviceId ;
-                             XMPersonManagementController.updateDevice (
-                                     JSON.stringify(objResult),
-                                      function(result,event)
-                                      {
-                                          if (event.status) {
-                                               var returnResult = JSON.parse(result);
-                                               if(returnResult.result != 'Failed'){
-                                                   options.success();
-                                               }
-                                               else{
-                                                   displayError(returnResult.message);
-                                               }
-                                              console.log('results =>' + result.result);
-                                            } else if (event.type === 'exception') {
-                                                  displayError(event.message);
-                                            } else {
-                                                 displayError(event.message);
-                                            }
-                                      },
-                                      {escape: false}
-                               );
+                            var objResult = new Object();
+                            objResult.name = options.data.name ;
+                            objResult.deviceValue = options.data.deviceValue ;
+                            objResult.priorityThreshold = "Medium";
+                            objResult.deviceId = options.data.deviceId ;
+                            objResult.timeframes = options.data.timeframes;
+                            XMPersonManagementController.updateDevice (
+                                JSON.stringify(objResult),
+                                function(result,event)
+                                {
+                                  if (event.status) {
+                                       var returnResult = JSON.parse(result);
+                                       if(returnResult.result != 'Failed'){
+                                           options.success();
+                                       }
+                                       else{
+                                           displayError(returnResult.message);
+                                       }
+                                       console.log('results =>' + returnResult.result);
+                                    } else if (event.type === 'exception') {
+                                          displayError(event.message);
+                                    } else {
+                                         displayError(event.message);
+                                    }
+                                },
+                                {escape: false}
+                            );
                         },
                         create: function(options){
 
