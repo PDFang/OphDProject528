@@ -281,7 +281,8 @@
                     </div>
 
                     <div class="modal-body" style="font-size:14px;" id="infoModal">
-                        <div class="row">
+                        <div class="row" style="padding: 10px 10px 10px 10px;">
+                            <span style="color: #5270c7;">{!timezoneDisplayName}</span>
                             <a href="#" id="btnAdd" onclick="addNewTab();" style="float:right;"><i class="glyphicon glyphicon-plus"></i> Add New</a>
                         </div>
                         <div id="validation-errors" class=" alert alert-danger message-alert" style="margin-top:15px;"></div>

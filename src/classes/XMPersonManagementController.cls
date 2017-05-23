@@ -11,6 +11,10 @@ public class XMPersonManagementController{
         return person != null ? person.timezone : null;
     }
 
+    public string getTimezoneDisplayName(){
+        return person != null ? TimeZone.getTimeZone(person.timezone).getDisplayName() : null;
+    }
+
     public boolean getIsXmPerson(){
         return currentContact != null && currentContact.xmPerson__c != null;
     }

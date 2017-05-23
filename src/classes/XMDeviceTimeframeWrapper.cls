@@ -27,31 +27,48 @@ public class XMDeviceTimeframeWrapper {
     }
 
     private transient static  Map<String, XmTimezones__c> timezoneMap = XmTimezones__c.getAll();
-    /*new Map<String, String>{
-            'US/Eastern' => 'America/New_York',
-            'US/Central' => 'America/Chicago',
-            'US/Mountain' => 'America/Denver',
-            'US/Pacific' => 'America/Los_Angeles'
-    };*/
+
+    private string getLocation(String timezone){
+
+        return (timezoneMap != null && timezoneMap.containsKey(timezone))
+                ? timezoneMap.get(timezone).Location__c : null;
+
+    }
 
     public XMDeviceTimeframeWrapper(XMDeviceTimeframe timeframe, String userTimezone){
 
-        //this.timezone = timezone;
+
         this.timezone = timeframe.timezone;
         this.name = timeframe.name;
+
+        system.debug('XMDeviceTimeframeWrapper():  name - '+ this.name);
+        system.debug('XMDeviceTimeframeWrapper():  current timezone  - '+ this.timezone);
+        system.debug('XMDeviceTimeframeWrapper():  user timezone - '+ userTimezone);
+
+        // calculate offset
+        Integer offset = offsetInMinutes();
+        system.debug('XMDeviceTimeframeWrapper():  GMT offset in minutes - '+ offset);
 
         Integer hours = Integer.valueOf(timeframe.startTime.left(2));
         Integer minutes = Integer.valueOf(timeframe.startTime.right(2));
         Time startTime = Time.newInstance(hours, minutes, 0, 0);
-        Datetime tempDate = Datetime.newInstance(system.today(), startTime);
-        this.startTime = tempDate.format('h:mm a', timezoneMap.get(this.timezone).Location__c);
+        Datetime tempDate = Datetime.newInstanceGmt(system.now().dateGMT(), startTime);
+        system.debug('XMDeviceTimeframeWrapper():  tempDate GMT - '+ tempDate);
 
-        Time endTime = startTime.addMinutes(timeframe.durationInMinutes);
-        tempDate = Datetime.newInstance(system.today(), endTime);
-        this.endTime = tempDate.format('h:mm a', timezoneMap.get(this.timezone).Location__c);
+        // add offset
+        tempDate = tempDate.addMinutes(offset);
+        system.debug('XMDeviceTimeframeWrapper():  tempDate with offset - '+ tempDate);
+
+        this.startTime = tempDate.format('h:mm a', getLocation(userTimezone));
+        system.debug('XMDeviceTimeframeWrapper():  Input - '+ timeframe.startTime + '\\n , output - ' + this.startTime);
+
+        // calculate endtime
+        tempDate = tempDate.addMinutes(timeframe.durationInMinutes);
+        this.endTime = tempDate.format('h:mm a', getLocation(userTimezone));
+        system.debug('XMDeviceTimeframeWrapper():  durationInMinutes - '+ timeframe.durationInMinutes + '\\n , endtime - ' + this.endTime);
 
         this.days = new Week();
-        system.debug('XMDeviceTimeframeWrapper:  timeframe.days - '+ timeframe.days);
+        system.debug('XMDeviceTimeframeWrapper():  timeframe.days - '+ timeframe.days);
         for(String day : timeframe.days){
             system.debug(' day  - '+day);
             if(day.containsIgnoreCase('SU')){
@@ -71,7 +88,7 @@ public class XMDeviceTimeframeWrapper {
             }
         }
 
-        system.debug('XMDeviceTimeframeWrapper:  timeframe - '+ this);
+        system.debug('XMDeviceTimeframeWrapper():  timeframe - '+ this);
 
     }
 
@@ -85,12 +102,12 @@ public class XMDeviceTimeframeWrapper {
         timeframeModel.timezone = this.timezone;
 
         Datetime startDateTime = convertTextToDateTime(this.startTime);
-        timeframeModel.startTime =  startDateTime.format('hh:mm', timezoneMap.get(this.timezone).Location__c);
+        timeframeModel.startTime =  startDateTime.format('HH:mm', getLocation(this.timezone));
 
         system.debug('createModel:  timeframeModel.startTime - '+ timeframeModel.startTime);
 
         Datetime endDateTime = convertTextToDateTime(this.endTime);
-        system.debug('createModel:  endDateTime - '+ endDateTime.format('hh:mm', timezoneMap.get(this.timezone).Location__c) );
+        system.debug('createModel:  endDateTime - '+ endDateTime.format('HH:mm', getLocation(this.timezone)) );
 
         timeframeModel.durationInMinutes = (Integer)(endDateTime.getTime() - startDateTime.getTime()) / 60 / 1000;
         system.debug('createModel:  durationInMinutes - ' +  timeframeModel.durationInMinutes);
@@ -140,11 +157,26 @@ public class XMDeviceTimeframeWrapper {
         }
 
         Time newTime = Time.newInstance(hours, minutes, 0, 0);
-        Datetime newDateTime = Datetime.newInstance(system.today(), newTime);
+        Datetime newDateTime = Datetime.newInstanceGmt(system.now().DateGMT(), newTime);
+
+        Integer offset = offsetInMinutes();
+        newDateTime = newDateTime.addMinutes(offset);
         system.debug('convertTextToDateTime:  newDateTime - '+ newDateTime);
 
         return newDateTime;
 
     }
+
+    private Integer offsetInMinutes(){
+
+        Timezone tz = system.Timezone.getTimeZone(getLocation(this.timezone));
+        // calculate offset
+        Datetime datetimeGmt = Datetime.newInstanceGmt( system.now().DateGMT(), Time.newInstance(0, 0, 0, 0));
+        Integer offset = tz.getOffset(datetimeGmt) / (1000 * 60) * -1; // in minutes
+
+        return offset;
+
+    }
+
 
 }
