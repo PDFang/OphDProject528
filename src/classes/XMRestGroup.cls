@@ -82,8 +82,9 @@ public with sharing class XMRestGroup {
 
     //need to modify this to support devices and shifts -- this method needs to be heavily modified see adding user to shifts
     //remove hardcoded person type
+    //need to change the response from void to some response object.
 
-    public void AddUserToGroup(string groupName, string PersonId, string type){
+    public string AddUserToGroup(string groupName, string PersonId, string type){
         string body;
         string url;
         string jsonResponse;
@@ -94,6 +95,7 @@ public with sharing class XMRestGroup {
         System.Debug('url = ' + url);
         jsonResponse = wrapper.performCallOut(url, 'POST', body);
         System.Debug(jsonResponse);
+        return jsonResponse;
     }
 
     public boolean CreateNewGroup(string groupName){
