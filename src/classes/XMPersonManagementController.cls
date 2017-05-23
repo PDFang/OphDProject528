@@ -12,7 +12,7 @@ public class XMPersonManagementController{
     }
 
     public string getTimezoneDisplayName(){
-        return person != null ? TimeZone.getTimeZone(person.timezone).getDisplayName() : null;
+        return person != null && person.timezone != null ? TimeZone.getTimeZone(person.timezone).getDisplayName() : null;
     }
 
     public boolean getIsXmPerson(){
