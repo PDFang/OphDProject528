@@ -22,6 +22,10 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
             {
                 xmSalesForceGroupMap.put(xmFinalListObjKey, xmFinalListObj);
             }
+            else{
+                //need business rule on this log it to the log for now
+                system.debug('Warning! xmatters group not found in salesforce group for this account');
+            }
 
             System.debug('xmSalesForceGroupMap -->' + xmSalesForceGroupMap);
         }
@@ -55,6 +59,9 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
 
                 System.debug(testName + ':' + xmGroupClusterObj);
             }
+            else{
+                System.debug('Warning empty group name');
+            }
 
 
         }
@@ -64,7 +71,7 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
 
 
     //Returns a list of salesforce product based groups an account belongs to
-    private Map<String, XMGroupProductCluster> GetSalesForceGroupData(Account acc){
+    public Map<String, XMGroupProductCluster> GetSalesForceGroupData(Account acc){
 
         Map<String, ProductEventMap__c> nodeMap;
         nodeMap = ProductEventMap__c.getAll();
@@ -117,6 +124,9 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
                 groupData.XmattersGroupName = 'IP_'+ groupData.PartnerPrefix + '_' + groupData.Product + '_'  + groupData.Cluster;
                 system.debug(groupData);
                 groupListMap.put(groupData.XmattersGroupName,groupData);
+            }
+            else{
+                system.debug('Warning product not found in the product map!!!');
             }
         }
         return groupListMap;
