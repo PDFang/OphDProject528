@@ -187,5 +187,23 @@ public class XMPersonManagementHelper {
 
     }
 
+    public static XMGroupProductCluster[] getUserGroups(String contactId){
+
+        XMGroupProductCluster[] xmGroupList = new XMGroupProductCluster[]{};
+
+        XMBusinessLayer groupLayer = new XMBusinessLayer(contactId);
+        Map<String, XMGroupProductCluster> groupMap = groupLayer.GetGroupListByUserid();
+
+        if(groupMap == null){
+            return xmGroupList;
+        }
+
+        for(XMGroupProductCluster xmGroup : groupMap.values()){
+            xmGroupList.add(xmGroup);
+        }
+
+        return xmGroupList;
+
+    }
 
 }
