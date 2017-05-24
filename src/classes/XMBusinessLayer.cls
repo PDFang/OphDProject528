@@ -31,9 +31,6 @@ public class XMBusinessLayer implements XMiBusiness {
         }
         return xmSalesForceGroupMap;
     }
-    public boolean SetGroupListForUser(string guid, List<XMGroupProductCluster> grouplist){
-        throw new CalloutException();
-    }
 
     //Parses ist of XM low level models into one that is used by the business layer
     private List<XMGroupProductCluster> GetXMGroupList(List<XMGroupMemberModel> groupList)
