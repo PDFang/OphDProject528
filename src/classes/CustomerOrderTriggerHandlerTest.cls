@@ -74,18 +74,20 @@ private class CustomerOrderTriggerHandlerTest {
     static testMethod void UpdateCustomerOrder(){
         //No Exception should be thrown
         SetupTestData();
+        custOrder2.CadebillAccountNumber__c = newAccount.CadebillAccountNo__c;
+        update custorder2;
         Test.startTest();                           
         System.debug('**** successfully created valid order');
         UpdateOrderLineItems();                                    
         Test.stopTest(); 
         List<Case> CaseList = [SELECT Id FROM Case WHERE AccountId = :custOrder2.Customer__C];
-        System.debug('**** Venkata Case List :' + CaseList);
+        System.debug('**** Venkata Case List :' + CaseList.size());
         system.assert(CaseList.size()>0);
     }
     static testMethod void OrderStatusCompleted_emailNotification(){
         //No Exception should be thrown
         SetupTestData();
-        
+
         Test.startTest();
         	custOrderCompleted.CadebillAccountNumber__c = newAccount.CadebillAccountNo__c;
         				        
@@ -99,7 +101,29 @@ private class CustomerOrderTriggerHandlerTest {
         
         system.assert(CustomerOrderTriggerHandler.emailSent == true);
         
-    }	
+    }
+    static testMethod void OrderStatusProcessed_AbandonedItemsCaseUpdate(){
+        //No Exception should be thrown
+        SetupTestData();
+        custOrder2.CadebillAccountNumber__c = newAccount.CadebillAccountNo__c;
+        UpdateOrderLineItems(); // create failed case
+
+        custOrder2.OrderStatus__c ='Processed';// Update Order Status
+        update custorder2;
+        Test.startTest();
+
+        OrderLineItemListComplete[0].Itemstatus__c = 'Abandoned';
+        User CastIron = [SELECT Id FROM USER WHERE Profile.name ='_castiron Profile' LIMIT 1];
+        system.runAs(CastIron)
+        {
+            update OrderLineItemListComplete;
+        }
+        Test.stopTest();
+        List<Case> CaseList = [SELECT Id FROM Case WHERE AccountId = :custOrder2.Customer__C];
+        System.debug('**** Case List :' + CaseList);
+        system.assert(CaseList.size()>0);
+
+    }
     static void SetupTestData(){
         //Create Account
         System.debug('**** creating default account');
@@ -120,6 +144,7 @@ private class CustomerOrderTriggerHandlerTest {
         newAccount = new Account(Name = ACCOUNT_NAME,
                                  RecordTypeId = recordTypeMap.get(ACCOUNT_TYPE).getRecordTypeId(),
                                  CadebillAccountNo__c = ACCOUNT_NUMBER);
+        newAccount.CG_Disconnect_Date__c = null;
         insert newAccount;
 
     }
