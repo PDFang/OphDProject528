@@ -71,7 +71,7 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
 
 
     //Returns a list of salesforce product based groups an account belongs to
-    public Map<String, XMGroupProductCluster> GetSalesForceGroupData(Account acc){
+    private Map<String, XMGroupProductCluster> GetSalesForceGroupData(Account acc){
 
         Map<String, ProductEventMap__c> nodeMap;
         nodeMap = ProductEventMap__c.getAll();
