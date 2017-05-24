@@ -154,35 +154,21 @@ public class XMPersonManagementController{
     }
 
     @RemoteAction
-    public static string addNewDevice(String contactId, String deviceType, String deviceValue)
+    public static string addNewDevice(String contactId, String deviceName, String deviceValue)
     {
         String result;
         String message = '';
 
         try{
-            //List<xmPerson__c> persons = [Select xmPersonUID__c from xmPerson__c where Id = :xmPersionId];
             List<Contact> contactList = [
                     Select xmPerson__c, xmPerson__r.xmPersonUID__c
                     from Contact where Id = :contactId
             ];
-            XMDeviceModel device;
-            if(deviceType.contains('Email')){
-                XMEmailDevice emailDevice = new XMEmailDevice();
-                emailDevice.emailAddress = deviceValue;
-                device = emailDevice;
+            String xmPersonGuid = contactList[0].xmPerson__r.xmPersonUID__c;
+            system.debug('addNewDevice(): contactList - '+ contactList);
 
-            } else if(deviceType.contains('Phone')){
-                XMSmsDevice smsDevice = new XMSmsDevice();
-                smsDevice.phoneNumber = '+1' + deviceValue;
-                device = smsDevice;
-            }
-            device.name = deviceType;
-            //device.owner = persons[0].xmPersonUID__c;
-            device.owner = contactList[0].xmPerson__r.xmPersonUID__c;
-
-            XMRestDeviceService service = new XMRestDeviceService();
-            XMDeviceModel response = service.createDeviceForPerson(device);
-            result = response != null ? 'Success' : 'Failed';
+            String deviceId = XMPersonManagementHelper.addDevice(xmPersonGuid, deviceName, deviceValue);
+            result = (deviceId != null) ? 'Success' : 'Failed';
         }catch(Exception ex){
             result = 'Failed';
             message = ex.getMessage();

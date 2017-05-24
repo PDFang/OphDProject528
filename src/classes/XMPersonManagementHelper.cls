@@ -147,6 +147,30 @@ public class XMPersonManagementHelper {
 
     }
 
+    public static String addDevice(String xmPersonGuid, String deviceName, String deviceValue) {
+
+        XMDeviceModel device;
+        if(deviceName.contains('Email')){
+            XMEmailDevice emailDevice = new XMEmailDevice();
+            emailDevice.emailAddress = deviceValue;
+            device = emailDevice;
+
+        } else if(deviceName.contains('Phone')){
+            XMSmsDevice smsDevice = new XMSmsDevice();
+            smsDevice.phoneNumber = '+1' + deviceValue;
+            device = smsDevice;
+        }
+        device.name = deviceName;
+        device.owner = xmPersonGuid;
+
+        XMRestDeviceService service = new XMRestDeviceService();
+        XMDeviceModel response = service.createDeviceForPerson(device);
+
+        system.debug('addDevice(): response - ' + response);
+        return response != null ? response.id : null;
+
+    }
+
     public static void updateDevice(XMDeviceWrapper deviceWrapper) {
 
         XMDeviceModel device = deviceWrapper.createModel();
