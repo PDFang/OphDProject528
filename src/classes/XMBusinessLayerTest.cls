@@ -9,31 +9,6 @@ public class XMBusinessLayerTest {
 
         XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
 
-//        Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
-//        Account testAccount = new Account(
-//                Name = 'testCalculateAccountNetScore Account',
-//                Type = 'Customer',
-//                RecordTypeId = accountRecordTypeMap.get('Customers').getRecordTypeId(),
-//                IsPartner__c = false,
-//                CustomerSegment__c = 'Strategic',
-//                Brand_Visibility__c = 'Yes',
-//                Industry_Leadership_Vocality__c = 'Yes',
-//                Social_Media_Presence__c = 'Yes',
-//                Risk_of_Leaving__c = 'Low',
-//                Referenceable__c = false,
-//                GYRStatus__c = 'Green'
-//        );
-//
-//        insert testAccount;
-//        Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SobjectType.Case.getRecordTypeInfosByName();
-//        // known issue
-//        //set default assignment rule
-//        database.DMLOptions dmo = new database.DMLOptions();
-//        dmo.assignmentRuleHeader.useDefaultRule = true;
-
-
-
-
         //setup test data
         Test.setMock(HttpCalloutMock.class, fakeResponse);
         Account acc = new Account();
@@ -79,6 +54,52 @@ public class XMBusinessLayerTest {
         ip3.Product__c = 'NICE WFM - IEX';
         ip3.Opportunity__c = o.Id;
         insert ip3;
+
+        ImplementedProduct__c ip4 = new ImplementedProduct__c();
+        ip4.Account__c = acc.Id;
+        ip4.GoLiveDate__c = system.today() - 1;
+        ip4.Status__c = 'Implemented';
+        ip4.Product__c = 'NICE WFM - NQM';
+        ip4.Opportunity__c = o.Id;
+        insert ip4;
+
+
+
+        ProductEventMap__c pem = new ProductEventMap__c();
+        pem.Name = 'inContact';
+        pem.Product__c = 'inContact';
+        pem.ImplementedProduct__c = 'inContact';
+        pem.Platform__c = 'Cluster - inContact';
+        pem.HasClusters__c = true;
+
+        insert pem;
+
+        ProductEventMap__c pem1 = new ProductEventMap__c();
+        pem1.Name = 'NICE QM - Engage';
+        pem1.Product__c = 'NICE QM - Engage';
+        pem1.ImplementedProduct__c = 'NICE QM - Engage';
+        pem1.Platform__c = 'Verint - inContact';
+        pem1.HasClusters__c = true;
+
+        insert pem1;
+
+        ProductEventMap__c pem2 = new ProductEventMap__c();
+        pem2.Name = 'NICE WFM - IEX';
+        pem2.Product__c = 'NICE WFM - IEX';
+        pem2.ImplementedProduct__c = 'NICE WFM - IEX';
+        pem2.Platform__c = 'NWFM - inContact';
+        pem2.HasClusters__c = true;
+
+        insert pem2;
+
+        ProductEventMap__c pem3 = new ProductEventMap__c();
+        pem3.Name = 'NICE WFM - NQM';
+        pem3.Product__c = 'NICE WFM - NQM';
+        pem3.ImplementedProduct__c = 'NICE WFM - NQM';
+        pem3.Platform__c = 'NQM - inContact';
+        pem3.HasClusters__c = true;
+
+        insert pem3;
 
         test.startTest();
         XMBusinessLayer xmBusinessLayer = new XMBusinessLayer();
