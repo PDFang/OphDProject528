@@ -13,7 +13,6 @@ public class XMPersonWrapper {
         this.contactId = cont.Id;
         this.xmPersonId = cont.xmPerson__c;
         this.status = 'Active';
-        this.timezone = (cont.xmPerson__c != null && cont.xmPerson__r.Timezone__c != null) ? cont.xmPerson__r.Timezone__c : null;
     }
 
     public XMPersonWrapper(XMPersonModel model){

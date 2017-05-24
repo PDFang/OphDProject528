@@ -1,0 +1,60 @@
+<apex:page standardController="CustomerOrder__c" extensions="CustomerOrderResolutionExtension" >
+    
+    <h1 style="border: black;">
+        <apex:outputText value="{!CustomerOrder__c.Name}"/>
+    </h1>
+    
+    <apex:form >
+        <apex:pageBlock >
+            <apex:pageBlockSection >
+                <apex:outputLabel value="Order ID   "> 
+                <apex:outputLink value="/{!CustomerOrder__c.Id}">{!CustomerOrder__c.Name}</apex:outputLink>
+                 </apex:outputLabel>
+                <apex:outputField value="{!CustomerOrder__c.OrderStatus__c}"/>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        <div style="float:left; margin-left:20px;margin-bottom:5px;" >
+                        <apex:outputText >
+                            <h2>
+                                Order Resolution:
+                            </h2>
+                        </apex:outputText>
+                        <apex:selectList value="{!updateAllResolution}" size="1" label="Resolution" rendered="{!LineItems.size!=0}">
+                            <apex:selectOptions value="{!UpdateAllOptions}"/>
+                            <apex:actionSupport event="onchange" reRender="tableBlock" immediate="false"/>                            
+                        </apex:selectList>
+                        <apex:commandButton action="{!UpdateAll}" value="UpdateAll" rendered="{!LineItems.size!=0}"/>
+         </div>
+        <apex:pageBlock id="tableBlock" rendered="{!LineItems.size!=0}">
+            
+                <apex:pageBlockButtons >                    
+                    <apex:commandButton action="{!SaveLineItems}" value="Save"/>
+                    <apex:commandButton action="{!RedirectPage}" value="Cancel"/>
+                </apex:pageBlockButtons> 
+            
+                <apex:pageBlockTable id="itemsTable" value="{!LineItems}" var="line">
+                    <apex:column headerValue="Order Line Item Name">
+                        <apex:outputLink value="/{!line.id}">
+                            {!line.name}
+                        </apex:outputLink> 
+                    </apex:column>
+                     <apex:column headerValue="Item Status">
+                         <apex:outputField value="{!line.ItemStatus__c}" />
+                    </apex:column>
+                     <apex:column headerValue="Order Type">
+                         <apex:outputField value="{!line.OrderType__c}" />
+                    </apex:column>
+                     <apex:column headerValue="Error Detail">
+                         <apex:outputField value="{!line.OrderErrorDetail__c}" />
+                    </apex:column>
+                    <apex:column headerValue="Resolution">                        
+                        <apex:inputField value="{!line.LineItemResolution__c}"/>
+                    </apex:column>
+                </apex:pageBlockTable>
+        </apex:pageBlock>
+        <apex:pageBlock rendered="{!NOT(LineItems.size!=0)}">
+            <apex:pageMessage summary="{!apexMessage}" severity="info" strength="3" />
+        </apex:pageBlock>
+        
+    </apex:form>
+</apex:page>

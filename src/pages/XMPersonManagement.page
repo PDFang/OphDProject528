@@ -1,8 +1,7 @@
 <!--
  - Created by arnab.karsarkar on 5/4/2017.
  -->
-
-<apex:page id="XMPersonManagement" standardController="Contact" extensions="XMPersonManagementController">
+<apex:page id="XMPersonManagement" standardController="Contact" tabStyle="Contact" title="Notification Profile - {!currentContact.Name}" extensions="XMPersonManagementController">
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
@@ -97,13 +96,22 @@
             font-size : 12px !important;
     }
 
+    .k-multiselect-wrap li {
+        color: #fff !important;
+        border-color: #357ebd !important;
+        background-color: #428bca !important;
+    }
+
     </style>
 
     <apex:form >
-            <div class="page-header">
-                <h1>Manage Notification Profile for Contact - {!currentContact.FirstName} {!currentContact.LastName}</h1>
-                <apex:commandLink action="{!goBack}" value="Go Back" style="float:right;"/>
-            </div>
+            <apex:sectionHeader title="Notification Profile" subtitle="{!currentContact.Name}"/>
+
+            <apex:commandLink action="{!goBack}" value="Go Back" style="float:right;"/>
+            <!--<div class="page-header">-->
+                <!--<h1>Manage Notification Profile for Contact - {!currentContact.FirstName} {!currentContact.LastName}</h1>-->
+                <!--<apex:commandLink action="{!goBack}" value="Go Back" style="float:right;"/>-->
+            <!--</div>-->
 
             <div class="container-fluid">
                 <div class="row">
@@ -113,6 +121,15 @@
 
                 </div>
                 <div class="panel panel-default">
+
+                    <apex:pageBlock id="contactDetail" >
+                        <apex:pageBlockSection  title="Contact Detail" collapsible="false" columns="1">
+                            <apex:outputField value="{!currentContact.Name}"/>
+                            <apex:outputField value="{!currentContact.AccountId}"/>
+                            <apex:outputField value="{!currentContact.Account.CadebillAccountNoText__c}"/>
+                        </apex:pageBlockSection>
+                    </apex:pageBlock>
+
                     <div class="panel-heading"><label>XMatters Person Details</label>
 
                         <apex:outputPanel id="alertmessage">
@@ -157,11 +174,11 @@
                             </apex:outputPanel>
                         </apex:outputPanel>
 
-                        <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,errorMessages, timezone" status="associateContact">
+                        <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,errorMessages,timezone,devicePanel" onComplete="setupDeviceList();" status="associateContact">
                             <apex:param id="rowId" name="rowId" value="" />
                         </apex:actionFunction>
 
-                        <apex:actionFunction name="callNotificationManage" action="{!addPerson}" reRender="contactList,alertmessage,errorMessages,timezone" status="addPersonStatus"/>
+                        <apex:actionFunction name="callNotificationManage" action="{!addPerson}" reRender="contactList,alertmessage,errorMessages,timezone,devicePanel" onComplete="setupDeviceList();" status="addPersonStatus"/>
 
                     </div>
                     <div class="panel-body">
@@ -200,68 +217,73 @@
                 </div>
 
 
+            <apex:pageBlock id="contactList">
+                <apex:pageBlockSection collapsible="true"  columns="1" showHeader="true" title="Duplicate Contacts">
 
-        <apex:pageBlock id="contactList">
-        <apex:pageBlockSection collapsible="true"  columns="1" showHeader="true" title="Duplicate Contacts">
+                    <apex:dataTable value="{!contactList}" var="con"  styleClass="table table-bordered table-condensed" rendered="{!contactList.size > 0}">
 
-            <apex:dataTable value="{!contactList}" var="con"  styleClass="table table-bordered table-condensed" rendered="{!contactList.size > 0}">
-
-                <apex:column >
-                    <apex:facet name="header">Account Name</apex:facet>
-                    <apex:outputLink value="/{!con.AccountId}">{!con.Account.Name}</apex:outputLink>
-                </apex:column>
-                <apex:column >
-                    <apex:facet name="header">First Name</apex:facet>
-                    <apex:outputLink value="/{!con.Id}">{!con.FirstName}</apex:outputLink>
-                </apex:column>
-                <apex:column >
-                    <apex:facet name="header">Last Name</apex:facet>
-                    <apex:outputLink value="/{!con.Id}">{!con.LastName}</apex:outputLink>
-                </apex:column>
-                <apex:column >
-                    <apex:facet name="header">Email</apex:facet>
-                    <apex:outputText >{!con.Email}</apex:outputText>
-                </apex:column>
-                <apex:column >
-                    <apex:facet name="header">Phone</apex:facet>
-                    <apex:outputText >{!con.Phone}</apex:outputText>
-                </apex:column>
-                <apex:column >
-                    <apex:facet name="header">Action</apex:facet>
-                    <apex:outputPanel rendered="{!IF(con.xmPerson__c == null, true, false)}">
-                        <apex:actionStatus id="associatePersons" >
-                            <apex:facet name="stop">
-                                <apex:commandButton value="Associate" onClick="callAssociateContact('{!con.Id}'); return false;"  status="associatePersons"/>
-                            </apex:facet>
-                            <apex:facet name="start">
-                                <apex:outputPanel >
-                                    <apex:image value="/img/loading32.gif" style="height: 15px;"/>
-                                    <apex:commandButton styleClass="k-button"  value="Adding..." status="associatePersons" disabled="true"/>
-                                </apex:outputPanel>
-                            </apex:facet>
-                        </apex:actionStatus>
-                    </apex:outputPanel>
-                </apex:column>
-            </apex:dataTable>
-        </apex:pageBlockSection>
-
-        </apex:pageBlock>
+                        <apex:column >
+                            <apex:facet name="header">Account Name</apex:facet>
+                            <apex:outputLink value="/{!con.AccountId}">{!con.Account.Name}</apex:outputLink>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Cadebill Account #</apex:facet>
+                            <apex:outputText value="{!con.Account.CadebillAccountNoText__c}"></apex:outputText>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">First Name</apex:facet>
+                            <apex:outputLink value="/{!con.Id}">{!con.FirstName}</apex:outputLink>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Last Name</apex:facet>
+                            <apex:outputLink value="/{!con.Id}">{!con.LastName}</apex:outputLink>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Email</apex:facet>
+                            <apex:outputText >{!con.Email}</apex:outputText>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Phone</apex:facet>
+                            <apex:outputText >{!con.Phone}</apex:outputText>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Action</apex:facet>
+                            <apex:outputPanel rendered="{!AND(isXmPerson, ISBLANK(con.xmPerson__c))}">
+                                <apex:actionStatus id="associatePersons" >
+                                    <apex:facet name="stop">
+                                        <apex:commandButton value="Associate" onClick="callAssociateContact('{!con.Id}'); return false;"  status="associatePersons"/>
+                                    </apex:facet>
+                                    <apex:facet name="start">
+                                        <apex:outputPanel >
+                                            <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                                            <apex:commandButton styleClass="k-button"  value="Adding..." status="associatePersons" disabled="true"/>
+                                        </apex:outputPanel>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                            </apex:outputPanel>
+                        </apex:column>
+                    </apex:dataTable>
+                </apex:pageBlockSection>
+            </apex:pageBlock>
+            <apex:outputPanel id="devicePanel" style="{!IF( isXmPerson, 'display: inline;', 'display: none;')}">
                 <div id="deviceList"></div>
-            </div>
+            </apex:outputPanel>
+        </div>
         <!-- Information Modal -->
         <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="infolabel">Manage TimeFrams</h5>
+                        <h5 class="modal-title" id="infolabel">Manage Time Frames</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
 
                     <div class="modal-body" style="font-size:14px;" id="infoModal">
-                        <div class="row">
-                            <a href="#" id="btnAdd" onclick="addNewTab();" style="float:right;"><i class="glyphicon glyphicon-plus"></i> Add New TimeFrame</a>
+                        <div class="row" style="padding: 10px 10px 10px 10px;">
+                            <span style="color: #5270c7;">{!timezoneDisplayName}</span>
+                            <a href="#" id="btnAdd" onclick="addNewTab();" style="float:right;"><i class="glyphicon glyphicon-plus"></i> Add New</a>
                         </div>
                         <div id="validation-errors" class=" alert alert-danger message-alert" style="margin-top:15px;"></div>
                         <ul class="nav nav-tabs" id="tabs">
@@ -328,6 +350,7 @@
                                                         }
                                                     }
                                               console.log('results =>' + JSON.stringify(result));
+                                              hideError();
                                               }
 
                                             } else if (event.type === 'exception') {
@@ -340,38 +363,40 @@
                                );
                             },
                         update: function(options){
-                               var objResult = new Object();
-                                objResult.deviceType = options.data.deviceType ;
-                                objResult.deviceValue = options.data.deviceValue ;
-                                objResult.priorityThreshold = "Medium";
-                                objResult.deviceId = options.data.deviceId ;
-                             XMPersonManagementController.updateDevice (
-                                     JSON.stringify(objResult),
-                                      function(result,event)
-                                      {
-                                          if (event.status) {
-                                               var returnResult = JSON.parse(result);
-                                               if(returnResult.result != 'Failed'){
-                                                   options.success();
-                                               }
-                                               else{
-                                                   displayError(returnResult.message);
-                                               }
-                                              console.log('results =>' + result.result);
-                                            } else if (event.type === 'exception') {
-                                                  displayError(event.message);
-                                            } else {
-                                                 displayError(event.message);
-                                            }
-                                      },
-                                      {escape: false}
-                               );
+                            var objResult = new Object();
+                            objResult.name = options.data.name ;
+                            objResult.deviceValue = options.data.deviceValue ;
+                            objResult.priorityThreshold = "Medium";
+                            objResult.deviceId = options.data.deviceId ;
+                            objResult.timeframes = options.data.timeframes;
+                            XMPersonManagementController.updateDevice (
+                                JSON.stringify(objResult),
+                                function(result,event)
+                                {
+                                  if (event.status) {
+                                       var returnResult = JSON.parse(result);
+                                       if(returnResult.result != 'Failed'){
+                                           options.success();
+                                       }
+                                       else{
+                                           displayError(returnResult.message);
+                                       }
+                                       console.log('results =>' + returnResult.result);
+                                    } else if (event.type === 'exception') {
+                                          displayError(event.message);
+                                    } else {
+                                         displayError(event.message);
+                                    }
+                                },
+                                {escape: false}
+                            );
                         },
                         create: function(options){
 
                               XMPersonManagementController.addNewDevice(
-                                      '{!xmPersonId}',
-                                      options.data.deviceType,
+                                      //{!xmPersonId},
+                                      '{!$CurrentPage.parameters.id}',
+                                      options.data.name,
                                       options.data.deviceValue,
                                       function(result,event)
                                       {
@@ -379,6 +404,8 @@
                                                  var returnResult = JSON.parse(result);
                                               if(returnResult.result != 'Failed'){
                                                    options.success();
+                                                   setupDeviceList();
+                                                   hideError();
                                                }
                                                else{
                                                    displayError(returnResult.message);
@@ -402,6 +429,7 @@
                                                  var returnResult = JSON.parse(result);
                                               if(returnResult.result != 'Failed'){
                                                    options.success();
+                                                   hideError();
                                                }
                                                else{
                                                    displayError(returnResult.message);
@@ -422,7 +450,7 @@
                             id: "Id",
                             fields: {
                                 "Id": {from:"deviceId", type: "string"},
-                                "DeviceType": { from: "deviceType", type: "string", },
+                                "DeviceType": { from: "name", type: "string", },
                                 "PriorityThreshold":{from:"priorityThreshold",type:"string"},
                                 "DeviceValue" : {from:"deviceValue",
                                                  type: "string",
@@ -461,7 +489,7 @@
                   editable: "inline",
                   scrollable: true,
                   noRecords: true,
-                  height: 150,
+                  height: 400,
                   toolbar: ["create"],
                   columns: [{
                                 field:"Id",
@@ -481,8 +509,8 @@
                                 field:"TimeFrame",
                                 title:"Time Frames",
                                 editable:false,
-                                template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">Manage TimeFrames</a>'
-
+                                //template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">Manage TimeFrames</a>'
+                                template: '<a href="" onClick="OpenModal(this); return false;" class="k-button k-button-icontext">Manage</a>'
                             },
                             {command: ["edit","destroy"]}
 
@@ -502,6 +530,12 @@
              $("div#java-errors").css("display", "block");
              document.getElementById("java-errors").innerHTML = '<strong>Snap!!</strong>Couldnt update the device list. Error occured - ' + message;
              console.log('error =>' + message);
+        }
+
+         function hideError(){
+             $("div#java-errors").css("display", "none");
+             document.getElementById("java-errors").innerHTML = ' ';
+
         }
 
         function DeviceTypePicklistEditor(container, options) {
@@ -549,7 +583,7 @@
             var deviceId = rowData.Id;
             deviceData = new Object();
             deviceData.deviceId = rowData.Id;
-            deviceData.deviceType = rowData.DeviceType;
+            deviceData.name = rowData.DeviceType;
             deviceData.deviceValue = rowData.DeviceValue ;
 
             addExistingTab(deviceId);
@@ -750,7 +784,8 @@
                             days : days,
                             endTime : endTimeVal,
                             startTime : startTimeVal,
-                            name : nameVal
+                            name : nameVal,
+                            timezone : "{!timezone}"
                            });
          });
 
@@ -758,7 +793,7 @@
          if(!isError){
              removeError();
              var deviceUpdate = new Object();
-             deviceUpdate.deviceType = deviceData.deviceType ;
+             deviceUpdate.name = deviceData.name ;
              deviceUpdate.deviceValue = deviceData.deviceValue ;
              deviceUpdate.priorityThreshold = "Medium";
              deviceUpdate.deviceId = deviceData.deviceId ;

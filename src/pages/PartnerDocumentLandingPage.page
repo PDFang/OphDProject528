@@ -1,110 +1,151 @@
+<apex:page id="PartnerDocumentLandingPage" controller="PartnerDocumentLandingPageController" sideBar="false">
 
-<apex:page id="PartnerDocumentLandingPage" controller="PartnerDocumentLandingPageController">
+    <!--    **Include the Bootstrap required components** -->
+    <apex:stylesheet value="{!URLFOR($Resource.ISBootStrap, '/bootstrap-3.3.7-dist/css/bootstrap.min.css')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.JQuery, '/jquery-1.9.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.ISBootStrap, '/bootstrap-3.3.7-dist/js/bootstrap.min.js')}"/>
+
     <style>
-        body{
-            font-family:'effra', 'Open Sans', sans-serif !important;
+        #partner-documents{
+            padding-left:5%
         }
+       .partner-header{
+           display:block;
+       }
+       #category-list{
+           float:right;
+           padding-right:5em;
+       }
+       #pdf-preview-modal{
+           padding-right:25em !important;
+       }
+       .bPageHeader{
+           font-size:12px;
+       }
 
-        ul{
-            list-style-type:none;
-            margin:0px;0px;0px;0px
-        }
-        li.menu-item {
-             margin:50px 0;
-             color: #428bca;
-             cursor: pointer;
-             line-height: 1.5em;
-             margin-left:0px;
-        }
-
-       .document-content li{
-            margin-left:0px;
-        }
-
-        h3{
-            margin-left:5%;
-            color:#51606E;
-            font:normal normal 600 normal 16px / 27px effra, 'Open Sans', sans-serif;
-            outline: #E68000;
-        }
-
-        .page-title{
-            font-size:1.5em;
-            text-transform: uppercase;
-            text-rendering: optimizeLegibility;
-            text-align:center;
-            color: #E68000;
-            display:block;
-
-            padding-top: .5em;
-        }
-
-        .document-content{
-           padding-top:2%
-        }
-
-        .side-bar{
-            width: 200px;
-            padding-left:2em;
-            margin-bottom:10px;
-            min-height:30em;
-        }
-
-        li > a {
-            text-decoration: none;
-            cursor: pointer;
-            color: #51606E;
-            line-height:1.5em;
-            font-size:11px;
-        }
-
-        .document-viewer{
-            padding-left:15em;
-        }
-
-
+       /* This is a hack to fix the toolbar because it was changing size on me */
+       body{
+       font-size:12px;
+       }
     </style>
 
-    <div style="width: 100%;">
 
-       <!-- <h2 class ="page-title">Partner Document Library</h2>-->
+    <h2 class="partner-header" align="center">Partner Document Viewer</h2>
 
-        <div class="document-content" style="width: 10%; float: left;">
-            <aside class ="side-bar">
-                <apex:form>
-                    <div class="side-bar-header" style="background-color:#1797C0; color:white; padding:5px 9px; padding-bottom:5px">
-                        <h2 style="font-weight:bold; font-size:100%">Available Documents</h2>
+    <div class="row" id="partner-documents">
+
+        <!--- Tab Categories and Document grids-->
+        <div class="col-sm-4">
+            <apex:form >
+                <div class="panel panel-default" style="float:right">
+                    <div class="panel-heading">Available Categories</div>
+                    <div class="panel-body">
+
+                        <!--- Category Navigation -->
+                        <div class="tabbable" id="category-list">
+                            <ul class="nav nav-pills nav-stacked">
+                                <apex:repeat value="{!CategoryToDocumentMap}" var="category">
+                                    <li style="margin-left:0px">
+                                        <apex:commandLink value="{!category}" reRender="previewPanel" action="{!setSelectedCategory}" style="text-decoration: none;" html-data-toggle="pill">
+                                            <apex:param name="selectedCategory" value="{!category}" />
+                                        </apex:commandLink>
+                                    </li>
+                                </apex:repeat>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="side-bar-content" style="padding-top:2px;background-color:#F1F3F5;padding-top:5px; padding-bottom:5px;font-size:1.5em">
-                            <apex:repeat value="{!DocumentDetailList}" var="d">
-                              <div style="color: #333435; font-size:75%;font-family:Arial,Helvetica,sans-serif;padding-top: 4px;padding-right: 5px; padding-bottom: 3px; padding-left:9px">
-                                    <apex:commandLink value="{!d.Title}" reRender="previewPanel" action="{!setSelectedDocumentId}" style="text-decoration: none;">
-                                        <apex:param name="documentId" value="{!d.DocumentId}" />
-                                        <apex:param name="documentTitle" value="{!d.Title}" />
-                                        <apex:param name="documentExtension" value="{!d.DocumentExtension}" />
-                                    </apex:commandLink>
-                               </div>
-                            </apex:repeat>
-                    </div>
-                </apex:form>
-            </aside>
+                </div>
+            </apex:form>
         </div>
 
-        <div style="width: 75%; float: left;" class="document-content document-viewer">
+        <!-- Document Grid List -->
+        <div class="tab-content col-sm-4">
+            <!-- Default display message when no cateogry is selected -->
             <apex:outputPanel id="previewPanel">
+                <apex:outputPanel rendered="{!IF(NOT(SelectedDocumentCategory == ''), true, false)}" layout="block">
 
-                <apex:outputPanel rendered="{!ShowCanvasApp}">
-                    <apex:canvasApp applicationName="inContact Document Viewer"  parameters="{salesforceDocumentId: '{!SelectedDocumentId}', documentType: '{!SelectedDocumentExtension}', documentTitle: '{!SelectedDocumentTitle}'}" height="750px" width="850px">
-                    </apex:canvasApp>
+                    <div class="tab-pane">
+                        <div class="panel panel-default">
+                            <!-- Default panel contents -->
+                            <div class="panel-heading">{!SelectedDocumentCategory} - Available Document(s)</div>
+                            <apex:form >
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>Document Title</th>
+                                        <th>Document Type</th>
+                                        <th>Action</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <apex:repeat value="{!CategoryToDocumentMap[SelectedDocumentCategory]}" var="item">
+                                        <tr>
+                                            <td>{!item.Title}</td>
+                                            <td>{!item.DocumentExtension}</td>
+                                            <td>
+                                                <apex:commandLink value="Download " reRender="canvas-download" action="{!setSelectedDocumentId}" style="text-decoration: none;">
+                                                    <apex:param name="documentId" value="{!item.DocumentId}" />
+                                                    <apex:param name="documentTitle" value="{!item.Title}" />
+                                                    <apex:param name="documentExtension" value="{!item.DocumentExtension}" />
+                                                </apex:commandLink>
+
+                                                <apex:commandLink value="| Preview" rendered="{!IF(item.DocumentExtension == 'pdf', true, false)}" reRender="canvas-previewer" action="{!setSelectedDocumentId}" style="text-decoration: none;" html-data-toggle="modal" html-data-target="#pdf-preview-modal">
+                                                    <apex:param name="documentId" value="{!item.DocumentId}" />
+                                                    <apex:param name="documentTitle" value="{!item.Title}" />
+                                                    <apex:param name="documentExtension" value="{!item.DocumentExtension}" />
+                                                </apex:commandLink>
+                                            </td>
+                                        </tr>
+                                    </apex:repeat>
+                                    </tbody>
+                                </table>
+                            </apex:form>
+                        </div>
+                    </div>
+
                 </apex:outputPanel>
 
-                <apex:outputPanel rendered="{!IF(ShowCanvasApp == true, false, true)}" layout="block">
-                    <div style="background-color:#1797C0; color: white; width: 28em; margin: 1em 0 .5em 0; padding:10px">
-                        <p>Please select a document from the available document list</p>
-                    </div>
+                <!-- Friendly Message instructing user to click on the categories on the left -->
+                <apex:outputPanel rendered="{!IF(SelectedDocumentCategory == '', true, false)}" layout="block">
+                    <div class="alert alert-info" role="alert">Please select a category from the left to view the available documents</div>
                 </apex:outputPanel>
 
             </apex:outputPanel>
+        </div>
+
+        <!-- Document Viewer -->
+        <div class="col-sm-4" style="opacity:0">
+            <apex:outputPanel id="canvas-download">
+                <apex:outputPanel rendered="{!ShowCanvasApp}">
+                    <apex:canvasApp applicationName="inContact Document Viewer"  parameters="{salesforceDocumentId: '{!SelectedDocumentId}', documentType: '{!SelectedDocumentExtension}', documentTitle: '{!SelectedDocumentTitle}', download:'true'}" height="0px" width="0px">
+                    </apex:canvasApp>
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="pdf-preview-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="width:900px">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Preview File</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <apex:outputPanel id="canvas-previewer">
+                        <apex:outputPanel rendered="{!ShowCanvasApp}">
+                            <apex:canvasApp applicationName="inContact Document Viewer"  parameters="{salesforceDocumentId: '{!SelectedDocumentId}', documentType: '{!SelectedDocumentExtension}', documentTitle: '{!SelectedDocumentTitle}', download:'false'}" height="500px" width="850px">
+                            </apex:canvasApp>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
         </div>
     </div>
 </apex:page>

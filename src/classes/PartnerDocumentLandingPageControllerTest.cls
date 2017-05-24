@@ -174,7 +174,8 @@ public class PartnerDocumentLandingPageControllerTest {
                 FileType__c = 'pdf',
                 Active__c = true,
                 All_Accounts__c = true,
-                Partner_Type__c = null
+                Partner_Type__c = null,
+                Category__c = 'Terms and conditions'
         );
         pdmList.add(pdmAllAccount);
 
@@ -185,7 +186,8 @@ public class PartnerDocumentLandingPageControllerTest {
                 FileType__c = 'xslx',
                 Active__c = true,
                 All_Accounts__c = true,
-                Partner_Type__c = 'Referral'
+                Partner_Type__c = 'Referral',
+                Category__c = 'Terms and conditions'
         );
         pdmList.add(pdmReferral);
 
@@ -196,7 +198,8 @@ public class PartnerDocumentLandingPageControllerTest {
                 FileType__c = 'pdf',
                 Active__c = true,
                 All_Accounts__c = false,
-                Partner_Type__c = null
+                Partner_Type__c = null,
+                Category__c = 'Terms and conditions'
         );
         pdmList.add(pdmPartner);
 

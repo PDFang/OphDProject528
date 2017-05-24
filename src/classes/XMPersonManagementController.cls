@@ -1,11 +1,18 @@
 public class XMPersonManagementController{
 
-
     public string xmPersonId{get;set;}
     public Contact currentContact{get;private set;}
     public XMPersonWrapper person{get;set;}
     public List<Contact> contactList{get;private set;}
     public boolean isPersonMatch{get;private set;}
+
+    public string getTimezone(){
+        return person != null ? person.timezone : null;
+    }
+
+    public string getTimezoneDisplayName(){
+        return person != null && person.timezone != null ? TimeZone.getTimeZone(person.timezone).getDisplayName() : null;
+    }
 
     public boolean getIsXmPerson(){
         return currentContact != null && currentContact.xmPerson__c != null;
@@ -62,7 +69,7 @@ public class XMPersonManagementController{
             }
 
             if(string.isNotBlank(xmPersonGuid)){
-                person = helper.getXmPersonByGuid(xmPersonGuid);
+                person = XMPersonManagementHelper.getXmPersonByGuid(xmPersonGuid);
             } else{
                 person = new XMPersonWrapper(currentContact);
             }
@@ -129,11 +136,11 @@ public class XMPersonManagementController{
     }
 
     @RemoteAction
-    public static string getUserDevices(String xmPersionId)
+    public static string getUserDevices(String xmPersonId)
     {
         XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
         try{
-            List<xmPerson__c> persons = [Select xmPersonUID__c from xmPerson__c where Id = :xmPersionId];
+            List<xmPerson__c> persons = [Select xmPersonUID__c from xmPerson__c where Id = :xmPersonId];
             if(persons.size() > 0){
                 newDeviceList = XMPersonManagementHelper.getUserDevices(persons[0].xmPersonUID__c);
             }
@@ -147,14 +154,17 @@ public class XMPersonManagementController{
     }
 
     @RemoteAction
-    public static string addNewDevice(String xmPersionId, String deviceType, String deviceValue)
+    public static string addNewDevice(String contactId, String deviceType, String deviceValue)
     {
         String result;
         String message = '';
 
         try{
-            List<xmPerson__c> persons = [Select xmPersonUID__c from xmPerson__c where Id = :xmPersionId];
-
+            //List<xmPerson__c> persons = [Select xmPersonUID__c from xmPerson__c where Id = :xmPersionId];
+            List<Contact> contactList = [
+                    Select xmPerson__c, xmPerson__r.xmPersonUID__c
+                    from Contact where Id = :contactId
+            ];
             XMDeviceModel device;
             if(deviceType.contains('Email')){
                 XMEmailDevice emailDevice = new XMEmailDevice();
@@ -167,7 +177,8 @@ public class XMPersonManagementController{
                 device = smsDevice;
             }
             device.name = deviceType;
-            device.owner = persons[0].xmPersonUID__c;
+            //device.owner = persons[0].xmPersonUID__c;
+            device.owner = contactList[0].xmPerson__r.xmPersonUID__c;
 
             XMRestDeviceService service = new XMRestDeviceService();
             XMDeviceModel response = service.createDeviceForPerson(device);
