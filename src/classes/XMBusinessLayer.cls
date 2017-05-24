@@ -92,9 +92,15 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
             system.debug (productMap);
             if (productMap != null) {
                 groupData.Product = productMap.Name;
-                if (productMap.HasClusters__c == true){
-                    groupData.Cluster = acc.Cluster__c;
-                }
+
+                if(acc.inContact_Cluster__c != NULL && productMap.Platform__c.startsWith('Cluster'))
+                    groupData.Cluster = productMap.Platform__c.replaceFirst('Cluster', acc.inContact_Cluster__c.trim());
+                if(acc.Verint_Cluster__c != NULL && productMap.Platform__c.startsWith('Verint')) // arnab
+                    groupData.Cluster = productMap.Platform__c.replaceFirst('Verint', acc.Verint_Cluster__c.trim());
+                if(acc.NICE_WFM_Cluster__c != NULL && productMap.Platform__c.startsWith('NWFM')) // arnab
+                    groupData.Cluster = productMap.Platform__c.replaceFirst('NWFM', acc.NICE_WFM_Cluster__c.trim());
+                if(acc.NICE_QM_Cluster__c != NULL && productMap.Platform__c.startsWith('NQM')) // arnab
+                    groupData.Cluster = productMap.Platform__c.replaceFirst('NQM', acc.NICE_QM_Cluster__c.trim());
                 if (groupData.Cluster == null || groupData.Cluster == ''){
                     //default cluster description
                     groupData.Cluster = 'NONE';
@@ -121,35 +127,50 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
     {
         List<XMGroupModel> xmGroupModelList = new List<XMGroupModel>();
         XMRestGroup xmRestGroupObj = new XMRestGroup();
+        String responseBody;
         String successMessage;
 
-        for(XMGroupProductCluster groupObj:groupList)
+        try
         {
-            if (groupObj.selected == true) {
-                xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
-                if (xmGroupModelList.size() > 0) {
-                    xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, userID, 'Person');
-                    successMessage = 'User information updated in xMatters.';
-                }
-                else {
-                    //build the group on the fly
-                    Boolean isGroupCreated;
-                    isGroupCreated = xmRestGroupObj.CreateNewGroup(groupObj.XmattersGroupName);
-                    if (isGroupCreated) {
-                        xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
-                        if (xmGroupModelList.size() > 0) {
-                            xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, userID, 'Person');
-                            successMessage = 'User has been successfully added to the selected groups.';
-                        }
+            for(XMGroupProductCluster groupObj:groupList)
+            {
+                if (groupObj.selected == true) {
+                    xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
+                    if (xmGroupModelList.size() > 0) {
+                        responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, userID, 'Person');
                     }
+                    else {
+                        //build the group on the fly
+                        Boolean isGroupCreated;
+                        isGroupCreated = xmRestGroupObj.CreateNewGroup(groupObj.XmattersGroupName);
+                        if (isGroupCreated) {
+                            xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
+                            if (xmGroupModelList.size() > 0) {
+                                responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, userID, 'Person');
+                            }
+                        }
 
+                    }
                 }
-            }
-            else{
-                xmRestGroupObj.RemoveUserFromAGroup(groupObj.XmattersGroupName, userID);
+                else{
+                    xmRestGroupObj.RemoveUserFromAGroup(groupObj.XmattersGroupName, userID);
+                }
             }
         }
+        catch(XMCalloutException xmCalloutException)
+        {
+            throw xmCalloutException;
+        }
 
+        catch(Exception ex)
+        {
+            XMCalloutException xmCalloutException = new XMCalloutException(ex.getMessage());
+            xmCalloutException.Message = ex.getMessage();
+
+            throw xmCalloutException;
+        }
+
+        successMessage = 'User has been successfully added to the selected groups.';
         if(successMessage != '' && successMessage != null)
             return successMessage;
         else
