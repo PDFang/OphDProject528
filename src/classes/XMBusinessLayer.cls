@@ -31,9 +31,6 @@ public class XMBusinessLayer implements XMiBusiness {
         }
         return xmSalesForceGroupMap;
     }
-    public boolean SetGroupListForUser(string guid, List<XMGroupProductCluster> grouplist){
-        throw new CalloutException();
-    }
 
     //Parses ist of XM low level models into one that is used by the business layer
     private List<XMGroupProductCluster> GetXMGroupList(List<XMGroupMemberModel> groupList)
@@ -133,7 +130,7 @@ public class XMBusinessLayer implements XMiBusiness {
     }
 
     //Update the contacts xmatters group memebership
-    public String UpdateXMUserToGrouops(List<XMGroupProductCluster> groupList, String userID)
+    public String UpdateXMUserToGroups(List<XMGroupProductCluster> groupList, String userID)
     {
         List<XMGroupModel> xmGroupModelList = new List<XMGroupModel>();
         XMRestGroup xmRestGroupObj = new XMRestGroup();
