@@ -31,11 +31,56 @@ public class XMBusinessLayerTest {
 //        database.DMLOptions dmo = new database.DMLOptions();
 //        dmo.assignmentRuleHeader.useDefaultRule = true;
 
-        test.startTest();
 
+
+
+        //setup test data
         Test.setMock(HttpCalloutMock.class, fakeResponse);
         Account acc = new Account();
-        acc.id = '0013C000006KV7CQAW';
+        acc.Name = 'Test Account';
+        acc.CadebillAccountNo__c = 9999999;
+        acc.NICE_QM_Cluster__c = 'EN1';
+        acc.NICE_WFM_Cluster__c = 'NWFM 1-2';
+        acc.Verint_Cluster__c = 'V1';
+        acc.inContact_Cluster__c =  'C9';
+
+        insert acc;
+
+        Opportunity o = new Opportunity();
+        o.RecordTypeId = inContactBaseClass.SelectRecordTypeIDByName('Historical Products', 'Opportunity');
+        o.Name = 'test';
+        o.CloseDate = system.today().addDays(30);
+        o.StageName = 'Open';
+        o.AccountId = acc.Id;
+
+        insert o;
+
+        ImplementedProduct__c ip1 = new ImplementedProduct__c();
+        ip1.Account__c = acc.Id;
+        ip1.GoLiveDate__c = system.today() - 1;
+        ip1.Status__c = 'Implemented';
+        ip1.Product__c = 'inContact';
+        ip1.Opportunity__c = o.Id;
+        insert ip1;
+
+
+        ImplementedProduct__c ip2 = new ImplementedProduct__c();
+        ip2.Account__c = acc.Id;
+        ip2.GoLiveDate__c = system.today() - 1;
+        ip2.Status__c = 'Implemented';
+        ip2.Product__c = 'NICE QM - Engage';
+        ip2.Opportunity__c = o.Id;
+        insert ip2;
+
+        ImplementedProduct__c ip3 = new ImplementedProduct__c();
+        ip3.Account__c = acc.Id;
+        ip3.GoLiveDate__c = system.today() - 1;
+        ip3.Status__c = 'Implemented';
+        ip3.Product__c = 'NICE WFM - IEX';
+        ip3.Opportunity__c = o.Id;
+        insert ip3;
+
+        test.startTest();
         XMBusinessLayer xmBusinessLayer = new XMBusinessLayer();
         Map<String, XMGroupProductCluster> groupListByUserId = xmBusinessLayer.GetGroupListByUserid('castiron', acc);
         test.stopTest();
