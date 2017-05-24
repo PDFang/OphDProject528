@@ -174,11 +174,11 @@
                             </apex:outputPanel>
                         </apex:outputPanel>
 
-                        <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,errorMessages, timezone" status="associateContact">
+                        <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,errorMessages,timezone,devicePanel" onComplete="setupDeviceList();" status="associateContact">
                             <apex:param id="rowId" name="rowId" value="" />
                         </apex:actionFunction>
 
-                        <apex:actionFunction name="callNotificationManage" action="{!addPerson}" reRender="contactList,alertmessage,errorMessages,timezone" status="addPersonStatus"/>
+                        <apex:actionFunction name="callNotificationManage" action="{!addPerson}" reRender="contactList,alertmessage,errorMessages,timezone,devicePanel" onComplete="setupDeviceList();" status="addPersonStatus"/>
 
                     </div>
                     <div class="panel-body">
@@ -217,58 +217,58 @@
                 </div>
 
 
+            <apex:pageBlock id="contactList">
+                <apex:pageBlockSection collapsible="true"  columns="1" showHeader="true" title="Duplicate Contacts">
 
-        <apex:pageBlock id="contactList">
-        <apex:pageBlockSection collapsible="true"  columns="1" showHeader="true" title="Duplicate Contacts">
+                    <apex:dataTable value="{!contactList}" var="con"  styleClass="table table-bordered table-condensed" rendered="{!contactList.size > 0}">
 
-            <apex:dataTable value="{!contactList}" var="con"  styleClass="table table-bordered table-condensed" rendered="{!contactList.size > 0}">
-
-                <apex:column >
-                    <apex:facet name="header">Account Name</apex:facet>
-                    <apex:outputLink value="/{!con.AccountId}">{!con.Account.Name}</apex:outputLink>
-                </apex:column>
-                <apex:column >
-                    <apex:facet name="header">Cadebill Account #</apex:facet>
-                    <apex:outputText value="{!con.Account.CadebillAccountNoText__c}"></apex:outputText>
-                </apex:column>
-                <apex:column >
-                    <apex:facet name="header">First Name</apex:facet>
-                    <apex:outputLink value="/{!con.Id}">{!con.FirstName}</apex:outputLink>
-                </apex:column>
-                <apex:column >
-                    <apex:facet name="header">Last Name</apex:facet>
-                    <apex:outputLink value="/{!con.Id}">{!con.LastName}</apex:outputLink>
-                </apex:column>
-                <apex:column >
-                    <apex:facet name="header">Email</apex:facet>
-                    <apex:outputText >{!con.Email}</apex:outputText>
-                </apex:column>
-                <apex:column >
-                    <apex:facet name="header">Phone</apex:facet>
-                    <apex:outputText >{!con.Phone}</apex:outputText>
-                </apex:column>
-                <apex:column >
-                    <apex:facet name="header">Action</apex:facet>
-                    <apex:outputPanel rendered="{!AND(isXmPerson, ISBLANK(con.xmPerson__c))}">
-                        <apex:actionStatus id="associatePersons" >
-                            <apex:facet name="stop">
-                                <apex:commandButton value="Associate" onClick="callAssociateContact('{!con.Id}'); return false;"  status="associatePersons"/>
-                            </apex:facet>
-                            <apex:facet name="start">
-                                <apex:outputPanel >
-                                    <apex:image value="/img/loading32.gif" style="height: 15px;"/>
-                                    <apex:commandButton styleClass="k-button"  value="Adding..." status="associatePersons" disabled="true"/>
-                                </apex:outputPanel>
-                            </apex:facet>
-                        </apex:actionStatus>
-                    </apex:outputPanel>
-                </apex:column>
-            </apex:dataTable>
-        </apex:pageBlockSection>
-
-        </apex:pageBlock>
+                        <apex:column >
+                            <apex:facet name="header">Account Name</apex:facet>
+                            <apex:outputLink value="/{!con.AccountId}">{!con.Account.Name}</apex:outputLink>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Cadebill Account #</apex:facet>
+                            <apex:outputText value="{!con.Account.CadebillAccountNoText__c}"></apex:outputText>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">First Name</apex:facet>
+                            <apex:outputLink value="/{!con.Id}">{!con.FirstName}</apex:outputLink>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Last Name</apex:facet>
+                            <apex:outputLink value="/{!con.Id}">{!con.LastName}</apex:outputLink>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Email</apex:facet>
+                            <apex:outputText >{!con.Email}</apex:outputText>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Phone</apex:facet>
+                            <apex:outputText >{!con.Phone}</apex:outputText>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Action</apex:facet>
+                            <apex:outputPanel rendered="{!AND(isXmPerson, ISBLANK(con.xmPerson__c))}">
+                                <apex:actionStatus id="associatePersons" >
+                                    <apex:facet name="stop">
+                                        <apex:commandButton value="Associate" onClick="callAssociateContact('{!con.Id}'); return false;"  status="associatePersons"/>
+                                    </apex:facet>
+                                    <apex:facet name="start">
+                                        <apex:outputPanel >
+                                            <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                                            <apex:commandButton styleClass="k-button"  value="Adding..." status="associatePersons" disabled="true"/>
+                                        </apex:outputPanel>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                            </apex:outputPanel>
+                        </apex:column>
+                    </apex:dataTable>
+                </apex:pageBlockSection>
+            </apex:pageBlock>
+            <apex:outputPanel id="devicePanel" style="{!IF( isXmPerson, 'display: inline;', 'display: none;')}">
                 <div id="deviceList"></div>
-            </div>
+            </apex:outputPanel>
+        </div>
         <!-- Information Modal -->
         <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
             <div class="modal-dialog" role="document">
@@ -394,7 +394,8 @@
                         create: function(options){
 
                               XMPersonManagementController.addNewDevice(
-                                      '{!xmPersonId}',
+                                      //{!xmPersonId},
+                                      '{!$CurrentPage.parameters.id}',
                                       options.data.name,
                                       options.data.deviceValue,
                                       function(result,event)
