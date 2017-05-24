@@ -1,4 +1,4 @@
-public with sharing class XMBusinessLayer implements XMiBusiness {
+public class XMBusinessLayer implements XMiBusiness {
 
     //Return full list of groups that an account can have
     public Map<String, XMGroupProductCluster> GetGroupListByUserid(string guid, Account acc){
