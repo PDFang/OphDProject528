@@ -217,10 +217,10 @@
                 </div>
 
 
-            <apex:pageBlock id="contactList">
+            <apex:pageBlock id="contactList" rendered="{!contactList.size > 0}">
                 <apex:pageBlockSection collapsible="true"  columns="1" showHeader="true" title="Duplicate Contacts">
 
-                    <apex:dataTable value="{!contactList}" var="con"  styleClass="table table-bordered table-condensed" rendered="{!contactList.size > 0}">
+                    <apex:dataTable value="{!contactList}" var="con"  styleClass="table table-bordered table-condensed" >
 
                         <apex:column >
                             <apex:facet name="header">Account Name</apex:facet>
@@ -266,7 +266,10 @@
                 </apex:pageBlockSection>
             </apex:pageBlock>
             <apex:outputPanel id="devicePanel" style="{!IF( isXmPerson, 'display: inline;', 'display: none;')}">
-                <div id="deviceList"></div>
+                <apex:pageBlock id="deviceBlock">
+                    <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Devices"/>
+                    <div id="deviceList"></div>
+                </apex:pageBlock>
             </apex:outputPanel>
         </div>
         <!-- Information Modal -->
@@ -342,7 +345,7 @@
 
     function associateContactCall(){
         callAssociateContact();
-        setupDeviceList();
+        //setupDeviceList();
     }
     function setupDeviceList(){
                var device =new kendo.data.DataSource({
