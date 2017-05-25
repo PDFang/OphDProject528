@@ -136,13 +136,13 @@ public class XMPersonManagementController{
     }
 
     @RemoteAction
-    public static string getUserDevices(String xmPersonId)
+    public static string getUserDevices(String contactId)// remove XmPersonID
     {
         XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
         try{
-            List<xmPerson__c> persons = [Select xmPersonUID__c from xmPerson__c where Id = :xmPersonId];
-            if(persons.size() > 0){
-                newDeviceList = XMPersonManagementHelper.getUserDevices(persons[0].xmPersonUID__c);
+            List<Contact> contacts = [Select xmPerson__r.xmPersonUID__c from Contact where Id = :contactId]; // query contacts
+            if(contacts.size() > 0){
+                newDeviceList = XMPersonManagementHelper.getUserDevices(contacts[0].xmPerson__r.xmPersonUID__c);
             }
         }catch(Exception ex){
             system.debug('getUserDevices(): exception - '+ex);
@@ -214,6 +214,42 @@ public class XMPersonManagementController{
 
         return sendResponse(result, message);
     }
+
+    /*@RemoteAction
+    public static string getProductGroups(String contactId){
+
+        XMGroupProductCluster[] xmGroupList;
+
+        try{
+            xmGroupList = XMPersonManagementHelper.getProductGroups(contactId);
+        }catch(Exception ex){
+            xmGroupList = new XMGroupProductCluster[]{};
+        }
+
+        return JSON.Serialize(xmGroupList);
+
+    }
+
+    @RemoteAction
+    public static string updateGroups(String groupJson){
+
+        String result;
+        String message = '';
+        try{
+            system.debug('updateGroups(): groupJson - '+groupJson);
+            XMGroupProductCluster[] xmGroupList = (XMGroupProductCluster[])JSON.deserialize(groupJson, XMGroupProductCluster.class);
+            system.debug('updateGroups(): xmGroupList - '+xmGroupList);
+
+            //XMPersonManagementHelper.updateDevice(deviceWrapper);
+            result = 'Success';
+        }catch(Exception ex){
+            result = 'Failed';
+            message = ex.getMessage();
+        }
+
+        return sendResponse(result, message);
+
+    }*/
 
     private static string sendResponse(String result, string message){
 

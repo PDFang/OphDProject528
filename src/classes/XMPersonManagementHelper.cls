@@ -8,8 +8,8 @@ public class XMPersonManagementHelper {
     public static final Set<String> deviceTypes = new Set<String>{
         'Work Email',
         'Secondary Email',
-        'SMS Phone',
-        'Secondary SMS Phone'
+        'SMS Phone'
+        //'Secondary SMS Phone'
     };
 
     public static List<SelectOption> getTimezones(){
@@ -187,7 +187,7 @@ public class XMPersonManagementHelper {
 
     }
 
-    public static XMGroupProductCluster[] getUserGroups(String contactId){
+    public static XMGroupProductCluster[] getProductGroups(String contactId){
 
         XMGroupProductCluster[] xmGroupList = new XMGroupProductCluster[]{};
 
