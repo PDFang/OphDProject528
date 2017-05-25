@@ -244,7 +244,7 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
         for(CustomerOrder__c newOrder : newList)
         {
             Account[] accts =[SELECT CG_Disconnect_Date__c FROM Account WHERE CadebillAccountNo__c =: newOrder.CadebillAccountNumber__c];
-            if(!(accts.size() > 0))
+            if(!(accts.size() > 0 && accts[0].CG_Disconnect_Date__c !=null))
             {
             CustomerOrder__c oldOrder = ( oldMap != null && oldMap.containsKey(newOrder.Id) ) ? oldMap.get(newOrder.Id) : null;                      
             	if ( oldOrder != null

@@ -1,4 +1,29 @@
-public with sharing class XMBusinessLayer implements XMiBusiness {
+public class XMBusinessLayer implements XMiBusiness {
+
+    private string guid = null;
+    private Account acc = null;
+
+    public XMBusinessLayer(){}
+
+    public XMBusinessLayer(String contactId){
+
+        Contact[] contactList = [
+                Select Id, xmPerson__c, xmPerson__r.xmPersonUID__c, accountId, account.ParentId,
+                        account.inContact_Cluster__c, account.Verint_Cluster__c,
+                        account.NICE_WFM_Cluster__c, account.NICE_QM_Cluster__c,
+                        account.Parent.XMPartnerPrefix__c
+                From Contact
+                where Id = :contactId
+        ];
+
+        acc = contactList[0].Account;
+        guid = contactList[0].xmPerson__r.xmPersonUID__c;
+
+    }
+
+    public Map<String, XMGroupProductCluster> GetGroupListByUserid(){
+        return GetGroupListByUserid(guid, acc);
+    }
 
     //Return full list of groups that an account can have
     public Map<String, XMGroupProductCluster> GetGroupListByUserid(string guid, Account acc){
@@ -22,13 +47,14 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
             {
                 xmSalesForceGroupMap.put(xmFinalListObjKey, xmFinalListObj);
             }
+            else{
+                //need business rule on this log it to the log for now
+                system.debug('Warning! xmatters group not found in salesforce group for this account');
+            }
 
             System.debug('xmSalesForceGroupMap -->' + xmSalesForceGroupMap);
         }
         return xmSalesForceGroupMap;
-    }
-    public boolean SetGroupListForUser(string guid, List<XMGroupProductCluster> grouplist){
-        throw new CalloutException();
     }
 
     //Parses ist of XM low level models into one that is used by the business layer
@@ -54,6 +80,9 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
                 String testName = 'xmGroupClusterObj' + String.valueOf(i);
 
                 System.debug(testName + ':' + xmGroupClusterObj);
+            }
+            else{
+                System.debug('Warning empty group name');
             }
 
 
@@ -118,12 +147,15 @@ public with sharing class XMBusinessLayer implements XMiBusiness {
                 system.debug(groupData);
                 groupListMap.put(groupData.XmattersGroupName,groupData);
             }
+            else{
+                system.debug('Warning product not found in the product map!!!');
+            }
         }
         return groupListMap;
     }
 
     //Update the contacts xmatters group memebership
-    public String UpdateXMUserToGrouops(List<XMGroupProductCluster> groupList, String userID)
+    public String UpdateXMUserToGroups(List<XMGroupProductCluster> groupList, String userID)
     {
         List<XMGroupModel> xmGroupModelList = new List<XMGroupModel>();
         XMRestGroup xmRestGroupObj = new XMRestGroup();
