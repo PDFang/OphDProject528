@@ -300,7 +300,8 @@
 
 
                     <div class="modal-footer">
-                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Close</button>
+                        <button type="button" class="btn button-timeframe" onclick = "saveTimeFrames(); return false;">Save</button>
+                        <button type="button" class="btn button-timeframe-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -673,11 +674,6 @@
                             + '<label for="weekday-sat-new'+nextTab+'">Sat</label>'
                             + '<input type="checkbox" id="weekday-sun-new'+nextTab+'" class="weekday sunday" checked="true"/>'
                             + '<label for="weekday-sun-new'+nextTab+'">Sun</label>'
-                            + '</div> </div>'
-                            + '<div class="form-group">'
-                            + '<div class="col-10">'
-                            + '<button type="button" class="btn button-timeframe" style="color:black !important;" onclick = "saveTimeFrames(); return false;">Save</button>'
-                            + '<button type="button" class="btn button-timeframe-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>'
                             + '</div></div></div>';
 
            $(divContent).appendTo('div.tab-content');
@@ -744,12 +740,8 @@
                                     + '<label for="weekday-sat'+name+'">Sat</label>'
                                     + '<input type="checkbox" id="weekday-sun'+name+'" class="weekday sunday '+name+'"/>'
                                     + '<label for="weekday-sun'+name+'">Sun</label>'
-                                    + '</div> </div>'
-                                    + '<div class="form-group">'
-                                    + '<div class="col-10">'
-                                    + '<button type="button" class="btn button-timeframe" onclick = "saveTimeFrames(); return false;">Save</button>'
-                                    + '<button type="button" class="btn button-timeframe-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>'
-                                    + '</div></div></div>';
+                                    + '</div> </div></div>';
+
 
                       $(divContent).appendTo('div.tab-content');
                       var startId = '#startTimeInput' + name;
