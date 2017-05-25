@@ -187,7 +187,7 @@ public class XMPersonManagementHelper {
 
     }
 
-    public static XMGroupProductCluster[] getUserGroups(String contactId){
+    public static XMGroupProductCluster[] getProductGroups(String contactId){
 
         XMGroupProductCluster[] xmGroupList = new XMGroupProductCluster[]{};
 

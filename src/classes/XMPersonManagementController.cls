@@ -215,6 +215,42 @@ public class XMPersonManagementController{
         return sendResponse(result, message);
     }
 
+    @RemoteAction
+    public static string getProductGroups(String contactId){
+
+        XMGroupProductCluster[] xmGroupList;
+
+        try{
+            xmGroupList = XMPersonManagementHelper.getProductGroups(contactId);
+        }catch(Exception ex){
+            xmGroupList = new XMGroupProductCluster[]{};
+        }
+
+        return JSON.Serialize(xmGroupList);
+
+    }
+
+    @RemoteAction
+    public static string updateGroups(String groupJson){
+
+        String result;
+        String message = '';
+        try{
+            system.debug('updateGroups(): groupJson - '+groupJson);
+            XMGroupProductCluster[] xmGroupList = (XMGroupProductCluster[])JSON.deserialize(groupJson, XMGroupProductCluster.class);
+            system.debug('updateGroups(): xmGroupList - '+xmGroupList);
+
+            //XMPersonManagementHelper.updateDevice(deviceWrapper);
+            result = 'Success';
+        }catch(Exception ex){
+            result = 'Failed';
+            message = ex.getMessage();
+        }
+
+        return sendResponse(result, message);
+
+    }
+
     private static string sendResponse(String result, string message){
 
         System.JSONGenerator generator = Json.createGenerator(true);
