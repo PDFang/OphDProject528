@@ -303,6 +303,27 @@
             </div>
         </div>
 
+        <!-- Confirmation Modal -->
+        <div class="modal fade" id="warning" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Warning!!</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" style="font-size:14px;">
+                        Please save the device details before you can add a new timeframe!!!
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
     </apex:form>
 
 <script>
@@ -580,18 +601,24 @@
 
             var selectedRow = $(sender).parent().parent();
             var rowData = $('#deviceList').data("kendoGrid").dataItem(selectedRow);
-            var deviceId = rowData.Id;
-            deviceData = new Object();
-            deviceData.deviceId = rowData.Id;
-            deviceData.name = rowData.DeviceType;
-            deviceData.deviceValue = rowData.DeviceValue ;
+             var deviceId = rowData.Id;
+            if(deviceId == null || deviceId == ''){
+                $('#warning').modal('show');
+            }else{
 
-            addExistingTab(deviceId);
-            $('#info').modal('show');
+                deviceData = new Object();
+                deviceData.deviceId = rowData.Id;
+                deviceData.name = rowData.DeviceType;
+                deviceData.deviceValue = rowData.DeviceValue ;
+
+                addExistingTab(deviceId);
+                $('#info').modal('show');
+            }
+
         }
 
 
-        function startChange() {
+        function startChange(sender) {
                         var startTime = start.value();
 
                         if (startTime) {
@@ -663,42 +690,57 @@
             $('ul#tabs').empty();
             $("div#validation-errors").css("display", "none");
              $("div#validation-errors").empty();
+              var tabClass = 'active',
+                    contentClass = 'in active',
+                    toggleActive = true;
             for(var i = 0; i < timeframes.length; i++){
                  if(deviceId === timeframes[i].deviceId){
-                      $('<li class="active"><a href="#'+timeframes[i].name+'" data-toggle="tab">'+timeframes[i].name+'</a></li>').appendTo('ul#tabs');
-                      divContent = '<div id="'+timeframes[i].name+'" class="tab-pane fade in active">'
+                        if(toggleActive){
+                            tabClass = 'active',
+                            contentClass = 'in active';
+                        }else{
+                            tabClass = '',
+                            contentClass = '';
+                        }
+
+                        toggleActive = false;
+                        var name = timeframes[i].name.replace(/\s+/g, '-');
+
+
+                      $('<li class="'+tabClass+'"><a href="#'+name+'" data-toggle="tab">'+timeframes[i].name+'</a></li>').appendTo('ul#tabs');
+                      divContent = '<div id="'+name+'" class="tab-pane fade '+contentClass+'">'
                                    + ' <div class="form-group">'
-                                    + '<label for="nameInput'+timeframes[i].name+'" class="col-2 col-form-label">Name </label>'
+                                    + '<label for="nameInput'+name+'" class="col-2 col-form-label">Name </label>'
                                     + '<div class="col-10">'
-                                    + '<input class="form-control" type="text" id="nameInput'+timeframes[i].name+'" style="width:30%;" value="'+ timeframes[i].name +'"/>'
+                                    + '<input class="form-control" type="text" id="nameInput'+name+'" style="width:30%;" value="'+ timeframes[i].name +'"/>'
                                     + '</div></div>'
                                     + '<div class="form-group">'
                                     + '<label for="startTimeInput" class="col-2 col-form-label">Start Time</label>'
                                     + '<div class="col-10">'
-                                    + '<input class="form-control" id="startTimeInput'+timeframes[i].name+'"  style="width:15%;" value="'+ timeframes[i].startTime +'"/>'
+                                    + '<input class="form-control" id="startTimeInput'+name+'"  style="width:15%;" value="'+ timeframes[i].startTime +'"/>'
                                     + '</div></div>'
                                     + '<div class="form-group">'
-                                    + '<label for="endTimeInput'+timeframes[i].name+'" class="col-2 col-form-label">End Time</label>'
+                                    + '<label for="endTimeInput'+name+'" class="col-2 col-form-label">End Time</label>'
                                     + '<div class="col-10">'
-                                    + '<input class="form-control" type="email" id="endTimeInput'+timeframes[i].name+'" style="width:15%;" value="'+ timeframes[i].endTime +'"/>'
+                                    + '<input class="form-control" type="email" id="endTimeInput'+name+'" style="width:15%;" value="'+ timeframes[i].endTime +'"/>'
                                     + '</div></div>'
                                     + '<div class="form-group">'
                                     + '<label for="DaysInput" class="col-2 col-form-label">Days</label>'
                                     + '<div class="weekDays-selector">'
-                                    + '<input type="checkbox" id="weekday-mon'+timeframes[i].name+'" class="weekday monday"/>'
-                                    + '<label for="weekday-mon'+timeframes[i].name+'">Mon</label>'
-                                    + '<input type="checkbox" id="weekday-tue'+timeframes[i].name+'" class="weekday tuesday"/>'
-                                    + '<label for="weekday-tue'+timeframes[i].name+'">Tue</label>'
-                                    + '<input type="checkbox" id="weekday-wed'+timeframes[i].name+'" class="weekday wednesday"/>'
-                                    + '<label for="weekday-wed'+timeframes[i].name+'">Wed</label>'
-                                    + '<input type="checkbox" id="weekday-thu'+timeframes[i].name+'" class="weekday thursday"/>'
-                                    + '<label for="weekday-thu'+timeframes[i].name+'">Thu</label>'
-                                    + '<input type="checkbox" id="weekday-fri'+timeframes[i].name+'" class="weekday friday"/>'
-                                    + '<label for="weekday-fri'+timeframes[i].name+'">Fri</label>'
-                                    + '<input type="checkbox" id="weekday-sat'+timeframes[i].name+'" class="weekday saturday"/>'
-                                    + '<label for="weekday-sat'+timeframes[i].name+'">Sat</label>'
-                                    + '<input type="checkbox" id="weekday-sun'+timeframes[i].name+'" class="weekday sunday"/>'
-                                    + '<label for="weekday-sun'+timeframes[i].name+'">Sun</label>'
+                                    + '<input type="checkbox" id="weekday-mon'+name+'" class="weekday monday '+name+'"/>'
+                                    + '<label for="weekday-mon'+name+'">Mon</label>'
+                                    + '<input type="checkbox" id="weekday-tue'+name+'" class="weekday tuesday '+name+'"/>'
+                                    + '<label for="weekday-tue'+name+'">Tue</label>'
+                                    + '<input type="checkbox" id="weekday-wed'+name+'" class="weekday wednesday '+name+'"/>'
+                                    + '<label for="weekday-wed'+name+'">Wed</label>'
+                                    + '<input type="checkbox" id="weekday-thu'+name+'" class="weekday thursday '+name+'"/>'
+                                    + '<label for="weekday-thu'+name+'">Thu</label>'
+                                    + '<input type="checkbox" id="weekday-fri'+name+'" class="weekday friday '+name+'"/>'
+                                    + '<label for="weekday-fri'+name+'">Fri</label>'
+                                    + '<input type="checkbox" id="weekday-sat'+name+'" class="weekday saturday '+name+'"/>'
+                                    + '<label for="weekday-sat'+name+'">Sat</label>'
+                                    + '<input type="checkbox" id="weekday-sun'+name+'" class="weekday sunday '+name+'"/>'
+                                    + '<label for="weekday-sun'+name+'">Sun</label>'
                                     + '</div> </div>'
                                     + '<div class="form-group">'
                                     + '<div class="col-10">'
@@ -707,24 +749,24 @@
                                     + '</div></div></div>';
 
                       $(divContent).appendTo('div.tab-content');
-                      var startId = '#startTimeInput' + timeframes[i].name;
-                      var endId = '#endTimeInput' + timeframes[i].name;
+                      var startId = '#startTimeInput' + name;
+                      var endId = '#endTimeInput' + name;
                        addKendoTimePicker(startId, endId);
 
                        $("div.weekDays-selector input[type=checkbox]").each(function(){
-                             if($(this).hasClass("monday"))
+                             if($(this).hasClass("monday") && $(this).hasClass(name))
                                     this.checked = timeframes[i].days["monday"];
-                             if($(this).hasClass("tuesday"))
+                             if($(this).hasClass("tuesday") && $(this).hasClass(name))
                                     this.checked = timeframes[i].days["tuesday"];
-                             if($(this).hasClass("wednesday"))
+                             if($(this).hasClass("wednesday") && $(this).hasClass(name))
                                     this.checked = timeframes[i].days["wednesday"];
-                             if($(this).hasClass("thursday"))
+                             if($(this).hasClass("thursday")&& $(this).hasClass(name))
                                     this.checked = timeframes[i].days["thursday"];
-                             if($(this).hasClass("friday"))
+                             if($(this).hasClass("friday")&& $(this).hasClass(name))
                                     this.checked = timeframes[i].days["friday"];
-                             if($(this).hasClass("saturday"))
+                             if($(this).hasClass("saturday")&& $(this).hasClass(name))
                                     this.checked = timeframes[i].days["saturday"];
-                             if($(this).hasClass("sunday"))
+                             if($(this).hasClass("sunday")&& $(this).hasClass(name))
                                     this.checked = timeframes[i].days["sunday"];
                        });
                  }
@@ -734,12 +776,24 @@
 
      function addKendoTimePicker(startId, endId){
             //init start timepicker
+            end = $(endId).kendoTimePicker().data("kendoTimePicker");
             start = $(startId).kendoTimePicker({
-                change: startChange
+                change: function(e){
+                       var startTime = this.value();
+                        var endTImePicker = this.element.parents().eq(3).next('div.form-group').find("input.k-input").data("kendoTimePicker");
+
+                        if (startTime) {
+                            startTime = new Date(startTime);
+                           // endTImePicker.max(startTime);
+                            startTime.setMinutes(startTime.getMinutes() + this.options.interval);
+                            endTImePicker.min(startTime);
+                            endTImePicker.value(startTime);
+                        }
+                }
             }).data("kendoTimePicker");
 
             //init end timepicker
-            end = $(endId).kendoTimePicker().data("kendoTimePicker");
+
      }
 
      function saveTimeFrames(){
