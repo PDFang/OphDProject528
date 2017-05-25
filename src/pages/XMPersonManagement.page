@@ -115,8 +115,6 @@
 
             <div class="container-fluid">
                 <div class="row">
-                    <div id="java-errors" class=" alert alert-danger message-alert" style="margin-left:15px;width:30%; display:none;"></div>
-                    <div id="success" class=" alert alert-success message-alert" style="margin-left:15px;width:30%; display:none;"></div>
                     <apex:pageMessages id="errorMessages"/>
 
                 </div>
@@ -312,13 +310,14 @@
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Warning!!</h5>
+                        <h5 class="modal-title" id="exampleModalLabel">!!Message!!</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <div class="modal-body" style="font-size:14px;">
-                        Please save the device details before you can add a new timeframe!!!
+                        <div id="java-errors" class=" alert alert-danger message-alert" style="margin-left:15px;width:90%; display:none;"></div>
+                        <div id="success" class=" alert alert-success message-alert" style="margin-left:15px;width:90%; display:none;"></div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">OK</button>
@@ -349,6 +348,8 @@
         //setupDeviceList();
     }
     function setupDeviceList(){
+
+
                var device =new kendo.data.DataSource({
                     autosync:true,
                     transport:{
@@ -377,10 +378,14 @@
                                               console.log('results =>' + JSON.stringify(result));
                                               hideError();
                                               }
-
+                                            if(resturnedResult.length >= 3){
+                                                $(".k-grid-add").hide();
+                                            }
                                             } else if (event.type === 'exception') {
+                                                 $("div#success").css("display", "none");
                                                    displayError(event.message);
                                             } else {
+                                                 $("div#success").css("display", "none");
                                                 displayError(event.message);
                                             }
                                       },
@@ -402,14 +407,18 @@
                                        var returnResult = JSON.parse(result);
                                        if(returnResult.result != 'Failed'){
                                            options.success();
+                                            hideError();
                                        }
                                        else{
+                                            $("div#success").css("display", "none");
                                            displayError(returnResult.message);
                                        }
                                        console.log('results =>' + returnResult.result);
                                     } else if (event.type === 'exception') {
+                                         $("div#success").css("display", "none");
                                           displayError(event.message);
                                     } else {
+                                         $("div#success").css("display", "none");
                                          displayError(event.message);
                                     }
                                 },
@@ -433,12 +442,15 @@
                                                    hideError();
                                                }
                                                else{
+                                                    $("div#success").css("display", "none");
                                                    displayError(returnResult.message);
                                                }
 
                                             } else if (event.type === 'exception') {
+                                                 $("div#success").css("display", "none");
                                               displayError(event.message);
                                             } else {
+                                                 $("div#success").css("display", "none");
                                                  displayError(event.message);
                                             }
                                       },
@@ -453,16 +465,23 @@
                                           if (event.status) {
                                                  var returnResult = JSON.parse(result);
                                               if(returnResult.result != 'Failed'){
+
+                                                        $(".k-grid-add").show();
+
+
                                                    options.success();
                                                    hideError();
                                                }
                                                else{
+                                                    $("div#success").css("display", "none");
                                                    displayError(returnResult.message);
                                                }
 
                                             } else if (event.type === 'exception') {
+                                                 $("div#success").css("display", "none");
                                               displayError(event.message);
                                             } else {
+                                                 $("div#success").css("display", "none");
                                                  displayError(event.message);
                                             }
                                       },
@@ -514,8 +533,13 @@
                   editable: "inline",
                   scrollable: true,
                   noRecords: true,
-                  height: 400,
-                  toolbar: ["create"],
+                  height: 200,
+                  toolbar: [
+                      {
+                          name: "create",
+                          text: "Add Device"
+                      }
+                      ],
                   columns: [{
                                 field:"Id",
                                 filterable: false,
@@ -553,13 +577,15 @@
 
         function displayError(message){
              $("div#java-errors").css("display", "block");
-             document.getElementById("java-errors").innerHTML = '<strong>Snap!!</strong>Couldnt update the device list. Error occured - ' + message;
+             document.getElementById("java-errors").innerHTML = '<strong>!!Error!!</strong> ' + message;
+              $('#warning').modal('show');
              console.log('error =>' + message);
         }
 
          function hideError(){
              $("div#java-errors").css("display", "none");
              document.getElementById("java-errors").innerHTML = ' ';
+
 
         }
 
@@ -607,7 +633,8 @@
             var rowData = $('#deviceList').data("kendoGrid").dataItem(selectedRow);
              var deviceId = rowData.Id;
             if(deviceId == null || deviceId == ''){
-                $('#warning').modal('show');
+                 displayError("Please save the device before adding the timeframes.");
+
             }else{
 
                 deviceData = new Object();
@@ -856,17 +883,22 @@
                              var returnResult = JSON.parse(result);
                              if(returnResult.result != 'Failed'){
                                   $("div#success").css("display", "block");
-                                  $('<strong>TimeFrames were updated successfully</strong>').appendTo("div#success");
+                                  $('<strong>Timeframes were updated successfully</strong>').appendTo("div#success");
+                                  $('#warning').modal('show');
                                   var grid = $("#deviceList").data("kendoGrid");
                                   grid.destroy();
                                   setupDeviceList();
+                                   hideError();
                                  }
                                  else{
+                                       $("div#success").css("display", "none");
                                      displayError(returnResult.message);
                                  }
                         } else if (event.type === 'exception') {
+                             $("div#success").css("display", "none");
                            displayError(event.message);
                         } else {
+                             $("div#success").css("display", "none");
                            displayError(event.message);
                         }
                     },
