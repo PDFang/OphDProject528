@@ -355,7 +355,8 @@
                     transport:{
                       read: function(options){
                                XMPersonManagementController.getUserDevices(
-                                      '{!XmPersonId}',
+                                      //'{!XmPersonId}',
+                                      '{!$CurrentPage.parameters.id}',
                                       function(result,event)
                                       {
                                           if (event.status) {
