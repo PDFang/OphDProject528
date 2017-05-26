@@ -1,10 +1,12 @@
 public class XMRestEventService {
     private XMRestWrapper restWrapper;
     private Map<String, ProductEventMap__c> nodeMap;
+    private List<Case_to_xMatters_Field_Mapping__mdt> caseToXMattersFieldMappings;
 
     public XMRestEventService(){
         restWrapper = new XMRestWrapper(); //TODO: Allow injection? Not sure yet
         this.nodeMap = ProductEventMap__c.getAll();
+        this.caseToXMattersFieldMappings = [select Salesforce_Case_Field__c, xMatters_Form_Field__c  from Case_to_xMatters_Field_Mapping__mdt];
     }
 
     /*
@@ -50,12 +52,15 @@ public class XMRestEventService {
      */
     private Case getCaseFromxmNotification(XMNotification__c xmNotification){
         String[] caseFields = new List<String>{'ProductImpacted__c', 'PlatformsImpacted__c' ,'Id'}; // Add default fields that we care about
-        List<Case_to_xMatters_Field_Mapping__mdt> caseToXMattersFieldMappings = [select Salesforce_Case_Field__c, xMatters_Form_Field__c  from Case_to_xMatters_Field_Mapping__mdt];
 
-        for(Case_to_xMatters_Field_Mapping__mdt caseField : caseToXMattersFieldMappings){
+        // Loop through the fields in custom data meta data to add fields we care about
+        for(Case_to_xMatters_Field_Mapping__mdt caseField : this.caseToXMattersFieldMappings){
             caseFields.add(caseField.Salesforce_Case_Field__c);
         }
 
+        system.debug('getCaseFromxmNotification() ===> CaseFields that we care about: ' + caseFields);
+
+        // Dynamic soql query to get the case object
         String dynamicCaseQuery = 'SELECT ' + String.join(caseFields, ',') + ' FROM Case Where Id = \'' + xmNotification.Id  + '\'' ;
 
         Case caseRecord = Database.query(dynamicCaseQuery);
