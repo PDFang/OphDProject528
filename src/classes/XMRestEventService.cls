@@ -26,15 +26,13 @@ public class XMRestEventService {
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();
 
         // PartnerPrefix is a place holder to be replaced by the inbound integration
-        eventGroupInfo.eventName = 'Event_' + eventCase.CaseNumber + '_{PartnerPrefix}';
+        eventGroupInfo.eventName = 'Event_' + xmNotificationRecord.Request_Type__c + '_' + eventCase.CaseNumber + '_{PartnerPrefix}';
         eventGroupInfo.salesforceCaseId = eventCase.Id;
         eventGroupInfo.partnerList = getSupportedPartners();
         xmEventData.eventGroupInfo = eventGroupInfo;
 
         // Build the properties needed to fill out the email template in xMatters
-        XMEventData.TemplateProperties templateProperties = new XMEventData.TemplateProperties();
-        templateProperties.caseNumber = eventCase.CaseNumber;
-        xmEventData.templateProperties = templateProperties;
+        XMEventData.templateProperties = addAdditionalSalesforceDataToFormProperties(eventCase);
 
         // Serialize the event information for processing in xMatters Api
         String eventDetailsJson = JSON.serialize(xmEventData);
@@ -47,8 +45,16 @@ public class XMRestEventService {
         return response;
     }
 
+
+    private Map<String,String> addAdditionalSalesforceDataToFormProperties(Case caseRecord){
+        Map<String, String> propertyMap = new Map<String, String>();
+
+        return propertyMap;
+
+    }
+
     /*
-     *  Will lookup a case dynamically to get the fields we care about
+     *  Performs a dynamic soql query to lookup a case and get the fields we care about
      */
     private Case getCaseFromxmNotification(XMNotification__c xmNotification){
         String[] caseFields = new List<String>{'ProductImpacted__c', 'PlatformsImpacted__c' ,'Id'}; // Add default fields that we care about
@@ -61,10 +67,11 @@ public class XMRestEventService {
         system.debug('getCaseFromxmNotification() ===> CaseFields that we care about: ' + caseFields);
 
         // Dynamic soql query to get the case object
-        String dynamicCaseQuery = 'SELECT ' + String.join(caseFields, ',') + ' FROM Case Where Id = \'' + xmNotification.Id  + '\'' ;
+        String dynamicCaseQuery = 'SELECT ' + String.join(caseFields, ',') + ' FROM Case Where Id = \'' + xmNotification.Case__c + '\'' ;
+        system.debug('getCaseFromxmNotification() ===> Attempting to run SOQL Query to get Case Record: ' + dynamicCaseQuery);
+
 
         Case caseRecord = Database.query(dynamicCaseQuery);
-
         return caseRecord;
     }
 
@@ -97,12 +104,14 @@ public class XMRestEventService {
                 cluster = 'NONE';
             }
 
-            groupArray.add('IP_{PartnerPrefix}_' + product + '_' + platform);
+            String groupString = ('IP_{PartnerPrefix}_' + product + '_' + platform).replace(' ', '');
+            groupArray.add(groupString);
+
+            system.debug('convertProductAndPlatformToGroupName() ==> Adding group to list' + groupString);
         }
 
         return groupArray;
     }
-
 
     /*
      * This will look up the XMPartnerPrefix field to determine the full list of partners we support

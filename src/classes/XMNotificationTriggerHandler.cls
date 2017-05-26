@@ -9,6 +9,7 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
 
     }
 
+    // calls XMRestEventService to create an event in xMatters
     private static void callXMRestEventService(List<xmNotification__c> notificationList) {
 
         system.debug('callXMRestEventService(): notificationList - '+ notificationList);
@@ -34,10 +35,19 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
         ];
         system.debug('callXMRestEventServiceFuture(): calling XMRestEventService for xmNotification - '+ notificationList[0]);
 
-        XMRestEventService eventService = new XMRestEventService();
-        String response = eventService.startExternalEventProcessing(notificationList[0]);
+        try{
+            XMRestEventService eventService = new XMRestEventService();
+            String response = eventService.startExternalEventProcessing(notificationList[0]);
 
-        system.debug('callXMRestEventServiceFuture(): XMRestEventService response - '+ response);
+            system.debug('callXMRestEventServiceFuture(): XMRestEventService response - '+ response);
+
+            notificationList[0].Status__c = 'Processed';
+        }catch(Exception ex){
+            system.debug('callXMRestEventServiceFuture(): Exception - '+ ex);
+            notificationList[0].Status__c = 'Failed';
+        }
+
+        update notificationList;
 
     }
 }
