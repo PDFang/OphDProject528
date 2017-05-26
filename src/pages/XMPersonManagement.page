@@ -1019,7 +1019,7 @@
                   columns: [{
                                 field:"selected",
                                  headerTemplate: '<input type="checkbox" id="header-chb" class="k-checkbox"><label class="k-checkbox-label" for="header-chb">Select</label>',
-                                template: '<input type="checkbox" # if (selected) { # checked="checked" :  # } #" class="k-checkbox"></input>'
+                                template: '<input type="checkbox" # if (selected) { # checked="checked" :  # } #" ></input>'
                             },
                             {
                                 field:"Product",
