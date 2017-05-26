@@ -65,7 +65,7 @@ public class XMRestEventService {
      *  Performs a dynamic soql query to lookup a case and get the fields we care about
      */
     private Case getCaseFromxmNotification(XMNotification__c xmNotification){
-        String[] caseFields = new List<String>{'ProductImpacted__c', 'PlatformsImpacted__c' ,'Id'}; // Add default fields that we care about
+        String[] caseFields = new List<String>{'PlatformsImpacted__c' ,'Id'}; // Add default fields that we care about
 
         // Loop through the fields in custom data meta data to add fields we care about
         for(Case_to_xMatters_Field_Mapping__mdt caseField : this.caseToXMattersFieldMappings){
