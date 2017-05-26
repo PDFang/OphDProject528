@@ -1093,7 +1093,7 @@
       console.log('checkedIds => ' + checkedIds);
       var grid = $("#groupList").data("kendoGrid");
       var groupData = [];
-      $("#groupList").find('.k-checkbox').each(function(idx, item){
+      $("div.k-grid-content").find('.k-checkbox').each(function(idx, item){
             var row = $(item).closest("tr"),
             dataItem = grid.dataItem(row);
             if(dataItem){
