@@ -1,8 +1,10 @@
 public class XMRestEventService {
     private XMRestWrapper restWrapper;
+    private Map<String, ProductEventMap__c> nodeMap;
 
     public XMRestEventService(){
         restWrapper = new XMRestWrapper(); //TODO: Allow injection? Not sure yet
+        this.nodeMap = ProductEventMap__c.getAll();
     }
 
     /*
@@ -14,7 +16,7 @@ public class XMRestEventService {
 
         XMEventData xmEventData = new XMEventData();
         xmeventData.platformGroups = convertProductAndPlatformToGroupName(eventCase.PlatformsImpacted__c, eventCase.ProductImpacted__c);
-        xmEventData.startEvent = false;
+        xmEventData.startEvent = true;
 
         // Build the specific event details needed to process the event.
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();
@@ -49,15 +51,33 @@ public class XMRestEventService {
         String[] groupArray = new List<string>();
         system.debug('convertProductAndPlatformToGroupName() ==> Platforms: ' + platforms + ' Product: ' + product);
 
-        /*
-         * TODO: Figure out how to handle none, how do I do something simliar to XMBusinesLayer.cls line 122
-         */
+        // Get the product map for the specific product in question
+        ProductEventMap__c productMap = nodeMap.get(product);
+
+        // If we didn't find the product we will need to notify someone
+        if(productMap == null){
+            // TODO: Throw a fit?
+        }
+
+        // TODO: Add check for null
         for(String platform : platforms.split(';')){
-            groupArray.add('IP_INC_' + product + '_' + platform);
+
+            String productClusterGroupName;
+            String cluster;
+
+            // If this is a product with a cluster we can just use the platform from platform imapcted otherwise we use None
+            if(productMap.HasClusters__c){
+                cluster = platform;
+            } else{
+                cluster = 'NONE';
+            }
+
+            groupArray.add('IP_{PartnerPrefix}_' + product + '_' + platform);
         }
 
         return groupArray;
     }
+
 
     // This will look up the XMPartnerPrefix field to determine the full list of partners we support
     private static String[] getSupportedPartners(){
