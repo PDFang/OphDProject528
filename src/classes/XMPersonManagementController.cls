@@ -215,7 +215,7 @@ public class XMPersonManagementController{
         return sendResponse(result, message);
     }
 
-    /*@RemoteAction
+    @RemoteAction
     public static string getProductGroups(String contactId){
 
         XMGroupProductCluster[] xmGroupList;
@@ -249,7 +249,7 @@ public class XMPersonManagementController{
 
         return sendResponse(result, message);
 
-    }*/
+    }
 
     private static string sendResponse(String result, string message){
 
