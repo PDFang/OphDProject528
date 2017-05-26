@@ -75,6 +75,7 @@ public class XMBusinessLayer implements XMiBusiness {
                     xmGroupClusterObj.Product = splitTargetName[2];
                     xmGroupClusterObj.Cluster = splitTargetName[3];
                     xmGroupClusterObj.selected = true;
+                    xmGroupClusterObj.XmattersGroupName = groupObj.group1.targetName;
                     xmGroupClusterObjList.add(xmGroupClusterObj);
                 }
                 String testName = 'xmGroupClusterObj' + String.valueOf(i);
@@ -175,7 +176,7 @@ public class XMBusinessLayer implements XMiBusiness {
             {
                 if (groupObj.selected == true) {
                     xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
-                    system.debug("xmGroupModelList =>" + xmGroupModelList);
+                    system.debug('xmGroupModelList =>' + xmGroupModelList);
                     if (xmGroupModelList.size() > 0) {
                             responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, userID, 'Person');
                     }
