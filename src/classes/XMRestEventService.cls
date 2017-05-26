@@ -18,7 +18,9 @@ public class XMRestEventService {
 
         // Build the specific event details needed to process the event.
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();
-        eventGroupInfo.eventName = 'This is a test Event from salesforce';
+
+        // PartnerPrefix is a place holder to be replaced by the inbound integration
+        eventGroupInfo.eventName = 'Event_' + eventCase.CaseNumber + '_{PartnerPrefix}';
         eventGroupInfo.salesforceCaseId = eventCase.Id;
         eventGroupInfo.partnerList = getSupportedPartners();
         xmEventData.eventGroupInfo = eventGroupInfo;
@@ -39,19 +41,26 @@ public class XMRestEventService {
         return response;
     }
 
+    /*
+     * Converts the product and platform to a group name that we can add to the event
+     * Example: IP_INC_Dialer_C13
+     */
     private String[] convertProductAndPlatformToGroupName(string platforms, string product){
         String[] groupArray = new List<string>();
+        system.debug('convertProductAndPlatformToGroupName() ==> Platforms: ' + platforms + ' Product: ' + product);
 
-        // TODO: There was mention of having "None" for the platform, figure out that use case
+        /*
+         * TODO: Figure out how to handle none, how do I do something simliar to XMBusinesLayer.cls line 122
+         */
         for(String platform : platforms.split(';')){
             groupArray.add('IP_INC_' + product + '_' + platform);
-    }
+        }
 
         return groupArray;
     }
 
     // This will look up the XMPartnerPrefix field to determine the full list of partners we support
-    private String[] getSupportedPartners(){
+    private static String[] getSupportedPartners(){
         String [] partnerArray = new List<String>();
 
         Schema.DescribeFieldResult fieldResult = Account.XMPartnerPrefix__c.getDescribe();
