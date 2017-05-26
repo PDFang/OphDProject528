@@ -2,6 +2,7 @@ public class CaseTriggerHandler extends TriggerHandler
 {
     private static boolean staticValuesSet = false;
     private static boolean isProxyServiceTurnedOff = false;
+    private static boolean isxMattersNotificationsTurnedOff = false;
     private static Id eventRecordType;
     private static Id maintenanceRecordType;   
     private static Id knownIssueRecordType;
@@ -27,6 +28,7 @@ public class CaseTriggerHandler extends TriggerHandler
             AppConfiguration__c config = AppConfiguration__c.getInstance();
             if(config != null) {
                 isProxyServiceTurnedOff = config.Turn_Off_Partner_Case_Proxy_Service__c;
+                isxMattersNotificationsTurnedOff = config.Turn_Off_xMatters_Notifications__c;
             }
         }
     }
@@ -45,6 +47,8 @@ public class CaseTriggerHandler extends TriggerHandler
     }
 
     protected override void afterUpdate(){
+        if(!isxMattersNotificationsTurnedOff)
+            createXmNotification((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
         if(!isProxyServiceTurnedOff)
             CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
     }
@@ -107,6 +111,40 @@ public class CaseTriggerHandler extends TriggerHandler
                 || newRecord.Related_to_Previous_Known_Issue__c != oldRecord.Related_to_Previous_Known_Issue__c
                 || newRecord.Security_Issue__c != oldRecord.Security_Issue__c
                 || newRecord.Workaround_Available__c != oldRecord.Workaround_Available__c;
+    }
+
+    // Create an xmNotification record when an event is confirmed
+    private void createXmNotification(List<Case> newList, Map<Id, Case> oldMap){
+
+        List<Case> processList = new List<Case>();
+        for(Case newCase : newList){
+            Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
+            // Is Event confirmed
+            if(newCase.RecordTypeId == eventRecordType && newCase.EventConfirmedDateTime__c != null
+                    && oldCase != null && oldCase.EventConfirmedDateTime__c == null){
+                processList.add(newCase);
+            }
+        }
+
+        system.debug('createXmNotification(): processList - ' + processList);
+        if(processList.isEmpty()){
+            return;
+        }
+
+        List<xmNotification__c> notificationList = new List<xmNotification__c>();
+
+        for(Case newCase :processList){
+            xmNotification__c xmNotification = new xmNotification__c(
+                    Case__c = newCase.Id,
+                    Request_Date__c = system.now(),
+                    Request_Type__c = 'Event Initial Confirmation'
+            );
+            notificationList.add(xmNotification);
+        }
+        system.debug('createXmNotification(): notificationList - ' + notificationList);
+
+        insert notificationList;
+
     }
 
     //push incidents to partner case proxy service
