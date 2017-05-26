@@ -120,8 +120,10 @@ public class CaseTriggerHandler extends TriggerHandler
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
             // Is Event confirmed
-            if(newCase.RecordTypeId == eventRecordType && newCase.EventConfirmedDateTime__c != null
-                    && oldCase != null && oldCase.EventConfirmedDateTime__c == null){
+            if(newCase.RecordTypeId == eventRecordType && oldCase != null
+                    && ( (newCase.EventConfirmedDateTime__c != null && oldCase.EventConfirmedDateTime__c == null)
+                    || (newCase.Status == 'Resolved' && oldCase.Status != 'Resolved') ) )
+            {
                 processList.add(newCase);
             }
         }
@@ -137,13 +139,27 @@ public class CaseTriggerHandler extends TriggerHandler
             xmNotification__c xmNotification = new xmNotification__c(
                     Case__c = newCase.Id,
                     Request_Date__c = system.now(),
-                    Request_Type__c = 'Event Initial Confirmation'
+                    Request_Type__c = getXmNotificationRequestType(newCase)
             );
             notificationList.add(xmNotification);
         }
         system.debug('createXmNotification(): notificationList - ' + notificationList);
 
         insert notificationList;
+
+    }
+
+    private string getXmNotificationRequestType(Case newCase){
+
+        String requestType = null;
+
+        if(newCase.RecordTypeId == eventRecordType && newCase.Status == 'Resolved'){
+            requestType = 'Event Resolved';
+        } else if(newCase.RecordTypeId == eventRecordType && newCase.EventConfirmedDateTime__c != null){
+            requestType = 'Event Initial Confirmation';
+        }
+
+        return requestType;
 
     }
 
