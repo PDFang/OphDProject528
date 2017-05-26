@@ -8,8 +8,8 @@ public class XMPersonManagementHelper {
     public static final Set<String> deviceTypes = new Set<String>{
         'Work Email',
         'Secondary Email',
-        'SMS Phone',
-        'Secondary SMS Phone'
+        'SMS Phone'
+        //'Secondary SMS Phone'
     };
 
     public static List<SelectOption> getTimezones(){
@@ -37,11 +37,15 @@ public class XMPersonManagementHelper {
 
     public Contact getContactById(String contactId){
 
-        return [
+        Contact[] contactList = [
                 select Name, FirstName, LastName, Email, Phone, Id, AccountId, Account.CadebillAccountNoText__c,
                         Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
                 from Contact where Id =: contactId
         ];
+        if(contactList.isEmpty()){
+            throw new QueryException('Failed to retrieve Contact information.');
+        }
+        return contactList[0];
     }
 
     public Map<Id, Contact> getContactsByEmail(String email){
@@ -75,6 +79,22 @@ public class XMPersonManagementHelper {
         XMPersonWrapper personWrapper = new XMPersonWrapper(response);
 
         return personWrapper;
+
+    }
+
+    public static String getXmPersonGuid(String contactId){
+
+        List<Contact> contactList = [
+                Select xmPerson__c, xmPerson__r.xmPersonUID__c
+                from Contact where Id = :contactId
+        ];
+        system.debug('addNewDevice(): contactList - '+ contactList);
+
+        if(contactList.isEmpty()){
+            throw new QueryException('Person does not exist in xMatters.');
+        }
+        String xmPersonGuid = contactList[0].xmPerson__r.xmPersonUID__c;
+        return xmPersonGuid;
 
     }
 
@@ -187,7 +207,7 @@ public class XMPersonManagementHelper {
 
     }
 
-    public static XMGroupProductCluster[] getUserGroups(String contactId){
+    public static XMGroupProductCluster[] getProductGroups(String contactId){
 
         XMGroupProductCluster[] xmGroupList = new XMGroupProductCluster[]{};
 
@@ -203,6 +223,14 @@ public class XMPersonManagementHelper {
         }
 
         return xmGroupList;
+
+    }
+
+    public static void updateXmGroupSubscription(XMGroupProductCluster[] xmGroupList, string xmPersonGuid){
+
+        XMBusinessLayer groupLayer = new XMBusinessLayer();
+        string message = groupLayer.UpdateXMUserToGroups(xmGroupList,  xmPersonGuid);
+        system.debug('updateXmGroupSubscription(): message - ' + message);
 
     }
 

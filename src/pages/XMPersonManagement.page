@@ -101,6 +101,16 @@
         border-color: #357ebd !important;
         background-color: #428bca !important;
     }
+    .form-control {
+       padding-right: 30px;
+       display: inline;
+       width:50%;
+    }
+    .form-control + .glyphicon {
+        position: absolute;
+        right: 50%;
+        padding: 8px 27px;
+    }
 
     </style>
 
@@ -115,22 +125,20 @@
 
             <div class="container-fluid">
                 <div class="row">
-                    <div id="java-errors" class=" alert alert-danger message-alert" style="margin-left:15px;width:30%; display:none;"></div>
-                    <div id="success" class=" alert alert-success message-alert" style="margin-left:15px;width:30%; display:none;"></div>
                     <apex:pageMessages id="errorMessages"/>
 
                 </div>
-                <div class="panel panel-default">
+                <div class="panel panel-default" style="{!IF( isValidContact, 'display: inline;', 'display: none;')}">
 
                     <apex:pageBlock id="contactDetail" >
-                        <apex:pageBlockSection  title="Contact Detail" collapsible="false" columns="1">
+                        <apex:pageBlockSection title="Contact Detail" collapsible="false" columns="1">
                             <apex:outputField value="{!currentContact.Name}"/>
                             <apex:outputField value="{!currentContact.AccountId}"/>
                             <apex:outputField value="{!currentContact.Account.CadebillAccountNoText__c}"/>
                         </apex:pageBlockSection>
                     </apex:pageBlock>
 
-                    <div class="panel-heading"><label>XMatters Person Details</label>
+                    <div class="panel-heading"><label>xMatters Person Detail</label>
 
                         <apex:outputPanel id="alertmessage">
                             <apex:outputPanel rendered="{!(isPersonMatch && !IsXmPerson)}">
@@ -217,10 +225,10 @@
                 </div>
 
 
-            <apex:pageBlock id="contactList">
+            <apex:pageBlock id="contactList" rendered="{!contactList.size > 0}">
                 <apex:pageBlockSection collapsible="true"  columns="1" showHeader="true" title="Duplicate Contacts">
 
-                    <apex:dataTable value="{!contactList}" var="con"  styleClass="table table-bordered table-condensed" rendered="{!contactList.size > 0}">
+                    <apex:dataTable value="{!contactList}" var="con"  styleClass="table table-bordered table-condensed" >
 
                         <apex:column >
                             <apex:facet name="header">Account Name</apex:facet>
@@ -266,8 +274,23 @@
                 </apex:pageBlockSection>
             </apex:pageBlock>
             <apex:outputPanel id="devicePanel" style="{!IF( isXmPerson, 'display: inline;', 'display: none;')}">
-                <div id="deviceList"></div>
+                <apex:pageBlock id="deviceBlock">
+                    <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Devices"/>
+                    <div id="deviceList"></div>
+                </apex:pageBlock>
             </apex:outputPanel>
+            <apex:outputPanel id="groupPanel" style="{!IF( isXmPerson, 'display: inline;', 'display: none;')}">
+                <apex:pageBlock id="groupBlock">
+                    <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Groups"/>
+                    <div class="row" style="margin-top : 5px;">
+                        <div class="col-md-5"> <input class="form-control" id="SearchText" onkeyup="SearchProducts(this.value)" type="text" placeholder="Search Products">
+                            <span class="glyphicon glyphicon-search" style="font-size: normal"></span></input></div>
+                        <div class="col-md-7"></div>
+                    </div>
+                    <div id="groupList"></div>
+                </apex:pageBlock>
+            </apex:outputPanel>
+
         </div>
         <!-- Information Modal -->
         <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
@@ -297,11 +320,34 @@
 
 
                     <div class="modal-footer">
-                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Close</button>
+                        <button type="button" class="btn button-timeframe" onclick = "saveTimeFrames(); return false;">Save</button>
+                        <button type="button" class="btn button-timeframe-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Confirmation Modal -->
+        <div class="modal fade" id="warning" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">!!Message!!</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" style="font-size:14px;">
+                        <div id="java-errors" class=" alert alert-danger message-alert" style="margin-left:15px;width:90%; display:none;"></div>
+                        <div id="success" class=" alert alert-success message-alert" style="margin-left:15px;width:90%; display:none;"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
     </apex:form>
 
@@ -310,6 +356,7 @@
 
      $(document).ready(function() {
             setupDeviceList();
+            setupGroupList();
          });
 
     var timeframes = [];
@@ -321,7 +368,7 @@
 
     function associateContactCall(){
         callAssociateContact();
-        setupDeviceList();
+        //setupDeviceList();
     }
     function setupDeviceList(){
                var device =new kendo.data.DataSource({
@@ -329,7 +376,8 @@
                     transport:{
                       read: function(options){
                                XMPersonManagementController.getUserDevices(
-                                      '{!XmPersonId}',
+                                      //'{!XmPersonId}',
+                                      '{!$CurrentPage.parameters.id}',
                                       function(result,event)
                                       {
                                           if (event.status) {
@@ -352,10 +400,14 @@
                                               console.log('results =>' + JSON.stringify(result));
                                               hideError();
                                               }
-
+                                            if(resturnedResult.length >= 3){
+                                                $(".k-grid-add").hide();
+                                            }
                                             } else if (event.type === 'exception') {
+                                                 $("div#success").css("display", "none");
                                                    displayError(event.message);
                                             } else {
+                                                 $("div#success").css("display", "none");
                                                 displayError(event.message);
                                             }
                                       },
@@ -377,14 +429,18 @@
                                        var returnResult = JSON.parse(result);
                                        if(returnResult.result != 'Failed'){
                                            options.success();
+                                            hideError();
                                        }
                                        else{
+                                            $("div#success").css("display", "none");
                                            displayError(returnResult.message);
                                        }
                                        console.log('results =>' + returnResult.result);
                                     } else if (event.type === 'exception') {
+                                         $("div#success").css("display", "none");
                                           displayError(event.message);
                                     } else {
+                                         $("div#success").css("display", "none");
                                          displayError(event.message);
                                     }
                                 },
@@ -408,12 +464,15 @@
                                                    hideError();
                                                }
                                                else{
+                                                    $("div#success").css("display", "none");
                                                    displayError(returnResult.message);
                                                }
 
                                             } else if (event.type === 'exception') {
+                                                 $("div#success").css("display", "none");
                                               displayError(event.message);
                                             } else {
+                                                 $("div#success").css("display", "none");
                                                  displayError(event.message);
                                             }
                                       },
@@ -428,16 +487,23 @@
                                           if (event.status) {
                                                  var returnResult = JSON.parse(result);
                                               if(returnResult.result != 'Failed'){
+
+                                                        $(".k-grid-add").show();
+
+
                                                    options.success();
                                                    hideError();
                                                }
                                                else{
+                                                    $("div#success").css("display", "none");
                                                    displayError(returnResult.message);
                                                }
 
                                             } else if (event.type === 'exception') {
+                                                 $("div#success").css("display", "none");
                                               displayError(event.message);
                                             } else {
+                                                 $("div#success").css("display", "none");
                                                  displayError(event.message);
                                             }
                                       },
@@ -460,12 +526,12 @@
                                                         if (input.is("[name='DeviceValue']") && input.val() != "") {
                                                             var deviceType = $("[name='DeviceType']").val();
                                                             if(deviceType.includes("Email")){
-                                                                 input.attr("data-deviceValueValidation-msg", "Invalid email address");
-                                                                 var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                                                                 input.attr("data-deviceValueValidation-msg", " Invalid Email address");
+                                                                 var re =  /^(?:[a-z0-9!+=_`-]+(?:\.[a-z0-9!+=_`-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)$/i;
                                                                  return re.test(input.val());
                                                             }
                                                             else{
-                                                                input.attr("data-deviceValueValidation-msg", "Invalid Phone number");
+                                                                input.attr("data-deviceValueValidation-msg", " Invalid Phone number");
                                                                 var re = /^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-\s\./0-9]*$/g;
                                                                 return re.test(input.val());
 
@@ -489,8 +555,13 @@
                   editable: "inline",
                   scrollable: true,
                   noRecords: true,
-                  height: 400,
-                  toolbar: ["create"],
+                  height: 200,
+                  toolbar: [
+                      {
+                          name: "create",
+                          text: "Add Device"
+                      }
+                      ],
                   columns: [{
                                 field:"Id",
                                 filterable: false,
@@ -527,14 +598,18 @@
                            }*/
 
         function displayError(message){
+             $("div#success").empty();
+             $("div#success").hide();
              $("div#java-errors").css("display", "block");
-             document.getElementById("java-errors").innerHTML = '<strong>Snap!!</strong>Couldnt update the device list. Error occured - ' + message;
+             document.getElementById("java-errors").innerHTML = '<strong>!!Error!!</strong> ' + message;
+              $('#warning').modal('show');
              console.log('error =>' + message);
         }
 
          function hideError(){
              $("div#java-errors").css("display", "none");
              document.getElementById("java-errors").innerHTML = ' ';
+
 
         }
 
@@ -580,18 +655,25 @@
 
             var selectedRow = $(sender).parent().parent();
             var rowData = $('#deviceList').data("kendoGrid").dataItem(selectedRow);
-            var deviceId = rowData.Id;
-            deviceData = new Object();
-            deviceData.deviceId = rowData.Id;
-            deviceData.name = rowData.DeviceType;
-            deviceData.deviceValue = rowData.DeviceValue ;
+             var deviceId = rowData.Id;
+            if(deviceId == null || deviceId == ''){
+                 displayError("Please save the device before adding the timeframes.");
 
-            addExistingTab(deviceId);
-            $('#info').modal('show');
+            }else{
+
+                deviceData = new Object();
+                deviceData.deviceId = rowData.Id;
+                deviceData.name = rowData.DeviceType;
+                deviceData.deviceValue = rowData.DeviceValue ;
+
+                addExistingTab(deviceId);
+                $('#info').modal('show');
+            }
+
         }
 
 
-        function startChange() {
+        function startChange(sender) {
                         var startTime = start.value();
 
                         if (startTime) {
@@ -643,11 +725,6 @@
                             + '<label for="weekday-sat-new'+nextTab+'">Sat</label>'
                             + '<input type="checkbox" id="weekday-sun-new'+nextTab+'" class="weekday sunday" checked="true"/>'
                             + '<label for="weekday-sun-new'+nextTab+'">Sun</label>'
-                            + '</div> </div>'
-                            + '<div class="form-group">'
-                            + '<div class="col-10">'
-                            + '<button type="button" class="btn button-timeframe" style="color:black !important;" onclick = "saveTimeFrames(); return false;">Save</button>'
-                            + '<button type="button" class="btn button-timeframe-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>'
                             + '</div></div></div>';
 
            $(divContent).appendTo('div.tab-content');
@@ -663,68 +740,79 @@
             $('ul#tabs').empty();
             $("div#validation-errors").css("display", "none");
              $("div#validation-errors").empty();
+              var tabClass = 'active',
+                    contentClass = 'in active',
+                    toggleActive = true;
             for(var i = 0; i < timeframes.length; i++){
                  if(deviceId === timeframes[i].deviceId){
-                      $('<li class="active"><a href="#'+timeframes[i].name+'" data-toggle="tab">'+timeframes[i].name+'</a></li>').appendTo('ul#tabs');
-                      divContent = '<div id="'+timeframes[i].name+'" class="tab-pane fade in active">'
+                        if(toggleActive){
+                            tabClass = 'active',
+                            contentClass = 'in active';
+                        }else{
+                            tabClass = '',
+                            contentClass = '';
+                        }
+
+                        toggleActive = false;
+                        var name = timeframes[i].name.replace(/\s+/g, '-');
+
+
+                      $('<li class="'+tabClass+'"><a href="#'+name+'" data-toggle="tab">'+timeframes[i].name+'</a></li>').appendTo('ul#tabs');
+                      divContent = '<div id="'+name+'" class="tab-pane fade '+contentClass+'">'
                                    + ' <div class="form-group">'
-                                    + '<label for="nameInput'+timeframes[i].name+'" class="col-2 col-form-label">Name </label>'
+                                    + '<label for="nameInput'+name+'" class="col-2 col-form-label">Name </label>'
                                     + '<div class="col-10">'
-                                    + '<input class="form-control" type="text" id="nameInput'+timeframes[i].name+'" style="width:30%;" value="'+ timeframes[i].name +'"/>'
+                                    + '<input class="form-control" type="text" id="nameInput'+name+'" style="width:30%;" value="'+ timeframes[i].name +'"/>'
                                     + '</div></div>'
                                     + '<div class="form-group">'
                                     + '<label for="startTimeInput" class="col-2 col-form-label">Start Time</label>'
                                     + '<div class="col-10">'
-                                    + '<input class="form-control" id="startTimeInput'+timeframes[i].name+'"  style="width:15%;" value="'+ timeframes[i].startTime +'"/>'
+                                    + '<input class="form-control" id="startTimeInput'+name+'"  style="width:15%;" value="'+ timeframes[i].startTime +'"/>'
                                     + '</div></div>'
                                     + '<div class="form-group">'
-                                    + '<label for="endTimeInput'+timeframes[i].name+'" class="col-2 col-form-label">End Time</label>'
+                                    + '<label for="endTimeInput'+name+'" class="col-2 col-form-label">End Time</label>'
                                     + '<div class="col-10">'
-                                    + '<input class="form-control" type="email" id="endTimeInput'+timeframes[i].name+'" style="width:15%;" value="'+ timeframes[i].endTime +'"/>'
+                                    + '<input class="form-control" type="email" id="endTimeInput'+name+'" style="width:15%;" value="'+ timeframes[i].endTime +'"/>'
                                     + '</div></div>'
                                     + '<div class="form-group">'
                                     + '<label for="DaysInput" class="col-2 col-form-label">Days</label>'
                                     + '<div class="weekDays-selector">'
-                                    + '<input type="checkbox" id="weekday-mon'+timeframes[i].name+'" class="weekday monday"/>'
-                                    + '<label for="weekday-mon'+timeframes[i].name+'">Mon</label>'
-                                    + '<input type="checkbox" id="weekday-tue'+timeframes[i].name+'" class="weekday tuesday"/>'
-                                    + '<label for="weekday-tue'+timeframes[i].name+'">Tue</label>'
-                                    + '<input type="checkbox" id="weekday-wed'+timeframes[i].name+'" class="weekday wednesday"/>'
-                                    + '<label for="weekday-wed'+timeframes[i].name+'">Wed</label>'
-                                    + '<input type="checkbox" id="weekday-thu'+timeframes[i].name+'" class="weekday thursday"/>'
-                                    + '<label for="weekday-thu'+timeframes[i].name+'">Thu</label>'
-                                    + '<input type="checkbox" id="weekday-fri'+timeframes[i].name+'" class="weekday friday"/>'
-                                    + '<label for="weekday-fri'+timeframes[i].name+'">Fri</label>'
-                                    + '<input type="checkbox" id="weekday-sat'+timeframes[i].name+'" class="weekday saturday"/>'
-                                    + '<label for="weekday-sat'+timeframes[i].name+'">Sat</label>'
-                                    + '<input type="checkbox" id="weekday-sun'+timeframes[i].name+'" class="weekday sunday"/>'
-                                    + '<label for="weekday-sun'+timeframes[i].name+'">Sun</label>'
-                                    + '</div> </div>'
-                                    + '<div class="form-group">'
-                                    + '<div class="col-10">'
-                                    + '<button type="button" class="btn button-timeframe" onclick = "saveTimeFrames(); return false;">Save</button>'
-                                    + '<button type="button" class="btn button-timeframe-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>'
-                                    + '</div></div></div>';
+                                    + '<input type="checkbox" id="weekday-mon'+name+'" class="weekday monday '+name+'"/>'
+                                    + '<label for="weekday-mon'+name+'">Mon</label>'
+                                    + '<input type="checkbox" id="weekday-tue'+name+'" class="weekday tuesday '+name+'"/>'
+                                    + '<label for="weekday-tue'+name+'">Tue</label>'
+                                    + '<input type="checkbox" id="weekday-wed'+name+'" class="weekday wednesday '+name+'"/>'
+                                    + '<label for="weekday-wed'+name+'">Wed</label>'
+                                    + '<input type="checkbox" id="weekday-thu'+name+'" class="weekday thursday '+name+'"/>'
+                                    + '<label for="weekday-thu'+name+'">Thu</label>'
+                                    + '<input type="checkbox" id="weekday-fri'+name+'" class="weekday friday '+name+'"/>'
+                                    + '<label for="weekday-fri'+name+'">Fri</label>'
+                                    + '<input type="checkbox" id="weekday-sat'+name+'" class="weekday saturday '+name+'"/>'
+                                    + '<label for="weekday-sat'+name+'">Sat</label>'
+                                    + '<input type="checkbox" id="weekday-sun'+name+'" class="weekday sunday '+name+'"/>'
+                                    + '<label for="weekday-sun'+name+'">Sun</label>'
+                                    + '</div> </div></div>';
+
 
                       $(divContent).appendTo('div.tab-content');
-                      var startId = '#startTimeInput' + timeframes[i].name;
-                      var endId = '#endTimeInput' + timeframes[i].name;
+                      var startId = '#startTimeInput' + name;
+                      var endId = '#endTimeInput' + name;
                        addKendoTimePicker(startId, endId);
 
                        $("div.weekDays-selector input[type=checkbox]").each(function(){
-                             if($(this).hasClass("monday"))
+                             if($(this).hasClass("monday") && $(this).hasClass(name))
                                     this.checked = timeframes[i].days["monday"];
-                             if($(this).hasClass("tuesday"))
+                             if($(this).hasClass("tuesday") && $(this).hasClass(name))
                                     this.checked = timeframes[i].days["tuesday"];
-                             if($(this).hasClass("wednesday"))
+                             if($(this).hasClass("wednesday") && $(this).hasClass(name))
                                     this.checked = timeframes[i].days["wednesday"];
-                             if($(this).hasClass("thursday"))
+                             if($(this).hasClass("thursday")&& $(this).hasClass(name))
                                     this.checked = timeframes[i].days["thursday"];
-                             if($(this).hasClass("friday"))
+                             if($(this).hasClass("friday")&& $(this).hasClass(name))
                                     this.checked = timeframes[i].days["friday"];
-                             if($(this).hasClass("saturday"))
+                             if($(this).hasClass("saturday")&& $(this).hasClass(name))
                                     this.checked = timeframes[i].days["saturday"];
-                             if($(this).hasClass("sunday"))
+                             if($(this).hasClass("sunday")&& $(this).hasClass(name))
                                     this.checked = timeframes[i].days["sunday"];
                        });
                  }
@@ -734,12 +822,24 @@
 
      function addKendoTimePicker(startId, endId){
             //init start timepicker
+            end = $(endId).kendoTimePicker().data("kendoTimePicker");
             start = $(startId).kendoTimePicker({
-                change: startChange
+                change: function(e){
+                       var startTime = this.value();
+                        var endTImePicker = this.element.parents().eq(3).next('div.form-group').find("input.k-input").data("kendoTimePicker");
+
+                        if (startTime) {
+                            startTime = new Date(startTime);
+                           // endTImePicker.max(startTime);
+                            startTime.setMinutes(startTime.getMinutes() + this.options.interval);
+                            endTImePicker.min(startTime);
+                            endTImePicker.value(startTime);
+                        }
+                }
             }).data("kendoTimePicker");
 
             //init end timepicker
-            end = $(endId).kendoTimePicker().data("kendoTimePicker");
+
      }
 
      function saveTimeFrames(){
@@ -806,18 +906,25 @@
                         if (event.status) {
                              var returnResult = JSON.parse(result);
                              if(returnResult.result != 'Failed'){
+                                   hideError();
                                   $("div#success").css("display", "block");
-                                  $('<strong>TimeFrames were updated successfully</strong>').appendTo("div#success");
+                                  $("div#success").empty();
+                                  $('<strong>Timeframes were updated successfully</strong>').appendTo("div#success");
+                                  $('#warning').modal('show');
                                   var grid = $("#deviceList").data("kendoGrid");
                                   grid.destroy();
                                   setupDeviceList();
+
                                  }
                                  else{
+                                       $("div#success").css("display", "none");
                                      displayError(returnResult.message);
                                  }
                         } else if (event.type === 'exception') {
+                             $("div#success").css("display", "none");
                            displayError(event.message);
                         } else {
+                             $("div#success").css("display", "none");
                            displayError(event.message);
                         }
                     },
@@ -866,7 +973,177 @@
 
     }
 
+    function setupGroupList(){
+        var groups =new kendo.data.DataSource({
+                    autosync:true,
+                    transport:{
+                      read: function(options){
+                               XMPersonManagementController.getProductGroups(
+                                      '{!$CurrentPage.parameters.id}',
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                              if(result.length > 1){
+                                                  options.success(JSON.parse(result));
+                                              }
+                                              console.log('groups =>' + JSON.stringify(result));
+                                              hideError();
+
+                                            } else if (event.type === 'exception') {
+                                                 $("div#success").css("display", "none");
+                                                   displayError(event.message);
+                                            } else {
+                                                 $("div#success").css("display", "none");
+                                                displayError(event.message);
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                            },
+                        update: function(options){
+                            options.success();
+
+                        },
+                        destroy: function(options){
+                            options.success();
+                        }
+                      },
+                    schema:{
+                        model: {
+                            Id: "Product",
+                            fields: {
+                                "Product": {from:"Product", type: "string"},
+                                "Cluster": { from: "Cluster", type: "string", },
+                                "PartnerPrefix":{from:"PartnerPrefix",type:"string"},
+                                "XmattersGroupName" : {from:"XmattersGroupName",type: "string"},
+                                "selected":{from:"selected", type:"boolean"}
+                        }
+                    }
+                  }
+              });
+
+          var groupGrid =    $("#groupList").kendoGrid({
+                  dataSource: groups,
+                  scrollable: true,
+                  noRecords: true,
+                  height: 500,
+                   toolbar: [
+                        { template: '<a class="k-button" onclick="updateGroups();">Save</a>'
+                        }
+                      ],
+                  columns: [{
+                                field:"selected",
+                                 headerTemplate: '<input type="checkbox" id="header-chb" class="k-checkbox" onclick="selectRow(this);"><label class="k-checkbox-label" for="header-chb">Select</label>',
+                                template: '<input  id="# Product #" class="k-checkbox" type="checkbox" # if (selected) { # checked="checked" :  # } #" ><label class="k-checkbox-label" for="# Product #"></label>'
+                            },
+                            {
+                                field:"Product",
+                                title:"Product Name"
+                            },
+                            {
+                                field: "Cluster",
+                                title: "Cluster"
+                            },
+                            {
+                                field:"PartnerPrefix",
+                                title:"Partner Prefix"
+                            },
+                            {
+                                field:"XmattersGroupName",
+                                title:"XmattersGroupName"
+                            }
+
+                  ]
+
+              });
+
+
+
+
+    }
+        var checkedIds = {};
+         //on click of the checkbox:
+      function selectRow(obj) {
+       var checked = obj.checked;
+       $("#groupList").find('.k-checkbox').each(function(idx, item){
+            var row = $(item).closest("tr");
+            if(checked){
+                $(item).prop("checked", true);
+                row.addClass("k-state-selected");
+            }else {
+                $(item).prop("checked", false);
+              //-remove selection
+              row.removeClass("k-state-selected");
+            }
+        });
+      }
+
+ function SearchProducts (val) {
+          var grid = $("#groupList").data("kendoGrid");
+          grid.dataSource.query({
+            filter:{
+              logic:"or",
+              filters:[
+                {field:"Product", operator:"contains",value:val}
+                ]
+             }
+          });
+      }
+  function updateGroups(){
+      console.log('checkedIds => ' + checkedIds);
+      var grid = $("#groupList").data("kendoGrid");
+      var groupData = [];
+      $("#groupList").find('.k-checkbox').each(function(idx, item){
+            var row = $(item).closest("tr"),
+            dataItem = grid.dataItem(row);
+            if(dataItem){
+                var  groupRow = new Object();
+                groupRow.Product = dataItem.Product;
+                groupRow.Cluster = dataItem.Cluster ;
+                groupRow.PartnerPrefix = dataItem.PartnerPrefix;
+                groupRow.XmattersGroupName = dataItem.XmattersGroupName ;
+                groupRow.selected = item.checked;
+                groupData.push(groupRow);
+            }
+        });
+
+        var salesforceGroup = new Object();
+        salesforceGroup.XMGroupProductCluster = groupData;
+
+        console.log(JSON.stringify(groupData));
+       XMPersonManagementController.updateGroupSubscription(
+          JSON.stringify(groupData),
+           '{!$CurrentPage.parameters.id}',
+          function(result,event)
+          {
+            if (event.status) {
+                var returnResult = JSON.parse(result);
+                if(returnResult.result != 'Failed'){
+                   setupGroupList();
+                   hideError();
+               }
+               else{
+                    $("div#success").css("display", "none");
+                   displayError(returnResult.message);
+               }
+            } else if (event.type === 'exception') {
+                 $("div#success").css("display", "none");
+                 displayError(event.message);
+            }else{
+                 $("div#success").css("display", "none");
+                 displayError(event.message);
+            }
+          },
+          {escape: false}
+    );
+
+  }
+
+
 </script>
+    <script id="template" type="text/x-kendo-template">
+        <a class="k-button" href="\#">Save</a>
+    </script>
 
 
 </apex:page>

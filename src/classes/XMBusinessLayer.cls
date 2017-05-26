@@ -175,8 +175,9 @@ public class XMBusinessLayer implements XMiBusiness {
             {
                 if (groupObj.selected == true) {
                     xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
+                    system.debug("xmGroupModelList =>" + xmGroupModelList);
                     if (xmGroupModelList.size() > 0) {
-                        responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, userID, 'Person');
+                            responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, userID, 'Person');
                     }
                     else {
                         //build the group on the fly
