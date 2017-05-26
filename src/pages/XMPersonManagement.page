@@ -1097,7 +1097,7 @@
             var row = $(item).closest("tr"),
             dataItem = grid.dataItem(row);
             if(dataItem){
-                groupRow = new Object();
+                var  groupRow = new Object();
                 groupRow.Product = dataItem.Product;
                 groupRow.Cluster = dataItem.Cluster ;
                 groupRow.PartnerPrefix = dataItem.PartnerPrefix;
@@ -1106,6 +1106,10 @@
                 groupData.push(groupRow);
             }
         });
+
+        var salesforceGroup = new Object();
+        salesforceGroup.XMGroupProductCluster = groupData;
+
         console.log(JSON.stringify(groupData));
        XMPersonManagementController.updateGroupSubscription(
           JSON.stringify(groupData),

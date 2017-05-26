@@ -15,7 +15,10 @@ public class XMRestWrapper {
         request.setMethod(verbType);
         request.setHeader('Content-Type', 'application/json');
 
+
+        system.debug('request ==> : ' + request);
         Http h = new Http();
+
 
         HttpResponse response = h.send(request);
         system.debug('performCallOut() ==> response: ' + response.getBody());

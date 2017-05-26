@@ -246,7 +246,7 @@ public class XMPersonManagementController{
             String xmPersonGuid = XMPersonManagementHelper.getXmPersonGuid(contactId);
 
             system.debug('updateGroups(): groupJson - '+groupJson);
-            XMGroupProductCluster[] xmGroupList = (XMGroupProductCluster[])JSON.deserialize(groupJson, XMGroupProductCluster.class);
+            XMGroupProductCluster[] xmGroupList = (XMGroupProductCluster[])JSON.deserialize(groupJson, List<XMGroupProductCluster>.class);
             system.debug('updateGroups(): xmGroupList - '+xmGroupList);
 
             XMPersonManagementHelper.updateXmGroupSubscription(xmGroupList, xmPersonGuid);

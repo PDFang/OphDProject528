@@ -32,7 +32,9 @@ public class XMRestEventService {
         xmEventData.eventGroupInfo = eventGroupInfo;
 
         // Build the properties needed to fill out the email template in xMatters
-        XMEventData.templateProperties = addAdditionalSalesforceDataToFormProperties(eventCase);
+        XMEventData.TemplateProperties templateProperties = new XMEventData.TemplateProperties();
+        templateProperties.caseNumber = eventCase.CaseNumber;
+        xmEventData.templateProperties = templateProperties;
 
         // Serialize the event information for processing in xMatters Api
         String eventDetailsJson = JSON.serialize(xmEventData);
@@ -46,10 +48,7 @@ public class XMRestEventService {
     }
 
 
-    private Map<String,String> addAdditionalSalesforceDataToFormProperties(Case caseRecord){
-        Map<String, String> propertyMap = new Map<String, String>();
-
-        return propertyMap;
+    private void addAdditionalSalesforceDataToFormProperties(Case caseRecord){
 
     }
 
@@ -106,8 +105,6 @@ public class XMRestEventService {
 
             String groupString = ('IP_{PartnerPrefix}_' + product + '_' + platform).replace(' ', '');
             groupArray.add(groupString);
-
-            system.debug('convertProductAndPlatformToGroupName() ==> Adding group to list' + groupString);
         }
 
         return groupArray;
