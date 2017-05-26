@@ -1,17 +1,18 @@
 public with sharing class XMRestGroup {
 
     private final String GroupUrl = 'groups/';
-    private final String GroupURLWithSearch = 'groups?search = ';
+    private final String GroupURLWithSearch = 'groups?search=';
 
     public List<XMGroupModel> GetAllGroupsByPrefix(string prefix) {
 
         XMRestWrapper wrapper = new XMRestWrapper();
         string jsonList;
         if (prefix.length() > 0){
-            jsonList = wrapper.performCallOut(this.GroupURLWithSearch + prefix, 'GET', null);
+            String encodedPrefix = EncodingUtil.urlEncode(prefix,'UTF-8');
+            jsonList = wrapper.performCallOut(this.GroupURLWithSearch + encodedPrefix, 'GET', null);
         }
         else{
-            jsonList = wrapper.performCallOut(this.GroupUrl + prefix, 'GET', null);
+            jsonList = wrapper.performCallOut(this.GroupUrl, 'GET', null);
         }
         system.debug('raw data -> ' + jsonList);
         List<XMGroupModel> groupList = new List<XMGroupModel>();
@@ -91,7 +92,8 @@ public with sharing class XMRestGroup {
         XMRestWrapper wrapper = new XMRestWrapper();
         body =  '{"position" : 1,"recipient":{"id": "'+ PersonId +'", "recipientType":"' + type +'"}}';
         System.Debug('body = ' + body);
-        url = this.GroupUrl + groupName +  '/shifts/24x7/members';  //always add to the default 24x7 shift for now
+        String encodedgroupName = EncodingUtil.urlEncode(groupName,'UTF-8');
+        url = this.GroupUrl + encodedgroupName +  '/shifts/24x7/members';  //always add to the default 24x7 shift for now
         System.Debug('url = ' + url);
         jsonResponse = wrapper.performCallOut(url, 'POST', body);
         System.Debug(jsonResponse);
