@@ -5,5 +5,5 @@
 public with sharing class XMPersonGroupModel {
         public string id { get; set; }
         public string targetName { get; set; }
-        public xmGroupLinks links { get; set; }
+        public xmGroupLinkModel links { get; set; }
 }
