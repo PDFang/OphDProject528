@@ -6,7 +6,9 @@ public class XMEventData {
 
     public Boolean startEvent {get;set;}
     public EventGroupInfo eventGroupInfo {get;set;}
-    public TemplateProperties templateProperties {get;set;}
+
+    // Dyanmic properties that get sent to xMatters and resolve to form fields
+    public Map<String,String> templateProperties {get;set;}
 
     public String[] platformGroups {get;set;}
 
@@ -15,10 +17,5 @@ public class XMEventData {
         public String eventName {get;set;}
         public String salesforceCaseId {get;set;}
         public String[] partnerList {get;set;}
-    }
-
-    // These are template fields that are used in the xMatters form
-    public class TemplateProperties{
-        public String caseNumber {get;set;}
     }
 }

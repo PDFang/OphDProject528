@@ -75,6 +75,7 @@ public class XMBusinessLayer implements XMiBusiness {
                     xmGroupClusterObj.Product = splitTargetName[2];
                     xmGroupClusterObj.Cluster = splitTargetName[3];
                     xmGroupClusterObj.selected = true;
+                    xmGroupClusterObj.XmattersGroupName = groupObj.group1.targetName;
                     xmGroupClusterObjList.add(xmGroupClusterObj);
                 }
                 String testName = 'xmGroupClusterObj' + String.valueOf(i);
@@ -93,7 +94,7 @@ public class XMBusinessLayer implements XMiBusiness {
 
 
     //Returns a list of salesforce product based groups an account belongs to
-    private Map<String, XMGroupProductCluster> GetSalesForceGroupData(Account acc){
+    public Map<String, XMGroupProductCluster> GetSalesForceGroupData(Account acc){
 
         Map<String, ProductEventMap__c> nodeMap;
         nodeMap = ProductEventMap__c.getAll();
@@ -130,21 +131,12 @@ public class XMBusinessLayer implements XMiBusiness {
                     groupData.Cluster = productMap.Platform__c.replaceFirst('NWFM', acc.NICE_WFM_Cluster__c.trim());
                 if(acc.NICE_QM_Cluster__c != NULL && productMap.Platform__c.startsWith('NQM')) // arnab
                     groupData.Cluster = productMap.Platform__c.replaceFirst('NQM', acc.NICE_QM_Cluster__c.trim());
-                if (groupData.Cluster == null || groupData.Cluster == ''){
-                    //default cluster description
-                    groupData.Cluster = 'NONE';
-                }
                 if (acc.Parent != null)
                 {
                     groupData.PartnerPrefix =  acc.Parent.XMPartnerPrefix__c;
                 }
-                if (groupData.PartnerPrefix == null)
-                {
-                    //default partner designation
-                    groupData.PartnerPrefix = 'INC';
-                }
-                groupData.XmattersGroupName = 'IP_'+ groupData.PartnerPrefix + '_' + groupData.Product + '_'  + groupData.Cluster;
-                system.debug(groupData);
+                groupData.XmattersGroupName = GetGroupName(groupData);
+                system.debug( 'groupData -->' + groupData);
                 groupListMap.put(groupData.XmattersGroupName,groupData);
             }
             else{
@@ -152,6 +144,22 @@ public class XMBusinessLayer implements XMiBusiness {
             }
         }
         return groupListMap;
+    }
+
+    public string GetGroupName(XMGroupProductCluster groupData){
+
+        string XmattersGroupName;
+        if (groupData.Cluster == null || groupData.Cluster == ''){
+            //default cluster description
+            groupData.Cluster = 'NONE';
+        }
+        if (groupData.PartnerPrefix == null || groupData.PartnerPrefix == '')
+        {
+            //default partner designation
+            groupData.PartnerPrefix = 'INC';
+        }
+        XmattersGroupName = 'IP_'+ groupData.partnerPrefix + '_' + groupData.product + '_'  + groupData.cluster;
+        return XmattersGroupName.replace(' ','');
     }
 
     //Update the contacts xmatters group memebership
@@ -168,7 +176,7 @@ public class XMBusinessLayer implements XMiBusiness {
             {
                 if (groupObj.selected == true) {
                     xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
-                    system.debug("xmGroupModelList =>" + xmGroupModelList);
+                    system.debug('xmGroupModelList =>' + xmGroupModelList);
                     if (xmGroupModelList.size() > 0) {
                             responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, userID, 'Person');
                     }
