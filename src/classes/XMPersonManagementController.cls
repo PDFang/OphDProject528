@@ -18,6 +18,10 @@ public class XMPersonManagementController{
         return currentContact != null && currentContact.xmPerson__c != null;
     }
 
+    public boolean getIsValidContact(){
+        return currentContact != null;
+    }
+
     public boolean getIsDuplicate(){
         return contactList != null && contactList.size() > 0;
     }
@@ -130,20 +134,22 @@ public class XMPersonManagementController{
         return null;
     }
 
+    // returns various device types
     public string getDeviceTypes()
     {
         return JSON.Serialize(XMPersonManagementHelper.deviceTypes);
     }
 
+    // retrieves all the devices for a person in xMatters
     @RemoteAction
-    public static string getUserDevices(String contactId)// remove XmPersonID
+    public static string getUserDevices(String contactId)
     {
         XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
         try{
-            List<Contact> contacts = [Select xmPerson__r.xmPersonUID__c from Contact where Id = :contactId]; // query contacts
-            if(contacts.size() > 0){
-                newDeviceList = XMPersonManagementHelper.getUserDevices(contacts[0].xmPerson__r.xmPersonUID__c);
-            }
+            String xmPersonGuid = XMPersonManagementHelper.getXmPersonGuid(contactId);
+
+            newDeviceList = XMPersonManagementHelper.getUserDevices(xmPersonGuid);
+
         }catch(Exception ex){
             system.debug('getUserDevices(): exception - '+ex);
             newDeviceList = new XMDeviceWrapper[]{};
@@ -153,6 +159,7 @@ public class XMPersonManagementController{
 
     }
 
+    // adds a new device in xMatters
     @RemoteAction
     public static string addNewDevice(String contactId, String deviceName, String deviceValue)
     {
@@ -160,15 +167,11 @@ public class XMPersonManagementController{
         String message = '';
 
         try{
-            List<Contact> contactList = [
-                    Select xmPerson__c, xmPerson__r.xmPersonUID__c
-                    from Contact where Id = :contactId
-            ];
-            String xmPersonGuid = contactList[0].xmPerson__r.xmPersonUID__c;
-            system.debug('addNewDevice(): contactList - '+ contactList);
+            String xmPersonGuid = XMPersonManagementHelper.getXmPersonGuid(contactId);
 
             String deviceId = XMPersonManagementHelper.addDevice(xmPersonGuid, deviceName, deviceValue);
             result = (deviceId != null) ? 'Success' : 'Failed';
+
         }catch(Exception ex){
             result = 'Failed';
             message = ex.getMessage();
@@ -178,6 +181,7 @@ public class XMPersonManagementController{
 
     }
 
+    // updates device information in xMatters including time frames
     @RemoteAction
     public static string updateDevice(String deviceJson){
 
@@ -199,6 +203,7 @@ public class XMPersonManagementController{
 
     }
 
+    // removes a device in xMatters
     @RemoteAction
     public static string deleteDevice(String deviceId){
 
@@ -215,6 +220,7 @@ public class XMPersonManagementController{
         return sendResponse(result, message);
     }
 
+    // retrieves all available product cluster groups for the contact's account. In addition, groups selected for the xMatters person
     @RemoteAction
     public static string getProductGroups(String contactId){
 
@@ -230,18 +236,22 @@ public class XMPersonManagementController{
 
     }
 
+    // add or remove xMatters person to/from the group
     @RemoteAction
-    public static string updateGroups(String groupJson){
+    public static string updateGroupSubscription(String groupJson, String contactId){
 
         String result;
         String message = '';
         try{
+            String xmPersonGuid = XMPersonManagementHelper.getXmPersonGuid(contactId);
+
             system.debug('updateGroups(): groupJson - '+groupJson);
             XMGroupProductCluster[] xmGroupList = (XMGroupProductCluster[])JSON.deserialize(groupJson, XMGroupProductCluster.class);
             system.debug('updateGroups(): xmGroupList - '+xmGroupList);
 
-            //XMPersonManagementHelper.updateDevice(deviceWrapper);
+            XMPersonManagementHelper.updateXmGroupSubscription(xmGroupList, xmPersonGuid);
             result = 'Success';
+
         }catch(Exception ex){
             result = 'Failed';
             message = ex.getMessage();
