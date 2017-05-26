@@ -118,10 +118,10 @@
                     <apex:pageMessages id="errorMessages"/>
 
                 </div>
-                <div class="panel panel-default">
+                <div class="panel panel-default" style="{!IF( isValidContact, 'display: inline;', 'display: none;')}">
 
                     <apex:pageBlock id="contactDetail" >
-                        <apex:pageBlockSection  title="Contact Detail" collapsible="false" columns="1">
+                        <apex:pageBlockSection title="Contact Detail" collapsible="false" columns="1">
                             <apex:outputField value="{!currentContact.Name}"/>
                             <apex:outputField value="{!currentContact.AccountId}"/>
                             <apex:outputField value="{!currentContact.Account.CadebillAccountNoText__c}"/>
@@ -1007,7 +1007,7 @@
                   }
               });
 
-              $("#groupList").kendoGrid({
+          var groupGrid =    $("#groupList").kendoGrid({
                   dataSource: groups,
                   scrollable: true,
                   noRecords: true,
@@ -1018,8 +1018,8 @@
                       ],
                   columns: [{
                                 field:"selected",
-                                title:"Select",
-                                template: '<input type="checkbox" # if (selected) { # checked="checked" :  # } #" ></input>'
+                                 headerTemplate: '<input type="checkbox" id="header-chb" class="k-checkbox"><label class="k-checkbox-label" for="header-chb">Select</label>',
+                                template: '<input type="checkbox" # if (selected) { # checked="checked" :  # } #" class="k-checkbox"></input>'
                             },
                             {
                                 field:"Product",
@@ -1042,7 +1042,28 @@
 
               });
 
+
+             groupGrid.table.on("click", ".k-checkbox" , selectRow);
+
     }
+    var checkedIds = {};
+     //on click of the checkbox:
+      function selectRow() {
+        var checked = this.checked,
+            row = $(this).closest("tr"),
+            grid = $("#groupList").data("kendoGrid"),
+            dataItem = grid.dataItem(row);
+
+        checkedIds[dataItem.Product] = checked;
+        if (checked) {
+          //-select the row
+          row.addClass("k-state-selected");
+        } else {
+          //-remove selection
+          row.removeClass("k-state-selected");
+        }
+      }
+
 
 
 
