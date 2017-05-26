@@ -12,7 +12,9 @@ public class XMRestEventService {
      *  Takes a list of clusters, a product and the salesforceCaseId (The unique Id)
      *  Returns back the xMatters processed guid id.  (Used for tracking purposes only)
      */
-    public String startExternalEventProcessing(Case eventCase){
+    public String startExternalEventProcessing(XMNotification__c xmNotificationRecord){
+
+        Case eventCase = getCaseFromxmNotification(xmNotificationRecord);
 
         XMEventData xmEventData = new XMEventData();
         xmeventData.platformGroups = convertProductAndPlatformToGroupName(eventCase.PlatformsImpacted__c, eventCase.ProductImpacted__c);
@@ -41,6 +43,24 @@ public class XMRestEventService {
         system.debug('startExternalEventProcessing() ===> Create Response From xMatters' + response);
 
         return response;
+    }
+
+    /*
+     *  Will lookup a case dynamically to get the fields we care about
+     */
+    private Case getCaseFromxmNotification(XMNotification__c xmNotification){
+        String[] caseFields = new List<String>{'ProductImpacted__c', 'PlatformsImpacted__c' ,'Id'}; // Add default fields that we care about
+        List<Case_to_xMatters_Field_Mapping__mdt> caseToXMattersFieldMappings = [select Salesforce_Case_Field__c, xMatters_Form_Field__c  from Case_to_xMatters_Field_Mapping__mdt];
+
+        for(Case_to_xMatters_Field_Mapping__mdt caseField : caseToXMattersFieldMappings){
+            caseFields.add(caseField.Salesforce_Case_Field__c);
+        }
+
+        String dynamicCaseQuery = 'SELECT ' + String.join(caseFields, ',') + ' FROM Case Where Id = \'' + xmNotification.Id  + '\'' ;
+
+        Case caseRecord = Database.query(dynamicCaseQuery);
+
+        return caseRecord;
     }
 
     /*
@@ -79,7 +99,9 @@ public class XMRestEventService {
     }
 
 
-    // This will look up the XMPartnerPrefix field to determine the full list of partners we support
+    /*
+     * This will look up the XMPartnerPrefix field to determine the full list of partners we support
+     */
     private static String[] getSupportedPartners(){
         String [] partnerArray = new List<String>();
 
