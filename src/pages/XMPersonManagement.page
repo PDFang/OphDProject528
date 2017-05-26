@@ -101,6 +101,16 @@
         border-color: #357ebd !important;
         background-color: #428bca !important;
     }
+    .form-control {
+       padding-right: 30px;
+       display: inline;
+       width:50%;
+    }
+    .form-control + .glyphicon {
+        position: absolute;
+        right: 50%;
+        padding: 8px 27px;
+    }
 
     </style>
 
@@ -128,7 +138,7 @@
                         </apex:pageBlockSection>
                     </apex:pageBlock>
 
-                    <div class="panel-heading"><label>XMatters Person Details</label>
+                    <div class="panel-heading"><label>xMatters Person Detail</label>
 
                         <apex:outputPanel id="alertmessage">
                             <apex:outputPanel rendered="{!(isPersonMatch && !IsXmPerson)}">
@@ -272,6 +282,11 @@
             <apex:outputPanel id="groupPanel" style="{!IF( isXmPerson, 'display: inline;', 'display: none;')}">
                 <apex:pageBlock id="groupBlock">
                     <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Groups"/>
+                    <div class="row" style="margin-top : 5px;">
+                        <div class="col-md-5"> <input class="form-control" id="SearchText" onkeyup="SearchProducts(this.value)" type="text" placeholder="Search Products">
+                            <span class="glyphicon glyphicon-search" style="font-size: normal"></span></input></div>
+                        <div class="col-md-7"></div>
+                    </div>
                     <div id="groupList"></div>
                 </apex:pageBlock>
             </apex:outputPanel>
@@ -511,12 +526,12 @@
                                                         if (input.is("[name='DeviceValue']") && input.val() != "") {
                                                             var deviceType = $("[name='DeviceType']").val();
                                                             if(deviceType.includes("Email")){
-                                                                 input.attr("data-deviceValueValidation-msg", "Invalid email address");
-                                                                 var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                                                                 input.attr("data-deviceValueValidation-msg", " Invalid Email address");
+                                                                 var re =  /^(?:[a-z0-9!+=_`-]+(?:\.[a-z0-9!+=_`-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)$/i;
                                                                  return re.test(input.val());
                                                             }
                                                             else{
-                                                                input.attr("data-deviceValueValidation-msg", "Invalid Phone number");
+                                                                input.attr("data-deviceValueValidation-msg", " Invalid Phone number");
                                                                 var re = /^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-\s\./0-9]*$/g;
                                                                 return re.test(input.val());
 
@@ -1013,13 +1028,13 @@
                   noRecords: true,
                   height: 500,
                    toolbar: [
-                        { template: '<a class="k-button">Save</a>'
+                        { template: '<a class="k-button" onclick="updateGroups();">Save</a>'
                         }
                       ],
                   columns: [{
                                 field:"selected",
-                                 headerTemplate: '<input type="checkbox" id="header-chb" class="k-checkbox"><label class="k-checkbox-label" for="header-chb">Select</label>',
-                                template: '<input type="checkbox" # if (selected) { # checked="checked" :  # } #" ></input>'
+                                 headerTemplate: '<input type="checkbox" id="header-chb" class="k-checkbox" onclick="selectRow(this);"><label class="k-checkbox-label" for="header-chb">Select</label>',
+                                template: '<input  id="# Product #" class="k-checkbox" type="checkbox" # if (selected) { # checked="checked" :  # } #" ><label class="k-checkbox-label" for="# Product #"></label>'
                             },
                             {
                                 field:"Product",
@@ -1043,28 +1058,82 @@
               });
 
 
-             groupGrid.table.on("click", ".k-checkbox" , selectRow);
+
 
     }
-    var checkedIds = {};
-     //on click of the checkbox:
-      function selectRow() {
-        var checked = this.checked,
-            row = $(this).closest("tr"),
-            grid = $("#groupList").data("kendoGrid"),
-            dataItem = grid.dataItem(row);
-
-        checkedIds[dataItem.Product] = checked;
-        if (checked) {
-          //-select the row
-          row.addClass("k-state-selected");
-        } else {
-          //-remove selection
-          row.removeClass("k-state-selected");
-        }
+        var checkedIds = {};
+         //on click of the checkbox:
+      function selectRow(obj) {
+       var checked = obj.checked;
+       $("#groupList").find('.k-checkbox').each(function(idx, item){
+            var row = $(item).closest("tr");
+            if(checked){
+                $(item).prop("checked", true);
+                row.addClass("k-state-selected");
+            }else {
+                $(item).prop("checked", false);
+              //-remove selection
+              row.removeClass("k-state-selected");
+            }
+        });
       }
 
+ function SearchProducts (val) {
+          var grid = $("#groupList").data("kendoGrid");
+          grid.dataSource.query({
+            filter:{
+              logic:"or",
+              filters:[
+                {field:"Product", operator:"contains",value:val}
+                ]
+             }
+          });
+      }
+  function updateGroups(){
+      console.log('checkedIds => ' + checkedIds);
+      var grid = $("#groupList").data("kendoGrid");
+      var groupData = [];
+      $("#groupList").find('.k-checkbox').each(function(idx, item){
+            var row = $(item).closest("tr"),
+            dataItem = grid.dataItem(row);
+            if(dataItem){
+                groupRow = new Object();
+                groupRow.Product = dataItem.Product;
+                groupRow.Cluster = dataItem.Cluster ;
+                groupRow.PartnerPrefix = dataItem.PartnerPrefix;
+                groupRow.XmattersGroupName = dataItem.XmattersGroupName ;
+                groupRow.selected = item.checked;
+                groupData.push(groupRow);
+            }
+        });
+        console.log(JSON.stringify(groupData));
+       XMPersonManagementController.updateGroupSubscription(
+          JSON.stringify(groupData),
+           '{!$CurrentPage.parameters.id}',
+          function(result,event)
+          {
+            if (event.status) {
+                var returnResult = JSON.parse(result);
+                if(returnResult.result != 'Failed'){
+                   setupGroupList();
+                   hideError();
+               }
+               else{
+                    $("div#success").css("display", "none");
+                   displayError(returnResult.message);
+               }
+            } else if (event.type === 'exception') {
+                 $("div#success").css("display", "none");
+                 displayError(event.message);
+            }else{
+                 $("div#success").css("display", "none");
+                 displayError(event.message);
+            }
+          },
+          {escape: false}
+    );
 
+  }
 
 
 </script>
