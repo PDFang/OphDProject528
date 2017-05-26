@@ -9,6 +9,12 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
 
     }
 
+    protected override void afterUpdate(){
+
+        // TBD: resend request to xMatters
+
+    }
+
     // calls XMRestEventService to create an event in xMatters
     private static void callXMRestEventService(List<xmNotification__c> notificationList) {
 
