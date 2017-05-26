@@ -118,10 +118,10 @@
                     <apex:pageMessages id="errorMessages"/>
 
                 </div>
-                <div class="panel panel-default">
+                <div class="panel panel-default" style="{!IF( isValidContact, 'display: inline;', 'display: none;')}">
 
                     <apex:pageBlock id="contactDetail" >
-                        <apex:pageBlockSection  title="Contact Detail" collapsible="false" columns="1">
+                        <apex:pageBlockSection title="Contact Detail" collapsible="false" columns="1">
                             <apex:outputField value="{!currentContact.Name}"/>
                             <apex:outputField value="{!currentContact.AccountId}"/>
                             <apex:outputField value="{!currentContact.Account.CadebillAccountNoText__c}"/>
@@ -269,6 +269,13 @@
                     <div id="deviceList"></div>
                 </apex:pageBlock>
             </apex:outputPanel>
+            <apex:outputPanel id="groupPanel" style="{!IF( isXmPerson, 'display: inline;', 'display: none;')}">
+                <apex:pageBlock id="groupBlock">
+                    <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Groups"/>
+                    <div id="groupList"></div>
+                </apex:pageBlock>
+            </apex:outputPanel>
+
         </div>
         <!-- Information Modal -->
         <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
@@ -334,6 +341,7 @@
 
      $(document).ready(function() {
             setupDeviceList();
+            setupGroupList();
          });
 
     var timeframes = [];
@@ -348,8 +356,6 @@
         //setupDeviceList();
     }
     function setupDeviceList(){
-
-
                var device =new kendo.data.DataSource({
                     autosync:true,
                     transport:{
@@ -577,6 +583,8 @@
                            }*/
 
         function displayError(message){
+             $("div#success").empty();
+             $("div#success").hide();
              $("div#java-errors").css("display", "block");
              document.getElementById("java-errors").innerHTML = '<strong>!!Error!!</strong> ' + message;
               $('#warning').modal('show');
@@ -883,13 +891,15 @@
                         if (event.status) {
                              var returnResult = JSON.parse(result);
                              if(returnResult.result != 'Failed'){
+                                   hideError();
                                   $("div#success").css("display", "block");
+                                  $("div#success").empty();
                                   $('<strong>Timeframes were updated successfully</strong>').appendTo("div#success");
                                   $('#warning').modal('show');
                                   var grid = $("#deviceList").data("kendoGrid");
                                   grid.destroy();
                                   setupDeviceList();
-                                   hideError();
+
                                  }
                                  else{
                                        $("div#success").css("display", "none");
@@ -948,7 +958,119 @@
 
     }
 
+    function setupGroupList(){
+        var groups =new kendo.data.DataSource({
+                    autosync:true,
+                    transport:{
+                      read: function(options){
+                               XMPersonManagementController.getProductGroups(
+                                      '{!$CurrentPage.parameters.id}',
+                                      function(result,event)
+                                      {
+                                          if (event.status) {
+                                              if(result.length > 1){
+                                                  options.success(JSON.parse(result));
+                                              }
+                                              console.log('groups =>' + JSON.stringify(result));
+                                              hideError();
+
+                                            } else if (event.type === 'exception') {
+                                                 $("div#success").css("display", "none");
+                                                   displayError(event.message);
+                                            } else {
+                                                 $("div#success").css("display", "none");
+                                                displayError(event.message);
+                                            }
+                                      },
+                                      {escape: false}
+                               );
+                            },
+                        update: function(options){
+                            options.success();
+
+                        },
+                        destroy: function(options){
+                            options.success();
+                        }
+                      },
+                    schema:{
+                        model: {
+                            Id: "Product",
+                            fields: {
+                                "Product": {from:"Product", type: "string"},
+                                "Cluster": { from: "Cluster", type: "string", },
+                                "PartnerPrefix":{from:"PartnerPrefix",type:"string"},
+                                "XmattersGroupName" : {from:"XmattersGroupName",type: "string"},
+                                "selected":{from:"selected", type:"boolean"}
+                        }
+                    }
+                  }
+              });
+
+          var groupGrid =    $("#groupList").kendoGrid({
+                  dataSource: groups,
+                  scrollable: true,
+                  noRecords: true,
+                  height: 500,
+                   toolbar: [
+                        { template: '<a class="k-button">Save</a>'
+                        }
+                      ],
+                  columns: [{
+                                field:"selected",
+                                 headerTemplate: '<input type="checkbox" id="header-chb" class="k-checkbox"><label class="k-checkbox-label" for="header-chb">Select</label>',
+                                template: '<input type="checkbox" # if (selected) { # checked="checked" :  # } #" ></input>'
+                            },
+                            {
+                                field:"Product",
+                                title:"Product Name"
+                            },
+                            {
+                                field: "Cluster",
+                                title: "Cluster"
+                            },
+                            {
+                                field:"PartnerPrefix",
+                                title:"Partner Prefix"
+                            },
+                            {
+                                field:"XmattersGroupName",
+                                title:"XmattersGroupName"
+                            }
+
+                  ]
+
+              });
+
+
+             groupGrid.table.on("click", ".k-checkbox" , selectRow);
+
+    }
+    var checkedIds = {};
+     //on click of the checkbox:
+      function selectRow() {
+        var checked = this.checked,
+            row = $(this).closest("tr"),
+            grid = $("#groupList").data("kendoGrid"),
+            dataItem = grid.dataItem(row);
+
+        checkedIds[dataItem.Product] = checked;
+        if (checked) {
+          //-select the row
+          row.addClass("k-state-selected");
+        } else {
+          //-remove selection
+          row.removeClass("k-state-selected");
+        }
+      }
+
+
+
+
 </script>
+    <script id="template" type="text/x-kendo-template">
+        <a class="k-button" href="\#">Save</a>
+    </script>
 
 
 </apex:page>
