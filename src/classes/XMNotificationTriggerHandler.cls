@@ -19,10 +19,12 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
         for (xmNotification__c xmNotification : notificationList) {
             notificationIdSet.add(xmNotification.Id);
         }
+        if(notificationIdSet.size() > 0)
+            callXMRestEventServiceFuture(notificationIdSet);
 
     }
 
-    @Future
+    @Future(callout=true)
     private static void callXMRestEventServiceFuture(Set<Id> notificationIdSet){
 
         List<xmNotification__c> notificationList = [
