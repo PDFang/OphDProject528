@@ -5,7 +5,9 @@ public class XMRestEventServiceTests {
         XMRestEventServiceHttpMock httpMockCallout = new XMRestEventServiceHttpMock(200,'Complete','[{"Name": "sForceTest1"}]',null);
 
         insertProductEventMap();
-        Case eventCase = insertCase();
+        Case createdCase = insertCase();
+
+        Case eventCase = [SELECT Id, CaseNumber, PlatformsImpacted__c, ProductImpacted__c FROM Case WHERE Id = :createdCase.Id];
 
         // Create XMNotificationObject
         XMNotification__c xMattersNotification = new XMNotification__c();
@@ -26,13 +28,17 @@ public class XMRestEventServiceTests {
 
         test.stopTest();
 
-        system.debug('look here ==> ' + httpMockCallout.requestBodyPassed);
-    }
+        XMEventData actualEventData = (XMEventData) JSON.deserialize(httpMockCallout.requestBodyPassed, XMEventData.class);
 
-    public testMethod static void  getSupportedPartners_Will_ReturnPartnerList(){
-        String[] results = XMRestEventService.getSupportedPartners();
+        // Check eventGroupInfo in the returned json
+        system.assertEquals(eventCase.Id, actualEventData.eventGroupInfo.salesforceCaseId);
 
-        system.assert(results.size() > 0);
+        // Check the platformGroup to ensure it has the right Implemented Product group
+        system.assertEquals('IP_{PartnerPrefix}_inContact_C9-inContact', actualEventData.platformGroups[0]);
+
+        // Check the template properties
+        system.assertEquals(eventCase.ProductImpacted__c, actualEventData.templateProperties.get('productImpacted'));
+        system.assertEquals(eventCase.CaseNumber, actualEventData.templateProperties.get('caseNumber'));
     }
 
     private static void insertProductEventMap(){
@@ -77,6 +83,7 @@ public class XMRestEventServiceTests {
         return eventCase;
     }
 
+    // This is required to create a case
     private static void createSiteConfig()
     {
         SiteConfiguration__c sbx = new SiteConfiguration__c();
