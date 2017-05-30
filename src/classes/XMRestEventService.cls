@@ -50,6 +50,7 @@ public class XMRestEventService {
      *  Finds the properties on the case that we care about and maps them to a property in xMatters and returns
      *  back that map for serialization
      */
+    @TestVisible
     private Map<String,String> addAdditionalSalesforceDataToFormProperties(Case caseRecord){
         Map<String, String> propertyMap = new Map<String, String>();
 
@@ -65,7 +66,7 @@ public class XMRestEventService {
      *  Performs a dynamic soql query to lookup a case and get the fields we care about
      */
     private Case getCaseFromxmNotification(XMNotification__c xmNotification){
-        String[] caseFields = new List<String>{'ProductImpacted__c', 'PlatformsImpacted__c' ,'Id'}; // Add default fields that we care about
+        String[] caseFields = new List<String>{'PlatformsImpacted__c' ,'Id'}; // Add default fields that we care about
 
         // Loop through the fields in custom data meta data to add fields we care about
         for(Case_to_xMatters_Field_Mapping__mdt caseField : this.caseToXMattersFieldMappings){
@@ -97,6 +98,7 @@ public class XMRestEventService {
         // If we didn't find the product we will need to notify someone
         if(productMap == null){
             // TODO: Throw a fit?
+            system.debug('convertProductAndPlatformToGroupName() ==> product map is null, this will cause a few problems');
         }
 
         // TODO: Add check for null
