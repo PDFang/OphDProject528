@@ -127,15 +127,24 @@ public class XMBusinessLayerTest {
         groupListTest.add(groupProClusterTest);
 
         XMGroupProductCluster groupProClusterTest1 = new XMGroupProductCluster();
-        groupProClusterTest.Product = 'TestProduct2';
-        groupProClusterTest.Cluster = 'TestCluster2';
-        groupProClusterTest.PartnerPrefix = 'TestPartnerPrefix2';
-        groupProClusterTest.XmattersGroupName = 'TestXmattersGroupName2';
-        groupProClusterTest.selected = true;
+        groupProClusterTest1.Product = 'TestProduct2';
+        groupProClusterTest1.Cluster = 'TestCluster2';
+        groupProClusterTest1.PartnerPrefix = 'TestPartnerPrefix2';
+        groupProClusterTest1.XmattersGroupName = 'TestXmattersGroupName2';
+        groupProClusterTest1.selected = true;
         groupListTest.add(groupProClusterTest1);
 
+
+        XMGroupProductCluster groupProClusterTest2 = new XMGroupProductCluster();
+        groupProClusterTest2.Product = 'TestProduct2';
+        groupProClusterTest2.Cluster = 'TestCluster2';
+        groupProClusterTest2.PartnerPrefix = 'TestPartnerPrefix2';
+        groupProClusterTest2.XmattersGroupName = 'TestXmattersGroupName2';
+        groupProClusterTest2.selected = false;
+        groupListTest.add(groupProClusterTest2);
+
         XMBusinessLayer xmBusinessLayer = new XMBusinessLayer();
-        String responseMessageTest = xmBusinessLayer.UpdateXMUserToGrouops(groupListTest, 'castiron');
+        String responseMessageTest = xmBusinessLayer.UpdateXMUserToGroups(groupListTest, 'castiron');
         test.stopTest();
         System.debug('responseMessageTest -->' + responseMessageTest);
     }
