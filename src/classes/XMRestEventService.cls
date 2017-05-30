@@ -50,6 +50,7 @@ public class XMRestEventService {
      *  Finds the properties on the case that we care about and maps them to a property in xMatters and returns
      *  back that map for serialization
      */
+    @TestVisible
     private Map<String,String> addAdditionalSalesforceDataToFormProperties(Case caseRecord){
         Map<String, String> propertyMap = new Map<String, String>();
 
@@ -64,6 +65,7 @@ public class XMRestEventService {
     /*
      *  Performs a dynamic soql query to lookup a case and get the fields we care about
      */
+    @TestVisible
     private Case getCaseFromxmNotification(XMNotification__c xmNotification){
         String[] caseFields = new List<String>{'PlatformsImpacted__c' ,'Id'}; // Add default fields that we care about
 
@@ -87,6 +89,7 @@ public class XMRestEventService {
      * Converts the product and platform to a group name that we can add to the event
      * Example: IP_INC_Dialer_C13
      */
+    @TestVisible
     private String[] convertProductAndPlatformToGroupName(string platforms, string product){
         String[] groupArray = new List<string>();
         system.debug('convertProductAndPlatformToGroupName() ==> Platforms: ' + platforms + ' Product: ' + product);
@@ -97,6 +100,7 @@ public class XMRestEventService {
         // If we didn't find the product we will need to notify someone
         if(productMap == null){
             // TODO: Throw a fit?
+            system.debug('convertProductAndPlatformToGroupName() ==> product map is null, this will cause a few problems');
         }
 
         // TODO: Add check for null
@@ -124,6 +128,7 @@ public class XMRestEventService {
     /*
      * This will look up the XMPartnerPrefix field to determine the full list of partners we support
      */
+    @TestVisible
     private static String[] getSupportedPartners(){
         String [] partnerArray = new List<String>();
 
