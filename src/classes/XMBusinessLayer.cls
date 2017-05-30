@@ -169,9 +169,16 @@ public class XMBusinessLayer implements XMiBusiness {
         XMRestGroup xmRestGroupObj = new XMRestGroup();
         String responseBody;
         String successMessage;
+        Boolean isGroupCreated;
 
         try
         {
+
+            List<XMGroupMemberModel> xmList  = xmRestGroupObj.GetXMPersonGroupsById(userID);
+            List<XMGroupProductCluster> xmCurrentGroupList = GetXMGroupList(xmList);
+
+            System.debug(xmCurrentGroupList);
+
             for(XMGroupProductCluster groupObj:groupList)
             {
                 if (groupObj.selected == true) {
@@ -182,7 +189,6 @@ public class XMBusinessLayer implements XMiBusiness {
                     }
                     else {
                         //build the group on the fly
-                        Boolean isGroupCreated;
                         isGroupCreated = xmRestGroupObj.CreateNewGroup(groupObj.XmattersGroupName);
                         if (isGroupCreated) {
                             xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
@@ -190,11 +196,17 @@ public class XMBusinessLayer implements XMiBusiness {
                                 responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, userID, 'Person');
                             }
                         }
-
                     }
                 }
                 else{
-                    xmRestGroupObj.RemoveUserFromAGroup(groupObj.XmattersGroupName, userID);
+                    if (xmCurrentGroupList != null && xmCurrentGroupList.isEmpty() == false)
+                    {
+                        System.debug('Group List');
+                        if(isUserMemberofGroup(groupObj.XmattersGroupName,xmCurrentGroupList) == true) {
+                            System.debug('Found in users group list -> ' + groupObj.XmattersGroupName );
+                            xmRestGroupObj.RemoveUserFromAGroup(groupObj.XmattersGroupName, userID);
+                        }
+                    }
                 }
             }
         }
@@ -216,6 +228,15 @@ public class XMBusinessLayer implements XMiBusiness {
             return successMessage;
         else
             return 'There are some issues in adding user to the selected group, please try again or call administrator.';
+    }
+    private boolean isUserMemberofGroup (string groupName, List<XMGroupProductCluster> xmCurrentGroupList ){
+
+        for ( XMGroupProductCluster xm : xmCurrentGroupList ){
+            if (xm.XmattersGroupName == groupName){
+                return true;
+            }
+        }
+        return false;
     }
 
 
