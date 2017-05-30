@@ -13,6 +13,8 @@ public class XMDeviceWrapper {
 
     public XMDeviceModel createModel(){
 
+        system.debug('createModel(): device name - ' + this.name);
+
         XMDeviceModel deviceModel;
         if(this.name.contains('Email')){
             XMEmailDevice emailDevice = new XMEmailDevice();
@@ -27,6 +29,8 @@ public class XMDeviceWrapper {
         deviceModel.name = this.name;
         deviceModel.id = this.deviceId;
 
+        system.debug('createModel(): deviceModel w/o timeframes - ' + deviceModel);
+
         deviceModel.timeframes = new XMDeviceTimeframe[]{};
         for(XMDeviceTimeframeWrapper wrapper : this.timeframes){
             XMDeviceTimeframe timeframeModel = wrapper.createModel();
@@ -34,6 +38,7 @@ public class XMDeviceWrapper {
         }
 
         system.debug('createModel(): deviceModel - ' + deviceModel);
+
         return deviceModel;
 
     }
