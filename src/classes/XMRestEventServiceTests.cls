@@ -2,6 +2,8 @@
 public class XMRestEventServiceTests {
     public testMethod static void startExternalEventProcessing_WillProcessRecords(){
 
+        XMRestEventServiceHttpMock httpMockCallout = new XMRestEventServiceHttpMock(200,'Complete','[{"Name": "sForceTest1"}]',null);
+
         insertProductEventMap();
         Case eventCase = insertCase();
 
@@ -14,11 +16,17 @@ public class XMRestEventServiceTests {
 
         insert xMattersNotification;
 
+        // Start test and perform fake callout
         Test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, httpMockCallout);
 
         XMRestEventService service = new XMRestEventService();
         service.startExternalEventProcessing(xMattersNotification);
+
         test.stopTest();
+
+        system.debug('look here ==> ' + httpMockCallout.requestBodyPassed);
     }
 
     public testMethod static void  getSupportedPartners_Will_ReturnPartnerList(){
