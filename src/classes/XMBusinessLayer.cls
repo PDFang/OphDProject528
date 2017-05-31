@@ -184,9 +184,11 @@ public class XMBusinessLayer implements XMiBusiness {
                 if (groupObj.selected == true) {
                     xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
                     system.debug('xmGroupModelList =>' + xmGroupModelList);
-                    if (xmGroupModelList.size() > 0) {
+                    if (xmGroupModelList.isEmpty() == false) {
+                        system.debug ( ' xmGroupModelList =>'  + xmGroupModelList.size());
                         if (isUserMemberofGroup(groupObj.XmattersGroupName,xmCurrentGroupList) == false)
                         {
+                            system.debug('** Adding user to group ** ==>' + groupObj.XmattersGroupName );
                             responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, userID, 'Person');
                         }
                     }
