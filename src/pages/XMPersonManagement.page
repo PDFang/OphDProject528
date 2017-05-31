@@ -1,7 +1,7 @@
 <!--
  - Created by arnab.karsarkar on 5/4/2017.
  -->
-<apex:page id="XMPersonManagement" standardController="Contact" tabStyle="Contact" title="Notification Profile - {!currentContact.Name}" extensions="XMPersonManagementController">
+<apex:page id="XMPersonManagement" standardController="Contact" tabStyle="Contact" title="Notification Profile - {!currentContact.Name}" sideBar="false" extensions="XMPersonManagementController">
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
@@ -207,11 +207,11 @@
                             </apex:outputPanel>
                         </apex:outputPanel>
 
-                        <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,errorMessages,timezone,devicePanel" onComplete="setupDeviceList();" status="associateContact">
+                        <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,errorMessages,timezone,devicePanel, groupPanel" onComplete="setupDeviceList();" status="associateContact">
                             <apex:param id="rowId" name="rowId" value="" />
                         </apex:actionFunction>
 
-                        <apex:actionFunction name="callNotificationManage" action="{!addPerson}" reRender="contactList,alertmessage,errorMessages,timezone,devicePanel" onComplete="setupDeviceList();" status="addPersonStatus"/>
+                        <apex:actionFunction name="callNotificationManage" action="{!addPerson}" reRender="contactList,alertmessage,errorMessages,timezone,devicePanel, groupPanel" onComplete="setupDeviceList();" status="addPersonStatus"/>
 
                     </div>
                     <div class="panel-body">
@@ -392,7 +392,7 @@
 
      $(document).ready(function() {
             setupDeviceList();
-            setupGroupList();
+		//setupGroupList();
          });
 
     var timeframes = [];
@@ -402,13 +402,20 @@
        // setupDeviceList();
     }
 
+	function loaddeviceAndGroups(){
+        setupDeviceList();
+		setupGroupList();
+     }
+
+
     function associateContactCall(){
         callAssociateContact();
         //setupDeviceList();
+
     }
     function setupDeviceList(){
                var device =new kendo.data.DataSource({
-                    autosync:true,
+                    autosync:false,
                     transport:{
                       read: function(options){
                                XMPersonManagementController.getUserDevices(
@@ -484,7 +491,7 @@
                             );
                         },
                         create: function(options){
-
+                                console.log('came here');
                               XMPersonManagementController.addNewDevice(
                                       //{!xmPersonId},
                                       '{!$CurrentPage.parameters.id}',
@@ -551,7 +558,7 @@
                         model: {
                             id: "Id",
                             fields: {
-                                "Id": {from:"deviceId", type: "string"},
+                                "Id": {from:"deviceId", type: "string", defaultValue:""},
                                 "DeviceType": { from: "name", type: "string", },
                                 "PriorityThreshold":{from:"priorityThreshold",type:"string"},
                                 "DeviceValue" : {from:"deviceValue",
@@ -622,7 +629,8 @@
                                 //template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">Manage TimeFrames</a>'
                                 template: '<a href="" onClick="OpenModal(this); return false;" class="k-button k-button-icontext">Manage</a>'
                             },
-                            {   title:"Action",
+                            {
+                                title:"Action",
                                 command: ["edit","destroy"]
                             }
 
