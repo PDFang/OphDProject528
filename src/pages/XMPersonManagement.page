@@ -112,12 +112,18 @@
         padding: 8px 27px;
     }
 
+    .k-grid-header th.k-header {
+        vertical-align: bottom;
+        font-weight: bold;
+    }
+
     </style>
 
     <apex:form >
             <apex:sectionHeader title="Notification Profile" subtitle="{!currentContact.Name}"/>
 
             <apex:commandLink action="{!goBack}" value="Go Back" style="float:right;"/>
+            <br/>
             <!--<div class="page-header">-->
                 <!--<h1>Manage Notification Profile for Contact - {!currentContact.FirstName} {!currentContact.LastName}</h1>-->
                 <!--<apex:commandLink action="{!goBack}" value="Go Back" style="float:right;"/>-->
@@ -838,31 +844,45 @@
                 }
             }).data("kendoTimePicker");
 
+            var startTime = new Date(start.value());
+            startTime.setMinutes(startTime.getMinutes() + start.options.interval);
+            end.min(startTime);
+             $(endId).attr("readonly", true);
+             $(startId).attr("readonly", true);
+
             //init end timepicker
 
      }
 
      function saveTimeFrames(){
         var timeframesUpdate = [];
+        var timeframeNames = [];
         var isError = false;
-         $("div.tab-content div.tab-pane").each(function(){
+        $("div.tab-content div.tab-pane").each(function(){
              var days = new Object();
              var thisId = $(this).attr('id');
              var nameId = 'input#nameInput' + thisId ;
              var nameVal = $(this).find(nameId).val();
+
              isError = validateInput(nameVal, nameId);
+             if(nameVal != ''){
+                 timeframeNames.push(nameVal);
+             }
              var startTimeId = 'input#startTimeInput' + thisId;
              var startTimeVal = $(this).find(startTimeId).val();
              var startTimepicker = $(startTimeId).data("kendoTimePicker");
-             startTimepicker.destroy();
+
              if(!isError)
                isError = validateInput(startTimeVal, startTimeId);
+
              var endTimeId = 'input#endTimeInput' + thisId;
              var endTimeVal = $(this).find(endTimeId).val();
              var endTimepicker = $(endTimeId).data("kendoTimePicker");
-             endTimepicker.destroy();
+           //  endTimepicker.destroy();
              if(!isError)
                isError = validateInput(endTimeVal, endTimeId);
+
+
              $(this).find("div.weekDays-selector input[type=checkbox]").each(function(){
                  if($(this).hasClass("monday") && this.checked)
                     days.monday = true;
@@ -891,53 +911,69 @@
 
 
          if(!isError){
-             removeError();
-             var deviceUpdate = new Object();
-             deviceUpdate.name = deviceData.name ;
-             deviceUpdate.deviceValue = deviceData.deviceValue ;
-             deviceUpdate.priorityThreshold = "Medium";
-             deviceUpdate.deviceId = deviceData.deviceId ;
-             deviceUpdate.timeframes = timeframesUpdate;
-               $('#info').modal('hide');
-             console.log('deviceupdate ==>' + JSON.stringify(deviceUpdate));
-             XMPersonManagementController.updateDevice (
-                    JSON.stringify(deviceUpdate),
-                    function(result,event){
-                        if (event.status) {
-                             var returnResult = JSON.parse(result);
-                             if(returnResult.result != 'Failed'){
-                                   hideError();
-                                  $("div#success").css("display", "block");
-                                  $("div#success").empty();
-                                  $('<strong>Timeframes were updated successfully</strong>').appendTo("div#success");
-                                  $('#warning').modal('show');
-                                  var grid = $("#deviceList").data("kendoGrid");
-                                  grid.destroy();
-                                  setupDeviceList();
 
-                                 }
-                                 else{
-                                       $("div#success").css("display", "none");
-                                     displayError(returnResult.message);
-                                 }
-                        } else if (event.type === 'exception') {
-                             $("div#success").css("display", "none");
-                           displayError(event.message);
-                        } else {
-                             $("div#success").css("display", "none");
-                           displayError(event.message);
-                        }
-                    },
-                    {escape: false}
-             );
+             var hasDupe = hasDuplicates(timeframeNames);
+             if(hasDupe){
+                 $("div#validation-errors").css("display", "block");
+                 var errorString = '<ul><li>Name can not have duplicate values.</li></ul>';
+                 $(errorString).appendTo("div#validation-errors");
+             }
+             else{
+                 removeError();
+                 var deviceUpdate = new Object();
+                 deviceUpdate.name = deviceData.name ;
+                 deviceUpdate.deviceValue = deviceData.deviceValue ;
+                 deviceUpdate.priorityThreshold = "Medium";
+                 deviceUpdate.deviceId = deviceData.deviceId ;
+                 deviceUpdate.timeframes = timeframesUpdate;
+                  $('#info').modal('hide');
+                 console.log('deviceupdate ==>' + JSON.stringify(deviceUpdate));
+                 XMPersonManagementController.updateDevice (
+                        JSON.stringify(deviceUpdate),
+                        function(result,event){
+                            if (event.status) {
+                                 var returnResult = JSON.parse(result);
+                                 if(returnResult.result != 'Failed'){
+                                       hideError();
+                                      $("div#success").css("display", "block");
+                                      $("div#success").empty();
+                                      $('<strong>Timeframes were updated successfully</strong>').appendTo("div#success");
+                                      $('#warning').modal('show');
+                                      var grid = $("#deviceList").data("kendoGrid");
+                                      grid.destroy();
+                                      setupDeviceList();
+
+                                     }
+                                     else{
+                                           $("div#success").css("display", "none");
+                                         displayError(returnResult.message);
+                                     }
+                            } else if (event.type === 'exception') {
+                                 $("div#success").css("display", "none");
+                               displayError(event.message);
+                            } else {
+                                 $("div#success").css("display", "none");
+                               displayError(event.message);
+                            }
+                        },
+                        {escape: false}
+                 );
+             }
+
          }
-
-
-
-
-
-
      }
+
+    function hasDuplicates(array) {
+        var valuesSoFar = [];
+        for (var i = 0; i < array.length; ++i) {
+            var value = array[i];
+            if (valuesSoFar.indexOf(value) !== -1) {
+                return true;
+            }
+            valuesSoFar.push(value);
+        }
+        return false;
+    }
 
     function validateInput(val, input){
          if(val == ''){
@@ -961,6 +997,7 @@
              $(errorString).appendTo("div#validation-errors");
              return true;
          }
+         return false;
      }
 
     function removeError(){
@@ -1034,7 +1071,7 @@
                   columns: [{
                                 field:"selected",
                                  headerTemplate: '<input type="checkbox" id="header-chb" class="k-checkbox" onclick="selectRow(this);"><label class="k-checkbox-label" for="header-chb">Select</label>',
-                                template: '<input  id="# Product #" class="k-checkbox" type="checkbox" # if (selected) { # checked="checked" :  # } #" ><label class="k-checkbox-label" for="# Product #"></label>'
+                                template: '<input  id="# Product #" class="k-checkbox" type="checkbox" checked=# if (selected) { # "checked" :  # } #" ><label class="k-checkbox-label" for="# Product #"></label>'
                             },
                             {
                                 field:"Product",
