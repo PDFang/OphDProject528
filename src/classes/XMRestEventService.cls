@@ -21,6 +21,7 @@ public class XMRestEventService {
         XMEventData xmEventData = new XMEventData();
         xmeventData.platformGroups = convertProductAndPlatformToGroupName(eventCase.PlatformsImpacted__c, eventCase.ProductImpacted__c);
         xmEventData.startEvent = true;
+        xmEventData.eventType = xmNotificationRecord.Request_Type__c;
 
         // Build the specific event details needed to process the event.
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();

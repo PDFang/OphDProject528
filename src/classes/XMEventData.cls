@@ -5,6 +5,7 @@
 public class XMEventData {
 
     public Boolean startEvent {get;set;}
+    public string eventType {get;set;}
     public EventGroupInfo eventGroupInfo {get;set;}
 
     // Dyanmic properties that get sent to xMatters and resolve to form fields
