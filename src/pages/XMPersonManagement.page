@@ -116,6 +116,25 @@
         vertical-align: bottom;
         font-weight: bold;
     }
+    .row-unselect {
+        color: #fff;
+        background-color: #f5e6b4;
+        border-color: #f5e6b4;
+    }
+    .row-unselect:hover {
+        color: #fff;
+        background-color: #f5e6b4 !important;
+        border-color: #f5e6b4 !important;
+    }
+
+    .spinnerClass {
+            background:url('../../img/loading32.gif') no-repeat;
+            height:32px;
+            margin:20px;
+            padding-left:40px;
+            padding-top:9px;
+            font-size: 0.75em;
+    	}
 
     </style>
 
@@ -354,6 +373,17 @@
             </div>
         </div>
 
+        <!-- loading Modal -->
+        <div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content" style="width:40%; top: 182px;">
+                    <div class="modal-body" style="font-size:14px;">
+                        <div class="spinnerClass">Updating Groups in Xmatters</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
     </apex:form>
 
@@ -527,19 +557,22 @@
                                 "DeviceValue" : {from:"deviceValue",
                                                  type: "string",
                                                  validation: {
-                                                    required: true,
                                                     deviceValueValidation: function (input) {
-                                                        if (input.is("[name='DeviceValue']") && input.val() != "") {
+                                                        if(input.val() == ""){
+                                                            input.attr("data-deviceValueValidation-msg", " Device Value is required");
+                                                            return false;
+                                                        }
+                                                        else if (input.is("[name='DeviceValue']")) {
                                                             var deviceType = $("[name='DeviceType']").val();
                                                             if(deviceType.includes("Email")){
                                                                  input.attr("data-deviceValueValidation-msg", " Invalid Email address");
                                                                  var re =  /^(?:[a-z0-9!+=_`-]+(?:\.[a-z0-9!+=_`-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)$/i;
-                                                                 return re.test(input.val());
+                                                                 return re.test(input.val().trim());
                                                             }
                                                             else{
                                                                 input.attr("data-deviceValueValidation-msg", " Invalid Phone number");
                                                                 var re = /^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-\s\./0-9]*$/g;
-                                                                return re.test(input.val());
+                                                                return re.test(input.val().trim());
 
                                                             }
 
@@ -589,7 +622,9 @@
                                 //template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">Manage TimeFrames</a>'
                                 template: '<a href="" onClick="OpenModal(this); return false;" class="k-button k-button-icontext">Manage</a>'
                             },
-                            {command: ["edit","destroy"]}
+                            {   title:"Action",
+                                command: ["edit","destroy"]
+                            }
 
                   ]
 
@@ -915,7 +950,7 @@
              var hasDupe = hasDuplicates(timeframeNames);
              if(hasDupe){
                  $("div#validation-errors").css("display", "block");
-                 var errorString = '<ul><li>Name can not have duplicate values.</li></ul>';
+                 var errorString = '<ul><li>Duplicate Timeframes are not allowed.</li></ul>';
                  $(errorString).appendTo("div#validation-errors");
              }
              else{
@@ -1065,13 +1100,14 @@
                   noRecords: true,
                   height: 500,
                    toolbar: [
-                        { template: '<a class="k-button" onclick="updateGroups();">Save</a>'
+                        { template: '<a class="k-button" onclick="updateGroups();">Update Group Subscription</a>'
                         }
                       ],
                   columns: [{
                                 field:"selected",
                                  headerTemplate: '<input type="checkbox" id="header-chb" class="k-checkbox" onclick="selectRow(this);"><label class="k-checkbox-label" for="header-chb">Select</label>',
-                                template: '<input  id="# Product #" class="k-checkbox" type="checkbox" checked=# if (selected) { # "checked" :  # } #" ><label class="k-checkbox-label" for="# Product #"></label>'
+                                template: '<input type="checkbox"  class="row-chk" onclick="selectgridRow(this);" # if (selected) { # checked="checked" :  # } #" />',
+                                width:80
                             },
                             {
                                 field:"Product",
@@ -1082,12 +1118,8 @@
                                 title: "Cluster"
                             },
                             {
-                                field:"PartnerPrefix",
-                                title:"Partner Prefix"
-                            },
-                            {
                                 field:"XmattersGroupName",
-                                title:"XmattersGroupName"
+                                title:"Xmatters Group API Name"
                             }
 
                   ]
@@ -1102,18 +1134,36 @@
          //on click of the checkbox:
       function selectRow(obj) {
        var checked = obj.checked;
-       $("#groupList").find('.k-checkbox').each(function(idx, item){
+       $("#groupList").find('.row-chk').each(function(idx, item){
             var row = $(item).closest("tr");
             if(checked){
                 $(item).prop("checked", true);
                 row.addClass("k-state-selected");
+                row.removeClass("row-unselect")
             }else {
                 $(item).prop("checked", false);
               //-remove selection
               row.removeClass("k-state-selected");
+              row.addClass("row-unselect");
             }
         });
       }
+
+    function selectgridRow(obj) {
+       var checked = obj.checked,
+           row = $(obj).closest("tr");
+
+       if (checked) {
+            //-select the row
+            row.addClass("k-state-selected");
+             row.removeClass("row-unselect")
+            } else {
+            //-remove selection
+            row.removeClass("k-state-selected");
+             row.addClass("row-unselect");
+
+       }
+     }
 
  function SearchProducts (val) {
           var grid = $("#groupList").data("kendoGrid");
@@ -1130,7 +1180,13 @@
       console.log('checkedIds => ' + checkedIds);
       var grid = $("#groupList").data("kendoGrid");
       var groupData = [];
-      $("div.k-grid-content").find('.k-checkbox').each(function(idx, item){
+      $('#loading').modal({
+                 backdrop: 'static',
+                 keyboard: false
+            });
+      $('#loading').modal('show');
+
+      $("div.k-grid-content").find('.row-chk').each(function(idx, item){
             var row = $(item).closest("tr"),
             dataItem = grid.dataItem(row);
             if(dataItem){
@@ -1156,17 +1212,27 @@
             if (event.status) {
                 var returnResult = JSON.parse(result);
                 if(returnResult.result != 'Failed'){
-                   setupGroupList();
-                   hideError();
+                  $('#loading').modal('hide');
+                  $("#header-chb").prop("checked", false);
+                  $("div#success").css("display", "block");
+                  $("div#success").empty();
+                  $('<strong>Groups were updated successfully</strong>').appendTo("div#success");
+                  $('#warning').modal('show');
+                  var grid = $("#groupList").data("kendoGrid");
+                  grid.destroy();
+                  setupGroupList();
                }
                else{
+                   $('#loading').modal('hide');
                     $("div#success").css("display", "none");
                    displayError(returnResult.message);
                }
             } else if (event.type === 'exception') {
+                $('#loading').modal('hide');
                  $("div#success").css("display", "none");
                  displayError(event.message);
             }else{
+                $('#loading').modal('hide');
                  $("div#success").css("display", "none");
                  displayError(event.message);
             }
