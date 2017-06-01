@@ -1,24 +1,22 @@
-public class XMBusinessLayer implements XMiBusiness {
+public class XMBusinessLayer  {
 
     private string guid = null;
-    private Account acc = null;
+    private Set<id> acc = new Set<id>();
 
     public XMBusinessLayer(){}
 
-    public XMBusinessLayer(String contactId){
+    public XMBusinessLayer(string contactId) {
 
-        Contact[] contactList = [
-                Select Id, xmPerson__c, xmPerson__r.xmPersonUID__c, accountId, account.ParentId,
-                        account.inContact_Cluster__c, account.Verint_Cluster__c,
-                        account.NICE_WFM_Cluster__c, account.NICE_QM_Cluster__c,
-                        account.Parent.XMPartnerPrefix__c
-                From Contact
-                where Id = :contactId
-        ];
+        List<Contact> contacts = [select xmPerson__c,  xmPerson__r.xmPersonUID__c from contact where id = :contactId];
 
-        acc = contactList[0].Account;
-        guid = contactList[0].xmPerson__r.xmPersonUID__c;
-
+        for (Contact con : [
+                select Id, xmPerson__c, AccountId
+                from Contact
+                Where xmPerson__c = :contacts[0].xmPerson__c
+        ]) {
+            acc.add(con.AccountId);
+        }
+        guid = contacts[0].xmPerson__r.xmPersonUID__c;
     }
 
     public Map<String, XMGroupProductCluster> GetGroupListByUserid(){
@@ -26,7 +24,7 @@ public class XMBusinessLayer implements XMiBusiness {
     }
 
     //Return full list of groups that an account can have
-    public Map<String, XMGroupProductCluster> GetGroupListByUserid(string guid, Account acc){
+    public Map<String, XMGroupProductCluster> GetGroupListByUserid(string guid, Set<id> acc){
         XMRestGroup xmRest = new XMRestGroup();
         Map<String, XMGroupProductCluster> xmSalesForceGroupMap = GetSalesForceGroupData(acc);
         System.debug('xmSalesForceGroupMap -- >' + xmSalesForceGroupMap);
@@ -94,7 +92,7 @@ public class XMBusinessLayer implements XMiBusiness {
 
 
     //Returns a list of salesforce product based groups an account belongs to
-    public Map<String, XMGroupProductCluster> GetSalesForceGroupData(Account acc){
+    public Map<String, XMGroupProductCluster> GetSalesForceGroupData(Set<id> acc){
 
         Map<String, ProductEventMap__c> nodeMap;
         nodeMap = ProductEventMap__c.getAll();
@@ -106,42 +104,48 @@ public class XMBusinessLayer implements XMiBusiness {
         //Iterate over the implemented prodcuts
         ImplementedProduct__c[] includedProducts = new ImplementedProduct__c[] {};
 
-        includedProducts = [SELECT Account__c,Product__c
-        FROM ImplementedProduct__c
-        WHERE Account__c =: acc.id  and Account__r.CG_Disconnect_Date__c = NULL
-        AND(GoLiveDate__c <= TODAY
-        OR(EstimatedGoLiveDate__c <= NEXT_N_DAYS : 14
-        AND Status__c != 'Canceled'))];
-
         //systXMem.debug (includedProducts);
         Map<String, XMGroupProductCluster> groupListMap = new Map<String, XMGroupProductCluster>();
-        for (ImplementedProduct__c product : includedProducts ){
-            system.debug ( 'product -->' + product);
-            XMGroupProductCluster groupData = new XMGroupProductCluster();
-            ProductEventMap__c productMap = nodeMap.get(product.Product__c);
-            system.debug (productMap);
-            if (productMap != null) {
-                groupData.Product = productMap.Name;
-
-                if(acc.inContact_Cluster__c != NULL && productMap.Platform__c.startsWith('Cluster'))
-                    groupData.Cluster = productMap.Platform__c.replaceFirst('Cluster', acc.inContact_Cluster__c.trim());
-                if(acc.Verint_Cluster__c != NULL && productMap.Platform__c.startsWith('Verint')) // arnab
-                    groupData.Cluster = productMap.Platform__c.replaceFirst('Verint', acc.Verint_Cluster__c.trim());
-                if(acc.NICE_WFM_Cluster__c != NULL && productMap.Platform__c.startsWith('NWFM')) // arnab
-                    groupData.Cluster = productMap.Platform__c.replaceFirst('NWFM', acc.NICE_WFM_Cluster__c.trim());
-                if(acc.NICE_QM_Cluster__c != NULL && productMap.Platform__c.startsWith('NQM')) // arnab
-                    groupData.Cluster = productMap.Platform__c.replaceFirst('NQM', acc.NICE_QM_Cluster__c.trim());
-                if (acc.Parent != null)
-                {
-                    groupData.PartnerPrefix =  acc.Parent.XMPartnerPrefix__c;
+        for ( ImplementedProduct__c product : [SELECT   Account__c,Product__c,
+                                                Account__r.ParentId,
+                                                Account__r.inContact_Cluster__c, Account__r.Verint_Cluster__c,
+                                                Account__r.NICE_WFM_Cluster__c,Account__r.XMPartnerPrefix__c, Account__r.NICE_QM_Cluster__c,
+                                                Account__r.Parent.XMPartnerPrefix__c
+                                                FROM ImplementedProduct__c
+                                                WHERE Account__c in :acc  and Account__r.CG_Disconnect_Date__c = NULL
+                                                AND(GoLiveDate__c <= TODAY
+                                                OR(EstimatedGoLiveDate__c <= NEXT_N_DAYS : 14
+                                                AND Status__c != 'Canceled'))])
+         {
+                system.debug ( 'product -->' + product);
+                XMGroupProductCluster groupData = new XMGroupProductCluster();
+                ProductEventMap__c productMap = nodeMap.get(product.Product__c);
+                system.debug (productMap);
+                if (productMap != null) {
+                    groupData.Product = productMap.Name;
+                    if(product.Account__r.inContact_Cluster__c != NULL && productMap.Platform__c.startsWith('Cluster'))
+                        groupData.Cluster = productMap.Platform__c.replaceFirst('Cluster', product.Account__r.inContact_Cluster__c.trim());
+                    if(product.Account__r.Verint_Cluster__c != NULL && productMap.Platform__c.startsWith('Verint')) // arnab
+                        groupData.Cluster = productMap.Platform__c.replaceFirst('Verint', product.Account__r.Verint_Cluster__c.trim());
+                    if(product.Account__r.NICE_WFM_Cluster__c != NULL && productMap.Platform__c.startsWith('NWFM')) // arnab
+                        groupData.Cluster = productMap.Platform__c.replaceFirst('NWFM', product.Account__r.NICE_WFM_Cluster__c.trim());
+                    if(product.Account__r.NICE_QM_Cluster__c != NULL && productMap.Platform__c.startsWith('NQM')) // arnab
+                        groupData.Cluster = productMap.Platform__c.replaceFirst('NQM', product.Account__r.NICE_QM_Cluster__c.trim());
+                    if (product.Account__r.Parent != null)
+                    {
+                        groupData.PartnerPrefix =  product.Account__r.Parent.XMPartnerPrefix__c;
+                    }
+                    else if ( product.Account__r.XMPartnerPrefix__c !=null)
+                    {
+                        groupData.PartnerPrefix =  product.Account__r.XMPartnerPrefix__c;
+                    }
+                    groupData.XmattersGroupName = GetGroupName(groupData);
+                    system.debug( 'groupData -->' + groupData);
+                    groupListMap.put(groupData.XmattersGroupName,groupData);
                 }
-                groupData.XmattersGroupName = GetGroupName(groupData);
-                system.debug( 'groupData -->' + groupData);
-                groupListMap.put(groupData.XmattersGroupName,groupData);
-            }
-            else{
-                system.debug('Warning product not found in the product map!!!');
-            }
+                else{
+                    system.debug('Warning product not found in the product map!!!');
+                }
         }
         return groupListMap;
     }
