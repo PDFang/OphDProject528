@@ -649,7 +649,7 @@
              $("div#success").empty();
              $("div#success").hide();
              $("div#java-errors").css("display", "block");
-             document.getElementById("java-errors").innerHTML = '<strong>Alert!!</strong> ' + message;
+             document.getElementById("java-errors").innerHTML =  message;
               $('#warning').modal('show');
              console.log('error =>' + message);
         }
@@ -1128,7 +1128,7 @@
                             },
                             {
                                 field:"XmattersGroupName",
-                                title:"Xmatters Group API Name"
+                                title:"xMatters Group API Name"
                             }
 
                   ]
