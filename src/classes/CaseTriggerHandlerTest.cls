@@ -342,6 +342,108 @@ private class CaseTriggerHandlerTest {
 
     } // end of testPartnerCaseProxyServiceUpdate()
 
+    static testMethod void testEventInitialConfirmationNotification() {
+
+        ProductEventMap__c pem = new ProductEventMap__c();
+        pem.Name = 'Test Product';
+        pem.Product__c = 'Test Product';
+        pem.ImplementedProduct__c = 'inContact';
+        pem.Platform__c = 'Cluster - inContact';
+        pem.HasClusters__c = true;
+        insert pem;
+
+        // create an event
+        Map<String,Schema.RecordTypeInfo> testIncidentTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
+        Case testEvent = new Case(
+                RecordTypeId = testIncidentTypeMap.get('Event').getRecordTypeId(),
+                Subject = 'testEventInitialConfirmationNotification Event',
+                Description = 'testEventInitialConfirmationNotification',
+                Status = 'New',
+                EventType__c = 'Service Disruption',
+                PlatformsImpacted__c = 'C6 - inContact',
+                ProductImpacted__c = 'Test Product',
+                InternalEvent__c = false,
+                Priority = 'P1'
+        );
+
+        database.DMLOptions dmo = new database.DMLOptions();
+        dmo.assignmentRuleHeader.useDefaultRule = true;
+        testEvent.setOptions(dmo);
+
+        insert testEvent;
+
+        // confirm event
+        test.startTest();
+        testEvent.status = 'Confirmed';
+        testEvent.IgnoreEventStatusLock__c = true;
+        update testEvent;
+        test.stopTest();
+
+        xmNotification__c[] notifications = [
+                Select Request_Type__c
+                from xmNotification__c
+                where Case__c = :testEvent.Id
+        ];
+
+        system.assertEquals(1, notifications.size(), 'One xmNotification record should be created.'+notifications);
+        system.assertEquals( new CaseTriggerHandler().getXmNotificationRequestType(testEvent), notifications[0].Request_Type__c, 'Request type is incorrect.');
+
+    }
+
+    static testMethod void testEventResolvedNotification() {
+
+        ProductEventMap__c pem = new ProductEventMap__c();
+        pem.Name = 'Test Product';
+        pem.Product__c = 'Test Product';
+        pem.ImplementedProduct__c = 'inContact';
+        pem.Platform__c = 'Cluster - inContact';
+        pem.HasClusters__c = true;
+        insert pem;
+
+        // create an event
+        Map<String,Schema.RecordTypeInfo> testIncidentTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
+        Case testEvent = new Case(
+                RecordTypeId = testIncidentTypeMap.get('Event').getRecordTypeId(),
+                Subject = 'testEventInitialConfirmationNotification Event',
+                Description = 'testEventInitialConfirmationNotification',
+                Status = 'New',
+                EventType__c = 'Service Disruption',
+                PlatformsImpacted__c = 'C6 - inContact',
+                ProductImpacted__c = 'Test Product',
+                InternalEvent__c = false,
+                Priority = 'P1'
+        );
+
+        database.DMLOptions dmo = new database.DMLOptions();
+        dmo.assignmentRuleHeader.useDefaultRule = true;
+        testEvent.setOptions(dmo);
+
+        insert testEvent;
+
+        // resolve event
+        test.startTest();
+
+        testEvent.status = 'Resolved';
+        testEvent.Database__c = 'Duplicate';
+        testEvent.Reason__c = 'Duplicate';
+        testEvent.Releases__c = 'Duplicate';
+        testEvent.IgnoreEventStatusLock__c = true;
+
+        update testEvent;
+
+        test.stopTest();
+
+        xmNotification__c[] notifications = [
+                Select Request_Type__c
+                from xmNotification__c
+                where Case__c = :testEvent.Id
+        ];
+
+        system.assertEquals(1, notifications.size(), 'One xmNotification record should be created.');
+        system.assertEquals( new CaseTriggerHandler().getXmNotificationRequestType(testEvent), notifications[0].Request_Type__c, 'Request type is incorrect.');
+
+    }
+
     @TestSetup
     private static void createTestData(){
 
@@ -354,6 +456,17 @@ private class CaseTriggerHandlerTest {
                 ETMS_Trouble_Type_Description__c = 'Unit Test'
         );
         insert etmsCode;
+
+        SiteConfiguration__c siteConfig = new SiteConfiguration__c();
+        siteConfig.Name = inContactBaseClass.OrgId15Digit; //UserInfo.getOrganizationId();
+        siteConfig.AutoEventEmails__c = false;
+        siteConfig.DaysToDisplayKnownIssues__c = 30;
+        siteConfig.OrgId__c =  inContactBaseClass.OrgId15Digit; //UserInfo.getOrganizationId();
+        siteConfig.EventResolvedPriorities__c = 'P1;P2;';
+        siteConfig.EventResolvedEmails__c = false;
+
+        insert siteConfig;
+
 
         Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
         Account verizonAccount = new Account(
