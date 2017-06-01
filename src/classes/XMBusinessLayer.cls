@@ -7,7 +7,7 @@ public class XMBusinessLayer  {
 
     public XMBusinessLayer(string contactId) {
 
-        List<Contact> contacts = [select xmPerson__c from contact where id = :contactId];
+        List<Contact> contacts = [select xmPerson__c,  xmPerson__r.xmPersonUID__c from contact where id = :contactId];
 
         for (Contact con : [
                 select Id, xmPerson__c, AccountId
@@ -15,9 +15,8 @@ public class XMBusinessLayer  {
                 Where xmPerson__c = :contacts[0].xmPerson__c
         ]) {
             acc.add(con.AccountId);
-
         }
-        guid = contacts[0].xmPerson__c;
+        guid = contacts[0].xmPerson__r.xmPersonUID__c;
     }
 
     public Map<String, XMGroupProductCluster> GetGroupListByUserid(){
