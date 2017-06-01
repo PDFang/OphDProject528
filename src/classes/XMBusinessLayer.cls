@@ -7,7 +7,7 @@ public class XMBusinessLayer  {
 
     public XMBusinessLayer(string contactId) {
 
-        List<Contact> contacts = [select xmPerson__c from contact where id = :contactId];
+        List<Contact> contacts = [select xmPerson__c,  xmPerson__r.xmPersonUID__c from contact where id = :contactId];
 
         for (Contact con : [
                 select Id, xmPerson__c, AccountId
@@ -15,9 +15,8 @@ public class XMBusinessLayer  {
                 Where xmPerson__c = :contacts[0].xmPerson__c
         ]) {
             acc.add(con.AccountId);
-
         }
-        guid = contacts[0].xmPerson__c;
+        guid = contacts[0].xmPerson__r.xmPersonUID__c;
     }
 
     public Map<String, XMGroupProductCluster> GetGroupListByUserid(){
@@ -110,7 +109,7 @@ public class XMBusinessLayer  {
         for ( ImplementedProduct__c product : [SELECT   Account__c,Product__c,
                                                 Account__r.ParentId,
                                                 Account__r.inContact_Cluster__c, Account__r.Verint_Cluster__c,
-                                                Account__r.NICE_WFM_Cluster__c, Account__r.NICE_QM_Cluster__c,
+                                                Account__r.NICE_WFM_Cluster__c,Account__r.XMPartnerPrefix__c, Account__r.NICE_QM_Cluster__c,
                                                 Account__r.Parent.XMPartnerPrefix__c
                                                 FROM ImplementedProduct__c
                                                 WHERE Account__c in :acc  and Account__r.CG_Disconnect_Date__c = NULL
@@ -135,6 +134,10 @@ public class XMBusinessLayer  {
                     if (product.Account__r.Parent != null)
                     {
                         groupData.PartnerPrefix =  product.Account__r.Parent.XMPartnerPrefix__c;
+                    }
+                    else if ( product.Account__r.XMPartnerPrefix__c !=null)
+                    {
+                        groupData.PartnerPrefix =  product.Account__r.XMPartnerPrefix__c;
                     }
                     groupData.XmattersGroupName = GetGroupName(groupData);
                     system.debug( 'groupData -->' + groupData);
