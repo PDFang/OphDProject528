@@ -649,7 +649,7 @@
              $("div#success").empty();
              $("div#success").hide();
              $("div#java-errors").css("display", "block");
-             document.getElementById("java-errors").innerHTML = '<strong>!!Error!!</strong> ' + message;
+             document.getElementById("java-errors").innerHTML =  message;
               $('#warning').modal('show');
              console.log('error =>' + message);
         }
@@ -954,9 +954,10 @@
 
 
          if(!isError){
-
+                removeError();
              var hasDupe = hasDuplicates(timeframeNames);
              if(hasDupe){
+
                  $("div#validation-errors").css("display", "block");
                  var errorString = '<ul><li>Duplicate Timeframes are not allowed.</li></ul>';
                  $(errorString).appendTo("div#validation-errors");
@@ -1127,7 +1128,7 @@
                             },
                             {
                                 field:"XmattersGroupName",
-                                title:"Xmatters Group API Name"
+                                title:"xMatters Group API Name"
                             }
 
                   ]
