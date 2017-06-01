@@ -173,7 +173,8 @@
                         <apex:outputPanel rendered="{!(isPersonMatch && !IsXmPerson)}">
                             <div class="alert alert-info message-alert">
                                 <p style="float:left;padding-right:10px;padding-top:5px;">
-                                    We found a match for this Contact in Xmatters; Please click on Associate button to associate this contact with the Xmatters Person
+                                    <!--We found a match for this Contact in Xmatters; Please click on Associate button to associate this contact with the Xmatters Person-->
+                                    {!$Label.XM_Notification_Associate_Contact}
                                 </p>
                                 <apex:actionStatus id="associateContact" >
                                     <apex:facet name="stop">
@@ -193,11 +194,12 @@
                         <apex:outputPanel rendered="{!(IF(isPersonMatch, False, True) && !IsXmPerson)}">
                             <div class="alert alert-info message-alert">
                                 <p style="float:left; padding-right:10px;padding-top:5px;">
-                                    No Matching Person record Found in Xmatters for this contact. Please click Add to create a record in Xmatters
+                                    <!--No Matching Person record Found in Xmatters for this contact. Please click Add to create a record in Xmatters-->
+                                    {!$Label.XM_Notification_Add_Person}
                                 </p>
                                 <apex:actionStatus id="addPersonStatus" >
                                     <apex:facet name="stop">
-                                        <apex:commandButton value="Add Person" onClick="AddPerson();return false;"  status="addPersonStatus"/>
+                                        <apex:commandButton value="Add" onClick="AddPerson();return false;"  status="addPersonStatus"/>
                                     </apex:facet>
                                     <apex:facet name="start">
                                         <apex:outputPanel >
