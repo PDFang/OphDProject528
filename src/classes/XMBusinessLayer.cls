@@ -184,7 +184,7 @@ public class XMBusinessLayer implements XMiBusiness {
                 if (groupObj.selected == true) {
                     xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
                     system.debug('xmGroupModelList =>' + xmGroupModelList);
-                    if (xmGroupModelList.isEmpty() == false) {
+                    if (xmGroupModelList[0].id != null) {
                         system.debug ( ' xmGroupModelList =>'  + xmGroupModelList.size());
                         if (isUserMemberofGroup(groupObj.XmattersGroupName,xmCurrentGroupList) == false)
                         {

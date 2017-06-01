@@ -135,13 +135,10 @@
             padding-top:9px;
             font-size: 0.75em;
     	}
-    .k-i-warning, .k-warning{
-    	padding-right: 2px;
-        }
-
-    .k-grid-header th.k-header:first-child {
-        padding-bottom: 0;
+    .timepicker{
+    	width:30%;
     }
+
 
     </style>
 
@@ -246,7 +243,7 @@
                         <div class="form-group col-md-3">
                             <label for="timezone" class="col-2 col-form-label">Time Zone </label>
                             <div class="col-10">
-                                <apex:selectList styleClass="form-control" value="{!person.timezone}" id="timezone" size="0" disabled="{!(isPersonMatch || IsXmPerson)}">
+                                <apex:selectList styleClass="form-control timezone" value="{!person.timezone}" id="timezone" size="0" disabled="{!(isPersonMatch || IsXmPerson)}">
                                     <apex:selectOptions value="{!Timezones}"/>
                                 </apex:selectList>
                             </div>
@@ -747,12 +744,12 @@
                             + '<div class="col-10">'
                             + '<input class="form-control" type="text" id="nameInput'+nextTab+'" style="width:30%;" required="true"/>'
                             + '</div></div>'
-                            + '<div class="form-group">'
+                            + '<div class="form-group timepicker">'
                             + '<label for="startTimeInput'+nextTab+'" class="col-2 col-form-label">Start Time</label>'
                             + '<div class="col-10">'
                             + '<input class="form-control" id="startTimeInput'+nextTab+'"  style="width:15%;"/>'
                             + '</div></div>'
-                            + '<div class="form-group">'
+                            + '<div class="form-group timepicker">'
                             + '<label for="endTimeInput'+nextTab+'" class="col-2 col-form-label">End Time</label>'
                             + '<div class="col-10">'
                             + '<input class="form-control" type="email" id="endTimeInput'+nextTab+'"  style="width:15%;"/>'
@@ -813,12 +810,12 @@
                                     + '<div class="col-10">'
                                     + '<input class="form-control" type="text" id="nameInput'+name+'" style="width:30%;" value="'+ timeframes[i].name +'"/>'
                                     + '</div></div>'
-                                    + '<div class="form-group">'
+                                    + '<div class="form-group timepicker">'
                                     + '<label for="startTimeInput" class="col-2 col-form-label">Start Time</label>'
                                     + '<div class="col-10">'
                                     + '<input class="form-control" id="startTimeInput'+name+'"  style="width:15%;" value="'+ timeframes[i].startTime +'"/>'
                                     + '</div></div>'
-                                    + '<div class="form-group">'
+                                    + '<div class="form-group timepicker">'
                                     + '<label for="endTimeInput'+name+'" class="col-2 col-form-label">End Time</label>'
                                     + '<div class="col-10">'
                                     + '<input class="form-control" type="email" id="endTimeInput'+name+'" style="width:15%;" value="'+ timeframes[i].endTime +'"/>'
@@ -943,12 +940,13 @@
                      days.sunday = true;
 
              });
+             var currentTimeZone = $("select.timezone").val();
                 timeframesUpdate.push({
                             days : days,
                             endTime : endTimeVal,
                             startTime : startTimeVal,
                             name : nameVal,
-                            timezone : "{!timezone}"
+                            timezone : currentTimeZone
                            });
          });
 
@@ -1221,6 +1219,7 @@
                 var returnResult = JSON.parse(result);
                 if(returnResult.result != 'Failed'){
                   $('#loading').modal('hide');
+                  hideError();
                   $("#header-chb").prop("checked", false);
                   $("div#success").css("display", "block");
                   $("div#success").empty();
@@ -1252,4 +1251,4 @@
 
 
 </script>
-    </apex:page>
+</apex:page>
