@@ -1,53 +1,110 @@
-public class FeatureCreateFromProject 
+public class FeatureCreateFromProject
 {
-    private final Project__c project;
-    public Feature__c feature{get;set;}
 
+    private Project__c project;
+  
+    // setup the controller varialbles here 
+    public string selectedArea{get; set;}
+    public string selectedTeam{get; set;}    
+
+       
     public FeatureCreateFromProject(ApexPages.StandardController controller) 
     {
         this.project = (Project__c)controller.getRecord();
-        SetUpNewFeature();
+        
+        project = [select Area__c, Team__c from Project__c where Id = :project.id];
+        
+        selectedArea = project.Area__c;
+        selectedTeam = project.Team__c;
     }
     
-    public void SetUpNewFeature()
+    
+    //get all Teams
+    public list<selectOption> getTeam()
     {
-        feature = new Feature__c();
-        feature.Title__c = project.Name + ' - ' + project.Summary__c;
-        feature.Details__c = project.ProblemStatement__c;
+          list<selectOption> lstOptions = new list<SelectOption>();   
+          Schema.DescribeFieldResult fieldResult =  ISTFSWorkItem__c.Team__c.getDescribe();
+          List<Schema.PicklistEntry> ple = fieldResult.getPicklistValues();
+            
+           for( Schema.PicklistEntry f : ple)
+           {
+              lstOptions.add(new SelectOption(f.getValue(), f.getLabel()));
+           }                
+          return lstOptions;
+             
     }
     
-    public boolean HasFeature
+   //get all Area 
+   public list<selectOption> getArea()
     {
-        get
-        {
-            return project.Feature__c != null;
+      list<selectOption> lstOptions = new list<SelectOption>();   
+      Schema.DescribeFieldResult fieldResult =  ISTFSWorkItem__c.Product__c.getDescribe();
+      List<Schema.PicklistEntry> ple = fieldResult.getPicklistValues();
+        
+       for( Schema.PicklistEntry f : ple)
+       {
+          lstOptions.add(new SelectOption(f.getValue(), f.getLabel()));
+       }              
+      return lstOptions;
+        
+    }
+    
+    
+    
+    
+   // call the component controller
+    public void save()
+    {
+        
+         string checkId = project.Id;
+        
+        if(checkId != null)
+        {        
+            try
+            {
+                 project.Area__c = selectedArea;
+                 project.Team__c = selectedTeam;
+                 update project;
+            }
+            catch(Exception e)
+            {
+                 ApexPages.Message error = new ApexPages.Message(ApexPages.severity.ERROR, 'ERROR: ' + e.getMessage());
+                 ApexPages.addMessage(error);
+            }         
+            
         }
+        
     }
     
-    @RemoteAction
-    public static String InsertNewFeature(string title, string details, string projectId)
+    public PageReference callTFS()
     {
-        Feature__c feature = new Feature__c();
-        feature.Title__c = title;
-        feature.Details__c = details;
+         // Call Webservice
+         set<string> stProjectId = new set<string>();
+        stProjectId.add(project.Id);
+        boolean result = ISTFSINTEGRATIONCLASS.CreateTFSItems(stProjectId, 'Project__c');
+        if(!result)
+        {
+            string tfsError = [select TFSError__c from Project__c where Id = :project.Id].TFSError__c;
+            ApexPages.Message error = new ApexPages.Message(ApexPages.severity.ERROR, 'ERROR:  there are some error occured. Error - ' + tfsError);
+            ApexPages.addMessage(error); 
+            return null;
+        }
+        else
+        {
+            PageReference pageRef = new PageReference('/' + project.Id);
+            pageRef.setRedirect(true);
+            return pageRef;
+        }
         
-        insert feature;
-        
-        Project__c project = new Project__c(Id = projectId);
-        project.Feature__c = feature.Id;
-        update project;
-        
-        return feature.Id;
+        return null;
     }
     
-    @RemoteAction
-    public static void InsertTfsFeature(string featureId)
+    public PageReference Cancel()
     {
-        CorporateItTfsAccess.CreateTfsFeature(featureId);
-    }
-    
-    
-    
-    
+        PageReference pageRef = new PageReference('/' + project.Id);
+        pageRef.setRedirect(true);
+        return pageRef;
+    }    
+        
 
 }

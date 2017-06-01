@@ -113,7 +113,7 @@ public class CaseTriggerHandler extends TriggerHandler
                 || newRecord.Workaround_Available__c != oldRecord.Workaround_Available__c;
     }
 
-    // Create an xmNotification record when an event is confirmed
+    // Create an xmNotification record when an event is confirmed or resolved
     private void createXmNotification(List<Case> newList, Map<Id, Case> oldMap){
 
         List<Case> processList = new List<Case>();
@@ -145,7 +145,13 @@ public class CaseTriggerHandler extends TriggerHandler
         }
         system.debug('createXmNotification(): notificationList - ' + notificationList);
 
-        insert notificationList;
+        try{
+            insert notificationList;
+        }catch(Exception ex){
+            system.debug('createXmNotification(): Exception - ' + ex);
+            newList[0].addError('Failed to create an xmNotification. '+ ex.getMessage());
+        }
+
 
     }
 
@@ -208,7 +214,5 @@ public class CaseTriggerHandler extends TriggerHandler
 
     }
     
-
-
 
 }

@@ -96,9 +96,16 @@ global class WebServiceUpdateFromTFS
                         obj.put('StoryPoints__c', workItems.StoryPoints == ''? '0' : workItems.StoryPoints);
 
                     }
-
+					
+                    if(workItems.Area == 'Operations')
+                    {
+                    	obj.put('Area__c', 'Other');
+                    }
+                    else
+                    {
+                        obj.put('Area__c', workItems.Area);
+                    }
                     obj.put('Team__c', workItems.Team);
-                    obj.put('Area__c', workItems.Area);
                     obj.put('Priority__c', workItems.Priority);
                     obj.put('Iteration__c', workItems.Iteration);
 
