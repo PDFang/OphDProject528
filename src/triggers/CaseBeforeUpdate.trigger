@@ -343,7 +343,9 @@ trigger CaseBeforeUpdate on Case (before update)
         }
 
         //get all newly closed cases for sla Entitlements
-        if((!closedStatuses.contains(co.Status) && co.Status != 'Resolved') && (closed || resolved) && (cn.RecordTypeId == incidentRecordType || cn.RecordTypeId == incidentUptivityRecordType))
+		//Modified for Jonah entitlement project 5/19/17 to not close on resolve
+        //if((!closedStatuses.contains(co.Status) && co.Status != 'Resolved') && (closed || resolved) && (cn.RecordTypeId == incidentRecordType || cn.RecordTypeId == incidentUptivityRecordType))
+        if((!closedStatuses.contains(co.Status)) && closed  && (cn.RecordTypeId == incidentRecordType || cn.RecordTypeId == incidentUptivityRecordType))
         {
             closedCasesForEntitlements.add(cn.Id);
             cn.EntitlementStatus__c = 'Closed';

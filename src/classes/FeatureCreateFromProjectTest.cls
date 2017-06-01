@@ -12,14 +12,14 @@ public class FeatureCreateFromProjectTest {
         FeatureCreateFromProject feature = new FeatureCreateFromProject(controller);
         feature.getArea();
         feature.getTeam();
-        feature.selectedArea = 'SalesForce';
+        feature.selectedArea = 'Salesforce';
         feature.selectedTeam = 'Operations';
         feature.save();
         feature.Cancel();
         test.stopTest();
         
         Project__c result = [select TFSId__c, Area__c, Team__c,SyncToTFS__c from Project__c where Id = :testProject.Id];          
-        system.assertEquals('SalesForce', result.Area__c);
+        system.assertEquals('Salesforce', result.Area__c);
         system.assertEquals('Operations', result.Team__c);
         
     } 
