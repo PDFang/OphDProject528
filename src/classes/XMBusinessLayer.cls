@@ -109,7 +109,7 @@ public class XMBusinessLayer  {
         for ( ImplementedProduct__c product : [SELECT   Account__c,Product__c,
                                                 Account__r.ParentId,
                                                 Account__r.inContact_Cluster__c, Account__r.Verint_Cluster__c,
-                                                Account__r.NICE_WFM_Cluster__c, Account__r.NICE_QM_Cluster__c,
+                                                Account__r.NICE_WFM_Cluster__c,Account__r.XMPartnerPrefix__c, Account__r.NICE_QM_Cluster__c,
                                                 Account__r.Parent.XMPartnerPrefix__c
                                                 FROM ImplementedProduct__c
                                                 WHERE Account__c in :acc  and Account__r.CG_Disconnect_Date__c = NULL
@@ -134,6 +134,10 @@ public class XMBusinessLayer  {
                     if (product.Account__r.Parent != null)
                     {
                         groupData.PartnerPrefix =  product.Account__r.Parent.XMPartnerPrefix__c;
+                    }
+                    else if ( product.Account__r.XMPartnerPrefix__c !=null)
+                    {
+                        groupData.PartnerPrefix =  product.Account__r.XMPartnerPrefix__c;
                     }
                     groupData.XmattersGroupName = GetGroupName(groupData);
                     system.debug( 'groupData -->' + groupData);
