@@ -9,8 +9,8 @@ public class XMBusinessLayer implements XMiBusiness {
 
         Contact[] contactList = [
                 Select Id, xmPerson__c, xmPerson__r.xmPersonUID__c, accountId, account.ParentId,
-                        account.inContact_Cluster__c, account.Verint_Cluster__c,
-                        account.NICE_WFM_Cluster__c, account.NICE_QM_Cluster__c,
+                        account.inContact_Cluster__c, account.Verint_Cluster__c,account.XMPartnerPrefix__c,
+                        account.NICE_WFM_Cluster__c, account.NICE_QM_Cluster__c, account.RecordType.Name,
                         account.Parent.XMPartnerPrefix__c
                 From Contact
                 where Id = :contactId
@@ -134,6 +134,8 @@ public class XMBusinessLayer implements XMiBusiness {
                 if (acc.Parent != null)
                 {
                     groupData.PartnerPrefix =  acc.Parent.XMPartnerPrefix__c;
+                }else if(acc.XMPartnerPrefix__c != null){
+                    groupData.PartnerPrefix =  acc.XMPartnerPrefix__c;
                 }
                 groupData.XmattersGroupName = GetGroupName(groupData);
                 system.debug( 'groupData -->' + groupData);
