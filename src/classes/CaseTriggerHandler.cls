@@ -55,11 +55,11 @@ public class CaseTriggerHandler extends TriggerHandler
 
     private void SetRecordTypeIds()
     {
-        Schema.DescribeSObjectResult d = Schema.SObjectType.Case; 
+        Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
         Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
         //Get Event record type id
         eventRecordType = rtMapByName.get('Event').getRecordTypeId();
-        maintenanceRecordType = rtMapByName.get('Maintenance Notification').getRecordTypeId();   
+        maintenanceRecordType = rtMapByName.get('Maintenance Notification').getRecordTypeId();
         knownIssueRecordType = rtMapByName.get('Known Issue').getRecordTypeId();
         incidentRecordType = rtMapByName.get('Incident').getRecordTypeId();
         problemRecordType = rtMapByName.get('Problem').getRecordTypeId();
@@ -69,7 +69,7 @@ public class CaseTriggerHandler extends TriggerHandler
         workOrderUptivityRecordType = rtMapByName.get('Work Orders - Premise').getRecordTypeId();
         helpDeskRCTypeId = rtMapByName.get('Help Desk').getRecordTypeId(); // Added the HelpDesk RecordType - Arnab
     }
-    
+
     private void GetClosedCaseStatuses()
     {
         closedStatuses = new Set<String>();
@@ -113,15 +113,18 @@ public class CaseTriggerHandler extends TriggerHandler
                 || newRecord.Workaround_Available__c != oldRecord.Workaround_Available__c;
     }
 
-    // Create an xmNotification record when an event is confirmed
+    // Create an xmNotification record when an event is confirmed or resolved
     private void createXmNotification(List<Case> newList, Map<Id, Case> oldMap){
 
         List<Case> processList = new List<Case>();
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
             // Is Event confirmed
+            system.debug('createXmNotification(): new status - ' + newCase.Status);
+            system.debug('createXmNotification(): old status - ' + oldCase.Status);
+
             if(newCase.RecordTypeId == eventRecordType && oldCase != null
-                    && ( (newCase.EventConfirmedDateTime__c != null && oldCase.EventConfirmedDateTime__c == null)
+                    && ( (newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed')
                     || (newCase.Status == 'Resolved' && oldCase.Status != 'Resolved') ) )
             {
                 processList.add(newCase);
@@ -145,17 +148,26 @@ public class CaseTriggerHandler extends TriggerHandler
         }
         system.debug('createXmNotification(): notificationList - ' + notificationList);
 
-        insert notificationList;
+        try{
+            insert notificationList;
+        }catch(Exception ex){
+            system.debug('createXmNotification(): Exception - ' + ex);
+            newList[0].addError('Failed to create an xmNotification. '+ ex.getMessage());
+        }finally {
+            // avoid recursion
+            isxMattersNotificationsTurnedOff = true;
+        }
 
     }
 
+    @TestVisible
     private string getXmNotificationRequestType(Case newCase){
 
         String requestType = null;
 
         if(newCase.RecordTypeId == eventRecordType && newCase.Status == 'Resolved'){
             requestType = 'Event Resolved';
-        } else if(newCase.RecordTypeId == eventRecordType && newCase.EventConfirmedDateTime__c != null){
+        } else if(newCase.RecordTypeId == eventRecordType && newCase.Status == 'Confirmed'){
             requestType = 'Event Initial Confirmation';
         }
 
@@ -208,7 +220,5 @@ public class CaseTriggerHandler extends TriggerHandler
 
     }
     
-
-
 
 }

@@ -24,7 +24,8 @@ public class ISTFSINTEGRATIONCLASS
         HttpResponse res = new HttpResponse();
         Http http = new Http();
         string tfsId;
-        string body = ISIntegrationHandlerClass.SerializeObject(currentId, sObjectType);      
+        string body = ISIntegrationHandlerClass.SerializeObject(currentId, sObjectType);   
+        system.debug('requestBody ==>' + body);
         string endPoint = getEndPoint(sObjectType);
         // Form the request 
         req.setEndpoint(endPoint);
@@ -122,7 +123,7 @@ public class ISTFSINTEGRATIONCLASS
     private static void doSendEmail(string emailBody)
     {   
         Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-        String[] toAddresses = new String[] {'Arnab.KarSarkar@incontact.com', 'Shawn.Hartke@incontact.com', 'Basant.Pathak@incontact.com'};
+        String[] toAddresses = new String[] {'Arnab.KarSarkar@incontact.com', 'Shawn.Hartke@incontact.com', 'Basant.Pathak@incontact.com','jeremy.sparrell@incontact.com'};
         mail.setToAddresses(toAddresses);
         mail.setSubject('There is an unexpected error occured');
         mail.setHtmlBody(emailBody);

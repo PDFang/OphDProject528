@@ -1,7 +1,7 @@
 <!--
  - Created by arnab.karsarkar on 5/4/2017.
  -->
-<apex:page id="XMPersonManagement" standardController="Contact" tabStyle="Contact" title="Notification Profile - {!currentContact.Name}" extensions="XMPersonManagementController">
+<apex:page id="XMPersonManagement" standardController="Contact" tabStyle="Contact" sidebar="false" title="Notification Profile - {!currentContact.Name}" extensions="XMPersonManagementController">
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
@@ -112,84 +112,115 @@
         padding: 8px 27px;
     }
 
+    .k-grid-header th.k-header {
+        vertical-align: bottom;
+        font-weight: bold;
+    }
+    .row-unselect {
+        color: #fff;
+        background-color: #f5e6b4;
+        border-color: #f5e6b4;
+    }
+    .row-unselect:hover {
+        color: #fff;
+        background-color: #f5e6b4 !important;
+        border-color: #f5e6b4 !important;
+    }
+
+    .spinnerClass {
+            background:url('../../img/loading32.gif') no-repeat;
+            height:32px;
+            margin:20px;
+            padding-left:40px;
+            padding-top:9px;
+            font-size: 0.75em;
+    	}
+    .timepicker{
+    	width:30%;
+    }
+
+
     </style>
 
     <apex:form >
-            <apex:sectionHeader title="Notification Profile" subtitle="{!currentContact.Name}"/>
+        <apex:sectionHeader title="Notification Profile" subtitle="{!currentContact.Name}"/>
 
-            <apex:commandLink action="{!goBack}" value="Go Back" style="float:right;"/>
-            <!--<div class="page-header">-->
-                <!--<h1>Manage Notification Profile for Contact - {!currentContact.FirstName} {!currentContact.LastName}</h1>-->
-                <!--<apex:commandLink action="{!goBack}" value="Go Back" style="float:right;"/>-->
-            <!--</div>-->
+        <apex:commandLink action="{!goBack}" value="Go Back" style="float:right;"/>
+        <br/>
+        <!--<div class="page-header">-->
+        <!--<h1>Manage Notification Profile for Contact - {!currentContact.FirstName} {!currentContact.LastName}</h1>-->
+        <!--<apex:commandLink action="{!goBack}" value="Go Back" style="float:right;"/>-->
+        <!--</div>-->
 
-            <div class="container-fluid">
-                <div class="row">
-                    <apex:pageMessages id="errorMessages"/>
+        <div class="container-fluid">
+            <div class="row">
+                <apex:pageMessages id="errorMessages"/>
+
+            </div>
+            <div class="panel panel-default" style="{!IF( isValidContact, 'display: inline;', 'display: none;')}">
+
+                <apex:pageBlock id="contactDetail" >
+                    <apex:pageBlockSection title="Contact Detail" collapsible="false" columns="1">
+                        <apex:outputField value="{!currentContact.Name}"/>
+                        <apex:outputField value="{!currentContact.AccountId}"/>
+                        <apex:outputField value="{!currentContact.Account.CadebillAccountNoText__c}"/>
+                    </apex:pageBlockSection>
+                </apex:pageBlock>
+
+                <div class="panel-heading"><label>xMatters Person Detail</label>
+
+                    <apex:outputPanel id="alertmessage">
+                        <apex:outputPanel rendered="{!(isPersonMatch && !IsXmPerson)}">
+                            <div class="alert alert-info message-alert">
+                                <p style="float:left;padding-right:10px;padding-top:5px;">
+                                    <!--We found a match for this Contact in Xmatters; Please click on Associate button to associate this contact with the Xmatters Person-->
+                                    {!$Label.XM_Notification_Associate_Contact}
+                                </p>
+                                <apex:actionStatus id="associateContact" >
+                                    <apex:facet name="stop">
+                                        <apex:commandButton value="Associate Contact" onClick="associateContactCall(); return false;" status="associateContact"/>
+
+                                    </apex:facet>
+                                    <apex:facet name="start">
+                                        <apex:outputPanel >
+                                            <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                                            <apex:commandButton styleClass="k-button"  value="Adding..." status="associateContact" disabled="true"/>
+                                        </apex:outputPanel>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                            </div>
+
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!(IF(isPersonMatch, False, True) && !IsXmPerson)}">
+                            <div class="alert alert-info message-alert">
+                                <p style="float:left; padding-right:10px;padding-top:5px;">
+                                    <!--No Matching Person record Found in Xmatters for this contact. Please click Add to create a record in Xmatters-->
+                                    {!$Label.XM_Notification_Add_Person}
+                                </p>
+                                <apex:actionStatus id="addPersonStatus" >
+                                    <apex:facet name="stop">
+                                        <apex:commandButton value="Add" onClick="AddPerson();return false;"  status="addPersonStatus"/>
+                                    </apex:facet>
+                                    <apex:facet name="start">
+                                        <apex:outputPanel >
+                                            <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                                            <apex:commandButton styleClass="k-button"  value="Adding..." status="addPersonStatus" disabled="true"/>
+                                        </apex:outputPanel>
+                                    </apex:facet>
+                                </apex:actionStatus>
+
+                            </div>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+
+                    <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,errorMessages,timezone,devicePanel,groupPanel" onComplete="loaddeviceAndGroups();" status="associateContact">
+                        <apex:param id="rowId" name="rowId" value="" />
+                    </apex:actionFunction>
+
+                    <apex:actionFunction name="callNotificationManage" action="{!addPerson}" reRender="contactList,alertmessage,errorMessages,timezone,devicePanel,groupPanel" onComplete="loaddeviceAndGroups();" status="addPersonStatus"/>
 
                 </div>
-                <div class="panel panel-default" style="{!IF( isValidContact, 'display: inline;', 'display: none;')}">
-
-                    <apex:pageBlock id="contactDetail" >
-                        <apex:pageBlockSection title="Contact Detail" collapsible="false" columns="1">
-                            <apex:outputField value="{!currentContact.Name}"/>
-                            <apex:outputField value="{!currentContact.AccountId}"/>
-                            <apex:outputField value="{!currentContact.Account.CadebillAccountNoText__c}"/>
-                        </apex:pageBlockSection>
-                    </apex:pageBlock>
-
-                    <div class="panel-heading"><label>xMatters Person Detail</label>
-
-                        <apex:outputPanel id="alertmessage">
-                            <apex:outputPanel rendered="{!(isPersonMatch && !IsXmPerson)}">
-                                <div class="alert alert-info message-alert">
-                                    <p style="float:left;padding-right:10px;padding-top:5px;">
-                                        We found a match for this Contact in Xmatters; Please click on Associate button to associate this contact with the Xmatters Person
-                                    </p>
-                                    <apex:actionStatus id="associateContact" >
-                                        <apex:facet name="stop">
-                                            <apex:commandButton value="Associate Contact" onClick="associateContactCall(); return false;" status="associateContact"/>
-
-                                        </apex:facet>
-                                        <apex:facet name="start">
-                                            <apex:outputPanel >
-                                                <apex:image value="/img/loading32.gif" style="height: 15px;"/>
-                                                <apex:commandButton styleClass="k-button"  value="Adding..." status="associateContact" disabled="true"/>
-                                            </apex:outputPanel>
-                                        </apex:facet>
-                                    </apex:actionStatus>
-                                </div>
-
-                            </apex:outputPanel>
-                            <apex:outputPanel rendered="{!(IF(isPersonMatch, False, True) && !IsXmPerson)}">
-                                <div class="alert alert-info message-alert">
-                                    <p style="float:left; padding-right:10px;padding-top:5px;">
-                                        No Matching Person record Found in Xmatters for this contact. Please click Add to create a record in Xmatters
-                                    </p>
-                                    <apex:actionStatus id="addPersonStatus" >
-                                        <apex:facet name="stop">
-                                            <apex:commandButton value="Add Person" onClick="AddPerson();return false;"  status="addPersonStatus"/>
-                                        </apex:facet>
-                                        <apex:facet name="start">
-                                            <apex:outputPanel >
-                                                <apex:image value="/img/loading32.gif" style="height: 15px;"/>
-                                                <apex:commandButton styleClass="k-button"  value="Adding..." status="addPersonStatus" disabled="true"/>
-                                            </apex:outputPanel>
-                                        </apex:facet>
-                                    </apex:actionStatus>
-
-                                </div>
-                            </apex:outputPanel>
-                        </apex:outputPanel>
-
-                        <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,errorMessages,timezone,devicePanel" onComplete="setupDeviceList();" status="associateContact">
-                            <apex:param id="rowId" name="rowId" value="" />
-                        </apex:actionFunction>
-
-                        <apex:actionFunction name="callNotificationManage" action="{!addPerson}" reRender="contactList,alertmessage,errorMessages,timezone,devicePanel" onComplete="setupDeviceList();" status="addPersonStatus"/>
-
-                    </div>
-                    <div class="panel-body">
+                <div class="panel-body">
                     <div class="row">
                         <div class="form-group col-md-3">
 
@@ -214,15 +245,15 @@
                         <div class="form-group col-md-3">
                             <label for="timezone" class="col-2 col-form-label">Time Zone </label>
                             <div class="col-10">
-                                <apex:selectList styleClass="form-control" value="{!person.timezone}" id="timezone" size="0" disabled="{!(isPersonMatch || IsXmPerson)}">
+                                <apex:selectList styleClass="form-control timezone" value="{!person.timezone}" id="timezone" size="0" disabled="{!(isPersonMatch || IsXmPerson)}">
                                     <apex:selectOptions value="{!Timezones}"/>
                                 </apex:selectList>
                             </div>
                         </div>
                     </div>
 
-                    </div>
                 </div>
+            </div>
 
 
             <apex:pageBlock id="contactList" rendered="{!contactList.size > 0}">
@@ -332,7 +363,7 @@
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">!!Message!!</h5>
+                        <h5 class="modal-title" id="exampleModalLabel">Alert</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -348,26 +379,42 @@
             </div>
         </div>
 
+        <!-- loading Modal -->
+        <div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content" style="width:40%; top: 182px;">
+                    <div class="modal-body" style="font-size:14px;">
+                        <div class="spinnerClass">Updating Groups in Xmatters</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
     </apex:form>
 
-<script>
+    <script>
 
 
      $(document).ready(function() {
-            setupDeviceList();
-            setupGroupList();
+            loaddeviceAndGroups();
          });
 
     var timeframes = [];
     var deviceData = new Object();
     function AddPerson(){
         callNotificationManage();
+
        // setupDeviceList();
     }
 
+	function loaddeviceAndGroups(){
+        setupDeviceList();
+		setupGroupList();
+     }
     function associateContactCall(){
         callAssociateContact();
+
         //setupDeviceList();
     }
     function setupDeviceList(){
@@ -521,24 +568,23 @@
                                 "DeviceValue" : {from:"deviceValue",
                                                  type: "string",
                                                  validation: {
-                                                    required: true,
                                                     deviceValueValidation: function (input) {
-                                                        if (input.is("[name='DeviceValue']") && input.val() != "") {
+                                                       if (input.is("[name='DeviceValue']") && input.val() != "") {
                                                             var deviceType = $("[name='DeviceType']").val();
                                                             if(deviceType.includes("Email")){
                                                                  input.attr("data-deviceValueValidation-msg", " Invalid Email address");
                                                                  var re =  /^(?:[a-z0-9!+=_`-]+(?:\.[a-z0-9!+=_`-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)$/i;
-                                                                 return re.test(input.val());
-                                                            }
-                                                            else{
+                                                                 return re.test(input.val().trim());
+                                                            }else{
                                                                 input.attr("data-deviceValueValidation-msg", " Invalid Phone number");
                                                                 var re = /^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-\s\./0-9]*$/g;
-                                                                return re.test(input.val());
+                                                                return re.test(input.val().trim());
 
                                                             }
-
+                                                        }else if(input.is("[name='DeviceValue']") && input.val() == ""){
+                                                            input.attr("data-deviceValueValidation-msg", " Device Value is required");
+                                                            return false;
                                                         }
-
                                                         return true;
                                                     }
                                                  }
@@ -583,7 +629,9 @@
                                 //template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">Manage TimeFrames</a>'
                                 template: '<a href="" onClick="OpenModal(this); return false;" class="k-button k-button-icontext">Manage</a>'
                             },
-                            {command: ["edit","destroy"]}
+                            {   title:"Action",
+                                command: ["edit","destroy"]
+                            }
 
                   ]
 
@@ -601,7 +649,7 @@
              $("div#success").empty();
              $("div#success").hide();
              $("div#java-errors").css("display", "block");
-             document.getElementById("java-errors").innerHTML = '<strong>!!Error!!</strong> ' + message;
+             document.getElementById("java-errors").innerHTML =  message;
               $('#warning').modal('show');
              console.log('error =>' + message);
         }
@@ -698,12 +746,12 @@
                             + '<div class="col-10">'
                             + '<input class="form-control" type="text" id="nameInput'+nextTab+'" style="width:30%;" required="true"/>'
                             + '</div></div>'
-                            + '<div class="form-group">'
+                            + '<div class="form-group timepicker">'
                             + '<label for="startTimeInput'+nextTab+'" class="col-2 col-form-label">Start Time</label>'
                             + '<div class="col-10">'
                             + '<input class="form-control" id="startTimeInput'+nextTab+'"  style="width:15%;"/>'
                             + '</div></div>'
-                            + '<div class="form-group">'
+                            + '<div class="form-group timepicker">'
                             + '<label for="endTimeInput'+nextTab+'" class="col-2 col-form-label">End Time</label>'
                             + '<div class="col-10">'
                             + '<input class="form-control" type="email" id="endTimeInput'+nextTab+'"  style="width:15%;"/>'
@@ -764,12 +812,12 @@
                                     + '<div class="col-10">'
                                     + '<input class="form-control" type="text" id="nameInput'+name+'" style="width:30%;" value="'+ timeframes[i].name +'"/>'
                                     + '</div></div>'
-                                    + '<div class="form-group">'
+                                    + '<div class="form-group timepicker">'
                                     + '<label for="startTimeInput" class="col-2 col-form-label">Start Time</label>'
                                     + '<div class="col-10">'
                                     + '<input class="form-control" id="startTimeInput'+name+'"  style="width:15%;" value="'+ timeframes[i].startTime +'"/>'
                                     + '</div></div>'
-                                    + '<div class="form-group">'
+                                    + '<div class="form-group timepicker">'
                                     + '<label for="endTimeInput'+name+'" class="col-2 col-form-label">End Time</label>'
                                     + '<div class="col-10">'
                                     + '<input class="form-control" type="email" id="endTimeInput'+name+'" style="width:15%;" value="'+ timeframes[i].endTime +'"/>'
@@ -838,31 +886,45 @@
                 }
             }).data("kendoTimePicker");
 
+            var startTime = new Date(start.value());
+            startTime.setMinutes(startTime.getMinutes() + start.options.interval);
+            end.min(startTime);
+             $(endId).attr("readonly", true);
+             $(startId).attr("readonly", true);
+
             //init end timepicker
 
      }
 
      function saveTimeFrames(){
         var timeframesUpdate = [];
+        var timeframeNames = [];
         var isError = false;
-         $("div.tab-content div.tab-pane").each(function(){
+        $("div.tab-content div.tab-pane").each(function(){
              var days = new Object();
              var thisId = $(this).attr('id');
              var nameId = 'input#nameInput' + thisId ;
              var nameVal = $(this).find(nameId).val();
+
              isError = validateInput(nameVal, nameId);
+             if(nameVal != ''){
+                 timeframeNames.push(nameVal);
+             }
              var startTimeId = 'input#startTimeInput' + thisId;
              var startTimeVal = $(this).find(startTimeId).val();
              var startTimepicker = $(startTimeId).data("kendoTimePicker");
-             startTimepicker.destroy();
+
              if(!isError)
                isError = validateInput(startTimeVal, startTimeId);
+
              var endTimeId = 'input#endTimeInput' + thisId;
              var endTimeVal = $(this).find(endTimeId).val();
              var endTimepicker = $(endTimeId).data("kendoTimePicker");
-             endTimepicker.destroy();
+           //  endTimepicker.destroy();
              if(!isError)
                isError = validateInput(endTimeVal, endTimeId);
+
+
              $(this).find("div.weekDays-selector input[type=checkbox]").each(function(){
                  if($(this).hasClass("monday") && this.checked)
                     days.monday = true;
@@ -880,64 +942,82 @@
                      days.sunday = true;
 
              });
+             var currentTimeZone = $("select.timezone").val();
                 timeframesUpdate.push({
                             days : days,
                             endTime : endTimeVal,
                             startTime : startTimeVal,
                             name : nameVal,
-                            timezone : "{!timezone}"
+                            timezone : currentTimeZone
                            });
          });
 
 
          if(!isError){
-             removeError();
-             var deviceUpdate = new Object();
-             deviceUpdate.name = deviceData.name ;
-             deviceUpdate.deviceValue = deviceData.deviceValue ;
-             deviceUpdate.priorityThreshold = "Medium";
-             deviceUpdate.deviceId = deviceData.deviceId ;
-             deviceUpdate.timeframes = timeframesUpdate;
-               $('#info').modal('hide');
-             console.log('deviceupdate ==>' + JSON.stringify(deviceUpdate));
-             XMPersonManagementController.updateDevice (
-                    JSON.stringify(deviceUpdate),
-                    function(result,event){
-                        if (event.status) {
-                             var returnResult = JSON.parse(result);
-                             if(returnResult.result != 'Failed'){
-                                   hideError();
-                                  $("div#success").css("display", "block");
-                                  $("div#success").empty();
-                                  $('<strong>Timeframes were updated successfully</strong>').appendTo("div#success");
-                                  $('#warning').modal('show');
-                                  var grid = $("#deviceList").data("kendoGrid");
-                                  grid.destroy();
-                                  setupDeviceList();
+                removeError();
+             var hasDupe = hasDuplicates(timeframeNames);
+             if(hasDupe){
 
-                                 }
-                                 else{
-                                       $("div#success").css("display", "none");
-                                     displayError(returnResult.message);
-                                 }
-                        } else if (event.type === 'exception') {
-                             $("div#success").css("display", "none");
-                           displayError(event.message);
-                        } else {
-                             $("div#success").css("display", "none");
-                           displayError(event.message);
-                        }
-                    },
-                    {escape: false}
-             );
+                 $("div#validation-errors").css("display", "block");
+                 var errorString = '<ul><li>Duplicate Timeframes are not allowed.</li></ul>';
+                 $(errorString).appendTo("div#validation-errors");
+             }
+             else{
+                 removeError();
+                 var deviceUpdate = new Object();
+                 deviceUpdate.name = deviceData.name ;
+                 deviceUpdate.deviceValue = deviceData.deviceValue ;
+                 deviceUpdate.priorityThreshold = "Medium";
+                 deviceUpdate.deviceId = deviceData.deviceId ;
+                 deviceUpdate.timeframes = timeframesUpdate;
+                  $('#info').modal('hide');
+                 console.log('deviceupdate ==>' + JSON.stringify(deviceUpdate));
+                 XMPersonManagementController.updateDevice (
+                        JSON.stringify(deviceUpdate),
+                        function(result,event){
+                            if (event.status) {
+                                 var returnResult = JSON.parse(result);
+                                 if(returnResult.result != 'Failed'){
+                                       hideError();
+                                      $("div#success").css("display", "block");
+                                      $("div#success").empty();
+                                      $('<strong>Timeframes were updated successfully</strong>').appendTo("div#success");
+                                      $('#warning').modal('show');
+                                      var grid = $("#deviceList").data("kendoGrid");
+                                      grid.destroy();
+                                      setupDeviceList();
+
+                                     }
+                                     else{
+                                           $("div#success").css("display", "none");
+                                         displayError(returnResult.message);
+                                     }
+                            } else if (event.type === 'exception') {
+                                 $("div#success").css("display", "none");
+                               displayError(event.message);
+                            } else {
+                                 $("div#success").css("display", "none");
+                               displayError(event.message);
+                            }
+                        },
+                        {escape: false}
+                 );
+             }
+
          }
-
-
-
-
-
-
      }
+
+    function hasDuplicates(array) {
+        var valuesSoFar = [];
+        for (var i = 0; i < array.length; ++i) {
+            var value = array[i];
+            if (valuesSoFar.indexOf(value) !== -1) {
+                return true;
+            }
+            valuesSoFar.push(value);
+        }
+        return false;
+    }
 
     function validateInput(val, input){
          if(val == ''){
@@ -961,6 +1041,7 @@
              $(errorString).appendTo("div#validation-errors");
              return true;
          }
+         return false;
      }
 
     function removeError(){
@@ -1028,13 +1109,14 @@
                   noRecords: true,
                   height: 500,
                    toolbar: [
-                        { template: '<a class="k-button" onclick="updateGroups();">Save</a>'
+                        { template: '<a class="k-button" onclick="updateGroups();">Update Group Subscription</a>'
                         }
                       ],
                   columns: [{
                                 field:"selected",
                                  headerTemplate: '<input type="checkbox" id="header-chb" class="k-checkbox" onclick="selectRow(this);"><label class="k-checkbox-label" for="header-chb">Select</label>',
-                                template: '<input  id="# Product #" class="k-checkbox" type="checkbox" # if (selected) { # checked="checked" :  # } #" ><label class="k-checkbox-label" for="# Product #"></label>'
+                                template: '<input type="checkbox"  class="row-chk" onclick="selectgridRow(this);" # if (selected) { # checked="checked" :  # } #" />',
+                                width:80
                             },
                             {
                                 field:"Product",
@@ -1045,12 +1127,8 @@
                                 title: "Cluster"
                             },
                             {
-                                field:"PartnerPrefix",
-                                title:"Partner Prefix"
-                            },
-                            {
                                 field:"XmattersGroupName",
-                                title:"XmattersGroupName"
+                                title:"xMatters Group API Name"
                             }
 
                   ]
@@ -1065,18 +1143,36 @@
          //on click of the checkbox:
       function selectRow(obj) {
        var checked = obj.checked;
-       $("#groupList").find('.k-checkbox').each(function(idx, item){
+       $("#groupList").find('.row-chk').each(function(idx, item){
             var row = $(item).closest("tr");
             if(checked){
                 $(item).prop("checked", true);
                 row.addClass("k-state-selected");
+                row.removeClass("row-unselect")
             }else {
                 $(item).prop("checked", false);
               //-remove selection
               row.removeClass("k-state-selected");
+              row.addClass("row-unselect");
             }
         });
       }
+
+    function selectgridRow(obj) {
+       var checked = obj.checked,
+           row = $(obj).closest("tr");
+
+       if (checked) {
+            //-select the row
+            row.addClass("k-state-selected");
+             row.removeClass("row-unselect")
+            } else {
+            //-remove selection
+            row.removeClass("k-state-selected");
+             row.addClass("row-unselect");
+
+       }
+     }
 
  function SearchProducts (val) {
           var grid = $("#groupList").data("kendoGrid");
@@ -1093,7 +1189,13 @@
       console.log('checkedIds => ' + checkedIds);
       var grid = $("#groupList").data("kendoGrid");
       var groupData = [];
-      $("div.k-grid-content").find('.k-checkbox').each(function(idx, item){
+      $('#loading').modal({
+                 backdrop: 'static',
+                 keyboard: false
+            });
+      $('#loading').modal('show');
+
+      $("div.k-grid-content").find('.row-chk').each(function(idx, item){
             var row = $(item).closest("tr"),
             dataItem = grid.dataItem(row);
             if(dataItem){
@@ -1119,17 +1221,28 @@
             if (event.status) {
                 var returnResult = JSON.parse(result);
                 if(returnResult.result != 'Failed'){
-                   setupGroupList();
-                   hideError();
+                  $('#loading').modal('hide');
+                  hideError();
+                  $("#header-chb").prop("checked", false);
+                  $("div#success").css("display", "block");
+                  $("div#success").empty();
+                  $('<strong>Groups were updated successfully</strong>').appendTo("div#success");
+                  $('#warning').modal('show');
+                  var grid = $("#groupList").data("kendoGrid");
+                  grid.destroy();
+                  setupGroupList();
                }
                else{
+                   $('#loading').modal('hide');
                     $("div#success").css("display", "none");
                    displayError(returnResult.message);
                }
             } else if (event.type === 'exception') {
+                $('#loading').modal('hide');
                  $("div#success").css("display", "none");
                  displayError(event.message);
             }else{
+                $('#loading').modal('hide');
                  $("div#success").css("display", "none");
                  displayError(event.message);
             }
@@ -1141,9 +1254,4 @@
 
 
 </script>
-    <script id="template" type="text/x-kendo-template">
-        <a class="k-button" href="\#">Save</a>
-    </script>
-
-
 </apex:page>

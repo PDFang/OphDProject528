@@ -221,6 +221,7 @@ public class XMPersonManagementHelper {
         for(XMGroupProductCluster xmGroup : groupMap.values()){
             xmGroupList.add(xmGroup);
         }
+        system.debug('getProductGroups(): xmGroupList - ' + xmGroupList);
 
         return xmGroupList;
 

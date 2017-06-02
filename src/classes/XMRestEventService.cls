@@ -22,6 +22,17 @@ public class XMRestEventService {
         xmeventData.platformGroups = convertProductAndPlatformToGroupName(eventCase.PlatformsImpacted__c, eventCase.ProductImpacted__c);
         xmEventData.startEvent = true;
 
+        //get the picklist API Name to pass as the eventType
+        Schema.DescribeFieldResult fieldResult = XMNotification__c.Request_Type__c.getDescribe();
+        List<Schema.PicklistEntry> values = fieldResult.getPicklistValues();
+
+        for(Schema.PicklistEntry picklistValue : values) {
+            if(picklistValue.getLabel() == xmNotificationRecord.Request_Type__c) {
+                xmEventData.eventType = picklistValue.getValue();
+                break;
+            }
+        }
+
         // Build the specific event details needed to process the event.
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();
 
