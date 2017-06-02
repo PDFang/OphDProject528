@@ -4,9 +4,11 @@ private class XMPersonManagementControllerTest {
     static final String CUSTOMER_ACCOUNT = 'Customers';
     static final String CUSTOMER_CONTACT = 'Customer-Other';
 
+    static Account testAccount;
+
     static testMethod void testContactNoXmPerson() {
 
-        Account testAccount = createAccount();
+        createAccount();
 
         Map<String, RecordTypeInfo> recordTypeMap = Schema.SObjectType.Contact.getRecordTypeInfosByName();
         Contact testContact = new Contact(
@@ -53,7 +55,7 @@ private class XMPersonManagementControllerTest {
 
     static testMethod void testContactWithXmPerson() {
 
-        Account testAccount = createAccount();
+        createAccount();
 
         xmPerson__c person = new xmPerson__c(
                 xmPersonUID__c = 'aefgh-1234-cdeft'
@@ -91,7 +93,7 @@ private class XMPersonManagementControllerTest {
 
     static testMethod void testContactWithDuplicates() {
 
-        Account testAccount = createAccount();
+        createAccount();
 
         xmPerson__c person = new xmPerson__c(
                 xmPersonUID__c = 'aefgh-1234-cdeft'
@@ -143,21 +145,89 @@ private class XMPersonManagementControllerTest {
 
     }
 
+    static testmethod void testProductGroups(){
 
+        createAccount();
+        createImplementedProduct();
 
-    static Account createAccount(){
+        xmPerson__c person = new xmPerson__c(
+                xmPersonUID__c = 'aefgh-1234-cdeft'
+        );
+        insert person;
+
+        Map<String, RecordTypeInfo> recordTypeMap = Schema.SObjectType.Contact.getRecordTypeInfosByName();
+        Contact testContact = new Contact(
+                FirstName = 'XMPersonManagementControllerTest',
+                LastName = 'Contact',
+                Email = 'contact1@incontact.com',
+                RecordTypeId = recordTypeMap.get(CUSTOMER_CONTACT).getRecordTypeId(),
+                AccountId = testAccount.Id,
+                xmPerson__c = person.Id
+        );
+
+        insert testContact;
+
+        test.startTest();
+
+        XMRestGroupMockHttpGenerator xmGroupMock = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+        Test.setMock(HttpCalloutMock.class, xmGroupMock);
+
+        string productGroups = XMPersonManagementController.getProductGroups(testContact.Id);
+
+        XMGroupProductCluster[] xmGroupList = (XMGroupProductCluster[])JSON.deserialize(productGroups, List<XMGroupProductCluster>.class);
+        system.assertNotEquals(0, xmGroupList.size());
+
+        test.stopTest();
+
+        xmGroupList[0].selected = true;
+        string result = XMPersonManagementController.updateGroupSubscription( JSON.Serialize(xmGroupList), testContact.Id);
+        system.assertNotEquals(null, result);
+
+    }
+
+    static void createAccount(){
 
         Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
 
-        Account testAccount = new Account(
+        testAccount = new Account(
                 Name = 'XMPersonManagementControllerTest Account',
                 Type = 'Customer',
                 CadebillAccountNo__c = 877124,
-                RecordTypeId = accountRecordTypeMap.get(CUSTOMER_ACCOUNT).getRecordTypeId()
+                RecordTypeId = accountRecordTypeMap.get(CUSTOMER_ACCOUNT).getRecordTypeId(),
+                Cluster__c = 'C3'
         );
         insert testAccount;
 
-        return testAccount;
+    }
+
+    static void createImplementedProduct(){
+
+        Map<String, RecordTypeInfo> recordTypeMap = Schema.SObjectType.Opportunity.getRecordTypeInfosByName();
+        Opportunity opp = new Opportunity();
+        opp.RecordTypeId = recordTypeMap.get('New Opportunity').getRecordTypeId();
+        opp.Name = 'test';
+        opp.CloseDate = system.today().addDays(30);
+        opp.StageName = 'Open';
+        opp.AccountId = testAccount.Id;
+
+        insert opp;
+
+        ImplementedProduct__c ip = new ImplementedProduct__c();
+        ip.Account__c = testAccount.Id;
+        ip.GoLiveDate__c = system.today() - 1;
+        ip.Status__c = 'Implemented';
+        ip.Product__c = 'inContact';
+        ip.Opportunity__c = opp.Id;
+        insert ip;
+
+        ProductEventMap__c pem = new ProductEventMap__c();
+        pem.Name = 'inContact';
+        pem.Product__c = 'inContact';
+        pem.ImplementedProduct__c = 'inContact';
+        pem.Platform__c = 'Cluster - inContact';
+        pem.HasClusters__c = true;
+
+        insert pem;
 
     }
 
