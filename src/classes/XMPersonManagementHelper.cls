@@ -74,11 +74,14 @@ public class XMPersonManagementHelper {
     public static XMPersonWrapper getXmPersonByGuid(String xmPersonGuid){
 
         XMRestPerson restService = new XMRestPerson();
-        XMPersonModel response = restService.getXmPersonModelByXmattersId(xmPersonGuid);
+        if(xmPersonGuid != null){
+            XMPersonModel response = restService.getXmPersonModelByXmattersId(xmPersonGuid);
 
-        XMPersonWrapper personWrapper = new XMPersonWrapper(response);
+            XMPersonWrapper personWrapper = new XMPersonWrapper(response);
 
-        return personWrapper;
+            return personWrapper;
+        }
+       return null;
 
     }
 
