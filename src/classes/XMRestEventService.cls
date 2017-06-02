@@ -21,7 +21,6 @@ public class XMRestEventService {
         XMEventData xmEventData = new XMEventData();
         xmeventData.platformGroups = convertProductAndPlatformToGroupName(eventCase.PlatformsImpacted__c, eventCase.ProductImpacted__c);
         xmEventData.startEvent = true;
-        xmEventData.eventType = xmNotificationRecord.Request_Type__c;
 
         // Build the specific event details needed to process the event.
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();
@@ -30,6 +29,7 @@ public class XMRestEventService {
         eventGroupInfo.eventName = 'Event_' + xmNotificationRecord.Request_Type__c + '_' + eventCase.CaseNumber + '_{PartnerPrefix}';
         eventGroupInfo.salesforceCaseId = eventCase.Id;
         eventGroupInfo.partnerList = getSupportedPartners();
+        eventGroupInfo.eventType = xmNotificationRecord.Request_Type__c;
         xmEventData.eventGroupInfo = eventGroupInfo;
 
         // Build the properties needed to fill out the email template in xMatters

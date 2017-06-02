@@ -5,7 +5,6 @@
 public class XMEventData {
 
     public Boolean startEvent {get;set;}
-    public string eventType {get;set;}
     public EventGroupInfo eventGroupInfo {get;set;}
 
     // Dyanmic properties that get sent to xMatters and resolve to form fields
@@ -18,5 +17,6 @@ public class XMEventData {
         public String eventName {get;set;}
         public String salesforceCaseId {get;set;}
         public String[] partnerList {get;set;}
+        public string eventType {get;set;}
     }
 }
