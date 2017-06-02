@@ -7,15 +7,20 @@ public class XMBusinessLayer  {
 
     public XMBusinessLayer(string contactId) {
 
-        List<Contact> contacts = [select xmPerson__c,  xmPerson__r.xmPersonUID__c from contact where id = :contactId];
+        List<Contact> contacts = [select xmPerson__c, AccountId, xmPerson__r.xmPersonUID__c from contact where id = :contactId];
 
-        for (Contact con : [
-                select Id, xmPerson__c, AccountId
-                from Contact
-                Where xmPerson__c = :contacts[0].xmPerson__c
-        ]) {
-            acc.add(con.AccountId);
+        if(contacts[0].xmPerson__c != null){
+            for (Contact con : [
+                    select Id, xmPerson__c, AccountId
+                    from Contact
+                    Where xmPerson__c = :contacts[0].xmPerson__c
+            ]) {
+                acc.add(con.AccountId);
+            }
+        }else{
+            acc.add(contacts[0].AccountId);
         }
+
         guid = contacts[0].xmPerson__r.xmPersonUID__c;
     }
 
@@ -29,7 +34,11 @@ public class XMBusinessLayer  {
         Map<String, XMGroupProductCluster> xmSalesForceGroupMap = GetSalesForceGroupData(acc);
         System.debug('xmSalesForceGroupMap -- >' + xmSalesForceGroupMap);
         List<XMGroupProductCluster> xmFinalList = new List<XMGroupProductCluster>();
-        List<XMGroupMemberModel> xmGrouplist  = xmRest.GetXMPersonGroupsById(guid);
+        List<XMGroupMemberModel> xmGrouplist = new List<XMGroupMemberModel>();
+        if(guid != null){
+            xmGrouplist  = xmRest.GetXMPersonGroupsById(guid);
+        }
+
         system.debug('XMGroupList -->' + xmGrouplist);
         if(xmGrouplist != null)
         {
