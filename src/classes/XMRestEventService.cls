@@ -20,7 +20,17 @@ public class XMRestEventService {
 
         XMEventData xmEventData = new XMEventData();
         xmeventData.platformGroups = convertProductAndPlatformToGroupName(eventCase.PlatformsImpacted__c, eventCase.ProductImpacted__c);
-        xmEventData.startEvent = true;
+
+        AppConfiguration__c config = AppConfiguration__c.getInstance();
+
+        if(config != null) {
+            // If the debug flag is off then start the event
+            xmEventData.startEvent = config.Debug_xMatters_Event_Request__c == false;
+        } else {
+            // Always start the event if the setting isn't there
+            xmEventData.startEvent = true;
+        }
+
 
         // Build the specific event details needed to process the event.
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();
