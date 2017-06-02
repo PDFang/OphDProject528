@@ -7,7 +7,7 @@ private class XMNotificationTriggerHandlerTest {
 
     // test callout to xMatters event service
     static testMethod void testBehavior() {
-        
+
         Map<String,Schema.RecordTypeInfo> testIncidentTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
         Case testEvent = new Case(
                 RecordTypeId = testIncidentTypeMap.get('Event').getRecordTypeId(),
