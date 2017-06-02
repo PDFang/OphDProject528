@@ -22,26 +22,25 @@ public class XMRestEventService {
         xmeventData.platformGroups = convertProductAndPlatformToGroupName(eventCase.PlatformsImpacted__c, eventCase.ProductImpacted__c);
         xmEventData.startEvent = true;
 
-        //get the picklist API Name to pass as the eventType
-        Schema.DescribeFieldResult fieldResult = XMNotification__c.Request_Type__c.getDescribe();
-        List<Schema.PicklistEntry> values = fieldResult.getPicklistValues();
-
-        for(Schema.PicklistEntry picklistValue : values) {
-            if(picklistValue.getLabel() == xmNotificationRecord.Request_Type__c) {
-                xmEventData.eventType = picklistValue.getValue();
-                break;
-            }
-        }
-
         // Build the specific event details needed to process the event.
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();
 
         // PartnerPrefix is a place holder to be replaced by the inbound integration
-        eventGroupInfo.eventName = 'Event_' + xmNotificationRecord.Request_Type__c + '_' + eventCase.CaseNumber + '_{PartnerPrefix}';
+        eventGroupInfo.eventName = ('Event_' + xmNotificationRecord.Request_Type__c + '_' + eventCase.CaseNumber + '_{PartnerPrefix}').replace(' ', '');
         eventGroupInfo.salesforceCaseId = eventCase.Id;
         eventGroupInfo.partnerList = getSupportedPartners();
-        eventGroupInfo.eventType = xmNotificationRecord.Request_Type__c;
         xmEventData.eventGroupInfo = eventGroupInfo;
+
+        //get the picklist API Name to pass as the eventType
+        Schema.DescribeFieldResult fieldResult = XMNotification__c.Request_Type__c.getDescribe();
+        List<Schema.PicklistEntry> values = fieldResult.getPicklistValues();
+        for(Schema.PicklistEntry picklistValue : values) {
+            if(picklistValue.getLabel() == xmNotificationRecord.Request_Type__c) {
+                eventGroupInfo.eventType = picklistValue.getValue();
+                break;
+            }
+        }
+
 
         // Build the properties needed to fill out the email template in xMatters
         XMEventData.templateProperties = addAdditionalSalesforceDataToFormProperties(eventCase);
@@ -109,7 +108,6 @@ public class XMRestEventService {
 
         // If we didn't find the product we will need to notify someone
         if(productMap == null){
-            // TODO: Throw a fit?
             system.debug('convertProductAndPlatformToGroupName() ==> product map is null, this will cause a few problems');
         }
 
