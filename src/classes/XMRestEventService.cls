@@ -12,7 +12,7 @@ public class XMRestEventService {
     /*
      *  Creates an external event in xMatters
      *  Takes a list of clusters, a product and the salesforceCaseId (The unique Id)
-     *  Returns back the xMatters processed guid id.  (Used for tracking purposes only)
+     *  Returns back the xMatters processed guid id.  (Use-d for tracking purposes only)
      */
     public String startExternalEventProcessing(XMNotification__c xmNotificationRecord){
 
@@ -134,7 +134,7 @@ public class XMRestEventService {
                 cluster = 'NONE';
             }
 
-            String groupString = ('IP_{PartnerPrefix}_' + product + '_' + platform).replace(' ', '');
+            String groupString = ('IP_{PartnerPrefix}_' + product + '_' + cluster).replace(' ', '');
             groupArray.add(groupString);
 
             system.debug('convertProductAndPlatformToGroupName() ==> Adding group to list' + groupString);
