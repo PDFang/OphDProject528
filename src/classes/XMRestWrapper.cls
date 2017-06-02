@@ -8,7 +8,7 @@ public class XMRestWrapper {
             request.setBody(body);
         }
 
-        request.setEndpoint('callout:xMatters_NP/' + url);
+        request.setEndpoint('callout:xMatters_REST_API/' + url);
 
         request.setHeader('Authorization', '{!$Credential.AuthorizationMethod} {!$Credential.AuthorizationHeaderValue}');
 

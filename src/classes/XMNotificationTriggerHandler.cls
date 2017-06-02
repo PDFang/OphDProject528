@@ -50,10 +50,23 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
             notificationList[0].Status__c = 'Processed';
         }catch(Exception ex){
             system.debug('callXMRestEventServiceFuture(): Exception - '+ ex);
+            sendErrorEmail(ex, notificationList[0].Case__c);
             notificationList[0].Status__c = 'Failed';
         }
 
         update notificationList;
 
     }
+
+    private static void sendErrorEmail(Exception calloutException, String caseId){
+
+        try{
+            inContactBaseClass.SendErrorEmail(calloutException, CaseId);
+        } catch (Exception ex){
+            system.debug('Exception sending error email - '+ ex);
+        }
+
+
+    }
+
 }
