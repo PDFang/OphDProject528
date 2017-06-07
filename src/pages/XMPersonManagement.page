@@ -162,6 +162,7 @@
                 <apex:pageBlock id="contactDetail" >
                     <apex:pageBlockSection title="Contact Detail" collapsible="false" columns="1">
                         <apex:outputField value="{!currentContact.Name}"/>
+                        <apex:outputField value="{!currentContact.Email}"/>
                         <apex:outputField value="{!currentContact.AccountId}"/>
                         <apex:outputField value="{!currentContact.Account.CadebillAccountNoText__c}"/>
                     </apex:pageBlockSection>
@@ -299,6 +300,9 @@
                                         </apex:outputPanel>
                                     </apex:facet>
                                 </apex:actionStatus>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!!ISBLANK(con.xmPerson__c)}">
+                                <apex:outputText value="Associated"></apex:outputText>
                             </apex:outputPanel>
                         </apex:column>
                     </apex:dataTable>
@@ -805,7 +809,7 @@
                         var name = timeframes[i].name.replace(/\s+/g, '-');
 
 
-                      $('<li class="'+tabClass+'"><a href="#'+name+'" data-toggle="tab">'+timeframes[i].name+'</a></li>').appendTo('ul#tabs');
+                      $('<li class="'+tabClass+'"><a href="#'+name+'" data-toggle="tab">'+timeframes[i].name+'&nbsp;&nbsp<button type="button" class="close" onclick="deleteTimeFrame(\''+timeframes[i].name+'\');" aria-label="Close"><span aria-hidden="true">&times;</span></button></a></li>').appendTo('ul#tabs');
                       divContent = '<div id="'+name+'" class="tab-pane fade '+contentClass+'">'
                                    + ' <div class="form-group">'
                                     + '<label for="nameInput'+name+'" class="col-2 col-form-label">Name </label>'
@@ -868,6 +872,10 @@
 
       }
 
+     function deleteTimeFrame(obj){
+         console.log('came into onclick event ==>' + obj);
+
+     }
      function addKendoTimePicker(startId, endId){
             //init start timepicker
             end = $(endId).kendoTimePicker().data("kendoTimePicker");
