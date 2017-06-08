@@ -28,7 +28,7 @@ public class XMRestWrapper {
         return returnResponse;
     }
 
-    public String callConfirmedInboundIntegration(String body) {
+    public String callConfirmedInboundIntegration(String body, String inboundIntegrationGuid) {
 
         HttpRequest request = new HttpRequest();
 
@@ -36,7 +36,7 @@ public class XMRestWrapper {
             request.setBody(body);
         }
 
-        request.setEndpoint('callout:xMatters_NP_Inbound_integration_Confirmed');
+        request.setEndpoint('callout:xMatters_NP_Inbound_integration_Confirmed/' + inboundIntegrationGuid + '/triggers');
 
         request.setHeader('Authorization', '{!$Credential.AuthorizationMethod} {!$Credential.AuthorizationHeaderValue}');
 
