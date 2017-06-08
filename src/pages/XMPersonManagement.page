@@ -535,7 +535,7 @@
                                        options.data.deviceId,
                                       function(result,event)
                                       {
-                                          if (event.status) {
+                                              if (event.status) {
                                                  var returnResult = JSON.parse(result);
                                               if(returnResult.result != 'Failed'){
 
@@ -809,7 +809,7 @@
                         var name = timeframes[i].name.replace(/\s+/g, '-');
 
 
-                      $('<li class="'+tabClass+'"><a href="#'+name+'" data-toggle="tab">'+timeframes[i].name+'&nbsp;&nbsp<button type="button" class="close" onclick="deleteTimeFrame(\''+timeframes[i].name+'\');" aria-label="Close"><span aria-hidden="true">&times;</span></button></a></li>').appendTo('ul#tabs');
+                      $('<li class="'+tabClass+'"><a href="#'+name+'" data-toggle="tab">'+timeframes[i].name+'&nbsp;&nbsp<button type="button" title="Delete timeframe" class="close" onclick="deleteTimeFrame(this, \''+timeframes[i].name+'\');" aria-label="Close"><span aria-hidden="true">&times;</span></button></a></li>').appendTo('ul#tabs');
                       divContent = '<div id="'+name+'" class="tab-pane fade '+contentClass+'">'
                                    + ' <div class="form-group">'
                                     + '<label for="nameInput'+name+'" class="col-2 col-form-label">Name </label>'
@@ -872,10 +872,43 @@
 
       }
 
-     function deleteTimeFrame(obj){
+     function deleteTimeFrame(sender, obj){
          console.log('came into onclick event ==>' + obj);
+         //var isTimeframeDelete = ConfirmDialog('Are you sure you want to delete this timeframe, you will no longer recieve notification in this timeframe.')
+         obj = '#' + obj;
+         var numOfTabs = $('div.tab-content div.tab-pane').length;
+         //var objDeleteTimeFrameID = '#' + objDeleteTimeframe[1];
+         if(numOfTabs > 1)
+         {
+//             if(confirm('Are you sure you want to delete this timeframe, you will no longer recieve notification in this timeframe.'))
+//             {
+                  $(obj).remove();
+                  $(sender).parent().parent().remove();
+                  if($("div#validation-errors").children().children().text() == "" || $("div#validation-errors").children().children().text() == null)
+                  {
+                      $("div#validation-errors").css("display", "block");
+                      var errorString = '<ul><li>You must click save to delete the timeframe else cancel.</li></ul>';
+                      $(errorString).appendTo("div#validation-errors");
+                      $(sender).parent().parent().children('li:first').addClass('active');
+                  }
+             //}
+         }
+         else
+         {
+             if($("div#validation-errors").children().children().text() == "" || $("div#validation-errors").children().children().text() == null || $("div#validation-errors").children().children().text() == "You must click save to delete the timeframe else cancel.")
+             {
+                $("div#validation-errors").css("display", "block");
+                var errorString = '<ul><li>You must have atleast one timeframe.</li></ul>';
+                $(errorString).appendTo("div#validation-errors");
+                return false;
+             }
+
+         }
+
+
 
      }
+
      function addKendoTimePicker(startId, endId){
             //init start timepicker
             end = $(endId).kendoTimePicker().data("kendoTimePicker");
