@@ -22,10 +22,10 @@ public class ReferenceProfileTriggerHandler extends TriggerHandler
 
         if(oldReferenceProfileList.size() == 0)
         {
-            //loop through contacts
+            //loop through refrence profile
             for(refedge__Reference_Basic_Information__c c:newReferenceProfileList)
             {
-                //get referenceable contacts
+                //get refrence profile
                 if(c.refedge__Is_Referenceable__c && c.refedge__Referenceability_Status__c == 'Active' )
                 {
                     if(!acctAddRef.contains(c.refedge__Account__c))
@@ -40,11 +40,11 @@ public class ReferenceProfileTriggerHandler extends TriggerHandler
             //loop through triggers
             for(integer i=0; i < newReferenceProfileList.size(); i++)
             {
-                //get new and old contact record
+                //get new and old refrence profile record
                 refedge__Reference_Basic_Information__c refProfNew = newReferenceProfileList[i];
                 refedge__Reference_Basic_Information__c refProfOld = oldReferenceProfileList[i];
 
-                //get newly referenceable contacts
+                //get newly refrence profile
                 if((!refProfOld.refedge__Is_Referenceable__c  && refProfOld.refedge__Referenceability_Status__c != 'Active') &&
                         (refProfNew.refedge__Is_Referenceable__c && refProfNew.refedge__Referenceability_Status__c == 'Active'))
                 {
