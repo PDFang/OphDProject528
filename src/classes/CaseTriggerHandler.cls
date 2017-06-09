@@ -117,20 +117,42 @@ public class CaseTriggerHandler extends TriggerHandler
     private void createXmNotification(List<Case> newList, Map<Id, Case> oldMap){
 
         List<Case> processList = new List<Case>();
+        string platformsAdded = '',
+               requestType = '';
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
             // Is Event confirmed
             system.debug('createXmNotification(): new status - ' + newCase.Status);
             system.debug('createXmNotification(): old status - ' + oldCase.Status);
 
-            if(newCase.RecordTypeId == eventRecordType && oldCase != null
-                    && ( (newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed')
-                    || (newCase.Status == 'Resolved' && oldCase.Status != 'Resolved') ) )
+            if(newCase.RecordTypeId == eventRecordType && oldCase != null)
             {
-                processList.add(newCase);
+               if ((newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed')
+                   || (newCase.Status == 'Resolved' && oldCase.Status != 'Resolved')){
+
+                   System.debug('Initial event');
+                   processList.add(newCase);
+               }
+               else if(newCase.Status == 'Confirmed' &&
+                       newCase.PlatformsImpacted__c != oldCase.PlatformsImpacted__c
+                       && !newCase.InternalEvent__c){
+                   System.debug('Add event');
+                   requestType = 'Event Platforms Add';
+                   processList.add(newCase);
+
+                   for(string s : newCase.PlatformsImpacted__c.split(';'))
+                   {
+                       if(!oldCase.PlatformsImpacted__c.contains(s))
+                       {
+                           platformsAdded += s + ';';
+
+                       }
+                   }
+
+               }
             }
         }
-
+        system.debug('platformsAdded(): platformsAdded - ' + platformsAdded);
         system.debug('createXmNotification(): processList - ' + processList);
         if(processList.isEmpty()){
             return;
@@ -142,7 +164,8 @@ public class CaseTriggerHandler extends TriggerHandler
             xmNotification__c xmNotification = new xmNotification__c(
                     Case__c = newCase.Id,
                     Request_Date__c = system.now(),
-                    Request_Type__c = getXmNotificationRequestType(newCase)
+                    Request_Type__c = requestType == '' ? getXmNotificationRequestType(newCase) : requestType,
+                    AddedPlatforms__c = platformsAdded
             );
             notificationList.add(xmNotification);
         }

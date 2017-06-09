@@ -885,7 +885,7 @@
               if($("div#validation-errors").children().children().text() == "" || $("div#validation-errors").children().children().text() == null)
               {
                   $("div#validation-errors").css("display", "block");
-                  var errorString = '<ul><li>You must click save to delete the timeframe else cancel.</li></ul>';
+                  var errorString = '<ul><li>You must click on save to delete the timeframe from xMatters.</li></ul>';
                   $(errorString).appendTo("div#validation-errors");
               }
          }
