@@ -2,6 +2,7 @@ public class XMRestEventService {
     private XMRestWrapper restWrapper;
     private Map<String, ProductEventMap__c> nodeMap;
     private List<Case_to_xMatters_Field_Mapping__mdt> caseToXMattersFieldMappings;
+    private SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(inContactBaseClass.OrgId15Digit);
 
     public XMRestEventService(){
         restWrapper = new XMRestWrapper(); //TODO: Allow injection? Not sure yet
@@ -18,8 +19,19 @@ public class XMRestEventService {
 
         Case eventCase = getCaseFromxmNotification(xmNotificationRecord);
 
+        String inboundIntegrationGuid;
+        String platformsAffected;
+
+        if(xmNotificationRecord.Request_Type__c == 'Event Platforms Add'){
+            platformsAffected = xmNotificationRecord.AddedPlatforms__c;
+            inboundIntegrationGuid = siteConfig.AddPlatformInboundGUID__c;
+        } else {
+            platformsAffected = eventCase.PlatformsImpacted__c;
+            inboundIntegrationGuid = siteConfig.ConfirmedResolvedInboundGUID__c;
+        }
+
         XMEventData xmEventData = new XMEventData();
-        xmeventData.platformGroups = convertProductAndPlatformToGroupName(eventCase.PlatformsImpacted__c, eventCase.ProductImpacted__c);
+        xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c);
 
         AppConfiguration__c config = AppConfiguration__c.getInstance();
 
@@ -36,9 +48,10 @@ public class XMRestEventService {
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();
 
         // PartnerPrefix is a place holder to be replaced by the inbound integration
-        eventGroupInfo.eventName = ('Event_' + xmNotificationRecord.Request_Type__c + '_' + eventCase.CaseNumber + '_{PartnerPrefix}').replace(' ', '');
+        eventGroupInfo.eventName = ('Event_' + eventCase.CaseNumber + '_{PartnerPrefix}').replace(' ', '');
         eventGroupInfo.salesforceCaseId = eventCase.Id;
         eventGroupInfo.partnerList = getSupportedPartners();
+        eventGroupInfo.xmNotificationId = xmNotificationRecord.Id;
         xmEventData.eventGroupInfo = eventGroupInfo;
 
         //get the picklist API Name to pass as the eventType
@@ -51,7 +64,6 @@ public class XMRestEventService {
             }
         }
 
-
         // Build the properties needed to fill out the email template in xMatters
         XMEventData.templateProperties = addAdditionalSalesforceDataToFormProperties(eventCase);
 
@@ -60,7 +72,7 @@ public class XMRestEventService {
         system.debug('startExternalEventProcessing() ===> Created Json Event Data: ' + eventDetailsJson);
 
         // Call out to xMatters and start the event process
-        String response = restWrapper.callConfirmedInboundIntegration(eventDetailsJson);
+        String response = restWrapper.callConfirmedInboundIntegration(eventDetailsJson, inboundIntegrationGuid);
         system.debug('startExternalEventProcessing() ===> Create Response From xMatters' + response);
 
         return response;

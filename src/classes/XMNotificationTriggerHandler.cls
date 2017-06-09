@@ -35,7 +35,7 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
     private static void callXMRestEventServiceFuture(Set<Id> notificationIdSet){
 
         List<xmNotification__c> notificationList = [
-                Select Id, Case__c, Request_Date__c, Request_Type__c, Status__c
+                Select Id, Case__c, Request_Date__c, Request_Type__c, Status__c,AddedPlatforms__c
                 From xmNotification__c
                 Where Id IN :notificationIdSet
         ];
@@ -46,7 +46,6 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
             String response = eventService.startExternalEventProcessing(notificationList[0]);
 
             system.debug('callXMRestEventServiceFuture(): XMRestEventService response - '+ response);
-
             notificationList[0].Status__c = 'Processed';
         }catch(Exception ex){
             system.debug('callXMRestEventServiceFuture(): Exception - '+ ex);
