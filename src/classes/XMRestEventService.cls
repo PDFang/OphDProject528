@@ -2,7 +2,6 @@ public class XMRestEventService {
     private XMRestWrapper restWrapper;
     private Map<String, ProductEventMap__c> nodeMap;
     private List<Case_to_xMatters_Field_Mapping__mdt> caseToXMattersFieldMappings;
-    private SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(inContactBaseClass.OrgId15Digit);
 
     public XMRestEventService(){
         restWrapper = new XMRestWrapper(); //TODO: Allow injection? Not sure yet
@@ -19,19 +18,7 @@ public class XMRestEventService {
 
         Case eventCase = getCaseFromxmNotification(xmNotificationRecord);
 
-        String inboundIntegrationGuid;
-        String platformsAffected;
-
-        if(xmNotificationRecord.Request_Type__c == 'Event Platforms Add'){
-            platformsAffected = xmNotificationRecord.AddedPlatforms__c;
-            inboundIntegrationGuid = siteConfig.AddPlatformInboundGUID__c;
-        } else {
-            platformsAffected = eventCase.PlatformsImpacted__c;
-            inboundIntegrationGuid = siteConfig.ConfirmedResolvedInboundGUID__c;
-        }
-
         XMEventData xmEventData = new XMEventData();
-        xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c);
 
         AppConfiguration__c config = AppConfiguration__c.getInstance();
 
@@ -43,6 +30,19 @@ public class XMRestEventService {
             xmEventData.startEvent = true;
         }
 
+        String inboundIntegrationGuid;
+        String platformsAffected;
+
+        if(xmNotificationRecord.Request_Type__c == 'Event Platforms Add'){
+            platformsAffected = xmNotificationRecord.AddedPlatforms__c;
+            inboundIntegrationGuid = (config != null) ? config.XM_Add_Platform_Inbound_GUID__c : null;
+        } else {
+            platformsAffected = eventCase.PlatformsImpacted__c;
+            inboundIntegrationGuid = (config != null) ? config.XM_Event_Notification_Inbound_GUID__c : null;
+        }
+
+
+        xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c);
 
         // Build the specific event details needed to process the event.
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();

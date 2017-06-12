@@ -3,6 +3,7 @@ public class CaseTriggerHandler extends TriggerHandler
     private static boolean staticValuesSet = false;
     private static boolean isProxyServiceTurnedOff = false;
     private static boolean isxMattersNotificationsTurnedOff = false;
+    private static String xmEventNotificationPriorities = 'P1;P2;';
     private static Id eventRecordType;
     private static Id maintenanceRecordType;   
     private static Id knownIssueRecordType;
@@ -28,7 +29,8 @@ public class CaseTriggerHandler extends TriggerHandler
             AppConfiguration__c config = AppConfiguration__c.getInstance();
             if(config != null) {
                 isProxyServiceTurnedOff = config.Turn_Off_Partner_Case_Proxy_Service__c;
-                isxMattersNotificationsTurnedOff = config.Turn_Off_xMatters_Notifications__c;
+                isxMattersNotificationsTurnedOff = config.XM_Turn_Off_Event_Notifications__c;
+                xmEventNotificationPriorities = config.XM_Event_Notification_Priorities__c;
             }
         }
     }
@@ -125,7 +127,7 @@ public class CaseTriggerHandler extends TriggerHandler
             system.debug('createXmNotification(): new status - ' + newCase.Status);
             system.debug('createXmNotification(): old status - ' + oldCase.Status);
 
-            if(newCase.RecordTypeId == eventRecordType && oldCase != null && !newCase.InternalEvent__c)
+            if(newCase.RecordTypeId == eventRecordType && oldCase != null && !newCase.InternalEvent__c && xmEventNotificationPriorities.containsIgnoreCase(newCase.Priority))
             {
                if ((newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed')
                    || (newCase.Status == 'Resolved' && oldCase.Status != 'Resolved')){
