@@ -874,6 +874,7 @@
 
      function deleteTimeFrame(sender, deleteTimeFrameObj){
          console.log('came into onclick event ==>' + deleteTimeFrameObj);
+         var userErrMessage  = 'You must click on save to delete the timeframe from xMatters.'
          deleteTimeFrameObj = '#' + deleteTimeFrameObj;
          var numOfTabs = $('div.tab-content div.tab-pane').length;
          if(numOfTabs > 1)
@@ -885,13 +886,13 @@
               if($("div#validation-errors").children().children().text() == "" || $("div#validation-errors").children().children().text() == null)
               {
                   $("div#validation-errors").css("display", "block");
-                  var errorString = '<ul><li>You must click on save to delete the timeframe from xMatters.</li></ul>';
+                  var errorString = '<ul><li>'+userErrMessage+'</li></ul>';
                   $(errorString).appendTo("div#validation-errors");
               }
          }
          else
          {
-              if($("div#validation-errors").children().children().text() == "" || $("div#validation-errors").children().children().text() == null || $("div#validation-errors").children().children().text() == "You must click save to delete the timeframe else cancel.")
+              if($("div#validation-errors").children().children().text() == "" || $("div#validation-errors").children().children().text() == null || $("div#validation-errors").children().children().text() == userErrMessage)
               {
                   $("div#validation-errors").css("display", "block");
                   var errorString = '<ul><li>You must have atleast one timeframe.</li></ul>';
