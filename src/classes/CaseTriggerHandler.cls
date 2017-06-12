@@ -125,7 +125,7 @@ public class CaseTriggerHandler extends TriggerHandler
             system.debug('createXmNotification(): new status - ' + newCase.Status);
             system.debug('createXmNotification(): old status - ' + oldCase.Status);
 
-            if(newCase.RecordTypeId == eventRecordType && oldCase != null)
+            if(newCase.RecordTypeId == eventRecordType && oldCase != null && !newCase.InternalEvent__c)
             {
                if ((newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed')
                    || (newCase.Status == 'Resolved' && oldCase.Status != 'Resolved')){
@@ -134,8 +134,7 @@ public class CaseTriggerHandler extends TriggerHandler
                    processList.add(newCase);
                }
                else if(newCase.Status == 'Confirmed' &&
-                       newCase.PlatformsImpacted__c != oldCase.PlatformsImpacted__c
-                       && !newCase.InternalEvent__c){
+                       newCase.PlatformsImpacted__c != oldCase.PlatformsImpacted__c){
                    System.debug('Add event');
                    requestType = 'Event Platforms Add';
                    processList.add(newCase);
