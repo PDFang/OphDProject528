@@ -22,13 +22,8 @@ public class XMRestEventService {
 
         AppConfiguration__c config = AppConfiguration__c.getInstance();
 
-        if(config != null) {
-            // If the debug flag is off then start the event
-            xmEventData.startEvent = config.Debug_xMatters_Event_Request__c == false;
-        } else {
-            // Always start the event if the setting isn't there
-            xmEventData.startEvent = true;
-        }
+        xmEventData.startEvent = config == null ? true: config.Debug_xMatters_Event_Request__c == false;
+
 
         String inboundIntegrationGuid;
         String platformsAffected;
@@ -133,16 +128,15 @@ public class XMRestEventService {
             system.debug('convertProductAndPlatformToGroupName() ==> product map is null, this will cause a few problems');
         }
 
-        // TODO: Add check for null
-        for(String platform : platforms.split(';')){
+        for(String platform : platforms.split(';')) {
 
             String productClusterGroupName;
             String cluster;
 
             // If this is a product with a cluster we can just use the platform from platform imapcted otherwise we use None
-            if(productMap.HasClusters__c){
+            if (productMap.HasClusters__c) {
                 cluster = platform;
-            } else{
+            } else {
                 cluster = 'NONE';
             }
 

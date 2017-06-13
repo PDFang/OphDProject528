@@ -5,7 +5,7 @@ public class XMRestEventServiceTests {
         XMRestEventServiceHttpMock httpMockCallout = new XMRestEventServiceHttpMock(200,'Complete','[{"Name": "sForceTest1"}]',null);
 
         insertProductEventMap();
-        Case createdCase = insertCase();
+        Case createdCase = insertCase('inContact', 'C9 - inContact');
 
         Case eventCase = [SELECT Id, CaseNumber, PlatformsImpacted__c, ProductImpacted__c FROM Case WHERE Id = :createdCase.Id];
 
@@ -41,18 +41,76 @@ public class XMRestEventServiceTests {
         system.assertEquals(eventCase.CaseNumber, actualEventData.templateProperties.get('caseNumber'));
     }
 
-    private static void insertProductEventMap(){
-        ProductEventMap__c pem = new ProductEventMap__c();
-        pem.Name = 'inContact';
-        pem.Product__c = 'inContact';
-        pem.ImplementedProduct__c = 'inContact';
-        pem.Platform__c = 'Cluster - inContact';
-        pem.HasClusters__c = true;
+    public testMethod static void startExternalEventProcessing_NoClusterAndNoConfig(){
 
-        insert pem;
+        XMRestEventServiceHttpMock httpMockCallout = new XMRestEventServiceHttpMock(200,'Complete','[{"Name": "sForceTest1"}]',null);
+
+        insertProductEventMap();
+        Case createdCase = insertCase('DIA', 'Transport Services');
+
+        Case eventCase = [SELECT Id, CaseNumber, PlatformsImpacted__c, ProductImpacted__c FROM Case WHERE Id = :createdCase.Id];
+
+        // Create XMNotificationObject
+        XMNotification__c xMattersNotification = new XMNotification__c();
+        xMattersNotification.Case__c = eventCase.Id;
+        xMattersNotification.Request_Type__c = 'Event Platforms Add';
+        xMattersNotification.Status__c = 'New';
+        xMattersNotification.Request_Date__c = system.today();
+        xMattersNotification.AddedPlatforms__c = 'DIA Circuit';
+
+        insert xMattersNotification;
+
+        // Start test and perform fake callout
+        Test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, httpMockCallout);
+
+        XMRestEventService service = new XMRestEventService();
+        service.startExternalEventProcessing(xMattersNotification);
+
+        test.stopTest();
+
+        XMEventData actualEventData = (XMEventData) JSON.deserialize(httpMockCallout.requestBodyPassed, XMEventData.class);
+
+        // Check eventGroupInfo in the returned json
+        system.assertEquals(eventCase.Id, actualEventData.eventGroupInfo.salesforceCaseId);
+
+        // Check the platformGroup to ensure it has the right Implemented Product group
+        system.assertEquals('IP_{PartnerPrefix}_DIA_NONE', actualEventData.platformGroups[0]);
+
+        // Check the template properties
+        system.assertEquals(eventCase.ProductImpacted__c, actualEventData.templateProperties.get('productImpacted'));
+        system.assertEquals(eventCase.CaseNumber, actualEventData.templateProperties.get('caseNumber'));
     }
 
-    private static Case insertCase(){
+
+    private static void insertProductEventMap(){
+
+        List<ProductEventMap__c> productEventMaps = new  List< ProductEventMap__c>();
+
+        ProductEventMap__c inContactPem = new ProductEventMap__c();
+        inContactPem.Name = 'inContact';
+        inContactPem.Product__c = 'inContact';
+        inContactPem.ImplementedProduct__c = 'inContact';
+        inContactPem.Platform__c = 'Cluster - inContact';
+        inContactPem.HasClusters__c = true;
+
+        productEventMaps.add(inContactPem);
+
+
+        ProductEventMap__c noClusterPem = new ProductEventMap__c();
+        noClusterPem.Name = 'DIA';
+        noClusterPem.Product__c = 'DIA';
+        noClusterPem.ImplementedProduct__c = 'inContact';
+        noClusterPem.Platform__c = 'DIA Circuit';
+        noClusterPem.HasClusters__c = false;
+
+        productEventMaps.add(noClusterPem);
+        insert productEventMaps;
+    }
+
+    private static Case insertCase(String productImpacted, String platformImpacted){
+
         createSiteConfig();
 
         //set default assignment rule
@@ -69,8 +127,8 @@ public class XMRestEventServiceTests {
         // Create case used for test
         Case eventCase = new Case();
         eventCase.Description = 'This is a sample case to test the xMatters integration';
-        eventCase.ProductImpacted__c = 'inContact';
-        eventCase.PlatformsImpacted__c = 'C9 - inContact';
+        eventCase.ProductImpacted__c = productImpacted;
+        eventCase.PlatformsImpacted__c = platformImpacted;
         eventCase.Subject = 'Test Event';
         eventCase.EventType__c = 'Service Disruption';
         eventCase.RecordTypeId = eventRecordType;
