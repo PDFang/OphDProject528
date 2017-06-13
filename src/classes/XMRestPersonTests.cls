@@ -6,6 +6,10 @@ public class XMRestPersonTests {
         XMPersonModel person = new XMPersonModel();
         person.firstName = 'Bob';
         person.lastName = 'Marly';
+        person.targetName = 'TBD';
+        person.externallyOwned = true;
+        person.status = 'TESTED';
+        person.externalKey = 'DoesntMatter';
 
 
         test.startTest();
