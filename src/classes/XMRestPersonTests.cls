@@ -51,6 +51,7 @@ public class XMRestPersonTests {
         system.assertEquals(createdRecord.firstName, person.firstName);
         system.assertEquals(createdRecord.lastName, person.lastName);
         system.assert(createdRecord.recipientType == 'PERSON');
+        system.assert('1451a630-4d44-46e6-84ba-6b966dbfa715' == createdRecord.id);
     }
 
     public static testMethod void createPerson_FailureCodeWillThrowCorrectException(){

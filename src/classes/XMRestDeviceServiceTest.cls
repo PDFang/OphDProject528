@@ -7,6 +7,7 @@ public class XMRestDeviceServiceTest {
         emailDevice.name = 'Email Device Name';
         emailDevice.description = 'This is a device for unit Testing';
         emailDevice.targetName = 'Device TargetName';
+        emailDevice.owner = 'ignore';
 
         Test.startTest();
 
