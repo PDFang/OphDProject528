@@ -19,26 +19,34 @@ public class XMRestEventService {
         Case eventCase = getCaseFromxmNotification(xmNotificationRecord);
 
         XMEventData xmEventData = new XMEventData();
-        xmeventData.platformGroups = convertProductAndPlatformToGroupName(eventCase.PlatformsImpacted__c, eventCase.ProductImpacted__c);
 
         AppConfiguration__c config = AppConfiguration__c.getInstance();
 
-        if(config != null) {
-            // If the debug flag is off then start the event
-            xmEventData.startEvent = config.Debug_xMatters_Event_Request__c == false;
+        xmEventData.startEvent = config == null ? true: config.Debug_xMatters_Event_Request__c == false;
+
+
+        String inboundIntegrationGuid;
+        String platformsAffected;
+
+        if(xmNotificationRecord.Request_Type__c == 'Event Platforms Add'){
+            platformsAffected = xmNotificationRecord.AddedPlatforms__c;
+            inboundIntegrationGuid = (config != null) ? config.XM_Add_Platform_Inbound_GUID__c : null;
         } else {
-            // Always start the event if the setting isn't there
-            xmEventData.startEvent = true;
+            platformsAffected = eventCase.PlatformsImpacted__c;
+            inboundIntegrationGuid = (config != null) ? config.XM_Event_Notification_Inbound_GUID__c : null;
         }
 
+
+        xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c);
 
         // Build the specific event details needed to process the event.
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();
 
         // PartnerPrefix is a place holder to be replaced by the inbound integration
-        eventGroupInfo.eventName = ('Event_' + xmNotificationRecord.Request_Type__c + '_' + eventCase.CaseNumber + '_{PartnerPrefix}').replace(' ', '');
+        eventGroupInfo.eventName = ('Event_' + eventCase.CaseNumber + '_{PartnerPrefix}').replace(' ', '');
         eventGroupInfo.salesforceCaseId = eventCase.Id;
         eventGroupInfo.partnerList = getSupportedPartners();
+        eventGroupInfo.xmNotificationId = xmNotificationRecord.Id;
         xmEventData.eventGroupInfo = eventGroupInfo;
 
         //get the picklist API Name to pass as the eventType
@@ -51,7 +59,6 @@ public class XMRestEventService {
             }
         }
 
-
         // Build the properties needed to fill out the email template in xMatters
         XMEventData.templateProperties = addAdditionalSalesforceDataToFormProperties(eventCase);
 
@@ -60,7 +67,7 @@ public class XMRestEventService {
         system.debug('startExternalEventProcessing() ===> Created Json Event Data: ' + eventDetailsJson);
 
         // Call out to xMatters and start the event process
-        String response = restWrapper.callConfirmedInboundIntegration(eventDetailsJson);
+        String response = restWrapper.callConfirmedInboundIntegration(eventDetailsJson, inboundIntegrationGuid);
         system.debug('startExternalEventProcessing() ===> Create Response From xMatters' + response);
 
         return response;
@@ -121,16 +128,15 @@ public class XMRestEventService {
             system.debug('convertProductAndPlatformToGroupName() ==> product map is null, this will cause a few problems');
         }
 
-        // TODO: Add check for null
-        for(String platform : platforms.split(';')){
+        for(String platform : platforms.split(';')) {
 
             String productClusterGroupName;
             String cluster;
 
             // If this is a product with a cluster we can just use the platform from platform imapcted otherwise we use None
-            if(productMap.HasClusters__c){
+            if (productMap.HasClusters__c) {
                 cluster = platform;
-            } else{
+            } else {
                 cluster = 'NONE';
             }
 

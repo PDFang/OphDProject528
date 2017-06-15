@@ -1,4 +1,4 @@
 trigger ContactAfterUpdateInsert on Contact (after insert, after update)
 {
-	new ContactTriggerHandler().run();
+	//new ContactTriggerHandler().run();
 }

@@ -18,5 +18,6 @@ public class XMEventData {
         public String salesforceCaseId {get;set;}
         public String[] partnerList {get;set;}
         public string eventType {get;set;}
+        public string xmNotificationId {get;set;}
     }
 }
