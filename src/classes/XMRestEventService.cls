@@ -60,7 +60,9 @@ public class XMRestEventService {
         }
 
         // Build the properties needed to fill out the email template in xMatters
-        XMEventData.templateProperties = addAdditionalSalesforceDataToFormProperties(eventCase);
+        Map<String, String> propertyMap = addAdditionalSalesforceDataToFormProperties(eventCase);
+        propertyMap.put('xmNotificationId', xmNotificationRecord.Id);
+        XMEventData.templateProperties = propertyMap;
 
         // Serialize the event information for processing in xMatters Api
         String eventDetailsJson = JSON.serialize(xmEventData);
