@@ -7,21 +7,29 @@ global class XMattersDeliveryWebService {
         system.debug('DeliveryNotification() ==> Called with the following values' + deliveryReceipt);
 
         List<xmNotification__c> notificationRecord = [SELECT Id from xmNotification__c WHERE Id = : deliveryReceipt.XMNotificationId];
+        List<xmPerson__c> xmPeople = [SELECT Id from xmPerson__c WHERE xmPersonUID__c = : deliveryReceipt.XMPersonId];
 
-        if(notificationRecord.size() > 0){
+        // Only create the record if we found both the notification record and the xmPerson record in SF
+        if(notificationRecord.size() > 0 && xmPeople.size() > 0){
             xmDelivery__c xmDelivery = new xmDelivery__c();
-            xmDelivery.Case__c = deliveryReceipt.CaseId;
             xmDelivery.DeliveryStatus__c = deliveryReceipt.Status;
-            xmDelivery.EventType__c = 'Confirmed';  //TODO: Do we pass this?
             xmDelivery.Message__c = 'Adding notification for device';
+            xmDelivery.xMattersPerson__c = xmPeople[0].Id;
+            xmDelivery.XMNotification__c = notificationRecord[0].Id;
 
+            // Set the rest context to indicate that we created the delivery record
             RestContext.response.statusCode = 201;
             RestContext.response.responseBody = Blob.valueOf(JSON.serialize(xmDelivery));
-          //  xmDelivery.Device__c = ??
-        } else {
+        } else if(notificationRecord.size() < 1) {
             RestContext.response.statusCode = 415;
 
             Map<String,String> errorResponse = getErrorMessageResponse('Could not find the XMDelivery Record');
+
+            RestContext.response.responseBody = Blob.valueOf(JSON.serialize(errorResponse));
+        } else if (xmPeople.size() < 1){
+            RestContext.response.statusCode = 415;
+
+            Map<String,String> errorResponse = getErrorMessageResponse('Could not find the xmPerson record');
 
             RestContext.response.responseBody = Blob.valueOf(JSON.serialize(errorResponse));
         }
