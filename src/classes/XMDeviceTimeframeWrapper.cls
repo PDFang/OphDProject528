@@ -107,7 +107,10 @@ public class XMDeviceTimeframeWrapper {
         system.debug('createModel:  timeframeModel.startTime - '+ timeframeModel.startTime);
 
         Datetime endDateTime = convertTextToDateTime(this.endTime);
-        
+
+        if(endDateTime == startDateTime){
+            endDateTime = endDateTime.addDays(1);
+        }
         system.debug('createModel:  endDateTime - '+ endDateTime.format('HH:mm', getLocation(this.timezone)) );
 
         timeframeModel.durationInMinutes = (Integer)(endDateTime.getTime() - startDateTime.getTime()) / 60 / 1000;
