@@ -20,6 +20,8 @@ global class XMattersDeliveryWebService {
             xmDelivery.Device__c = deliveryReceipt.Device;
             xmDelivery.Device_Type__c = deliveryReceipt.DeviceType;
 
+            insert xmDelivery;
+
             // Set the rest context to indicate that we created the delivery record
             RestContext.response.statusCode = 201;
             RestContext.response.responseBody = Blob.valueOf(JSON.serialize(xmDelivery));
@@ -37,7 +39,6 @@ global class XMattersDeliveryWebService {
             RestContext.response.responseBody = Blob.valueOf(JSON.serialize(errorResponse));
         }
 
-        insert notificationRecord;
     }
 
     // TODO: Should modify this so that it can add multiple error messages
