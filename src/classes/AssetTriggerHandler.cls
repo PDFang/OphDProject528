@@ -10,6 +10,7 @@ public class AssetTriggerHandler extends TriggerHandler {
     {
         ProjectPhaseAssetSummary();
         ProjectParentAssetSummary();
+        AttachParentProject();
     }
 
     public override void afterDelete()
@@ -194,5 +195,20 @@ public class AssetTriggerHandler extends TriggerHandler {
         update parentProjects.values();
 
     } // end of ProjectParentAssetSummary()
+
+    public static void AttachParentProject(){
+        Set<Id> assetIds = new Set<Id>();
+        Set<Id> quoteLineIds = new Set<Id>();
+        List<Asset> newList = (List<Asset>)( trigger.new );
+        for(Asset newAsset : newList){
+            if(newAsset.SBQQ__QuoteLine__c != null){
+                quoteLineIds.add(newAsset.SBQQ__QuoteLine__c);
+                assetIds.add(newAsset.Id);
+            }
+        }
+        if(quoteLineIds.size() > 0){
+            PSProjectAssetAttachment.AttachAssetsByIdToParentProject(quoteLineIds, assetIds, new set<Id>());
+        }
+    }
 
 }

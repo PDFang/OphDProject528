@@ -875,7 +875,7 @@
      function deleteTimeFrame(sender, deleteTimeFrameObj){
          console.log('came into onclick event ==>' + deleteTimeFrameObj);
          var userErrMessage  = 'You must click on save to delete the timeframe from xMatters.'
-         deleteTimeFrameObj = '#' + deleteTimeFrameObj;
+         deleteTimeFrameObj = '#' + deleteTimeFrameObj.replace(/\s+/g, '-');
          var numOfTabs = $('div.tab-content div.tab-pane').length;
          if(numOfTabs > 1)
          {

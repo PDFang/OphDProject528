@@ -19,6 +19,7 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
                 SubscriptionReplica__c newReplica = new SubscriptionReplica__c();
                 newReplica.Subscription__c = subscription.Id;
                 newReplica.AccountLookup__c = subscription.SBQQ__Account__c;
+                newReplica.QuoteLineLookup__c = subscription.SBQQ__QuoteLine__c;
                 lstSubscriptionReplicas.add(newReplica);
             }
 
