@@ -17,7 +17,8 @@ global class XMattersDeliveryWebService {
             xmDelivery.Message__c = 'Adding notification for device';
             xmDelivery.xMattersPerson__c = xmPeople[0].Id;
             xmDelivery.XMNotification__c = notificationRecord[0].Id;
-            // TODO: Add device list, need to figure out from Mohan what that looks like
+            xmDelivery.Device__c = deliveryReceipt.Device;
+            xmDelivery.Device_Type__c = deliveryReceipt.DeviceType;
 
             // Set the rest context to indicate that we created the delivery record
             RestContext.response.statusCode = 201;
