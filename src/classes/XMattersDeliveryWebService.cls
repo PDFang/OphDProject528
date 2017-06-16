@@ -36,7 +36,7 @@ global class XMattersDeliveryWebService {
             RestContext.response.responseBody = Blob.valueOf(JSON.serialize(errorResponse));
         }
 
-       // insert notificationRecord;
+        insert notificationRecord;
     }
 
     // TODO: Should modify this so that it can add multiple error messages
