@@ -19,6 +19,7 @@ global class XMattersDeliveryWebService {
             xmDelivery.XMNotification__c = notificationRecord[0].Id;
             xmDelivery.Device__c = deliveryReceipt.Device;
             xmDelivery.Device_Type__c = deliveryReceipt.DeviceType;
+            xmDelivery.Message__c = deliveryReceipt.Message;
             if(String.isNotBlank(deliveryReceipt.DeliveryDate)){
                 // xMatters delivery date, year is only two characters
                 // convert yy-MM-dd HH:mm:ss to yyyy-MM-dd HH:mm:ss
