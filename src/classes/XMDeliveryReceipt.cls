@@ -5,4 +5,5 @@ global class XMDeliveryReceipt {
     global String DeliveryDate {get;set;}
     global String DeviceType {get;set;}
     global String Device {get;set;}
+    global String Message {get;set;}
 }
