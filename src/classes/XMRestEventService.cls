@@ -128,6 +128,7 @@ public class XMRestEventService {
         // If we didn't find the product we will need to notify someone
         if(productMap == null){
             system.debug('convertProductAndPlatformToGroupName() ==> product map is null, this will cause a few problems');
+            throw new ProductEventMapException('The product:' + product + ' does not exist in the product event map');
         }
 
         for(String platform : platforms.split(';')) {
