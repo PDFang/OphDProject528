@@ -139,17 +139,22 @@ public class CaseTriggerHandler extends TriggerHandler
                        newCase.PlatformsImpacted__c != oldCase.PlatformsImpacted__c){
                    System.debug('Add event');
                    requestType = 'Event Platforms Add';
-                   processList.add(newCase);
+
+                   Integer newPlatforms = 0;
 
                    for(string s : newCase.PlatformsImpacted__c.split(';'))
                    {
                        if(!oldCase.PlatformsImpacted__c.contains(s))
                        {
                            platformsAdded += s + ';';
-
+                           newPlatforms ++;
                        }
                    }
 
+                   // Only add the case if the platforms have been added ignore removing
+                   if(newPlatforms > 0){
+                       processList.add(newCase);
+                   }
                }
             }
         }
