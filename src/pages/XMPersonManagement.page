@@ -743,8 +743,8 @@
         function addNewTab(){
 
             var nextTab = $('#tabs li').length+1;
-            $('<li><a href="#'+nextTab+'" data-toggle="tab">New</a></li>').appendTo('ul#tabs');
-            var divContent = '<div id="'+nextTab+'" class="tab-pane fade">'
+            $('<li><a href="#tab'+nextTab+'" data-toggle="tab">New</a></li>').appendTo('ul#tabs');
+            var divContent = '<div id="tab'+nextTab+'" class="tab-pane fade">'
                             + ' <div class="form-group">'
                             + '<label for="nameInput'+nextTab+'" class="col-2 col-form-label">Name </label>'
                             + '<div class="col-10">'
