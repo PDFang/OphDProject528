@@ -16,9 +16,9 @@ public with sharing class PSProjectAssetAttachment {
         try{
             //get all Subscriptions/Assets from the QuoteLines
             for ( SBQQ__QuoteLine__c quoteLine : [select SBQQ__Quote__r.SBQQ__Opportunity2__c,
-            (select id from SBQQ__Assets__r where id in : AssetsIds),
-            (select id from Subscriptions_Custom__r where id in : SubscriptionsIds)
-            from SBQQ__QuoteLine__c where id in : QouteLineids]){
+                                                    (select id from SBQQ__Assets__r where id in : AssetsIds),
+                                                    (select id from Subscriptions_Custom__r where id in : SubscriptionsIds)
+                                                    from SBQQ__QuoteLine__c where id in : QouteLineids]){
 
                 opportunityIds.add(quoteLine.SBQQ__Quote__r.SBQQ__Opportunity2__c);
                 if(AssetsIds.size() > 0){
@@ -63,7 +63,7 @@ public with sharing class PSProjectAssetAttachment {
                     for(Project__c proj :[select Id, Status__c,
                     (select Id from Assets__r)
                     From Project__c
-                    Where id in : projectIds]){
+                    Where id in : projectIds and Status__c = '0 - PreSale']){
                         if(proj.Assets__r.size() <= 0){
                             Project__c newProject = new Project__c(Id = proj.Id);
                             newProject.Status__c = '1 - Open';
