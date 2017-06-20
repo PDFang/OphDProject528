@@ -120,42 +120,46 @@ public class CaseTriggerHandler extends TriggerHandler
 
         List<Case> processList = new List<Case>();
         string platformsAdded = '',
-               requestType = '';
+                requestType = '';
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
             // Is Event confirmed
             system.debug('createXmNotification(): new status - ' + newCase.Status);
             system.debug('createXmNotification(): old status - ' + oldCase.Status);
 
-            if(newCase.RecordTypeId == eventRecordType && oldCase != null && !newCase.InternalEvent__c && xmEventNotificationPriorities.containsIgnoreCase(newCase.Priority))
+            if(newCase.RecordTypeId == eventRecordType && oldCase != null && !newCase.InternalEvent__c )
             {
-               if ((newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed')
-                   || (newCase.Status == 'Resolved' && oldCase.Status != 'Resolved')){
+                if(String.isNotBlank(xmEventNotificationPriorities) && !xmEventNotificationPriorities.containsIgnoreCase(newCase.Priority)){
+                    continue;
+                }
 
-                   System.debug('Initial event');
-                   processList.add(newCase);
-               }
-               else if(newCase.Status == 'Confirmed' &&
-                       newCase.PlatformsImpacted__c != oldCase.PlatformsImpacted__c){
-                   System.debug('Add event');
-                   requestType = 'Event Platforms Add';
+                if ((newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed')
+                        || (newCase.Status == 'Resolved' && oldCase.Status != 'Resolved')){
 
-                   Integer newPlatforms = 0;
+                    System.debug('Initial event');
+                    processList.add(newCase);
+                }
+                else if(newCase.Status == 'Confirmed' &&
+                        newCase.PlatformsImpacted__c != oldCase.PlatformsImpacted__c){
+                    System.debug('Add event');
+                    requestType = 'Event Platforms Add';
 
-                   for(string s : newCase.PlatformsImpacted__c.split(';'))
-                   {
-                       if(!oldCase.PlatformsImpacted__c.contains(s))
-                       {
-                           platformsAdded += s + ';';
-                           newPlatforms ++;
-                       }
-                   }
+                    Integer newPlatforms = 0;
 
-                   // Only add the case if the platforms have been added ignore removing
-                   if(newPlatforms > 0){
-                       processList.add(newCase);
-                   }
-               }
+                    for(string s : newCase.PlatformsImpacted__c.split(';'))
+                    {
+                        if(!oldCase.PlatformsImpacted__c.contains(s))
+                        {
+                            platformsAdded += s + ';';
+                            newPlatforms ++;
+                        }
+                    }
+
+                    // Only add the case if the platforms have been added ignore removing
+                    if(newPlatforms > 0){
+                        processList.add(newCase);
+                    }
+                }
             }
         }
         system.debug('platformsAdded(): platformsAdded - ' + platformsAdded);
