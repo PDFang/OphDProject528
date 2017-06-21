@@ -387,7 +387,7 @@ private class CaseTriggerHandlerTest {
     static testMethod void testxMattersEventNotificationTurnedOff() {
 
         AppConfiguration__c appConfig = new AppConfiguration__c(
-                Turn_Off_xMatters_Notifications__c = true
+                XM_Turn_Off_Event_Notifications__c = true
         );
         insert appConfig;
 

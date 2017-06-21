@@ -2,7 +2,6 @@ public class XMRestEventService {
     private XMRestWrapper restWrapper;
     private Map<String, ProductEventMap__c> nodeMap;
     private List<Case_to_xMatters_Field_Mapping__mdt> caseToXMattersFieldMappings;
-    private SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(inContactBaseClass.OrgId15Digit);
 
     public XMRestEventService(){
         restWrapper = new XMRestWrapper(); //TODO: Allow injection? Not sure yet
@@ -19,30 +18,26 @@ public class XMRestEventService {
 
         Case eventCase = getCaseFromxmNotification(xmNotificationRecord);
 
+        XMEventData xmEventData = new XMEventData();
+
+        AppConfiguration__c config = AppConfiguration__c.getInstance();
+
+        xmEventData.startEvent = config == null ? true: config.Debug_xMatters_Event_Request__c == false;
+
+
         String inboundIntegrationGuid;
         String platformsAffected;
 
         if(xmNotificationRecord.Request_Type__c == 'Event Platforms Add'){
             platformsAffected = xmNotificationRecord.AddedPlatforms__c;
-            inboundIntegrationGuid = siteConfig.AddPlatformInboundGUID__c;
+            inboundIntegrationGuid = (config != null) ? config.XM_Add_Platform_Inbound_GUID__c : null;
         } else {
             platformsAffected = eventCase.PlatformsImpacted__c;
-            inboundIntegrationGuid = siteConfig.ConfirmedResolvedInboundGUID__c;
+            inboundIntegrationGuid = (config != null) ? config.XM_Event_Notification_Inbound_GUID__c : null;
         }
 
-        XMEventData xmEventData = new XMEventData();
+
         xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c);
-
-        AppConfiguration__c config = AppConfiguration__c.getInstance();
-
-        if(config != null) {
-            // If the debug flag is off then start the event
-            xmEventData.startEvent = config.Debug_xMatters_Event_Request__c == false;
-        } else {
-            // Always start the event if the setting isn't there
-            xmEventData.startEvent = true;
-        }
-
 
         // Build the specific event details needed to process the event.
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();
@@ -65,7 +60,9 @@ public class XMRestEventService {
         }
 
         // Build the properties needed to fill out the email template in xMatters
-        XMEventData.templateProperties = addAdditionalSalesforceDataToFormProperties(eventCase);
+        Map<String, String> propertyMap = addAdditionalSalesforceDataToFormProperties(eventCase);
+        propertyMap.put('xmNotificationId', xmNotificationRecord.Id);
+        XMEventData.templateProperties = propertyMap;
 
         // Serialize the event information for processing in xMatters Api
         String eventDetailsJson = JSON.serialize(xmEventData);
@@ -131,18 +128,18 @@ public class XMRestEventService {
         // If we didn't find the product we will need to notify someone
         if(productMap == null){
             system.debug('convertProductAndPlatformToGroupName() ==> product map is null, this will cause a few problems');
+            throw new ProductEventMapException('The product:' + product + ' does not exist in the product event map');
         }
 
-        // TODO: Add check for null
-        for(String platform : platforms.split(';')){
+        for(String platform : platforms.split(';')) {
 
             String productClusterGroupName;
             String cluster;
 
             // If this is a product with a cluster we can just use the platform from platform imapcted otherwise we use None
-            if(productMap.HasClusters__c){
+            if (productMap.HasClusters__c) {
                 cluster = platform;
-            } else{
+            } else {
                 cluster = 'NONE';
             }
 

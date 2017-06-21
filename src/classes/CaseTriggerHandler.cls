@@ -3,6 +3,7 @@ public class CaseTriggerHandler extends TriggerHandler
     private static boolean staticValuesSet = false;
     private static boolean isProxyServiceTurnedOff = false;
     private static boolean isxMattersNotificationsTurnedOff = false;
+    private static String xmEventNotificationPriorities = 'P1;P2;';
     private static Id eventRecordType;
     private static Id maintenanceRecordType;   
     private static Id knownIssueRecordType;
@@ -28,7 +29,8 @@ public class CaseTriggerHandler extends TriggerHandler
             AppConfiguration__c config = AppConfiguration__c.getInstance();
             if(config != null) {
                 isProxyServiceTurnedOff = config.Turn_Off_Partner_Case_Proxy_Service__c;
-                isxMattersNotificationsTurnedOff = config.Turn_Off_xMatters_Notifications__c;
+                isxMattersNotificationsTurnedOff = config.XM_Turn_Off_Event_Notifications__c;
+                xmEventNotificationPriorities = config.XM_Event_Notification_Priorities__c;
             }
         }
     }
@@ -118,38 +120,46 @@ public class CaseTriggerHandler extends TriggerHandler
 
         List<Case> processList = new List<Case>();
         string platformsAdded = '',
-               requestType = '';
+                requestType = '';
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
             // Is Event confirmed
             system.debug('createXmNotification(): new status - ' + newCase.Status);
             system.debug('createXmNotification(): old status - ' + oldCase.Status);
 
-            if(newCase.RecordTypeId == eventRecordType && oldCase != null)
+            if(newCase.RecordTypeId == eventRecordType && oldCase != null && !newCase.InternalEvent__c )
             {
-               if ((newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed')
-                   || (newCase.Status == 'Resolved' && oldCase.Status != 'Resolved')){
+                if(String.isNotBlank(xmEventNotificationPriorities) && !xmEventNotificationPriorities.containsIgnoreCase(newCase.Priority)){
+                    continue;
+                }
 
-                   System.debug('Initial event');
-                   processList.add(newCase);
-               }
-               else if(newCase.Status == 'Confirmed' &&
-                       newCase.PlatformsImpacted__c != oldCase.PlatformsImpacted__c
-                       && !newCase.InternalEvent__c){
-                   System.debug('Add event');
-                   requestType = 'Event Platforms Add';
-                   processList.add(newCase);
+                if ((newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed')
+                        || (newCase.Status == 'Resolved' && oldCase.Status != 'Resolved')){
 
-                   for(string s : newCase.PlatformsImpacted__c.split(';'))
-                   {
-                       if(!oldCase.PlatformsImpacted__c.contains(s))
-                       {
-                           platformsAdded += s + ';';
+                    System.debug('Initial event');
+                    processList.add(newCase);
+                }
+                else if(newCase.Status == 'Confirmed' &&
+                        newCase.PlatformsImpacted__c != oldCase.PlatformsImpacted__c){
+                    System.debug('Add event');
+                    requestType = 'Event Platforms Add';
 
-                       }
-                   }
+                    Integer newPlatforms = 0;
 
-               }
+                    for(string s : newCase.PlatformsImpacted__c.split(';'))
+                    {
+                        if(!oldCase.PlatformsImpacted__c.contains(s))
+                        {
+                            platformsAdded += s + ';';
+                            newPlatforms ++;
+                        }
+                    }
+
+                    // Only add the case if the platforms have been added ignore removing
+                    if(newPlatforms > 0){
+                        processList.add(newCase);
+                    }
+                }
             }
         }
         system.debug('platformsAdded(): platformsAdded - ' + platformsAdded);

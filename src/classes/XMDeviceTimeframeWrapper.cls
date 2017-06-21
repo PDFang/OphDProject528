@@ -108,7 +108,7 @@ public class XMDeviceTimeframeWrapper {
 
         Datetime endDateTime = convertTextToDateTime(this.endTime);
 
-        if(endDateTime >= startDateTime){
+        if(endDateTime == startDateTime){
             endDateTime = endDateTime.addDays(1);
         }
         system.debug('createModel:  endDateTime - '+ endDateTime.format('HH:mm', getLocation(this.timezone)) );

@@ -6,6 +6,10 @@ public class XMRestPersonTests {
         XMPersonModel person = new XMPersonModel();
         person.firstName = 'Bob';
         person.lastName = 'Marly';
+        person.targetName = 'TBD';
+        person.externallyOwned = true;
+        person.status = 'TESTED';
+        person.externalKey = 'DoesntMatter';
 
 
         test.startTest();
@@ -47,5 +51,36 @@ public class XMRestPersonTests {
         system.assertEquals(createdRecord.firstName, person.firstName);
         system.assertEquals(createdRecord.lastName, person.lastName);
         system.assert(createdRecord.recipientType == 'PERSON');
+        system.assert('1451a630-4d44-46e6-84ba-6b966dbfa715' == createdRecord.id);
+    }
+
+    public static testMethod void createPerson_FailureCodeWillThrowCorrectException(){
+        XMRestPeopleMockHttpGenerator httpMock = new XMRestPeopleMockHttpGenerator(415,'Complete','[{"Name": "sForceTest1"}]',null);
+        XMCalloutException testException = null;
+
+        XMPersonModel person = new XMPersonModel();
+        person.firstName = 'Bob';
+        person.lastName = 'Marly';
+        person.targetName = 'TBD';
+        person.externallyOwned = true;
+        person.status = 'TESTED';
+        person.externalKey = 'DoesntMatter';
+
+
+        test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, httpMock);
+        XMRestPerson service = new XMRestPerson();
+
+        try{
+            XMPersonModel createdRecord = service.createPerson(person);
+        } catch(XMCalloutException calloutException){
+            testException = calloutException;
+        }
+
+        test.stopTest();
+
+        system.assert(415 == testException.HttpStatusCode, 'Http Status code does not match expected');
+        system.assert('Could not process request.' == testException.getMessage());
     }
 }

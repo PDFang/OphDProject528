@@ -138,7 +138,11 @@
     .timepicker{
     	width:30%;
     }
-
+   .k-autocomplete.k-state-border-up, .k-calendar-container.k-state-border-up,
+    .k-dropdown-wrap.k-state-border-up, .k-filter-menu, .k-list-container.k-state-border-up,
+     .k-multiselect.k-state-border-up, .k-numeric-wrap.k-state-border-up, .k-picker-wrap.k-state-border-up, .k-window-content{
+        width :164px !important;
+    }
 
     </style>
 
@@ -744,8 +748,8 @@
         function addNewTab(){
 
             var nextTab = $('#tabs li').length+1;
-            $('<li><a href="#'+nextTab+'" data-toggle="tab">New</a></li>').appendTo('ul#tabs');
-            var divContent = '<div id="'+nextTab+'" class="tab-pane fade">'
+            $('<li><a href="#tab'+nextTab+'" data-toggle="tab">New</a></li>').appendTo('ul#tabs');
+            var divContent = '<div id="tab'+nextTab+'" class="tab-pane fade">'
                             + ' <div class="form-group">'
                             + '<label for="nameInput'+nextTab+'" class="col-2 col-form-label">Name </label>'
                             + '<div class="col-10">'
@@ -809,47 +813,46 @@
                         toggleActive = false;
                         var name = timeframes[i].name.replace(/\s+/g, '-');
 
-
-                      $('<li class="'+tabClass+'"><a href="#'+name+'" data-toggle="tab">'+timeframes[i].name+'&nbsp;&nbsp<button type="button" title="Delete time frame" class="close" onclick="deleteTimeFrame(this, \''+timeframes[i].name+'\');" aria-label="Close"><span aria-hidden="true">&times;</span></button></a></li>').appendTo('ul#tabs');
-                      divContent = '<div id="'+name+'" class="tab-pane fade '+contentClass+'">'
+                      $('<li class="'+tabClass+'"><a href="#tab'+i+'" data-toggle="tab">'+timeframes[i].name+'&nbsp;&nbsp<button type="button" title="Delete time frame" class="close" onclick="deleteTimeFrame(this, \'tab'+i+'\');" aria-label="Close"><span aria-hidden="true">&times;</span></button></a></li>').appendTo('ul#tabs');
+                      divContent = '<div id="tab'+i+'" class="tab-pane fade '+contentClass+'">'
                                    + ' <div class="form-group">'
-                                    + '<label for="nameInput'+name+'" class="col-2 col-form-label">Name </label>'
+                                    + '<label for="nameInput'+i+'" class="col-2 col-form-label">Name </label>'
                                     + '<div class="col-10">'
-                                    + '<input class="form-control" type="text" onkeypress = "validateKeyPress(event);" id="nameInput'+name+'" style="width:30%;" value="'+ timeframes[i].name +'"/>'
+                                    + '<input class="form-control" type="text" onkeypress = "validateKeyPress(event);" id="nameInput'+i+'" style="width:30%;" value="'+ timeframes[i].name +'"/>'
                                     + '</div></div>'
                                     + '<div class="form-group timepicker">'
                                     + '<label for="startTimeInput" class="col-2 col-form-label">Start Time</label>'
                                     + '<div class="col-10">'
-                                    + '<input class="form-control" id="startTimeInput'+name+'"  style="width:15%;" value="'+ timeframes[i].startTime +'"/>'
+                                    + '<input class="form-control" id="startTimeInput'+i+'"  style="width:15%;" value="'+ timeframes[i].startTime +'"/>'
                                     + '</div></div>'
                                     + '<div class="form-group timepicker">'
-                                    + '<label for="endTimeInput'+name+'" class="col-2 col-form-label">End Time</label>'
+                                    + '<label for="endTimeInput'+i+'" class="col-2 col-form-label">End Time</label>'
                                     + '<div class="col-10">'
-                                    + '<input class="form-control" type="email" id="endTimeInput'+name+'" style="width:15%;" value="'+ timeframes[i].endTime +'"/>'
+                                    + '<input class="form-control" type="email" id="endTimeInput'+i+'" style="width:15%;" value="'+ timeframes[i].endTime +'"/>'
                                     + '</div></div>'
                                     + '<div class="form-group">'
                                     + '<label for="DaysInput" class="col-2 col-form-label">Days</label>'
                                     + '<div class="weekDays-selector">'
-                                    + '<input type="checkbox" id="weekday-mon'+name+'" class="weekday monday '+name+'"/>'
-                                    + '<label for="weekday-mon'+name+'">Mon</label>'
-                                    + '<input type="checkbox" id="weekday-tue'+name+'" class="weekday tuesday '+name+'"/>'
-                                    + '<label for="weekday-tue'+name+'">Tue</label>'
-                                    + '<input type="checkbox" id="weekday-wed'+name+'" class="weekday wednesday '+name+'"/>'
-                                    + '<label for="weekday-wed'+name+'">Wed</label>'
-                                    + '<input type="checkbox" id="weekday-thu'+name+'" class="weekday thursday '+name+'"/>'
-                                    + '<label for="weekday-thu'+name+'">Thu</label>'
-                                    + '<input type="checkbox" id="weekday-fri'+name+'" class="weekday friday '+name+'"/>'
-                                    + '<label for="weekday-fri'+name+'">Fri</label>'
-                                    + '<input type="checkbox" id="weekday-sat'+name+'" class="weekday saturday '+name+'"/>'
-                                    + '<label for="weekday-sat'+name+'">Sat</label>'
-                                    + '<input type="checkbox" id="weekday-sun'+name+'" class="weekday sunday '+name+'"/>'
-                                    + '<label for="weekday-sun'+name+'">Sun</label>'
+                                    + '<input type="checkbox" id="weekday-mon'+i+'" class="weekday monday '+name+'"/>'
+                                    + '<label for="weekday-mon'+i+'">Mon</label>'
+                                    + '<input type="checkbox" id="weekday-tue'+i+'" class="weekday tuesday '+name+'"/>'
+                                    + '<label for="weekday-tue'+i+'">Tue</label>'
+                                    + '<input type="checkbox" id="weekday-wed'+i+'" class="weekday wednesday '+name+'"/>'
+                                    + '<label for="weekday-wed'+i+'">Wed</label>'
+                                    + '<input type="checkbox" id="weekday-thu'+i+'" class="weekday thursday '+name+'"/>'
+                                    + '<label for="weekday-thu'+i+'">Thu</label>'
+                                    + '<input type="checkbox" id="weekday-fri'+i+'" class="weekday friday '+name+'"/>'
+                                    + '<label for="weekday-fri'+i+'">Fri</label>'
+                                    + '<input type="checkbox" id="weekday-sat'+i+'" class="weekday saturday '+name+'"/>'
+                                    + '<label for="weekday-sat'+i+'">Sat</label>'
+                                    + '<input type="checkbox" id="weekday-sun'+i+'" class="weekday sunday '+name+'"/>'
+                                    + '<label for="weekday-sun'+i+'">Sun</label>'
                                     + '</div> </div></div>';
 
 
                       $(divContent).appendTo('div.tab-content');
-                      var startId = '#startTimeInput' + name;
-                      var endId = '#endTimeInput' + name;
+                      var startId = '#startTimeInput' + i;
+                      var endId = '#endTimeInput' + i;
                        addKendoTimePicker(startId, endId);
 
                        $("div.weekDays-selector input[type=checkbox]").each(function(){
@@ -876,7 +879,7 @@
      function deleteTimeFrame(sender, deleteTimeFrameObj){
          console.log('came into onclick event ==>' + deleteTimeFrameObj);
          var userErrMessage  = 'You must click on save to delete the time frame(s) from xMatters.'
-         deleteTimeFrameObj = '#' + deleteTimeFrameObj;
+         deleteTimeFrameObj = '#' + deleteTimeFrameObj.replace(/\s+/g, '-');
          var numOfTabs = $('div.tab-content div.tab-pane').length;
          if(numOfTabs > 1)
          {
@@ -912,7 +915,7 @@
 
      function addKendoTimePicker(startId, endId){
             //init start timepicker
-
+            end = $(endId).kendoTimePicker().data("kendoTimePicker");
             start = $(startId).kendoTimePicker({
                 change: function(e){
                        var startTime = this.value();
@@ -927,7 +930,6 @@
                         }
                 }
             }).data("kendoTimePicker");
-            end = $(endId).kendoTimePicker().data("kendoTimePicker");
 
             var startTime = new Date(start.value());
             startTime.setMinutes(startTime.getMinutes() + start.options.interval);
@@ -946,21 +948,22 @@
         $("div.tab-content div.tab-pane").each(function(){
              var days = new Object();
              var thisId = $(this).attr('id');
-             var nameId = 'input#nameInput' + thisId ;
+             var rowId = thisId.substring(3);
+             var nameId = 'input#nameInput' + rowId ;
              var nameVal = $(this).find(nameId).val();
 
              isError = validateInput(nameVal, nameId);
              if(nameVal != ''){
                  timeframeNames.push(nameVal);
              }
-             var startTimeId = 'input#startTimeInput' + thisId;
+             var startTimeId = 'input#startTimeInput' + rowId;
              var startTimeVal = $(this).find(startTimeId).val();
              var startTimepicker = $(startTimeId).data("kendoTimePicker");
 
              if(!isError)
                isError = validateInput(startTimeVal, startTimeId);
 
-             var endTimeId = 'input#endTimeInput' + thisId;
+             var endTimeId = 'input#endTimeInput' + rowId;
              var endTimeVal = $(this).find(endTimeId).val();
              var endTimepicker = $(endTimeId).data("kendoTimePicker");
            //  endTimepicker.destroy();
