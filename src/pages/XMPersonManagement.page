@@ -161,7 +161,8 @@
 
                 <apex:pageBlock id="contactDetail" >
                     <apex:pageBlockSection title="Contact Detail" collapsible="false" columns="1">
-                        <apex:outputField value="{!currentContact.Name}"/>
+                        <apex:outputField value="{!currentContact.FirstName}"/>
+                        <apex:outputField value="{!currentContact.LastName}"/>
                         <apex:outputField value="{!currentContact.Email}"/>
                         <apex:outputField value="{!currentContact.AccountId}"/>
                         <apex:outputField value="{!currentContact.Account.CadebillAccountNoText__c}"/>
@@ -709,7 +710,7 @@
             var rowData = $('#deviceList').data("kendoGrid").dataItem(selectedRow);
              var deviceId = rowData.Id;
             if(deviceId == null || deviceId == ''){
-                 displayError("Please save the device before adding the timeframes.");
+                 displayError("Please save the device before adding the time frames.");
 
             }else{
 
@@ -748,7 +749,7 @@
                             + ' <div class="form-group">'
                             + '<label for="nameInput'+nextTab+'" class="col-2 col-form-label">Name </label>'
                             + '<div class="col-10">'
-                            + '<input class="form-control" type="text" id="nameInput'+nextTab+'" style="width:30%;" required="true"/>'
+                            + '<input class="form-control" type="text" onkeypress = "validateKeyPress(event);" id="nameInput'+nextTab+'" style="width:30%;" required="true"/>'
                             + '</div></div>'
                             + '<div class="form-group timepicker">'
                             + '<label for="startTimeInput'+nextTab+'" class="col-2 col-form-label">Start Time</label>'
@@ -809,12 +810,12 @@
                         var name = timeframes[i].name.replace(/\s+/g, '-');
 
 
-                      $('<li class="'+tabClass+'"><a href="#'+name+'" data-toggle="tab">'+timeframes[i].name+'&nbsp;&nbsp<button type="button" title="Delete timeframe" class="close" onclick="deleteTimeFrame(this, \''+timeframes[i].name+'\');" aria-label="Close"><span aria-hidden="true">&times;</span></button></a></li>').appendTo('ul#tabs');
+                      $('<li class="'+tabClass+'"><a href="#'+name+'" data-toggle="tab">'+timeframes[i].name+'&nbsp;&nbsp<button type="button" title="Delete time frame" class="close" onclick="deleteTimeFrame(this, \''+timeframes[i].name+'\');" aria-label="Close"><span aria-hidden="true">&times;</span></button></a></li>').appendTo('ul#tabs');
                       divContent = '<div id="'+name+'" class="tab-pane fade '+contentClass+'">'
                                    + ' <div class="form-group">'
                                     + '<label for="nameInput'+name+'" class="col-2 col-form-label">Name </label>'
                                     + '<div class="col-10">'
-                                    + '<input class="form-control" type="text" id="nameInput'+name+'" style="width:30%;" value="'+ timeframes[i].name +'"/>'
+                                    + '<input class="form-control" type="text" onkeypress = "validateKeyPress(event);" id="nameInput'+name+'" style="width:30%;" value="'+ timeframes[i].name +'"/>'
                                     + '</div></div>'
                                     + '<div class="form-group timepicker">'
                                     + '<label for="startTimeInput" class="col-2 col-form-label">Start Time</label>'
@@ -874,7 +875,7 @@
 
      function deleteTimeFrame(sender, deleteTimeFrameObj){
          console.log('came into onclick event ==>' + deleteTimeFrameObj);
-         var userErrMessage  = 'You must click on save to delete the timeframe from xMatters.'
+         var userErrMessage  = 'You must click on save to delete the time frame(s) from xMatters.'
          deleteTimeFrameObj = '#' + deleteTimeFrameObj;
          var numOfTabs = $('div.tab-content div.tab-pane').length;
          if(numOfTabs > 1)
@@ -895,16 +896,23 @@
               if($("div#validation-errors").children().children().text() == "" || $("div#validation-errors").children().children().text() == null || $("div#validation-errors").children().children().text() == userErrMessage)
               {
                   $("div#validation-errors").css("display", "block");
-                  var errorString = '<ul><li>You must have atleast one timeframe.</li></ul>';
+                  var errorString = '<ul><li>You must have at least one time frame.</li></ul>';
                   $(errorString).appendTo("div#validation-errors");
                   return false;
               }
          }
      }
 
+     function validateKeyPress(event){
+         var valid = (event.which >= 48 && event.which <= 57) || (event.which >= 65 && event.which <= 90) || (event.which >= 97 && event.which <= 122) || (event.which == 32);
+         if (!valid) {
+             event.preventDefault();
+         }
+     }
+
      function addKendoTimePicker(startId, endId){
             //init start timepicker
-            end = $(endId).kendoTimePicker().data("kendoTimePicker");
+
             start = $(startId).kendoTimePicker({
                 change: function(e){
                        var startTime = this.value();
@@ -919,6 +927,7 @@
                         }
                 }
             }).data("kendoTimePicker");
+            end = $(endId).kendoTimePicker().data("kendoTimePicker");
 
             var startTime = new Date(start.value());
             startTime.setMinutes(startTime.getMinutes() + start.options.interval);
@@ -993,7 +1002,7 @@
              if(hasDupe){
 
                  $("div#validation-errors").css("display", "block");
-                 var errorString = '<ul><li>Duplicate Timeframes are not allowed.</li></ul>';
+                 var errorString = '<ul><li>Duplicate time frames are not allowed.</li></ul>';
                  $(errorString).appendTo("div#validation-errors");
              }
              else{
@@ -1015,7 +1024,7 @@
                                        hideError();
                                       $("div#success").css("display", "block");
                                       $("div#success").empty();
-                                      $('<strong>Timeframes were updated successfully</strong>').appendTo("div#success");
+                                      $('<strong>Time frame(s) were updated successfully</strong>').appendTo("div#success");
                                       $('#warning').modal('show');
                                       var grid = $("#deviceList").data("kendoGrid");
                                       grid.destroy();
