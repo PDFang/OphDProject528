@@ -138,7 +138,11 @@
     .timepicker{
     	width:30%;
     }
-
+   .k-autocomplete.k-state-border-up, .k-calendar-container.k-state-border-up,
+    .k-dropdown-wrap.k-state-border-up, .k-filter-menu, .k-list-container.k-state-border-up,
+     .k-multiselect.k-state-border-up, .k-numeric-wrap.k-state-border-up, .k-picker-wrap.k-state-border-up, .k-window-content{
+        width :164px !important;
+    }
 
     </style>
 

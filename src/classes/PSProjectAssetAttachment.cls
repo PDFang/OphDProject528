@@ -42,12 +42,13 @@ public with sharing class PSProjectAssetAttachment {
                 Group By Opportunity__c, Id]){
                     string projId = (string)agr.get('Id');
                     string oppyId = (string)agr.get('Opportunity__c');
+                    projectIds.add(projId);
                     if(opportunityAssetsByIds.size() > 0){
                         for(Asset a : opportunityAssetsByIds.get(oppyId)){
                             Asset asset = new Asset(Id = a.Id);
                             asset.Parent_Project__c = projId;
                             lstAssets.add(asset);
-                            projectIds.add(projId);
+
                         }
                     }
                     else if(opportunitySubscriptionsByIds.size() > 0){
@@ -55,6 +56,7 @@ public with sharing class PSProjectAssetAttachment {
                             SubscriptionReplica__c subs = new SubscriptionReplica__c(Id = s.Id);
                             subs.ParentProject__c = projId;
                             lstSubscriptionReplicas.add(subs);
+
                         }
                     }
                 }
