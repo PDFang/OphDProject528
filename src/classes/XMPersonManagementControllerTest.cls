@@ -80,12 +80,16 @@ private class XMPersonManagementControllerTest {
         Test.setMock(HttpCalloutMock.class, xmPersonMock);
 
         XMPersonManagementController testController = new XMPersonManagementController(new ApexPages.StandardController(testContact));
+        system.assertEquals( true, testController.getIsValidContact(), 'Contact should be found.');
         system.assertEquals( true, testController.getIsXmPerson(), 'Contact should have an xmPerson.');
         system.assertEquals( false, testController.getIsDuplicate(), 'Contact should not have any duplicates.');
         system.assertEquals( false, testController.isPersonMatch, 'Contact should not have a matching xmPerson.');
 
         XMPersonWrapper personWrapper = testController.person;
         system.assertNotEquals( null, personWrapper, 'xMatters should return an XM Person.');
+
+        testController.getTimezone();
+        testController.getTimezoneDisplayName();
 
         test.stopTest();
 
@@ -140,6 +144,55 @@ private class XMPersonManagementControllerTest {
 
         testDuplicateContact = [Select xmPerson__c from Contact where Id = :testDuplicateContact.Id];
         system.assertEquals( person.Id, testDuplicateContact.xmPerson__c, 'Contact record should be associated with XmPerson.');
+
+        test.stopTest();
+
+    }
+
+    static testmethod void testDeviceCrud(){
+
+        createAccount();
+
+        xmPerson__c person = new xmPerson__c(
+                xmPersonUID__c = 'aefgh-1234-cdeft'
+        );
+        insert person;
+
+        Map<String, RecordTypeInfo> recordTypeMap = Schema.SObjectType.Contact.getRecordTypeInfosByName();
+        Contact testContact = new Contact(
+                FirstName = 'XMPersonManagementControllerTest',
+                LastName = 'Contact',
+                Email = 'contact1@incontact.com',
+                RecordTypeId = recordTypeMap.get(CUSTOMER_CONTACT).getRecordTypeId(),
+                AccountId = testAccount.Id,
+                xmPerson__c = person.Id
+        );
+
+        insert testContact;
+
+        XmTimezones__c mountainTimezone = new XmTimezones__c(
+                Name = 'US/Mountain',
+                Location__c = 'America/Denver'
+        );
+        insert mountainTimezone;
+
+        XMRestDeviceServiceMock httpMockCallout = new XMRestDeviceServiceMock(200,'Complete','[{"Name": "sForceTest1"}]',null);
+        Test.setMock(HttpCalloutMock.class, httpMockCallout);
+
+        test.startTest();
+
+        String devices = XMPersonManagementController.getUserDevices(testContact.Id);
+        system.assert(devices.length() > 0, 'Should return one or more devices.');
+
+        string addResult = XMPersonManagementController.addNewDevice(testContact.Id, 'Work Email', testContact.Email);
+        system.assert(addResult.containsIgnoreCase('Success'), 'Should have added a new device.'+addResult);
+
+        String deviceJson = '{"name":"Work Email","deviceValue":"testcontact@in.com","priorityThreshold":"Medium","deviceId":"59ac4f15-a7d0-44b0-9be4-007be83ebc18","timeframes":[{"timezone":"US/Mountain","startTime":"12:00 AM","name":"24x7","endTime":"12:00 AM","days":{"wednesday":true,"tuesday":true,"thursday":true,"sunday":true,"saturday":true,"monday":true,"friday":true}}]}';
+        string updateResult = XMPersonManagementController.updateDevice(deviceJson);
+        system.assert(updateResult.containsIgnoreCase('Success'), 'Should have updated the device.'+updateResult);
+
+        string deleteResult = XMPersonManagementController.deleteDevice('59ac4f15-a7d0-44b0-9be4-007be83ebc18');
+        system.assert(deleteResult.containsIgnoreCase('Success'), 'Should have deleted the device.');
 
         test.stopTest();
 
