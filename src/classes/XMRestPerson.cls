@@ -18,6 +18,23 @@ public class XMRestPerson {
         return createdPerson;
     }
 
+    public XMPersonModel modifyPerson(XMPersonModel person) {
+
+        XMRestWrapper wrapper = new XMRestWrapper();
+
+        String requestBody = JSON.serialize(person, true);
+
+        system.debug('modifyPerson() ====> requestBody' + requestBody);
+
+        String jsonString = wrapper.performCallOut(this.PersonUrl, 'POST', requestBody);
+
+        XMPersonModel modifiedPerson = null;
+
+        modifiedPerson = (XMPersonModel) JSON.deserialize(jsonString, XMPersonModel.class);
+
+        return modifiedPerson;
+    }
+
     public XMPersonModel getXmPersonModelByXmattersId(String personId) {
 
         XMPersonModel personModel = null;
