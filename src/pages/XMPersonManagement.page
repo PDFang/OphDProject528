@@ -1158,12 +1158,13 @@
                         { template: '<a class="k-button" onclick="updateGroups();">Update Group Subscription</a>'
                         }
                       ],
-                  columns: [{
-                                field:"selected",
-                                 headerTemplate: '<input type="checkbox" id="header-chb" class="k-checkbox" onclick="selectRow(this);"><label class="k-checkbox-label" for="header-chb">Select</label>',
-                                template: '<input type="checkbox"  class="row-chk" onclick="selectgridRow(this);" # if (selected) { # checked="checked" :  # } #" />',
-                                width:80
-                            },
+                  columns: [
+//                      {
+//                                field:"selected",
+//                                 headerTemplate: '<input type="checkbox" id="header-chb" class="k-checkbox" onclick="selectRow(this);"><label class="k-checkbox-label" for="header-chb">Select</label>',
+//                                template: '<input type="checkbox"  class="row-chk" onclick="selectgridRow(this);" # if (selected) { # checked="checked" :  # } #" /> <br /> <input type="checkbox"  class="row-chk" onclick="selectgridRow(this);" # if (selected) { # checked="checked" :  # } #" />',
+//                                width:80
+//                            },
                             {
                                 field:"Product",
                                 title:"Product Name"
@@ -1171,6 +1172,13 @@
                             {
                                 field: "Cluster",
                                 title: "Cluster"
+                            },
+
+                            {
+                                field:"Notification",
+                                title:"Notification Options",
+                                template: '<input type="checkbox"  class="row-chk" onclick="selectgridRow(this);" # if (selected) { # checked="checked" :  # } #" /> Work Email<br /><input type="checkbox" disabled="true"  class="row-chk" onclick="selectgridRow(this);" # if (selected) { # checked="checked" :  # } #" /> Secondary Email<br /><input type="checkbox" disabled="true"  class="row-chk" onclick="selectgridRow(this);" # if (selected) { # checked="checked" :  # } #" /> SMS Phone',
+                                width:300
                             },
                             {
                                 field:"XmattersGroupName",
