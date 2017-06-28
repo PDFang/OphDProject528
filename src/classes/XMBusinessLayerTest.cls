@@ -4,12 +4,14 @@
 
 @IsTest
 public class XMBusinessLayerTest {
-
+    static final String CUSTOMER_CONTACT = 'Customer-Other';
     public static testMethod void TestGetGroupListByUserid() {
 
         XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
 
         //setup test data
+
+        Id rtCustOther = '01270000000Lrn4AAC';
         Test.setMock(HttpCalloutMock.class, fakeResponse);
         Account acc = new Account();
         acc.Name = 'Test Account';
@@ -20,6 +22,23 @@ public class XMBusinessLayerTest {
         acc.inContact_Cluster__c =  'C9';
 
         insert acc;
+
+        xmPerson__c person = new xmPerson__c(
+                xmPersonUID__c = 'aefgh-1234-cdeft'
+        );
+        insert person;
+
+        Map<String, RecordTypeInfo> recordTypeMap = Schema.SObjectType.Contact.getRecordTypeInfosByName();
+        Contact testContact = new Contact(
+                FirstName = 'XMPersonManagementControllerTest',
+                LastName = 'Contact',
+                Email = 'contact1@incontact.com',
+                RecordTypeId = recordTypeMap.get(CUSTOMER_CONTACT).getRecordTypeId(),
+                AccountId = acc.Id,
+                xmPerson__c = person.Id
+        );
+
+        insert testContact;
 
         Opportunity o = new Opportunity();
         o.RecordTypeId = inContactBaseClass.SelectRecordTypeIDByName('Historical Products', 'Opportunity');
@@ -102,8 +121,8 @@ public class XMBusinessLayerTest {
         insert pem3;
 
         test.startTest();
-        XMBusinessLayer xmBusinessLayer = new XMBusinessLayer();
-        Map<String, XMGroupProductCluster> groupListByUserId = xmBusinessLayer.GetGroupListByUserid('castiron', acc);
+        XMBusinessLayer xmBusinessLayer = new XMBusinessLayer(testContact.Id);
+        Map<String, XMGroupProductCluster> groupListByUserId = xmBusinessLayer.GetGroupListByUserid();
         test.stopTest();
         System.debug('groupListByUserIdTest -->' + groupListByUserId);
     }
