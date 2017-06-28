@@ -74,24 +74,43 @@ public class XMBusinessLayer  {
         Integer i = 0;
         for (XMGroupMemberModel groupObj : groupList)
         {
+
             i++;
+            boolean isSkipped = false;
+
             XMGroupProductCluster xmGroupClusterObj = new XMGroupProductCluster();
             if(groupObj.group1 != null)
             {
                 if(groupObj.group1.targetName.substring(0,2) == 'IP')
                 {
-                    List<String> splitTargetName = groupObj.group1.targetName.split('_');
-                    xmGroupClusterObj.PartnerPrefix = splitTargetName[1];
-                    xmGroupClusterObj.Product = splitTargetName[2];
-                    xmGroupClusterObj.Cluster = splitTargetName[3];
-                    //xmGroupClusterObj.Devices.add(sdfsf);
-                   if(groupObj.member != null){
+                    for(XMGroupProductCluster xmGroupCluster : xmGroupClusterObjList)
+                    {
+                        if(xmGroupCluster.XmattersGroupName == groupObj.group1.targetName)
+                        {
+                            if(groupObj.member != null){
 
-                       xmGroupClusterObj.Devices.add(groupObj.member);
+                                xmGroupCluster.Devices.add(groupObj.member);
+                                isSkipped = true;
 
-                   }
-                    xmGroupClusterObj.XmattersGroupName = groupObj.group1.targetName;
-                    xmGroupClusterObjList.add(xmGroupClusterObj);
+                            }
+                        }
+                    }
+                    if(!isSkipped)
+                    {
+                        List<String> splitTargetName = groupObj.group1.targetName.split('_');
+                        xmGroupClusterObj.PartnerPrefix = splitTargetName[1];
+                        xmGroupClusterObj.Product = splitTargetName[2];
+                        xmGroupClusterObj.Cluster = splitTargetName[3];
+                        //xmGroupClusterObj.Devices.add(sdfsf);
+                        if(groupObj.member != null){
+
+                            xmGroupClusterObj.Devices.add(groupObj.member);
+
+                        }
+                        xmGroupClusterObj.XmattersGroupName = groupObj.group1.targetName;
+                        xmGroupClusterObjList.add(xmGroupClusterObj);
+                    }
+
                 }
                 String testName = 'xmGroupClusterObj' + String.valueOf(i);
 
