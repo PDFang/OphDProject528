@@ -30,11 +30,14 @@ public class XMBusinessLayer  {
 
     //Return full list of groups that an account can have
     public Map<String, XMGroupProductCluster> GetGroupListByUserid(string guid, Set<id> acc){
+
         XMRestGroup xmRest = new XMRestGroup();
         Map<String, XMGroupProductCluster> xmSalesForceGroupMap = GetSalesForceGroupData(acc);
         System.debug('xmSalesForceGroupMap -- >' + xmSalesForceGroupMap);
         List<XMGroupProductCluster> xmFinalList = new List<XMGroupProductCluster>();
         List<XMGroupMemberModel> xmGrouplist = new List<XMGroupMemberModel>();
+
+
         if(guid != null){
             xmGrouplist  = xmRest.GetXMPersonGroupsById(guid);
         }
@@ -81,7 +84,12 @@ public class XMBusinessLayer  {
                     xmGroupClusterObj.PartnerPrefix = splitTargetName[1];
                     xmGroupClusterObj.Product = splitTargetName[2];
                     xmGroupClusterObj.Cluster = splitTargetName[3];
-                    xmGroupClusterObj.selected = true;
+                    //xmGroupClusterObj.Devices.add(sdfsf);
+                   if(groupObj.member != null){
+
+                       xmGroupClusterObj.Devices.add(groupObj.member);
+
+                   }
                     xmGroupClusterObj.XmattersGroupName = groupObj.group1.targetName;
                     xmGroupClusterObjList.add(xmGroupClusterObj);
                 }
