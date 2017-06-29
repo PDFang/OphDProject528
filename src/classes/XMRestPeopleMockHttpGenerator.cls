@@ -5,10 +5,12 @@
 public class XMRestPeopleMockHttpGenerator implements HttpCalloutMock {
 
     private Integer statusCode;
+    private String statusName;
 
     public XMRestPeopleMockHttpGenerator(Integer code, String status, String body,
             Map<String, String> responseHeaders){
         statusCode = code;
+        statusName = status;
     }
 
 
@@ -30,7 +32,12 @@ public class XMRestPeopleMockHttpGenerator implements HttpCalloutMock {
             //Updates or deletions of groups
             if (method == 'POST') {
                 system.debug('post');
-                res.setBody(buildCreatePersonResponseBody());
+                if (statusName.indexOf('Inactivate') > 0) {
+                    res.setBody(buildInactivatePersonResponseBody());
+                }
+                else {
+                    res.setBody(buildCreatePersonResponseBody());
+                }
             }
             else {
                 system.debug('group membership');
@@ -43,6 +50,11 @@ public class XMRestPeopleMockHttpGenerator implements HttpCalloutMock {
 
     private String buildCreatePersonResponseBody(){
         string body = '{"id":"1451a630-4d44-46e6-84ba-6b966dbfa715","targetName":"shartkeExternallyOwned3","recipientType":"PERSON","externallyOwned":true,"externalKey":"externallyOwned3","links":{"self":"/api/xm/1/people/1451a630-4d44-46e6-84ba-6b966dbfa715"},"firstName":"Bob","lastName":"Marly","language":"en","timezone":"US/Mountain","webLogin":"shartkeExternallyOwned3","site":{"id":"c8bf79e5-dab2-419d-ab8e-685516ae9a74","name":"Default Site","links":{"self":"/api/xm/1/sites/c8bf79e5-dab2-419d-ab8e-685516ae9a74"}},"status":"ACTIVE"}';
+        return body;
+    }
+
+    private String buildInactivatePersonResponseBody(){
+        string body = '{"id":"1451a630-4d44-46e6-84ba-6b966dbfa715","targetName":"shartkeExternallyOwned3","recipientType":"PERSON","externallyOwned":true,"externalKey":"externallyOwned3","links":{"self":"/api/xm/1/people/1451a630-4d44-46e6-84ba-6b966dbfa715"},"firstName":"Bob","lastName":"Marly","language":"en","timezone":"US/Mountain","webLogin":"shartkeExternallyOwned3","site":{"id":"c8bf79e5-dab2-419d-ab8e-685516ae9a74","name":"Default Site","links":{"self":"/api/xm/1/sites/c8bf79e5-dab2-419d-ab8e-685516ae9a74"}},"status":"INACTIVE"}';
         return body;
     }
 
