@@ -1289,6 +1289,9 @@
                 groupRow.XmattersGroupName = dataItem.XmattersGroupName ;
                 groupRow.selected = item.checked;
                 groupRow.Devices = dataItem.Devices;
+                groupRow.Devices[0].checked = row[0].cells[2].childNodes[0].checked;
+                groupRow.Devices[1].checked = row[0].cells[2].childNodes[3].checked;
+                groupRow.Devices[2].checked = row[0].cells[2].childNodes[6].checked;
                 groupData.push(groupRow);
             }
         });
