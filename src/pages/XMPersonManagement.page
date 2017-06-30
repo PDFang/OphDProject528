@@ -1177,7 +1177,7 @@
                             {
                                 field:"Notification",
                                 title:"Notification Options",
-                                template: '<input type="checkbox"  class="row-chk" onclick="selectgridRow(this);" # if (selected) { # checked="checked" :  # } #" /> Work Email<br /><input type="checkbox" disabled="true"  class="row-chk" onclick="selectgridRow(this);" # if (selected) { # checked="checked" :  # } #" /> Secondary Email<br /><input type="checkbox" disabled="true"  class="row-chk" onclick="selectgridRow(this);" # if (selected) { # checked="checked" :  # } #" /> SMS Phone',
+                                template: '<input type="checkbox"   id = "#=GetDeviceIdByType("Work Email", data)#"  class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("Work Email", data)) { # checked="checked" :  # } #" /> Work Email<br /><input type="checkbox"  id = "#=GetDeviceIdByType("Secondary Email", data)#" class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("Secondary Email", data)) { # checked="checked" :  # } #" /> Secondary Email<br /><input type="checkbox"  id = "#=GetDeviceIdByType("SMS Phone", data)#" class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("SMS Phone", data)) { # checked="checked" :  # } #" />SMS Phone',
                                 width:300
                             },
                             {
@@ -1227,6 +1227,33 @@
 
        }
      }
+
+
+     function isDeviceSelected(name, itemData){
+        //check to see if the name is in a collection
+        if(itemData.Devices != null && itemData.Devices.length > 0){
+            for (i = 0; i < itemData.Devices.length; i++) {
+              if (itemData.Devices[i].targetName.indexOf(name) > -1){
+                  return true;
+              }
+           }
+        }
+        return false;
+     }
+
+
+      function GetDeviceIdByType(name, itemData){
+        //check to see if the name is in a collection
+        if(itemData.Devices != null && itemData.Devices.length > 0){
+            for (i = 0; i < itemData.Devices.length; i++) {
+              if (itemData.Devices[i].targetName.indexOf(name) > -1){
+                  return itemData.Devices[i].id;
+              }
+           }
+        }
+        return false;
+     }
+
 
  function SearchProducts (val) {
           var grid = $("#groupList").data("kendoGrid");
