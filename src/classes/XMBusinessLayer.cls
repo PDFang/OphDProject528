@@ -45,7 +45,7 @@ public class XMBusinessLayer  {
         system.debug('XMGroupList -->' + xmGrouplist);
         if(xmGrouplist != null)
         {
-            xmFinalList = GetXMGroupList(xmGrouplist);
+            xmFinalList = GetXMGroupList(xmGrouplist,guid);
             System.debug('xmFinalList-->' + xmFinalList);
         }
         List<XMGroupProductCluster> returnXMFinalProductClusterList = new List<XMGroupProductCluster>();
@@ -68,10 +68,21 @@ public class XMBusinessLayer  {
     }
 
     //Parses ist of XM low level models into one that is used by the business layer
-    private List<XMGroupProductCluster> GetXMGroupList(List<XMGroupMemberModel> groupList)
+    private List<XMGroupProductCluster> GetXMGroupList(List<XMGroupMemberModel> groupList, string userId)
     {
         List<XMGroupProductCluster> xmGroupClusterObjList = new List<XMGroupProductCluster>();
         Integer i = 0;
+
+
+
+        XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
+        newDeviceList = XMPersonManagementHelper.getUserDevices(userId);
+
+
+
+
+
+
         for (XMGroupMemberModel groupObj : groupList)
         {
 
@@ -88,7 +99,7 @@ public class XMBusinessLayer  {
                         if(xmGroupCluster.XmattersGroupName == groupObj.group1.targetName)
                         {
                             if(groupObj.member != null){
-
+                                groupObj.member.checked = true;
                                 xmGroupCluster.Devices.add(groupObj.member);
                                 isSkipped = true;
 
@@ -105,7 +116,6 @@ public class XMBusinessLayer  {
                         if(groupObj.member != null){
 
                             xmGroupClusterObj.Devices.add(groupObj.member);
-
                         }
                         xmGroupClusterObj.XmattersGroupName = groupObj.group1.targetName;
                         xmGroupClusterObjList.add(xmGroupClusterObj);
@@ -122,15 +132,43 @@ public class XMBusinessLayer  {
 
 
         }
+        //loop through and add any missing devices to the list mark them as unchecked
+
+        AddMissingDevicesToList(newDeviceList, xmGroupClusterObjList);
+        System.debug('ListReturnedToSF -->' + ':' + xmGroupClusterObjList);
+
         return xmGroupClusterObjList;
     }
 
+    public void AddMissingDevicesToList(XMDeviceWrapper[] newDeviceList, List<XMGroupProductCluster> xmGroupClusterObjList) {
+        for (XMGroupProductCluster xmGroupCluster : xmGroupClusterObjList) {
 
+            for (XMDeviceWrapper device : newDeviceList) {
+                boolean skip = false;
+                for(xmPersonMemberModel xmModel: xmGroupCluster.Devices) {
+                    if (xmModel.recipientType == device.deviceType)
+                    {
+                        skip = true;
+                        break;
+                    }
+                }
+                if (skip == false) {
+                    xmPersonMemberModel xmNewModel = new xmPersonMemberModel();
+                    xmNewModel.checked = false;
+                    xmNewModel.recipientType = device.deviceType;
+                    xmNewModel.id = device.deviceId;
+                    xmNewModel.targetName = device.deviceValue;
+                    xmGroupCluster.Devices.add(xmNewModel);
+                }
+            }
+        }
+    }
 
     //Returns a list of salesforce product based groups an account belongs to
     public Map<String, XMGroupProductCluster> GetSalesForceGroupData(Set<id> acc){
 
         Map<String, ProductEventMap__c> nodeMap;
+
         nodeMap = ProductEventMap__c.getAll();
         List<XMGroupProductCluster> availableProducts = new List<XMGroupProductCluster>();
         string partnerPrefix;
@@ -221,7 +259,7 @@ public class XMBusinessLayer  {
                 for(xmPersonMemberModel deviceObj:groupObj.Devices){
 
                     List<XMGroupMemberModel> xmList  = xmRestGroupObj.GetXMPersonGroupsById(userID);
-                    List<XMGroupProductCluster> xmCurrentGroupList = GetXMGroupList(xmList);
+                    List<XMGroupProductCluster> xmCurrentGroupList = GetXMGroupList(xmList,userID);
 
                     System.debug(xmCurrentGroupList);
                     if (deviceObj.checked == true) {
