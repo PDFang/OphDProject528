@@ -230,10 +230,10 @@ public class XMPersonManagementHelper {
 
     }
 
-    public static void updateXmGroupSubscription(XMGroupProductCluster[] xmGroupList, string xmPersonGuid){
+    public static void updateXmGroupSubscription(XMGroupProductCluster[] xmGroupList, string xmPersonGuid ){
 
         XMBusinessLayer groupLayer = new XMBusinessLayer();
-        string message = groupLayer.UpdateXMUserToGroups(xmGroupList,  xmPersonGuid);
+        string message = groupLayer.UpdateXMUserToGroups(xmGroupList, xmPersonGuid);
         system.debug('updateXmGroupSubscription(): message - ' + message);
 
     }

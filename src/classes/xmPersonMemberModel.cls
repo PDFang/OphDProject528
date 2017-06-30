@@ -7,6 +7,7 @@ public with sharing class xmPersonMemberModel {
     public string targetName { get; set; }
     public string recipientType { get; set; }
     public xmGroupLinkModel links { get; set; }
+    public boolean checked {get; set;}
 
 }
 

@@ -1177,7 +1177,7 @@
                             {
                                 field:"Notification",
                                 title:"Notification Options",
-                                template: '<input type="checkbox"   id = "#=GetDeviceIdByType("Work Email", data)#"  class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("Work Email", data)) { # checked="checked" :  # } #" /> Work Email<br /><input type="checkbox"  id = "#=GetDeviceIdByType("Secondary Email", data)#" class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("Secondary Email", data)) { # checked="checked" :  # } #" /> Secondary Email<br /><input type="checkbox"  id = "#=GetDeviceIdByType("SMS Phone", data)#" class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("SMS Phone", data)) { # checked="checked" :  # } #" />SMS Phone',
+                                template: '<input type="checkbox"  id = "#=GetDeviceIdByType("Work Email", data)#"  class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("Work Email", data)) { # checked="checked" :  # } #" /> Work Email<br /><input type="checkbox" id = "#=GetDeviceIdByType("Secondary Email", data)#" class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("Secondary Email", data)) { # checked="checked" :  # } #" /> Secondary Email<br /><input type="checkbox"  id = "#=GetDeviceIdByType("SMS Phone", data)#" class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("SMS Phone", data)) { # checked="checked" :  # } #" />SMS Phone',
                                 width:300
                             },
                             {
@@ -1234,6 +1234,7 @@
         if(itemData.Devices != null && itemData.Devices.length > 0){
             for (i = 0; i < itemData.Devices.length; i++) {
               if (itemData.Devices[i].targetName.indexOf(name) > -1){
+                  itemData.Devices[i].checked = true;
                   return true;
               }
            }
@@ -1270,6 +1271,7 @@
       console.log('checkedIds => ' + checkedIds);
       var grid = $("#groupList").data("kendoGrid");
       var groupData = [];
+      var Devices = [];
       $('#loading').modal({
                  backdrop: 'static',
                  keyboard: false
@@ -1277,7 +1279,7 @@
       $('#loading').modal('show');
 
       $("div.k-grid-content").find('.row-chk').each(function(idx, item){
-            var row = $(item).closest("tr"),
+            var row = $(item).closest("tr");
             dataItem = grid.dataItem(row);
             if(dataItem){
                 var  groupRow = new Object();
@@ -1286,6 +1288,7 @@
                 groupRow.PartnerPrefix = dataItem.PartnerPrefix;
                 groupRow.XmattersGroupName = dataItem.XmattersGroupName ;
                 groupRow.selected = item.checked;
+                groupRow.Devices = dataItem.Devices;
                 groupData.push(groupRow);
             }
         });

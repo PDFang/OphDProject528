@@ -238,7 +238,7 @@ public class XMPersonManagementController{
 
     // add or remove xMatters person to/from the group
     @RemoteAction
-    public static string updateGroupSubscription(String groupJson, String contactId){
+    public static string updateGroupSubscription(String groupJson , String contactId){
 
         String result;
         String message = '';

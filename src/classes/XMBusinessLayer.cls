@@ -214,45 +214,50 @@ public class XMBusinessLayer  {
         try
         {
 
-            List<XMGroupMemberModel> xmList  = xmRestGroupObj.GetXMPersonGroupsById(userID);
-            List<XMGroupProductCluster> xmCurrentGroupList = GetXMGroupList(xmList);
 
-            System.debug(xmCurrentGroupList);
 
             for(XMGroupProductCluster groupObj:groupList)
             {
-                if (groupObj.selected == true) {
-                    xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
-                    system.debug('xmGroupModelList =>' + xmGroupModelList);
-                    if (xmGroupModelList[0].id != null) {
-                        system.debug ( ' xmGroupModelList =>'  + xmGroupModelList.size());
-                        if (isUserMemberofGroup(groupObj.XmattersGroupName,xmCurrentGroupList) == false)
-                        {
-                            system.debug('** Adding user to group ** ==>' + groupObj.XmattersGroupName );
-                            responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, userID, 'Person');
+                for(xmPersonMemberModel deviceObj:groupObj.Devices){
+
+                    List<XMGroupMemberModel> xmList  = xmRestGroupObj.GetXMPersonGroupsById(userID);
+                    List<XMGroupProductCluster> xmCurrentGroupList = GetXMGroupList(xmList);
+
+                    System.debug(xmCurrentGroupList);
+                    if (deviceObj.checked == true) {
+                        xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
+                        system.debug('xmGroupModelList =>' + xmGroupModelList);
+                        if (xmGroupModelList[0].id != null) {
+                            system.debug ( ' xmGroupModelList =>'  + xmGroupModelList.size());
+                            if (isUserMemberofGroup(groupObj.XmattersGroupName,xmCurrentGroupList) == false)
+                            {
+                                system.debug('** Adding user to group ** ==>' + groupObj.XmattersGroupName );
+                                responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, deviceObj.id, 'Device');
+                            }
+                        }
+                        else {
+                            //build the group on the fly
+                            isGroupCreated = xmRestGroupObj.CreateNewGroup(groupObj.XmattersGroupName);
+                            if (isGroupCreated) {
+                                xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
+                                if (xmGroupModelList.size() > 0) {
+                                    responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, deviceObj.id, 'Device');
+                                }
+                            }
                         }
                     }
-                    else {
-                        //build the group on the fly
-                        isGroupCreated = xmRestGroupObj.CreateNewGroup(groupObj.XmattersGroupName);
-                        if (isGroupCreated) {
-                            xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
-                            if (xmGroupModelList.size() > 0) {
-                                responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, userID, 'Person');
+                    else{
+                        if (xmCurrentGroupList != null && xmCurrentGroupList.isEmpty() == false)
+                        {
+                            System.debug('Group List');
+                            if(isUserMemberofGroup(groupObj.XmattersGroupName,xmCurrentGroupList) == true) {
+                                System.debug('Found in users group list -> ' + groupObj.XmattersGroupName );
+                                xmRestGroupObj.RemoveUserFromAGroup(groupObj.XmattersGroupName, deviceObj.id);
                             }
                         }
                     }
                 }
-                else{
-                    if (xmCurrentGroupList != null && xmCurrentGroupList.isEmpty() == false)
-                    {
-                        System.debug('Group List');
-                        if(isUserMemberofGroup(groupObj.XmattersGroupName,xmCurrentGroupList) == true) {
-                            System.debug('Found in users group list -> ' + groupObj.XmattersGroupName );
-                            xmRestGroupObj.RemoveUserFromAGroup(groupObj.XmattersGroupName, userID);
-                        }
-                    }
-                }
+
             }
         }
         catch(XMCalloutException xmCalloutException)
