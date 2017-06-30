@@ -54,6 +54,28 @@ public class XMRestPersonTests {
         system.assert('1451a630-4d44-46e6-84ba-6b966dbfa715' == createdRecord.id);
     }
 
+    public static testMethod void modifyPerson_WillReturnCorrectJson(){
+        XMRestPeopleMockHttpGenerator httpMock = new XMRestPeopleMockHttpGenerator(200,'Complete Inactivate','[{"Name": "sForceTest1"}]',null);
+
+        XMPersonModel person = new XMPersonModel();
+        person.id = 'test';
+        person.status = 'INACTIVE';
+
+
+        test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, httpMock);
+        XMRestPerson service = new XMRestPerson();
+
+        XMPersonModel modifiedRecord = service.modifyPerson(person);
+
+        test.stopTest();
+
+        // System should automatically create this as externally owned since this is coming from salesforce
+        system.assertEquals(modifiedRecord.status, 'INACTIVE');
+
+    }
+
     public static testMethod void createPerson_FailureCodeWillThrowCorrectException(){
         XMRestPeopleMockHttpGenerator httpMock = new XMRestPeopleMockHttpGenerator(415,'Complete','[{"Name": "sForceTest1"}]',null);
         XMCalloutException testException = null;
