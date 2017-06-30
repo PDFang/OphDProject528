@@ -1260,6 +1260,14 @@
              }
           });
       }
+
+      function setCheckedFlag(devices, value, type){
+          for(i=0; i < devices.length; i++) {
+              if(devices[i].targetName.indexOf(type) !== -1){
+                  devices[i].checked = value;
+              }
+          }
+      }
   function updateGroups(){
       console.log('checkedIds => ' + checkedIds);
       var grid = $("#groupList").data("kendoGrid");
@@ -1282,9 +1290,9 @@
                 groupRow.XmattersGroupName = dataItem.XmattersGroupName ;
                 groupRow.selected = item.checked;
                 groupRow.Devices = dataItem.Devices;
-                groupRow.Devices[0].checked = $('#'+ dataItem.XmattersGroupName + '_1').is(':checked');
-                groupRow.Devices[1].checked = $('#'+ dataItem.XmattersGroupName + '_2').is(':checked');
-                groupRow.Devices[2].checked = $('#'+ dataItem.XmattersGroupName + '_3').is(':checked');
+                setCheckedFlag(groupRow.Devices, $('#'+ dataItem.XmattersGroupName + '_1').is(':checked'), "Work Email");
+                setCheckedFlag(groupRow.Devices, $('#'+ dataItem.XmattersGroupName + '_2').is(':checked'), "Secondary Email");
+                setCheckedFlag(groupRow.Devices, $('#'+ dataItem.XmattersGroupName + '_3').is(':checked'), "SMS");
                 groupData.push(groupRow);
             }
         });
