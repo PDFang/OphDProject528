@@ -64,104 +64,123 @@ public class XMBusinessLayer  {
 
             System.debug('xmSalesForceGroupMap -->' + xmSalesForceGroupMap);
         }
+        System.debug('Final List being returned to SF -->' + xmSalesForceGroupMap);
         return xmSalesForceGroupMap;
     }
 
     //Parses ist of XM low level models into one that is used by the business layer
     private List<XMGroupProductCluster> GetXMGroupList(List<XMGroupMemberModel> groupList, string userId)
     {
-        List<XMGroupProductCluster> xmGroupClusterObjList = new List<XMGroupProductCluster>();
-        Integer i = 0;
+        try{
+            List<XMGroupProductCluster> xmGroupClusterObjList = new List<XMGroupProductCluster>();
+            Integer i = 0;
+            System.debug('GetXMGroupList --> called');
 
+            System.debug('userid -->' + ':' + userId);
 
+            XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
+            newDeviceList = XMPersonManagementHelper.getUserDevices(userId);
 
-        XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
-        newDeviceList = XMPersonManagementHelper.getUserDevices(userId);
+            System.debug('new device -->' + ':' + newDeviceList);
 
-
-
-
-
-
-        for (XMGroupMemberModel groupObj : groupList)
-        {
-
-            i++;
-            boolean isSkipped = false;
-
-            XMGroupProductCluster xmGroupClusterObj = new XMGroupProductCluster();
-            if(groupObj.group1 != null)
+            for (XMGroupMemberModel groupObj : groupList)
             {
-                if(groupObj.group1.targetName.substring(0,2) == 'IP')
-                {
-                    for(XMGroupProductCluster xmGroupCluster : xmGroupClusterObjList)
-                    {
-                        if(xmGroupCluster.XmattersGroupName == groupObj.group1.targetName)
-                        {
-                            if(groupObj.member != null){
-                                groupObj.member.checked = true;
-                                xmGroupCluster.Devices.add(groupObj.member);
-                                isSkipped = true;
 
+                i++;
+                boolean isSkipped = false;
+
+                XMGroupProductCluster xmGroupClusterObj = new XMGroupProductCluster();
+                if(groupObj.group1 != null)
+                {
+                    if(groupObj.group1.targetName.substring(0,2) == 'IP')
+                    {
+                        for(XMGroupProductCluster xmGroupCluster : xmGroupClusterObjList)
+                        {
+                            if(xmGroupCluster.XmattersGroupName == groupObj.group1.targetName)
+                            {
+                                if(groupObj.member != null){
+                                    groupObj.member.checked = true;
+                                    xmGroupCluster.Devices.add(groupObj.member);
+                                    isSkipped = true;
+
+                                }
                             }
                         }
-                    }
-                    if(!isSkipped)
-                    {
-                        List<String> splitTargetName = groupObj.group1.targetName.split('_');
-                        xmGroupClusterObj.PartnerPrefix = splitTargetName[1];
-                        xmGroupClusterObj.Product = splitTargetName[2];
-                        xmGroupClusterObj.Cluster = splitTargetName[3];
-                        //xmGroupClusterObj.Devices.add(sdfsf);
-                        if(groupObj.member != null){
+                        if(!isSkipped)
+                        {
+                            List<String> splitTargetName = groupObj.group1.targetName.split('_');
+                            xmGroupClusterObj.PartnerPrefix = splitTargetName[1];
+                            xmGroupClusterObj.Product = splitTargetName[2];
+                            xmGroupClusterObj.Cluster = splitTargetName[3];
+                            //xmGroupClusterObj.Devices.add(sdfsf);
+                            if(groupObj.member != null){
 
-                            xmGroupClusterObj.Devices.add(groupObj.member);
+                                xmGroupClusterObj.Devices.add(groupObj.member);
+                            }
+                            xmGroupClusterObj.XmattersGroupName = groupObj.group1.targetName;
+                            xmGroupClusterObjList.add(xmGroupClusterObj);
                         }
-                        xmGroupClusterObj.XmattersGroupName = groupObj.group1.targetName;
-                        xmGroupClusterObjList.add(xmGroupClusterObj);
+
                     }
+                    String testName = 'xmGroupClusterObj' + String.valueOf(i);
 
+                    System.debug(testName + ':' + xmGroupClusterObj);
                 }
-                String testName = 'xmGroupClusterObj' + String.valueOf(i);
+                else{
+                    System.debug('Warning empty group name');
+                }
 
-                System.debug(testName + ':' + xmGroupClusterObj);
+
             }
-            else{
-                System.debug('Warning empty group name');
-            }
+            //loop through and add any missing devices to the list mark them as unchecked
+            System.debug('PreReturnedToSF -->' + ':' + xmGroupClusterObjList);
+            AddMissingDevicesToList(newDeviceList, xmGroupClusterObjList);
+            System.debug('ListReturnedToSF -->' + ':' + xmGroupClusterObjList);
 
-
+            return xmGroupClusterObjList;
         }
-        //loop through and add any missing devices to the list mark them as unchecked
-
-        AddMissingDevicesToList(newDeviceList, xmGroupClusterObjList);
-        System.debug('ListReturnedToSF -->' + ':' + xmGroupClusterObjList);
-
-        return xmGroupClusterObjList;
+        catch(Exception ex)
+        {
+            System.debug('GetXMGroupList  -->'  + ex.getMessage());
+            throw ex;
+        }
     }
 
     public void AddMissingDevicesToList(XMDeviceWrapper[] newDeviceList, List<XMGroupProductCluster> xmGroupClusterObjList) {
-        for (XMGroupProductCluster xmGroupCluster : xmGroupClusterObjList) {
+        try{
+               System.debug('AddMissingDevicesToList --> entered');
+               //System.debug('AddMissingDevicesToList --> ' + xmGroupClusterObjList) ;
+               for (XMGroupProductCluster xmGroupCluster : xmGroupClusterObjList) {
+                   System.debug('AddMissingDevicesToList --> looping through the list');
+                   for (XMDeviceWrapper device : newDeviceList) {
+                       boolean skip = false;
+                       for (xmPersonMemberModel xmModel: xmGroupCluster.Devices) {
+                           System.debug('AddMissingDevicesToList compare xmModel Type--> ' + xmModel );
+                           System.debug('AddMissingDevicesToList compare device Type--> ' + device );
+                           if (xmModel.targetName.contains(device.name)) {
+                               skip = true;
+                               xmModel.checked = true;
+                               System.debug('AddMissingDevicesToList --> record already present');
+                            }
+                       }
+                       if (skip == false) {
+                           System.debug('AddMissingDevicesToList --> adding a record');
+                           System.debug('Record being added -->' + device);
+                           xmPersonMemberModel xmNewModel = new xmPersonMemberModel();
+                           xmNewModel.checked = false;
+                           xmNewModel.recipientType = device.deviceType;
+                           xmNewModel.id = device.deviceId;
+                           xmNewModel.targetName = device.name;
+                           xmGroupCluster.Devices.add(xmNewModel);
+                       }
+                   }
+               }
 
-            for (XMDeviceWrapper device : newDeviceList) {
-                boolean skip = false;
-                for(xmPersonMemberModel xmModel: xmGroupCluster.Devices) {
-                    if (xmModel.recipientType == device.deviceType)
-                    {
-                        skip = true;
-                        break;
-                    }
-                }
-                if (skip == false) {
-                    xmPersonMemberModel xmNewModel = new xmPersonMemberModel();
-                    xmNewModel.checked = false;
-                    xmNewModel.recipientType = device.deviceType;
-                    xmNewModel.id = device.deviceId;
-                    xmNewModel.targetName = device.deviceValue;
-                    xmGroupCluster.Devices.add(xmNewModel);
-                }
-            }
-        }
+       }
+       catch(Exception ex)
+       {
+           System.debug('Error in AddMissingDevicesToList  -->'  + ex.getMessage());
+       }
     }
 
     //Returns a list of salesforce product based groups an account belongs to
@@ -251,7 +270,7 @@ public class XMBusinessLayer  {
 
         try
         {
-
+            system.debug('UpdateXMUserToGroups => ***- Entering -***');
 
 
             for(XMGroupProductCluster groupObj:groupList)
@@ -259,7 +278,9 @@ public class XMBusinessLayer  {
                 for(xmPersonMemberModel deviceObj:groupObj.Devices){
 
                     List<XMGroupMemberModel> xmList  = xmRestGroupObj.GetXMPersonGroupsById(userID);
+                    system.debug('UpdateXMUserToGroups list of groups by id => ' + xmList );
                     List<XMGroupProductCluster> xmCurrentGroupList = GetXMGroupList(xmList,userID);
+                    system.debug('UpdateXMUserToGroups current list of groups => ' + xmCurrentGroupList );
 
                     System.debug(xmCurrentGroupList);
                     if (deviceObj.checked == true) {
@@ -267,7 +288,7 @@ public class XMBusinessLayer  {
                         system.debug('xmGroupModelList =>' + xmGroupModelList);
                         if (xmGroupModelList[0].id != null) {
                             system.debug ( ' xmGroupModelList =>'  + xmGroupModelList.size());
-                            if (isUserMemberofGroup(groupObj.XmattersGroupName,xmCurrentGroupList) == false)
+                            if (isUserMemberofGroup(groupObj.XmattersGroupName, deviceObj,xmCurrentGroupList) == false)
                             {
                                 system.debug('** Adding user to group ** ==>' + groupObj.XmattersGroupName );
                                 responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, deviceObj.id, 'Device');
@@ -288,7 +309,7 @@ public class XMBusinessLayer  {
                         if (xmCurrentGroupList != null && xmCurrentGroupList.isEmpty() == false)
                         {
                             System.debug('Group List');
-                            if(isUserMemberofGroup(groupObj.XmattersGroupName,xmCurrentGroupList) == true) {
+                            if(isUserMemberofGroup(groupObj.XmattersGroupName,deviceObj,xmCurrentGroupList) == true) {
                                 System.debug('Found in users group list -> ' + groupObj.XmattersGroupName );
                                 xmRestGroupObj.RemoveUserFromAGroup(groupObj.XmattersGroupName, deviceObj.id);
                             }
@@ -317,13 +338,24 @@ public class XMBusinessLayer  {
         else
             return 'There are some issues in adding user to the selected group, please try again or call administrator.';
     }
-    private boolean isUserMemberofGroup (string groupName, List<XMGroupProductCluster> xmCurrentGroupList ){
+    private boolean isUserMemberofGroup (string groupName,xmPersonMemberModel device,  List<XMGroupProductCluster> xmCurrentGroupList ){
 
         for ( XMGroupProductCluster xm : xmCurrentGroupList ){
             if (xm.XmattersGroupName == groupName){
-                return true;
+
+                for (xmPersonMemberModel currentDevice :xm.Devices){
+                    system.debug('***Current Device --> ' + currentDevice);
+                    system.debug('***Camparing Device --> ' + device);
+
+                    if (currentDevice.id == device.id && currentDevice.checked == true){
+                        system.debug('***returning a true for  --> ' + device);
+                        return true;
+                    }
+                }
+
             }
         }
+        system.debug('***returning a false for  --> ' + device);
         return false;
     }
 
