@@ -1232,10 +1232,12 @@
      function isDeviceSelected(name, itemData){
         //check to see if the name is in a collection
         if(itemData.Devices != null && itemData.Devices.length > 0){
+
             for (i = 0; i < itemData.Devices.length; i++) {
-              if (itemData.Devices[i].checked == true){
-                  itemData.Devices[i].checked = true;
-                  return true;
+               if (itemData.Devices[i].targetName.indexOf(name) > -1){
+                    if (itemData.Devices[i].checked == true){
+                    return true;
+               }
               }
            }
         }
