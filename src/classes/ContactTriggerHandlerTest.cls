@@ -1,75 +1,94 @@
-/**
- * Created by arnab.karsarkar on 5/1/2017.
- */
-
 @isTest
 public class ContactTriggerHandlerTest {
 
-    PRIVATE static Contact ct;
+    @testSetup
     private static void setUpData(){
-        Id rtCustOther = '01270000000Lrn4AAC';
-        ct = new Contact();
+
         Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
         Account testAccount = new Account(
-                Name = 'testCalculateAccountNetScore Account',
+                Name = 'ContactTriggerHandlerTest Account',
                 Type = 'Customer',
-                RecordTypeId = accountRecordTypeMap.get('Customers').getRecordTypeId(),
-                IsPartner__c = false,
-                CustomerSegment__c = 'Strategic',
-                Brand_Visibility__c = 'Yes',
-                Industry_Leadership_Vocality__c = 'Yes',
-                Social_Media_Presence__c = 'Yes',
-                Risk_of_Leaving__c = 'Low',
-                Referenceable__c = false,
-                GYRStatus__c = 'Green'
+                RecordTypeId = accountRecordTypeMap.get('Customers').getRecordTypeId()
         );
 
         insert testAccount;
 
-        //create contact
-        ct = inContactBaseClass.CreateContact(testAccount.Id, 'firstName', 'lastName', 'email@test.com', rtCustOther);
+        xmPerson__c person = new xmPerson__c(
+                xmPersonUID__c = 'efrd-sqaw-123e-deft'
+        );
+        insert person;
 
+        Map<String,Schema.RecordTypeInfo> contactRecordTypeMap = Schema.SObjectType.Contact.getRecordTypeInfosByName();
+        Contact testContact = new Contact(
+                LastName = 'Contact',
+                FirstName = 'ContactTriggerHandlerTest',
+                Email = 'contact1@test.com',
+                RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
+                AccountId = testAccount.Id,
+                xmPerson__c = person.Id
+        );
+
+        insert testContact;
 
     }
 
+    // validate person is deactivated when associated contact is deactivated
+    static testMethod void testContactDeactivation(){
 
-    public static testMethod void insertReferenceableActCheck(){
-        setUpData();
-        test.startTest();
-        ct.Referenceable__c = true;
-        insert ct;
-        test.stopTest();
-
-        Account act = [select Referenceable__c from Account Limit 1];
-        system.assertEquals(true, act.Referenceable__c);
-    }
-
-    public static testMethod void updateReferenceableActCheck(){
-
-        setUpData();
-        insert ct;
-        test.startTest();
-        ct.Referenceable__c = true;
-        update ct;
-        test.stopTest();
-        Account act = [select Referenceable__c from Account Limit 1];
-        system.assertEquals(true, act.Referenceable__c);
-    }
-
-    public static testMethod void removeReferenceableActCheck(){
-
-        setUpData();
+        Contact testContact = [
+                Select Id, xmPerson__c from Contact
+                Where xmPerson__c != null Limit 1
+        ][0];
 
         test.startTest();
-        ct.Referenceable__c = true;
-        insert ct;
-
-        ct.Referenceable__c = false;
-        update ct;
+        test.setMock(HttpCalloutMock.class, new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Id": "efrd-sqaw-123e-deft","Status":"INACTIVE"}]',null));
+        testContact.Deactivated__c = true;
+        update testContact;
         test.stopTest();
-        Account act = [select Referenceable__c from Account Limit 1];
-        system.assertEquals(false, act.Referenceable__c);
+
+        system.assertEquals(true, ContactTriggerHandler.isValidatePersonStatusExecuted, 'Should have executed Contact trigger handler method.');
+        system.assertEquals(true, ContactTriggerHandler.calloutXMRestPerson, 'Should have called xMatters REST API');
+
     }
+
+    // validate person is deactivated when contact is disassociated
+    static testMethod void testContactDisassociation(){
+
+        Contact testContact = [
+                Select Id, xmPerson__c from Contact
+                Where xmPerson__c != null Limit 1
+        ][0];
+
+        test.startTest();
+        test.setMock(HttpCalloutMock.class, new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Id": "efrd-sqaw-123e-deft","Status":"INACTIVE"}]',null));
+        testContact.xmPerson__c = null;
+        update testContact;
+        test.stopTest();
+
+        system.assertEquals(true, ContactTriggerHandler.isValidatePersonStatusExecuted, 'Should have executed Contact trigger handler method.');
+        system.assertEquals(true, ContactTriggerHandler.calloutXMRestPerson, 'Should have called xMatters REST API');
+
+    }
+
+    // validate person is deactivated when associated contact is deleted
+    static testMethod void testContactDeletion(){
+
+        Contact testContact = [
+                Select Id, xmPerson__c from Contact
+                Where xmPerson__c != null Limit 1
+        ][0];
+
+        test.startTest();
+        test.setMock(HttpCalloutMock.class, new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Id": "efrd-sqaw-123e-deft","Status":"INACTIVE"}]',null));
+        delete testContact;
+        test.stopTest();
+
+        system.assertEquals(true, ContactTriggerHandler.isValidatePersonStatusExecuted, 'Should have executed Contact trigger handler method.');
+        system.assertEquals(true, ContactTriggerHandler.calloutXMRestPerson, 'Should have called xMatters REST API');
+
+    }
+
+
 
 
 
