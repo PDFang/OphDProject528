@@ -137,21 +137,53 @@ public class XMBusinessLayerTest {
         Test.setMock(HttpCalloutMock.class, fakeResponse);
 
         List<XMGroupProductCluster> groupListTest = new List<XMGroupProductCluster>();
+
+        List<xmPersonMemberModel> deviceList1 = new List<xmPersonMemberModel>();
+        xmPersonMemberModel device1 = new xmPersonMemberModel();
+        device1.id = '1234453223525';
+        device1.targetName= 'testTargetName1';
+        device1.recipientType= 'testRecipientType1';
+        device1.links = new xmGroupLinkModel();
+        device1.checked= true;
+
+        xmPersonMemberModel device2 = new xmPersonMemberModel();
+        device2.id = '123443223525';
+        device2.targetName= 'testTargetName2';
+        device2.recipientType= 'testRecipientType2';
+        device2.links = new xmGroupLinkModel();
+        device2.checked= false;
+
+        xmPersonMemberModel device3 = new xmPersonMemberModel();
+        device3.id = '123445322525';
+        device3.targetName= 'testTargetName3';
+        device3.recipientType= 'testRecipientType3';
+        device3.links = new xmGroupLinkModel();
+        device3.checked= true;
+
+        deviceList1.add(device1);
+        deviceList1.add(device2);
+        deviceList1.add(device3);
+
         XMGroupProductCluster groupProClusterTest = new XMGroupProductCluster();
         groupProClusterTest.Product = 'TestProduct1';
         groupProClusterTest.Cluster = 'TestCluster1';
         groupProClusterTest.PartnerPrefix = 'TestPartnerPrefix1';
         groupProClusterTest.XmattersGroupName = 'TestXmattersGroupName1';
+        groupProClusterTest.Devices = deviceList1;
         groupProClusterTest.selected = true;
         groupListTest.add(groupProClusterTest);
+
+
 
         XMGroupProductCluster groupProClusterTest1 = new XMGroupProductCluster();
         groupProClusterTest1.Product = 'TestProduct2';
         groupProClusterTest1.Cluster = 'TestCluster2';
         groupProClusterTest1.PartnerPrefix = 'TestPartnerPrefix2';
         groupProClusterTest1.XmattersGroupName = 'TestXmattersGroupName2';
+        groupProClusterTest1.Devices = deviceList1;
         groupProClusterTest1.selected = true;
         groupListTest.add(groupProClusterTest1);
+
 
 
         XMGroupProductCluster groupProClusterTest2 = new XMGroupProductCluster();
@@ -159,11 +191,17 @@ public class XMBusinessLayerTest {
         groupProClusterTest2.Cluster = 'TestCluster2';
         groupProClusterTest2.PartnerPrefix = 'TestPartnerPrefix2';
         groupProClusterTest2.XmattersGroupName = 'TestXmattersGroupName2';
+        groupProClusterTest2.Devices = deviceList1;
         groupProClusterTest2.selected = false;
         groupListTest.add(groupProClusterTest2);
 
         XMBusinessLayer xmBusinessLayer = new XMBusinessLayer();
+        XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
+        newDeviceList.add(new XMDeviceWrapper());
+        xmBusinessLayer.AddMissingDevicesToList(newDeviceList, groupListTest);
         String responseMessageTest = xmBusinessLayer.UpdateXMUserToGroups(groupListTest, 'castiron');
+
+
         test.stopTest();
         System.debug('responseMessageTest -->' + responseMessageTest);
     }
