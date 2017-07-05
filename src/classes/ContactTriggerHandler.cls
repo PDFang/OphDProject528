@@ -192,28 +192,28 @@ public class ContactTriggerHandler extends TriggerHandler{
     @Future(callout=true)
     private static void deactivateXmPerson(Set<Id> xmPersonIds){
 
-        Set<String> xmPersonGuids = new Set<String>();
+        List<xmPerson__c> xmPersonList = new List<xmPerson__c>();
 
         for(xmPerson__c person : [
-                Select xmPersonUID__c from xmPerson__c
+                Select Id, xmPersonUID__c from xmPerson__c
                 where Id IN :xmPersonIds
                 and xmPersonUID__c != null
         ]){
-            xmPersonGuids.add(person.xmPersonUID__c);
+            xmPersonList.add(person);
         }
 
-        if(xmPersonGuids.isEmpty()){
+        if(xmPersonList.isEmpty()){
             return;
         }
 
-        system.debug('deactivateXmPerson(): xmPersonGuids - ' + xmPersonGuids);
+        system.debug('deactivateXmPerson(): xmPersonList - ' + xmPersonList);
 
         XMRestPerson restService = new XMRestPerson();
 
-        for(String personGuid : xmPersonGuids){
+        for(xmPerson__c person : xmPersonList){
 
             XMPersonModel newPerson = new XMPersonModel();
-            newPerson.id = personGuid;
+            newPerson.id = person.xmPersonUID__c;
             newPerson.status = 'INACTIVE';
             // default to null
             newPerson.roles = null;
@@ -232,6 +232,7 @@ public class ContactTriggerHandler extends TriggerHandler{
                 // abort unless bad request error
                 String statusCode = String.valueOf(ex.HttpStatusCode);
                 if(statusCode != '400' && statusCode.startsWith('4') || statusCode.startsWith('5')){
+                    inContactBaseClass.SendErrorEmail(ex, person.Id + ' - Error deactivating Person in xMatters');
                     throw ex;
                 }
             }
