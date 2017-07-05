@@ -35,18 +35,19 @@ public with sharing class PSProjectAssetAttachment {
             }
             // if there are related opportinuties found attach the Parent project of the opportunities to the Assets/subscriptions
             if(opportunityIds.size() > 0){
-                for(AggregateResult agr: [select Id, Opportunity__c,Max(CreatedDate) maxDt
-                from Project__c
-                where Opportunity__c in : opportunityIds
-                And RecordType.Name like  '%Parent%'
-                Group By Opportunity__c, Id]){
-                    string projId = (string)agr.get('Id');
+
+                for(AggregateResult agr: [select Opportunity__c,Max(Id) maxId
+                                            from Project__c
+                                            where Opportunity__c in : opportunityIds
+                                            And RecordType.Name like  '%Parent%'
+                                            Group By Opportunity__c]){
+                    string projectId = (string)agr.get('maxId');
                     string oppyId = (string)agr.get('Opportunity__c');
-                    projectIds.add(projId);
+                    projectIds.add(projectId);
                     if(opportunityAssetsByIds.size() > 0){
                         for(Asset a : opportunityAssetsByIds.get(oppyId)){
                             Asset asset = new Asset(Id = a.Id);
-                            asset.Parent_Project__c = projId;
+                            asset.Parent_Project__c =projectId;
                             lstAssets.add(asset);
 
                         }
@@ -54,11 +55,12 @@ public with sharing class PSProjectAssetAttachment {
                     else if(opportunitySubscriptionsByIds.size() > 0){
                         for(SubscriptionReplica__c s : opportunitySubscriptionsByIds.get(oppyId)){
                             SubscriptionReplica__c subs = new SubscriptionReplica__c(Id = s.Id);
-                            subs.ParentProject__c = projId;
+                            subs.ParentProject__c = projectId;
                             lstSubscriptionReplicas.add(subs);
 
                         }
                     }
+
                 }
 
                 if(projectIds.size() > 0){
