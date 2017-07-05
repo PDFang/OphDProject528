@@ -272,15 +272,19 @@ public class XMBusinessLayer  {
         {
             system.debug('UpdateXMUserToGroups => ***- Entering -***');
 
+            List<XMGroupMemberModel> xmList  = xmRestGroupObj.GetXMPersonGroupsById(userID);
+            system.debug('UpdateXMUserToGroups list of groups by id => ' + xmList );
+            List<XMGroupProductCluster> xmCurrentGroupList = GetXMGroupList(xmList,userID);
+            system.debug('UpdateXMUserToGroups current list of groups => ' + xmCurrentGroupList );
 
             for(XMGroupProductCluster groupObj:groupList)
             {
                 for(xmPersonMemberModel deviceObj:groupObj.Devices){
 
-                    List<XMGroupMemberModel> xmList  = xmRestGroupObj.GetXMPersonGroupsById(userID);
-                    system.debug('UpdateXMUserToGroups list of groups by id => ' + xmList );
-                    List<XMGroupProductCluster> xmCurrentGroupList = GetXMGroupList(xmList,userID);
-                    system.debug('UpdateXMUserToGroups current list of groups => ' + xmCurrentGroupList );
+                    //List<XMGroupMemberModel> xmList  = xmRestGroupObj.GetXMPersonGroupsById(userID);
+                    //system.debug('UpdateXMUserToGroups list of groups by id => ' + xmList );
+                    //List<XMGroupProductCluster> xmCurrentGroupList = GetXMGroupList(xmList,userID);
+                    //system.debug('UpdateXMUserToGroups current list of groups => ' + xmCurrentGroupList );
 
                     System.debug(xmCurrentGroupList);
                     if (deviceObj.checked == true) {
