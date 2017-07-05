@@ -332,6 +332,9 @@
                         <div class="col-md-7"></div>
                     </div>
                     <div id="groupList"></div>
+                    <div style="margin-top:4px;" >
+                        <a class="k-button btn btn-primary" onclick="updateGroups();" style="float:right;background: #0275d8; color:white;">Update Group Subscription</a>
+                    </div>
                 </apex:pageBlock>
             </apex:outputPanel>
 
@@ -411,8 +414,10 @@
     var resturnedResult;
      $(document).ready(function() {
             loaddeviceAndGroups();
+
          });
 
+    function setFocusOnLoad() {}
     var timeframes = [];
     var devices = [];
     var deviceData = new Object();
@@ -1163,11 +1168,7 @@
                   dataSource: groups,
                   scrollable: true,
                   noRecords: true,
-                  height: 500,
-                   toolbar: [
-                        { template: '<a class="k-button" onclick="updateGroups();">Update Group Subscription</a>'
-                        }
-                      ],
+                  height: 300,
                   columns: [
 //                      {
 //                                field:"selected",
@@ -1187,7 +1188,7 @@
                             {
                                 field:"Notification",
                                 title:"Notification Options",
-                                template: '<input type="checkbox"  id = "#=GetDeviceIdByType("1", data)#"  class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("Work Email", data)) { # checked="checked" :  # } #"  # if (!isDeviceExist("Work Email")) { # disabled :  # } #"/> <label style="font-weight:100;">Work Email</label><br /><input type="checkbox" id = "#=GetDeviceIdByType("2", data)#" class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("Secondary Email", data)) { # checked="checked" :  # } #" # if (!isDeviceExist("Secondary Email")) { # disabled :  # } #"/><label style="font-weight:100;"> Secondary Email</label><br /><input type="checkbox"  id = "#=GetDeviceIdByType("3", data)#" class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("SMS Phone", data)) { # checked="checked" :  # } # # if (!isDeviceExist("SMS Phone")) { # disabled :  # } #" /><label style="font-weight:100;"> SMS Phone</label>',
+                                template: '<input type="checkbox"  id = "#=GetDeviceIdByType("1", data)#"  class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("Work Email", data)) { # checked="checked" initial-check="true": initial-check="false" # } #"  # if (!isDeviceExist("Work Email")) { # disabled :  # } #"/> <label style="font-weight:100;">Work Email</label><br /><input type="checkbox" id = "#=GetDeviceIdByType("2", data)#" class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("Secondary Email", data)) { # checked="checked" initial-check="true": initial-check="false"  # } #" # if (!isDeviceExist("Secondary Email")) { # disabled :  # } #"/><label style="font-weight:100;"> Secondary Email</label><br /><input type="checkbox"  id = "#=GetDeviceIdByType("3", data)#" class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("SMS Phone", data)) { # checked="checked" initial-check="true": initial-check="false"  # } # # if (!isDeviceExist("SMS Phone")) { # disabled :  # } #" /><label style="font-weight:100;"> SMS Phone</label>',
                                 width:300
                             },
                             {
@@ -1224,17 +1225,14 @@
 
     function selectgridRow(obj) {
        var checked = obj.checked,
-           row = $(obj).closest("tr");
+           row = $(obj).closest("tr"),
+           initialCheck = $(obj).attr("initial-check") == "true" ? true : false;
 
-       if (checked) {
-            //-select the row
+       if (checked != initialCheck) {
             row.addClass("k-state-selected");
-             row.removeClass("row-unselect")
             } else {
             //-remove selection
             row.removeClass("k-state-selected");
-             row.addClass("row-unselect");
-
        }
      }
 
