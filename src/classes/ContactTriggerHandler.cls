@@ -1,10 +1,9 @@
-/**
- * Created by ravish.chawla on 4/27/2017.
- */
-
 public class ContactTriggerHandler extends TriggerHandler{
 
+    @TestVisible
     private static boolean isValidatePersonStatusExecuted = false;
+    @TestVisible
+    private static boolean calloutXMRestPerson = false;
 
     public override void afterUpdate(){
 
@@ -26,7 +25,6 @@ public class ContactTriggerHandler extends TriggerHandler{
         if(oldMap == null){
             return;
         }
-        isValidatePersonStatusExecuted = true;
 
         Set<Id> xmPersonIds = new Set<Id>();
         Set<Id> contactIds = new Set<Id>();
@@ -88,6 +86,8 @@ public class ContactTriggerHandler extends TriggerHandler{
 
         deactivateXmPerson(xmPersonIds);
 
+        isValidatePersonStatusExecuted = true;
+
     }
 
     // deactivate the person in xMatters
@@ -125,7 +125,7 @@ public class ContactTriggerHandler extends TriggerHandler{
             XMPersonModel response;
             try{
                 response = restService.modifyPerson(newPerson);
-
+                calloutXMRestPerson = true;
                 system.debug('deactivateXmPerson(): response - ' + response);
 
             }catch(XMCalloutException ex){
