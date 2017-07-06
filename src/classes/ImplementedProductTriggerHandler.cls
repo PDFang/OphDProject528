@@ -43,7 +43,8 @@ public class ImplementedProductTriggerHandler extends TriggerHandler {
                                     Contact__c = cont.Id,
                                     ImplementedProduct__c = imp.Id,
                                     NotificationProfile__c = cont.xmPerson__c,
-                                    Status__c = 'In Queue'
+                                    Status__c = 'In Queue',
+                                    Action__c = 'Remove'
                             );
                             System.debug('grpChangeRequest : ' + grpChangeRequest);
                             groupChangeRequestList.add(grpChangeRequest);

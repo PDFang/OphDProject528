@@ -1,7 +1,7 @@
 /**
  * Created by william.nelson on 6/22/2017.
  */
-
+@IsTest
 public with sharing class PSProjectAssetAttachmentTest {
 
 
@@ -25,7 +25,7 @@ public with sharing class PSProjectAssetAttachmentTest {
     static List<Product2> productList = null;
     static List<Project__c> projectList = null;
     static List<Asset> assetList = null;
-
+    static SBQQ__QuoteLine__c qli1;
 
 
 
@@ -46,10 +46,7 @@ public with sharing class PSProjectAssetAttachmentTest {
             recordTypeMap.put(record.Name, record.Id);
         }
 
-        createAccount();
-        createProducts();
-        createProjects();
-        //createAssets();
+
     }
 
     static void createAccount()
@@ -164,6 +161,45 @@ public with sharing class PSProjectAssetAttachmentTest {
         assetList.add(asset4);
 
         insert assetList;
+    }
+
+
+    public static void createSimpleTestData(){
+
+        Pricebook2 pb = [select Id from Pricebook2 where isStandard=true];
+        Product2 prod = new Product2(Name='TestProd', IsActive=true);
+        insert(prod);
+
+        PricebookEntry pbe = new PricebookEntry(Pricebook2Id=pb.Id, Product2Id=prod.Id, IsActive=true, UnitPrice=10);
+        insert(pbe);
+
+        Account acc = new Account(name='test');
+        insert(acc);
+
+        Opportunity opp = new Opportunity(Name='test', StageName='Open', CloseDate=System.today(), AccountId=acc.Id, Pricebook2Id=pb.Id);
+        insert(opp);
+
+        SBQQ__Quote__c q = new SBQQ__Quote__c(); //SBQQ_O SBQQ__Opportunity__c = opp.Id
+        insert(q);
+        qli1 = new SBQQ__QuoteLine__c( SBQQ__ListPrice__c =5 ,  SBQQ__Quote__c=q.Id, SBQQ__Product__c=prod.Id,  SBQQ__Quantity__c=10, SBQQ__Number__c=1);
+
+        createAssets();
+        createProjects();
+
+    }
+
+
+    @IsTest
+    public static void TestAssetAttachment(){
+        //Arrange
+        createSimpleTestData();
+        //Act
+        PSProjectAssetAttachment attachment = new PSProjectAssetAttachment();
+        set<id> QouteLineids = new set<id>();
+
+        set<id> AssetsIds= new set<id>();
+        AttachAssetsByIdToParentProject.AttachAssetsByIdToParentProject(QouteLineids, AssetsIds, null);
+        //Assert
     }
 
 }
