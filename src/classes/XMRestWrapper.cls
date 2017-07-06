@@ -97,7 +97,7 @@ public class XMRestWrapper {
             request.setBody(body);
         }
 
-        request.setEndpoint('callout:xMatters_Inbound_integration_ChangeRequest/' + inboundIntegrationGuid + '/triggers');
+        request.setEndpoint('callout:xMatters_Inbound_integration_Confirmed/' + inboundIntegrationGuid + '/triggers');
 
         request.setHeader('Authorization', '{!$Credential.AuthorizationMethod} {!$Credential.AuthorizationHeaderValue}');
 
