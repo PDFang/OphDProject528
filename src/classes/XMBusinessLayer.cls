@@ -65,6 +65,17 @@ public class XMBusinessLayer  {
             System.debug('xmSalesForceGroupMap -->' + xmSalesForceGroupMap);
         }
         System.debug('Final List being returned to SF -->' + xmSalesForceGroupMap);
+
+        XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
+        newDeviceList = XMPersonManagementHelper.getUserDevices(guid);
+
+        System.debug('new device -->' + ':' + newDeviceList);
+
+        //loop through and add any missing devices to the list mark them as unchecked
+        System.debug('PreReturnedToSF -->' + ':' + xmSalesForceGroupMap.values());
+        AddMissingDevicesToList(newDeviceList, xmSalesForceGroupMap.values());
+        System.debug('ListReturnedToSF -->' + ':' + xmSalesForceGroupMap.values());
+
         return xmSalesForceGroupMap;
     }
 
@@ -78,10 +89,7 @@ public class XMBusinessLayer  {
 
             System.debug('userid -->' + ':' + userId);
 
-            XMDeviceWrapper[] newDeviceList = new XMDeviceWrapper[]{};
-            newDeviceList = XMPersonManagementHelper.getUserDevices(userId);
 
-            System.debug('new device -->' + ':' + newDeviceList);
 
             for (XMGroupMemberModel groupObj : groupList)
             {
@@ -132,10 +140,7 @@ public class XMBusinessLayer  {
 
 
             }
-            //loop through and add any missing devices to the list mark them as unchecked
-            System.debug('PreReturnedToSF -->' + ':' + xmGroupClusterObjList);
-            AddMissingDevicesToList(newDeviceList, xmGroupClusterObjList);
-            System.debug('ListReturnedToSF -->' + ':' + xmGroupClusterObjList);
+
 
             return xmGroupClusterObjList;
         }
@@ -286,7 +291,7 @@ public class XMBusinessLayer  {
                     //List<XMGroupProductCluster> xmCurrentGroupList = GetXMGroupList(xmList,userID);
                     //system.debug('UpdateXMUserToGroups current list of groups => ' + xmCurrentGroupList );
 
-                    System.debug(xmCurrentGroupList);
+                    System.debug('xmCurrentGroupList = >' + xmCurrentGroupList);
                     if (deviceObj.checked == true) {
                         xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
                         system.debug('xmGroupModelList =>' + xmGroupModelList);
@@ -346,6 +351,7 @@ public class XMBusinessLayer  {
 
         for ( XMGroupProductCluster xm : xmCurrentGroupList ){
             if (xm.XmattersGroupName == groupName){
+                    system.debug('*** groupName => ' + groupName);
 
                 for (xmPersonMemberModel currentDevice :xm.Devices){
                     system.debug('***Current Device --> ' + currentDevice);

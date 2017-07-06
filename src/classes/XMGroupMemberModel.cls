@@ -4,6 +4,7 @@ public with sharing class XMGroupMemberModel
     public xmPersonMemberModel member { get; set; }
 
     public XMGroupMemberModel(){
+      //  member = new xmPersonMemberModel();
         //member  = new list<xmPersonMemberModel>();
     }
 
