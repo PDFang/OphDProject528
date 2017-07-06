@@ -174,7 +174,12 @@ public class inContactBaseClass
     	email.setPlainTextBody(ex.getMessage() + '/n/r/n/rStack Trace:/n/r' + ex.getStackTraceString());
     	
     	//send message
-    	Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
+		try{
+			Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
+		}catch(EmailException emailEx){
+			system.debug('EmailException - '+ emailEx);
+		}
+
     }
     
     public static void SendErrorEmail(string errorMessage, string recordId)
@@ -207,7 +212,12 @@ public class inContactBaseClass
     	email.setPlainTextBody(errorMessage);
     	
     	//send message
-    	Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
+		try{
+			Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
+		}catch(EmailException emailEx){
+			system.debug('EmailException - '+ emailEx);
+		}
+
     }
 	
     

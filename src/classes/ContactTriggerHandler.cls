@@ -1,112 +1,180 @@
-/**
- * Created by ravish.chawla on 4/27/2017.
- */
-
 public class ContactTriggerHandler extends TriggerHandler{
 
-    public override void afterInsert(){
-        updateReferencable((list<Contact>)trigger.new, new list<Contact>());
-    }
+    @TestVisible
+    private static boolean isValidatePersonStatusExecuted = false;
+    @TestVisible
+    private static boolean calloutXMRestPerson = false;
 
     public override void afterUpdate(){
-        updateReferencable((list<Contact>)trigger.new, (list<Contact>)trigger.old);
+
+        if(!isValidatePersonStatusExecuted)
+            validatePersonStatus((List<Contact>) trigger.new, (List<Contact>) trigger.old, (Map<Id, Contact>) trigger.oldMap); // this shall be the last method call
 
     }
 
-    private static void updateReferencable(list<Contact> newContactList, list<Contact> oldContactList)
-    {
-        Set<Id> acctAddRef = new Set<Id>();
-        Set<Id> acctRemoveRef = new Set<Id>();
+    protected override void afterDelete(){
 
-        if(oldContactList.size() == 0)
-        {
-            //loop through contacts
-            for(Contact c:newContactList)
-            {
-                //get referenceable contacts
-                if(c.Referenceable__c)
-                {
-                    if(!acctAddRef.contains(c.AccountId))
-                    {
-                        acctAddRef.add(c.AccountId);
-                    }
-                }
-            }
-        }
-        else
-        {
-            //loop through triggers
-            for(integer i=0; i < newContactList.size(); i++)
-            {
-                //get new and old contact record
-                Contact cn = newContactList[i];
-                Contact co = oldContactList[i];
+        if(!isValidatePersonStatusExecuted)
+            validatePersonStatus((List<Contact>) trigger.new, (List<Contact>) trigger.old, (Map<Id, Contact>) trigger.oldMap); // this shall be the last method call
 
-                //get newly referenceable contacts
-                if(!co.Referenceable__c && cn.Referenceable__c)
-                {
-                    if(!acctAddRef.contains(cn.AccountId))
-                    {
-                        acctAddRef.add(cn.AccountId);
-                    }
-                }
-                else if(co.Referenceable__c && !cn.Referenceable__c)
-                {
-                    if(!acctRemoveRef.contains(cn.AccountId))
-                    {
-                        acctRemoveRef.add(cn.AccountId);
-                    }
-                }
-            }
-        }
-
-        if(acctAddRef.size() > 0)
-            addAccountRef(acctAddRef);
-
-        if(acctRemoveRef.size() > 0)
-            removeAccountRef(acctRemoveRef);
     }
 
-    private static void addAccountRef(set<id> acctAddRef)
-    {
-        //get accounts that need referenced
-        Account[] accts = [SELECT Id, Referenceable__c FROM Account WHERE Id IN :acctAddRef AND Referenceable__c = false];
+    // validate the contact that is deactivated, disassociated or deleted was the only active contact associated with xMatters person
+    private static void validatePersonStatus(List<Contact> newList, List<Contact> oldList, Map<Id, Contact> oldMap){
 
-        //make sure accounts are returned
-        if(accts.size()>0)
-        {
-            //loop through accounts and mark them as referenceable
-            for(Account a:accts)
-            {
-                a.Referenceable__c = true;
-            }
-
-            //update accounts
-            update accts;
+        if(oldMap == null){
+            return;
         }
-    }
 
-    private static void removeAccountRef(set<id> acctRemoveRef)
-    {
-        //get accounts that need referenced
-        Account[] accts = [SELECT Id, Referenceable__c, (select Id from Contacts where Referenceable__c = true)
-        FROM Account WHERE Id IN :acctRemoveRef];
+        Set<Id> xmPersonIds = new Set<Id>();
+        Set<Id> contactIds = new Set<Id>();
 
-        //make sure accounts are returned
-        if(accts.size()>0)
-        {
-            //loop through accounts and mark them as referenceable
-            for(Account a:accts)
-            {
-                if(a.Contacts.size() <= 0)
+        List<xmGroupChangeRequest__c> requestList = new List<xmGroupChangeRequest__c>();
+
+        // update
+        if(newList != null){
+
+            for(Contact newContact : newList){
+                Contact oldContact = oldMap.get(newContact.Id);
+
+                if( (newContact.Deactivated__c && oldContact.Deactivated__c == false && oldContact.xmPerson__c != null)
+                        || (newContact.xmPerson__c != oldContact.xmPerson__c && oldContact.xmPerson__c != null))
                 {
-                    a.Referenceable__c = false;
+                    xmPersonIds.add(oldContact.xmPerson__c);
+                    contactIds.add(newContact.Id);
+
+                    xmGroupChangeRequest__c newCR = new xmGroupChangeRequest__c(
+                            NotificationProfile__c = oldContact.xmPerson__c,
+                            Contact__c = newContact.Id,
+                            Account__c = newContact.AccountId
+                    );
+                    requestList.add(newCR);
                 }
             }
 
-            //update accounts
-            update accts;
+            system.debug('validatePersonStatus(): no of contacts deactivated or disassociated - ' + contactIds.size());
+
         }
+        // delete
+        else{
+
+            for(Contact oldContact : oldList){
+
+                if(oldContact.Deactivated__c == false && oldContact.xmPerson__c != null){
+                    xmPersonIds.add(oldContact.xmPerson__c);
+                    contactIds.add(oldContact.Id);
+
+                    xmGroupChangeRequest__c newCR = new xmGroupChangeRequest__c(
+                            NotificationProfile__c = oldContact.xmPerson__c,
+                            Account__c = oldContact.AccountId
+                    );
+                    requestList.add(newCR);
+                }
+            }
+
+            system.debug('validatePersonStatus(): no of contacts deleted - ' + contactIds.size());
+        }
+
+        system.debug('validatePersonStatus(): requestList - ' + requestList);
+
+        // create group change request
+        if(requestList.size() > 0){
+            try{
+                insert requestList;
+
+            }catch(DmlException ex){
+                system.debug('validatePersonStatus(): DmlException - ' + ex);
+                inContactBaseClass.SendErrorEmail(ex, requestList[0].Contact__c + ' - Error creating xMatters group change request');
+
+            }
+        }
+
+        system.debug('validatePersonStatus(): xmPersonIds - ' + xmPersonIds);
+
+        if(xmPersonIds.isEmpty()){
+            return;
+        }
+
+        Set<Id> activeXmPersonIds = new Set<Id>();
+
+        // find associated contacts if any that are active
+        for(Contact cont : [
+                Select Id, AccountId, xmPerson__c from Contact
+                Where xmPerson__c IN :xmPersonIds and Deactivated__c = false
+                and Id NOT IN :contactIds
+        ]){
+            activeXmPersonIds.add(cont.xmPerson__c);
+        }
+
+        xmPersonIds.removeAll(activeXmPersonIds);
+
+        system.debug('validatePersonStatus(): xmPersonIds to be deactivated - ' + xmPersonIds);
+
+        if(xmPersonIds.isEmpty()){
+            return;
+        }
+
+        if(xmPersonIds.size() > limits.getLimitCallouts()){
+            throw new LimitException('Unable to deactivate ' + xmPersonIds.size() +' associated users in xMatters. Please try again with a smaller batch size.');
+        }
+
+        deactivateXmPerson(xmPersonIds);
+
+        isValidatePersonStatusExecuted = true;
+
+    }
+
+    // deactivate the person in xMatters
+    @Future(callout=true)
+    private static void deactivateXmPerson(Set<Id> xmPersonIds){
+
+        List<xmPerson__c> xmPersonList = new List<xmPerson__c>();
+
+        for(xmPerson__c person : [
+                Select Id, xmPersonUID__c from xmPerson__c
+                where Id IN :xmPersonIds
+                and xmPersonUID__c != null
+        ]){
+            xmPersonList.add(person);
+        }
+
+        if(xmPersonList.isEmpty()){
+            return;
+        }
+
+        system.debug('deactivateXmPerson(): xmPersonList - ' + xmPersonList);
+
+        XMRestPerson restService = new XMRestPerson();
+
+        for(xmPerson__c person : xmPersonList){
+
+            XMPersonModel newPerson = new XMPersonModel();
+            newPerson.id = person.xmPersonUID__c;
+            newPerson.status = 'INACTIVE';
+            // default to null
+            newPerson.roles = null;
+            newPerson.recipientType = null;
+            newPerson.externallyOwned = null;
+
+            XMPersonModel response;
+            try{
+                response = restService.modifyPerson(newPerson);
+                calloutXMRestPerson = true;
+                system.debug('deactivateXmPerson(): response - ' + response);
+
+            }catch(XMCalloutException ex){
+                system.debug('deactivateXmPerson(): XMCalloutException - ' + ex);
+
+                // abort unless bad request error
+                String statusCode = String.valueOf(ex.HttpStatusCode);
+                if(statusCode != '400' && statusCode.startsWith('4') || statusCode.startsWith('5')){
+                    inContactBaseClass.SendErrorEmail(ex, person.Id + ' - Error deactivating Person in xMatters');
+                    throw ex;
+                }
+            }
+
+        }
+
     }
 
 }
