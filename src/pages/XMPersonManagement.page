@@ -1178,7 +1178,8 @@
 //                            },
                             {
                                 field:"Product",
-                                title:"Product Name"
+                                title:"Product Name",
+                                template:'<label class="row-chk" style="font-weight:100;">#: data.Product #</label>'
                             },
                             {
                                 field: "Cluster",
@@ -1188,7 +1189,7 @@
                             {
                                 field:"Notification",
                                 title:"Notification Options",
-                                template: '<input type="checkbox"  id = "#=GetDeviceIdByType("1", data)#"  class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("Work Email", data)) { # checked="checked" initial-check="true": initial-check="false" # } #"  # if (!isDeviceExist("Work Email")) { # disabled :  # } #"/> <label style="font-weight:100;">Work Email</label><br /><input type="checkbox" id = "#=GetDeviceIdByType("2", data)#" class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("Secondary Email", data)) { # checked="checked" initial-check="true": initial-check="false"  # } #" # if (!isDeviceExist("Secondary Email")) { # disabled :  # } #"/><label style="font-weight:100;"> Secondary Email</label><br /><input type="checkbox"  id = "#=GetDeviceIdByType("3", data)#" class="row-chk" onclick="selectgridRow(this);" # if (isDeviceSelected("SMS Phone", data)) { # checked="checked" initial-check="true": initial-check="false"  # } # # if (!isDeviceExist("SMS Phone")) { # disabled :  # } #" /><label style="font-weight:100;"> SMS Phone</label>',
+                                template: '<input type="checkbox"  id = "#=GetDeviceIdByType("1", data)#"   onclick="selectgridRow(this);" # if (isDeviceSelected("Work Email", data)) { # checked="checked" initial-check="true": initial-check="false" # } #"  # if (!isDeviceExist("Work Email")) { # disabled :  # } #"/> <label style="font-weight:100;">Work Email</label><br /><input type="checkbox" id = "#=GetDeviceIdByType("2", data)#" onclick="selectgridRow(this);" # if (isDeviceSelected("Secondary Email", data)) { # checked="checked" initial-check="true": initial-check="false"  # } #" # if (!isDeviceExist("Secondary Email")) { # disabled :  # } #"/><label style="font-weight:100;"> Secondary Email</label><br /><input type="checkbox"  id = "#=GetDeviceIdByType("3", data)#" onclick="selectgridRow(this);" # if (isDeviceSelected("SMS Phone", data)) { # checked="checked" initial-check="true": initial-check="false"  # } # # if (!isDeviceExist("SMS Phone")) { # disabled :  # } #" /><label style="font-weight:100;"> SMS Phone</label>',
                                 width:300
                             },
                             {

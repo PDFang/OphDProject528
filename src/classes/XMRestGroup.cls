@@ -56,9 +56,14 @@ public with sharing class XMRestGroup {
             if (parser.getCurrentToken() == JSONToken.START_ARRAY) {
                 while (parser.nextToken() != null) {
                     if (parser.getCurrentToken() == JSONToken.START_OBJECT) {
+
                         XMGroupMemberModel model = (XMGroupMemberModel) parser.readValueAs(XMGroupMemberModel.class);
+                        if(model.member != null){
+                            model.member.checked = true;
+                        }
+                        system.debug('model  =>' + model);
                         groupList.Add(model);
-                        system.debug(model);
+
                     }
                 }
             }
