@@ -29,6 +29,8 @@ public class ContactTriggerHandler extends TriggerHandler{
         Set<Id> xmPersonIds = new Set<Id>();
         Set<Id> contactIds = new Set<Id>();
 
+        List<xmGroupChangeRequest__c> requestList = new List<xmGroupChangeRequest__c>();
+
         // update
         if(newList != null){
 
@@ -36,10 +38,17 @@ public class ContactTriggerHandler extends TriggerHandler{
                 Contact oldContact = oldMap.get(newContact.Id);
 
                 if( (newContact.Deactivated__c && oldContact.Deactivated__c == false && oldContact.xmPerson__c != null)
-                        || (newContact.xmPerson__c == null && oldContact.xmPerson__c != null))
+                        || (newContact.xmPerson__c != oldContact.xmPerson__c && oldContact.xmPerson__c != null))
                 {
                     xmPersonIds.add(oldContact.xmPerson__c);
                     contactIds.add(newContact.Id);
+
+                    xmGroupChangeRequest__c newCR = new xmGroupChangeRequest__c(
+                            NotificationProfile__c = oldContact.xmPerson__c,
+                            Contact__c = newContact.Id,
+                            Account__c = newContact.AccountId
+                    );
+                    requestList.add(newCR);
                 }
             }
 
@@ -54,18 +63,43 @@ public class ContactTriggerHandler extends TriggerHandler{
                 if(oldContact.Deactivated__c == false && oldContact.xmPerson__c != null){
                     xmPersonIds.add(oldContact.xmPerson__c);
                     contactIds.add(oldContact.Id);
+
+                    xmGroupChangeRequest__c newCR = new xmGroupChangeRequest__c(
+                            NotificationProfile__c = oldContact.xmPerson__c,
+                            Account__c = oldContact.AccountId
+                    );
+                    requestList.add(newCR);
                 }
             }
 
             system.debug('validatePersonStatus(): no of contacts deleted - ' + contactIds.size());
         }
 
+        system.debug('validatePersonStatus(): requestList - ' + requestList);
+
+        // create group change request
+        if(requestList.size() > 0){
+            try{
+                insert requestList;
+
+            }catch(DmlException ex){
+                system.debug('validatePersonStatus(): DmlException - ' + ex);
+                inContactBaseClass.SendErrorEmail(ex, requestList[0].Contact__c + ' - Error creating xMatters group change request');
+
+            }
+        }
+
         system.debug('validatePersonStatus(): xmPersonIds - ' + xmPersonIds);
+
+        if(xmPersonIds.isEmpty()){
+            return;
+        }
 
         Set<Id> activeXmPersonIds = new Set<Id>();
 
+        // find associated contacts if any that are active
         for(Contact cont : [
-                Select Id, xmPerson__c from Contact
+                Select Id, AccountId, xmPerson__c from Contact
                 Where xmPerson__c IN :xmPersonIds and Deactivated__c = false
                 and Id NOT IN :contactIds
         ]){
