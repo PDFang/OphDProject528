@@ -87,4 +87,30 @@ public class XMRestWrapper {
 
         return null;
     }
+
+
+    public String callChangeRequestInboundIntegration(String body, String inboundIntegrationGuid) {
+
+        HttpRequest request = new HttpRequest();
+
+        if (body != null) {
+            request.setBody(body);
+        }
+
+        request.setEndpoint('callout:xMatters_Inbound_integration_Confirmed/' + inboundIntegrationGuid + '/triggers');
+
+        request.setHeader('Authorization', '{!$Credential.AuthorizationMethod} {!$Credential.AuthorizationHeaderValue}');
+
+        request.setMethod('POST');
+        request.setHeader('Content-Type', 'application/json');
+
+        Http h = new Http();
+
+        HttpResponse response = h.send(request);
+        system.debug('callChangeRequestInboundIntegration() ==> response: ' + response.getBody());
+
+        String returnResponse = getResponse(response);
+
+        return returnResponse;
+    }
 }

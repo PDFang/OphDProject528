@@ -1,6 +1,86 @@
 @isTest
 public class ContactTriggerHandlerTest {
 
+    // validate person is deactivated when associated contact is deactivated
+    static testMethod void testContactDeactivation(){
+
+        Contact testContact = [
+                Select Id, AccountId, xmPerson__c from Contact
+                Where xmPerson__c != null Limit 1
+        ][0];
+
+        test.startTest();
+        test.setMock(HttpCalloutMock.class, new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Id": "efrd-sqaw-123e-deft","Status":"INACTIVE"}]',null));
+        testContact.Deactivated__c = true;
+        update testContact;
+        test.stopTest();
+
+        List<xmGroupChangeRequest__c> requestList = [
+                Select Id from xmGroupChangeRequest__c
+                where NotificationProfile__c = :testContact.xmPerson__c
+                and Contact__c = :testContact.Id
+                and Account__c = :testContact.AccountId
+        ];
+        system.assertEquals(1, requestList.size(), 'Should have created a group change request.');
+
+        system.assertEquals(true, ContactTriggerHandler.isValidatePersonStatusExecuted, 'Should have executed Contact trigger handler method.');
+        system.assertEquals(true, ContactTriggerHandler.calloutXMRestPerson, 'Should have called xMatters REST API');
+
+    }
+
+    // validate person is deactivated when contact is disassociated
+    static testMethod void testContactDisassociation(){
+
+        Contact testContact = [
+                Select Id, AccountId, xmPerson__c from Contact
+                Where xmPerson__c != null Limit 1
+        ][0];
+        String xmPersonId = testContact.xmPerson__c;
+
+        test.startTest();
+        test.setMock(HttpCalloutMock.class, new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Id": "efrd-sqaw-123e-deft","Status":"INACTIVE"}]',null));
+        testContact.xmPerson__c = null;
+        update testContact;
+        test.stopTest();
+
+        List<xmGroupChangeRequest__c> requestList = [
+                Select Id from xmGroupChangeRequest__c
+                where NotificationProfile__c = :xmPersonId
+                and Contact__c = :testContact.Id
+                and Account__c = :testContact.AccountId
+        ];
+        system.assertEquals(1, requestList.size(), 'Should have created a group change request.');
+
+        system.assertEquals(true, ContactTriggerHandler.isValidatePersonStatusExecuted, 'Should have executed Contact trigger handler method.');
+        system.assertEquals(true, ContactTriggerHandler.calloutXMRestPerson, 'Should have called xMatters REST API');
+
+    }
+
+    // validate person is deactivated when associated contact is deleted
+    static testMethod void testContactDeletion(){
+
+        Contact testContact = [
+                Select Id, AccountId, xmPerson__c from Contact
+                Where xmPerson__c != null Limit 1
+        ][0];
+
+        test.startTest();
+        test.setMock(HttpCalloutMock.class, new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Id": "efrd-sqaw-123e-deft","Status":"INACTIVE"}]',null));
+        delete testContact;
+        test.stopTest();
+
+        List<xmGroupChangeRequest__c> requestList = [
+                Select Id from xmGroupChangeRequest__c
+                where NotificationProfile__c = :testContact.xmPerson__c
+                and Account__c = :testContact.AccountId
+        ];
+        system.assertEquals(1, requestList.size(), 'Should have created a group change request.');
+
+        system.assertEquals(true, ContactTriggerHandler.isValidatePersonStatusExecuted, 'Should have executed Contact trigger handler method.');
+        system.assertEquals(true, ContactTriggerHandler.calloutXMRestPerson, 'Should have called xMatters REST API');
+
+    }
+
     @testSetup
     private static void setUpData(){
 
@@ -31,65 +111,5 @@ public class ContactTriggerHandlerTest {
         insert testContact;
 
     }
-
-    // validate person is deactivated when associated contact is deactivated
-    static testMethod void testContactDeactivation(){
-
-        Contact testContact = [
-                Select Id, xmPerson__c from Contact
-                Where xmPerson__c != null Limit 1
-        ][0];
-
-        test.startTest();
-        test.setMock(HttpCalloutMock.class, new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Id": "efrd-sqaw-123e-deft","Status":"INACTIVE"}]',null));
-        testContact.Deactivated__c = true;
-        update testContact;
-        test.stopTest();
-
-        system.assertEquals(true, ContactTriggerHandler.isValidatePersonStatusExecuted, 'Should have executed Contact trigger handler method.');
-        system.assertEquals(true, ContactTriggerHandler.calloutXMRestPerson, 'Should have called xMatters REST API');
-
-    }
-
-    // validate person is deactivated when contact is disassociated
-    static testMethod void testContactDisassociation(){
-
-        Contact testContact = [
-                Select Id, xmPerson__c from Contact
-                Where xmPerson__c != null Limit 1
-        ][0];
-
-        test.startTest();
-        test.setMock(HttpCalloutMock.class, new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Id": "efrd-sqaw-123e-deft","Status":"INACTIVE"}]',null));
-        testContact.xmPerson__c = null;
-        update testContact;
-        test.stopTest();
-
-        system.assertEquals(true, ContactTriggerHandler.isValidatePersonStatusExecuted, 'Should have executed Contact trigger handler method.');
-        system.assertEquals(true, ContactTriggerHandler.calloutXMRestPerson, 'Should have called xMatters REST API');
-
-    }
-
-    // validate person is deactivated when associated contact is deleted
-    static testMethod void testContactDeletion(){
-
-        Contact testContact = [
-                Select Id, xmPerson__c from Contact
-                Where xmPerson__c != null Limit 1
-        ][0];
-
-        test.startTest();
-        test.setMock(HttpCalloutMock.class, new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Id": "efrd-sqaw-123e-deft","Status":"INACTIVE"}]',null));
-        delete testContact;
-        test.stopTest();
-
-        system.assertEquals(true, ContactTriggerHandler.isValidatePersonStatusExecuted, 'Should have executed Contact trigger handler method.');
-        system.assertEquals(true, ContactTriggerHandler.calloutXMRestPerson, 'Should have called xMatters REST API');
-
-    }
-
-
-
-
 
 }
