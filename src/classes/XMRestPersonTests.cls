@@ -55,7 +55,7 @@ public class XMRestPersonTests {
     }
 
     public static testMethod void modifyPerson_WillReturnCorrectJson(){
-        XMRestPeopleMockHttpGenerator httpMock = new XMRestPeopleMockHttpGenerator(200,'Complete Inactivate','[{"Name": "sForceTest1"}]',null);
+        XMRestPeopleMockHttpGenerator httpMock = new XMRestPeopleMockHttpGenerator(200,'Complete Inactivate','[{"Name": "sForceTest1","Status":"INACTIVE"}]',null);
 
         XMPersonModel person = new XMPersonModel();
         person.id = 'test';
@@ -72,7 +72,7 @@ public class XMRestPersonTests {
         test.stopTest();
 
         // System should automatically create this as externally owned since this is coming from salesforce
-        system.assertEquals(modifiedRecord.status, 'INACTIVE');
+        system.assertEquals('INACTIVE', modifiedRecord.status);
 
     }
 
