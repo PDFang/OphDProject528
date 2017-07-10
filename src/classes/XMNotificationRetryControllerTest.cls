@@ -5,7 +5,7 @@
 @IsTest
 private class XMNotificationRetryControllerTest {
 
-    static testMethod void testBehavior() {
+    static testMethod void testWithoutCaseIdParameter() {
 
         Test.startTest();
 
@@ -19,4 +19,20 @@ private class XMNotificationRetryControllerTest {
         Test.stopTest();
 
     }
+
+    static testMethod void testInvalidCaseId() {
+
+        Test.startTest();
+
+        Test.setCurrentPage(Page.XMNotificationRetry);
+        ApexPages.currentPage().getParameters().put('caseId', '005');
+
+        XMNotificationRetryController controller = new XMNotificationRetryController();
+
+        ApexPages.hasMessages(ApexPages.Severity.ERROR);
+
+        Test.stopTest();
+
+    }
+
 }
