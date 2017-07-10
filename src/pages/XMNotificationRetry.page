@@ -1,7 +1,3 @@
-<!--
- - Created by mohandaas.rangaswamy on 7/7/2017.
- -->
-
 <apex:page id="XMNotificationRetry"  title="Notification Retry" tabStyle="Case" controller="XMNotificationRetryController">
 
     <apex:sectionHeader title="Case" subTitle="{!caseRecord.CaseNumber}"/>
@@ -10,8 +6,8 @@
             <apex:pageMessages/>
 
             <apex:pageBlockButtons title="">
-                <apex:commandButton title="Retry" value="Retry" action="{!retry}" reRender="retrybtn"/>
-                <apex:commandButton title="Cancel" value="Cancel" action="{!cancel}" reRender="cancelbtn"/>
+                <apex:commandButton title="Retry" value="Retry" action="{!retry}" disabled="{!notificationList.size == 0}" reRender="pgblock"/>
+                <apex:commandButton title="Cancel" value="Cancel" action="{!cancel}"/>
             </apex:pageBlockButtons>
             <apex:pageBlockSection title="Failed Requests" columns="1">
 

@@ -9,9 +9,6 @@ public without sharing class XMNotificationRetryController {
 
     public XMNotificationRetryController(){
 
-        notificationList = new List<xmNotification__c>();
-        notificationMap = new Map<Id, xmNotification__c>();
-
         String caseId = ApexPages.currentPage().getParameters().get('caseId');
 
         if(String.isBlank(caseId)){
@@ -33,6 +30,20 @@ public without sharing class XMNotificationRetryController {
         caseRecord = caseList[0];
         system.debug('XMNotificationRetryController(): caseRecord - ' + caseRecord);
 
+        getNotifications(caseRecord.Id);
+
+        if(notificationMap.isEmpty()){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.INFO, 'No notification requests available for retry.'));
+            return;
+        }
+
+    }
+
+    private void getNotifications(String caseId){
+
+        notificationList = new List<xmNotification__c>();
+        notificationMap = new Map<Id, xmNotification__c>();
+
         for(xmNotification__c notification : [
                 Select Id, AddedPlatforms__c, Case__c, Request_Date__c, Request_Type__c, Status__c, CreatedBy.Name, CreatedDate
                 from xmNotification__c
@@ -42,10 +53,6 @@ public without sharing class XMNotificationRetryController {
             notificationMap.put(notification.Id, notification);
         }
 
-        if(notificationMap.isEmpty()){
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.INFO, 'No notification requests available for retry.'));
-            return;
-        }
         system.debug('XMNotificationRetryController(): notificationList - ' + notificationList);
 
     }
@@ -76,6 +83,8 @@ public without sharing class XMNotificationRetryController {
 
             notification.Status__c = 'Retried';
             update notification;
+
+            getNotifications(caseRecord.Id);
 
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Notification request retry was Successfull.'));
 
