@@ -3,8 +3,8 @@ public without sharing class XMNotificationRetryController {
 
     public List<xmNotification__c> notificationList{get;set;}
     public Case caseRecord{get; private set;}
-    public String selectedId{get;set;}
 
+    // cache failed notifications
     private Map<Id, xmNotification__c> notificationMap;
 
     public XMNotificationRetryController(){
@@ -31,6 +31,7 @@ public without sharing class XMNotificationRetryController {
         }
 
         caseRecord = caseList[0];
+        system.debug('XMNotificationRetryController(): caseRecord - ' + caseRecord);
 
         for(xmNotification__c notification : [
                 Select Id, AddedPlatforms__c, Case__c, Request_Date__c, Request_Type__c, Status__c, CreatedBy.Name, CreatedDate
@@ -45,6 +46,7 @@ public without sharing class XMNotificationRetryController {
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.INFO, 'No notification requests available for retry.'));
             return;
         }
+        system.debug('XMNotificationRetryController(): notificationList - ' + notificationList);
 
     }
 
@@ -60,6 +62,7 @@ public without sharing class XMNotificationRetryController {
 
         try{
             notification = notificationMap.get(notificationId);
+            system.debug('retry(): notification - ' + notification);
 
             xmNotification__c newNotification = new xmNotification__c(
                     Case__c = notification.Case__c,
@@ -84,5 +87,9 @@ public without sharing class XMNotificationRetryController {
 
     }
 
+    public pagereference cancel(){
+
+        return new pagereference('/'+ caseRecord.Id);
+    }
 
 }
