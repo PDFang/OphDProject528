@@ -69,7 +69,8 @@ public without sharing class XMNotificationRetryController {
                     Request_Date__c = system.now(),
                     Request_Type__c = notification.Request_Type__c,
                     AddedPlatforms__c = notification.AddedPlatforms__c,
-                    Status__c = 'New'
+                    Status__c = 'New',
+                    Related_Notification__c = notification.Id
             );
             insert newNotification;
 

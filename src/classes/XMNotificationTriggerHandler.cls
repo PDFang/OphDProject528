@@ -24,7 +24,8 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
         }
         Set<Id> notificationIdSet = new Set<Id>();
         for (xmNotification__c xmNotification : notificationList) {
-            notificationIdSet.add(xmNotification.Id);
+            if(xmNotification.Status__c == 'New')
+                notificationIdSet.add(xmNotification.Id);
         }
         if(notificationIdSet.size() > 0)
             callXMRestEventServiceFuture(notificationIdSet);
