@@ -7,19 +7,15 @@ public class ContactTriggerHandler extends TriggerHandler{
 
     public override void afterUpdate(){
 
-        if(!isValidatePersonStatusExecuted){
+        if(!isValidatePersonStatusExecuted)
             validatePersonStatus((List<Contact>) trigger.new, (List<Contact>) trigger.old, (Map<Id, Contact>) trigger.oldMap); // this shall be the last method call
-            isValidatePersonStatusExecuted = true;
-        }
 
     }
 
     protected override void afterDelete(){
 
-        if(!isValidatePersonStatusExecuted){
+        if(!isValidatePersonStatusExecuted)
             validatePersonStatus((List<Contact>) trigger.new, (List<Contact>) trigger.old, (Map<Id, Contact>) trigger.oldMap); // this shall be the last method call
-            isValidatePersonStatusExecuted = true;
-        }
 
     }
 
@@ -86,6 +82,7 @@ public class ContactTriggerHandler extends TriggerHandler{
         // create group change request
         if(requestList.size() > 0){
             try{
+                isValidatePersonStatusExecuted = true;
                 insert requestList;
 
             }catch(DmlException ex){
