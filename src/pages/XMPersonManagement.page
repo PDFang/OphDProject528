@@ -332,8 +332,12 @@
                         <div class="col-md-7"></div>
                     </div>
                     <div id="groupList"></div>
-                    <div style="margin-top:4px;" >
-                        <a class="k-button btn btn-primary" onclick="updateGroups();" style="float:right;background: #0275d8; color:white;">Update Group Subscription</a>
+                    <div style="margin-top:8px;" class="row" >
+                        <div class="col-md-9 col-md-push-3">
+                            <a class="k-button btn btn-primary" onclick="updateGroups();" style="float:right;background: #0275d8; color:white;">Update Group Subscription</a>
+                        </div>
+                        <div class="col-md-3 col-md-pull-9"></div>
+
                     </div>
                 </apex:pageBlock>
             </apex:outputPanel>
@@ -400,7 +404,7 @@
             <div class="modal-dialog" role="document">
                 <div class="modal-content" style="width:40%; top: 182px;">
                     <div class="modal-body" style="font-size:14px;">
-                        <div class="spinnerClass">Updating Groups in Xmatters</div>
+                        <div class="spinnerClass">Updating groups in xMatters</div>
                     </div>
                 </div>
             </div>
