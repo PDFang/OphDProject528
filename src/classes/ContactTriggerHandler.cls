@@ -46,7 +46,8 @@ public class ContactTriggerHandler extends TriggerHandler{
                     xmGroupChangeRequest__c newCR = new xmGroupChangeRequest__c(
                             NotificationProfile__c = oldContact.xmPerson__c,
                             Contact__c = newContact.Id,
-                            Account__c = newContact.AccountId
+                            Account__c = newContact.AccountId,
+                            Action__c = 'Remove'
                     );
                     requestList.add(newCR);
                 }
@@ -66,7 +67,8 @@ public class ContactTriggerHandler extends TriggerHandler{
 
                     xmGroupChangeRequest__c newCR = new xmGroupChangeRequest__c(
                             NotificationProfile__c = oldContact.xmPerson__c,
-                            Account__c = oldContact.AccountId
+                            Account__c = oldContact.AccountId,
+                            Action__c = 'Remove'
                     );
                     requestList.add(newCR);
                 }
