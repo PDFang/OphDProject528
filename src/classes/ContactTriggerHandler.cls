@@ -82,6 +82,7 @@ public class ContactTriggerHandler extends TriggerHandler{
         // create group change request
         if(requestList.size() > 0){
             try{
+                isValidatePersonStatusExecuted = true;
                 insert requestList;
 
             }catch(DmlException ex){
@@ -121,8 +122,6 @@ public class ContactTriggerHandler extends TriggerHandler{
         }
 
         deactivateXmPerson(xmPersonIds);
-
-        isValidatePersonStatusExecuted = true;
 
     }
 
