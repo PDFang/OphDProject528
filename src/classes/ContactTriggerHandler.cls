@@ -7,23 +7,25 @@ public class ContactTriggerHandler extends TriggerHandler{
 
     public override void afterUpdate(){
 
-        if(!isValidatePersonStatusExecuted)
+        if(!isValidatePersonStatusExecuted){
             validatePersonStatus((List<Contact>) trigger.new, (List<Contact>) trigger.old, (Map<Id, Contact>) trigger.oldMap); // this shall be the last method call
+            isValidatePersonStatusExecuted = true;
+        }
 
     }
 
     protected override void afterDelete(){
 
-        if(!isValidatePersonStatusExecuted)
+        if(!isValidatePersonStatusExecuted){
             validatePersonStatus((List<Contact>) trigger.new, (List<Contact>) trigger.old, (Map<Id, Contact>) trigger.oldMap); // this shall be the last method call
+            isValidatePersonStatusExecuted = true;
+        }
 
     }
 
     // validate the contact that is deactivated, disassociated or deleted was the only active contact associated with xMatters person
     private static void validatePersonStatus(List<Contact> newList, List<Contact> oldList, Map<Id, Contact> oldMap){
 
-        isValidatePersonStatusExecuted = true;
-        
         if(oldMap == null){
             return;
         }
