@@ -89,7 +89,7 @@ public class XMRestWrapper {
     }
 
 
-    public String callChangeRequestInboundIntegration(String body, String inboundIntegrationGuid) {
+    public String callChangeRequestInboundIntegration(String body) {
 
         HttpRequest request = new HttpRequest();
 
@@ -97,7 +97,7 @@ public class XMRestWrapper {
             request.setBody(body);
         }
 
-        request.setEndpoint('callout:xMatters_Inbound_integration_Confirmed/' + inboundIntegrationGuid + '/triggers');
+        request.setEndpoint('callout:xMattersGroupCRInboundIntegration/');
 
         request.setHeader('Authorization', '{!$Credential.AuthorizationMethod} {!$Credential.AuthorizationHeaderValue}');
 
