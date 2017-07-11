@@ -22,6 +22,8 @@ public class ContactTriggerHandler extends TriggerHandler{
     // validate the contact that is deactivated, disassociated or deleted was the only active contact associated with xMatters person
     private static void validatePersonStatus(List<Contact> newList, List<Contact> oldList, Map<Id, Contact> oldMap){
 
+        isValidatePersonStatusExecuted = true;
+        
         if(oldMap == null){
             return;
         }
@@ -121,8 +123,6 @@ public class ContactTriggerHandler extends TriggerHandler{
         }
 
         deactivateXmPerson(xmPersonIds);
-
-        isValidatePersonStatusExecuted = true;
 
     }
 
