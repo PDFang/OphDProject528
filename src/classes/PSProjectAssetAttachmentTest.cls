@@ -45,13 +45,10 @@ public with sharing class PSProjectAssetAttachmentTest {
         {
             recordTypeMap.put(record.Name, record.Id);
         }
-
-
     }
 
     static void createAccount()
     {
-
         acct = new Account(
                 Name = 'AssetTriggerHandlerTest Account',
                 RecordTypeId = recordTypeMap.get(ACCOUNT_TYPE_CUSTOMERS)
@@ -181,8 +178,7 @@ public with sharing class PSProjectAssetAttachmentTest {
 
         SBQQ__Quote__c q = new SBQQ__Quote__c(); //SBQQ_O SBQQ__Opportunity__c = opp.Id
         insert(q);
-        qli1 = new SBQQ__QuoteLine__c( SBQQ__ListPrice__c =5 ,  SBQQ__Quote__c=q.Id, SBQQ__Product__c=prod.Id,  SBQQ__Quantity__c=10, SBQQ__Number__c=1);
-
+        qli1 = new SBQQ__QuoteLine__c( SBQQ__ListPrice__c = 5 ,  SBQQ__Quote__c=q.Id, SBQQ__Product__c=prod.Id,  SBQQ__Quantity__c=10, SBQQ__Number__c=1);
         createAssets();
         createProjects();
 
@@ -192,14 +188,31 @@ public with sharing class PSProjectAssetAttachmentTest {
     @IsTest
     public static void TestAssetAttachment(){
         //Arrange
+        test.startTest();
         createSimpleTestData();
-        //Act
-        PSProjectAssetAttachment attachment = new PSProjectAssetAttachment();
-        set<id> QouteLineids = new set<id>();
 
-        set<id> AssetsIds= new set<id>();
-        AttachAssetsByIdToParentProject.AttachAssetsByIdToParentProject(QouteLineids, AssetsIds, null);
+        //Act
+        set<SBQQ__QuoteLine__c> QouteLines = new set<SBQQ__QuoteLine__c>([Select id from SBQQ__QuoteLine__c]);
+
+        set<Asset> Assets =  new set<Asset> ([select id from Asset]);
+
+        set<id>Assetids = new set<id>();
+        for(Asset a : Assets){
+            Assetids.add(a.Id);
+        }
+        system.debug('Assets ==>' + AssetIds);
+        set <id>QouteLineids = new set <id>();
+        for (SBQQ__QuoteLine__c line :QouteLines)
+        {
+            QouteLineids.add(line.Id);
+        }
+        system.debug('Lines ==>' + QouteLineids);
+
+
+
+        PSProjectAssetAttachment.AttachAssetsByIdToParentProject(QouteLineids, Assetids, null);
         //Assert
+        test.stopTest();
     }
 
 }
