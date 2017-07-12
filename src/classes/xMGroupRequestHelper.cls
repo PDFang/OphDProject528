@@ -63,8 +63,8 @@ public class xMGroupRequestHelper extends TriggerHandler {
     public static void CreateGroupChangeRequests(set<id> headers){
         try{
             //determine object types and process
-            Map<id, id> implementedProductAccount = new Map<id, id>() ;
-            Map<id, id> contactAccount = new Map<id, id>();
+            set<id> implmentedProductIds = new set<id>();
+            set<id> contactIds = new set<id>();
             Set<id> accounts = new Set<id>();
             Map<id, id> groupCRAccount = new Map<id, id>();
 
@@ -74,23 +74,23 @@ public class xMGroupRequestHelper extends TriggerHandler {
                 groupCRAccount.put(header.Account__c, header.Id);
 
                 if(header.sObjectType__c == 'ImplementedProduct'){
-                    implementedProductAccount.put(header.sObjectId__c,header.Account__c);
+                    implmentedProductIds.add(header.sObjectId__c);
                 }
                 else if (header.sObjectType__c == 'Contact'){
-                    contactAccount.put(header.sObjectId__c,header.Account__c);
+                    contactIds.add(header.sObjectId__c);
                 }
             }
 
 
             List<xmGroupChangeRequest__c> groupChangeRequestList = new List<xmGroupChangeRequest__c>();
             string queryString = 'select Id,(select Id, xmPerson__c from Contacts where xmPerson__c != null ';
-            if(contactAccount.size() > 0)
-                queryString += ' and Id in : contactAccount.keyset()';
+            if(contactIds.size() > 0)
+                queryString += ' and Id in :  contactIds';
 
             queryString += ' ),(select Id from Implemented_Products__r' ;
-            if (implementedProductAccount.size() > 0){
+            if (implmentedProductIds.size() > 0){
 
-                queryString += ' where Id in: implementedProductAccount.keyset()';
+                queryString += ' where Id in:  implmentedProductIds';
             }
             queryString += ' ) from Account where Id in : accounts';
             System.debug('queryString =>' + queryString);
