@@ -25,11 +25,11 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
             list<XMGroupChangeRequestItem> requestItems = new list<XMGroupChangeRequestItem>();
             Map<String, ProductEventMap__c> nodeMap;
             nodeMap = ProductEventMap__c.getAll();
-            system.debug('nodeMap is =>>' + nodeMap);
+            //system.debug('nodeMap is =>>' + nodeMap);
 
             for (xmGroupChangeRequest__C changeRequest : scope ) {
                 string partnerPrefix;
-                system.debug('changeRequest.ImplementedProduct__r.Product__c => +' + changeRequest.ImplementedProduct__r.Product__c);
+               // system.debug('changeRequest.ImplementedProduct__r.Product__c => +' + changeRequest.ImplementedProduct__r.Product__c);
                 ProductEventMap__c productMap = nodeMap.get(changeRequest.ImplementedProduct__r.Product__c);
                // system.debug (productMap);
                 if (productMap != null) {
@@ -53,7 +53,7 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                     item.personId = changeRequest.NotificationProfile__r.xmPersonUID__c;
                     item.ChangeRequestId = changeRequest.Id;
                     item.Action= changeRequest.action__c;
-                    system.debug('Request Item => ' + item);
+                   // system.debug('Request Item => ' + item);
                     requestItems.add(item);
                 }
 
