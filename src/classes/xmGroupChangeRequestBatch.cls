@@ -49,10 +49,16 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                 item.personId = changeRequest.NotificationProfile__r.xmPersonUID__c;
                 item.ChangeRequestId = changeRequest.Id;
                 item.Action= changeRequest.action__c;
+                system.debug('Request Item => ' + item);
                 requestItems.add(item);
             }
 
         }
+        string requestbody = Json.serialize(requestItems);
+        system.debug('Request Body =>' + requestbody);
+
+        xmRestWrapper wrapper = new xmRestWrapper();
+        wrapper.callChangeRequestInboundIntegration(requestbody);
 
 
     }
