@@ -44,6 +44,21 @@ public class xMGroupRequestHelper extends TriggerHandler {
 
     }
 
+    public override void afterUpdate(){
+
+        set<id> headerIds = new set<id>();
+
+        for (xmGroupChangeRequestHeader__c header: (list<xmGroupChangeRequestHeader__c> )Trigger.new)
+        {
+            if(header.Retry__c){
+                headerIds.add(header.id);
+            }
+        }
+        if(headerIds.size() > 0)
+            CreateGroupChangeRequests(headerIds);
+
+    }
+
     @future
     public static void CreateGroupChangeRequests(set<id> headers){
         try{
@@ -77,9 +92,11 @@ public class xMGroupRequestHelper extends TriggerHandler {
 
                 queryString += ' where Id in: implementedProductAccount.keyset()';
             }
-            queryString += ') from Account where Id in : accounts';
+            queryString += ' ) from Account where Id in : accounts';
+            System.debug('queryString =>' + queryString);
 
             list<Account> accountList = Database.query(queryString);
+            System.debug('accountList =>' + accountList);
 
             for(Account act: accountList){
 
