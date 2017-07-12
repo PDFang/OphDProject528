@@ -1193,7 +1193,7 @@
                             {
                                 field:"Notification",
                                 title:"Notification Options",
-                                template: '<input type="checkbox"  id = "#=GetDeviceIdByType("1", data)#"   onclick="selectgridRow(this);" # if (isDeviceSelected("Work Email", data)) { # checked="checked" initial-check="true": initial-check="false" # } #"  # if (!isDeviceExist("Work Email")) { # disabled :  # } #"/> <label style="font-weight:100;">Work Email</label><br /><input type="checkbox" id = "#=GetDeviceIdByType("2", data)#" onclick="selectgridRow(this);" # if (isDeviceSelected("Secondary Email", data)) { # checked="checked" initial-check="true": initial-check="false"  # } #" # if (!isDeviceExist("Secondary Email")) { # disabled :  # } #"/><label style="font-weight:100;"> Secondary Email</label><br /><input type="checkbox"  id = "#=GetDeviceIdByType("3", data)#" onclick="selectgridRow(this);" # if (isDeviceSelected("SMS Phone", data)) { # checked="checked" initial-check="true": initial-check="false"  # } # # if (!isDeviceExist("SMS Phone")) { # disabled :  # } #" /><label style="font-weight:100;"> SMS Phone</label>',
+                                template: '<input type="checkbox"  class = "#=GetDeviceIdByType("1", data)#"   onclick="selectgridRow(this);" # if (isDeviceSelected("Work Email", data)) { # checked="checked" initial-check="true": initial-check="false" # } #"  # if (!isDeviceExist("Work Email")) { # disabled :  # } #"/> <label style="font-weight:100;">Work Email</label><br /><input type="checkbox" class = "#=GetDeviceIdByType("2", data)#" onclick="selectgridRow(this);" # if (isDeviceSelected("Secondary Email", data)) { # checked="checked" initial-check="true": initial-check="false"  # } #" # if (!isDeviceExist("Secondary Email")) { # disabled :  # } #"/><label style="font-weight:100;"> Secondary Email</label><br /><input type="checkbox"  class = "#=GetDeviceIdByType("3", data)#" onclick="selectgridRow(this);" # if (isDeviceSelected("SMS Phone", data)) { # checked="checked" initial-check="true": initial-check="false"  # } # # if (!isDeviceExist("SMS Phone")) { # disabled :  # } #" /><label style="font-weight:100;"> SMS Phone</label>',
                                 width:300
                             },
                             {
@@ -1231,9 +1231,17 @@
     function selectgridRow(obj) {
        var checked = obj.checked,
            row = $(obj).closest("tr"),
-           initialCheck = $(obj).attr("initial-check") == "true" ? true : false;
+           initialCheck = false;
 
-       if (checked != initialCheck) {
+           $(row).children().find("input").each(function(idx, item){
+                    var itemCheck = item.checked,
+                    itemInitialcheck = $(item).attr("initial-check") == "true" ? true : false;
+                    if(itemCheck != itemInitialcheck)
+                                initialCheck = true;
+           });
+
+
+       if (initialCheck) {
             row.addClass("k-state-selected");
             } else {
             //-remove selection
@@ -1277,7 +1285,8 @@
 
       function GetDeviceIdByType(id, itemData){
         //check to see if the name is in a collection
-       return itemData.XmattersGroupName + "_" + id;
+        var removespclChar = itemData.XmattersGroupName.replace(/[^a-zA-Z0-9]/g, '');
+       return removespclChar + "_" + id;
      }
 
 
@@ -1305,6 +1314,7 @@
       var grid = $("#groupList").data("kendoGrid");
       var groupData = [];
       var Devices = [];
+      var groupSelectionChange = false;
       $('#loading').modal({
                  backdrop: 'static',
                  keyboard: false
@@ -1313,6 +1323,8 @@
 
       $("div.k-grid-content").find('.row-chk').each(function(idx, item){
             var row = $(item).closest("tr");
+            if($(row).hasClass('k-state-selected'))
+                groupSelectionChange = true;
             dataItem = grid.dataItem(row);
             if(dataItem){
                 var  groupRow = new Object();
@@ -1322,17 +1334,21 @@
                 groupRow.XmattersGroupName = dataItem.XmattersGroupName ;
                 groupRow.selected = item.checked;
                 groupRow.Devices = dataItem.Devices;
-                setCheckedFlag(groupRow.Devices, $('#'+ dataItem.XmattersGroupName + '_1').is(':checked'), "Work Email");
-                setCheckedFlag(groupRow.Devices, $('#'+ dataItem.XmattersGroupName + '_2').is(':checked'), "Secondary Email");
-                setCheckedFlag(groupRow.Devices, $('#'+ dataItem.XmattersGroupName + '_3').is(':checked'), "SMS");
+                var removespclChar = dataItem.XmattersGroupName.replace(/[^a-zA-Z0-9]/g, '');
+                setCheckedFlag(groupRow.Devices, $('.'+ removespclChar + '_1').is(':checked'), "Work Email");
+                setCheckedFlag(groupRow.Devices, $('.'+ removespclChar + '_2').is(':checked'), "Secondary Email");
+                setCheckedFlag(groupRow.Devices, $('.'+ removespclChar + '_3').is(':checked'), "SMS");
                 groupData.push(groupRow);
             }
         });
 
-        var salesforceGroup = new Object();
-        salesforceGroup.XMGroupProductCluster = groupData;
 
-        console.log(JSON.stringify(groupData));
+      // console.log(JSON.stringify(groupData));
+      if(!groupSelectionChange){
+          $('#loading').modal('hide');
+          displayError('No group selection change was made. Please make a selection to update group subscription');
+          return;
+      }
        XMPersonManagementController.updateGroupSubscription(
           JSON.stringify(groupData),
            '{!$CurrentPage.parameters.id}',
