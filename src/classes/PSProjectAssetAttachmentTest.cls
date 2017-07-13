@@ -4,214 +4,160 @@
 @IsTest
 public with sharing class PSProjectAssetAttachmentTest {
 
+    private static Id childRTId = [SELECT id from RecordType where Name = 'PS Project Phase SaaS'].Id;
+    private static Id parentProjectRTId = [SELECT id from RecordType where Name = 'PS Parent Project - SaaS'].Id;
 
-    static final String ACCOUNT_TYPE_CUSTOMERS = 'Customers';
-    static final String PROJECT_TYPE_PARENT_SAAS = 'PS Parent Project - SaaS';
-    static final String PROJECT_TYPE_PHASE_SAAS = 'PS Project Phase SaaS';
-    static final String ASSET_TYPE_PREMISE = 'Premise Asset';
-    static final String ASSET_TYPE_SAAS = 'SaaS Asset';
-
-    static final Set<String> recordTypeSet = new Set<String>
-    {
-            ACCOUNT_TYPE_CUSTOMERS,
-            PROJECT_TYPE_PARENT_SAAS,
-            PROJECT_TYPE_PHASE_SAAS,
-            ASSET_TYPE_PREMISE,
-            ASSET_TYPE_SAAS
-    };
-
-    static Map<String, Id> recordTypeMap = null;
-    static Account acct = null;
-    static List<Product2> productList = null;
-    static List<Project__c> projectList = null;
-    static List<Asset> assetList = null;
-    static SBQQ__QuoteLine__c qli1;
-
-
-
-
-
-
-
-
+    private static Asset TestAsset;
+    private static SBQQ__QuoteLine__c QuoteLine;
+    private static SBQQ__Subscription__c subscription;
      /**** Following methods create test data ******/
-
-    static void createTestData()
-    {
-
-        recordTypeMap = new Map<String, Id>();
-        for(RecordType record : [Select Id, Name from RecordType
-        where Name IN :recordTypeSet])
-        {
-            recordTypeMap.put(record.Name, record.Id);
-        }
-    }
-
-    static void createAccount()
-    {
-        acct = new Account(
-                Name = 'AssetTriggerHandlerTest Account',
-                RecordTypeId = recordTypeMap.get(ACCOUNT_TYPE_CUSTOMERS)
-        );
-        insert acct;
-    }
-
-    static void createProducts()
-    {
-        productList = new List<Product2>();
-
-        Product2 p1 = new Product2();
-        p1.Name     = 'AssetTriggerHandlerTest 1';
-        p1.ProductCode ='1111';
-        p1.Category__c = 'Maintenance';
-        productList.add(p1);
-
-        Product2 p2 = new Product2();
-        p2.Name     = 'AssetTriggerHandlerTest 2';
-        p2.ProductCode ='1097';
-        p2.Category__c ='Integration';
-        productList.add(p2);
-
-        insert productList;
-
-    }
-
-    static void createProjects()
-    {
-        projectList = new List<Project__c>();
-
-        Project__c project1 = new Project__c();
-        project1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
-        project1.Projected_Deadline__c = system.today() + 30;
-        projectList.add(project1);
-
-        Project__c project2 = new Project__c();
-        project2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
-        project2.Projected_Deadline__c = system.today() + 30;
-        projectList.add(project2);
-
-        Project__c phase1 = new Project__c();
-        phase1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_SAAS);
-        phase1.Projected_Deadline__c = system.today() + 30;
-        projectList.add(phase1);
-
-        Project__c phase2 = new Project__c();
-        phase2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_SAAS);
-        phase2.Projected_Deadline__c = system.today() + 30;
-        projectList.add(phase2);
-
-        insert projectList;
-
-        phase1.ParentProject__c = project1.Id;
-        phase1.Phase_Status__c = 'Closed';
-        update phase1;
-
-    }
-
-    static void createAssets()
-    {
-        assetList = new List<Asset>();
-
-        Asset asset1 = new Asset();
-        asset1.RecordTypeId = recordTypeMap.get(ASSET_TYPE_PREMISE);
-        asset1.Name = 'AssetTriggerHandlerTest Asset 1';
-        asset1.AccountId = acct.Id;
-        asset1.Parent_Project__c = projectList[0].Id;
-        asset1.Project_Phase__c = projectList[2].Id;
-        asset1.Product2Id = productList[0].Id;
-        asset1.Quantity = 1;
-        asset1.Price = 10.00;
-        assetList.add(asset1);
-
-        Asset asset2 = new Asset();
-        asset2.RecordTypeId = recordTypeMap.get(ASSET_TYPE_PREMISE);
-        asset2.Name = 'AssetTriggerHandlerTest Asset 2';
-        asset2.AccountId = acct.Id;
-        asset2.Parent_Project__c = projectList[0].Id;
-        asset2.Project_Phase__c = projectList[2].Id;
-        asset2.Product2Id = productList[0].Id;
-        asset2.Quantity = 1;
-        asset2.Price = 100.00;
-        assetList.add(asset2);
-
-        //create SaaS assets
-        Asset asset3 = new Asset();
-        asset3.RecordTypeId = recordTypeMap.get(ASSET_TYPE_SAAS);
-        asset3.Name = 'AssetTriggerHandlerTest Saas Asset 1';
-        asset3.AccountId = acct.Id;
-        asset3.Parent_Project__c = projectList[0].Id;
-        asset3.Project_Phase__c = projectList[2].Id;
-        asset3.Sales_Price__c = 500.00;
-        asset3.Quantity = 1.00;
-        asset3.Type__c = 'MRC';
-        assetList.add(asset3);
-
-        Asset asset4 = new Asset();
-        asset4.RecordTypeId = recordTypeMap.get(ASSET_TYPE_SAAS);
-        asset4.Name = 'AssetTriggerHandlerTest Saas Asset 1';
-        asset4.AccountId = acct.Id;
-        asset4.Parent_Project__c = projectList[0].Id;
-        asset4.Project_Phase__c = projectList[2].Id;
-        asset4.Sales_Price__c = 1000.00;
-        asset4.Quantity = 2.00;
-        asset4.Type__c = 'NRC';
-        assetList.add(asset4);
-
-        insert assetList;
-    }
-
 
     public static void createSimpleTestData(){
 
-        Pricebook2 pb = [select Id from Pricebook2 where isStandard=true];
-        Product2 prod = new Product2(Name='TestProd', IsActive=true);
-        insert(prod);
+        //creates the required strcuture for the test
+        Id strRecordTypeId = Schema.SObjectType.SBQQ__Quote__c.RecordTypeInfosByName.get('SaaS').RecordTypeId;
+        system.debug('starting test data creation');
+        List<ImplementedProduct__c> implementedProducts = new List<ImplementedProduct__c>();
+        List<Asset> assets = new List<Asset>();
+        // Create account
+        Account accountRecord = InContactBaseClass.CreateAccount('Test Account');
+        insert accountRecord;
 
-        PricebookEntry pbe = new PricebookEntry(Pricebook2Id=pb.Id, Product2Id=prod.Id, IsActive=true, UnitPrice=10);
-        insert(pbe);
+        Opportunity opp = new Opportunity(
+                Name = 'Test',
+                AccountId = accountRecord.Id,
+                StageName = 'Assigned',
+                CloseDate = Date.today(),
+                RecordTypeId = inContactBaseClass.SelectRecordTypeIDByName('Education Request', 'Opportunity'),
+                PM_Estimated_Go_Live__c = system.today(),
+                PM_Go_Live_Date__c  = null
+        );
 
-        Account acc = new Account(name='test');
-        insert(acc);
+        insert opp;
 
-        Opportunity opp = new Opportunity(Name='test', StageName='Open', CloseDate=System.today(), AccountId=acc.Id, Pricebook2Id=pb.Id);
-        insert(opp);
+        // Parent Project
+        Project__c parentProject1 = new Project__c(
+                RecordTypeId = parentProjectRTId,
+                Summary__c = 'This is the parent Project 1',
+                ProjectType__c = 'CEM',
+                Opportunity__c = opp.Id,
+                Status__c = '0 - PreSale'
+        );
 
-        SBQQ__Quote__c q = new SBQQ__Quote__c(); //SBQQ_O SBQQ__Opportunity__c = opp.Id
-        insert(q);
-        qli1 = new SBQQ__QuoteLine__c( SBQQ__ListPrice__c = 5 ,  SBQQ__Quote__c=q.Id, SBQQ__Product__c=prod.Id,  SBQQ__Quantity__c=10, SBQQ__Number__c=1);
-        createAssets();
-        createProjects();
+        insert parentProject1;
+
+        // Parent Project
+        Project__c childProject1 = new Project__c(
+                RecordTypeId = childRTId,
+                Summary__c = 'This is the Child Project 1',
+                ProjectType__c = 'CEM',
+                ParentProject__c = parentProject1.Id,
+                Opportunity__c = opp.Id,
+                Status__c = '0 - PreSale'
+        );
+
+        insert childProject1;
+
+        ImplementedProduct__c ip1 = new ImplementedProduct__c(
+                Account__c = accountRecord.Id,
+                Opportunity__c = opp.Id
+        );
+
+        implementedProducts.add(ip1);
+        insert implementedProducts;
+
+
+        Product2 p = new Product2();
+        p.Name     = 'TEST';
+        p.ProductCode ='1234520-000-000-XX';
+        p.Family = 'SOFTWARE MRC PRODUCTS';
+        insert (p);
+
+        SBQQ__Quote__c objQuote = createQuoteTestData(strRecordTypeId, accountRecord.Id);
+
+        objQuote.SBQQ__Opportunity2__c = opp.id;
+        update(objQuote);
+
+
+        SBQQ__QuoteLine__c QuoteLine = new SBQQ__QuoteLine__c();
+        QuoteLine.SBQQ__Product__c = p.Id;
+        QuoteLine.SBQQ__Existing__c = true;
+        QuoteLine.SBQQ__NetPrice__c  = 20.00;
+        QuoteLine.SBQQ__Quantity__c = 5;
+        QuoteLine.SBQQ__Quote__c = objQuote.Id;
+        //q1.SBQQ__Assets__r = asset1.id;
+        insert (QuoteLine);
+
+        TestAsset = new Asset(
+                Name = 'Asset asset1',
+                Project_Phase__c = childProject1.Id,
+                ImplementedProduct__c = ip1.Id,
+                AccountId = accountRecord.Id,
+                SBQQ__QuoteLine__c = QuoteLine.id
+        );
+        assets.add(TestAsset);
+        insert assets;
+
+        subscription = new SBQQ__Subscription__c();
+        subscription.SBQQ__Account__c =  accountRecord.id;
+        subscription.SBQQ__QuoteLine__c = QuoteLine.id;
+        subscription.SBQQ__Quantity__c = 1;
+        insert subscription;
 
     }
 
+
+    public static SBQQ__Quote__c createQuoteTestData(Id strRecordtypeId, Id strAccId) {
+        SBQQ__Quote__c objQuote = new SBQQ__Quote__c();
+        objQuote.SBQQ__Account__c = strAccId;
+        objQuote.SBQQ__Type__c = 'Quote';
+        objQuote.SBQQ__Status__c = 'Draft';
+        objQuote.RecordTypeId = strRecordtypeId;
+        insert objQuote;
+        return objQuote;
+    }
+
+    //begin unit tests
 
     @IsTest
     public static void TestAssetAttachment(){
         //Arrange
-        test.startTest();
+
         createSimpleTestData();
-
+        test.startTest();
+        system.debug('*** starting Test Run ***');
         //Act
-        set<SBQQ__QuoteLine__c> QouteLines = new set<SBQQ__QuoteLine__c>([Select id from SBQQ__QuoteLine__c]);
+        set<SBQQ__QuoteLine__c> QouteLines = new set<SBQQ__QuoteLine__c>();
+        QouteLines.Add(QuoteLine);
 
-        set<Asset> Assets =  new set<Asset> ([select id from Asset]);
+        system.debug('*** Qoute Lines ==>' + QouteLines);
+        set<Asset> Assets =  new set<Asset> ();
+        Assets.Add(TestAsset);
 
+
+        system.debug(' *** Assets ==>' + Assets);
         set<id>Assetids = new set<id>();
         for(Asset a : Assets){
             Assetids.add(a.Id);
         }
-        system.debug('Assets ==>' + AssetIds);
+        system.debug(' ***Assets ==>' + AssetIds);
         set <id>QouteLineids = new set <id>();
         for (SBQQ__QuoteLine__c line :QouteLines)
         {
             QouteLineids.add(line.Id);
         }
-        system.debug('Lines ==>' + QouteLineids);
+
+        set<Id> subsciptions = new set<Id>();
+        subsciptions.add(subscription.Id);
 
 
-
+        system.debug('*** Qoute Lines ==>' + QouteLineids);
         PSProjectAssetAttachment.AttachAssetsByIdToParentProject(QouteLineids, Assetids, null);
+        PSProjectAssetAttachment.AttachAssetsByIdToParentProject(QouteLineids, null, subsciptions);
+
+        //PSProjectAssetAttachment.AttachAssetsByIdToParentProject(null, null, null);
         //Assert
+        //nothing to assert
         test.stopTest();
     }
 
