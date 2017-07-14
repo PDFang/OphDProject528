@@ -15,13 +15,12 @@ public class ContactTriggerHandlerTest {
         update testContact;
         test.stopTest();
 
-        List<xmGroupChangeRequest__c> requestList = [
-                Select Id from xmGroupChangeRequest__c
-                where NotificationProfile__c = :testContact.xmPerson__c
-                and Contact__c = :testContact.Id
+        List<xmGroupChangeRequestHeader__c> requestList = [
+                Select Id from xmGroupChangeRequestHeader__c
+                where sObjectId__c = :testContact.Id
                 and Account__c = :testContact.AccountId
         ];
-        system.assertEquals(1, requestList.size(), 'Should have created a group change request.');
+        system.assertEquals(1, requestList.size(), 'Should have created a group change request header.');
 
         system.assertEquals(true, ContactTriggerHandler.isValidatePersonStatusExecuted, 'Should have executed Contact trigger handler method.');
         system.assertEquals(true, ContactTriggerHandler.calloutXMRestPerson, 'Should have called xMatters REST API');
@@ -43,13 +42,12 @@ public class ContactTriggerHandlerTest {
         update testContact;
         test.stopTest();
 
-        List<xmGroupChangeRequest__c> requestList = [
-                Select Id from xmGroupChangeRequest__c
-                where NotificationProfile__c = :xmPersonId
-                and Contact__c = :testContact.Id
+        List<xmGroupChangeRequestHeader__c> requestList = [
+                Select Id from xmGroupChangeRequestHeader__c
+                where sObjectId__c = :testContact.Id
                 and Account__c = :testContact.AccountId
         ];
-        system.assertEquals(1, requestList.size(), 'Should have created a group change request.');
+        system.assertEquals(1, requestList.size(), 'Should have created a group change request header.');
 
         system.assertEquals(true, ContactTriggerHandler.isValidatePersonStatusExecuted, 'Should have executed Contact trigger handler method.');
         system.assertEquals(true, ContactTriggerHandler.calloutXMRestPerson, 'Should have called xMatters REST API');
@@ -68,13 +66,6 @@ public class ContactTriggerHandlerTest {
         test.setMock(HttpCalloutMock.class, new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Id": "efrd-sqaw-123e-deft","Status":"INACTIVE"}]',null));
         delete testContact;
         test.stopTest();
-
-        List<xmGroupChangeRequest__c> requestList = [
-                Select Id from xmGroupChangeRequest__c
-                where NotificationProfile__c = :testContact.xmPerson__c
-                and Account__c = :testContact.AccountId
-        ];
-        system.assertEquals(1, requestList.size(), 'Should have created a group change request.');
 
         system.assertEquals(true, ContactTriggerHandler.isValidatePersonStatusExecuted, 'Should have executed Contact trigger handler method.');
         system.assertEquals(true, ContactTriggerHandler.calloutXMRestPerson, 'Should have called xMatters REST API');
