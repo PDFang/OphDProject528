@@ -29,7 +29,7 @@ public class ContactTriggerHandler extends TriggerHandler{
         Set<Id> xmPersonIds = new Set<Id>();
         Set<Id> contactIds = new Set<Id>();
 
-        List<xmGroupChangeRequest__c> requestList = new List<xmGroupChangeRequest__c>();
+        List<xmChangeRequestHeaderData> requestList = new List<xmChangeRequestHeaderData>();
 
         // update
         if(newList != null){
@@ -43,12 +43,16 @@ public class ContactTriggerHandler extends TriggerHandler{
                     xmPersonIds.add(oldContact.xmPerson__c);
                     contactIds.add(newContact.Id);
 
-                    xmGroupChangeRequest__c newCR = new xmGroupChangeRequest__c(
+                    xmChangeRequestHeaderData newCR = new xmChangeRequestHeaderData();
+                    newCR.accountId = newContact.AccountId;
+                    newCR.sObjectId = newContact.Id;
+                    newCR.sObjectType = 'Contact';
+                    /*xmGroupChangeRequest__c newCR = new xmGroupChangeRequest__c(
                             NotificationProfile__c = oldContact.xmPerson__c,
                             Contact__c = newContact.Id,
                             Account__c = newContact.AccountId,
                             Action__c = 'Remove'
-                    );
+                    );*/
                     requestList.add(newCR);
                 }
             }
@@ -65,11 +69,15 @@ public class ContactTriggerHandler extends TriggerHandler{
                     xmPersonIds.add(oldContact.xmPerson__c);
                     contactIds.add(oldContact.Id);
 
-                    xmGroupChangeRequest__c newCR = new xmGroupChangeRequest__c(
+                    xmChangeRequestHeaderData newCR = new xmChangeRequestHeaderData();
+                    newCR.accountId = oldContact.AccountId;
+                    newCR.sObjectId = oldContact.Id;
+                    newCR.sObjectType = 'Contact';
+                    /*xmGroupChangeRequest__c newCR = new xmGroupChangeRequest__c(
                             NotificationProfile__c = oldContact.xmPerson__c,
                             Account__c = oldContact.AccountId,
                             Action__c = 'Remove'
-                    );
+                    );*/
                     requestList.add(newCR);
                 }
             }
@@ -81,7 +89,10 @@ public class ContactTriggerHandler extends TriggerHandler{
 
         // create group change request
         if(requestList.size() > 0){
-            try{
+
+            isValidatePersonStatusExecuted = true;
+            xMGroupRequestHelper.CreateGroupChangeRequestHeader(requestList);
+            /*try{
                 isValidatePersonStatusExecuted = true;
                 insert requestList;
 
@@ -89,7 +100,7 @@ public class ContactTriggerHandler extends TriggerHandler{
                 system.debug('validatePersonStatus(): DmlException - ' + ex);
                 inContactBaseClass.SendErrorEmail(ex, requestList[0].Contact__c + ' - Error creating xMatters group change request');
 
-            }
+            }*/
         }
 
         system.debug('validatePersonStatus(): xmPersonIds - ' + xmPersonIds);
