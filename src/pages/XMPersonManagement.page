@@ -383,7 +383,7 @@
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Alert</h5>
+                        <h5 class="modal-title" id="exampleModalLabel" style="font-weight:bold">Alert</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -993,6 +993,8 @@
 
              var endTimeId = 'input#endTimeInput' + rowId;
              var endTimeVal = $(this).find(endTimeId).val();
+             if(endTimeVal == '12:00 AM' && startTimeVal != '12:00 AM')
+                endTimeVal = '11:59 PM';
              var endTimepicker = $(endTimeId).data("kendoTimePicker");
            //  endTimepicker.destroy();
              if(!isError)
