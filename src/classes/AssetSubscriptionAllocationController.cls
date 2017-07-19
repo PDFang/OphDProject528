@@ -10,21 +10,21 @@ public with sharing class AssetSubscriptionAllocationController {
                 ? businessLayer.assetAllocations : null;
     }
 
-
+    private String currentId;
     private AssetSubscriptionAllocationBusinessLayer businessLayer;
 
     public AssetSubscriptionAllocationController(){
 
-        String idParam = ApexPages.currentPage().getParameters().get('id');
+        currentId = ApexPages.currentPage().getParameters().get('id');
 
-        system.debug('getAsset(): idParam - ' + idParam);
+        system.debug('getAsset(): currentId - ' + currentId);
 
-        if(String.isBlank(idParam)){
+        if(String.isBlank(currentId)){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Invalid URL: Missing ID Parameter.'));
             return;
         }
 
-        businessLayer = new AssetSubscriptionAllocationBusinessLayer(idParam);
+        businessLayer = new AssetSubscriptionAllocationBusinessLayer(currentId);
 
     }
 
@@ -49,6 +49,12 @@ public with sharing class AssetSubscriptionAllocationController {
             system.debug('saveAssetAllocation(): Exception - ' + ex);
         }
         return null;
+
+    }
+
+    public pagereference cancel(){
+
+        return new PageReference('/'+currentId).setRedirect(true);
     }
 
     //need a method to return the availble phase projects
