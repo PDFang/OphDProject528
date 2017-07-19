@@ -39,7 +39,7 @@ public class XMPersonManagementHelper {
 
         Contact[] contactList = [
                 select Name, FirstName, LastName, Email, Phone, Id, AccountId, Account.CadebillAccountNoText__c,
-                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
+                        Account.Name, xmPerson__c, XmattersUid__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
                 from Contact where Id =: contactId
         ];
         if(contactList.isEmpty()){
@@ -51,7 +51,7 @@ public class XMPersonManagementHelper {
     public Map<Id, Contact> getContactsByEmail(String email){
 
         return new Map<Id, Contact>([
-                select FirstName, LastName, Email, Phone, Id, AccountId, Account.CadebillAccountNoText__c,
+                select FirstName, LastName, Email,Phone, Id, AccountId, Account.CadebillAccountNoText__c,
                         Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
                 from Contact where Email =: email //and xmPerson__c != null
         ]);
@@ -62,14 +62,30 @@ public class XMPersonManagementHelper {
         if(string.isNotBlank(contactId)){
             update new Contact(
                     Id = contactId,
-                    xmPerson__c = xmPersonId
+                    xmPerson__c = xmPersonId,
+                    XmattersUid__c = ''
             );
         } else{
             currentContact.xmPerson__c = xmPersonId;
+            currentContact.XmattersUid__c = '';
             update currentContact;
         }
 
     }
+
+    public void removeContactAssociation(String contactId, string xmPersonGuid){
+
+        if(string.isNotBlank(contactId)){
+            update new Contact(
+                    Id = contactId,
+                    xmPerson__c = null,
+                    XmattersUid__c = xmPersonGuid
+            );
+        }
+
+    }
+
+
 
     public static XMPersonWrapper getXmPersonByGuid(String xmPersonGuid){
 
