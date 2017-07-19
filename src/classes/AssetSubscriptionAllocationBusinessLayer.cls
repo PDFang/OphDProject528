@@ -1,14 +1,19 @@
 public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     public Asset currentAsset;
+    public SubscriptionReplica__c currentSubscription;
 
-    public List<AssetSubscriptionAllocationModal> assetAllocations{get; set;}
+    public List<AssetSubscriptionAllocationModel> assetAllocations{get; set;}
+    public List<AssetSubscriptionAllocationModel> subscriptionAllocations{get; set;}
 
     public AssetSubscriptionAllocationBusinessLayer(String idParam){
 
         if(idParam.left(3) == Schema.SObjectType.Asset.getKeyPrefix()){
             getAsset(idParam);
             getAssetAllocations();
+        }else if(idParam.left(3) == Schema.SObjectType.SubscriptionReplica__c.getKeyPrefix()){
+            getSubscription(idParam);
+            getSubscriptionAllocations();
         }
 
     }
@@ -34,25 +39,61 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     private void getAssetAllocations(){
 
-        assetAllocations = new List<AssetSubscriptionAllocationModal>();
+        assetAllocations = new List<AssetSubscriptionAllocationModel>();
 
         for(Project_Asset_Allocation__c allocation : [
                 Select Project__c, Percent_Allocation__c, Asset__c, Quantity_Allocation__c
                 from Project_Asset_Allocation__c
                 where Asset__c = :currentAsset.Id
         ]){
-            AssetSubscriptionAllocationModal newModal = new AssetSubscriptionAllocationModal(allocation);
-            assetAllocations.add(newModal);
+            AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(allocation);
+            assetAllocations.add(newModel);
         }
 
         system.debug('getAssetAllocations(): assetAllocations - ' + assetAllocations);
 
     }
 
+    private void getSubscription(String subscriptionId){
+
+        List<SubscriptionReplica__c> subscriptions = [
+                Select Id, Name, Account__c, Product__c, Quantity__c, ParentProject__c,
+                        ParentProject__r.Name
+                from SubscriptionReplica__c where Id = :subscriptionId
+        ];
+
+        if(subscriptions.isEmpty()){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'No Subscription record found.'));
+            return;
+        }
+
+        currentSubscription = subscriptions[0];
+
+        system.debug('getSubscription(): currentSubscription - ' + currentSubscription);
+
+    }
+
+    private void getSubscriptionAllocations(){
+
+        subscriptionAllocations = new List<AssetSubscriptionAllocationModel>();
+
+        for(Project_Subscription_Allocation__c allocation : [
+                Select Project__c, Subscription__c, Percent_Allocation__c, Quantity_Allocation__c
+                from Project_Subscription_Allocation__c
+                where Subscription__c = :currentSubscription.Id
+        ]){
+            AssetSubscriptionAllocationModel newModal = new AssetSubscriptionAllocationModel(allocation);
+            subscriptionAllocations.add(newModal);
+        }
+
+        system.debug('getSubscriptionAllocations(): subscriptionAllocations - ' + subscriptionAllocations);
+
+    }
+
     public void createAssetAllocation(){
 
-        AssetSubscriptionAllocationModal newModal = new AssetSubscriptionAllocationModal(currentAsset);
-        assetAllocations.add(newModal);
+        AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentAsset);
+        assetAllocations.add(newModel);
 
     }
 
@@ -61,7 +102,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         Project_Asset_Allocation__c[] allocations = new Project_Asset_Allocation__c[]{};
         Project_Asset_Allocation__c[] delAllocations = new Project_Asset_Allocation__c[]{};
 
-        for(AssetSubscriptionAllocationModal modal :assetAllocations){
+        for(AssetSubscriptionAllocationModel modal :assetAllocations){
             if(modal.isDelete){
                 if(modal.assetAllocation.Id != null){
                     delAllocations.add(modal.assetAllocation);
