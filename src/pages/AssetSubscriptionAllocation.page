@@ -11,7 +11,7 @@
             <apex:pageMessages/>
 
             <apex:pageBlockButtons title="">
-                <apex:commandButton title="New" value="New" action="{!createAssetAllocation}" reRender="assettbl"/>
+                <apex:commandButton title="New" value="New" action="{!createAssetAllocation}" reRender="pgblock"/>
                 <apex:commandButton title="Save" value="Save" action="{!saveAssetAllocation}" reRender="pgblock"/>
                 <apex:commandButton title="Cancel" value="Cancel" action="{!cancel}"/>
             </apex:pageBlockButtons>
