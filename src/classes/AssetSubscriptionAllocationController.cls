@@ -7,6 +7,20 @@ public with sharing class AssetSubscriptionAllocationController {
         }
     }
 
+    public SubscriptionReplica__c Subscription{
+        get {
+            return businessLayer != null
+                    ? businessLayer.currentSubscription : null;
+        }
+    }
+
+    public Project__c Project{
+        get {
+            return businessLayer != null
+                    ? businessLayer.currentProject : null;
+        }
+    }
+
     public List<AssetSubscriptionAllocationModel> getAssetAllocations(){
         return businessLayer != null
                 ? businessLayer.assetAllocations : null;
