@@ -2,6 +2,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     public Asset currentAsset;
     public SubscriptionReplica__c currentSubscription;
+    public Project__c currentProject;
 
     public List<AssetSubscriptionAllocationModel> assetAllocations{get; set;}
     public List<AssetSubscriptionAllocationModel> subscriptionAllocations{get; set;}
@@ -14,7 +15,29 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         }else if(idParam.left(3) == Schema.SObjectType.SubscriptionReplica__c.getKeyPrefix()){
             getSubscription(idParam);
             getSubscriptionAllocations();
+        }else if(idParam.left(3) == Schema.SObjectType.Project__c.getKeyPrefix()){
+            getProject(idParam);
+            getAssetAllocations();
+            getSubscriptionAllocations();
         }
+
+    }
+
+    private void getProject(String projectId){
+
+        List<Project__c> projects = [
+                Select Id, Name, RecordType.Name, Account__r.Name, ParentProject__c, ParentProject__r.Name
+                from Project__c where Id = :projectId
+        ];
+
+        if(projects.isEmpty()){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'No project record found.'));
+            return;
+        }
+
+        currentProject = projects[0];
+
+        system.debug('getProject(): currentProject - ' + currentProject);
 
     }
 
@@ -41,11 +64,16 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
         assetAllocations = new List<AssetSubscriptionAllocationModel>();
 
-        for(Project_Asset_Allocation__c allocation : [
-                Select Project__c, Percent_Allocation__c, Asset__c, Quantity_Allocation__c
-                from Project_Asset_Allocation__c
-                where Asset__c = :currentAsset.Id
-        ]){
+        String soql = 'Select Project__c, Percent_Allocation__c, Asset__c, Quantity_Allocation__c '
+                + 'from Project_Asset_Allocation__c where ';
+
+        if(currentProject != null){
+            soql += ' Project__c = \'' + currentProject.Id + '\'';
+        } else{
+            soql += ' Asset__c = \'' + currentAsset.Id + '\'';
+        }
+
+        for(Project_Asset_Allocation__c allocation : Database.query(soql)){
             AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(allocation);
             assetAllocations.add(newModel);
         }
@@ -77,11 +105,15 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
         subscriptionAllocations = new List<AssetSubscriptionAllocationModel>();
 
-        for(Project_Subscription_Allocation__c allocation : [
-                Select Project__c, Subscription__c, Percent_Allocation__c, Quantity_Allocation__c
-                from Project_Subscription_Allocation__c
-                where Subscription__c = :currentSubscription.Id
-        ]){
+        String soql = 'Select Project__c, Subscription__c, Percent_Allocation__c, Quantity_Allocation__c '
+                + 'from Project_Subscription_Allocation__c where ';
+        if(currentProject != null){
+            soql += ' Project__c = \'' + currentProject.Id + '\'';
+        } else{
+            soql += ' Subscription__c = \'' + currentSubscription.Id + '\'';
+        }
+
+        for(Project_Subscription_Allocation__c allocation : Database.query(soql)){
             AssetSubscriptionAllocationModel newModal = new AssetSubscriptionAllocationModel(allocation);
             subscriptionAllocations.add(newModal);
         }
