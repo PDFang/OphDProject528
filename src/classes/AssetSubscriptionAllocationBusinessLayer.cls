@@ -59,12 +59,29 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
     public void saveAssetAllocation(){
 
         Project_Asset_Allocation__c[] allocations = new Project_Asset_Allocation__c[]{};
+        Project_Asset_Allocation__c[] delAllocations = new Project_Asset_Allocation__c[]{};
 
         for(AssetSubscriptionAllocationModal modal :assetAllocations){
+            if(modal.isDelete){
+                if(modal.assetAllocation.Id != null){
+                    delAllocations.add(modal.assetAllocation);
+                }
+                continue;
+            }
             allocations.add(modal.assetAllocation);
         }
 
-        upsert allocations;
+        system.debug('getAssetAllocations(): allocations - ' + allocations);
+
+        system.debug('getAssetAllocations(): delAllocations - ' + delAllocations);
+
+        if(allocations.size() > 0){
+            upsert allocations;
+        }
+
+        if(delAllocations.size() > 0){
+            delete delAllocations;
+        }
 
     }
 

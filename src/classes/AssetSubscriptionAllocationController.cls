@@ -44,6 +44,7 @@ public with sharing class AssetSubscriptionAllocationController {
 
         try{
             businessLayer.saveAssetAllocation();
+            businessLayer = new AssetSubscriptionAllocationBusinessLayer(currentId);
         } catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while saving asset allocations. ' + ex.getMessage()));
             system.debug('saveAssetAllocation(): Exception - ' + ex);

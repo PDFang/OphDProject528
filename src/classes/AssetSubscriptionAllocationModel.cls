@@ -1,11 +1,12 @@
 public with sharing class AssetSubscriptionAllocationModal {
 
+    public boolean isDelete{get;set;}
     public Project_Asset_Allocation__c assetAllocation{get; set;}
 
     public AssetSubscriptionAllocationModal(Asset currentAsset){
 
         this.assetAllocation = new Project_Asset_Allocation__c(
-                Asset__c = assetAllocation.Id
+                Asset__c = currentAsset.Id
         );
 
     }
