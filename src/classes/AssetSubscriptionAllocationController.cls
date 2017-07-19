@@ -10,6 +10,11 @@ public with sharing class AssetSubscriptionAllocationController {
                 ? businessLayer.assetAllocations : null;
     }
 
+    public List<AssetSubscriptionAllocationModel> getSubscriptionAllocations(){
+        return businessLayer != null
+                ? businessLayer.subscriptionAllocations : null;
+    }
+
     private String currentId;
     private AssetSubscriptionAllocationBusinessLayer businessLayer;
 

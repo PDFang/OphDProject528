@@ -102,19 +102,55 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         Project_Asset_Allocation__c[] allocations = new Project_Asset_Allocation__c[]{};
         Project_Asset_Allocation__c[] delAllocations = new Project_Asset_Allocation__c[]{};
 
-        for(AssetSubscriptionAllocationModel modal :assetAllocations){
-            if(modal.isDelete){
-                if(modal.assetAllocation.Id != null){
-                    delAllocations.add(modal.assetAllocation);
+        for(AssetSubscriptionAllocationModel model :assetAllocations){
+            if(model.isDelete){
+                if(model.assetAllocation.Id != null){
+                    delAllocations.add(model.assetAllocation);
                 }
                 continue;
             }
-            allocations.add(modal.assetAllocation);
+            allocations.add(model.assetAllocation);
         }
 
-        system.debug('getAssetAllocations(): allocations - ' + allocations);
+        system.debug('saveAssetAllocation(): allocations - ' + allocations);
 
-        system.debug('getAssetAllocations(): delAllocations - ' + delAllocations);
+        system.debug('saveAssetAllocation(): delAllocations - ' + delAllocations);
+
+        if(allocations.size() > 0){
+            upsert allocations;
+        }
+
+        if(delAllocations.size() > 0){
+            delete delAllocations;
+        }
+
+    }
+
+    public void createSubscriptionAllocation(){
+
+        AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentSubscription);
+        assetAllocations.add(newModel);
+
+    }
+
+    public void saveSubscriptionAllocation(){
+
+        Project_Subscription_Allocation__c[] allocations = new Project_Subscription_Allocation__c[]{};
+        Project_Subscription_Allocation__c[] delAllocations = new Project_Subscription_Allocation__c[]{};
+
+        for(AssetSubscriptionAllocationModel model :subscriptionAllocations){
+            if(model.isDelete){
+                if(model.subscriptionAllocation.Id != null){
+                    delAllocations.add(model.subscriptionAllocation);
+                }
+                continue;
+            }
+            allocations.add(model.subscriptionAllocation);
+        }
+
+        system.debug('saveSubscriptionAllocation(): allocations - ' + allocations);
+
+        system.debug('saveSubscriptionAllocation(): delAllocations - ' + delAllocations);
 
         if(allocations.size() > 0){
             upsert allocations;
