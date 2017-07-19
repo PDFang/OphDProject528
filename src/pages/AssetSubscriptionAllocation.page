@@ -2,6 +2,6 @@
 
     Hello !!!!!!!!!!!!!!
 
-    Refer XMNotificationRetry
+    You came from {!currentAsset.Name}
 
 </apex:page>
