@@ -19,10 +19,10 @@
             <apex:pageBlockSection title="Asset Allocations" columns="1">
                 <apex:pageBlockTable value="{!assetAllocations}" var="entry" id="assettbl">
                     <apex:column title="Asset">
-                        <apex:inputField value="{!entry.assetAllocation.Asset__c}"/>
+                        <apex:inputField value="{!entry.assetAllocation.Asset__c}" required="false"/>
                     </apex:column>
                     <apex:column title="Phase Project">
-                        <apex:inputField value="{!entry.assetAllocation.Project__c}"/>
+                        <apex:inputField value="{!entry.assetAllocation.Project__c}" required="false"/>
                     </apex:column>
                     <apex:column title="Quantity">
                         <apex:inputField value="{!entry.assetAllocation.Quantity_Allocation__c}"/>

@@ -5,7 +5,7 @@ public with sharing class AssetSubscriptionAllocationModal {
     public AssetSubscriptionAllocationModal(Asset currentAsset){
 
         this.assetAllocation = new Project_Asset_Allocation__c(
-                Asset__c = assetAllocation.Id
+                Asset__c = currentAsset.Id
         );
 
     }
