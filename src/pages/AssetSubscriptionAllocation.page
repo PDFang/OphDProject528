@@ -1,13 +1,14 @@
 <apex:page id="AssetSubscriptionAllocation" controller="AssetSubscriptionAllocationController">
 
-    Hello !!!!!!!!!!!!!!
 
-    You came from {!currentAsset.Name}
+    <apex:form >
+        <apex:pageBlock title="Asset Allocation" id="pgblock" mode="edit">
+            <apex:pageMessages />
 
-
-    <apex:form>
-        <apex:pageBlock title="Need a title" id="pgblock" mode="edit">
-            <apex:pageMessages/>
+            <apex:pageBlockSection columns="1" >
+                <apex:outputField value="{!Asset.Name}"/>
+                <apex:outputField value="{!Asset.Description}"/>
+            </apex:pageBlockSection>
 
             <apex:pageBlockButtons title="">
                 <apex:commandButton title="New" value="New" action="{!createAssetAllocation}" reRender="pgblock"/>
