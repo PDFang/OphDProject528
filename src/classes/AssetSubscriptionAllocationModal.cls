@@ -1,5 +1,6 @@
 public with sharing class AssetSubscriptionAllocationModal {
 
+    public boolean isDelete{get;set;}
     public Project_Asset_Allocation__c assetAllocation{get; set;}
 
     public AssetSubscriptionAllocationModal(Asset currentAsset){
