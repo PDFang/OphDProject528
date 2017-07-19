@@ -4,7 +4,6 @@
 
     You came from {!currentAsset.Name}
 
-    {!assetAllocations}
 
     <apex:form>
         <apex:pageBlock title="Need a title" id="pgblock" mode="edit">
@@ -41,3 +40,6 @@
 
 
 </apex:page>
+
+
+

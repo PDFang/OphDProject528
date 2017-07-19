@@ -1,8 +1,10 @@
 public with sharing class AssetSubscriptionAllocationController {
 
-    public Asset getCurrentAsset(){
+    public Asset Asset{
+        get {
         return businessLayer != null
                 ? businessLayer.currentAsset : null;
+        }
     }
 
     public List<AssetSubscriptionAllocationModel> getAssetAllocations(){
