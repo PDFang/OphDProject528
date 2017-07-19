@@ -1,9 +1,9 @@
 <apex:page id="AssetSubscriptionAllocation" controller="AssetSubscriptionAllocationController">
 
 
-    <apex:form >
+    <apex:form>
         <apex:pageBlock title="Asset Allocation" id="pgblock" mode="edit">
-            <apex:pageMessages />
+            <apex:pageMessages/>
 
             <apex:pageBlockSection columns="1" >
                 <apex:outputField value="{!Asset.Name}"/>
