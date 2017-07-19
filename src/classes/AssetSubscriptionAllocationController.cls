@@ -5,9 +5,14 @@ public with sharing class AssetSubscriptionAllocationController {
                 ? businessLayer.currentAsset : null;
     }
 
-    public List<AssetSubscriptionAllocationModal> getAssetAllocations(){
+    public List<AssetSubscriptionAllocationModel> getAssetAllocations(){
         return businessLayer != null
                 ? businessLayer.assetAllocations : null;
+    }
+
+    public List<AssetSubscriptionAllocationModel> getSubscriptionAllocations(){
+        return businessLayer != null
+                ? businessLayer.subscriptionAllocations : null;
     }
 
     private String currentId;
