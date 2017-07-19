@@ -1,7 +1,10 @@
 <apex:page id="AssetSubscriptionAllocation" controller="AssetSubscriptionAllocationController">
 
+    <apex:pageMessages/>
     Hello !!!!!!!!!!!!!!
 
     You came from {!currentAsset.Name}
+
+    {!assetAllocations}
 
 </apex:page>
