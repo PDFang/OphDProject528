@@ -1,10 +1,40 @@
 <apex:page id="AssetSubscriptionAllocation" controller="AssetSubscriptionAllocationController">
 
-    <apex:pageMessages/>
     Hello !!!!!!!!!!!!!!
 
     You came from {!currentAsset.Name}
 
     {!assetAllocations}
+
+    <apex:form>
+        <apex:pageBlock title="Need a title" id="pgblock" mode="edit">
+            <apex:pageMessages/>
+
+            <apex:pageBlockButtons title="">
+                <apex:commandButton title="New" value="New" action="{!createAssetAllocation}" reRender="assettbl"/>
+                <apex:commandButton title="Save" value="Save" action="{!saveAssetAllocation}" reRender="pgblock"/>
+                <apex:commandButton title="Cancel" value="Cancel" action="{!cancel}"/>
+            </apex:pageBlockButtons>
+
+            <apex:pageBlockSection title="Asset Allocations" columns="1">
+                <apex:pageBlockTable value="{!assetAllocations}" var="entry" id="assettbl">
+                    <apex:column title="Asset">
+                        <apex:inputField value="{!entry.assetAllocation.Asset__c}"/>
+                    </apex:column>
+                    <apex:column title="Phase Project">
+                        <apex:inputField value="{!entry.assetAllocation.Project__c}"/>
+                    </apex:column>
+                    <apex:column title="Quantity">
+                        <apex:inputField value="{!entry.assetAllocation.Quantity_Allocation__c}"/>
+                    </apex:column>
+                    <apex:column title="Percentage">
+                        <apex:inputField value="{!entry.assetAllocation.Percent_Allocation__c}"/>
+                    </apex:column>
+                </apex:pageBlockTable>
+
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+
 
 </apex:page>
