@@ -23,6 +23,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
+
     private void getProject(String projectId){
 
         List<Project__c> projects = [
