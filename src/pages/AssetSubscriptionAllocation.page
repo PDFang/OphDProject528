@@ -29,11 +29,14 @@
                         <apex:inputField value="{!entry.assetAllocation.Project__c}" required="false" rendered="{!ISBLANK(entry.assetAllocation.Id)}"/>
                         <apex:outputField value="{!entry.assetAllocation.Project__c}" rendered="{!NOT(ISBLANK(entry.assetAllocation.Id))}"/>
                     </apex:column>
-                    <apex:column headervalue="Quantity">
+                    <apex:column headervalue="Allocated Quantity">
                         <apex:inputField value="{!entry.assetAllocation.Quantity_Allocation__c}" rendered="{!entry.isQuantityAllocation}"/>
                     </apex:column>
-                    <apex:column headervalue="Percentage">
+                    <apex:column headervalue="Allocated Percentage">
                         <apex:inputField value="{!entry.assetAllocation.Percent_Allocation__c}" rendered="{!NOT(entry.isQuantityAllocation)}"/>
+                    </apex:column>
+                    <apex:column headervalue="Allocated Hours">
+                        <apex:outputField value="{!entry.assetAllocation.Hours_Allocated__c}" rendered="{!NOT(entry.isQuantityAllocation)}"/>
                     </apex:column>
                 </apex:pageBlockTable>
 
