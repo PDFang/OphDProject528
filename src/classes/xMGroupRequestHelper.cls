@@ -107,12 +107,23 @@ public class xMGroupRequestHelper extends TriggerHandler {
 
                     for(Contact cont: act.Contacts){
                         if(!personIdSet.contains(cont.xmPerson__c)){
+                            xmPerson__c xmPerson ;
+                            if(cont.xmPerson__c == null){
+                                xmPerson = new xmPerson__c(
+                                        xmPersonUID__c =  cont.XmattersUid__c
+                                );
+                            }
+                            else {
+                                xmPerson = new xmPerson__c(
+                                        Id =  cont.xmPerson__c
+                                );
+                            }
 
                             xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
                                     Account__c = act.Id,
                                     Contact__c = cont.Id,
                                     ImplementedProduct__c = imp.Id,
-                                    NotificationProfile__c = cont.xmPerson__c == null ? cont.XmattersUid__c : cont.xmPerson__c,
+                                    NotificationProfile__r = xmPerson,
                                     Status__c = 'In Queue',
                                     Action__c = 'Remove',
                                     xmGroupChangeRequestHeader__c = groupCRAccount.get(act.Id)
