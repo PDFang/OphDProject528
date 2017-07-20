@@ -7,14 +7,6 @@ public with sharing class AssetSubscriptionAllocationController {
         }
     }
 
-    public List<Project__c>  PhaseProjects{
-        get{
-            return businessLayer != null
-                    ? businessLayer.PhaseProjects : null;
-        }
-
-    }
-
     public SubscriptionReplica__c Subscription{
         get {
             return businessLayer != null
