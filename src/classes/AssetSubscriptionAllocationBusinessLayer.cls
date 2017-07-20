@@ -65,7 +65,8 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
         assetAllocations = new List<AssetSubscriptionAllocationModel>();
 
-        String soql = 'Select Project__c, Percent_Allocation__c, Asset__c, Quantity_Allocation__c '
+        String soql = 'Select Project__c, Percent_Allocation__c, Asset__c, Asset__r.Quantity, '
+                + 'Quantity_Allocation__c, Hours_Allocated__c '
                 + 'from Project_Asset_Allocation__c where ';
 
         if(currentProject != null){
@@ -131,24 +132,38 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
-    public void saveAssetAllocation(){
+    public boolean saveAssetAllocation(){
 
         Project_Asset_Allocation__c[] allocations = new Project_Asset_Allocation__c[]{};
         Project_Asset_Allocation__c[] delAllocations = new Project_Asset_Allocation__c[]{};
 
+        Boolean error = false;
+
         for(AssetSubscriptionAllocationModel model :assetAllocations){
+
+            system.debug('saveAssetAllocation(): model - ' + model);
+
             if(model.isDelete){
                 if(model.assetAllocation.Id != null){
                     delAllocations.add(model.assetAllocation);
                 }
                 continue;
             }
+            if(model.assetAllocation.Asset__r.Quantity == 1 && model.assetAllocation.Quantity_Allocation__c != 1){
+                model.isError = true;
+                model.message = 'Quantity cannot be greater than one.';
+                error = true;
+                continue;
+            }
             allocations.add(model.assetAllocation);
         }
 
         system.debug('saveAssetAllocation(): allocations - ' + allocations);
-
         system.debug('saveAssetAllocation(): delAllocations - ' + delAllocations);
+
+        if(error){
+            return false;
+        }
 
         if(allocations.size() > 0){
             upsert allocations;
@@ -157,6 +172,8 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         if(delAllocations.size() > 0){
             delete delAllocations;
         }
+
+        return true;
 
     }
 
