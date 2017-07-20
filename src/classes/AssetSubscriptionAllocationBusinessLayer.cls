@@ -172,9 +172,14 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
             return false;
         }
 
+        System.Savepoint beforeUpdate = Database.setSavepoint();
+        
+        if(delAllocations.size() > 0){
+            delete delAllocations;
+        }
+
         if(allocations.size() > 0){
 
-            System.Savepoint beforeUpdate = Database.setSavepoint();
             Integer failures = 0;
             Database.UpsertResult[] results = Database.upsert(allocations, false);
             for(Integer i=0; i < results.size(); i++){
@@ -192,9 +197,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
             }
         }
 
-        if(delAllocations.size() > 0){
-            delete delAllocations;
-        }
+
 
         return true;
 

@@ -66,6 +66,7 @@ public with sharing class AssetSubscriptionAllocationController {
         try{
             Boolean success = businessLayer.saveAssetAllocation();
             if(success){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Saved Successfully.'));
                 businessLayer = new AssetSubscriptionAllocationBusinessLayer(currentId);
             }
         } catch (Exception ex){
