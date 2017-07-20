@@ -19,18 +19,21 @@
                 <apex:pageBlockTable value="{!assetAllocations}" var="entry" id="assettbl">
                     <apex:column headervalue="Delete">
                         <apex:inputCheckbox value="{!entry.isDelete}"/>
+                        <apex:outputText value="Error" rendered="{!entry.isError}" title="{!entry.message}"/>
                     </apex:column>
                     <apex:column headervalue="Asset">
-                        <apex:inputField value="{!entry.assetAllocation.Asset__c}" required="false"/>
+                        <apex:inputField value="{!entry.assetAllocation.Asset__c}" required="false" rendered="{!ISNULL(asset)}"/>
+                        <apex:outputField value="{!entry.assetAllocation.Asset__c}" rendered="{!NOT(ISNULL(asset))}"/>
                     </apex:column>
                     <apex:column headervalue="Phase Project">
-                        <apex:inputField value="{!entry.assetAllocation.Project__c}" required="false"/>
+                        <apex:inputField value="{!entry.assetAllocation.Project__c}" required="false" rendered="{!ISBLANK(entry.assetAllocation.Id)}"/>
+                        <apex:outputField value="{!entry.assetAllocation.Project__c}" rendered="{!NOT(ISBLANK(entry.assetAllocation.Id))}"/>
                     </apex:column>
                     <apex:column headervalue="Quantity">
-                        <apex:inputField value="{!entry.assetAllocation.Quantity_Allocation__c}"/>
+                        <apex:inputField value="{!entry.assetAllocation.Quantity_Allocation__c}" rendered="{!entry.isQuantityAllocation}"/>
                     </apex:column>
                     <apex:column headervalue="Percentage">
-                        <apex:inputField value="{!entry.assetAllocation.Percent_Allocation__c}"/>
+                        <apex:inputField value="{!entry.assetAllocation.Percent_Allocation__c}" rendered="{!NOT(entry.isQuantityAllocation)}"/>
                     </apex:column>
                 </apex:pageBlockTable>
 

@@ -19,6 +19,7 @@ public with sharing class AssetSubscriptionAllocationModel {
     public AssetSubscriptionAllocationModel(Project_Asset_Allocation__c allocation){
 
         this.assetAllocation = allocation;
+        this.isQuantityAllocation = (allocation.Asset__r.Quantity != 1);
 
     }
 
