@@ -156,11 +156,14 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
                 }
                 continue;
             }
-            if(model.assetAllocation.Asset__r.Quantity == 1 && model.assetAllocation.Quantity_Allocation__c != 1){
+            /*if(model.assetAllocation.Asset__r.Quantity == 1 && model.assetAllocation.Quantity_Allocation__c != 1){
                 model.isError = true;
                 model.message = 'Quantity cannot be greater than one.';
                 error = true;
                 continue;
+            }*/
+            if(model.isQuantityAllocation == false){
+                model.assetAllocation.Hours_Allocated__c = model.assetAllocation.Percent_Allocation__c * model.assetAllocation.Asset__r.Budgeted_Hours__c / 100;
             }
             allocations.add(model.assetAllocation);
         }
@@ -173,7 +176,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         }
 
         System.Savepoint beforeUpdate = Database.setSavepoint();
-        
+
         if(delAllocations.size() > 0){
             delete delAllocations;
         }
