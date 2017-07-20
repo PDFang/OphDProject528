@@ -173,6 +173,8 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         }
 
         if(allocations.size() > 0){
+
+            System.Savepoint beforeUpdate = Database.setSavepoint();
             Integer failures = 0;
             Database.UpsertResult[] results = Database.upsert(allocations, false);
             for(Integer i=0; i < results.size(); i++){
@@ -185,6 +187,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
                 }
             }
             if(failures > 0){
+                Database.rollback(beforeUpdate);
                 return false;
             }
         }
