@@ -5,9 +5,12 @@ public class XMPersonManagementController{
     public XMPersonWrapper person{get;set;}
     public List<Contact> contactList{get;private set;}
     public boolean isPersonMatch{get;private set;}
+    public boolean isPersonRemoved{get;private set;}
+    private string xmPersonGuid;
 
     public string getTimezone(){
         return person != null ? person.timezone : null;
+
     }
 
     public string getTimezoneDisplayName(){
@@ -37,19 +40,26 @@ public class XMPersonManagementController{
     // constructor
     public XMPersonManagementController(ApexPages.StandardController controller){
 
+        contactId = (string)controller.getId();
+        isPersonRemoved = false;
+        loadContact();
+
+    }
+
+    private void loadContact(){
         try{
             // initialization
             isPersonMatch = false;
             contactList = new List<Contact>();
 
             // get current contact info
-            contactId = (string)controller.getId();
+            xmPersonGuid = '';
             helper = new XMPersonManagementHelper(contactId);
             currentContact = helper.getCurrentContact();
             contactEmail = currentContact.Email;
             system.debug('XMPersonManagementController(): currentContact - '+currentContact);
 
-            String xmPersonGuid = null;
+
             // find the associated person record
             if(currentContact.xmPerson__c != null && currentContact.xmPerson__r.xmPersonUID__c != null) {
                 // current contact has person record
@@ -69,18 +79,25 @@ public class XMPersonManagementController{
                         xmPersonId = cont.xmPerson__c;
                         xmPersonGuid = cont.xmPerson__r.xmPersonUID__c;
                     }
+
                 }
             }
 
-            if(string.isNotBlank(xmPersonGuid)){
+            system.debug('xmPersonGuid =>' + xmPersonGuid);
+
+            if(string.isNotBlank(xmPersonGuid) && !isPersonRemoved){
                 person = XMPersonManagementHelper.getXmPersonByGuid(xmPersonGuid);
-            } else{
+            }else if(currentContact.XmattersUid__c != null){
+                isPersonMatch = true;
+                xmPersonGuid = currentContact.XmattersUid__c;
+            }
+            if(person == null){
                 person = new XMPersonWrapper(currentContact);
             }
 
             //findAssociatedContacts();
         } catch(Exception ex){
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ex.getMessage()));
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ex.getMessage() + ' at line ' + ex.getLineNumber()));
             return;
         }
     }
@@ -124,6 +141,9 @@ public class XMPersonManagementController{
 
         try{
             String contactRowId = ApexPages.currentPage().getParameters().get('rowId');
+            if(xmPersonId == null){
+                xmPersonId = [select Id from xmPerson__c where xmPersonUID__c = :currentContact.XmattersUid__c Limit 1].Id;
+            }
             helper.associateContact(contactRowId, xmPersonId);
             ApexPages.currentPage().getParameters().put('rowId', '');
             findDuplicateContacts();
@@ -133,6 +153,26 @@ public class XMPersonManagementController{
         }
         return null;
     }
+
+    // remove contact's association from xmPerson
+    public pagereference dissociateContact(){
+
+        try{
+            String contactRowId = ApexPages.currentPage().getParameters().get('removeId');
+            helper.removeContactAssociation(contactRowId, xmPersonGuid);
+            ApexPages.currentPage().getParameters().put('removeId', '');
+            isPersonRemoved = true;
+            findDuplicateContacts();
+            loadContact();
+        }
+        catch(Exception ex){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ex.getMessage()));
+        }
+        return null;
+    }
+
+
+
 
     // returns various device types
     public string getDeviceTypes()

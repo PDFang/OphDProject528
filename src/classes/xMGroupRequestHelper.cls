@@ -83,9 +83,11 @@ public class xMGroupRequestHelper extends TriggerHandler {
 
 
             List<xmGroupChangeRequest__c> groupChangeRequestList = new List<xmGroupChangeRequest__c>();
-            string queryString = 'select Id,(select Id, xmPerson__c from Contacts where xmPerson__c != null ';
+            string queryString = 'select Id,(select Id, XmattersUid__c, xmPerson__c from Contacts ';
             if(contactIds.size() > 0)
-                queryString += ' and Id in :  contactIds';
+                queryString += ' where Id in :  contactIds';
+            else
+                queryString += ' where xmPerson__c != null ';
 
             queryString += ' ),(select Id from Implemented_Products__r' ;
             if (implmentedProductIds.size() > 0){
@@ -105,11 +107,12 @@ public class xMGroupRequestHelper extends TriggerHandler {
 
                     for(Contact cont: act.Contacts){
                         if(!personIdSet.contains(cont.xmPerson__c)){
+
                             xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
                                     Account__c = act.Id,
                                     Contact__c = cont.Id,
                                     ImplementedProduct__c = imp.Id,
-                                    NotificationProfile__c = cont.xmPerson__c,
+                                    NotificationProfile__c = cont.xmPerson__c == null ? cont.XmattersUid__c : cont.xmPerson__c,
                                     Status__c = 'In Queue',
                                     Action__c = 'Remove',
                                     xmGroupChangeRequestHeader__c = groupCRAccount.get(act.Id)

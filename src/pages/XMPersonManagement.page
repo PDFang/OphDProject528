@@ -148,32 +148,32 @@
         color : lightgray;
     }
 
+    .page-header h1 {
+        font-size: 33px;
+    }
+
     </style>
 
     <apex:form >
-        <apex:sectionHeader title="Notification Profile" subtitle="{!currentContact.Name}"/>
-
-        <apex:commandLink action="{!goBack}" value="Go Back" style="float:right;"/>
-        <br/>
-        <!--<div class="page-header">-->
-        <!--<h1>Manage Notification Profile for Contact - {!currentContact.FirstName} {!currentContact.LastName}</h1>-->
-        <!--<apex:commandLink action="{!goBack}" value="Go Back" style="float:right;"/>-->
-        <!--</div>-->
 
         <div class="container-fluid">
-            <div class="row">
-                <apex:pageMessages id="errorMessages"/>
-
+            <apex:commandLink action="{!goBack}" value="<< Back to Contact" style="font-size:12px;"/>
+            <br/>
+            <div class="page-header">
+                <h1>Notification Profile</h1>
+                <p style="font-size:15px;">{!currentContact.Name}</p>
             </div>
-            <div class="panel panel-default" style="{!IF( isValidContact, 'display: inline;', 'display: none;')}">
+            <apex:pageMessages id="errorMessages"/>
 
+            <div class="panel panel-default" style="{!IF( isValidContact, 'display: inline;', 'display: none;')}">
                 <apex:pageBlock id="contactDetail" >
-                    <apex:pageBlockSection title="Contact Detail" collapsible="false" columns="1">
+                    <apex:pageBlockSection title="Contact Detail" collapsible="false" columns="2">
                         <apex:outputField value="{!currentContact.FirstName}"/>
-                        <apex:outputField value="{!currentContact.LastName}"/>
-                        <apex:outputField value="{!currentContact.Email}"/>
                         <apex:outputField value="{!currentContact.AccountId}"/>
+                        <apex:outputField value="{!currentContact.LastName}"/>
                         <apex:outputField value="{!currentContact.Account.CadebillAccountNoText__c}"/>
+                        <apex:outputField value="{!currentContact.Email}"/>
+
                     </apex:pageBlockSection>
                 </apex:pageBlock>
 
@@ -221,11 +221,30 @@
 
                             </div>
                         </apex:outputPanel>
-                    </apex:outputPanel>
+                        <apex:outputPanel rendered="{!IsXmPerson}" style="margin-left:15px;" >
+                                <apex:actionStatus id="dissociatePersonStatus" >
+                                    <apex:facet name="stop">
+                                        <apex:commandButton value="Dissociate" title="Dissociate xmPerson from this contact" onClick="callDissociateContact('{!currentContact.Id}');return false;"  status="dissociatePersonStatus"/>
+                                    </apex:facet>
+                                    <apex:facet name="start">
+                                        <apex:outputPanel >
+                                            <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                                            <apex:commandButton styleClass="k-button"  value="Removing..." status="dissociatePersonStatus" disabled="true"/>
+                                        </apex:outputPanel>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                        </apex:outputPanel>
 
-                    <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,errorMessages,timezone,devicePanel,groupPanel" onComplete="loaddeviceAndGroups();" status="associateContact">
+                    </apex:outputPanel>
+                    <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,errorMessages,timezone,devicePanel,groupPanel" onComplete="loaddeviceAndGroups();">
                         <apex:param id="rowId" name="rowId" value="" />
                     </apex:actionFunction>
+
+                    <apex:actionFunction name="callDissociateContact" action="{!dissociateContact}" reRender="contactList,alertmessage,errorMessages,timezone,devicePanel,groupPanel" onComplete="loaddeviceAndGroups();" status="dissociatePersonStatus">
+                        <apex:param id="removeId" name="removeId" value="" />
+                    </apex:actionFunction>
+
+
 
                     <apex:actionFunction name="callNotificationManage" action="{!addPerson}" reRender="contactList,alertmessage,errorMessages,timezone,devicePanel,groupPanel" onComplete="loaddeviceAndGroups();" status="addPersonStatus"/>
 
@@ -266,8 +285,8 @@
             </div>
 
 
-            <apex:pageBlock id="contactList" rendered="{!contactList.size > 0}">
-                <apex:pageBlockSection collapsible="true"  columns="1" showHeader="true" title="Duplicate Contacts">
+                <apex:pageBlock id="contactList" rendered="{!contactList.size > 0}">
+                <apex:pageBlockSection collapsible="true"  columns="1" showHeader="true" title="Duplicate Contacts" id="duplicateContacts">
 
                     <apex:dataTable value="{!contactList}" var="con"  styleClass="table table-bordered table-condensed" >
 
@@ -311,7 +330,18 @@
                                 </apex:actionStatus>
                             </apex:outputPanel>
                             <apex:outputPanel rendered="{!!ISBLANK(con.xmPerson__c)}">
-                                <apex:outputText value="Associated"></apex:outputText>
+                                <apex:actionStatus id="dissociateContact" >
+                                    <apex:facet name="stop">
+                                        <apex:commandButton value="Dissociate" onClick="callDissociateContact('{!con.Id}'); return false;"  status="dissociateContact"/>
+                                    </apex:facet>
+                                    <apex:facet name="start">
+                                        <apex:outputPanel >
+                                            <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                                            <apex:commandButton styleClass="k-button"  value="Removing..." status="dissociateContact" disabled="true"/>
+                                        </apex:outputPanel>
+                                    </apex:facet>
+                                </apex:actionStatus>
+
                             </apex:outputPanel>
                         </apex:column>
                     </apex:dataTable>
@@ -416,9 +446,10 @@
     <script>
 
     var resturnedResult;
+
      $(document).ready(function() {
             loaddeviceAndGroups();
-
+                twistSection($("div[id$='duplicateContacts']").find('img')[0]);
          });
 
     function setFocusOnLoad() {}
@@ -629,7 +660,7 @@
                   editable: "inline",
                   scrollable: true,
                   noRecords: true,
-                  height: 200,
+                  height: 186,
                   edit:disablePicklist,
                   toolbar: [
                       {
@@ -656,8 +687,9 @@
                                 field:"TimeFrame",
                                 title:"Time Frames",
                                 editable:false,
+                                width:250,
                                 //template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">Manage TimeFrames</a>'
-                                template: '<a href="" onClick="OpenModal(this); return false;" class="k-button k-button-icontext">Manage</a>'
+                                template: '#if(data.DeviceType.indexOf("Email") > -1){#<span style="text-decoration: underline;padding-left: 10px;">24X7</span>#}else{#<a href="" onClick="OpenModal(this); return false;" class="k-button k-button-icontext">Manage</a>#}#'
                             },
                             {   title:"Action",
                                 command: ["edit","destroy"]
