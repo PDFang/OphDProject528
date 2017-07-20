@@ -145,6 +145,9 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
         for(AssetSubscriptionAllocationModel model :assetAllocations){
 
+            model.isError = false;
+            model.message = null;
+
             system.debug('saveAssetAllocation(): model - ' + model);
 
             if(model.isDelete){
@@ -170,7 +173,20 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         }
 
         if(allocations.size() > 0){
-            upsert allocations;
+            Integer failures = 0;
+            Database.UpsertResult[] results = Database.upsert(allocations, false);
+            for(Integer i=0; i < results.size(); i++){
+                Database.UpsertResult res = results[i];
+                if(!res.isSuccess()){
+                    failures++;
+                    Database.Error[] errors = res.getErrors();
+                    assetAllocations[i].isError = true;
+                    assetAllocations[i].message = errors[0].getMessage();
+                }
+            }
+            if(failures > 0){
+                return false;
+            }
         }
 
         if(delAllocations.size() > 0){
