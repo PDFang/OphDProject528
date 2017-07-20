@@ -17,8 +17,12 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
             getSubscriptionAllocations();
         }else if(idParam.left(3) == Schema.SObjectType.Project__c.getKeyPrefix()){
             getProject(idParam);
-            getAssetAllocations();
-            getSubscriptionAllocations();
+            if(currentProject != null){
+                getAssetAllocations();
+                getSubscriptionAllocations();
+            }
+        }else{
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'URL: Invalid ID Parameter.'));
         }
 
     }
@@ -28,7 +32,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
         List<Project__c> projects = [
                 Select Id, Name, RecordType.Name, Account__r.Name, ParentProject__c, ParentProject__r.Name
-                from Project__c where Id = :projectId
+                from Project__c where Id = :projectId and RecordType.Name like 'PS Project Phase%'
         ];
 
         if(projects.isEmpty()){
@@ -65,7 +69,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
         assetAllocations = new List<AssetSubscriptionAllocationModel>();
 
-        String soql = 'Select Project__c, Percent_Allocation__c, Asset__c, Asset__r.Quantity, '
+        String soql = 'Select Project__c, Percent_Allocation__c, Asset__c, Asset__r.Quantity, Asset__r.Budgeted_Hours__c, '
                 + 'Quantity_Allocation__c, Hours_Allocated__c '
                 + 'from Project_Asset_Allocation__c where ';
 
