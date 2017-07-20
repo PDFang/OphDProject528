@@ -3,6 +3,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
     public Asset currentAsset;
     public SubscriptionReplica__c currentSubscription;
     public Project__c currentProject;
+    public List<Project__c> PhaseProjects;
 
     public List<AssetSubscriptionAllocationModel> assetAllocations{get; set;}
     public List<AssetSubscriptionAllocationModel> subscriptionAllocations{get; set;}
@@ -21,6 +22,23 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
             getSubscriptionAllocations();
         }
 
+    }
+
+    private void GetPhaseProjectsByAsset(String assetId){
+
+        //need to check this relationship
+        list <Asset> Assets =   [SELECT Parent_Project__c FROM Asset where Id =: assetId];
+
+        system.debug( 'Assets => '  + Assets);
+        set <id> AssetPhaseProjects = new set <id>();
+
+        for (Asset a : Assets){
+            system.debug( 'Adding an asset => '  + a.Parent_Project__c);
+            AssetPhaseProjects.add(a.Parent_Project__c);
+        }
+
+        PhaseProjects = [Select id, Name from Project__c where id in : AssetPhaseProjects ];
+        system.debug( 'PhaseProjects => '  +  PhaseProjects);
     }
 
     private void getProject(String projectId){
