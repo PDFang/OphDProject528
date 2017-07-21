@@ -21,7 +21,7 @@
         </apex:pageBlockSection>
     </apex:pageBlock>
     <apex:form >
-        <apex:pageBlock title="" id="pgblock" mode="edit" rendered="{!Not(ISNULL(Asset))}">
+        <apex:pageBlock title="" id="pgblock" mode="edit" rendered="{!Not(ISNULL(Asset))|| Not(ISNULL(Project))}">
             <apex:pageMessages/>
             <apex:pageBlockButtons title="">
                 <apex:commandButton title="New" value="New" action="{!createAssetAllocation}" reRender="pgblock"/>
@@ -57,7 +57,7 @@
         </apex:pageBlock>
     </apex:form>
     <apex:form >
-        <apex:pageBlock title="" id="pgblock" mode="edit" rendered="{!Not(ISNULL(Subscription))}">
+        <apex:pageBlock title="" id="pgblock" mode="edit" rendered="{!Not(ISNULL(Subscription)) || Not(ISNULL(Project))}">
             <apex:pageMessages/>
             <apex:pageBlockButtons title="">
                 <apex:commandButton title="New" value="New" action="{!createSubscriptionAllocation}" reRender="pgblock"/>
