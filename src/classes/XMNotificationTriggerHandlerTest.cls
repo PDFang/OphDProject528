@@ -6,26 +6,9 @@
 private class XMNotificationTriggerHandlerTest {
 
     // test callout to xMatters event service
-    static testMethod void testBehavior() {
+    static testMethod void testCalloutSuccess() {
 
-        Map<String,Schema.RecordTypeInfo> testIncidentTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
-        Case testEvent = new Case(
-                RecordTypeId = testIncidentTypeMap.get('Event').getRecordTypeId(),
-                Subject = 'testEventInitialConfirmationNotification Event',
-                Description = 'testEventInitialConfirmationNotification',
-                Status = 'New',
-                EventType__c = 'Service Disruption',
-                PlatformsImpacted__c = 'C6 - inContact',
-                ProductImpacted__c = 'Test Product',
-                InternalEvent__c = false,
-                Priority = 'P1'
-        );
-
-        database.DMLOptions dmo = new database.DMLOptions();
-        dmo.assignmentRuleHeader.useDefaultRule = true;
-        testEvent.setOptions(dmo);
-
-        insert testEvent;
+        Case testEvent =[Select Id from Case where RecordType.Name = 'Event' Limit 1];
 
         test.startTest();
         Test.setMock(HttpCalloutMock.class, new XMRestEventServiceHttpMock(200,'Complete','[{"Name": "sForceTest1"}]',null));
@@ -33,7 +16,8 @@ private class XMNotificationTriggerHandlerTest {
         xmNotification__c xmNotification = new xmNotification__c(
                 Case__c = testEvent.Id,
                 Request_Date__c = system.now(),
-                Request_Type__c = 'Event Initial Confirmation'
+                Request_Type__c = 'Event Initial Confirmation',
+                Status__c = 'New'
         );
         insert xmNotification;
 
@@ -41,7 +25,31 @@ private class XMNotificationTriggerHandlerTest {
 
         xmNotification = [Select Id, Status__c from xmNotification__c where Id = :xmNotification.Id];
 
-        system.assertEquals('Processed', xmNotification.Status__c, 'xmNotification event service request failed.');
+        system.assertEquals('Processed', xmNotification.Status__c, 'xmNotification status update failed.');
+
+    }
+
+    // test callout to xMatters event service
+    static testMethod void testCalloutError() {
+
+        Case testEvent =[Select Id from Case where RecordType.Name = 'Event' Limit 1];
+
+        test.startTest();
+        Test.setMock(HttpCalloutMock.class, new XMRestEventServiceHttpMock(500,'Complete','[{"Name": "sForceTest1"}]',null));
+
+        xmNotification__c xmNotification = new xmNotification__c(
+                Case__c = testEvent.Id,
+                Request_Date__c = system.now(),
+                Request_Type__c = 'Event Initial Confirmation',
+                Status__c = 'New'
+        );
+        insert xmNotification;
+
+        test.stopTest();
+
+        xmNotification = [Select Id, Status__c from xmNotification__c where Id = :xmNotification.Id];
+
+        system.assertEquals('Failed', xmNotification.Status__c, 'xmNotification status update failed.');
 
     }
 
@@ -65,6 +73,25 @@ private class XMNotificationTriggerHandlerTest {
         siteConfig.EventResolvedEmails__c = false;
 
         insert siteConfig;
+
+        Map<String,Schema.RecordTypeInfo> testIncidentTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
+        Case testEvent = new Case(
+                RecordTypeId = testIncidentTypeMap.get('Event').getRecordTypeId(),
+                Subject = 'testEventInitialConfirmationNotification Event',
+                Description = 'testEventInitialConfirmationNotification',
+                Status = 'New',
+                EventType__c = 'Service Disruption',
+                PlatformsImpacted__c = 'C6 - inContact',
+                ProductImpacted__c = 'Test Product',
+                InternalEvent__c = false,
+                Priority = 'P1'
+        );
+
+        database.DMLOptions dmo = new database.DMLOptions();
+        dmo.assignmentRuleHeader.useDefaultRule = true;
+        testEvent.setOptions(dmo);
+
+        insert testEvent;
 
     }
 

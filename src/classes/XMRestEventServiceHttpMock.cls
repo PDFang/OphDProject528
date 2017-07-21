@@ -2,8 +2,11 @@ public class XMRestEventServiceHttpMock implements HttpCalloutMock {
 
     // Used for asserts to determine what was passed to the callout
     public String requestBodyPassed {get;set;}
+    public Integer codePassed {get;set;}
 
-    public XMRestEventServiceHttpMock(Integer code, String status, String body, Map<String, String> responseHeaders){}
+    public XMRestEventServiceHttpMock(Integer code, String status, String body, Map<String, String> responseHeaders){
+        this.codePassed = code;
+    }
 
     public HTTPResponse respond(HTTPRequest req) {
         system.debug('calling response');
@@ -14,7 +17,7 @@ public class XMRestEventServiceHttpMock implements HttpCalloutMock {
         HttpResponse res = new HttpResponse();
         res.setHeader('Content-Type', 'application/json');
 
-        res.setStatusCode(200);
+        res.setStatusCode(this.codePassed);
 
         if (method == 'POST')
         {

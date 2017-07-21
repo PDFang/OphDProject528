@@ -17,8 +17,12 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
             getSubscriptionAllocations();
         }else if(idParam.left(3) == Schema.SObjectType.Project__c.getKeyPrefix()){
             getProject(idParam);
-            getAssetAllocations();
-            getSubscriptionAllocations();
+            if(currentProject != null){
+                getAssetAllocations();
+                getSubscriptionAllocations();
+            }
+        }else{
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'URL: Invalid ID Parameter.'));
         }
 
     }
@@ -28,7 +32,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
         List<Project__c> projects = [
                 Select Id, Name, RecordType.Name, Account__r.Name, ParentProject__c, ParentProject__r.Name
-                from Project__c where Id = :projectId
+                from Project__c where Id = :projectId and RecordType.Name like 'PS Project Phase%'
         ];
 
         if(projects.isEmpty()){
@@ -65,7 +69,8 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
         assetAllocations = new List<AssetSubscriptionAllocationModel>();
 
-        String soql = 'Select Project__c, Percent_Allocation__c, Asset__c, Quantity_Allocation__c '
+        String soql = 'Select Project__c, Percent_Allocation__c, Asset__c, Asset__r.Quantity, Asset__r.Budgeted_Hours__c, '
+                + 'Quantity_Allocation__c, Hours_Allocated__c '
                 + 'from Project_Asset_Allocation__c where ';
 
         if(currentProject != null){
@@ -131,32 +136,73 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
-    public void saveAssetAllocation(){
+    public boolean saveAssetAllocation(){
 
         Project_Asset_Allocation__c[] allocations = new Project_Asset_Allocation__c[]{};
         Project_Asset_Allocation__c[] delAllocations = new Project_Asset_Allocation__c[]{};
 
+        Boolean error = false;
+
         for(AssetSubscriptionAllocationModel model :assetAllocations){
+
+            model.isError = false;
+            model.message = null;
+
+            system.debug('saveAssetAllocation(): model - ' + model);
+
             if(model.isDelete){
                 if(model.assetAllocation.Id != null){
                     delAllocations.add(model.assetAllocation);
                 }
                 continue;
             }
+            /*if(model.assetAllocation.Asset__r.Quantity == 1 && model.assetAllocation.Quantity_Allocation__c != 1){
+                model.isError = true;
+                model.message = 'Quantity cannot be greater than one.';
+                error = true;
+                continue;
+            }*/
+            if(model.isQuantityAllocation == false){
+                model.assetAllocation.Hours_Allocated__c = model.assetAllocation.Percent_Allocation__c * model.assetAllocation.Asset__r.Budgeted_Hours__c / 100;
+            }
             allocations.add(model.assetAllocation);
         }
 
         system.debug('saveAssetAllocation(): allocations - ' + allocations);
-
         system.debug('saveAssetAllocation(): delAllocations - ' + delAllocations);
 
-        if(allocations.size() > 0){
-            upsert allocations;
+        if(error){
+            return false;
         }
+
+        System.Savepoint beforeUpdate = Database.setSavepoint();
 
         if(delAllocations.size() > 0){
             delete delAllocations;
         }
+
+        if(allocations.size() > 0){
+
+            Integer failures = 0;
+            Database.UpsertResult[] results = Database.upsert(allocations, false);
+            for(Integer i=0; i < results.size(); i++){
+                Database.UpsertResult res = results[i];
+                if(!res.isSuccess()){
+                    failures++;
+                    Database.Error[] errors = res.getErrors();
+                    assetAllocations[i].isError = true;
+                    assetAllocations[i].message = errors[0].getMessage();
+                }
+            }
+            if(failures > 0){
+                Database.rollback(beforeUpdate);
+                return false;
+            }
+        }
+
+
+
+        return true;
 
     }
 
