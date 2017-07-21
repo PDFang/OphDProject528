@@ -111,7 +111,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
         subscriptionAllocations = new List<AssetSubscriptionAllocationModel>();
 
-        String soql = 'Select Project__c, Subscription__c, Percent_Allocation__c, Quantity_Allocation__c '
+        String soql = 'Select Project__c, Subscription__c, Percent_Allocation__c, Quantity_Allocation__c, Hours_Allocated__c '
                 + 'from Project_Subscription_Allocation__c where ';
         if(currentProject != null){
             soql += ' Project__c = \'' + currentProject.Id + '\'';
