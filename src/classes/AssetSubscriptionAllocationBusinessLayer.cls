@@ -31,7 +31,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
     private void getProject(String projectId){
 
         List<Project__c> projects = [
-                Select Id, Name, RecordType.Name, Account__r.Name, ParentProject__c, ParentProject__r.Name
+                Select Id, ProjectType__c, Name, RecordType.Name, Account__r.Name, ParentProject__c, ParentProject__r.Name, Project__c.ProjectStatus__c
                 from Project__c where Id = :projectId and RecordType.Name like 'PS Project Phase%'
         ];
 
