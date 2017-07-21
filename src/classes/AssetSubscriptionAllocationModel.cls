@@ -9,9 +9,10 @@ public with sharing class AssetSubscriptionAllocationModel {
 
     public AssetSubscriptionAllocationModel(Asset currentAsset){
 
+
         this.assetAllocation = new Project_Asset_Allocation__c(
-                Asset__c = currentAsset.Id,
-                Asset__r = currentAsset
+                Asset__c = (currentAsset !=null ? currentAsset.Id:null ) ,
+                Asset__r = (currentAsset !=null ? currentAsset:null )
         );
         this.isQuantityAllocation = (currentAsset.Quantity != 1);
 
