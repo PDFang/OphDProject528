@@ -24,8 +24,8 @@
         <apex:pageBlock title="" id="pgblock1" mode="edit" rendered="{!Not(ISNULL(Asset))|| Not(ISNULL(Project))}">
             <apex:pageMessages />
             <apex:pageBlockButtons title="">
-                <apex:commandButton title="New" value="New" action="{!createAssetAllocation}" reRender="pgblock"/>
-                <apex:commandButton title="Save" value="Save" action="{!saveAssetAllocation}" reRender="pgblock"/>
+                <apex:commandButton title="New" value="New" action="{!createAssetAllocation}" reRender="pgblock1"/>
+                <apex:commandButton title="Save" value="Save" action="{!saveAssetAllocation}" reRender="pgblock1"/>
                 <apex:commandButton title="Cancel" value="Cancel" action="{!cancel}"/>
             </apex:pageBlockButtons>
             <apex:pageBlockSection title="Asset Allocations" columns="1">
@@ -59,8 +59,8 @@
         <apex:pageBlock title="" id="pgblock2" mode="edit" rendered="{!Not(ISNULL(Subscription)) || Not(ISNULL(Project))}">
             <apex:pageMessages />
             <apex:pageBlockButtons title="">
-                <apex:commandButton title="New" value="New" action="{!createSubscriptionAllocation}" reRender="pgblock"/>
-                <apex:commandButton title="Save" value="Save" action="{!saveSubscriptionAllocation}" reRender="pgblock"/>
+                <apex:commandButton title="New" value="New" action="{!createSubscriptionAllocation}" reRender="pgblock2"/>
+                <apex:commandButton title="Save" value="Save" action="{!saveSubscriptionAllocation}" reRender="pgblock2"/>
                 <apex:commandButton title="Cancel" value="Cancel" action="{!cancel}"/>
             </apex:pageBlockButtons>
             <apex:pageBlockSection title="Subscription Allocation" columns="1">
