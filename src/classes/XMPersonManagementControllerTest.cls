@@ -133,9 +133,9 @@ private class XMPersonManagementControllerTest {
         Test.setMock(HttpCalloutMock.class, xmPersonMock);
 
         XMPersonManagementController testController = new XMPersonManagementController(new ApexPages.StandardController(testDuplicateContact));
-        system.assertEquals( false, testController.getIsXmPerson(), 'Contact should have an xmPerson.');
+        system.assertEquals( false, testController.getIsXmPerson(), 'Contact should not have an xmPerson.');
         system.assertEquals( true, testController.getIsDuplicate(), 'Contact should have a duplicate.');
-        system.assertEquals( true, testController.isPersonMatch, 'Contact should have a matching xmPerson.');
+        system.assertEquals( false, testController.isPersonMatch, 'Contact should have a matching xmPerson.');
 
         XMPersonWrapper personWrapper = testController.person;
         system.assertNotEquals( null, personWrapper, 'xMatters should return an XM Person.');
@@ -148,6 +148,54 @@ private class XMPersonManagementControllerTest {
         test.stopTest();
 
     }
+
+    // remove associateion
+    static testMethod void testContactDissociation() {
+
+        createAccount();
+
+        xmPerson__c person = new xmPerson__c(
+                xmPersonUID__c = 'aefgh-1234-cdeft'
+        );
+        insert person;
+
+        Map<String, RecordTypeInfo> recordTypeMap = Schema.SObjectType.Contact.getRecordTypeInfosByName();
+        Contact[] contactList = new Contact[]{};
+        Contact testContact = new Contact(
+                FirstName = 'XMPersonManagementControllerTest',
+                LastName = 'Contact',
+                Email = 'contact1@incontact.com',
+                RecordTypeId = recordTypeMap.get(CUSTOMER_CONTACT).getRecordTypeId(),
+                AccountId = testAccount.Id,
+                xmPerson__c = person.Id
+        );
+        contactList.add(testContact);
+
+       insert contactList;
+
+        test.startTest();
+
+        XMRestPeopleMockHttpGenerator xmPersonMock = new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Name": "XMPersonManagementControllerTest"}]',null);
+        Test.setMock(HttpCalloutMock.class, xmPersonMock);
+
+        XMPersonManagementController testController = new XMPersonManagementController(new ApexPages.StandardController(contactList[0]));
+        system.assertEquals( true, testController.getIsXmPerson(), 'Contact should have an xmPerson.');
+        system.assertEquals( false, testController.isPersonMatch, 'Contact should not have a matching xmPerson.');
+
+        XMPersonWrapper personWrapper = testController.person;
+        system.assertNotEquals( null, personWrapper, 'xMatters should return an XM Person.');
+
+
+
+        testController.dissociateContact();
+
+        testContact = [Select xmPerson__c from Contact where Id = :testContact.Id];
+        system.assertNotEquals( person.Id, testContact.xmPerson__c, 'Contact record should not be associated with XmPerson.');
+
+        test.stopTest();
+
+    }
+
 
     static testmethod void testDeviceCrud(){
 

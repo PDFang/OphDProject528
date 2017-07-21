@@ -18,6 +18,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         }else if(idParam.left(3) == Schema.SObjectType.Project__c.getKeyPrefix()){
             getProject(idParam);
             if(currentProject != null){
+                system.debug('Initalizing allocation collections');
                 getAssetAllocations();
                 getSubscriptionAllocations();
             }
@@ -31,7 +32,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
     private void getProject(String projectId){
 
         List<Project__c> projects = [
-                Select Id, Name, RecordType.Name, Account__r.Name, ParentProject__c, ParentProject__r.Name
+                Select Id, ProjectType__c, Name, RecordType.Name, Account__r.Name, ParentProject__c, ParentProject__r.Name, Project__c.ProjectStatus__c
                 from Project__c where Id = :projectId and RecordType.Name like 'PS Project Phase%'
         ];
 
@@ -111,7 +112,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
         subscriptionAllocations = new List<AssetSubscriptionAllocationModel>();
 
-        String soql = 'Select Project__c, Subscription__c, Percent_Allocation__c, Quantity_Allocation__c '
+        String soql = 'Select Project__c, Subscription__c, Percent_Allocation__c, Quantity_Allocation__c, Hours_Allocated__c '
                 + 'from Project_Subscription_Allocation__c where ';
         if(currentProject != null){
             soql += ' Project__c = \'' + currentProject.Id + '\'';
@@ -129,6 +130,10 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
     }
 
     public void createAssetAllocation(){
+
+        if (currentAsset == null){
+            currentAsset = new Asset();
+        }
 
         AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentAsset);
         system.debug('Current Asset =>' + currentAsset);
@@ -199,21 +204,19 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
                 return false;
             }
         }
-
-
-
         return true;
 
     }
 
     public void createSubscriptionAllocation(){
 
+        system.debug('currentSubscription =>' + currentSubscription);
         AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentSubscription);
-        assetAllocations.add(newModel);
+        subscriptionAllocations.add(newModel);
 
     }
 
-    public void saveSubscriptionAllocation(){
+    public boolean saveSubscriptionAllocation(){
 
         Project_Subscription_Allocation__c[] allocations = new Project_Subscription_Allocation__c[]{};
         Project_Subscription_Allocation__c[] delAllocations = new Project_Subscription_Allocation__c[]{};
@@ -239,6 +242,8 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         if(delAllocations.size() > 0){
             delete delAllocations;
         }
+
+        return true;
 
     }
 

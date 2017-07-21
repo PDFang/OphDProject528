@@ -1,0 +1,395 @@
+<!--
+ - Created by arnab.karsarkar on 7/20/2017.
+ -->
+
+<apex:page id="CreateMaintenanceNotification" standardController="BMCServiceDesk__Change_Request__c" extensions="CreateMaintenanceNotificationController" docType="html-5.0" applyBodyTag="false"  standardStylesheets="false" sideBar="false">
+
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" lang="en">
+    <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <title>Create Maintenance Case</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <apex:slds />
+        <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+    <!-- Import the Design System style sheet -->
+
+    </head>
+        <body>
+        <div class="slds-scope container-fluid" >
+            <apex:form >
+            <nav role="navigation" aria-label="Breadcrumbs">
+                <ol class="slds-breadcrumb slds-list_horizontal slds-wrap">
+                    <li class="slds-breadcrumb__item slds-text-title_caps"><apex:commandLink action="{!goBack}" value="CR Page" style="font-size:12px;"/></li>
+                    <li class="slds-breadcrumb__item slds-text-title_caps" style="padding-left : 9px;"> Manage Maintenance Notifications </li>
+                </ol>
+            </nav>
+            <br/>
+            <div class="slds-page-header">
+                <div class="slds-media">
+                    <div class="slds-media__body">
+                        <h1 class="slds-page-header__title slds-truncate slds-align-middle" title="Manage maintenance Notifications">Manage Maintenance Notifications
+                            <button class="slds-button slds-button_brand" onClick="openCreateCase(); return false;">Create New</button>
+                        </h1>
+                        <p class="slds-text-body_small slds-line-height_reset">Change Request - {!ccr.RF_Summary__c}</p>
+                    </div>
+                </div>
+            </div>
+            <br/>
+            <apex:outputPanel id="tablePanel" >
+            <apex:outputPanel rendered="{!maintenanceCases.size > 0}">
+            <table class="slds-table slds-table_bordered slds-table_cell-buffer" role="grid">
+             <thead>
+               <tr class="slds-text-title_caps">
+                  <th scope="col">
+                     <div class="slds-truncate" title="Case Number">Case Number</div>
+                  </th>
+                   <th scope="col">
+                       <span class="slds-truncate" title="Status">Status</span>
+                   </th>
+                   <th scope="col">
+                       <span class="slds-truncate" title="Product Impacted">Product Impacted</span>
+                   </th>
+                   <th scope="col">
+                       <span class="slds-truncate" title="Platforms Impacted">Platforms Impacted</span>
+                   </th>
+                   <th scope="col">
+                       <span class="slds-truncate" title="Priority">Emergency Maintenance</span>
+                   </th>
+                   <th scope="col">
+                       <span class="slds-truncate" title="Assign To">Assigned To</span>
+                   </th>
+                   <th class="slds-is-sortable slds-is-resizable slds-text-title_caps" scope="col">
+                       <span class="slds-truncate" title="Date/Time Opened">Date Time Opened</span>
+                   </th>
+               </tr>
+             </thead>
+             <tbody>
+
+
+             <apex:repeat value="{!maintenanceCases}" var="case" >
+                 <tr class="slds-hint-parent">
+                     <td role="gridcell">
+                         <div class="slds-truncate" title="{!case.CaseNumber}"><apex:outputLink value="/{!case.Id}">{!case.CaseNumber}</apex:outputLink> </div>
+                     </td>
+                     <td role="gridcell">
+                         <div class="slds-truncate" title="{!case.Status}">{!case.Status}</div>
+                     </td>
+                     <td role="gridcell">
+                         <div class="slds-truncate" title="{!case.ProductImpacted__c}">{!case.ProductImpacted__c}</div>
+                     </td>
+                     <td role="gridcell">
+                         <div class="slds-truncate" title="{!case.PlatformsImpacted__c}">{!case.PlatformsImpacted__c}</div>
+                     </td>
+                     <td role="gridcell">
+                         <div class="slds-truncate" title="{!case.EmergencyMaintenance__c}"><apex:outputField value="{!case.EmergencyMaintenance__c}"></apex:outputField> </div>
+                     </td>
+                     <td role="gridcell">
+                         <div class="slds-truncate" title="{!case.Assigned_To__r.Name}">{!case.Assigned_To__r.Name}</div>
+                     </td>
+                     <td role="gridcell">
+                         <div class="slds-truncate" title="{!case.CreatedDate}"><apex:outputField value="{!case.CreatedDate}"></apex:outputField></div>
+                     </td>
+                 </tr>
+             </apex:repeat>
+
+
+
+              </tbody>
+            </table>
+            </apex:outputPanel>
+            </apex:outputPanel>
+
+
+              <apex:outputPanel id="noRecords">
+                <apex:outputPanel  rendered="{!maintenanceCases.size == 0}">
+                        <div class="slds-truncate" style="color: red; font-size:1.5rem;">No related maintenance record found </div>
+
+                </apex:outputPanel>
+            </apex:outputPanel>
+
+
+                <!-- Create Case Modal -->
+                <div class="modal fade" id="createMaintenance" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title slds-truncate slds-text-heading_small" id="exampleModalLabel" style="font-weight:bold">Create Maintenance Record
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true" style="font-size:33px;">&times;</span>
+                                    </button>
+                                </h5>
+                                <apex:pageMessages id="errorMessage"/>
+                            </div>
+                            <div class="modal-body" style="font-size:14px;">
+                                <apex:outputPanel id="newCasePanel">
+
+                                    <section aria-labelledby="badges" style="padding:0 0 1rem 1rem; border-bottom: 1px solid #d8dde6;">
+                                        <h2 id="badges" class="slds-text-heading--medium slds-m-vertical--medium" style="margin:0px;font-size:1.40rem;">Impacted Platforms on this CCR</h2>
+                                        <div style="margin-top:1rem;">
+                                            <apex:repeat value="{!impactedClusters}" var="cluster">
+                                                <span class="slds-badge" style="font-size:1.05rem;">{!cluster}</span>
+                                            </apex:repeat>
+                                        </div>
+                                    </section>
+                                    <div class="slds-panel__section">
+                                        <h3 class="slds-text-heading_large slds-m-bottom_large">Maintenance Case Information</h3>
+
+                                        <div class="slds-form-element">
+                                            <label class="slds-form-element__label">Products Impacted</label>
+                                            <div class="slds-form-element__control">
+                                                <apex:inputField  styleClass="slds-input" style="height:30px;" value="{!newCase.ProductImpacted__c}"/>
+                                            </div>
+                                            <label class="slds-form-element__label">Platforms Impacted</label>
+                                            <div class="slds-form-element__control">
+                                                <apex:inputField value="{!newCase.PlatformsImpacted__c}"/>
+                                            </div>
+                                            <label class="slds-form-element__label">Contact Us Options</label>
+                                            <div class="slds-form-element__control">
+                                                <apex:repeat value="{!ContactInfo}" var="contactUs" >
+                                                    <span class="slds-radio">
+                                                      <input type="radio" id="{!contactUs.value}" name="contactusCheckboxes" value="{!contactUs.value}" onclick="UpdateContactUs(this);"/>
+                                                      <label class="slds-radio__label" for="{!contactUs.value}" onclick="document.getElementById(this.htmlFor).checked=true;" >
+                                                        <span class="slds-radio--faux"></span>
+                                                        <apex:outputText styleClass="slds-form-element__label" escape="false" value="{!contactUs.label}"></apex:outputText>
+                                                      </label>
+                                                    </span>
+                                                </apex:repeat>
+                                                <apex:inputHidden value="{!contactUsString}" id="hiddenValue"/>
+                                            </div>
+                                            <label class="slds-form-element__label" for="text-input-01">Subject</label>
+                                            <div class="slds-form-element__control">
+                                                <input class="slds-input" id="text-input-01" style="border-width: 0 0 1px 0;box-shadow: none;"  value="{!newCase.Subject}"/>
+                                            </div>
+                                            <label class="slds-form-element__label" for="text-input-02">Description</label>
+                                            <div class="slds-form-element__control">
+                                                <apex:inputField styleClass="slds-textarea" id="text-input-02"  value="{!newCase.Description}"/>
+                                            </div>
+                                            <label class="slds-form-element__label" for="text-input-03" >Maintenance Start Date</label>
+                                            <div class="slds-form-element__control">
+                                                <apex:input type="datetime-local" id="text-input-03" styleClass="slds-input" style="width: 45%;border-width: 0 0 1px 0;box-shadow: none;" value="{!startTime}" />
+                                            </div>
+
+                                            <label class="slds-form-element__label" for="text-input-04" >Maintenance End Date</label>
+                                            <div class="slds-form-element__control">
+                                                <apex:input type="datetime-local" id="text-input-04" styleClass="slds-input" style="width: 45%;border-width: 0 0 1px 0;box-shadow: none;" value="{!endTime}" />
+                                            </div>
+                                            <label class="slds-form-element__label" for="text-input-04" >Emergency Maintenance</label>
+                                            <div class="slds-form-element__control">
+                                         <span class="slds-checkbox">
+                                          <apex:inputCheckbox id="emergencyCheckbox" value="{!emergency}" />
+                                          <!--<apex:inputHidden value="{!emergency}" id="hiddenemergency"/>   -->
+
+                                          <label class="slds-checkbox__label" for="{!$Component.emergencyCheckbox}">
+                                            <span class="slds-checkbox_faux"></span>
+                                          </label>
+                                        </span>
+                                            </div>
+                                            <label class="slds-form-element__label" >Customer Analysis </label>
+                                            <div class="slds-form-element__control">
+                                                <apex:inputField styleClass="slds-textarea"   value="{!newCase.CustomerAnalysis__c}"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </apex:outputPanel>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="slds-button slds-button_brand" onClick="SaveCaseRecord(); return false;">Save</button>
+                                <button type="button" class="slds-button slds-button_neutral" data-dismiss="modal">Cancel</button>
+                                <apex:actionFunction name="callSaveActionFunction" action="{!createMaintenanceRecord}" reRender="errorMessage, newCasePanel, tablePanel, noRecords" status="renderLightningSpinner" onComplete="overridePageMessages();"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <apex:actionStatus id="renderLightningSpinner" rendered="true" onstart="showSpinner();" onstop="hideSpinner();">
+                    <apex:facet name="start">
+                        <div class="slds-spinner_container slds-hide" style="z-index:100000;top: -137px;">
+                            <div class="slds-spinner--brand slds-spinner slds-spinner--medium" aria-hidden="false" role="alert" style="top:308px;left:871px;">
+                                <div class="slds-spinner__dot-a"></div>
+                                <div class="slds-spinner__dot-b"></div>
+                            </div>
+                        </div>
+                    </apex:facet>
+                </apex:actionStatus>
+
+            </apex:form>
+        </div>
+
+
+
+        </body>
+    </html>
+    <script>
+
+        function openCreateCase(){
+            //validateEmergencyCheckbox();
+            hideMessage();
+             $('#createMaintenance').modal({
+                 backdrop: 'static',
+                 keyboard: false
+            });
+            $('#createMaintenance').modal('show');
+        }
+
+        function SaveCaseRecord(){
+
+            callSaveActionFunction();
+        }
+
+        function UpdateContactUs(obj){
+            if(obj.checked){
+                $('input[id$="hiddenValue"]').val($(obj).val());
+            }
+        }
+
+        function hideMessage(){
+            $("div.customMessage").hide();
+        }
+
+        function overridePageMessages(){
+             $("div.customMessage").show();
+            var textureEffect = '';
+            //Uncomment below line for texture effect on page messages
+            //textureEffect = 'slds-theme--alert-texture';
+
+            $('.warningM3').addClass('slds-notify slds-notify--toast slds-theme--warning customMessage '+textureEffect);
+            $('.confirmM3').addClass('slds-notify slds-notify--alert slds-theme--success  customMessage '+textureEffect);
+            $('.errorM3').addClass('slds-notify slds-notify--alert slds-theme--error customMessage '+textureEffect);
+            $('.infoM3').addClass('slds-notify slds-notify--toast customMessage '+textureEffect);
+
+            $('.errorM3').removeClass('errorM3');
+            $('.confirmM3').removeClass('confirmM3');
+            $('.infoM3').removeClass('infoM3');
+            $('.warningM3').removeClass('warningM3');
+      }
+
+      function showSpinner(){
+    		console.log('test');
+            $('.slds-spinner_container').removeClass('slds-hide');
+            $('.slds-spinner_container').addClass('slds-show');
+			var winWidth = $(document).width();
+            var winHeight = $(document).height() + 100;
+            $('.slds-spinner_container').css({'width': winWidth,'height': winHeight});
+        }
+
+        function hideSpinner(){
+            $('.slds-spinner_container').removeClass('slds-show');
+            $('.slds-spinner_container').addClass('slds-hide');
+        }
+    </script>
+    <style>
+
+        h1 h2 h3{
+            font-size : 1.25rem !important;
+        }
+         body{
+            font-size : 0.75rem !important;
+        }
+        p{
+            font-size : 0.75rem !important;
+        }
+       .slds-scope .slds-text-title--caps, .slds-scope .slds-text-title_caps {
+               font-size: 1.25rem !important;
+           }
+
+        .slds-scope .slds-button{
+            font-size: 1.3rem !important;
+            padding-bottom: .05rem;
+            height: 31px;
+            margin-left: 4%;
+        }
+        .slds-scope .slds-page-header__title{
+            font-size : 1.70rem !important;
+        }
+        table{
+            font-size : 1.30rem !important;
+        }
+        .slds-scope .slds-truncate{
+            font-size: 1.30rem;
+        }
+        .slds-scope .slds-line-height--reset, .slds-scope .slds-line-height_reset {
+            line-height: 2;
+            font-size: 1.25rem !important;
+        }
+        body {
+            background-repeat:repeat-x;
+            background-position:left top;
+            font-size:1.05rem;
+            font-family:Arial,Helvetica,sans-serif;
+            background-color:#fff;
+        }
+        .slds-scope img {
+            height: 20px;
+        }
+        select[multiple], select[size]{
+            font-size : 1.25rem;
+        }
+
+      .slds-form-element .slds-form-element__label {
+            font-size: 1.40rem !important;
+            margin-top: 1.25rem;
+            font-weight: 500;
+        }
+
+   .modal-body{
+    height: 550px;
+    overflow-y: auto;
+    }
+
+    @media (min-height: 500px) {
+        .modal-body { height: 500px; }
+    }
+
+    @media (min-height: 800px) {
+        .modal-body { height: 600px; }
+    }
+
+    .slds-scope .slds-radio .slds-form-element__label {
+            font-size: 1.10rem !important;
+            font-weight: 400 !important;
+    }
+
+    .slds-scope .slds-radio .slds-radio--faux, .slds-scope .slds-radio .slds-radio_faux{
+            width: 1.4rem !important;
+            height: 1.40rem !important;
+    }
+
+    .slds-checkbox .slds-checkbox_faux, .slds-checkbox .slds-checkbox--faux{
+            width: 1.5rem !important;
+            height: 1.50rem !important;
+    }
+    .slds-scope .slds-checkbox [type=checkbox]:checked+.slds-checkbox--faux:after,
+    .slds-scope .slds-checkbox [type=checkbox]:checked+.slds-checkbox__label .slds-checkbox--faux:after,
+     .slds-scope .slds-checkbox [type=checkbox]:checked+.slds-checkbox__label .slds-checkbox_faux:after,
+      .slds-scope .slds-checkbox [type=checkbox]:checked+.slds-checkbox_faux:after,
+     .slds-scope .slds-checkbox [type=checkbox]:checked~.slds-checkbox--faux:after,
+     .slds-scope .slds-checkbox [type=checkbox]:checked~.slds-checkbox_faux:after{
+             height: 0.5rem;
+            width: .85rem;
+     }
+         .msgIcon {
+        display: none!important
+        }
+        .customMessage * {
+        color: #fff!important
+        }
+        .customMessage {
+        margin: 5px 0!important;
+        max-width: 1280px;
+        opacity: 1!important;
+        width: 100%;
+        font-size: 12px;
+        border: 0px;
+        padding-left: 10px;
+        }
+        .message {
+        opacity: .1
+        }
+
+    </style>
+
+</apex:page>
