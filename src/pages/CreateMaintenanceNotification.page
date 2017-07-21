@@ -83,7 +83,7 @@
                          <div class="slds-truncate" title="{!case.ProductImpacted__c}">{!case.ProductImpacted__c}</div>
                      </td>
                      <td role="gridcell">
-                         <div class="slds-truncate" title="{!case.PlatformsImpacted__c}">{!case.PlatformsImpacted__c}</div>
+                         <div class="slds-truncate" title="{!case.PlatformsImpacted__c}" style="white-space: pre-wrap;">{!case.PlatformsImpacted__c}</div>
                      </td>
                      <td role="gridcell">
                          <div class="slds-truncate" title="{!case.EmergencyMaintenance__c}"><apex:outputField value="{!case.EmergencyMaintenance__c}"></apex:outputField> </div>
