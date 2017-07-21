@@ -18,6 +18,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         }else if(idParam.left(3) == Schema.SObjectType.Project__c.getKeyPrefix()){
             getProject(idParam);
             if(currentProject != null){
+                system.debug('Initalizing allocation collections');
                 getAssetAllocations();
                 getSubscriptionAllocations();
             }
@@ -130,6 +131,10 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     public void createAssetAllocation(){
 
+        if (currentAsset == null){
+            currentAsset = new Asset();
+        }
+
         AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentAsset);
         system.debug('Current Asset =>' + currentAsset);
         assetAllocations.add(newModel);
@@ -199,9 +204,6 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
                 return false;
             }
         }
-
-
-
         return true;
 
     }
@@ -214,7 +216,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
-    public void saveSubscriptionAllocation(){
+    public boolean saveSubscriptionAllocation(){
 
         Project_Subscription_Allocation__c[] allocations = new Project_Subscription_Allocation__c[]{};
         Project_Subscription_Allocation__c[] delAllocations = new Project_Subscription_Allocation__c[]{};
@@ -240,6 +242,8 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         if(delAllocations.size() > 0){
             delete delAllocations;
         }
+
+        return true;
 
     }
 
