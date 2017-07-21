@@ -208,8 +208,9 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     public void createSubscriptionAllocation(){
 
+        system.debug('currentSubscription =>' + currentSubscription);
         AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentSubscription);
-        assetAllocations.add(newModel);
+        subscriptionAllocations.add(newModel);
 
     }
 
