@@ -92,11 +92,14 @@ public with sharing class AssetSubscriptionAllocationController {
     public pagereference saveSubscriptionAllocation(){
 
         try{
-            businessLayer.saveSubscriptionAllocation();
-            businessLayer = new AssetSubscriptionAllocationBusinessLayer(currentId);
-        } catch (Exception ex){
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while saving subscription allocations. ' + ex.getMessage()));
-            system.debug('saveSubscriptionAllocation(): Exception - ' + ex);
+                Boolean success =  businessLayer.saveSubscriptionAllocation();
+                if (success){
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Saved Successfully.'));
+                    businessLayer = new AssetSubscriptionAllocationBusinessLayer(currentId);
+                }
+            } catch (Exception ex){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while saving subscription allocations. ' + ex.getMessage()));
+                system.debug('saveSubscriptionAllocation(): Exception - ' + ex);
         }
         return null;
 
