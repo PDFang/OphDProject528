@@ -33,7 +33,7 @@
                 <div class="slds-media">
                     <div class="slds-media__body">
                         <h1 class="slds-page-header__title slds-truncate slds-align-middle" title="Manage maintenance Notifications">Manage Maintenance Notifications
-                            <button class="slds-button slds-button_brand" onClick="openCreateCase(); return false;">Create New</button>
+                            <button class="slds-button slds-button_brand" onClick="openCreateCase(); return false;" title="Create a new Maintenance Case Record">Create New</button>
                         </h1>
                         <p class="slds-text-body_small slds-line-height_reset">Change Request - {!ccr.RF_Summary__c}</p>
                     </div>
@@ -83,7 +83,7 @@
                          <div class="slds-truncate" title="{!case.ProductImpacted__c}">{!case.ProductImpacted__c}</div>
                      </td>
                      <td role="gridcell">
-                         <div class="slds-truncate" title="{!case.PlatformsImpacted__c}">{!case.PlatformsImpacted__c}</div>
+                         <div class="slds-truncate" title="{!case.PlatformsImpacted__c}" style="white-space: pre-wrap;">{!case.PlatformsImpacted__c}</div>
                      </td>
                      <td role="gridcell">
                          <div class="slds-truncate" title="{!case.EmergencyMaintenance__c}"><apex:outputField value="{!case.EmergencyMaintenance__c}"></apex:outputField> </div>
@@ -364,20 +364,20 @@
     }
     .slds-scope .slds-checkbox [type=checkbox]:checked+.slds-checkbox--faux:after,
     .slds-scope .slds-checkbox [type=checkbox]:checked+.slds-checkbox__label .slds-checkbox--faux:after,
-     .slds-scope .slds-checkbox [type=checkbox]:checked+.slds-checkbox__label .slds-checkbox_faux:after,
-      .slds-scope .slds-checkbox [type=checkbox]:checked+.slds-checkbox_faux:after,
-     .slds-scope .slds-checkbox [type=checkbox]:checked~.slds-checkbox--faux:after,
-     .slds-scope .slds-checkbox [type=checkbox]:checked~.slds-checkbox_faux:after{
+    .slds-scope .slds-checkbox [type=checkbox]:checked+.slds-checkbox__label .slds-checkbox_faux:after,
+    .slds-scope .slds-checkbox [type=checkbox]:checked+.slds-checkbox_faux:after,
+    .slds-scope .slds-checkbox [type=checkbox]:checked~.slds-checkbox--faux:after,
+    .slds-scope .slds-checkbox [type=checkbox]:checked~.slds-checkbox_faux:after{
              height: 0.5rem;
             width: .85rem;
      }
-         .msgIcon {
-        display: none!important
-        }
-        .customMessage * {
+   .msgIcon {
+         display: none!important
+    }
+    .customMessage * {
         color: #fff!important
-        }
-        .customMessage {
+    }
+    .customMessage {
         margin: 5px 0!important;
         max-width: 1280px;
         opacity: 1!important;
@@ -385,10 +385,14 @@
         font-size: 12px;
         border: 0px;
         padding-left: 10px;
-        }
-        .message {
+    }
+    .message {
         opacity: .1
-        }
+    }
+
+    .zen .zen-tabMenu a{
+        font-size: 1rem!important;
+    }
 
     </style>
 

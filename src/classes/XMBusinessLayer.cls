@@ -211,7 +211,7 @@ public class XMBusinessLayer  {
                                                 WHERE Account__c in :acc  and Account__r.CG_Disconnect_Date__c = NULL
                                                 AND(GoLiveDate__c <= TODAY
                                                 OR(EstimatedGoLiveDate__c <= NEXT_N_DAYS : 14
-                                                AND Status__c != 'Canceled'))])
+                                                AND Status__c not in('Canceled', 'Deactivated')))])
          {
              system.debug ( 'product -->' + product);
              ProductEventMap__c productMap = nodeMap.get(product.Product__c);
