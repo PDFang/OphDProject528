@@ -87,7 +87,7 @@ public class xMGroupRequestHelper extends TriggerHandler {
             if(contactIds.size() > 0)
                 queryString += ' where Id in :  contactIds';
             else
-                queryString += ' where xmPerson__c != null ';
+                    queryString += ' where xmPerson__c != null ';
 
             queryString += ' ),(select Id from Implemented_Products__r' ;
             if (implmentedProductIds.size() > 0){
@@ -108,16 +108,7 @@ public class xMGroupRequestHelper extends TriggerHandler {
                     for(Contact cont: act.Contacts){
                         if(!personIdSet.contains(cont.xmPerson__c)){
                             xmPerson__c xmPerson ;
-                            if(cont.xmPerson__c == null){
-                                xmPerson = new xmPerson__c(
-                                        xmPersonUID__c =  cont.XmattersUid__c
-                                );
-                            }
-                            else {
-                                xmPerson = new xmPerson__c(
-                                        Id =  cont.xmPerson__c
-                                );
-                            }
+
 
                             xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
                                     Account__c = act.Id,
@@ -128,6 +119,16 @@ public class xMGroupRequestHelper extends TriggerHandler {
                                     Action__c = 'Remove',
                                     xmGroupChangeRequestHeader__c = groupCRAccount.get(act.Id)
                             );
+
+                            if(cont.xmPerson__c == null){
+                                xmPerson = new xmPerson__c(
+                                        xmPersonUID__c =  cont.XmattersUid__c
+                                );
+                                grpChangeRequest.NotificationProfile__r = xmPerson;
+                            }
+                            else {
+                                grpChangeRequest.NotificationProfile__c = cont.xmPerson__c;
+                            }
                             System.debug('grpChangeRequest : ' + grpChangeRequest);
                             groupChangeRequestList.add(grpChangeRequest);
                             personIdSet.add(cont.xmPerson__c);

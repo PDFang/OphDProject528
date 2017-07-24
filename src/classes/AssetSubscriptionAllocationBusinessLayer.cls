@@ -21,7 +21,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
             'Name',
             'Quantity__c',
             'Budgeted_Hours__c',
-            'Parent_Project__c'
+            'ParentProject__c'
     };
 
     Set<String> projectFields = new Set<String>{
@@ -36,11 +36,28 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
     public AssetSubscriptionAllocationBusinessLayer(String idParam){
 
         if(idParam.left(3) == Schema.SObjectType.Asset.getKeyPrefix()){
-            getAsset(idParam);
+            currentAsset = getAsset(idParam);
+            system.debug('getAsset(): currentAsset - ' + currentAsset);
+
+            if(currentAsset == null){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'No asset record found.'));
+                return;
+            }
+
             getAssetAllocations();
+
         }else if(idParam.left(3) == Schema.SObjectType.SubscriptionReplica__c.getKeyPrefix()){
-            getSubscription(idParam);
+
+            currentSubscription = getSubscription(idParam);
+            system.debug('getAsset(): currentSubscription - ' + currentSubscription);
+
+            if(currentSubscription == null){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'No subscription record found.'));
+                return;
+            }
+
             getSubscriptionAllocations();
+
         }else if(idParam.left(3) == Schema.SObjectType.Project__c.getKeyPrefix()){
             getProject(idParam);
             if(currentProject != null){
@@ -82,7 +99,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
-    private void getAsset(String assetId){
+    private Asset getAsset(String assetId){
 
 
         List<Schema.FieldSetMember> fsMembers = Schema.SobjectType.Asset.fieldSets.PS_Asset_Allocation.getFields();
@@ -99,15 +116,13 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         system.debug('getAsset(): soql - ' + soql);
 
         List<Asset> assets = Database.query(soql);
+        system.debug('getAsset(): assets - ' + assets);
 
         if(assets.isEmpty()){
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'No asset record found.'));
-            return;
+            return null;
         }
 
-        currentAsset = assets[0];
-
-        system.debug('getAsset(): currentAsset - ' + currentAsset);
+        return assets[0];
 
     }
 
@@ -126,7 +141,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         }
 
         for(Project_Asset_Allocation__c allocation : Database.query(soql)){
-            AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(allocation);
+            AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(allocation, assetAllocations.size());
             assetAllocations.add(newModel);
         }
 
@@ -134,7 +149,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
-    private void getSubscription(String subscriptionId){
+    private SubscriptionReplica__c getSubscription(String subscriptionId){
 
         List<Schema.FieldSetMember> fsMembers = Schema.SobjectType.SubscriptionReplica__c.fieldSets.PS_Subscription_Allocation.getFields();
         for(Schema.FieldSetMember member : fsMembers){
@@ -151,14 +166,13 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
         List<SubscriptionReplica__c> subscriptions = Database.query(soql);
 
+        system.debug('getSubscription(): subscriptions - ' + subscriptions);
+
         if(subscriptions.isEmpty()){
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'No Subscription record found.'));
-            return;
+            return null;
         }
 
-        currentSubscription = subscriptions[0];
-
-        system.debug('getSubscription(): currentSubscription - ' + currentSubscription);
+        return subscriptions[0];
 
     }
 
@@ -175,11 +189,56 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         }
 
         for(Project_Subscription_Allocation__c allocation : Database.query(soql)){
-            AssetSubscriptionAllocationModel newModal = new AssetSubscriptionAllocationModel(allocation);
-            subscriptionAllocations.add(newModal);
+            AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(allocation, subscriptionAllocations.size());
+            subscriptionAllocations.add(newModel);
         }
 
         system.debug('getSubscriptionAllocations(): subscriptionAllocations - ' + subscriptionAllocations);
+
+    }
+
+    public void changeAsset(Integer rowid){
+
+        for(AssetSubscriptionAllocationModel model: assetAllocations){
+            if(model.rowid == rowid){
+                model.isError = false;
+                model.message = null;
+
+                system.debug('changeAsset(): currentAsset - ' + model.assetAllocation.Asset__c);
+
+                Asset selAsset = getAsset(model.assetAllocation.Asset__c);
+                if(selAsset != null){
+                    model.isQuantityAllocation = (selAsset.Quantity != 1);
+                    model.assetAllocation.Asset__r = selAsset;
+                }else{
+                    model.isError = true;
+                    model.message = 'Asset not found';
+                }
+            }
+        }
+
+    }
+
+    public void changeSubscription(Integer rowid){
+
+        for(AssetSubscriptionAllocationModel model: subscriptionAllocations){
+            if(model.rowid == rowid){
+                model.isError = false;
+                model.message = null;
+
+                system.debug('changeSubscription(): subscription id - ' + model.subscriptionAllocation);
+
+                SubscriptionReplica__c selSubscription = getSubscription(model.subscriptionAllocation.Subscription__c);
+
+                if(selSubscription != null){
+                    model.isQuantityAllocation = (selSubscription.Quantity__c != 1);
+                    model.subscriptionAllocation.Subscription__r = selSubscription;
+                }else{
+                    model.isError = true;
+                    model.message = 'Subscription not found';
+                }
+            }
+        }
 
     }
 
@@ -188,7 +247,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         system.debug('createAssetAllocation(): currentAsset - ' + currentAsset);
         system.debug('createAssetAllocation(): currentProject - ' + currentProject);
 
-        AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentAsset, currentProject);
+        AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentAsset, currentProject, assetAllocations.size());
         assetAllocations.add(newModel);
 
     }
@@ -265,7 +324,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         system.debug('createSubscriptionAllocation(): currentSubscription - ' + currentSubscription);
         system.debug('createSubscriptionAllocation(): currentProject - ' + currentProject);
 
-        AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentSubscription, currentProject);
+        AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentSubscription, currentProject, subscriptionAllocations.size());
         subscriptionAllocations.add(newModel);
 
     }

@@ -24,7 +24,7 @@
             <apex:form >
             <nav role="navigation" aria-label="Breadcrumbs">
                 <ol class="slds-breadcrumb slds-list_horizontal slds-wrap">
-                    <li class="slds-breadcrumb__item slds-text-title_caps"><apex:commandLink action="{!goBack}" value="CR Page" style="font-size:12px;"/></li>
+                    <li class="slds-breadcrumb__item slds-text-title_caps"><apex:commandLink action="{!goBack}" value="{!ccr.Name}" style="font-size:12px;"/></li>
                     <li class="slds-breadcrumb__item slds-text-title_caps" style="padding-left : 9px;"> Manage Maintenance Notifications </li>
                 </ol>
             </nav>
@@ -130,7 +130,7 @@
 
                                     <section aria-labelledby="badges" style="padding:0 0 1rem 1rem; border-bottom: 1px solid #d8dde6;">
                                         <h2 id="badges" class="slds-text-heading--medium slds-m-vertical--medium" style="margin:0px;font-size:1.40rem;">Impacted Platforms on this CCR</h2>
-                                        <div style="margin-top:1rem;">
+                                        <div style="margin-top:1rem;" class="badgeList">
                                             <apex:repeat value="{!impactedClusters}" var="cluster">
                                                 <span class="slds-badge" style="font-size:1.05rem;">{!cluster}</span>
                                             </apex:repeat>
@@ -398,6 +398,10 @@
 
     .zen .zen-tabMenu a{
         font-size: 1rem!important;
+    }
+
+    .badgeList > :first-child{
+            margin-left: 5px;
     }
 
     </style>
