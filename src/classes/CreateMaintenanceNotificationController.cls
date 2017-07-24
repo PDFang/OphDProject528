@@ -44,11 +44,12 @@ public class CreateMaintenanceNotificationController {
 
     private void loadCaseDetails(){
         newCase = new Case();
+        contactUsString = '';
         Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
         Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
         string maintenanceRecordType = rtMapByName.get('Maintenance Notification').getRecordTypeId();
 
-        ccr = [select RF_Summary__c, RF_Cluster_s__c, BMCServiceDesk__Change_Description__c, RF_Maint_Window_Start_Time__c, RF_Maint_Window_End_Time__c,
+        ccr = [select RF_Summary__c,Name, RF_Cluster_s__c, BMCServiceDesk__Change_Description__c, RF_Maint_Window_Start_Time__c, RF_Maint_Window_End_Time__c,
                 BMCServiceDesk__Change_Type__c, RF_Customer_Impact_Analysis__c
         from  BMCServiceDesk__Change_Request__c where Id =:ccr.id ];
 

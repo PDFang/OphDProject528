@@ -24,7 +24,7 @@
             <apex:form >
             <nav role="navigation" aria-label="Breadcrumbs">
                 <ol class="slds-breadcrumb slds-list_horizontal slds-wrap">
-                    <li class="slds-breadcrumb__item slds-text-title_caps"><apex:commandLink action="{!goBack}" value="CR Page" style="font-size:12px;"/></li>
+                    <li class="slds-breadcrumb__item slds-text-title_caps"><apex:commandLink action="{!goBack}" value="{!ccr.Name}" style="font-size:12px;"/></li>
                     <li class="slds-breadcrumb__item slds-text-title_caps" style="padding-left : 9px;"> Manage Maintenance Notifications </li>
                 </ol>
             </nav>
