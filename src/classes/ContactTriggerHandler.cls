@@ -40,15 +40,17 @@ public class ContactTriggerHandler extends TriggerHandler{
                 if( (newContact.Deactivated__c && oldContact.Deactivated__c == false && oldContact.xmPerson__c != null)
                         || (newContact.xmPerson__c != oldContact.xmPerson__c && oldContact.xmPerson__c != null))
                 {
-                    xmPersonIds.add(oldContact.xmPerson__c);
-                    contactIds.add(newContact.Id);
+                    //if the account is being deactivated we don't want to add more removal requests for the contacts
+                    if (newContact.Account.CG_Disconnect_Date__c == null ){
+                        xmPersonIds.add(oldContact.xmPerson__c);
+                        contactIds.add(newContact.Id);
 
-                    xmChangeRequestHeaderData newCR = new xmChangeRequestHeaderData();
-                    newCR.accountId = newContact.AccountId;
-                    newCR.sObjectId = newContact.Id;
-                    newCR.sObjectType = 'Contact';
-
-                    requestList.add(newCR);
+                        xmChangeRequestHeaderData newCR = new xmChangeRequestHeaderData();
+                        newCR.accountId = newContact.AccountId;
+                        newCR.sObjectId = newContact.Id;
+                        newCR.sObjectType = 'Contact';
+                        requestList.add(newCR);
+                    }
                 }
             }
 

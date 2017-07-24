@@ -7,6 +7,32 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
     public List<AssetSubscriptionAllocationModel> assetAllocations{get; set;}
     public List<AssetSubscriptionAllocationModel> subscriptionAllocations{get; set;}
 
+    Set<String> assetFields = new Set<String>{
+            'Id',
+            'Name',
+            'RecordType.Name',
+            'Quantity',
+            'Budgeted_Hours__c',
+            'Parent_Project__c'
+    };
+
+    Set<String> subscriptionFields = new Set<String>{
+            'Id',
+            'Name',
+            'Quantity__c',
+            'Budgeted_Hours__c',
+            'Parent_Project__c'
+    };
+
+    Set<String> projectFields = new Set<String>{
+            'Id',
+            'Name',
+            'RecordType.Name',
+            'ParentProject__c',
+            'ParentProject__r.Name'
+    };
+
+
     public AssetSubscriptionAllocationBusinessLayer(String idParam){
 
         if(idParam.left(3) == Schema.SObjectType.Asset.getKeyPrefix()){
@@ -31,16 +57,25 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     private void getProject(String projectId){
 
-        List<Project__c> projects = [
-                Select Id, ProjectType__c, Name, RecordType.Name, Account__r.Name, ParentProject__c, ParentProject__r.Name, Project__c.ProjectStatus__c
-                from Project__c where Id = :projectId and RecordType.Name like 'PS Project Phase%'
-        ];
+        List<Schema.FieldSetMember> fsMembers = Schema.SobjectType.Project__c.fieldSets.PS_Project_Allocation.getFields();
+        for(Schema.FieldSetMember member : fsMembers){
+            projectFields.add(member.getFieldPath());
+        }
+
+        List<String> fieldList = new List<String>(projectFields);
+
+        String columns = String.join(fieldList, ',');
+        system.debug('getProject(): columns - ' + columns);
+
+        String soql = 'Select ' + columns + ' From Project__c where Id = \'' + projectId + '\' and RecordType.Name like \'PS Project Phase%\'';
+        system.debug('getProject(): soql - ' + soql);
+
+        List<Project__c> projects = Database.query(soql);
 
         if(projects.isEmpty()){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'No project record found.'));
             return;
         }
-
         currentProject = projects[0];
 
         system.debug('getProject(): currentProject - ' + currentProject);
@@ -49,11 +84,21 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     private void getAsset(String assetId){
 
-        List<Asset> assets = [
-                Select Id, Name, Description, RecordType.Name, Account.Name, Product2.Name, Quantity, Budgeted_Hours__c, Parent_Project__c,
-                        Parent_Project__r.Name, Type__c
-                from Asset where Id = :assetId
-        ];
+
+        List<Schema.FieldSetMember> fsMembers = Schema.SobjectType.Asset.fieldSets.PS_Asset_Allocation.getFields();
+        for(Schema.FieldSetMember member : fsMembers){
+            assetFields.add(member.getFieldPath());
+        }
+
+        List<String> fieldList = new List<String>(assetFields);
+
+        String columns = String.join(fieldList, ',');
+        system.debug('getAsset(): columns - ' + columns);
+
+        String soql = 'Select ' + columns + ' From Asset where Id = \'' + assetId + '\'';
+        system.debug('getAsset(): soql - ' + soql);
+
+        List<Asset> assets = Database.query(soql);
 
         if(assets.isEmpty()){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'No asset record found.'));
@@ -91,11 +136,20 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     private void getSubscription(String subscriptionId){
 
-        List<SubscriptionReplica__c> subscriptions = [
-                Select Id, Name, Account__c, Product__c, Quantity__c, ParentProject__c,
-                        ParentProject__r.Name
-                from SubscriptionReplica__c where Id = :subscriptionId
-        ];
+        List<Schema.FieldSetMember> fsMembers = Schema.SobjectType.SubscriptionReplica__c.fieldSets.PS_Subscription_Allocation.getFields();
+        for(Schema.FieldSetMember member : fsMembers){
+            subscriptionFields.add(member.getFieldPath());
+        }
+
+        List<String> fieldList = new List<String>(subscriptionFields);
+
+        String columns = String.join(fieldList, ',');
+        system.debug('getSubscription(): columns - ' + columns);
+
+        String soql = 'Select ' + columns + ' From SubscriptionReplica__c where Id = \'' + subscriptionId + '\'';
+        system.debug('getSubscription(): soql - ' + soql);
+
+        List<SubscriptionReplica__c> subscriptions = Database.query(soql);
 
         if(subscriptions.isEmpty()){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'No Subscription record found.'));
@@ -131,12 +185,10 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     public void createAssetAllocation(){
 
-        if (currentAsset == null){
-            currentAsset = new Asset();
-        }
+        system.debug('createAssetAllocation(): currentAsset - ' + currentAsset);
+        system.debug('createAssetAllocation(): currentProject - ' + currentProject);
 
-        AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentAsset);
-        system.debug('Current Asset =>' + currentAsset);
+        AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentAsset, currentProject);
         assetAllocations.add(newModel);
 
     }
@@ -210,8 +262,10 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     public void createSubscriptionAllocation(){
 
-        system.debug('currentSubscription =>' + currentSubscription);
-        AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentSubscription);
+        system.debug('createSubscriptionAllocation(): currentSubscription - ' + currentSubscription);
+        system.debug('createSubscriptionAllocation(): currentProject - ' + currentProject);
+
+        AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentSubscription, currentProject);
         subscriptionAllocations.add(newModel);
 
     }

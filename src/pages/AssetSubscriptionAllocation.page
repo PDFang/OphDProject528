@@ -1,32 +1,51 @@
-<apex:page id="AssetSubscriptionAllocation" controller="AssetSubscriptionAllocationController">
-    <apex:pageBlock title="Project" rendered="{!Not(ISNULL(Project))}">
-        <apex:pageBlockSection columns="1" >
-            <apex:repeat value="{!$ObjectType.Project__c.FieldSets.PS_Project_Allocation}" var="f">
-                <apex:outputfield value="{!Project[f]}" />
-            </apex:repeat>
-        </apex:pageBlockSection>
-    </apex:pageBlock>
-    <apex:pageBlock title="Asset" rendered="{!Not(ISNULL(asset))}">
-        <apex:pageBlockSection columns="1" >
-            <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation}" var="f">
-                <apex:outputfield value="{!Asset[f]}" />
-            </apex:repeat>
-        </apex:pageBlockSection>
-    </apex:pageBlock>
-    <apex:pageBlock title="Subscription" rendered="{!Not(ISNULL(Subscription))}">
-        <apex:pageBlockSection columns="1" >
-            <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation}" var="f">
-                <apex:outputfield value="{!Subscription[f]}" />
-            </apex:repeat>
-        </apex:pageBlockSection>
-    </apex:pageBlock>
-    <apex:form >
-        <apex:pageBlock title="" id="pgblock" mode="edit" rendered="{!Not(ISNULL(Asset))|| Not(ISNULL(Project))}">
-            <apex:pageMessages/>
-            <apex:pageBlockButtons title="">
-                <apex:commandButton title="New" value="New" action="{!createAssetAllocation}" reRender="pgblock"/>
-                <apex:commandButton title="Save" value="Save" action="{!saveAssetAllocation}" reRender="pgblock"/>
-                <apex:commandButton title="Cancel" value="Cancel" action="{!cancel}"/>
+<apex:page id="AssetSubscriptionAllocation" controller="AssetSubscriptionAllocationController" title="Asset/Subscription Allocation" tabStyle="Project__c">
+
+    <apex:sectionHeader subtitle="{!Asset.Name}" title="Asset Allocation" rendered="{!NOT(ISNULL(Asset))}"/>
+
+    <apex:sectionHeader subtitle="{!Subscription.Name}" title="Subscription Allocation" rendered="{!NOT(ISNULL(Subscription))}"/>
+
+    <apex:sectionHeader subtitle="{!Project.Name}" title="Project Allocation" rendered="{!NOT(ISNULL(Project))}"/>
+
+    <apex:form id="myform">
+
+        <apex:pageBlock title="Project Detail" rendered="{!Not(ISNULL(Project))}">
+            <apex:pageBlockButtons title="" location="bottom">
+                <apex:commandButton title="Back" value="Back" action="{!cancel}"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="1" >
+                <apex:repeat value="{!$ObjectType.Project__c.FieldSets.PS_Project_Allocation}" var="f">
+                    <apex:outputfield value="{!Project[f]}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:pageBlock title="Asset Detail" rendered="{!Not(ISNULL(asset))}">
+            <apex:pageBlockButtons title="" location="bottom">
+                <apex:commandButton title="Back" value="Back" action="{!cancel}"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="1" >
+                <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation}" var="f">
+                    <apex:outputfield value="{!Asset[f]}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:pageBlock title="Subscription Detail" rendered="{!Not(ISNULL(Subscription))}">
+            <apex:pageBlockButtons title="" location="bottom">
+                <apex:commandButton title="Back" value="Back" action="{!cancel}"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="1" >
+                <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation}" var="f">
+                    <apex:outputfield value="{!Subscription[f]}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:pageBlock title="" id="pgblock1" mode="edit" rendered="{!Not(ISNULL(Asset))|| Not(ISNULL(Project))}">
+            <apex:pageMessages />
+            <apex:pageBlockButtons title="" location="bottom">
+                <apex:commandButton title="New" value="New" action="{!createAssetAllocation}" reRender="pgblock1"/>
+                <apex:commandButton title="Save" value="Save" action="{!saveAssetAllocation}" reRender="pgblock1"/>
             </apex:pageBlockButtons>
             <apex:pageBlockSection title="Asset Allocations" columns="1">
                 <apex:pageBlockTable value="{!assetAllocations}" var="entry" id="assettbl">
@@ -35,12 +54,12 @@
                         <apex:outputText value="Error" rendered="{!entry.isError}" title="{!entry.message}"/>
                     </apex:column>
                     <apex:column headervalue="Asset">
-                        <apex:inputField value="{!entry.assetAllocation.Asset__c}" required="false" rendered="{!ISNULL(asset)}"/>
-                        <apex:outputField value="{!entry.assetAllocation.Asset__c}" rendered="{!NOT(ISNULL(asset))}"/>
+                        <apex:inputField value="{!entry.assetAllocation.Asset__c}" required="false" rendered="{!ISNULL(asset) ||  Not(ISNULL(Project))}"/>
+                        <apex:outputField value="{!entry.assetAllocation.Asset__c}" rendered="{!NOT(ISNULL(asset) )}"/>
                     </apex:column>
                     <apex:column headervalue="Phase Project">
-                        <apex:inputField value="{!entry.assetAllocation.Project__c}" required="false" rendered="{!ISBLANK(entry.assetAllocation.Id)}"/>
-                        <apex:outputField value="{!entry.assetAllocation.Project__c}" rendered="{!NOT(ISBLANK(entry.assetAllocation.Id))}"/>
+                        <apex:inputField value="{!entry.assetAllocation.Project__c}" required="false" rendered="{!AND(ISBLANK(entry.assetAllocation.Id), ISNULL(project))}"/>
+                        <apex:outputField value="{!entry.assetAllocation.Project__c}" rendered="{!OR(NOT(ISBLANK(entry.assetAllocation.Id)), NOT(ISNULL(project)))}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Quantity">
                         <apex:inputField value="{!entry.assetAllocation.Quantity_Allocation__c}" rendered="{!entry.isQuantityAllocation}"/>
@@ -55,14 +74,12 @@
 
             </apex:pageBlockSection>
         </apex:pageBlock>
-    </apex:form>
-    <apex:form >
-        <apex:pageBlock title="" id="pgblock" mode="edit" rendered="{!Not(ISNULL(Subscription)) || Not(ISNULL(Project))}">
-            <apex:pageMessages/>
-            <apex:pageBlockButtons title="">
-                <apex:commandButton title="New" value="New" action="{!createSubscriptionAllocation}" reRender="pgblock"/>
-                <apex:commandButton title="Save" value="Save" action="{!saveSubscriptionAllocation}" reRender="pgblock"/>
-                <apex:commandButton title="Cancel" value="Cancel" action="{!cancel}"/>
+
+        <apex:pageBlock title="" id="pgblock2" mode="edit" rendered="{!Not(ISNULL(Subscription)) || Not(ISNULL(Project))}">
+            <apex:pageMessages />
+            <apex:pageBlockButtons title="" location="bottom">
+                <apex:commandButton title="New" value="New" action="{!createSubscriptionAllocation}" reRender="pgblock2"/>
+                <apex:commandButton title="Save" value="Save" action="{!saveSubscriptionAllocation}" reRender="pgblock2"/>
             </apex:pageBlockButtons>
             <apex:pageBlockSection title="Subscription Allocation" columns="1">
                 <apex:pageBlockTable value="{!subscriptionAllocations}" var="entry" id="assettbl">
@@ -71,12 +88,12 @@
                         <apex:outputText value="Error" rendered="{!entry.isError}" title="{!entry.message}"/>
                     </apex:column>
                     <apex:column headervalue="Subscription">
-                        <apex:inputField value="{!entry.subscriptionAllocation.Subscription__c}" required="false" rendered="{!ISNULL(Subscription)}"/>
+                        <apex:inputField value="{!entry.subscriptionAllocation.Subscription__c}" required="false" rendered="{!ISNULL(Subscription) ||  Not(ISNULL(Project))}"/>
                         <apex:outputField value="{!entry.subscriptionAllocation.Subscription__c}" rendered="{!NOT(ISNULL(Subscription))}"/>
                     </apex:column>
                     <apex:column headervalue="Phase Project">
-                        <apex:inputField value="{!entry.subscriptionAllocation.Project__c}" required="false" rendered="{!ISBLANK(entry.subscriptionAllocation.Id)}"/>
-                        <apex:outputField value="{!entry.subscriptionAllocation.Project__c}" rendered="{!NOT(ISBLANK(entry.subscriptionAllocation.Id))}"/>
+                        <apex:inputField value="{!entry.subscriptionAllocation.Project__c}" required="false" rendered="{!AND(ISBLANK(entry.subscriptionAllocation.Id), ISNULL(project))}"/>
+                        <apex:outputField value="{!entry.subscriptionAllocation.Project__c}" rendered="{!OR(NOT(ISBLANK(entry.subscriptionAllocation.Id)), NOT(ISNULL(project)))}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Quantity">
                         <apex:inputField value="{!entry.subscriptionAllocation.Quantity_Allocation__c}" rendered="{!entry.isQuantityAllocation}"/>
@@ -95,6 +112,3 @@
 
 
 </apex:page>
-
-
-
