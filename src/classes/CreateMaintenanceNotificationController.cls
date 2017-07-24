@@ -44,6 +44,7 @@ public class CreateMaintenanceNotificationController {
 
     private void loadCaseDetails(){
         newCase = new Case();
+        contactUsString = '';
         Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
         Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
         string maintenanceRecordType = rtMapByName.get('Maintenance Notification').getRecordTypeId();
