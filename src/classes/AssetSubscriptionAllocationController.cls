@@ -105,15 +105,41 @@ public with sharing class AssetSubscriptionAllocationController {
 
     }
 
+    public pagereference changeAsset(){
+
+        try{
+            String rowId = ApexPages.currentPage().getParameters().get('newAssetRowId');
+            system.debug('changeAsset(): rowId - ' + rowId);
+
+            businessLayer.changeAsset(Integer.valueOf(rowid));
+
+        } catch (Exception ex){
+
+        }
+        return null;
+
+    }
+
+    public pagereference changeSubscription(){
+
+        try{
+            String rowId = ApexPages.currentPage().getParameters().get('newSubscriptionRowId');
+            system.debug('changeSubscription(): rowId - ' + rowId);
+
+            businessLayer.changeSubscription(Integer.valueOf(rowid));
+
+        } catch (Exception ex){
+
+        }
+        return null;
+
+    }
+
     public pagereference cancel(){
 
         return new PageReference('/'+currentId).setRedirect(true);
     }
 
-    //need a method to return the availble phase projects
-    //need a method to return current allocations for Asset
-    //need a method to return current allocations for subscription
-    //need a method to save a list of  Asset allocations
-    //need a method to save a list of  Subscription Allocations
+
 
 }
