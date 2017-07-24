@@ -47,12 +47,7 @@ public class ContactTriggerHandler extends TriggerHandler{
                     newCR.accountId = newContact.AccountId;
                     newCR.sObjectId = newContact.Id;
                     newCR.sObjectType = 'Contact';
-                    /*xmGroupChangeRequest__c newCR = new xmGroupChangeRequest__c(
-                            NotificationProfile__c = oldContact.xmPerson__c,
-                            Contact__c = newContact.Id,
-                            Account__c = newContact.AccountId,
-                            Action__c = 'Remove'
-                    );*/
+
                     requestList.add(newCR);
                 }
             }
@@ -73,11 +68,7 @@ public class ContactTriggerHandler extends TriggerHandler{
                     newCR.accountId = oldContact.AccountId;
                     newCR.sObjectId = oldContact.Id;
                     newCR.sObjectType = 'Contact';
-                    /*xmGroupChangeRequest__c newCR = new xmGroupChangeRequest__c(
-                            NotificationProfile__c = oldContact.xmPerson__c,
-                            Account__c = oldContact.AccountId,
-                            Action__c = 'Remove'
-                    );*/
+
                     requestList.add(newCR);
                 }
             }
@@ -92,15 +83,7 @@ public class ContactTriggerHandler extends TriggerHandler{
 
             isValidatePersonStatusExecuted = true;
             xMGroupRequestHelper.CreateGroupChangeRequestHeader(requestList);
-            /*try{
-                isValidatePersonStatusExecuted = true;
-                insert requestList;
 
-            }catch(DmlException ex){
-                system.debug('validatePersonStatus(): DmlException - ' + ex);
-                inContactBaseClass.SendErrorEmail(ex, requestList[0].Contact__c + ' - Error creating xMatters group change request');
-
-            }*/
         }
 
         system.debug('validatePersonStatus(): xmPersonIds - ' + xmPersonIds);

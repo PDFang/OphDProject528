@@ -13,7 +13,7 @@ global class WebServiceUpdateFromTFS
         // Make sure the trigger dont fire off the sync to TFS again.
         ISTFSINTEGRATIONCLASS.isWebserviceCall = true;
         map<string, string> mapAssignToId = new map<string, string>();
-        map<string, list<string>> mapAssignToName = new map<string, list<string>>();
+        //map<string, list<string>> mapAssignToName = new map<string, list<string>>();
         map<string, Id> mapParentIds = new map<string, id>();
 
         Schema.DescribeSObjectResult d = Schema.SObjectType.IsTfsWorkItem__c;
@@ -25,13 +25,13 @@ global class WebServiceUpdateFromTFS
             for(WorkItemsWrapperParams workItems : WorkItemLists)
             {
 
-                if(workItems.AssignedTo != null && workItems.AssignedTo != '')
+                /*if(workItems.AssignedTo != null && workItems.AssignedTo != '')
                 {
                     if(mapAssignToName.containsKey(workItems.AssignedTo))
                         mapAssignToName.get(workItems.AssignedTo).add(workItems.SalesforceRecordId);
                     else
                         mapAssignToName.put(workItems.AssignedTo, new list<string>{workItems.SalesforceRecordId});
-                }
+                }*/
                 if(workItems.ParentTfsId != null)
                 {
                     parentIds.add(workItems.ParentTfsId);
@@ -43,13 +43,13 @@ global class WebServiceUpdateFromTFS
                 mapParentIds.put(p.TFSId__c,p.Id);
             }
 
-            for(User u : [select Id, Name from User where Name in : mapAssignToName.keySet()])
+            /*for(User u : [select Id, Name from User where Name in : mapAssignToName.keySet()])
             {
                 for(string salesforceId : mapAssignToName.get(u.Name))
                 {
                     mapAssignToId.put(salesforceId, u.Id);
                 }
-            }
+            }*/
 
             for(WorkItemsWrapperParams workItems : WorkItemLists)
             {
@@ -77,8 +77,8 @@ global class WebServiceUpdateFromTFS
                     }
                     tfsSobjectMap.put(workItems.TfsId, obj);
 
-                    if(mapAssignToId.size() > 0)
-                        obj.put('AssignedTo__c', mapAssignToId.get(workItems.SalesforceRecordId));
+                    //if(mapAssignToId.size() > 0)
+                    //    obj.put('AssignedTo__c', mapAssignToId.get(workItems.SalesforceRecordId));
 
 
                     if (obj.getSObjectType() == Schema.Project__c.getSObjectType())
@@ -107,7 +107,7 @@ global class WebServiceUpdateFromTFS
                     }
                     obj.put('Team__c', workItems.Team);
                     obj.put('Priority__c', workItems.Priority);
-                    obj.put('Iteration__c', workItems.Iteration);
+                    obj.put('Iteration__c', workItems.Iteration == 'Operations\\Dev'? 'Operations' : workItems.Iteration);
 
                     if(workItems.Comment != '' && sObjId != null)
                     {

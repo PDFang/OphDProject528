@@ -131,12 +131,10 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     public void createAssetAllocation(){
 
-        if (currentAsset == null){
-            currentAsset = new Asset();
-        }
+        system.debug('createAssetAllocation(): currentAsset - ' + currentAsset);
+        system.debug('createAssetAllocation(): currentProject - ' + currentProject);
 
-        AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentAsset);
-        system.debug('Current Asset =>' + currentAsset);
+        AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentAsset, currentProject);
         assetAllocations.add(newModel);
 
     }
@@ -210,8 +208,10 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     public void createSubscriptionAllocation(){
 
-        system.debug('currentSubscription =>' + currentSubscription);
-        AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentSubscription);
+        system.debug('createSubscriptionAllocation(): currentSubscription - ' + currentSubscription);
+        system.debug('createSubscriptionAllocation(): currentProject - ' + currentProject);
+
+        AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentSubscription, currentProject);
         subscriptionAllocations.add(newModel);
 
     }
