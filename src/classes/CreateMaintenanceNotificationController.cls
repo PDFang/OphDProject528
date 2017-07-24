@@ -60,7 +60,10 @@ public class CreateMaintenanceNotificationController {
                 RecordTypeId = maintenanceRecordType,
                 Description = ccr.BMCServiceDesk__Change_Description__c,
                 RF_Change_Request__c = ccr.Id,
-                CustomerAnalysis__c = ccr.RF_Customer_Impact_Analysis__c
+                ProductImpacted__c = null,
+                PlatformsImpacted__c = null,
+                CustomerAnalysis__c = ccr.RF_Customer_Impact_Analysis__c,
+                EventType__c = 'Platform/Software Updates'
         );
 
         endTime = ccr.RF_Maint_Window_End_Time__c;
