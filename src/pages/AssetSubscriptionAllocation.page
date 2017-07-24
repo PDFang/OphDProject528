@@ -1,4 +1,4 @@
-<apex:page id="AssetSubscriptionAllocation" controller="AssetSubscriptionAllocationController">
+<apex:page id="AssetSubscriptionAllocation" controller="AssetSubscriptionAllocationController" title="Asset/Subscription Allocation">
     <apex:pageBlock title="Project" rendered="{!Not(ISNULL(Project))}">
         <apex:pageBlockSection columns="1" >
             <apex:repeat value="{!$ObjectType.Project__c.FieldSets.PS_Project_Allocation}" var="f">
