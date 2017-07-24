@@ -138,17 +138,17 @@
                                     </section>
                                     <div class="slds-panel__section">
                                         <h3 class="slds-text-heading_large slds-m-bottom_large">Maintenance Case Information</h3>
-
+                                        <p class="slds-text-body_small slds-line-height_reset" style="float: right;"><abbr class="slds-required">*</abbr> marked fields are required</p>
                                         <div class="slds-form-element">
-                                            <label class="slds-form-element__label">Products Impacted</label>
+                                            <label class="slds-form-element__label">Products Impacted</label><abbr class="slds-required">*</abbr>
                                             <div class="slds-form-element__control">
                                                 <apex:inputField  styleClass="slds-input" style="height:30px;" value="{!newCase.ProductImpacted__c}"/>
                                             </div>
-                                            <label class="slds-form-element__label">Platforms Impacted</label>
+                                            <label class="slds-form-element__label">Platforms Impacted</label><abbr class="slds-required">*</abbr>
                                             <div class="slds-form-element__control">
                                                 <apex:inputField value="{!newCase.PlatformsImpacted__c}"/>
                                             </div>
-                                            <label class="slds-form-element__label">Contact Us Options</label>
+                                            <label class="slds-form-element__label">Contact Us Options</label><abbr class="slds-required">*</abbr>
                                             <div class="slds-form-element__control">
                                                 <apex:repeat value="{!ContactInfo}" var="contactUs" >
                                                     <span class="slds-radio">
@@ -193,6 +193,12 @@
                                             <div class="slds-form-element__control">
                                                 <apex:inputField styleClass="slds-textarea"   value="{!newCase.CustomerAnalysis__c}"/>
                                             </div>
+                                            <label class="slds-form-element__label" >Event Type </label>
+                                            <div class="slds-form-element__control">
+                                                <apex:inputField  styleClass="slds-input" style="height:30px;"  value="{!newCase.EventType__c}"/>
+                                            </div>
+
+
                                         </div>
                                     </div>
                                 </apex:outputPanel>
