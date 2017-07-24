@@ -17,6 +17,7 @@ public with sharing class AssetSubscriptionAllocationModel {
         );
         this.isQuantityAllocation = (currentAsset != null && currentAsset.Quantity != 1);
         this.rowid = row;
+        this.isDelete = false;
 
     }
 
@@ -25,6 +26,7 @@ public with sharing class AssetSubscriptionAllocationModel {
         this.assetAllocation = allocation;
         this.isQuantityAllocation = (allocation.Asset__c != null && allocation.Asset__r.Quantity != 1);
         this.rowid = row;
+        this.isDelete = false;
 
     }
 
@@ -35,14 +37,18 @@ public with sharing class AssetSubscriptionAllocationModel {
                 Subscription__r = currentSubscription != null ? currentSubscription : null,
                 project__c = currentProject != null ? currentProject.id : null
         );
+        this.isQuantityAllocation = (currentSubscription != null && currentSubscription.Quantity__c != 1);
         this.rowid = row;
+        this.isDelete = false;
 
     }
 
     public AssetSubscriptionAllocationModel(Project_Subscription_Allocation__c allocation, Integer row){
 
         this.subscriptionAllocation = allocation;
+        this.isQuantityAllocation = (allocation.Subscription__c != null && allocation.Subscription__r.Quantity__c != 1);
         this.rowid = row;
+        this.isDelete = false;
 
     }    
 

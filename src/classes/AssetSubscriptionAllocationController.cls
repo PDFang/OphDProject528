@@ -130,6 +130,7 @@ public with sharing class AssetSubscriptionAllocationController {
         } catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while saving subscription allocations. ' + ex.getMessage()));
             system.debug('saveSubscriptionAllocation(): Exception - ' + ex);
+            system.debug('saveSubscriptionAllocation(): ' + ex.getStackTraceString());
         }
         return null;
 
