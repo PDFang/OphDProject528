@@ -252,6 +252,23 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
+    public void deleteAssetAllocation(Integer rowid){
+
+        system.debug('deleteAssetAllocation(): rowid - ' + rowid);
+
+        AssetSubscriptionAllocationModel[] assetAllocationsCopy = new AssetSubscriptionAllocationModel[]{};
+
+        for(AssetSubscriptionAllocationModel model: assetAllocations){
+            if(model.rowid != rowid){
+                AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(model.assetAllocation, assetAllocationsCopy.size());
+                assetAllocationsCopy.add(newModel);
+            }
+        }
+
+        this.assetAllocations = assetAllocationsCopy;
+
+    }
+
     public boolean saveAssetAllocation(){
 
         Project_Asset_Allocation__c[] allocations = new Project_Asset_Allocation__c[]{};
@@ -328,6 +345,24 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         subscriptionAllocations.add(newModel);
 
     }
+
+    public void deleteSubscriptionAllocation(Integer rowid){
+
+        system.debug('deleteSubscriptionAllocation(): rowid - ' + rowid);
+
+        AssetSubscriptionAllocationModel[] subscriptionAllocationCopy = new AssetSubscriptionAllocationModel[]{};
+
+        for(AssetSubscriptionAllocationModel model: subscriptionAllocations){
+            if(model.rowid != rowid){
+                AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(model.subscriptionAllocation, subscriptionAllocationCopy.size());
+                subscriptionAllocationCopy.add(newModel);
+            }
+        }
+
+        this.subscriptionAllocations = subscriptionAllocationCopy;
+
+    }
+
 
     public boolean saveSubscriptionAllocation(){
 
