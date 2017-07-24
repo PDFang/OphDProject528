@@ -35,8 +35,8 @@
                         <apex:outputText value="Error" rendered="{!entry.isError}" title="{!entry.message}"/>
                     </apex:column>
                     <apex:column headervalue="Asset">
-                        <apex:inputField value="{!entry.assetAllocation.Asset__c}" required="false" rendered="{!ISNULL(asset)}"/>
-                        <apex:outputField value="{!entry.assetAllocation.Asset__c}" rendered="{!NOT(ISNULL(asset))}"/>
+                        <apex:inputField value="{!entry.assetAllocation.Asset__c}" required="false" rendered="{!ISNULL(asset) ||  Not(ISNULL(Project))}"/>
+                        <apex:outputField value="{!entry.assetAllocation.Asset__c}" rendered="{!NOT(ISNULL(asset) )}"/>
                     </apex:column>
                     <apex:column headervalue="Phase Project">
                         <apex:inputField value="{!entry.assetAllocation.Project__c}" required="false" rendered="{!AND(ISBLANK(entry.assetAllocation.Id), ISNULL(project))}"/>
@@ -70,7 +70,7 @@
                         <apex:outputText value="Error" rendered="{!entry.isError}" title="{!entry.message}"/>
                     </apex:column>
                     <apex:column headervalue="Subscription">
-                        <apex:inputField value="{!entry.subscriptionAllocation.Subscription__c}" required="false" rendered="{!ISNULL(Subscription)}"/>
+                        <apex:inputField value="{!entry.subscriptionAllocation.Subscription__c}" required="false" rendered="{!ISNULL(Subscription) ||  Not(ISNULL(Project))}"/>
                         <apex:outputField value="{!entry.subscriptionAllocation.Subscription__c}" rendered="{!NOT(ISNULL(Subscription))}"/>
                     </apex:column>
                     <apex:column headervalue="Phase Project">
