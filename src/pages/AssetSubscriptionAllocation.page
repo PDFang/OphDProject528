@@ -53,13 +53,16 @@
 
                 <apex:pageBlockTable value="{!assetAllocations}" var="entry" id="assettbl">
                     <apex:column headervalue="Delete">
-                        <apex:inputCheckbox value="{!entry.isDelete}"/>
+                        <apex:inputCheckbox value="{!entry.isDelete}" rendered="{!NOT(ISNULL(entry.assetAllocation.Id))}"/>
+                        <apex:commandLink action="{!deleteAssetAllocation}" value="Delete" rendered="{!ISNULL(entry.assetAllocation.Id)}" reRender="pgblock1">
+                            <apex:param value="{!entry.rowid}" name="delAssetRowId"></apex:param>
+                        </apex:commandLink>
                         <apex:inputHidden value="{!entry.rowid}"/>
                         <apex:outputText value="Error" rendered="{!entry.isError}" title="{!entry.message}"/>
                     </apex:column>
                     <apex:column headervalue="Asset">
                         <apex:inputField value="{!entry.assetAllocation.Asset__c}" required="false" rendered="{!ISNULL(asset) ||  Not(ISNULL(Project))}">
-                            <apex:actionSupport event="onchange" action="{!changeAsset}" reRender="assettbl">
+                            <apex:actionSupport event="onchange" action="{!changeAsset}" reRender="pgblock1">
                                 <apex:param value="{!entry.rowid}" name="newAssetRowId"></apex:param>
                             </apex:actionSupport>
                         </apex:inputField>
@@ -95,12 +98,16 @@
 
                 <apex:pageBlockTable value="{!subscriptionAllocations}" var="entry" id="subscriptiontbl">
                     <apex:column headervalue="Delete">
-                        <apex:inputCheckbox value="{!entry.isDelete}"/>
+                        <apex:inputCheckbox value="{!entry.isDelete}" rendered="{!NOT(ISNULL(entry.subscriptionAllocation.Id))}" />
+                        <apex:commandLink action="{!deleteSubscriptionAllocation}" value="Delete" rendered="{!ISNULL(entry.subscriptionAllocation.Id)}" reRender="pgblock2">
+                            <apex:param value="{!entry.rowid}" name="delSubscriptionRowId"></apex:param>
+                        </apex:commandLink>
+                        <apex:inputHidden value="{!entry.rowid}"/>
                         <apex:outputText value="Error" rendered="{!entry.isError}" title="{!entry.message}"/>
                     </apex:column>
                     <apex:column headervalue="Subscription">
                         <apex:inputField value="{!entry.subscriptionAllocation.Subscription__c}" required="false" rendered="{!ISNULL(Subscription) ||  Not(ISNULL(Project))}">
-                            <apex:actionSupport event="onchange" action="{!changeSubscription}" reRender="subscriptiontbl">
+                            <apex:actionSupport event="onchange" action="{!changeSubscription}" reRender="pgblock2">
                                 <apex:param value="{!entry.rowid}" name="newSubscriptionRowId"></apex:param>
                             </apex:actionSupport>
                         </apex:inputField>

@@ -180,7 +180,7 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
         subscriptionAllocations = new List<AssetSubscriptionAllocationModel>();
 
-        String soql = 'Select Project__c, Subscription__c, Percent_Allocation__c, Quantity_Allocation__c, Hours_Allocated__c '
+        String soql = 'Select Project__c, Subscription__c, Subscription__r.Quantity__c, Subscription__r.Budgeted_Hours__c, Percent_Allocation__c, Quantity_Allocation__c, Hours_Allocated__c '
                 + 'from Project_Subscription_Allocation__c where ';
         if(currentProject != null){
             soql += ' Project__c = \'' + currentProject.Id + '\'';
@@ -249,6 +249,23 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
         AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentAsset, currentProject, assetAllocations.size());
         assetAllocations.add(newModel);
+
+    }
+
+    public void deleteAssetAllocation(Integer rowid){
+
+        system.debug('deleteAssetAllocation(): rowid - ' + rowid);
+
+        AssetSubscriptionAllocationModel[] assetAllocationsCopy = new AssetSubscriptionAllocationModel[]{};
+
+        for(AssetSubscriptionAllocationModel model: assetAllocations){
+            if(model.rowid != rowid){
+                AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(model.assetAllocation, assetAllocationsCopy.size());
+                assetAllocationsCopy.add(newModel);
+            }
+        }
+
+        this.assetAllocations = assetAllocationsCopy;
 
     }
 
@@ -329,10 +346,30 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
+    public void deleteSubscriptionAllocation(Integer rowid){
+
+        system.debug('deleteSubscriptionAllocation(): rowid - ' + rowid);
+
+        AssetSubscriptionAllocationModel[] subscriptionAllocationCopy = new AssetSubscriptionAllocationModel[]{};
+
+        for(AssetSubscriptionAllocationModel model: subscriptionAllocations){
+            if(model.rowid != rowid){
+                AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(model.subscriptionAllocation, subscriptionAllocationCopy.size());
+                subscriptionAllocationCopy.add(newModel);
+            }
+        }
+
+        this.subscriptionAllocations = subscriptionAllocationCopy;
+
+    }
+
+
     public boolean saveSubscriptionAllocation(){
 
         Project_Subscription_Allocation__c[] allocations = new Project_Subscription_Allocation__c[]{};
         Project_Subscription_Allocation__c[] delAllocations = new Project_Subscription_Allocation__c[]{};
+
+        system.debug('saveSubscriptionAllocation(): subscriptionAllocations - ' + subscriptionAllocations);
 
         for(AssetSubscriptionAllocationModel model :subscriptionAllocations){
             if(model.isDelete){
@@ -341,6 +378,11 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
                 }
                 continue;
             }
+
+            if(model.isQuantityAllocation == false){
+                model.subscriptionAllocation.Hours_Allocated__c = model.subscriptionAllocation.Percent_Allocation__c * model.subscriptionAllocation.Subscription__r.Budgeted_Hours__c / 100;
+            }
+
             allocations.add(model.subscriptionAllocation);
         }
 

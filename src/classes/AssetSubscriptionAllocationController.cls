@@ -61,6 +61,21 @@ public with sharing class AssetSubscriptionAllocationController {
 
     }
 
+    public pagereference deleteAssetAllocation(){
+
+        try{
+            String rowId = ApexPages.currentPage().getParameters().get('delAssetRowId');
+            system.debug('deleteAssetAllocation(): rowId - ' + rowId);
+
+            businessLayer.deleteAssetAllocation(Integer.valueOf(rowid));
+        } catch (Exception ex){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while deleting asset allocation. ' + ex.getMessage()));
+            system.debug('deleteAssetAllocation(): Exception - ' + ex);
+        }
+        return null;
+
+    }
+
     public pagereference saveAssetAllocation(){
 
         try{
@@ -89,6 +104,21 @@ public with sharing class AssetSubscriptionAllocationController {
 
     }
 
+    public pagereference deleteSubscriptionAllocation(){
+
+        try{
+            String rowId = ApexPages.currentPage().getParameters().get('delSubscriptionRowId');
+            system.debug('deleteSubscriptionAllocation(): rowId - ' + rowId);
+
+            businessLayer.deleteSubscriptionAllocation(Integer.valueOf(rowid));
+        } catch (Exception ex){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while deleting subscription allocation. ' + ex.getMessage()));
+            system.debug('deleteSubscriptionAllocation(): Exception - ' + ex);
+        }
+        return null;
+
+    }
+
     public pagereference saveSubscriptionAllocation(){
 
         try{
@@ -100,6 +130,7 @@ public with sharing class AssetSubscriptionAllocationController {
         } catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while saving subscription allocations. ' + ex.getMessage()));
             system.debug('saveSubscriptionAllocation(): Exception - ' + ex);
+            system.debug('saveSubscriptionAllocation(): ' + ex.getStackTraceString());
         }
         return null;
 
