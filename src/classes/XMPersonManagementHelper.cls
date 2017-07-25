@@ -81,6 +81,8 @@ public class XMPersonManagementHelper {
                     xmPerson__c = null,
                     XmattersUid__c = xmPersonGuid
             );
+
+            system.debug('contact -> ' + xmPersonGuid);
         }
 
     }

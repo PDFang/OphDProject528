@@ -101,6 +101,33 @@ public class ContactTriggerHandlerTest {
 
         insert testContact;
 
+        Opportunity o = new Opportunity();
+        o.RecordTypeId = inContactBaseClass.SelectRecordTypeIDByName('Historical Products', 'Opportunity');
+        o.Name = 'test';
+        o.CloseDate = system.today().addDays(30);
+        o.StageName = 'Open';
+        o.AccountId = testAccount.Id;
+
+        insert o;
+
+        ImplementedProduct__c ip1 = new ImplementedProduct__c();
+        ip1.Account__c = testAccount.Id;
+        ip1.GoLiveDate__c = system.today() - 1;
+        ip1.Status__c = 'Implemented';
+        ip1.Product__c = 'inContact';
+        ip1.Opportunity__c = o.Id;
+        insert ip1;
+
+
+        ProductEventMap__c pem = new ProductEventMap__c();
+        pem.Name = 'inContact';
+        pem.Product__c = 'inContact';
+        pem.ImplementedProduct__c = 'inContact';
+        pem.Platform__c = 'Cluster - inContact';
+        pem.HasClusters__c = true;
+
+        insert pem;
+
     }
 
 }

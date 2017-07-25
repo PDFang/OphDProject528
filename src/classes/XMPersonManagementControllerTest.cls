@@ -135,11 +135,13 @@ private class XMPersonManagementControllerTest {
         XMPersonManagementController testController = new XMPersonManagementController(new ApexPages.StandardController(testDuplicateContact));
         system.assertEquals( false, testController.getIsXmPerson(), 'Contact should not have an xmPerson.');
         system.assertEquals( true, testController.getIsDuplicate(), 'Contact should have a duplicate.');
-        system.assertEquals( false, testController.isPersonMatch, 'Contact should have a matching xmPerson.');
+        system.assertEquals( true, testController.isPersonMatch, 'Contact should have a matching xmPerson.');
 
         XMPersonWrapper personWrapper = testController.person;
         system.assertNotEquals( null, personWrapper, 'xMatters should return an XM Person.');
 
+        Test.setCurrentPageReference(new PageReference('Page.XMPersonManagement'));
+        ApexPages.currentPage().getParameters().put('rowId',testDuplicateContact.Id );
         testController.associateContact();
 
         testDuplicateContact = [Select xmPerson__c from Contact where Id = :testDuplicateContact.Id];
@@ -185,8 +187,8 @@ private class XMPersonManagementControllerTest {
         XMPersonWrapper personWrapper = testController.person;
         system.assertNotEquals( null, personWrapper, 'xMatters should return an XM Person.');
 
-
-
+        Test.setCurrentPageReference(new PageReference('Page.XMPersonManagement'));
+        ApexPages.currentPage().getParameters().put('removeId',contactList[0].id );
         testController.dissociateContact();
 
         testContact = [Select xmPerson__c from Contact where Id = :testContact.Id];
