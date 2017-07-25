@@ -8,7 +8,7 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<SObject>, D
         String contactSoql = 'SELECT Id, FirstName, LastName, Email FROM Contact '
                 + 'WHERE Deactivated__c = false AND Email != NULL AND xmPerson__c = NULL '
                 + 'AND Contact_Role__c INCLUDES (\'Event Notification\',\'Maintenance Notification\') '
-                + 'order by CreatedDate, Email';
+                + 'order by Email, CreatedDate';
         return Database.getQueryLocator(contactSoql);
 
     }
