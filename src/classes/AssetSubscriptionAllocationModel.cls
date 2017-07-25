@@ -1,4 +1,4 @@
-public with sharing class AssetSubscriptionAllocationModel {
+public class AssetSubscriptionAllocationModel {
 
     public integer rowid{get;set;}
     public boolean isDelete{get;set;}

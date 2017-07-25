@@ -1,4 +1,4 @@
-public with sharing class AssetSubscriptionAllocationBusinessLayer {
+public class AssetSubscriptionAllocationBusinessLayer {
 
     public Asset currentAsset;
     public SubscriptionReplica__c currentSubscription;
