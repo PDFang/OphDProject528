@@ -8,7 +8,7 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<SObject>, D
         String contactSoql = 'SELECT Id, FirstName, LastName, Email FROM Contact '
                 + 'WHERE Deactivated__c = false AND Email != NULL AND xmPerson__c = NULL '
                 + 'AND Contact_Role__c INCLUDES (\'Event Notification\',\'Maintenance Notification\') '
-                + 'order by CreatedDate desc, Email LIMIT 1';
+                + 'order by CreatedDate, Email';
         return Database.getQueryLocator(contactSoql);
 
     }
@@ -33,7 +33,7 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<SObject>, D
             newPerson.firstName = cont.FirstName;
             newPerson.lastName = cont.LastName;
             newPerson.externalKey = cont.Id;
-            //newPerson.timezone = '';
+            newPerson.timezone = 'US/Mountain';
             XMRestPerson restService = new XMRestPerson();
             XMPersonModel response = restService.createPerson(newPerson);
 
