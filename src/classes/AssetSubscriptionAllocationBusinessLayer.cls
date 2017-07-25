@@ -319,15 +319,15 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
             delete delAllocations;
         }
 
-        if(currentAllocations.size() > 0){
+        System.Savepoint beforeSave = Database.setSavepoint();
 
-            System.Savepoint beforeUpdate = Database.setSavepoint();
+        if(currentAllocations.size() > 0){
 
             Database.SaveResult[] results = Database.update(currentAllocations.values(), false);
             Integer failures = parseErrors(results, assetAllocations, new List<Integer>(currentAllocations.keySet()));
 
             if(failures > 0){
-                Database.rollback(beforeUpdate);
+                Database.rollback(beforeSave);
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line items has errors.'));
                 return false;
             }
@@ -335,13 +335,11 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
         if(newAllocations.size() > 0){
 
-            System.Savepoint beforeInsert = Database.setSavepoint();
-
             Database.SaveResult[] results = Database.insert(newAllocations.values(), false);
             Integer failures = parseErrors(results, assetAllocations, new List<Integer>(newAllocations.keySet()));
 
             if(failures > 0){
-                Database.rollback(beforeInsert);
+                Database.rollback(beforeSave);
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line items has errors.'));
                 return false;
             }
@@ -414,19 +412,19 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
         system.debug('saveSubscriptionAllocation(): currentAllocations - ' + currentAllocations);
         system.debug('saveSubscriptionAllocation(): delAllocations - ' + delAllocations);
 
+        System.Savepoint beforeSave = Database.setSavepoint();
+
         if(delAllocations.size() > 0){
             delete delAllocations;
         }
 
         if(currentAllocations.size() > 0){
 
-            System.Savepoint beforeUpdate = Database.setSavepoint();
-
             Database.SaveResult[] results = Database.update(currentAllocations.values(), false);
             Integer failures = parseErrors(results, subscriptionAllocations, new List<Integer>(currentAllocations.keySet()));
 
             if(failures > 0){
-                Database.rollback(beforeUpdate);
+                Database.rollback(beforeSave);
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line items has errors.'));
                 return false;
             }
@@ -434,13 +432,11 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
         if(newAllocations.size() > 0){
 
-            System.Savepoint beforeInsert = Database.setSavepoint();
-
             Database.SaveResult[] results = Database.insert(newAllocations.values(), false);
             Integer failures = parseErrors(results, subscriptionAllocations, new List<Integer>(newAllocations.keySet()));
 
             if(failures > 0){
-                Database.rollback(beforeInsert);
+                Database.rollback(beforeSave);
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line items has errors.'));
                 return false;
             }
