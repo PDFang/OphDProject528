@@ -1,6 +1,10 @@
-global class CaseKBAttachedScheduler implements Schedulable {
-    
-	global void execute(SchedulableContext ctx)
+/**
+ * Created by arnab.karsarkar on 7/25/2017.
+ */
+
+global class xmGroupChangeRequestScheduler implements Schedulable{
+
+    global void execute(SchedulableContext ctx)
     {
         // Last_Batch_Run_Date__c batchRunDt = Last_Batch_Run_Date__c.getall().values();
         //dateTime lastBatchRunTime = batchRunDt.LastRunTime__c;
@@ -19,4 +23,5 @@ global class CaseKBAttachedScheduler implements Schedulable {
                 + 'AND isClosed = true AND ClosedDate >= ' + formattedDate + ' AND recordTypeId in :stRecordTypes';
         id batchinstanceid = database.executeBatch(new CaseUpdateBatch(casesQuery), 100);
     }
+
 }
