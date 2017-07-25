@@ -58,7 +58,7 @@
                             <apex:param value="{!entry.rowid}" name="delAssetRowId"></apex:param>
                         </apex:commandLink>
                         <apex:inputHidden value="{!entry.rowid}"/>
-                        <apex:outputText value="Error" rendered="{!entry.isError}" title="{!entry.message}"/>
+                        <apex:outputText  style='color:red'  value=" !Error " rendered="{!entry.isError}" title="{!entry.message}"/>
                     </apex:column>
                     <apex:column headervalue="Asset">
                         <apex:inputField value="{!entry.assetAllocation.Asset__c}" required="false" rendered="{!ISNULL(asset) ||  Not(ISNULL(Project))}">
@@ -103,7 +103,7 @@
                             <apex:param value="{!entry.rowid}" name="delSubscriptionRowId"></apex:param>
                         </apex:commandLink>
                         <apex:inputHidden value="{!entry.rowid}"/>
-                        <apex:outputText value="Error" rendered="{!entry.isError}" title="{!entry.message}"/>
+                        <apex:outputText style='color:red' value=" Error " rendered="{!entry.isError}" title="{!entry.message}"/>
                     </apex:column>
                     <apex:column headervalue="Subscription">
                         <apex:inputField value="{!entry.subscriptionAllocation.Subscription__c}" required="false" rendered="{!ISNULL(Subscription) ||  Not(ISNULL(Project))}">
