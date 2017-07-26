@@ -6,13 +6,18 @@
 
     <apex:sectionHeader subtitle="{!Project.Name}" title="Project Allocation" rendered="{!NOT(ISNULL(Project))}"/>
 
+    <style>
+        .image {
+            padding-left:15px;
+        }
+    </style>
     <apex:form id="myform">
 
         <apex:pageBlock title="Project Detail" rendered="{!Not(ISNULL(Project))}">
             <apex:pageBlockButtons title="" location="bottom">
-                <apex:commandButton title="Back" value="Back" action="{!cancel}"/>
+                <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
             </apex:pageBlockButtons>
-            <apex:pageBlockSection columns="1" >
+            <apex:pageBlockSection columns="2" >
                 <apex:repeat value="{!$ObjectType.Project__c.FieldSets.PS_Project_Allocation}" var="f">
                     <apex:outputfield value="{!Project[f]}" />
                 </apex:repeat>
@@ -21,9 +26,9 @@
 
         <apex:pageBlock title="Asset Detail" rendered="{!Not(ISNULL(asset))}">
             <apex:pageBlockButtons title="" location="bottom">
-                <apex:commandButton title="Back" value="Back" action="{!cancel}"/>
+                <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
             </apex:pageBlockButtons>
-            <apex:pageBlockSection columns="1" >
+            <apex:pageBlockSection columns="2" >
                 <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation}" var="f">
                     <apex:outputfield value="{!Asset[f]}" />
                 </apex:repeat>
@@ -32,9 +37,9 @@
 
         <apex:pageBlock title="Subscription Detail" rendered="{!Not(ISNULL(Subscription))}">
             <apex:pageBlockButtons title="" location="bottom">
-                <apex:commandButton title="Back" value="Back" action="{!cancel}"/>
+                <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
             </apex:pageBlockButtons>
-            <apex:pageBlockSection columns="1" >
+            <apex:pageBlockSection columns="2" >
                 <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation}" var="f">
                     <apex:outputfield value="{!Subscription[f]}" />
                 </apex:repeat>
@@ -58,7 +63,7 @@
                             <apex:param value="{!entry.rowid}" name="delAssetRowId"></apex:param>
                         </apex:commandLink>
                         <apex:inputHidden value="{!entry.rowid}"/>
-                        <apex:outputText value="Error" rendered="{!entry.isError}" title="{!entry.message}"/>
+                        <apex:image id="ErrorImage" styleClass="image" value="{!$Resource.ErrorImage}" rendered="{!entry.isError}"  width="15px" height="15px"  title="{!entry.message}"/>
                     </apex:column>
                     <apex:column headervalue="Asset">
                         <apex:inputField value="{!entry.assetAllocation.Asset__c}" required="false" rendered="{!ISNULL(asset) ||  Not(ISNULL(Project))}">
@@ -76,10 +81,10 @@
                         <apex:inputField value="{!entry.assetAllocation.Quantity_Allocation__c}" rendered="{!entry.isQuantityAllocation}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Percentage">
-                        <apex:inputField value="{!entry.assetAllocation.Percent_Allocation__c}" rendered="{!NOT(entry.isQuantityAllocation)}"/>
+                        <apex:inputField value="{!entry.assetAllocation.Percent_Allocation__c}" rendered="{!entry.isPercentageAllocation}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Hours">
-                        <apex:outputField value="{!entry.assetAllocation.Hours_Allocated__c}" rendered="{!NOT(entry.isQuantityAllocation)}"/>
+                        <apex:outputField value="{!entry.assetAllocation.Hours_Allocated__c}" rendered="{!entry.isPercentageAllocation}"/>
                     </apex:column>
                 </apex:pageBlockTable>
 
@@ -94,7 +99,7 @@
                 <apex:commandButton title="Save" value="Save" action="{!saveSubscriptionAllocation}" reRender="pgblock2"/>
             </apex:pageBlockButtons>
 
-            <apex:pageBlockSection title="Subscription Allocation" columns="1">
+            <apex:pageBlockSection title="Subscription Allocations" columns="1">
 
                 <apex:pageBlockTable value="{!subscriptionAllocations}" var="entry" id="subscriptiontbl">
                     <apex:column headervalue="Delete">
@@ -103,7 +108,7 @@
                             <apex:param value="{!entry.rowid}" name="delSubscriptionRowId"></apex:param>
                         </apex:commandLink>
                         <apex:inputHidden value="{!entry.rowid}"/>
-                        <apex:outputText value="Error" rendered="{!entry.isError}" title="{!entry.message}"/>
+                        <apex:image id="ErrorImage" styleClass="image" value="{!$Resource.ErrorImage}" rendered="{!entry.isError}"  width="15px" height="15px"  title="{!entry.message}"/>
                     </apex:column>
                     <apex:column headervalue="Subscription">
                         <apex:inputField value="{!entry.subscriptionAllocation.Subscription__c}" required="false" rendered="{!ISNULL(Subscription) ||  Not(ISNULL(Project))}">
@@ -121,10 +126,10 @@
                         <apex:inputField value="{!entry.subscriptionAllocation.Quantity_Allocation__c}" rendered="{!entry.isQuantityAllocation}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Percentage">
-                        <apex:inputField value="{!entry.subscriptionAllocation.Percent_Allocation__c}" rendered="{!NOT(entry.isQuantityAllocation)}"/>
+                        <apex:inputField value="{!entry.subscriptionAllocation.Percent_Allocation__c}" rendered="{!entry.isPercentageAllocation}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Hours">
-                        <apex:outputField value="{!entry.subscriptionAllocation.Hours_Allocated__c}" rendered="{!NOT(entry.isQuantityAllocation)}"/>
+                        <apex:outputField value="{!entry.subscriptionAllocation.Hours_Allocated__c}" rendered="{!entry.isPercentageAllocation}"/>
                     </apex:column>
                 </apex:pageBlockTable>
 

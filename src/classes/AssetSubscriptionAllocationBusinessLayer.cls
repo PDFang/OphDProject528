@@ -1,4 +1,4 @@
-public with sharing class AssetSubscriptionAllocationBusinessLayer {
+public class AssetSubscriptionAllocationBusinessLayer {
 
     public Asset currentAsset;
     public SubscriptionReplica__c currentSubscription;
@@ -208,7 +208,8 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
                 Asset selAsset = getAsset(model.assetAllocation.Asset__c);
                 if(selAsset != null){
-                    model.isQuantityAllocation = (selAsset.Quantity != 1);
+                    model.isQuantityAllocation = (selAsset.Quantity > 1);
+                    model.isPercentageAllocation = (selAsset.Budgeted_Hours__c > 0);
                     model.assetAllocation.Asset__r = selAsset;
                 }else{
                     model.isError = true;
@@ -231,7 +232,8 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
                 SubscriptionReplica__c selSubscription = getSubscription(model.subscriptionAllocation.Subscription__c);
 
                 if(selSubscription != null){
-                    model.isQuantityAllocation = (selSubscription.Quantity__c != 1);
+                    model.isQuantityAllocation = (selSubscription.Quantity__c > 1);
+                    model.isPercentageAllocation = (selSubscription.Budgeted_Hours__c > 0);
                     model.subscriptionAllocation.Subscription__r = selSubscription;
                 }else{
                     model.isError = true;
@@ -271,7 +273,8 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     public boolean saveAssetAllocation(){
 
-        Project_Asset_Allocation__c[] allocations = new Project_Asset_Allocation__c[]{};
+        Map<Integer, Project_Asset_Allocation__c> newAllocations = new Map<Integer,Project_Asset_Allocation__c>();
+        Map<Integer, Project_Asset_Allocation__c> currentAllocations = new Map<Integer, Project_Asset_Allocation__c>();
         Project_Asset_Allocation__c[] delAllocations = new Project_Asset_Allocation__c[]{};
 
         Boolean error = false;
@@ -295,43 +298,55 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
                 error = true;
                 continue;
             }*/
-            if(model.isQuantityAllocation == false){
+            if(model.isPercentageAllocation){
                 model.assetAllocation.Hours_Allocated__c = model.assetAllocation.Percent_Allocation__c * model.assetAllocation.Asset__r.Budgeted_Hours__c / 100;
             }
-            allocations.add(model.assetAllocation);
+            if(model.assetAllocation.Id == null){
+                newAllocations.put(model.rowid, model.assetAllocation);
+            } else{
+                currentAllocations.put(model.rowid, model.assetAllocation);
+            }
+
         }
 
-        system.debug('saveAssetAllocation(): allocations - ' + allocations);
+        system.debug('saveAssetAllocation(): newAllocations - ' + newAllocations);
+        system.debug('saveAssetAllocation(): currentAllocations - ' + currentAllocations);
         system.debug('saveAssetAllocation(): delAllocations - ' + delAllocations);
 
         if(error){
             return false;
         }
 
-        System.Savepoint beforeUpdate = Database.setSavepoint();
-
         if(delAllocations.size() > 0){
             delete delAllocations;
         }
 
-        if(allocations.size() > 0){
+        System.Savepoint beforeSave = Database.setSavepoint();
 
-            Integer failures = 0;
-            Database.UpsertResult[] results = Database.upsert(allocations, false);
-            for(Integer i=0; i < results.size(); i++){
-                Database.UpsertResult res = results[i];
-                if(!res.isSuccess()){
-                    failures++;
-                    Database.Error[] errors = res.getErrors();
-                    assetAllocations[i].isError = true;
-                    assetAllocations[i].message = errors[0].getMessage();
-                }
-            }
+        if(currentAllocations.size() > 0){
+
+            Database.SaveResult[] results = Database.update(currentAllocations.values(), false);
+            Integer failures = parseErrors(results, assetAllocations, new List<Integer>(currentAllocations.keySet()));
+
             if(failures > 0){
-                Database.rollback(beforeUpdate);
+                Database.rollback(beforeSave);
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line items has errors.'));
                 return false;
             }
         }
+
+        if(newAllocations.size() > 0){
+
+            Database.SaveResult[] results = Database.insert(newAllocations.values(), false);
+            Integer failures = parseErrors(results, assetAllocations, new List<Integer>(newAllocations.keySet()));
+
+            if(failures > 0){
+                Database.rollback(beforeSave);
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line items has errors.'));
+                return false;
+            }
+        }
+
         return true;
 
     }
@@ -366,12 +381,19 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
 
     public boolean saveSubscriptionAllocation(){
 
-        Project_Subscription_Allocation__c[] allocations = new Project_Subscription_Allocation__c[]{};
+        Map<Integer, Project_Subscription_Allocation__c> newAllocations = new Map<Integer, Project_Subscription_Allocation__c>();
+        Map<Integer, Project_Subscription_Allocation__c> currentAllocations = new Map<Integer, Project_Subscription_Allocation__c>();
         Project_Subscription_Allocation__c[] delAllocations = new Project_Subscription_Allocation__c[]{};
 
         system.debug('saveSubscriptionAllocation(): subscriptionAllocations - ' + subscriptionAllocations);
 
         for(AssetSubscriptionAllocationModel model :subscriptionAllocations){
+
+            model.isError = false;
+            model.message = null;
+
+            system.debug('saveSubscriptionAllocation(): model - ' + model);
+
             if(model.isDelete){
                 if(model.subscriptionAllocation.Id != null){
                     delAllocations.add(model.subscriptionAllocation);
@@ -379,27 +401,78 @@ public with sharing class AssetSubscriptionAllocationBusinessLayer {
                 continue;
             }
 
-            if(model.isQuantityAllocation == false){
+            if(model.isPercentageAllocation){
                 model.subscriptionAllocation.Hours_Allocated__c = model.subscriptionAllocation.Percent_Allocation__c * model.subscriptionAllocation.Subscription__r.Budgeted_Hours__c / 100;
             }
 
-            allocations.add(model.subscriptionAllocation);
+            if(model.subscriptionAllocation.Id == null){
+                newAllocations.put(model.rowid, model.subscriptionAllocation);
+            } else{
+                currentAllocations.put(model.rowid, model.subscriptionAllocation);
+            }
+
         }
 
-        system.debug('saveSubscriptionAllocation(): allocations - ' + allocations);
-
+        system.debug('saveSubscriptionAllocation(): newAllocations - ' + newAllocations);
+        system.debug('saveSubscriptionAllocation(): currentAllocations - ' + currentAllocations);
         system.debug('saveSubscriptionAllocation(): delAllocations - ' + delAllocations);
 
-        if(allocations.size() > 0){
-            upsert allocations;
-        }
+        System.Savepoint beforeSave = Database.setSavepoint();
 
         if(delAllocations.size() > 0){
             delete delAllocations;
         }
 
+        if(currentAllocations.size() > 0){
+
+            Database.SaveResult[] results = Database.update(currentAllocations.values(), false);
+            Integer failures = parseErrors(results, subscriptionAllocations, new List<Integer>(currentAllocations.keySet()));
+
+            if(failures > 0){
+                Database.rollback(beforeSave);
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line items has errors.'));
+                return false;
+            }
+        }
+
+        if(newAllocations.size() > 0){
+
+            Database.SaveResult[] results = Database.insert(newAllocations.values(), false);
+            Integer failures = parseErrors(results, subscriptionAllocations, new List<Integer>(newAllocations.keySet()));
+
+            if(failures > 0){
+                Database.rollback(beforeSave);
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line items has errors.'));
+                return false;
+            }
+        }
+
         return true;
 
+    }
+
+
+    private Integer  parseErrors(Database.SaveResult[] results, AssetSubscriptionAllocationModel[] allocations, List<Integer> rowIds){
+
+        Integer failures = 0;
+
+        for(Integer i=0; i < results.size(); i++){
+            Database.SaveResult res = results[i];
+            if(!res.isSuccess()){
+                failures++;
+                Database.Error[] errors = res.getErrors();
+                Integer rowid = rowIds[i];
+                for(Integer id=0; id < allocations.size(); id++){
+                    if(allocations[id].rowid == rowid){
+                        allocations[id].isError = true;
+                        allocations[id].message = errors[0].getMessage();
+                    }
+                }
+
+            }
+        }
+
+        return failures;
     }
 
 }
