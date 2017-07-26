@@ -363,7 +363,8 @@ public class OpportunityTriggerHelper {
                 Select Id, ParentProject__r.Opportunity__c from Project__c
                 where RecordType.Name = :PS_PROJECT_PHASE_SAAS and ParentProject__r.RecordType.Name = :PS_PROJECT_PARENT_SAAS
                 and ParentProject__r.Opportunity__c IN :oppIdSet
-                and Phase_Status__c NOT IN ('Closed', 'Cancelled')
+                and Phase_Status__c != 'Closed'
+                and Phase__c != '0'
         ]){
             oppNotReadySet.add(psPhase.ParentProject__r.Opportunity__c);
         }
