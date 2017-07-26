@@ -208,7 +208,8 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
                 Asset selAsset = getAsset(model.assetAllocation.Asset__c);
                 if(selAsset != null){
-                    model.isQuantityAllocation = (selAsset.Quantity != 1);
+                    model.isQuantityAllocation = (selAsset.Quantity > 1);
+                    model.isPercentageAllocation = (selAsset.Budgeted_Hours__c > 0);
                     model.assetAllocation.Asset__r = selAsset;
                 }else{
                     model.isError = true;
@@ -231,7 +232,8 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 SubscriptionReplica__c selSubscription = getSubscription(model.subscriptionAllocation.Subscription__c);
 
                 if(selSubscription != null){
-                    model.isQuantityAllocation = (selSubscription.Quantity__c != 1);
+                    model.isQuantityAllocation = (selSubscription.Quantity__c > 1);
+                    model.isPercentageAllocation = (selSubscription.Budgeted_Hours__c > 0);
                     model.subscriptionAllocation.Subscription__r = selSubscription;
                 }else{
                     model.isError = true;
@@ -296,7 +298,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 error = true;
                 continue;
             }*/
-            if(model.isQuantityAllocation == false){
+            if(model.isPercentageAllocation){
                 model.assetAllocation.Hours_Allocated__c = model.assetAllocation.Percent_Allocation__c * model.assetAllocation.Asset__r.Budgeted_Hours__c / 100;
             }
             if(model.assetAllocation.Id == null){
@@ -396,7 +398,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 continue;
             }
 
-            if(model.isQuantityAllocation == false){
+            if(model.isPercentageAllocation){
                 model.subscriptionAllocation.Hours_Allocated__c = model.subscriptionAllocation.Percent_Allocation__c * model.subscriptionAllocation.Subscription__r.Budgeted_Hours__c / 100;
             }
 

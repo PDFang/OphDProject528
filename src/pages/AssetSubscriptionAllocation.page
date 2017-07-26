@@ -17,7 +17,7 @@
             <apex:pageBlockButtons title="" location="bottom">
                 <apex:commandButton title="Back" value="Back" action="{!cancel}"/>
             </apex:pageBlockButtons>
-            <apex:pageBlockSection columns="1" >
+            <apex:pageBlockSection columns="2" >
                 <apex:repeat value="{!$ObjectType.Project__c.FieldSets.PS_Project_Allocation}" var="f">
                     <apex:outputfield value="{!Project[f]}" />
                 </apex:repeat>
@@ -28,7 +28,7 @@
             <apex:pageBlockButtons title="" location="bottom">
                 <apex:commandButton title="Back" value="Back" action="{!cancel}"/>
             </apex:pageBlockButtons>
-            <apex:pageBlockSection columns="1" >
+            <apex:pageBlockSection columns="2" >
                 <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation}" var="f">
                     <apex:outputfield value="{!Asset[f]}" />
                 </apex:repeat>
@@ -39,7 +39,7 @@
             <apex:pageBlockButtons title="" location="bottom">
                 <apex:commandButton title="Back" value="Back" action="{!cancel}"/>
             </apex:pageBlockButtons>
-            <apex:pageBlockSection columns="1" >
+            <apex:pageBlockSection columns="2" >
                 <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation}" var="f">
                     <apex:outputfield value="{!Subscription[f]}" />
                 </apex:repeat>
@@ -81,10 +81,10 @@
                         <apex:inputField value="{!entry.assetAllocation.Quantity_Allocation__c}" rendered="{!entry.isQuantityAllocation}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Percentage">
-                        <apex:inputField value="{!entry.assetAllocation.Percent_Allocation__c}" rendered="{!NOT(entry.isQuantityAllocation)}"/>
+                        <apex:inputField value="{!entry.assetAllocation.Percent_Allocation__c}" rendered="{!entry.isPercentageAllocation}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Hours">
-                        <apex:outputField value="{!entry.assetAllocation.Hours_Allocated__c}" rendered="{!NOT(entry.isQuantityAllocation)}"/>
+                        <apex:outputField value="{!entry.assetAllocation.Hours_Allocated__c}" rendered="{!entry.isPercentageAllocation}"/>
                     </apex:column>
                 </apex:pageBlockTable>
 
@@ -126,10 +126,10 @@
                         <apex:inputField value="{!entry.subscriptionAllocation.Quantity_Allocation__c}" rendered="{!entry.isQuantityAllocation}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Percentage">
-                        <apex:inputField value="{!entry.subscriptionAllocation.Percent_Allocation__c}" rendered="{!NOT(entry.isQuantityAllocation)}"/>
+                        <apex:inputField value="{!entry.subscriptionAllocation.Percent_Allocation__c}" rendered="{!entry.isPercentageAllocation}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Hours">
-                        <apex:outputField value="{!entry.subscriptionAllocation.Hours_Allocated__c}" rendered="{!NOT(entry.isQuantityAllocation)}"/>
+                        <apex:outputField value="{!entry.subscriptionAllocation.Hours_Allocated__c}" rendered="{!entry.isPercentageAllocation}"/>
                     </apex:column>
                 </apex:pageBlockTable>
 
