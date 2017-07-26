@@ -389,6 +389,9 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
         for(AssetSubscriptionAllocationModel model :subscriptionAllocations){
 
+            model.isError = false;
+            model.message = null;
+
             system.debug('saveSubscriptionAllocation(): model - ' + model);
 
             if(model.isDelete){
