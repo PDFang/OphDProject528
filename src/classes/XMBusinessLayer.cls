@@ -2,6 +2,7 @@ public class XMBusinessLayer  {
 
     private string guid = null;
     private Set<id> acc = new Set<id>();
+    private XMPersonManagementHelper helper;
 
     public XMBusinessLayer(){}
 
@@ -149,6 +150,21 @@ public class XMBusinessLayer  {
             System.debug('GetXMGroupList  -->'  + ex.getMessage());
             throw ex;
         }
+    }
+
+
+    public string GetExistingXMPersonId(string contactEmail){
+
+        string xmPersonId;
+        List<Contact> contactList = new List<Contact>();
+        if(string.isNotBlank(contactEmail)){
+            Map<Id, Contact> contactMap = helper.getContactsByEmail(contactEmail);
+            if (contactMap.isEmpty() == false)
+            {
+                xmPersonId = contactMap.values()[0].xmPerson__c;
+            }
+        }
+        return xmPersonId;
     }
 
 
