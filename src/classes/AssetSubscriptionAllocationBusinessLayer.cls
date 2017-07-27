@@ -215,6 +215,8 @@ public class AssetSubscriptionAllocationBusinessLayer {
                     model.isError = true;
                     model.message = 'Asset not found';
                 }
+
+                system.debug('changeAsset(): model - ' + model);
             }
         }
 
@@ -239,6 +241,9 @@ public class AssetSubscriptionAllocationBusinessLayer {
                     model.isError = true;
                     model.message = 'Subscription not found';
                 }
+
+                system.debug('changeSubscription(): model - ' + model);
+
             }
         }
 
@@ -388,6 +393,9 @@ public class AssetSubscriptionAllocationBusinessLayer {
         system.debug('saveSubscriptionAllocation(): subscriptionAllocations - ' + subscriptionAllocations);
 
         for(AssetSubscriptionAllocationModel model :subscriptionAllocations){
+
+            model.isError = false;
+            model.message = null;
 
             system.debug('saveSubscriptionAllocation(): model - ' + model);
 
