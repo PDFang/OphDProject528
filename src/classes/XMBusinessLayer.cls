@@ -164,7 +164,7 @@ public class XMBusinessLayer  {
             //need to check if other accounts has the same active product
             List<ImplementedProduct__c> products = [select Account__c, product__c FROM ImplementedProduct__c where product__C =: Product and DeactivatedDate__c = null and
                     Account__c in : accountIds and (Account__r.inContact_Cluster__c =: cluster or
-            Account__r.inView_Cluster__c =: cluster)];
+            Account__r.inView_Cluster__c =: cluster or Account__r.Verint_Cluster__c =: cluster)];
             if (products.size() > 0)
             {
                 system.debug('ProductActiveOnAnotherAccount ==> return true');
