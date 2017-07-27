@@ -2,6 +2,16 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<SObject>, D
 
     private Integer maxCallouts = Limits.getLimitCallouts();
 
+    public class XMPersonDeviceUploadError{
+        public String contactId;
+        public String errorMessage;
+
+        public XMPersonDeviceUploadError(String contactId, String message){
+            this.contactId = contactId;
+            this.errorMessage = message;
+        }
+    }
+
     global Database.QueryLocator start(Database.BatchableContext context)
     {
 
@@ -16,15 +26,17 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<SObject>, D
     global void execute(Database.BatchableContext context, List<Contact> scope)
     {
 
-        system.debug(scope.size());
-        system.debug(maxCallouts);
+        system.debug('execute(): no of records - ' + scope.size());
+        system.debug('execute(): no of permissible callouts - ' +maxCallouts);
 
         if(scope.size() > (maxCallouts / 2)){
-            throw new LimitException('Warning: Too many callouts anticipated. Please try with a smaller batch size. ');
+            throw new LimitException('Warning: Too many callouts anticipated. Please try with a smaller batch size.');
         }
 
         List<xmPerson__c> personList = new List<xmPerson__c>();
         List<Contact> contactList = new List<Contact>();
+
+        XMPersonDeviceUploadError[] errors = new XMPersonDeviceUploadError[]{};
 
         for(Contact cont: scope){
 
@@ -34,22 +46,17 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<SObject>, D
             newPerson.lastName = cont.LastName;
             newPerson.externalKey = cont.Id;
             newPerson.timezone = 'US/Mountain';
-            XMRestPerson restService = new XMRestPerson();
-            XMPersonModel response = restService.createPerson(newPerson);
 
-            String xmGuid = response.Id;
-            xmPerson__c profile;
-            if(xmGuid != null){
+            String xmGuid = null;
+            try{
+                XMRestPerson personService = new XMRestPerson();
+                XMPersonModel response = personService.createPerson(newPerson);
 
-                XMEmailDevice device = new XMEmailDevice();
-                device.emailAddress = cont.Email;
-                device.name = 'Work Email';
-                device.owner = xmGuid;
+                system.debug('execute(): XMRestPerson response - ' + response);
 
-                XMRestDeviceService service = new XMRestDeviceService();
-                XMDeviceModel deviceResponse = service.createDeviceForPerson(device);
+                xmGuid = response.Id;
 
-                profile = new xmPerson__c(
+                xmPerson__c profile = new xmPerson__c(
                         PrimaryContact__c = cont.Id,
                         xmPersonUID__c = xmGuid
                 );
@@ -58,16 +65,40 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<SObject>, D
                 cont.xmPerson__c = profile.Id;
                 contactList.add(cont);
 
+            }catch(Exception ex){
+                errors.add(new XMPersonDeviceUploadError( cont.Id, ex.getMessage()));
+                continue;
+            }
+
+            if(String.isBlank(xmGuid)){
+                errors.add(new XMPersonDeviceUploadError( cont.Id, 'User was not created in xMatters.'));
+                continue;
+            }
+
+            XMEmailDevice device = new XMEmailDevice();
+            device.emailAddress = cont.Email;
+            device.name = 'Work Email';
+            device.owner = xmGuid;
+
+            try{
+                XMRestDeviceService deviceService = new XMRestDeviceService();
+                XMDeviceModel deviceResponse = deviceService.createDeviceForPerson(device);
+
+                system.debug('execute(): XMRestDeviceService deviceResponse - ' + deviceResponse);
+
+            }catch(Exception ex){
+                errors.add(new XMPersonDeviceUploadError( cont.Id, ex.getMessage()));
+                continue;
             }
 
         }
 
         if(personList.size() > 0){
-            insert personList;
+            database.insert(personList, false);
         }
 
         if(contactList.size() > 0){
-            update contactList;
+            database.update(contactList, false);
         }
 
 
