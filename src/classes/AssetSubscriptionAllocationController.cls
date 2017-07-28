@@ -79,14 +79,19 @@ public with sharing class AssetSubscriptionAllocationController {
     public pagereference saveAssetAllocation(){
 
         try{
+
             Boolean success = businessLayer.saveAssetAllocation();
             if(success){
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Saved Successfully.'));
                 businessLayer = new AssetSubscriptionAllocationBusinessLayer(currentId);
+            } else{
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line item(s) has error.'));
             }
+
         } catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while saving asset allocations. ' + ex.getMessage()));
             system.debug('saveAssetAllocation(): Exception - ' + ex);
+            system.debug('saveAssetAllocation(): ' + ex.getStackTraceString());
         }
         return null;
 
@@ -122,11 +127,15 @@ public with sharing class AssetSubscriptionAllocationController {
     public pagereference saveSubscriptionAllocation(){
 
         try{
+
             Boolean success =  businessLayer.saveSubscriptionAllocation();
             if (success){
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Saved Successfully.'));
                 businessLayer = new AssetSubscriptionAllocationBusinessLayer(currentId);
+            } else{
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line item(s) has error.'));
             }
+
         } catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while saving subscription allocations. ' + ex.getMessage()));
             system.debug('saveSubscriptionAllocation(): Exception - ' + ex);

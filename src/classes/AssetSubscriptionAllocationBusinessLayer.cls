@@ -300,7 +300,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
             if(!model.isPercentageAllocation && !model.isQuantityAllocation){
                 model.isError = true;
-                model.message = 'Asset has no quantity and budgeted hours. Please delete this line item.';
+                model.message = 'Asset has no quantity and budgeted hours. Please delete this row and try again.';
                 error = true;
                 continue;
             }
@@ -320,6 +320,14 @@ public class AssetSubscriptionAllocationBusinessLayer {
             if(model.isPercentageAllocation){
                 model.assetAllocation.Hours_Allocated__c = model.assetAllocation.Percent_Allocation__c * model.assetAllocation.Asset__r.Budgeted_Hours__c / 100;
             }
+
+            if(!(model.assetAllocation.Hours_Allocated__c > 0) && !(model.assetAllocation.Quantity_Allocation__c > 0)){
+                model.isError = true;
+                model.message = 'Either allocated quantity or allocated hours must be greater than or equal to one.';
+                error = true;
+                continue;
+            }
+
             if(model.assetAllocation.Id == null){
                 newAllocations.put(model.rowid, model.assetAllocation);
             } else{
@@ -349,7 +357,6 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
             if(failures > 0){
                 Database.rollback(beforeSave);
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line items has errors.'));
                 return false;
             }
         }
@@ -361,7 +368,6 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
             if(failures > 0){
                 Database.rollback(beforeSave);
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line items has errors.'));
                 return false;
             }
         }
@@ -424,7 +430,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
             if(!model.isPercentageAllocation && !model.isQuantityAllocation){
                 model.isError = true;
-                model.message = 'Subscription has no quantity and budgeted hours. Please delete this line item.';
+                model.message = 'Subscription has no quantity and budgeted hours. Please delete this row and try again..';
                 error = true;
                 continue;
             }
@@ -445,6 +451,13 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
             if(model.isPercentageAllocation){
                 model.subscriptionAllocation.Hours_Allocated__c = model.subscriptionAllocation.Percent_Allocation__c * model.subscriptionAllocation.Subscription__r.Budgeted_Hours__c / 100;
+            }
+
+            if(!(model.subscriptionAllocation.Hours_Allocated__c > 0) && !(model.subscriptionAllocation.Quantity_Allocation__c > 0)){
+                model.isError = true;
+                model.message = 'Either allocated quantity or allocated hours must be greater than or equal to one.';
+                error = true;
+                continue;
             }
 
             if(model.subscriptionAllocation.Id == null){
