@@ -10,6 +10,7 @@ private class AssetSubscriptionAllocationCtrlTest {
     private static Id assetReordTypeId = [Select id from RecordType where Name = 'Premise Asset'].Id;
 
     private static Asset TestAsset;
+    private static Asset TestAsset1;
     private static SBQQ__QuoteLine__c QuoteLine;
     private static Project__c parentProject1;
     private static SBQQ__Subscription__c subscription;
@@ -17,6 +18,7 @@ private class AssetSubscriptionAllocationCtrlTest {
     private static AssetSubscriptionAllocationController asstSubsAlloCont;
 
     private static Project_Asset_Allocation__c projectAssetAllocation;
+    private static Project_Asset_Allocation__c projectAssetAllocation1;
     private static Project_Subscription_Allocation__c projectSubscriptionAllocation;
 
     public static void createSimpleTestData(){
@@ -103,10 +105,25 @@ private class AssetSubscriptionAllocationCtrlTest {
                 AccountId = accountRecord.Id,
                 SBQQ__QuoteLine__c = QuoteLine.id,
                 Quantity = 10,
-                RecordTypeId = assetReordTypeId
+                RecordTypeId = assetReordTypeId,
+                Budgeted_Hours__c = 100
         );
         //assets.add(TestAsset);
         insert TestAsset;
+
+        TestAsset1 = new Asset(
+                Name = 'Asset asset1',
+                Project_Phase__c = childProject1.Id,
+                ImplementedProduct__c = ip1.Id,
+                AccountId = accountRecord.Id,
+                SBQQ__QuoteLine__c = QuoteLine.id,
+                Quantity = 10,
+                RecordTypeId = assetReordTypeId,
+                Budgeted_Hours__c = 100
+        );
+        //assets.add(TestAsset);
+        insert TestAsset1;
+
 
         system.debug('TestAsset =>' + TestAsset.Id);
 
@@ -114,6 +131,7 @@ private class AssetSubscriptionAllocationCtrlTest {
         subscription.SBQQ__Account__c =  accountRecord.id;
         subscription.SBQQ__QuoteLine__c = QuoteLine.id;
         subscription.SBQQ__Quantity__c = 10;
+
         insert subscription;
 
         subscriptionReplica = new SubscriptionReplica__c();
@@ -128,6 +146,14 @@ private class AssetSubscriptionAllocationCtrlTest {
                 Percent_Allocation__c = 50
         );
         insert projectAssetAllocation;
+
+        projectAssetAllocation1 = new Project_Asset_Allocation__c(
+                Project__c = parentProject1.Id,
+                Asset__c  = TestAsset.Id,
+                Hours_Allocated__c = 5,
+                Percent_Allocation__c = 50
+        );
+        insert projectAssetAllocation1;
 
         projectSubscriptionAllocation = new Project_Subscription_Allocation__c(
                 Project__c = parentProject1.Id,
@@ -178,12 +204,17 @@ private class AssetSubscriptionAllocationCtrlTest {
         asstSubsAlloCont.createAssetAllocation();
 
         List<AssetSubscriptionAllocationModel> allocations = asstSubsAlloCont.getAssetAllocations();
-        allocations[0].assetAllocation.Asset__c = TestAsset.Id;
-        allocations[0].assetAllocation.Asset__r.Quantity = 5;
+        system.debug('allocations[0].assetAllocation.Asset__c' + allocations[0].assetAllocation.Asset__c);
+        system.debug('allocations' + allocations.size());
+        //system.assert(false, allocations);
+
+        allocations[2].assetAllocation.Asset__c = TestAsset.Id;
+        //allocations[3].assetAllocation.All 5;
 
 
         //system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Error while creating a new asset allocation. ');
         asstSubsAlloCont.saveAssetAllocation();
+//        system.assert(ApexPages.hasMessages(ApexPages.Severity.CONFIRM), 'Saved Successfully.');
         ApexPages.currentPage().getParameters().put('newAssetRowId', '0');
         asstSubsAlloCont.changeAsset();
         ApexPages.currentPage().getParameters().put('delAssetRowId', TestAsset.Id);
@@ -193,7 +224,14 @@ private class AssetSubscriptionAllocationCtrlTest {
         asstSubsAlloCont.deleteAssetAllocation();
         system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), '');
         asstSubsAlloCont.createSubscriptionAllocation();
+
+        List<AssetSubscriptionAllocationModel> allocationsSub = asstSubsAlloCont.getSubscriptionAllocations();
+        //system.assert(false, allocationsSub);
+
+        allocationsSub[1].subscriptionAllocation.Subscription__c = subscriptionReplica.Id;
+
         asstSubsAlloCont.saveSubscriptionAllocation();
+//        system.assert(ApexPages.hasMessages(ApexPages.Severity.CONFIRM), 'Saved Successfully.');
         ApexPages.currentPage().getParameters().put('newSubscriptionRowId', '0');
         asstSubsAlloCont.changeSubscription();
         ApexPages.currentPage().getParameters().put('delSubscriptionRowId', subscriptionReplica.Id);
