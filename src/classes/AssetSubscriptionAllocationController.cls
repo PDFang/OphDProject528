@@ -1,5 +1,7 @@
+// AssetSubscriptionAllocation VF page custom controller
 public with sharing class AssetSubscriptionAllocationController {
 
+    // current asset record
     public Asset Asset{
         get {
         return businessLayer != null
@@ -7,6 +9,7 @@ public with sharing class AssetSubscriptionAllocationController {
         }
     }
 
+    // current subscription record
     public SubscriptionReplica__c Subscription{
         get {
             return businessLayer != null
@@ -14,6 +17,7 @@ public with sharing class AssetSubscriptionAllocationController {
         }
     }
 
+    // current project record
     public Project__c Project{
         get {
             return businessLayer != null
@@ -31,9 +35,12 @@ public with sharing class AssetSubscriptionAllocationController {
                 ? businessLayer.subscriptionAllocations : null;
     }
 
+    // query string parameter
     private String currentId;
+
     private AssetSubscriptionAllocationBusinessLayer businessLayer;
 
+    // constructor
     public AssetSubscriptionAllocationController(){
 
         currentId = ApexPages.currentPage().getParameters().get('id');
@@ -181,7 +188,5 @@ public with sharing class AssetSubscriptionAllocationController {
 
         return new PageReference('/'+currentId).setRedirect(true);
     }
-
-
 
 }
