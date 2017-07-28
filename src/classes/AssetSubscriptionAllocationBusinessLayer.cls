@@ -215,6 +215,8 @@ public class AssetSubscriptionAllocationBusinessLayer {
                     model.isError = true;
                     model.message = 'Asset not found';
                 }
+
+                system.debug('changeAsset(): model - ' + model);
             }
         }
 
@@ -239,6 +241,9 @@ public class AssetSubscriptionAllocationBusinessLayer {
                     model.isError = true;
                     model.message = 'Subscription not found';
                 }
+
+                system.debug('changeSubscription(): model - ' + model);
+
             }
         }
 
