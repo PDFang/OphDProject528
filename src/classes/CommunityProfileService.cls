@@ -3,14 +3,11 @@ global with sharing class CommunityProfileService {
     global class HttpGetResponse{
         public String status;
         public String message;
-        // public String licenseName;
-        // public String isCustom;
         public List<Profile> profileList;
     }
 
     @HttpGet
     global static HttpGetResponse getProfiles( ) {
-
         RestRequest req = RestContext.request;
         RestResponse res = RestContext.response;
         HttpGetResponse response = new HttpGetResponse();
@@ -35,25 +32,22 @@ global with sharing class CommunityProfileService {
                 profileList.add(permissionset.Profile);
             }
 
-            // Return Failed when Get No Profile
+            // Failed response when Get no Profile
             if (profileList.isEmpty()) {
                 response.status = 'Failed';
                 response.message = 'Profile_NOT_FOUND';
                 return response;
             }
 
-            // Prepare response when Get some Profiles
+            // Success response when Get some Profiles
             response.status = 'Success';
             response.message = 'Sucess';
-            // response.licenseName = inputLicenseName;
-            // response.isCustom = inputIsCustom;
             response.profileList = profileList;
 
         } catch(System.Exception ex){
             response.status = 'Failed';
-            response.message = ex.getMessage();
+            response.message = 'Exception: ' + ex.getMessage();
         }
         return response;
-
     }
 }

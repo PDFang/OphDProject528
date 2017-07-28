@@ -1,5 +1,7 @@
+// AssetSubscriptionAllocation VF page custom controller
 public with sharing class AssetSubscriptionAllocationController {
 
+    // current asset record
     public Asset Asset{
         get {
         return businessLayer != null
@@ -7,6 +9,7 @@ public with sharing class AssetSubscriptionAllocationController {
         }
     }
 
+    // current subscription record
     public SubscriptionReplica__c Subscription{
         get {
             return businessLayer != null
@@ -14,6 +17,7 @@ public with sharing class AssetSubscriptionAllocationController {
         }
     }
 
+    // current project record
     public Project__c Project{
         get {
             return businessLayer != null
@@ -31,9 +35,12 @@ public with sharing class AssetSubscriptionAllocationController {
                 ? businessLayer.subscriptionAllocations : null;
     }
 
+    // query string parameter
     private String currentId;
+
     private AssetSubscriptionAllocationBusinessLayer businessLayer;
 
+    // constructor
     public AssetSubscriptionAllocationController(){
 
         currentId = ApexPages.currentPage().getParameters().get('id');
@@ -79,14 +86,19 @@ public with sharing class AssetSubscriptionAllocationController {
     public pagereference saveAssetAllocation(){
 
         try{
+
             Boolean success = businessLayer.saveAssetAllocation();
             if(success){
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Saved Successfully.'));
                 businessLayer = new AssetSubscriptionAllocationBusinessLayer(currentId);
+            } else{
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line item(s) has error.'));
             }
+
         } catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while saving asset allocations. ' + ex.getMessage()));
             system.debug('saveAssetAllocation(): Exception - ' + ex);
+            system.debug('saveAssetAllocation(): ' + ex.getStackTraceString());
         }
         return null;
 
@@ -122,11 +134,15 @@ public with sharing class AssetSubscriptionAllocationController {
     public pagereference saveSubscriptionAllocation(){
 
         try{
+
             Boolean success =  businessLayer.saveSubscriptionAllocation();
             if (success){
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Saved Successfully.'));
                 businessLayer = new AssetSubscriptionAllocationBusinessLayer(currentId);
+            } else{
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line item(s) has error.'));
             }
+
         } catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while saving subscription allocations. ' + ex.getMessage()));
             system.debug('saveSubscriptionAllocation(): Exception - ' + ex);
@@ -145,7 +161,8 @@ public with sharing class AssetSubscriptionAllocationController {
             businessLayer.changeAsset(Integer.valueOf(rowid));
 
         } catch (Exception ex){
-
+            system.debug('changeAsset(): Exception - ' + ex);
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while retrieving the asset.'));
         }
         return null;
 
@@ -160,7 +177,8 @@ public with sharing class AssetSubscriptionAllocationController {
             businessLayer.changeSubscription(Integer.valueOf(rowid));
 
         } catch (Exception ex){
-
+            system.debug('changeSubscription(): Exception - ' + ex);
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while retrieving the Subscription.'));
         }
         return null;
 
@@ -170,7 +188,5 @@ public with sharing class AssetSubscriptionAllocationController {
 
         return new PageReference('/'+currentId).setRedirect(true);
     }
-
-
 
 }

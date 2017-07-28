@@ -7,7 +7,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
     public List<AssetSubscriptionAllocationModel> assetAllocations{get; set;}
     public List<AssetSubscriptionAllocationModel> subscriptionAllocations{get; set;}
 
-    Set<String> assetFields = new Set<String>{
+    static Set<String> assetFields = new Set<String>{
             'Id',
             'Name',
             'RecordType.Name',
@@ -16,7 +16,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
             'Parent_Project__c'
     };
 
-    Set<String> subscriptionFields = new Set<String>{
+    static Set<String> subscriptionFields = new Set<String>{
             'Id',
             'Name',
             'Quantity__c',
@@ -24,7 +24,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
             'ParentProject__c'
     };
 
-    Set<String> projectFields = new Set<String>{
+    static Set<String> projectFields = new Set<String>{
             'Id',
             'Name',
             'RecordType.Name',
@@ -32,9 +32,10 @@ public class AssetSubscriptionAllocationBusinessLayer {
             'ParentProject__r.Name'
     };
 
-
+    // constructor
     public AssetSubscriptionAllocationBusinessLayer(String idParam){
 
+        // entry from an asset
         if(idParam.left(3) == Schema.SObjectType.Asset.getKeyPrefix()){
             currentAsset = getAsset(idParam);
             system.debug('getAsset(): currentAsset - ' + currentAsset);
@@ -46,7 +47,9 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
             getAssetAllocations();
 
-        }else if(idParam.left(3) == Schema.SObjectType.SubscriptionReplica__c.getKeyPrefix()){
+        }
+        // entry from a subscription
+        else if(idParam.left(3) == Schema.SObjectType.SubscriptionReplica__c.getKeyPrefix()){
 
             currentSubscription = getSubscription(idParam);
             system.debug('getAsset(): currentSubscription - ' + currentSubscription);
@@ -58,20 +61,24 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
             getSubscriptionAllocations();
 
-        }else if(idParam.left(3) == Schema.SObjectType.Project__c.getKeyPrefix()){
+        }
+        // entry from project
+        else if(idParam.left(3) == Schema.SObjectType.Project__c.getKeyPrefix()){
             getProject(idParam);
             if(currentProject != null){
                 system.debug('Initalizing allocation collections');
                 getAssetAllocations();
                 getSubscriptionAllocations();
             }
-        }else{
+        }
+        // invalid entry
+        else{
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'URL: Invalid ID Parameter.'));
         }
 
     }
 
-
+    // fetch project details
     private void getProject(String projectId){
 
         List<Schema.FieldSetMember> fsMembers = Schema.SobjectType.Project__c.fieldSets.PS_Project_Allocation.getFields();
@@ -99,6 +106,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
+    // fetch asset details
     private Asset getAsset(String assetId){
 
 
@@ -126,6 +134,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
+    // fetch Project Asset Allocations
     private void getAssetAllocations(){
 
         assetAllocations = new List<AssetSubscriptionAllocationModel>();
@@ -139,6 +148,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
         } else{
             soql += ' Asset__c = \'' + currentAsset.Id + '\'';
         }
+        soql += ' order by createddate ';
 
         for(Project_Asset_Allocation__c allocation : Database.query(soql)){
             AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(allocation, assetAllocations.size());
@@ -149,6 +159,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
+    // fetch subscription details
     private SubscriptionReplica__c getSubscription(String subscriptionId){
 
         List<Schema.FieldSetMember> fsMembers = Schema.SobjectType.SubscriptionReplica__c.fieldSets.PS_Subscription_Allocation.getFields();
@@ -176,6 +187,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
+    // fetch Project Subscription Allocation
     private void getSubscriptionAllocations(){
 
         subscriptionAllocations = new List<AssetSubscriptionAllocationModel>();
@@ -187,6 +199,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
         } else{
             soql += ' Subscription__c = \'' + currentSubscription.Id + '\'';
         }
+        soql += ' order by createddate ';
 
         for(Project_Subscription_Allocation__c allocation : Database.query(soql)){
             AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(allocation, subscriptionAllocations.size());
@@ -197,6 +210,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
+    // check if selected asset has a quantity or budgeted hours
     public void changeAsset(Integer rowid){
 
         for(AssetSubscriptionAllocationModel model: assetAllocations){
@@ -222,6 +236,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
+    // check if selected subscription has a quantity or budgeted hours
     public void changeSubscription(Integer rowid){
 
         for(AssetSubscriptionAllocationModel model: subscriptionAllocations){
@@ -249,6 +264,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
+    // create and insert a new row for asset allocation
     public void createAssetAllocation(){
 
         system.debug('createAssetAllocation(): currentAsset - ' + currentAsset);
@@ -259,6 +275,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
+    // delete asset allocation row from the list
     public void deleteAssetAllocation(Integer rowid){
 
         system.debug('deleteAssetAllocation(): rowid - ' + rowid);
@@ -276,6 +293,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
+    // perform validations and save the asset allocations
     public boolean saveAssetAllocation(){
 
         Map<Integer, Project_Asset_Allocation__c> newAllocations = new Map<Integer,Project_Asset_Allocation__c>();
@@ -297,15 +315,37 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 }
                 continue;
             }
-            /*if(model.assetAllocation.Asset__r.Quantity == 1 && model.assetAllocation.Quantity_Allocation__c != 1){
+
+            if(!model.isPercentageAllocation && !model.isQuantityAllocation){
                 model.isError = true;
-                model.message = 'Quantity cannot be greater than one.';
+                model.message = 'Asset has no quantity and budgeted hours. Please delete this row and try again.';
                 error = true;
                 continue;
-            }*/
+            }
+
+            if(model.assetAllocation.Quantity_Allocation__c > 0 && !(model.assetAllocation.Asset__r.Quantity > 1)){
+                model.isError = true;
+                model.message = 'Asset has no quantity available for allocation.';
+                error = true;
+                continue;
+            }
+            if(model.assetAllocation.Percent_Allocation__c > 0 && !(model.assetAllocation.Asset__r.Budgeted_Hours__c > 0)){
+                model.isError = true;
+                model.message = 'Asset has no budgeted hours available for allocation.';
+                error = true;
+                continue;
+            }
             if(model.isPercentageAllocation){
                 model.assetAllocation.Hours_Allocated__c = model.assetAllocation.Percent_Allocation__c * model.assetAllocation.Asset__r.Budgeted_Hours__c / 100;
             }
+
+            if(!(model.assetAllocation.Hours_Allocated__c > 0) && !(model.assetAllocation.Quantity_Allocation__c > 0)){
+                model.isError = true;
+                model.message = 'Either allocated quantity or allocated hours must be greater than or equal to one.';
+                error = true;
+                continue;
+            }
+
             if(model.assetAllocation.Id == null){
                 newAllocations.put(model.rowid, model.assetAllocation);
             } else{
@@ -335,7 +375,6 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
             if(failures > 0){
                 Database.rollback(beforeSave);
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line items has errors.'));
                 return false;
             }
         }
@@ -347,7 +386,6 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
             if(failures > 0){
                 Database.rollback(beforeSave);
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line items has errors.'));
                 return false;
             }
         }
@@ -356,6 +394,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
+    // create and insert a new row for subscription allocation
     public void createSubscriptionAllocation(){
 
         system.debug('createSubscriptionAllocation(): currentSubscription - ' + currentSubscription);
@@ -366,6 +405,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
+    // delete subscription allocation row from the list
     public void deleteSubscriptionAllocation(Integer rowid){
 
         system.debug('deleteSubscriptionAllocation(): rowid - ' + rowid);
@@ -383,7 +423,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
-
+    // perform validations and save the subscription allocations
     public boolean saveSubscriptionAllocation(){
 
         Map<Integer, Project_Subscription_Allocation__c> newAllocations = new Map<Integer, Project_Subscription_Allocation__c>();
@@ -391,6 +431,8 @@ public class AssetSubscriptionAllocationBusinessLayer {
         Project_Subscription_Allocation__c[] delAllocations = new Project_Subscription_Allocation__c[]{};
 
         system.debug('saveSubscriptionAllocation(): subscriptionAllocations - ' + subscriptionAllocations);
+
+        Boolean error = false;
 
         for(AssetSubscriptionAllocationModel model :subscriptionAllocations){
 
@@ -406,8 +448,36 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 continue;
             }
 
+            if(!model.isPercentageAllocation && !model.isQuantityAllocation){
+                model.isError = true;
+                model.message = 'Subscription has no quantity and budgeted hours. Please delete this row and try again..';
+                error = true;
+                continue;
+            }
+
+            if(model.subscriptionAllocation.Quantity_Allocation__c > 0 && !(model.subscriptionAllocation.Subscription__r.Quantity__c > 1)){
+                model.isError = true;
+                model.message = 'Subscription has no quantity available for allocation.';
+                error = true;
+                continue;
+            }
+
+            if(model.subscriptionAllocation.Percent_Allocation__c > 0 && !(model.subscriptionAllocation.Subscription__r.Budgeted_Hours__c > 0)){
+                model.isError = true;
+                model.message = 'Subscription has no budgeted hours available for allocation.';
+                error = true;
+                continue;
+            }
+
             if(model.isPercentageAllocation){
                 model.subscriptionAllocation.Hours_Allocated__c = model.subscriptionAllocation.Percent_Allocation__c * model.subscriptionAllocation.Subscription__r.Budgeted_Hours__c / 100;
+            }
+
+            if(!(model.subscriptionAllocation.Hours_Allocated__c > 0) && !(model.subscriptionAllocation.Quantity_Allocation__c > 0)){
+                model.isError = true;
+                model.message = 'Either allocated quantity or allocated hours must be greater than or equal to one.';
+                error = true;
+                continue;
             }
 
             if(model.subscriptionAllocation.Id == null){
@@ -421,6 +491,10 @@ public class AssetSubscriptionAllocationBusinessLayer {
         system.debug('saveSubscriptionAllocation(): newAllocations - ' + newAllocations);
         system.debug('saveSubscriptionAllocation(): currentAllocations - ' + currentAllocations);
         system.debug('saveSubscriptionAllocation(): delAllocations - ' + delAllocations);
+
+        if(error){
+            return false;
+        }
 
         System.Savepoint beforeSave = Database.setSavepoint();
 
@@ -456,7 +530,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
     }
 
-
+    // parse database errors
     private Integer  parseErrors(Database.SaveResult[] results, AssetSubscriptionAllocationModel[] allocations, List<Integer> rowIds){
 
         Integer failures = 0;
