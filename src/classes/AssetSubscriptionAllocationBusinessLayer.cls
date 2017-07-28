@@ -297,12 +297,26 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 }
                 continue;
             }
-            /*if(model.assetAllocation.Asset__r.Quantity == 1 && model.assetAllocation.Quantity_Allocation__c != 1){
+
+            if(!model.isPercentageAllocation && !model.isQuantityAllocation){
                 model.isError = true;
-                model.message = 'Quantity cannot be greater than one.';
+                model.message = 'Asset has no quantity and budgeted hours. Please delete this line item.';
                 error = true;
                 continue;
-            }*/
+            }
+
+            if(model.assetAllocation.Quantity_Allocation__c > 0 && !(model.assetAllocation.Asset__r.Quantity > 1)){
+                model.isError = true;
+                model.message = 'Asset has no quantity available for allocation.';
+                error = true;
+                continue;
+            }
+            if(model.assetAllocation.Percent_Allocation__c > 0 && !(model.assetAllocation.Asset__r.Budgeted_Hours__c > 0)){
+                model.isError = true;
+                model.message = 'Asset has no budgeted hours available for allocation.';
+                error = true;
+                continue;
+            }
             if(model.isPercentageAllocation){
                 model.assetAllocation.Hours_Allocated__c = model.assetAllocation.Percent_Allocation__c * model.assetAllocation.Asset__r.Budgeted_Hours__c / 100;
             }
@@ -392,6 +406,8 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
         system.debug('saveSubscriptionAllocation(): subscriptionAllocations - ' + subscriptionAllocations);
 
+        Boolean error = false;
+
         for(AssetSubscriptionAllocationModel model :subscriptionAllocations){
 
             model.isError = false;
@@ -403,6 +419,27 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 if(model.subscriptionAllocation.Id != null){
                     delAllocations.add(model.subscriptionAllocation);
                 }
+                continue;
+            }
+
+            if(!model.isPercentageAllocation && !model.isQuantityAllocation){
+                model.isError = true;
+                model.message = 'Subscription has no quantity and budgeted hours. Please delete this line item.';
+                error = true;
+                continue;
+            }
+
+            if(model.subscriptionAllocation.Quantity_Allocation__c > 0 && !(model.subscriptionAllocation.Subscription__r.Quantity__c > 1)){
+                model.isError = true;
+                model.message = 'Subscription has no quantity available for allocation.';
+                error = true;
+                continue;
+            }
+
+            if(model.subscriptionAllocation.Percent_Allocation__c > 0 && !(model.subscriptionAllocation.Subscription__r.Budgeted_Hours__c > 0)){
+                model.isError = true;
+                model.message = 'Subscription has no budgeted hours available for allocation.';
+                error = true;
                 continue;
             }
 
@@ -421,6 +458,10 @@ public class AssetSubscriptionAllocationBusinessLayer {
         system.debug('saveSubscriptionAllocation(): newAllocations - ' + newAllocations);
         system.debug('saveSubscriptionAllocation(): currentAllocations - ' + currentAllocations);
         system.debug('saveSubscriptionAllocation(): delAllocations - ' + delAllocations);
+
+        if(error){
+            return false;
+        }
 
         System.Savepoint beforeSave = Database.setSavepoint();
 

@@ -145,7 +145,8 @@ public with sharing class AssetSubscriptionAllocationController {
             businessLayer.changeAsset(Integer.valueOf(rowid));
 
         } catch (Exception ex){
-
+            system.debug('changeAsset(): Exception - ' + ex);
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while retrieving the asset.'));
         }
         return null;
 
@@ -160,7 +161,8 @@ public with sharing class AssetSubscriptionAllocationController {
             businessLayer.changeSubscription(Integer.valueOf(rowid));
 
         } catch (Exception ex){
-
+            system.debug('changeSubscription(): Exception - ' + ex);
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while retrieving the Subscription.'));
         }
         return null;
 
