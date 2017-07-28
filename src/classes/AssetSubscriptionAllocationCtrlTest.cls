@@ -7,12 +7,19 @@ private class AssetSubscriptionAllocationCtrlTest {
 
     private static Id childRTId = [SELECT id from RecordType where Name = 'PS Project Phase SaaS'].Id;
     private static Id parentProjectRTId = [SELECT id from RecordType where Name = 'PS Project Phase SaaS'].Id;
+    private static Id assetReordTypeId = [Select id from RecordType where Name = 'Premise Asset'].Id;
 
     private static Asset TestAsset;
+    private static Asset TestAsset1;
     private static SBQQ__QuoteLine__c QuoteLine;
     private static Project__c parentProject1;
     private static SBQQ__Subscription__c subscription;
     private static SubscriptionReplica__c subscriptionReplica;
+    private static AssetSubscriptionAllocationController asstSubsAlloCont;
+
+    private static Project_Asset_Allocation__c projectAssetAllocation;
+    private static Project_Asset_Allocation__c projectAssetAllocation1;
+    private static Project_Subscription_Allocation__c projectSubscriptionAllocation;
 
     public static void createSimpleTestData(){
 
@@ -96,23 +103,65 @@ private class AssetSubscriptionAllocationCtrlTest {
                 Project_Phase__c = childProject1.Id,
                 ImplementedProduct__c = ip1.Id,
                 AccountId = accountRecord.Id,
-                SBQQ__QuoteLine__c = QuoteLine.id
+                SBQQ__QuoteLine__c = QuoteLine.id,
+                Quantity = 10,
+                RecordTypeId = assetReordTypeId,
+                Budgeted_Hours__c = 100
         );
         //assets.add(TestAsset);
         insert TestAsset;
+
+        TestAsset1 = new Asset(
+                Name = 'Asset asset1',
+                Project_Phase__c = childProject1.Id,
+                ImplementedProduct__c = ip1.Id,
+                AccountId = accountRecord.Id,
+                SBQQ__QuoteLine__c = QuoteLine.id,
+                Quantity = 10,
+                RecordTypeId = assetReordTypeId,
+                Budgeted_Hours__c = 100
+        );
+        //assets.add(TestAsset);
+        insert TestAsset1;
+
 
         system.debug('TestAsset =>' + TestAsset.Id);
 
         subscription = new SBQQ__Subscription__c();
         subscription.SBQQ__Account__c =  accountRecord.id;
         subscription.SBQQ__QuoteLine__c = QuoteLine.id;
-        subscription.SBQQ__Quantity__c = 1;
+        subscription.SBQQ__Quantity__c = 10;
+
         insert subscription;
 
         subscriptionReplica = new SubscriptionReplica__c();
         subscriptionReplica = [SELECT Id, Account__c, Quote_Line__c, Quantity__c, Subscription__c FROM SubscriptionReplica__c WHERE Subscription__c = :subscription.Id limit 1];
         //insert subscriptionReplica;
         system.debug('subscriptionReplica.Subscription__c =>' + subscriptionReplica.Subscription__c);
+
+        projectAssetAllocation = new Project_Asset_Allocation__c(
+                Project__c = parentProject1.Id,
+                Asset__c  = TestAsset.Id,
+                Quantity_Allocation__c = 5,
+                Percent_Allocation__c = 50
+        );
+        insert projectAssetAllocation;
+
+        projectAssetAllocation1 = new Project_Asset_Allocation__c(
+                Project__c = parentProject1.Id,
+                Asset__c  = TestAsset.Id,
+                Hours_Allocated__c = 5,
+                Percent_Allocation__c = 50
+        );
+        insert projectAssetAllocation1;
+
+        projectSubscriptionAllocation = new Project_Subscription_Allocation__c(
+                Project__c = parentProject1.Id,
+                Subscription__c  = subscriptionReplica.Id,
+                Quantity_Allocation__c = 5,
+                Percent_Allocation__c = 50
+        );
+        insert projectSubscriptionAllocation;
 
     }
 
@@ -133,67 +182,67 @@ private class AssetSubscriptionAllocationCtrlTest {
     static testMethod void AssetSubscriptionAllocationControllerTest() {
 
         createSimpleTestData();
-        //string id;
-        //ApexPages.StandardController stdCtrl = new ApexPages.StandardController(changeRequest);
         Test.startTest();
         Test.setCurrentPage(Page.AssetSubscriptionAllocation);
         ApexPages.currentPage().getParameters().put('id', TestAsset.Id);
-        //id= ApexPages.currentPage().getParameters().get('id');
 
-        AssetSubscriptionAllocationController asstSubsAlloCont = new AssetSubscriptionAllocationController();
+        asstSubsAlloCont = new AssetSubscriptionAllocationController();
+        asstSubsAlloCont.getAssetAllocations();
+        asstSubsAlloCont.getSubscriptionAllocations();
         system.assertEquals(TestAsset.Id, asstSubsAlloCont.Asset.Id);
-        //        AssetSubscriptionAllocationBusinessLayer asstSubsAlloBusLayer = new AssetSubscriptionAllocationBusinessLayer(id);
-//        asstSubsAlloBusLayer.currentAsset = TestAsset;
-//        asstSubsAlloBusLayer.currentSubscription = subscriptionReplica;
-//        asstSubsAlloBusLayer.currentProject = parentProject1;
-        Test.stopTest();
 
-    }
-
-    static testMethod void AssetSubscriptionAllocationControllerTest1() {
-
-        createSimpleTestData();
-        //string id;
-        //ApexPages.StandardController stdCtrl = new ApexPages.StandardController(changeRequest);
-        Test.startTest();
-        Test.setCurrentPage(Page.AssetSubscriptionAllocation);
         ApexPages.currentPage().getParameters().put('id', subscriptionReplica.Id);
-        //id= ApexPages.currentPage().getParameters().get('id');
 
-        AssetSubscriptionAllocationController asstSubsAlloCont = new AssetSubscriptionAllocationController();
-//        system.debug('subscriptionReplica.Subscription__c =>' + subscriptionReplica.Subscription__c);
+        asstSubsAlloCont = new AssetSubscriptionAllocationController();
         system.assertEquals(subscriptionReplica.Id, asstSubsAlloCont.Subscription.Id);
-        //        AssetSubscriptionAllocationBusinessLayer asstSubsAlloBusLayer = new AssetSubscriptionAllocationBusinessLayer(id);
-//        asstSubsAlloBusLayer.currentAsset = TestAsset;
-//        asstSubsAlloBusLayer.currentSubscription = subscriptionReplica;
-//        asstSubsAlloBusLayer.currentProject = parentProject1;
-        Test.stopTest();
 
-    }
-
-    static testMethod void AssetSubscriptionAllocationControllerTest2() {
-
-        createSimpleTestData();
-        system.debug('parentProject1.Id =>' + parentProject1.Id);
-        //string id;
-        //ApexPages.StandardController stdCtrl = new ApexPages.StandardController(changeRequest);
-        Test.startTest();
-        Test.setCurrentPage(Page.AssetSubscriptionAllocation);
         ApexPages.currentPage().getParameters().put('id', parentProject1.Id);
-        //id= ApexPages.currentPage().getParameters().get('id');
 
-        AssetSubscriptionAllocationController asstSubsAlloCont = new AssetSubscriptionAllocationController();
-
+        asstSubsAlloCont = new AssetSubscriptionAllocationController();
         system.assertEquals(parentProject1.Id, asstSubsAlloCont.Project.Id);
-        //        AssetSubscriptionAllocationBusinessLayer asstSubsAlloBusLayer = new AssetSubscriptionAllocationBusinessLayer(id);
-//        asstSubsAlloBusLayer.currentAsset = TestAsset;
-//        asstSubsAlloBusLayer.currentSubscription = subscriptionReplica;
-//        asstSubsAlloBusLayer.currentProject = parentProject1;
+
+        asstSubsAlloCont.createAssetAllocation();
+
+        List<AssetSubscriptionAllocationModel> allocations = asstSubsAlloCont.getAssetAllocations();
+        system.debug('allocations[0].assetAllocation.Asset__c' + allocations[0].assetAllocation.Asset__c);
+        system.debug('allocations' + allocations.size());
+        //system.assert(false, allocations);
+
+        allocations[2].assetAllocation.Asset__c = TestAsset.Id;
+        //allocations[3].assetAllocation.All 5;
+
+
+        //system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Error while creating a new asset allocation. ');
+        asstSubsAlloCont.saveAssetAllocation();
+//        system.assert(ApexPages.hasMessages(ApexPages.Severity.CONFIRM), 'Saved Successfully.');
+        ApexPages.currentPage().getParameters().put('newAssetRowId', '0');
+        asstSubsAlloCont.changeAsset();
+        ApexPages.currentPage().getParameters().put('delAssetRowId', TestAsset.Id);
+        asstSubsAlloCont.deleteAssetAllocation();
+        system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Error while deleting asset allocation. ');
+        ApexPages.currentPage().getParameters().put('delAssetRowId', '0');
+        asstSubsAlloCont.deleteAssetAllocation();
+        system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), '');
+        asstSubsAlloCont.createSubscriptionAllocation();
+
+        List<AssetSubscriptionAllocationModel> allocationsSub = asstSubsAlloCont.getSubscriptionAllocations();
+        //system.assert(false, allocationsSub);
+
+        allocationsSub[1].subscriptionAllocation.Subscription__c = subscriptionReplica.Id;
+
+        asstSubsAlloCont.saveSubscriptionAllocation();
+//        system.assert(ApexPages.hasMessages(ApexPages.Severity.CONFIRM), 'Saved Successfully.');
+        ApexPages.currentPage().getParameters().put('newSubscriptionRowId', '0');
+        asstSubsAlloCont.changeSubscription();
+        ApexPages.currentPage().getParameters().put('delSubscriptionRowId', subscriptionReplica.Id);
+        asstSubsAlloCont.deleteSubscriptionAllocation();
+        system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Error while deleting asset allocation. ');
+        ApexPages.currentPage().getParameters().put('delSubscriptionRowId', '0');
+        asstSubsAlloCont.deleteSubscriptionAllocation();
+        system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), '');
+        asstSubsAlloCont.cancel();
         Test.stopTest();
 
     }
-
-
-
 
 }
