@@ -2,6 +2,7 @@ public class XMBusinessLayer  {
 
     private string guid = null;
     private Set<id> acc = new Set<id>();
+    private XMPersonManagementHelper helper;
 
     public XMBusinessLayer(){}
 
@@ -152,6 +153,21 @@ public class XMBusinessLayer  {
     }
 
 
+    public string GetExistingXMPersonId(string contactEmail){
+
+        string xmPersonId;
+        List<Contact> contactList = new List<Contact>();
+        if(string.isNotBlank(contactEmail)){
+            Map<Id, Contact> contactMap = helper.getContactsByEmail(contactEmail);
+            if (contactMap.isEmpty() == false)
+            {
+                xmPersonId = contactMap.values()[0].xmPerson__c;
+            }
+        }
+        return xmPersonId;
+    }
+
+
     public boolean ProductActiveOnAnotherAccount(String Product, string cluster, Id xmPersonID){
 
         id[] accountIds = new id[]{};
@@ -164,7 +180,7 @@ public class XMBusinessLayer  {
             //need to check if other accounts has the same active product
             List<ImplementedProduct__c> products = [select Account__c, product__c FROM ImplementedProduct__c where product__C =: Product and DeactivatedDate__c = null and
                     Account__c in : accountIds and (Account__r.inContact_Cluster__c =: cluster or
-            Account__r.inView_Cluster__c =: cluster)];
+            Account__r.inView_Cluster__c =: cluster or Account__r.Verint_Cluster__c =: cluster)];
             if (products.size() > 0)
             {
                 system.debug('ProductActiveOnAnotherAccount ==> return true');
@@ -236,8 +252,8 @@ public class XMBusinessLayer  {
                                                 FROM ImplementedProduct__c
                                                 WHERE Account__c in :acc  and Account__r.CG_Disconnect_Date__c = NULL
                                                 AND(GoLiveDate__c <= TODAY
-                                                OR(EstimatedGoLiveDate__c <= NEXT_N_DAYS : 14
-                                                AND Status__c not in('Canceled', 'Deactivated')))])
+                                                OR EstimatedGoLiveDate__c <= NEXT_N_DAYS : 14)
+                                                AND Status__c not in('Canceled', 'Deactivated')])
          {
              system.debug ( 'product -->' + product);
              ProductEventMap__c productMap = nodeMap.get(product.Product__c);
