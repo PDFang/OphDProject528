@@ -509,7 +509,6 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
             if(failures > 0){
                 Database.rollback(beforeSave);
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line items has errors.'));
                 return false;
             }
         }
@@ -521,7 +520,6 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
             if(failures > 0){
                 Database.rollback(beforeSave);
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line items has errors.'));
                 return false;
             }
         }
