@@ -12,6 +12,17 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<SObject>, D
         }
     }
 
+/*
+
+    // custom iterator
+    global Iterable<XMPersonDeviceUploadIterator.XMContactWrapper> start(Database.BatchableContext context)
+    {
+        return new XMPersonDeviceUploadIterable();
+    }
+
+*/
+
+    // deprecate this method
     global Database.QueryLocator start(Database.BatchableContext context)
     {
 
