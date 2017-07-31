@@ -79,12 +79,14 @@
                     </apex:column>
                     <apex:column headervalue="Allocated Quantity">
                         <apex:inputField value="{!entry.assetAllocation.Quantity_Allocation__c}" rendered="{!entry.isQuantityAllocation}"/>
+                        <apex:outputField value="{!entry.assetAllocation.Quantity_Allocation__c}" rendered="{!NOT(entry.isQuantityAllocation)}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Percentage">
                         <apex:inputField value="{!entry.assetAllocation.Percent_Allocation__c}" rendered="{!entry.isPercentageAllocation}"/>
+                        <apex:outputField value="{!entry.assetAllocation.Percent_Allocation__c}" rendered="{!NOT(entry.isPercentageAllocation)}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Hours">
-                        <apex:outputField value="{!entry.assetAllocation.Hours_Allocated__c}" rendered="{!entry.isPercentageAllocation}"/>
+                        <apex:outputField value="{!entry.assetAllocation.Hours_Allocated__c}"/>
                     </apex:column>
                 </apex:pageBlockTable>
 
@@ -124,12 +126,14 @@
                     </apex:column>
                     <apex:column headervalue="Allocated Quantity">
                         <apex:inputField value="{!entry.subscriptionAllocation.Quantity_Allocation__c}" rendered="{!entry.isQuantityAllocation}"/>
+                        <apex:outputField value="{!entry.subscriptionAllocation.Quantity_Allocation__c}" rendered="{!NOT(entry.isQuantityAllocation)}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Percentage">
                         <apex:inputField value="{!entry.subscriptionAllocation.Percent_Allocation__c}" rendered="{!entry.isPercentageAllocation}"/>
+                        <apex:outputField value="{!entry.subscriptionAllocation.Percent_Allocation__c}" rendered="{!NOT(entry.isPercentageAllocation)}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Hours">
-                        <apex:outputField value="{!entry.subscriptionAllocation.Hours_Allocated__c}" rendered="{!entry.isPercentageAllocation}"/>
+                        <apex:outputField value="{!entry.subscriptionAllocation.Hours_Allocated__c}"/>
                     </apex:column>
                 </apex:pageBlockTable>
 
