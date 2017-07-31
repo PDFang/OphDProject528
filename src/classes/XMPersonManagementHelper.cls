@@ -49,12 +49,21 @@ public class XMPersonManagementHelper {
     }
 
     public Map<Id, Contact> getContactsByEmail(String email){
+        try
+        {
+            system.debug ('getContactsByEmail ==> called');
 
-        return new Map<Id, Contact>([
-                select FirstName, LastName, Email,Phone, Id, AccountId, Account.CadebillAccountNoText__c,
-                        Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
-                from Contact where Email =: email //and xmPerson__c != null
-        ]);
+            return new Map<Id, Contact>([
+                    select FirstName, LastName, Email,Phone, Id, AccountId, Account.CadebillAccountNoText__c,
+                            Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
+                    from Contact where Email =: email and xmPerson__c != null
+            ]);
+        }
+        catch (Exception e)
+        {
+            system.debug ( 'Excpetion encountered ' + e.getMessage());
+            return null;
+        }
     }
 
     public void associateContact(String contactId, String xmPersonId){
