@@ -335,7 +335,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 error = true;
                 continue;
             }
-            if(model.isPercentageAllocation){
+            if(model.isPercentageAllocation && model.assetAllocation.Percent_Allocation__c > 0){
                 model.assetAllocation.Hours_Allocated__c = model.assetAllocation.Percent_Allocation__c * model.assetAllocation.Asset__r.Budgeted_Hours__c / 100;
             }
 
@@ -469,7 +469,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 continue;
             }
 
-            if(model.isPercentageAllocation){
+            if(model.isPercentageAllocation && model.subscriptionAllocation.Percent_Allocation__c > 0){
                 model.subscriptionAllocation.Hours_Allocated__c = model.subscriptionAllocation.Percent_Allocation__c * model.subscriptionAllocation.Subscription__r.Budgeted_Hours__c / 100;
             }
 
