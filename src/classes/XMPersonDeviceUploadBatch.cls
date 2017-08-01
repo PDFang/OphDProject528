@@ -1,4 +1,4 @@
-global class XMPersonDeviceUploadBatch implements Database.Batchable<SObject>, Database.AllowsCallouts, Database.Stateful{
+global class XMPersonDeviceUploadBatch implements Database.Batchable<XMPersonDeviceUploadIterator.XMContactWrapper>, Database.AllowsCallouts, Database.Stateful{
 
     private Integer maxCallouts = Limits.getLimitCallouts();
 
@@ -12,16 +12,134 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<SObject>, D
         }
     }
 
-/*
-
     // custom iterator
     global Iterable<XMPersonDeviceUploadIterator.XMContactWrapper> start(Database.BatchableContext context)
     {
         return new XMPersonDeviceUploadIterable();
     }
 
-*/
+    global void execute(Database.BatchableContext context, List<XMPersonDeviceUploadIterator.XMContactWrapper> scope)
+    {
+        system.debug('execute(): no of records - ' + scope.size());
 
+        system.debug('execute(): no of permissible callouts - ' + maxCallouts);
+
+        if(scope.size() > (maxCallouts / 2)){
+            throw new LimitException('Warning: Too many callouts anticipated. Please try with a smaller batch size.');
+        }
+
+        List<Contact> updateList = new List<Contact>();
+        List<xmPerson__c> personList = new List<xmPerson__c>();
+
+        for(XMPersonDeviceUploadIterator.XMContactWrapper wrapper : scope){
+
+            system.debug('execute(): contact email - ' + wrapper.email);
+
+            List<Contact> contactList = wrapper.contacts;
+            if(contactList == null || contactList.size() == 0){
+                continue;
+            }
+
+            system.debug('execute(): contactList - ' + contactList);
+
+            Boolean hasPerson = false;
+            String xmPersonGuid = null;
+
+            // ID's of contacts that has no XMPerson
+            Set<Id> contactIds = new Set<Id>();
+
+            // any of the contacts has an XM Person
+            for(Contact cont : contactList){
+                if(cont.xmPerson__c != null && String.isNotBlank(cont.xmPerson__r.xmPersonUID__c)){
+                    hasPerson = true;
+                    xmPersonGuid = cont.xmPerson__r.xmPersonUID__c;
+                } else{
+                    contactIds.add(cont.Id);
+                }
+            }
+
+            // create user for this Contact in xMatters if there isn't one already
+            if(!hasPerson){
+
+                try{
+                    xmPersonGuid = createPerson(contactList[0]);
+                    xmPerson__c profile = new xmPerson__c(
+                            PrimaryContact__c = contactList[0].Id,
+                            xmPersonUID__c = xmPersonGuid
+                    );
+                    personList.add(profile);
+                } catch(Exception ex){
+                    //errors.add(new XMPersonDeviceUploadError( cont.Id, ex.getMessage()));
+                    continue;
+                }
+
+                try{
+                    createDevice(contactList[0].Email, xmPersonGuid);
+                } catch(Exception ex){
+                    //errors.add(new XMPersonDeviceUploadError( cont.Id, ex.getMessage()));
+                    continue;
+                }
+
+            }
+
+            // relate duplicate contacts to XM person
+            for(Id contactId : contactIds){
+                updateList.add(
+                        new Contact(
+                            Id = contactId,
+                            xmPerson__r = new xmPerson__c(
+                                    xmPersonUID__c = xmPersonGuid
+                            )
+                        )
+                );
+            }
+
+        }
+
+        if(personList.size() > 0){
+            database.insert(personList, false);
+        }
+
+        if(updateList.size() > 0){
+            database.update(updateList, false);
+        }
+
+    } // execute()
+
+    private String createPerson(Contact cont) {
+
+        XMPersonModel newPerson = new XMPersonModel();
+        newPerson.targetName = cont.Id;
+        newPerson.firstName = cont.FirstName;
+        newPerson.lastName = cont.LastName;
+        newPerson.externalKey = cont.Id;
+        newPerson.timezone = 'US/Mountain';
+
+
+        XMRestPerson personService = new XMRestPerson();
+        XMPersonModel response = personService.createPerson(newPerson);
+
+        system.debug('createPerson(): XMRestPerson response - ' + response);
+
+        return response.Id;
+
+    }
+
+    private void createDevice(String email, String xmGuid){
+        XMEmailDevice device = new XMEmailDevice();
+        device.emailAddress = email;
+        device.name = 'Work Email';
+        device.owner = xmGuid;
+
+        XMRestDeviceService deviceService = new XMRestDeviceService();
+        XMDeviceModel deviceResponse = deviceService.createDeviceForPerson(device);
+
+        system.debug('createDevice(): XMRestDeviceService deviceResponse - ' + deviceResponse);
+
+
+    }
+
+/*
     // deprecate this method
     global Database.QueryLocator start(Database.BatchableContext context)
     {
@@ -31,9 +149,9 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<SObject>, D
                 + 'AND Contact_Role__c INCLUDES (\'Event Notification\',\'Maintenance Notification\') and CreatedDate > YESTERDAY '
                 + 'order by Email, CreatedDate';
         return Database.getQueryLocator(contactSoql);
-    }
+    }*/
 
-    private List<Contact> GetNewContacts (List<Contact> contacts)
+    /*private List<Contact> GetNewContacts (List<Contact> contacts)
     {
         Set<Id> resultIds = (new Map<Id,SObject>(contacts)).keySet();
         List<String> Emails = getStringFieldFromList(contacts, 'Email');
@@ -191,7 +309,7 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<SObject>, D
         }
 
 
-    }
+    }*/
 
     global void finish(Database.BatchableContext context)
     {
