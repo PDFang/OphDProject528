@@ -27,7 +27,7 @@ public with sharing class XMPersonDeviceUploadBatchTest {
 
         Map<String,Schema.RecordTypeInfo> contactRecordTypeMap = Schema.SObjectType.Contact.getRecordTypeInfosByName();
         Contact testContact = new Contact(
-                LastName = 'Contact',
+                LastName = 'Contact1',
                 FirstName = 'ContactTriggerHandlerTest',
                 Email = 'contact1@test.com',
                 RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
@@ -38,7 +38,7 @@ public with sharing class XMPersonDeviceUploadBatchTest {
         insert testContact;
 
         testContact = new Contact(
-                LastName = 'Contact',
+                LastName = 'Contact1',
                 FirstName = 'ContactTriggerHandlerTest',
                 Email = 'contact1@test.com',
                 RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
@@ -46,9 +46,9 @@ public with sharing class XMPersonDeviceUploadBatchTest {
                 xmPerson__c = null
         );
 
-
+        insert testContact;
         testContact = new Contact(
-                LastName = 'Contact',
+                LastName = 'Contact1',
                 FirstName = 'ContactTriggerHandlerTest',
                 Email = 'contact1@test.com',
                 RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
@@ -56,45 +56,47 @@ public with sharing class XMPersonDeviceUploadBatchTest {
                 xmPerson__c = null
         );
 
+        insert testContact;
         //scnario 2  no duplicates
         testContact = new Contact(
-                LastName = 'Contact',
+                LastName = 'Contact2',
                 FirstName = 'ContactTriggerHandlerTest',
                 Email = 'contact2@test.com',
                 RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
                 AccountId = testAccount.Id,
                 xmPerson__c = null
         );
-
+        insert testContact;
         testContact = new Contact(
-                LastName = 'Contact',
+                LastName = 'Contact2',
                 FirstName = 'ContactTriggerHandlerTest',
                 Email = 'contact3@test.com',
                 RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
                 AccountId = testAccount.Id,
                 xmPerson__c = null
         );
-
+        insert testContact;
 
         //scnario 3  duplicats no xm person
         testContact = new Contact(
-                LastName = 'Contact',
+                LastName = 'Contact3',
                 FirstName = 'ContactTriggerHandlerTest',
                 Email = 'contact4@test.com',
                 RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
                 AccountId = testAccount.Id,
                 xmPerson__c = null
         );
+        insert testContact;
         //scnario 2  no duplicates
         testContact = new Contact(
-                LastName = 'Contact',
+                LastName = 'Contact3',
                 FirstName = 'ContactTriggerHandlerTest',
                 Email = 'contact4@test.com',
                 RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
                 AccountId = testAccount.Id,
                 xmPerson__c = null
         );
-
+        insert testContact;
     }
     static void TestContactLoad(){
         SetupData();
