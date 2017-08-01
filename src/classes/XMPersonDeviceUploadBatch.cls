@@ -30,7 +30,7 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<SObject>, D
                 + 'order by Email, CreatedDate';
         return Database.getQueryLocator(contactSoql);
     }
-    */
+
 
     private List<Contact> GetNewContacts (List<Contact> contacts)
     {
