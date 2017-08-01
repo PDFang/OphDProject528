@@ -2,6 +2,14 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<XMPersonDev
 
     private Integer maxCallouts = Limits.getLimitCallouts();
 
+    private Integer totalContacts = 0;
+    private Integer uniqueContacts = 0;
+    private Integer associatedContacts = 0;
+    private Integer newXmPersons = 0;
+    private Integer newUsers = 0;
+    private Integer newDevices = 0;
+
+
     public class XMPersonDeviceUploadError{
         public String contactId;
         public String errorMessage;
@@ -31,6 +39,8 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<XMPersonDev
         List<Contact> updateList = new List<Contact>();
         List<xmPerson__c> personList = new List<xmPerson__c>();
 
+        XMPersonDeviceUploadError[] errors = new XMPersonDeviceUploadError[]{};
+
         for(XMPersonDeviceUploadIterator.XMContactWrapper wrapper : scope){
 
             system.debug('execute(): contact email - ' + wrapper.email);
@@ -39,6 +49,8 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<XMPersonDev
             if(contactList == null || contactList.size() == 0){
                 continue;
             }
+            uniqueContacts++;
+            totalContacts += contactList.size();
 
             system.debug('execute(): contactList - ' + contactList);
 
@@ -63,21 +75,23 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<XMPersonDev
 
                 try{
                     xmPersonGuid = createPerson(contactList[0]);
+                    newUsers++;
+
                     xmPerson__c profile = new xmPerson__c(
                             PrimaryContact__c = contactList[0].Id,
                             xmPersonUID__c = xmPersonGuid
                     );
                     personList.add(profile);
                 } catch(Exception ex){
-                    //errors.add(new XMPersonDeviceUploadError( cont.Id, ex.getMessage()));
+                    errors.add(new XMPersonDeviceUploadError( contactList[0].Id, 'Failed to create a person in xMatters. ' + ex.getMessage()));
                     continue;
                 }
 
                 try{
                     createDevice(contactList[0].Email, xmPersonGuid);
+                    newDevices++;
                 } catch(Exception ex){
-                    //errors.add(new XMPersonDeviceUploadError( cont.Id, ex.getMessage()));
-                    continue;
+                    errors.add(new XMPersonDeviceUploadError( contactList[0].Id, 'Failed to add a new device in xMatters. ' + ex.getMessage()));
                 }
 
             }
@@ -94,18 +108,84 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<XMPersonDev
                 );
             }
 
-        }
+        } // for loop
 
+        // insert XM Persons
         if(personList.size() > 0){
-            database.insert(personList, false);
+
+            Database.SaveResult[] results = database.insert(personList, false);
+            for(Integer i = 0; i < results.size(); i++){
+
+                Database.SaveResult result = results[i];
+                if(result.isSuccess()){
+                    newXmPersons++;
+                } else{
+                    errors.add(new XMPersonDeviceUploadError( personList[i].PrimaryContact__c, 'Failed to create XM Person. ' + result.getErrors()[0].getMessage()));
+                }
+
+            }
         }
 
+        // update contacts
         if(updateList.size() > 0){
-            database.update(updateList, false);
+
+            Database.SaveResult[] results = database.update(updateList, false);
+            for(Integer i = 0; i < results.size(); i++){
+
+                Database.SaveResult result = results[i];
+                if(result.isSuccess()){
+                    associatedContacts++;
+                } else{
+                    errors.add(new XMPersonDeviceUploadError( updateList[i].Id, 'Failed to associate contact with XM Person. ' + result.getErrors()[0].getMessage()));
+                }
+
+            }
         }
+
+        if(errors.size() > 0){
+            sendErrorEmail(errors);
+        }
+
 
     } // execute()
 
+    // send email when the job is completed
+    global void finish(Database.BatchableContext context)
+    {
+
+        AsyncApexJob a = [
+                SELECT Id, Status, NumberOfErrors, JobItemsProcessed,
+                        TotalJobItems, CreatedBy.Email
+                FROM AsyncApexJob WHERE Id = :context.getJobId()
+        ];
+
+        Messaging.SingleEmailMessage message = new Messaging.SingleEmailMessage();
+        String[] toAddresses = new String[] { a.CreatedBy.Email };
+        message.setToAddresses(toAddresses);
+        message.setSubject('XMPersonDeviceUploadBatch has completed');
+
+        string messageBody = 'The XMPersonDeviceUploadBatch process has completed.';
+
+        messageBody = messageBody + ' The batch Apex job processed ' + a.TotalJobItems + ' batches with '+ a.NumberOfErrors + ' failures. \n\n';
+
+        messageBody = messageBody + ' No of Contacts processed - ' + totalContacts + ' \n';
+        messageBody = messageBody + ' No of Contacts with distinct email - ' + uniqueContacts + ' \n';
+        messageBody = messageBody + ' No of users created in xMatters - ' + newUsers + ' \n';
+        messageBody = messageBody + ' No of XM Persons created - ' + newXmPersons + ' \n';
+        messageBody = messageBody + ' No of Contacts associated with XM Person - ' + associatedContacts + ' \n';
+        messageBody = messageBody + ' No of devices added in xMatters - ' + newDevices + ' \n';
+
+        message.setPlainTextBody(messageBody);
+
+        try{
+            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { message });
+        }catch(system.EmailException ex){
+            system.debug(ex);
+        }
+
+    }
+
+    // create user in xMatters
     private String createPerson(Contact cont) {
 
         XMPersonModel newPerson = new XMPersonModel();
@@ -125,7 +205,9 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<XMPersonDev
 
     }
 
+    // add a new device in xMatters
     private void createDevice(String email, String xmGuid){
+
         XMEmailDevice device = new XMEmailDevice();
         device.emailAddress = email;
         device.name = 'Work Email';
@@ -136,184 +218,37 @@ global class XMPersonDeviceUploadBatch implements Database.Batchable<XMPersonDev
 
         system.debug('createDevice(): XMRestDeviceService deviceResponse - ' + deviceResponse);
 
-
     }
 
-/*
-    // deprecate this method
-    global Database.QueryLocator start(Database.BatchableContext context)
-    {
+    // email error information
+    private void sendErrorEmail(XMPersonDeviceUploadError[] errors){
 
-        String contactSoql = 'SELECT Id, FirstName, LastName, Email  FROM Contact '
-                + 'WHERE Deactivated__c = false AND Email != NULL AND xmPerson__c = NULL '
-                + 'AND Contact_Role__c INCLUDES (\'Event Notification\',\'Maintenance Notification\') and CreatedDate > YESTERDAY '
-                + 'order by Email, CreatedDate';
-        return Database.getQueryLocator(contactSoql);
-    }*/
-
-    /*private List<Contact> GetNewContacts (List<Contact> contacts)
-    {
-        Set<Id> resultIds = (new Map<Id,SObject>(contacts)).keySet();
-        List<String> Emails = getStringFieldFromList(contacts, 'Email');
-
-        system.debug('GetNewContacts ==> resultIds ==> ' + resultIds);
-        system.debug('GetNewContacts ==> Emails ==> ' + Emails);
-
-        List<Contact>contactsNew = [SELECT Id, FirstName, LastName, Email, xmPerson__c FROM Contact WHERE Deactivated__c = false AND Email != NULL  AND Contact_Role__c INCLUDES ('Event Notification','Maintenance Notification')  And Id Not in: resultIds and Email in: Emails];
-        system.debug('GetNewContacts ==> ' + contactsNew);
-        return contactsNew;
-    }
-
-    private List<String> getStringFieldFromList(List<sObject> records, String field) {
-        List<String> result = new List<String>();
-
-        for (sObject record:records) {
-            // Assumes excluding null/empty values
-            if (!isBlank((string)record.get(field))) {
-                result.add((string)record.get(field));
-            }
-        }
-
-        return result;
-    }
-
-    private Boolean isBlank(String s) {
-        if (s == null || s == '') {
-            return true;
-        }
-
-        return false;
-    }
-
-    global void execute(Database.BatchableContext context, List<Contact> scope)
-    {
-
-        Map<string,string> existingXmPerson = new Map<string,string>();
-
-        XMBusinessLayer business = new XMBusinessLayer();
-
-        //Add additional contacts to the list that have emails that are the same as the emails in the list
-        List<Contact> NewScopecontact = GetNewContacts(scope);
-
-        for (Contact con : NewScopecontact )
+        string subject = 'XMPersonDeviceUploadBatch Errors' ;
+        Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+        String[] toAddresses = new String[]{};
+        toAddresses = Label.DEVErrorEmailRecipient.split(',');
+        email.setSenderDisplayName('Salesforce Developers');
+        email.setSubject(subject);
+        email.setToAddresses(toAddresses);
+        String baseUrl = URL.getSalesforceBaseUrl().toExternalForm();
+        string body = '<table align="center" border="1" cellpadding="0" cellspacing="0"><thead><th><b>Contact ID</b></th><th><b>Error message</b></th></thead><tbody>' ;
+        for(XMPersonDeviceUploadError error : errors)
         {
-            System.debug ('execute():NewScopecontact == > processing');
-            if (con.xmPerson__c != null)
-            {
-                System.debug ('execute():NewScopecontact == > adding existing xmPerson ==> ' +  con);
-                existingXmPerson.put(con.Email, con.xmPerson__c );  //populate the list with existing xmPersons
-            }
-            else
-            {
-                System.debug ('execute():Adding Additional scope contact == > ' + con);
-                scope.add(con);
-            }
+            String hrefValue = baseUrl + '/' + error.contactId;
+            body += '<tr><td><a href="' + hrefValue + '">' + error.contactId + '</a></td>';
+            body += '<td>' + error.errorMessage + '</td></tr>';
         }
 
-        system.debug('execute(): no of records - ' + scope.size());
-        system.debug('execute(): no of permissible callouts - ' + maxCallouts);
+        body += '</tbody></table>';
+        email.setHtmlBody(body);
 
-        //final scope size check our max call outs
-        if(scope.size() > (maxCallouts / 2)){
-            throw new LimitException('Warning: Too many callouts anticipated. Please try with a smaller batch size.');
+        //send email message
+        try{
+            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
+        }catch(system.EmailException ex){
+            system.debug(ex);
         }
-
-        List<xmPerson__c> personList = new List<xmPerson__c>();
-        List<Contact> contactList = new List<Contact>();
-
-        XMPersonDeviceUploadError[] errors = new XMPersonDeviceUploadError[]{};
-        string xmPersonId;
-
-
-        for(Contact cont: scope){
-            XMPersonModel newPerson = new XMPersonModel();
-            newPerson.targetName = cont.Id;
-            newPerson.firstName = cont.FirstName;
-            newPerson.lastName = cont.LastName;
-            newPerson.externalKey = cont.Id;
-            newPerson.timezone = 'US/Mountain';
-
-            String xmGuid = null;
-            try {
-
-                system.debug('execute():processing ==>' +  cont );
-                if (existingXmPerson.containsKey(cont.Email) == true)
-                {
-                    system.debug('execute():Getting xmPersonId ==>' +  cont );
-                    xmPersonId = existingXmPerson.get(cont.Email);
-                }
-
-                if (xmPersonId == null)
-                {
-                    system.debug('xmPersonId ==>' +  xmPersonId );
-                    XMRestPerson personService = new XMRestPerson();
-                    XMPersonModel response = personService.createPerson(newPerson);
-
-                    system.debug('execute(): XMRestPerson response - ' + response);
-
-                    xmGuid = response.Id;
-
-                    xmPerson__c profile = new xmPerson__c(
-                            PrimaryContact__c = cont.Id,
-                            xmPersonUID__c = xmGuid
-                    );
-                    //personList.add(profile);
-                    database.insert(profile);
-                    cont.xmPerson__c = profile.Id;
-                    system.debug ('execute():new Profile ==> ' +  profile);
-                    system.debug ('execute():new xmPerson ==> ' +  cont.xmPerson__c );
-                }
-                else
-                {
-                    system.debug ('execute():Setting contact to existing xmPerson ==> ' + xmPersonId );
-                    cont.xmPerson__c = xmPersonId;
-                    xmPersonId = null;
-                }
-                contactList.add(cont);
-            }catch(Exception ex){
-                errors.add(new XMPersonDeviceUploadError( cont.Id, ex.getMessage()));
-                continue;
-            }
-
-            if(String.isBlank(xmGuid)){
-                errors.add(new XMPersonDeviceUploadError( cont.Id, 'execute():User was not created in xMatters.'));
-                continue;
-            }
-
-            XMEmailDevice device = new XMEmailDevice();
-            device.emailAddress = cont.Email;
-            device.name = 'Work Email';
-            device.owner = xmGuid;
-
-            try{
-                XMRestDeviceService deviceService = new XMRestDeviceService();
-                XMDeviceModel deviceResponse = deviceService.createDeviceForPerson(device);
-                system.debug('execute(): adding existingXMPerson to the list - ' + cont.xmPerson__c);
-                existingXmPerson.put(cont.Email, cont.xmPerson__c );
-                system.debug('execute(): XMRestDeviceService deviceResponse - ' + deviceResponse);
-
-            }catch(Exception ex){
-                errors.add(new XMPersonDeviceUploadError( cont.Id, ex.getMessage()));
-                continue;
-            }
-
-
-        }
-
-        //if(personList.size() > 0){
-        //    database.insert(personList, false);
-        //}
-
-        if(contactList.size() > 0){
-            database.update(contactList, false);
-        }
-
-
-    }*/
-
-    global void finish(Database.BatchableContext context)
-    {
-
 
     }
+
 }
