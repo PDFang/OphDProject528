@@ -16,8 +16,8 @@ public class AccountTriggerHandler extends TriggerHandler  {
     }
 
     protected override void afterUpdate(){
-        CalculateAccountNetScore((List<Account>) trigger.new, (Map<Id, Account>) trigger.oldMap);
         dissociateContactXmPerson((List<Account>) trigger.new, (Map<Id, Account>) trigger.oldMap);
+        CalculateAccountNetScore((List<Account>) trigger.new, (Map<Id, Account>) trigger.oldMap);
     }
 
     private void SetRecordTypeIds() {

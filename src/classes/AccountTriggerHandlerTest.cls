@@ -34,16 +34,18 @@ private class AccountTriggerHandlerTest {
 
         test.startTest();
 
-        test.setMock(HttpCalloutMock.class, new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Id": "efrd-sqaw-123e-deft","Status":"INACTIVE"}]',null));
+        //test.setMock(HttpCalloutMock.class, new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Id": "efrd-sqaw-123e-deft","Status":"INACTIVE"}]',null));
 
         // deactivate account
         testAccount.CG_Disconnect_Date__c = system.today();
+
+        ContactTriggerHandler.isValidatePersonStatusExecuted = true; // prevent callout from happening
         update testAccount;
 
         test.stopTest();
 
         // verify contact is dissociated
-        Contact[] contactList = [Select Id from Contact where AccountId = :testAccount.Id];
+        Contact[] contactList = [Select Id, xmPerson__c from Contact where AccountId = :testAccount.Id];
 
         system.assertEquals(null, contactList[0].xmPerson__c, 'Contact was not dissociated.');
 
