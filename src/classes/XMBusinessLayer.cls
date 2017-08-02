@@ -155,15 +155,21 @@ public class XMBusinessLayer  {
 
     public string GetExistingXMPersonId(string contactEmail){
 
+        system.debug ('GetExistingXMPersonId ==> called');
         string xmPersonId;
         List<Contact> contactList = new List<Contact>();
         if(string.isNotBlank(contactEmail)){
+            system.debug ('GetExistingXMPersonId ==> Calling the Helper');
+            system.debug ('GetExistingXMPersonId ==> Calling the Helper ' + contactEmail);
             Map<Id, Contact> contactMap = helper.getContactsByEmail(contactEmail);
+            system.debug ('GetExistingXMPersonId ==> called the helper');
             if (contactMap.isEmpty() == false)
             {
+                system.debug ('GetExistingXMPersonId ==> NotEmpty');
                 xmPersonId = contactMap.values()[0].xmPerson__c;
             }
         }
+        system.debug ('GetExistingXMPersonId ==>' +   xmPersonId);
         return xmPersonId;
     }
 
