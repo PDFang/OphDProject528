@@ -189,7 +189,7 @@
                                           </label>
                                         </span>
                                             </div>
-                                            <label class="slds-form-element__label" >Customer Analysis </label>
+                                            <label class="slds-form-element__label" >Customer Impact Analysis </label>
                                             <div class="slds-form-element__control">
                                                 <apex:inputField styleClass="slds-textarea"   value="{!newCase.CustomerAnalysis__c}"/>
                                             </div>
