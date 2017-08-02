@@ -490,6 +490,7 @@ private class InContactTestClass
         gyr.GYRStartDate__c = system.today();
         gyr.GYRStatus__c = 'Black';
         gyr.ReasonSummary__c = 'No Reason';
+        gyr.ScheduledTermination__c = system.today();
 
         insert gyr;
         Test.startTest();
@@ -513,6 +514,7 @@ private class InContactTestClass
         p.Summary__c = 'Test';
         p.ProjectStatus__c = 'Backlogged';
         p.TFSId__c = '1234';
+        p.ExpectedDeliveryDate__c = system.today();
         insert p;
 
         Test.setMock(HttpCalloutMock.class, new ISTFSINTEGRATIONCLASSMOCKTEST(200));
@@ -841,6 +843,9 @@ private class InContactTestClass
     public static testMethod void TestLeadStatusClass()
     {
         Lead l = inContactBaseClass.CreateLead('firstName', 'lastName', 'leadSource', 'company');
+
+        l.Status = 'Working';
+        l.Lead_Status_Detail__c = '1st attempt to contact';
 
         insert l;
         Test.startTest();
