@@ -2,6 +2,54 @@
 private class AccountTriggerHandlerTest {
     static final String OPPORTUNITY_TYPE_NEW = 'New Opportunity';
 
+    static testMethod void dissociateContactXmPersonTest() {
+
+        Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
+        Account testAccount = new Account(
+                Name = 'dissociateContactXmPersonTest Account',
+                Type = 'Customer',
+                RecordTypeId = accountRecordTypeMap.get('Customers').getRecordTypeId(),
+                IsPartner__c = false,
+                CG_Disconnect_Date__c = null
+        );
+
+        insert testAccount;
+
+        xmPerson__c person = new xmPerson__c(
+                xmPersonUID__c = 'efrd-sqaw-123e-deft'
+        );
+        insert person;
+
+        Map<String,Schema.RecordTypeInfo> contactRecordTypeMap = Schema.SObjectType.Contact.getRecordTypeInfosByName();
+        Contact testContact = new Contact(
+                LastName = 'Contact',
+                FirstName = 'dissociateContactXmPersonTest',
+                Email = 'contact11@test.com',
+                RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
+                AccountId = testAccount.Id,
+                xmPerson__c = person.Id
+        );
+
+        insert testContact;
+
+        test.startTest();
+
+        test.setMock(HttpCalloutMock.class, new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Id": "efrd-sqaw-123e-deft","Status":"INACTIVE"}]',null));
+
+        // deactivate account
+        testAccount.CG_Disconnect_Date__c = system.today();
+        update testAccount;
+
+        test.stopTest();
+
+        // verify contact is dissociated
+        Contact[] contactList = [Select Id from Contact where AccountId = :testAccount.Id];
+
+        system.assertEquals(null, contactList[0].xmPerson__c, 'Contact was not dissociated.');
+
+    }
+
+
     static testMethod void testCalculateAccountNetScore_Insert() {
 
         AccountImpactCalculationImpl accountScoreCalculator = new AccountImpactCalculationImpl();

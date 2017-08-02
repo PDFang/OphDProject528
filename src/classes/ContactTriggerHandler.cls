@@ -80,16 +80,6 @@ public class ContactTriggerHandler extends TriggerHandler{
             system.debug('validatePersonStatus(): no of contacts deleted - ' + contactIds.size());
         }
 
-        system.debug('validatePersonStatus(): requestList - ' + requestList);
-
-        // create group change request
-        if(requestList.size() > 0){
-
-            isValidatePersonStatusExecuted = true;
-            xMGroupRequestHelper.CreateGroupChangeRequestHeader(requestList);
-
-        }
-
         system.debug('validatePersonStatus(): xmPersonIds - ' + xmPersonIds);
 
         if(xmPersonIds.isEmpty()){
@@ -111,15 +101,23 @@ public class ContactTriggerHandler extends TriggerHandler{
 
         system.debug('validatePersonStatus(): xmPersonIds to be deactivated - ' + xmPersonIds);
 
-        if(xmPersonIds.isEmpty()){
-            return;
+        if(xmPersonIds.size() > 0){
+            if(xmPersonIds.size() > limits.getLimitCallouts()){
+                throw new LimitException('Unable to deactivate ' + xmPersonIds.size() +' associated users in xMatters. Please try again with a smaller batch size.');
+            }
+
+            deactivateXmPerson(xmPersonIds);
         }
 
-        if(xmPersonIds.size() > limits.getLimitCallouts()){
-            throw new LimitException('Unable to deactivate ' + xmPersonIds.size() +' associated users in xMatters. Please try again with a smaller batch size.');
-        }
+        system.debug('validatePersonStatus(): requestList - ' + requestList);
 
-        deactivateXmPerson(xmPersonIds);
+        // create group change request
+        if(requestList.size() > 0){
+
+            isValidatePersonStatusExecuted = true;
+            xMGroupRequestHelper.CreateGroupChangeRequestHeader(requestList);
+
+        }
 
     }
 
