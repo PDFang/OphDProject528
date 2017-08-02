@@ -87,7 +87,7 @@ public with sharing class XMPersonDeviceUploadBatchTest {
                 xmPerson__c = null
         );
         insert testContact;
-        //scnario 2  no duplicates
+
         testContact = new Contact(
                 LastName = 'Contact3',
                 FirstName = 'ContactTriggerHandlerTest',
@@ -98,12 +98,10 @@ public with sharing class XMPersonDeviceUploadBatchTest {
         );
         insert testContact;
     }
-    static void TestContactLoad(){
+    public testMethod static void   TestContactLoad(){
         SetupData();
         test.startTest();
-        //call batch
-        //XMPersonDeviceUploadBatch
-
+        Database.executeBatch(new XMPersonDeviceUploadBatch(), 20);
         test.stopTest();
     }
 
