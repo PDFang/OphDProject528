@@ -90,7 +90,7 @@ public class AccountTriggerHandler extends TriggerHandler  {
 
         for(Account accountRecord : newList){
             Account oldAccount = (oldMap != null) ? oldMap.get(accountRecord.Id) : null;
-            // is new or dependent fields updated
+            // is account deactivated
             if(oldAccount != null && oldAccount.CG_Disconnect_Date__c == null
                     && accountRecord.CG_Disconnect_Date__c != null){
                 accountIdSet.add(accountRecord.Id);
