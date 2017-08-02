@@ -2,7 +2,7 @@
  - Created by arnab.karsarkar on 7/20/2017.
  -->
 
-<apex:page id="CreateMaintenanceNotification" standardController="BMCServiceDesk__Change_Request__c" extensions="CreateMaintenanceNotificationController" docType="html-5.0" applyBodyTag="false"  standardStylesheets="false" sideBar="false">
+    <apex:page id="CreateMaintenanceNotification" standardController="BMCServiceDesk__Change_Request__c" extensions="CreateMaintenanceNotificationController" docType="html-5.0" applyBodyTag="false"  standardStylesheets="false" sideBar="false">
 
     <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" lang="en">
     <head>
@@ -55,7 +55,7 @@
                        <span class="slds-truncate" title="Product Impacted">Product Impacted</span>
                    </th>
                    <th scope="col">
-                       <span class="slds-truncate" title="Platforms Impacted">Platforms Impacted</span>
+                       <span class="slds-truncate" title="Platform(s) Impacted">Platform(s) Impacted</span>
                    </th>
                    <th scope="col">
                        <span class="slds-truncate" title="Priority">Emergency Maintenance</span>
@@ -129,7 +129,7 @@
                                 <apex:outputPanel id="newCasePanel">
 
                                     <section aria-labelledby="badges" style="padding:0 0 1rem 1rem; border-bottom: 1px solid #d8dde6;">
-                                        <h2 id="badges" class="slds-text-heading--medium slds-m-vertical--medium" style="margin:0px;font-size:1.40rem;">Impacted Platforms on this CCR</h2>
+                                        <h2 id="badges" class="slds-text-heading--medium slds-m-vertical--medium" style="margin:0px;font-size:1.40rem;">Impacted Platform(s) on this CCR</h2>
                                         <div style="margin-top:1rem;" class="badgeList">
                                             <apex:repeat value="{!impactedClusters}" var="cluster">
                                                 <span class="slds-badge" style="font-size:1.05rem;">{!cluster}</span>
@@ -140,11 +140,11 @@
                                         <h3 class="slds-text-heading_large slds-m-bottom_large">Maintenance Case Information</h3>
                                         <p class="slds-text-body_small slds-line-height_reset" style="float: right;"><abbr class="slds-required">*</abbr> marked fields are required</p>
                                         <div class="slds-form-element">
-                                            <label class="slds-form-element__label">Products Impacted</label><abbr class="slds-required">*</abbr>
+                                            <label class="slds-form-element__label">Product Impacted</label><abbr class="slds-required">*</abbr>
                                             <div class="slds-form-element__control">
                                                 <apex:inputField  styleClass="slds-input" style="height:30px;" value="{!newCase.ProductImpacted__c}"/>
                                             </div>
-                                            <label class="slds-form-element__label">Platforms Impacted</label><abbr class="slds-required">*</abbr>
+                                            <label class="slds-form-element__label">Platform(s) Impacted</label><abbr class="slds-required">*</abbr>
                                             <div class="slds-form-element__control">
                                                 <apex:inputField value="{!newCase.PlatformsImpacted__c}"/>
                                             </div>
@@ -152,10 +152,10 @@
                                             <div class="slds-form-element__control">
                                                 <apex:repeat value="{!ContactInfo}" var="contactUs" >
                                                     <span class="slds-radio">
-                                                      <input type="radio" id="{!contactUs.value}" name="contactusCheckboxes" value="{!contactUs.value}" onclick="UpdateContactUs(this);"/>
-                                                      <label class="slds-radio__label" for="{!contactUs.value}" onclick="document.getElementById(this.htmlFor).checked=true;" >
+                                                      <input type="radio" id="{!contactUs.label}" name="contactusCheckboxes" value="{!contactUs.value}" onclick="UpdateContactUs(this);"/>
+                                                      <label class="slds-radio__label" for="{!contactUs.label}" onclick="document.getElementById(this.htmlFor).checked=true;" >
                                                         <span class="slds-radio--faux"></span>
-                                                        <apex:outputText styleClass="slds-form-element__label" escape="false" value="{!contactUs.label}"></apex:outputText>
+                                                        <apex:outputText styleClass="slds-form-element__label" escape="false" value="{!contactUs.value}"></apex:outputText>
                                                       </label>
                                                     </span>
                                                 </apex:repeat>
@@ -163,7 +163,7 @@
                                             </div>
                                             <label class="slds-form-element__label" for="text-input-01">Subject</label>
                                             <div class="slds-form-element__control">
-                                                <input class="slds-input" id="text-input-01" style="border-width: 0 0 1px 0;box-shadow: none;"  value="{!newCase.Subject}"/>
+                                                <apex:inputField styleClass="slds-input" id="text-input-01" style="border-width: 0 0 1px 0;box-shadow: none;"  value="{!newCase.Subject}"/>
                                             </div>
                                             <label class="slds-form-element__label" for="text-input-02">Description</label>
                                             <div class="slds-form-element__control">

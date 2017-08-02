@@ -16,6 +16,7 @@ public class AccountTriggerHandler extends TriggerHandler  {
     }
 
     protected override void afterUpdate(){
+        dissociateContactXmPerson((List<Account>) trigger.new, (Map<Id, Account>) trigger.oldMap);
         CalculateAccountNetScore((List<Account>) trigger.new, (Map<Id, Account>) trigger.oldMap);
     }
 
@@ -81,6 +82,45 @@ public class AccountTriggerHandler extends TriggerHandler  {
                 || newRecord.Risk_of_Leaving__c != oldRecord.Risk_of_Leaving__c
                 || newRecord.Referenceable__c != oldRecord.Referenceable__c
                 || newRecord.GYRStatus__c != oldRecord.GYRStatus__c;
+    }
+
+    private void dissociateContactXmPerson(List<Account> newList, Map<Id, Account> oldMap){
+
+        Set<Id> accountIdSet = new Set<Id>();
+
+        for(Account accountRecord : newList){
+            Account oldAccount = (oldMap != null) ? oldMap.get(accountRecord.Id) : null;
+            // is account deactivated
+            if(oldAccount != null && oldAccount.CG_Disconnect_Date__c == null
+                    && accountRecord.CG_Disconnect_Date__c != null){
+                accountIdSet.add(accountRecord.Id);
+            }
+        }
+
+        system.debug('dissociateContactXmPerson(): accountIdSet - ' + accountIdSet);
+
+        if(accountIdSet.isEmpty()){
+            return;
+        }
+
+        Contact[] updateList = new Contact[]{};
+
+        for(Contact cont : [
+                Select Id, xmPerson__c
+                from Contact
+                where AccountId IN :accountIdSet and xmPerson__c!= null
+        ]){
+            cont.xmPerson__c = null;
+            updateList.add(cont);
+        }
+
+        system.debug('dissociateContactXmPerson(): updateList - ' + updateList);
+
+        if(updateList.size() > 0) {
+            Database.update(updateList, false);
+        }
+
+
     }
 
 }
