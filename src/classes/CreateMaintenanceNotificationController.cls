@@ -23,10 +23,11 @@ public class CreateMaintenanceNotificationController {
 
     public list<SelectOption> getContactInfo(){
         list<SelectOption> contactinfoStrings = new list<SelectOption>();
+        integer i = 0;
         for(ContactUsInfo__mdt info : [select ContactInfoText__c from ContactUsInfo__mdt]){
 
-            contactinfoStrings.add(new SelectOption(info.ContactInfoText__c,info.ContactInfoText__c));
-
+            contactinfoStrings.add(new SelectOption(info.ContactInfoText__c, 'label' + i));
+            i++;
         }
 
         return contactinfoStrings;
