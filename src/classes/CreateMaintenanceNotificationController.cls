@@ -85,7 +85,7 @@ public class CreateMaintenanceNotificationController {
             newCase.EventEndDateTime__c = endTime;
             newCase.ContactInfoText__c = contactUsString.replace('<br/>', '');
             newCase.ContactInfoText__c = newCase.ContactInfoText__c.replace('</medium>', '');
-            newCase.ContactInfoText__c = newCase.ContactInfoText__c.replace('<medium style="padding-left:18px;">', '');
+            newCase.ContactInfoText__c = newCase.ContactInfoText__c.replace('<medium style="padding-left: 18px;" >', '');
             newCase.EmergencyMaintenance__c = emergency;
             system.debug('new case =>' + newCase);
             try{

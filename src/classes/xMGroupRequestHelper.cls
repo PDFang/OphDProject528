@@ -79,6 +79,7 @@ public class xMGroupRequestHelper extends TriggerHandler {
                 else if (header.sObjectType__c == 'Contact'){
                     contactIds.add(header.sObjectId__c);
                 }
+
             }
 
 
@@ -87,7 +88,7 @@ public class xMGroupRequestHelper extends TriggerHandler {
             if(contactIds.size() > 0)
                 queryString += ' where Id in :  contactIds';
             else
-                    queryString += ' where xmPerson__c != null ';
+                    queryString += ' where xmPerson__c != null or XmattersUid__c != null';
 
             queryString += ' ),(select Id from Implemented_Products__r' ;
             if (implmentedProductIds.size() > 0){
@@ -140,6 +141,7 @@ public class xMGroupRequestHelper extends TriggerHandler {
             }
 
             if(groupChangeRequestList.size() >0){
+                system.debug ('***  groupChangeRequestList ==> ' + groupChangeRequestList);
                 insert groupChangeRequestList;
             }
         }
