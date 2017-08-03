@@ -5,7 +5,7 @@
 global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, Database.Stateful, Database.AllowsCallouts {
     private string queryString;
      global xmGroupChangeRequestBatch(){
-         queryString = 'Select Id, Action__c, Account__c, Contact__r.xmPerson__c, Contact__c, ImplementedProduct__c, NotificationProfile__r.xmPersonUID__c,' +
+         queryString = 'Select Id, Action__c, Account__c, Contact__r.xmPerson__c, Contact__c, ImplementedProduct__c,NotificationProfile__c, NotificationProfile__r.xmPersonUID__c,' +
                  ' Account__r.inContact_Cluster__c, Account__r.Parentid, Account__r.Verint_Cluster__c,Account__r.NICE_WFM_Cluster__c,Account__r.XMPartnerPrefix__c, ' +
                  'Account__r.NICE_QM_Cluster__c,Account__r.Parent.XMPartnerPrefix__c,ImplementedProduct__r.Product__c from xmGroupChangeRequest__C ' +
                  'where status__c = \'In Queue\' order by NotificationProfile__r.xmPersonUID__c' ;
@@ -25,7 +25,10 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
             list<XMGroupChangeRequestItem> requestItems = new list<XMGroupChangeRequestItem>();
             Map<String, ProductEventMap__c> nodeMap;
             nodeMap = ProductEventMap__c.getAll();
-            //system.debug('nodeMap is =>>' + nodeMap);
+            set<string> xmPersonIds = new set<string>();
+            set<string> productIds = new set<string>();
+            set<string> clusters = new set<string>();
+            list<ChangeRequestxmPersonProduct> lstCRxmPersonProducts = new list<ChangeRequestxmPersonProduct>();
 
             for (xmGroupChangeRequest__C changeRequest : scope ) {
                 string partnerPrefix;
@@ -48,22 +51,27 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                             productMap
                     );
                     XMGroupProductCluster groupData = businessLayer.GetGroupDataMap(prodMap);
-                    //check to see if this xmperson belongs to another account with the product that is active
-                    system.debug('checking xmPerson for xmGroupChangeRequestBatch ==> active product ');
-                    system.debug('changeRequest.NotificationProfile__r.xmPersonUID__c ' + changeRequest.Contact__r.xmPerson__c);
-                    system.debug('groupData.Product ' + groupData.Product);
-                    if (businessLayer.ProductActiveOnAnotherAccount(groupData.Product, groupData.Cluster, changeRequest.Contact__r.xmPerson__c) == false){
-                        XMGroupChangeRequestItem item = new XMGroupChangeRequestItem();
-                        item.groupName = groupData.XmattersGroupName;
-                        item.personId = changeRequest.NotificationProfile__r.xmPersonUID__c;
-                        item.ChangeRequestId = changeRequest.Id;
-                        item.Action= changeRequest.action__c;
-                       // system.debug('Request Item => ' + item);
-                        requestItems.add(item);
-                    }
+                    xmPersonIds.add(changeRequest.NotificationProfile__c);
+                    productIds.add(groupData.Product);
+                    clusters.add(groupData.Cluster);
+                    lstCRxmPersonProducts.add(new ChangeRequestxmPersonProduct(groupData,changeRequest.NotificationProfile__r.xmPersonUID__c, changeRequest.Id, changeRequest.Action__c));
                 }
-
             }
+            map<string, boolean> activeProductxmPerson = ProductActiveOnAnotherAccount(xmPersonIds,productIds, clusters);
+
+            for(ChangeRequestxmPersonProduct request: lstCRxmPersonProducts){
+                if (!activeProductxmPerson.containsKey(request.xmPersonId)){
+                    XMGroupChangeRequestItem item = new XMGroupChangeRequestItem();
+                    item.groupName = request.groupData.XmattersGroupName;
+                    item.personId = request.xmPersonId;
+                    item.ChangeRequestId = request.ChangeRequestId;
+                    item.Action= request.Action;
+                    requestItems.add(item);
+                }
+            }
+
+           //check to see if this xmperson belongs to another account with the product that is active
+
             if(requestItems.size() > 0){
                 string requestbody = Json.serialize(requestItems);
                 system.debug('Request Body =>' + requestbody);
@@ -79,12 +87,12 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
             update scope;
 
         }catch (Exception  ex){
-            inContactBaseClass.SendErrorEmail(ex, 'Error in Batch class to process change requests in Xmatters');
+                inContactBaseClass.SendErrorEmail(ex, 'Error in Batch class to process change requests in Xmatters');
         }
-
-
-
     }
+
+
+
 
     global void finish(Database.BatchableContext BC)
     {
@@ -108,7 +116,41 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
     }
 
 
+    public map<string,boolean> ProductActiveOnAnotherAccount(set<string> xmPersonIds, set<string> productIds, set<string> clusters ){
+         map<string,string> acctXmPersonIds = new map<string,string>();
+        map<string, boolean> activeProductxmPerson = new map<string, boolean>();
+
+        for (contact con :  [Select AccountId, xmPerson__r.xmPersonUID__c from Contact Where xmPerson__c in :xmPersonIds and xmPerson__c != null]){
+            acctXmPersonIds.put(con.AccountId, con.xmPerson__r.xmPersonUID__c);
+        }
 
 
+        if (acctXmPersonIds.size() > 1){
+            //need to check if other accounts has the same active product
+           for(ImplementedProduct__c product : [select Account__c, product__c FROM ImplementedProduct__c where product__C in: productIds and DeactivatedDate__c = null and
+            Account__c in : acctXmPersonIds.keySet() and (Account__r.inContact_Cluster__c in: clusters or
+            Account__r.inView_Cluster__c in : clusters or Account__r.Verint_Cluster__c in: clusters)]){
+               activeProductxmPerson.put(acctXmPersonIds.get(product.Account__c), true);
+           }
+
+        }
+
+        return activeProductxmPerson;
+    }
+
+    public class ChangeRequestxmPersonProduct{
+        public XMGroupProductCluster GroupData;
+        public string xmPersonId;
+        public string ChangeRequestId;
+        public string Action;
+
+        public ChangeRequestxmPersonProduct(XMGroupProductCluster grp, string xmPerson, string cr, string action){
+            this.GroupData = grp;
+            this.xmPersonId = xmPerson;
+            this.ChangeRequestId = cr;
+            this.Action = action;
+        }
+
+    }
 
 }

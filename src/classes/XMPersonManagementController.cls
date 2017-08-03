@@ -159,7 +159,8 @@ public class XMPersonManagementController{
 
         try{
             String contactRowId = ApexPages.currentPage().getParameters().get('removeId');
-            helper.removeContactAssociation(contactRowId, xmPersonGuid);
+            string currentxmPersonGuid = [select xmPerson__r.xmPersonUID__c from Contact where id = :contactRowId Limit 1].xmPerson__r.xmPersonUID__c;
+            helper.removeContactAssociation(contactRowId, currentxmPersonGuid);
             ApexPages.currentPage().getParameters().put('removeId', '');
             isPersonRemoved = true;
             findDuplicateContacts();

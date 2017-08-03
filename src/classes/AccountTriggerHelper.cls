@@ -136,19 +136,6 @@ public static void updateVariousAccountTypes(Map<Id, Account> mpNewAccts, Map<Id
                System.debug('lstlicense ====> ' + lstlicense); 
                 update lstlicense;
 
-			//insert record into the xm Header Request
-			system.debug('***Starting xmHeader Processing');
-			for (id acc: discAccts ){
-				system.debug('*** xmHeader Processing ==>id =' + acc);
-				xmGroupChangeRequestHeader__c header = new xmGroupChangeRequestHeader__c();
-				header.Account__c = acc;
-				header.sObjectId__c = acc;
-				header.sObjectType__c = 'account';
-				xmHeaderData.add(header);
-			}
-			if (!xmHeaderData.isEmpty()) {
-				insert xmHeaderData;
-			}
 	}
 
  }
