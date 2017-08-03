@@ -84,17 +84,44 @@ public class AccountTriggerHandler extends TriggerHandler  {
                 || newRecord.GYRStatus__c != oldRecord.GYRStatus__c;
     }
 
+    private void clearXMAccountAssociation(List<Account> newList, Map<Id, Account> oldMap) {
+        list<xmGroupChangeRequestHeader__c> xmHeaderData = new list<xmGroupChangeRequestHeader__c>();
+        for (Account accountRecord : newList) {
+            Account oldAccount = (oldMap != null) ? oldMap.get(accountRecord.Id) : null;
+            // is account deactivated
+            if (oldAccount != null && oldAccount.CG_Disconnect_Date__c == null && accountRecord.CG_Disconnect_Date__c != null) {
+                system.debug('*** xmHeader Processing ==>Account =' + accountRecord);
+                xmGroupChangeRequestHeader__c header = new xmGroupChangeRequestHeader__c();
+                header.Account__c = accountRecord.Id;
+                header.sObjectId__c = accountRecord.Id;
+                header.sObjectType__c = 'account';
+                xmHeaderData.add(header);
+            }
+            if (!xmHeaderData.isEmpty()) {
+                insert xmHeaderData;
+            }
+        }
+    }
     private void dissociateContactXmPerson(List<Account> newList, Map<Id, Account> oldMap){
-
         Set<Id> accountIdSet = new Set<Id>();
-
+        list<xmGroupChangeRequestHeader__c> xmHeaderData = new list<xmGroupChangeRequestHeader__c>();
         for(Account accountRecord : newList){
             Account oldAccount = (oldMap != null) ? oldMap.get(accountRecord.Id) : null;
             // is account deactivated
             if(oldAccount != null && oldAccount.CG_Disconnect_Date__c == null
                     && accountRecord.CG_Disconnect_Date__c != null){
                 accountIdSet.add(accountRecord.Id);
+                //adds data to xmBatch header for xMatters
+                xmGroupChangeRequestHeader__c header = new xmGroupChangeRequestHeader__c();
+                header.Account__c = accountRecord.Id;
+                header.sObjectId__c = accountRecord.Id;
+                header.sObjectType__c = 'account';
+                xmHeaderData.add(header);
             }
+        }
+
+        if (!xmHeaderData.isEmpty()) {
+            insert xmHeaderData;
         }
 
         system.debug('dissociateContactXmPerson(): accountIdSet - ' + accountIdSet);
@@ -106,11 +133,12 @@ public class AccountTriggerHandler extends TriggerHandler  {
         Contact[] updateList = new Contact[]{};
 
         for(Contact cont : [
-                Select Id, xmPerson__c
+                Select Id, xmPerson__c, xmPerson__r.xmPersonUID__c
                 from Contact
                 where AccountId IN :accountIdSet and xmPerson__c!= null
         ]){
             cont.xmPerson__c = null;
+            cont.XmattersUid__c = cont.xmPerson__r.xmPersonUID__c;
             updateList.add(cont);
         }
 
