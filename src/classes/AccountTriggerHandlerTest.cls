@@ -1,6 +1,6 @@
 @IsTest
 private class AccountTriggerHandlerTest {
-    static final String OPPORTUNITY_TYPE_NEW = 'New Opportunity';
+
 
     static testMethod void dissociateContactXmPersonTest() {
 
@@ -48,6 +48,10 @@ private class AccountTriggerHandlerTest {
         Contact[] contactList = [Select Id, xmPerson__c from Contact where AccountId = :testAccount.Id];
 
         system.assertEquals(null, contactList[0].xmPerson__c, 'Contact was not dissociated.');
+
+        List<xmGroupChangeRequestHeader__c> xmHeaderData = [Select Id from xmGroupChangeRequestHeader__c where sObjectId__c = :testAccount.Id];
+
+        system.assertEquals(1, xmHeaderData.size(), 'Should have inserted a record in xmGroupChangeRequestHeader.');
 
     }
 
