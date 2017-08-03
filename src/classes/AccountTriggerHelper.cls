@@ -46,13 +46,14 @@ public static void updateContract(Map<Id, Account> mpNewAccts){
 
 }
 //referenceable and non-referenceable
-//DisConnected Account. 
+//Disconnected Account.
 public static void updateVariousAccountTypes(Map<Id, Account> mpNewAccts, Map<Id, Account> mpOldAccts){
 		
 		 Set<Id> discAccts = new Set<Id>();
 		 GYR__c[] gyrs = new GYR__c[]{};
 		 Set<Id> nrAccts = new Set<Id>();
-		 Set<Id> referAccts = new Set<Id>();	
+		 Set<Id> referAccts = new Set<Id>();
+	     list<xmGroupChangeRequestHeader__c> xmHeaderData = new list<xmGroupChangeRequestHeader__c>();
 
 		for (Account na : mpNewAccts.values()){	
 			//check for new disconnected gyrs
@@ -134,7 +135,21 @@ public static void updateVariousAccountTypes(Map<Id, Account> mpNewAccts, Map<Id
               }                
                System.debug('lstlicense ====> ' + lstlicense); 
                 update lstlicense;
-	}		
+
+			//insert record into the xm Header Request
+			system.debug('***Starting xmHeader Processing');
+			for (id acc: discAccts ){
+				system.debug('*** xmHeader Processing ==>id =' + acc);
+				xmGroupChangeRequestHeader__c header = new xmGroupChangeRequestHeader__c();
+				header.Account__c = acc;
+				header.sObjectId__c = acc;
+				header.sObjectType__c = 'account';
+				xmHeaderData.add(header);
+			}
+			if (!xmHeaderData.isEmpty()) {
+				insert xmHeaderData;
+			}
+	}
 
  }
  // send accounts to Sharepoint
