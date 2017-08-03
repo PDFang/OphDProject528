@@ -34,18 +34,30 @@ public class ContactTriggerHandler extends TriggerHandler{
         // update
         if(newList != null){
 
+            Set<Id> accountIds = new Set<Id>();
+            for(Contact newContact : newList){
+                accountIds.add(newContact.AccountId);
+            }
+
+            Map<Id, Account> accountMap = new Map<Id, Account>([
+                    Select Id, CG_Disconnect_Date__c from Account
+                    Where Id IN :accountIds
+            ]);
+
             for(Contact newContact : newList){
                 Contact oldContact = oldMap.get(newContact.Id);
 
                 if( (newContact.Deactivated__c && oldContact.Deactivated__c == false && oldContact.xmPerson__c != null)
                         || (newContact.xmPerson__c != oldContact.xmPerson__c && oldContact.xmPerson__c != null))
                 {
-                    system.debug ('newContact.Account.CG_Disconnect_Date__c ==>' + newContact.Account.CG_Disconnect_Date__c);
-                    //if the account is being deactivated we don't want to add more removal requests for the contacts
-                    if (newContact.Account.CG_Disconnect_Date__c == null ){
-                        xmPersonIds.add(oldContact.xmPerson__c);
-                        contactIds.add(newContact.Id);
+                    xmPersonIds.add(oldContact.xmPerson__c);
+                    contactIds.add(newContact.Id);
 
+                    Account acct = accountMap.get(newContact.AccountId);
+                    system.debug ('validatePersonStatus(): acct - ' + acct);
+
+                    //if the account is being deactivated we don't want to add more removal requests for the contacts
+                    if (acct != null && acct.CG_Disconnect_Date__c == null ){
                         xmChangeRequestHeaderData newCR = new xmChangeRequestHeaderData();
                         newCR.accountId = newContact.AccountId;
                         newCR.sObjectId = newContact.Id;
@@ -64,17 +76,14 @@ public class ContactTriggerHandler extends TriggerHandler{
             for(Contact oldContact : oldList){
 
                 if(oldContact.Deactivated__c == false && oldContact.xmPerson__c != null){
-                    system.debug ('newContact.Account.CG_Disconnect_Date__c ==>' + oldContact.Account.CG_Disconnect_Date__c);
-                    //if the account is being deactivated we don't want to add more removal requests for the contacts
-                    if (oldContact.Account.CG_Disconnect_Date__c == null ) {
-                        xmPersonIds.add(oldContact.xmPerson__c);
-                        contactIds.add(oldContact.Id);
-                        xmChangeRequestHeaderData newCR = new xmChangeRequestHeaderData();
-                        newCR.accountId = oldContact.AccountId;
-                        newCR.sObjectId = oldContact.Id;
-                        newCR.sObjectType = 'Contact';
-                        requestList.add(newCR);
-                    }
+                    xmPersonIds.add(oldContact.xmPerson__c);
+                    contactIds.add(oldContact.Id);
+
+                    xmChangeRequestHeaderData newCR = new xmChangeRequestHeaderData();
+                    newCR.accountId = oldContact.AccountId;
+                    newCR.sObjectId = oldContact.Id;
+                    newCR.sObjectType = 'Contact';
+                    requestList.add(newCR);
                 }
             }
             system.debug('validatePersonStatus(): no of contacts deleted - ' + contactIds.size());

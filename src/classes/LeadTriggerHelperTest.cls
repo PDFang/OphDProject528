@@ -51,6 +51,8 @@ private class LeadTriggerHelperTest {
                     Title = 'CFO',
                     Company = 'My Inc',
                     Phone = '2002103300',
+                    Status = 'Working',
+                    Lead_Status_Detail__c = '1st attempt to contact',
                     Partner_Agent_Company__c = 'Not inContact',
                     Partner_Agent_First_Name__c = 'Super',
                     Partner_Agent_Last_Name__c = 'Agent',
