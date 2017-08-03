@@ -7,15 +7,26 @@ public with sharing class XMPersonDeviceUploadBatchTest {
 
     private static void SetupData(){
 
+        // create two accounts
+        Account[] testAccounts = new Account[]{};
+
         Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
         //setup the reference account
-        testAccount = new Account(
-                Name = 'ContactTriggerHandlerTest Account',
+        Account testAccount1 = new Account(
+                Name = 'XMPersonDeviceUploadBatchTest Account 1',
                 Type = 'Customer',
                 RecordTypeId = accountRecordTypeMap.get('Customers').getRecordTypeId()
         );
+        testAccounts.add(testAccount1);
 
-        insert testAccount;
+        Account testAccount2 = new Account(
+                Name = 'XMPersonDeviceUploadBatchTest Account 2',
+                Type = 'Customer',
+                RecordTypeId = accountRecordTypeMap.get('Customers').getRecordTypeId()
+        );
+        testAccounts.add(testAccount2);
+
+        insert testAccounts;
 
         //setup the reference xmperson
         xmPerson__c person = new xmPerson__c(
@@ -23,81 +34,103 @@ public with sharing class XMPersonDeviceUploadBatchTest {
         );
         insert person;
 
-        //setup scenario 1 with 1 xmperson and two duplicates
+        // create contacts
+        Contact[] testContacts = new Contact[]{};
 
         Map<String,Schema.RecordTypeInfo> contactRecordTypeMap = Schema.SObjectType.Contact.getRecordTypeInfosByName();
-        Contact testContact = new Contact(
+
+        //setup scenario 1 with 1 xmperson
+        Contact testContact1 = new Contact(
                 LastName = 'Contact1',
-                FirstName = 'ContactTriggerHandlerTest',
+                FirstName = 'XMPersonDeviceUploadBatchTest',
                 Email = 'contact1@test.com',
                 RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
-                AccountId = testAccount.Id,
-                xmPerson__c = person.Id
+                AccountId = testAccounts[0].Id,
+                xmPerson__c = person.Id,
+                Contact_Role__c = 'Event Notification;Maintenance Notification'
         );
 
-        insert testContact;
+        testContacts.add(testContact1);
 
-        testContact = new Contact(
-                LastName = 'Contact1',
-                FirstName = 'ContactTriggerHandlerTest',
-                Email = 'contact1@test.com',
-                RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
-                AccountId = testAccount.Id,
-                xmPerson__c = null
-        );
-
-        insert testContact;
-        testContact = new Contact(
-                LastName = 'Contact1',
-                FirstName = 'ContactTriggerHandlerTest',
-                Email = 'contact1@test.com',
-                RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
-                AccountId = testAccount.Id,
-                xmPerson__c = null
-        );
-
-        insert testContact;
-        //scnario 2  no duplicates
-        testContact = new Contact(
+        // setup duplicate contacts
+        Contact testContact2 = new Contact(
                 LastName = 'Contact2',
-                FirstName = 'ContactTriggerHandlerTest',
+                FirstName = 'XMPersonDeviceUploadBatchTest',
                 Email = 'contact2@test.com',
                 RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
-                AccountId = testAccount.Id,
-                xmPerson__c = null
+                AccountId = testAccounts[0].Id,
+                xmPerson__c = null,
+                Contact_Role__c = 'Maintenance Notification'
         );
-        insert testContact;
-        testContact = new Contact(
+
+        testContacts.add(testContact2);
+
+        Contact testContact3 = new Contact(
                 LastName = 'Contact2',
-                FirstName = 'ContactTriggerHandlerTest',
-                Email = 'contact3@test.com',
+                FirstName = 'XMPersonDeviceUploadBatchTest',
+                Email = 'contact2@test.com',
                 RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
-                AccountId = testAccount.Id,
-                xmPerson__c = null
+                AccountId = testAccounts[1].Id,
+                xmPerson__c = null,
+                Contact_Role__c = 'Event Notification'
         );
-        insert testContact;
 
-        //scnario 3  duplicats no xm person
-        testContact = new Contact(
-                LastName = 'Contact3',
-                FirstName = 'ContactTriggerHandlerTest',
+        testContacts.add(testContact3);
+
+        //scenario - contact with distinct email
+        Contact testContact4 = new Contact(
+                LastName = 'Contact4',
+                FirstName = 'XMPersonDeviceUploadBatchTest',
                 Email = 'contact4@test.com',
                 RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
-                AccountId = testAccount.Id,
-                xmPerson__c = null
+                AccountId = testAccounts[1].Id,
+                xmPerson__c = null,
+                Contact_Role__c = 'Maintenance Notification'
         );
-        insert testContact;
 
-        testContact = new Contact(
-                LastName = 'Contact3',
-                FirstName = 'ContactTriggerHandlerTest',
-                Email = 'contact4@test.com',
+        testContacts.add(testContact4);
+
+        Contact testContact5 = new Contact(
+                LastName = 'Contact5',
+                FirstName = 'XMPersonDeviceUploadBatchTest',
+                Email = 'contact5@test.com',
                 RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
-                AccountId = testAccount.Id,
-                xmPerson__c = null
+                AccountId = testAccounts[1].Id,
+                xmPerson__c = null,
+                Contact_Role__c = 'Maintenance Notification'
         );
-        insert testContact;
+
+        testContacts.add(testContact5);
+
+        //scenario - contact without notification role
+        Contact testContact6 = new Contact(
+                LastName = 'Contact6',
+                FirstName = 'ContactTriggerHandlerTest',
+                Email = 'contact6@test.com',
+                RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
+                AccountId = testAccounts[0].Id,
+                xmPerson__c = null,
+                Contact_Role__c = 'Main;Billing'
+        );
+        testContacts.add(testContact6);
+
+        //scenario - deactivated contact
+        Contact testContact7 = new Contact(
+                LastName = 'Contact7',
+                FirstName = 'ContactTriggerHandlerTest',
+                Email = 'contact7@test.com',
+                RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
+                AccountId = testAccounts[1].Id,
+                xmPerson__c = null,
+                Deactivated__c = true,
+                Contact_Role__c = 'Event Notification'
+        );
+        testContacts.add(testContact7);
+
+        insert testContacts;
+
     }
+
     public testMethod static void   TestContactLoad(){
         SetupData();
         test.startTest();
