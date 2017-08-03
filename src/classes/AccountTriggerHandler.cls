@@ -104,7 +104,7 @@ public class AccountTriggerHandler extends TriggerHandler  {
     }
     private void dissociateContactXmPerson(List<Account> newList, Map<Id, Account> oldMap){
         Set<Id> accountIdSet = new Set<Id>();
-        list<xmGroupChangeRequestHeader__c> xmHeaderData = new list<xmGroupChangeRequestHeader__c>();
+        list<xmChangeRequestHeaderData> xmHeaderData = new list<xmChangeRequestHeaderData>();
         for(Account accountRecord : newList){
             Account oldAccount = (oldMap != null) ? oldMap.get(accountRecord.Id) : null;
             // is account deactivated
@@ -112,16 +112,16 @@ public class AccountTriggerHandler extends TriggerHandler  {
                     && accountRecord.CG_Disconnect_Date__c != null){
                 accountIdSet.add(accountRecord.Id);
                 //adds data to xmBatch header for xMatters
-                xmGroupChangeRequestHeader__c header = new xmGroupChangeRequestHeader__c();
-                header.Account__c = accountRecord.Id;
-                header.sObjectId__c = accountRecord.Id;
-                header.sObjectType__c = 'account';
+                xmChangeRequestHeaderData header = new xmChangeRequestHeaderData();
+                header.accountId = accountRecord.Id;
+                header.sObjectId = accountRecord.Id;
+                header.sObjectType = 'account';
                 xmHeaderData.add(header);
             }
         }
 
         if (!xmHeaderData.isEmpty()) {
-            insert xmHeaderData;
+            xMGroupRequestHelper.CreateGroupChangeRequestHeader(xmHeaderData);
         }
 
         system.debug('dissociateContactXmPerson(): accountIdSet - ' + accountIdSet);
