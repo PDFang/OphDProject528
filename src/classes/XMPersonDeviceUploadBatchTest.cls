@@ -3,7 +3,15 @@
  */
 @isTest
 public with sharing class XMPersonDeviceUploadBatchTest {
-    private static Account testAccount;
+
+    testMethod static void personDeviceUploadBatchTest(){
+
+        SetupData();
+        test.startTest();
+        Database.executeBatch(new XMPersonDeviceUploadBatch(), 20);
+        test.stopTest();
+
+    }
 
     private static void SetupData(){
 
@@ -130,14 +138,6 @@ public with sharing class XMPersonDeviceUploadBatchTest {
         insert testContacts;
 
     }
-
-    public testMethod static void   TestContactLoad(){
-        SetupData();
-        test.startTest();
-        Database.executeBatch(new XMPersonDeviceUploadBatch(), 20);
-        test.stopTest();
-    }
-
 
 }
 
