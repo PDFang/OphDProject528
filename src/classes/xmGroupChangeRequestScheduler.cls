@@ -7,7 +7,7 @@ global class xmGroupChangeRequestScheduler implements Schedulable{
     global void execute(SchedulableContext ctx)
     {
 
-        id batchinstanceid = database.executeBatch(new CaseUpdateBatch(casesQuery), 100);
+        id batchinstanceid = database.executeBatch(new xmGroupChangeRequestBatch(), 200);
     }
 
 }

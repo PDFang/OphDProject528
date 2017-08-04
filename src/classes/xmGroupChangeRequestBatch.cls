@@ -45,7 +45,7 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                             productMap.Name,
                             changeRequest.Account__r.inContact_Cluster__c,
                             changeRequest.Account__r.Verint_Cluster__c,
-                            changeRequest.Account__r.Verint_Cluster__c,
+                            changeRequest.Account__r.NICE_WFM_Cluster__c,
                             changeRequest.Account__r.NICE_QM_Cluster__c,
                             partnerPrefix,
                             productMap
@@ -113,13 +113,18 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
 
 
     public map<string,boolean> ProductActiveOnAnotherAccount(set<string> xmPersonIds, set<string> productIds, set<string> clusters,  Map<String, ProductEventMap__c> nodeMap){
-        map<string,string> acctXmPersonIds = new map<string,string>();
+        map<string,list<string>> acctXmPersonIds = new map<string,list<string>>();
         map<string, boolean> activeProductxmPerson = new map<string, boolean>();
         XMBusinessLayer businessLayer =  new XMBusinessLayer();
 
       //  system.debug('clusters ==>' + clusters);
         for (contact con :  [Select AccountId, xmPerson__r.xmPersonUID__c from Contact Where xmPerson__c in :xmPersonIds and xmPerson__c != null]){
-            acctXmPersonIds.put(con.AccountId, con.xmPerson__r.xmPersonUID__c);
+            if(!acctXmPersonIds.containsKey(con.AccountId)){
+                acctXmPersonIds.put(con.AccountId, new list<string> {con.xmPerson__r.xmPersonUID__c} );
+            }else{
+                acctXmPersonIds.get(con.AccountId).add(con.xmPerson__r.xmPersonUID__c);
+            }
+
         }
 
         //system.debug('acctXmPersonIds ==>' + acctXmPersonIds);
@@ -137,16 +142,19 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                         product.Product__c,
                         product.Account__r.inContact_Cluster__c,
                         product.Account__r.Verint_Cluster__c,
-                        product.Account__r.Verint_Cluster__c,
+                        product.Account__r.NICE_WFM_Cluster__c,
                         product.Account__r.NICE_QM_Cluster__c,
                         null,
                         productMap
                 );
                 XMGroupProductCluster thisgroupData = businessLayer.GetGroupDataMap(prodMap);
 
-                string productxmPerson = acctXmPersonIds.get(product.Account__c) + '~' + thisgroupData.Product + '~' + thisgroupData.Cluster;
-                system.debug('productxmPerson in method  ==>' + productxmPerson);
-                activeProductxmPerson.put(productxmPerson, true);
+                for(string xmPersonId : acctXmPersonIds.get(product.Account__c)){
+                    string productxmPerson = xmPersonId + '~' + thisgroupData.Product + '~' + thisgroupData.Cluster;
+                    system.debug('productxmPerson in method  ==>' + productxmPerson);
+                    activeProductxmPerson.put(productxmPerson, true);
+                }
+
             }
 
         }
