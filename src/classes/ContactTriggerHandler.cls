@@ -5,6 +5,11 @@ public class ContactTriggerHandler extends TriggerHandler{
     @TestVisible
     private static boolean calloutXMRestPerson = false;
 
+
+    public override void beforeUpdate(){
+        dissociatexMattersUid((List<Contact>) trigger.new, (List<Contact>) trigger.old, (Map<Id, Contact>) trigger.oldMap);
+    }
+
     public override void afterUpdate(){
 
         if(!isValidatePersonStatusExecuted)
@@ -19,6 +24,26 @@ public class ContactTriggerHandler extends TriggerHandler{
 
     }
 
+
+    private static void dissociatexMattersUid(List<Contact> newList, List<Contact> oldList, Map<Id, Contact> oldMap){
+        if(oldMap == null)
+            return;
+        Set<Id> contactIds = new Set<Id>();
+
+        for(Contact newContact : newList){
+            contactIds.add(newContact.Id);
+        }
+
+        Map<id, Contact> personMap = new map<id, Contact>([select Id, xmPerson__r.xmPersonUID__c from Contact where Id in: contactIds]);
+        for(Contact newContact : newList){
+            Contact oldContact = oldMap.get(newContact.Id);
+            if((newContact.Deactivated__c && oldContact.Deactivated__c == false && newContact.xmPerson__c != null)){
+                newContact.XmattersUid__c = personMap.get(newContact.Id).xmPerson__r.xmPersonUID__c;
+                newContact.xmPerson__c = null;
+            }
+        }
+    }
+
     // validate the contact that is deactivated, disassociated or deleted was the only active contact associated with xMatters person
     private static void validatePersonStatus(List<Contact> newList, List<Contact> oldList, Map<Id, Contact> oldMap){
 
@@ -30,7 +55,7 @@ public class ContactTriggerHandler extends TriggerHandler{
         Set<Id> contactIds = new Set<Id>();
 
         List<xmChangeRequestHeaderData> requestList = new List<xmChangeRequestHeaderData>();
-
+        list<Contact> deactivatedContacts = new list<Contact>();
         // update
         if(newList != null){
 
@@ -50,8 +75,11 @@ public class ContactTriggerHandler extends TriggerHandler{
                 if( (newContact.Deactivated__c && oldContact.Deactivated__c == false && oldContact.xmPerson__c != null)
                         || (newContact.xmPerson__c != oldContact.xmPerson__c && oldContact.xmPerson__c != null))
                 {
+
                     xmPersonIds.add(oldContact.xmPerson__c);
                     contactIds.add(newContact.Id);
+
+
 
                     Account acct = accountMap.get(newContact.AccountId);
                     system.debug ('validatePersonStatus(): acct - ' + acct);
@@ -95,7 +123,10 @@ public class ContactTriggerHandler extends TriggerHandler{
         if(requestList.size() > 0){
 
             isValidatePersonStatusExecuted = true;
+
             xMGroupRequestHelper.CreateGroupChangeRequestHeader(requestList);
+
+
 
         }
 

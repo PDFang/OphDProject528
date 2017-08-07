@@ -1,10 +1,6 @@
 /**
  * Created by arnab.karsarkar on 7/11/2017.
  */
-
-
-
-
 public class xMGroupRequestHelper extends TriggerHandler {
 
     public static void CreateGroupChangeRequestHeader(list<xmChangeRequestHeaderData> requestList){
@@ -104,36 +100,35 @@ public class xMGroupRequestHelper extends TriggerHandler {
             for(Account act: accountList){
 
                 for(ImplementedProduct__c imp: act.Implemented_Products__r){
-                    Set<String> personIdSet = new Set<String>();
 
                     for(Contact cont: act.Contacts){
-                        if(!personIdSet.contains(cont.xmPerson__c)){
-                            xmPerson__c xmPerson ;
+
+                        xmPerson__c xmPerson ;
 
 
-                            xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
-                                    Account__c = act.Id,
-                                    Contact__c = cont.Id,
-                                    ImplementedProduct__c = imp.Id,
-                                    NotificationProfile__r = xmPerson,
-                                    Status__c = 'In Queue',
-                                    Action__c = 'Remove',
-                                    xmGroupChangeRequestHeader__c = groupCRAccount.get(act.Id)
+                        xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
+                                Account__c = act.Id,
+                                Contact__c = cont.Id,
+                                ImplementedProduct__c = imp.Id,
+                                NotificationProfile__r = xmPerson,
+                                Status__c = 'In Queue',
+                                Action__c = 'Remove',
+                                xmGroupChangeRequestHeader__c = groupCRAccount.get(act.Id)
+                        );
+
+                        if(cont.xmPerson__c == null){
+                            xmPerson = new xmPerson__c(
+                                    xmPersonUID__c =  cont.XmattersUid__c
                             );
-
-                            if(cont.xmPerson__c == null){
-                                xmPerson = new xmPerson__c(
-                                        xmPersonUID__c =  cont.XmattersUid__c
-                                );
-                                grpChangeRequest.NotificationProfile__r = xmPerson;
-                            }
-                            else {
-                                grpChangeRequest.NotificationProfile__c = cont.xmPerson__c;
-                            }
-                            System.debug('grpChangeRequest : ' + grpChangeRequest);
-                            groupChangeRequestList.add(grpChangeRequest);
-                            personIdSet.add(cont.xmPerson__c);
+                            grpChangeRequest.NotificationProfile__r = xmPerson;
                         }
+                        else {
+                            grpChangeRequest.NotificationProfile__c = cont.xmPerson__c;
+                        }
+                        System.debug('grpChangeRequest : ' + grpChangeRequest);
+                        groupChangeRequestList.add(grpChangeRequest);
+
+
 
                     }
                 }
