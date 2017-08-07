@@ -134,6 +134,7 @@ public class XMRestEventServiceTests {
         eventCase.RecordTypeId = eventRecordType;
         eventCase.Status = 'New';
         eventCase.InternalEvent__c = false;
+        eventCase.EventStartDateTime__c = system.now();
 
         eventCase.setOptions(dmo);
         insert eventCase;
