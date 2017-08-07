@@ -229,16 +229,11 @@ public class CaseAssignmentClass
 		String results;
 		ID recordTypeId = c.RecordTypeId;
 		
-		ID nOCProfileId = '00e700000017HEk';
+		//ID nOCProfileId = '00e700000017HEk';-- Need of this
 		String userProfile = UserInfo.getProfileId();
-		
-		
-		if(userProfile == nOCProfileId && eventRecordType == recordTypeId)
-        {
-        	c.IgnoreEventStatusLock__c = true;
-        	results = 'Confirmed'; 
-        }
-        else if(eventRecordType == recordTypeId)
+
+		// Removed NOC status confirmed event
+    	if(eventRecordType == recordTypeId)
     	{
     		c.IgnoreEventStatusLock__c = true;
     		results = 'Suspected';	
