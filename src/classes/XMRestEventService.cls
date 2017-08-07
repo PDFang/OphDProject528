@@ -84,9 +84,30 @@ public class XMRestEventService {
     private Map<String,String> addAdditionalSalesforceDataToFormProperties(Case caseRecord){
         Map<String, String> propertyMap = new Map<String, String>();
 
+        Map<String, Schema.sObjectField> caseFields = Schema.sObjectType.Case.Fields.getMap();
+
         for(Case_to_xMatters_Field_Mapping__mdt caseMapping: caseToXMattersFieldMappings){
+
             system.debug('addAdditionalSalesforceDataToFormProperties() ==> adding property to mapping: ' + caseMapping);
-            propertyMap.put(caseMapping.xMatters_Form_Field__c, (String)caseRecord.get(caseMapping.Salesforce_Case_Field__c));
+
+            String caseField = caseMapping.Salesforce_Case_Field__c;
+            if(String.isBlank(caseField) || !caseFields.containsKey(caseField)){
+                continue;
+            }
+
+            Schema.DescribeFieldResult fieldResult = caseFields.get(caseField).getDescribe();
+            String fieldValue = null;
+            // format datetime in UTC
+            if(fieldResult.getType() == Schema.DisplayType.DATETIME && caseRecord.get(caseField) != null){
+                fieldValue = ((DateTime)caseRecord.get(caseField)).formatGmt('MM/dd/yyyy HH:mm:ss') + ' UTC';
+            } else{
+                fieldValue = (String)caseRecord.get(caseField);
+            }
+
+            system.debug('addAdditionalSalesforceDataToFormProperties() ==> form field: ' + caseMapping.xMatters_Form_Field__c);
+            system.debug('addAdditionalSalesforceDataToFormProperties() ==> field value: ' + fieldValue);
+
+            propertyMap.put(caseMapping.xMatters_Form_Field__c, fieldValue);
         }
 
         return propertyMap;
@@ -96,17 +117,20 @@ public class XMRestEventService {
      *  Performs a dynamic soql query to lookup a case and get the fields we care about
      */
     private Case getCaseFromxmNotification(XMNotification__c xmNotification){
-        String[] caseFields = new List<String>{'PlatformsImpacted__c' ,'Id'}; // Add default fields that we care about
+
+        Set<String> caseFields = new Set<String>{'PlatformsImpacted__c' ,'Id'}; // Add default fields that we care about
+        system.debug('getCaseFromxmNotification() ===> CaseFields that we care about: ' + caseFields);
 
         // Loop through the fields in custom data meta data to add fields we care about
         for(Case_to_xMatters_Field_Mapping__mdt caseField : this.caseToXMattersFieldMappings){
             caseFields.add(caseField.Salesforce_Case_Field__c);
         }
 
-        system.debug('getCaseFromxmNotification() ===> CaseFields that we care about: ' + caseFields);
+        List<String> fieldList = new List<String>(caseFields);
+        system.debug('getCaseFromxmNotification() ===> fieldList: ' + fieldList);
 
         // Dynamic soql query to get the case object
-        String dynamicCaseQuery = 'SELECT ' + String.join(caseFields, ',') + ' FROM Case Where Id = \'' + xmNotification.Case__c + '\'' ;
+        String dynamicCaseQuery = 'SELECT ' + String.join(fieldList, ',') + ' FROM Case Where Id = \'' + xmNotification.Case__c + '\'' ;
         system.debug('getCaseFromxmNotification() ===> Attempting to run SOQL Query to get Case Record: ' + dynamicCaseQuery);
 
 
