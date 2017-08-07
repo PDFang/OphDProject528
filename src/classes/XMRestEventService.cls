@@ -100,7 +100,9 @@ public class XMRestEventService {
             // format datetime in UTC
             if(fieldResult.getType() == Schema.DisplayType.DATETIME && caseRecord.get(caseField) != null){
                 fieldValue = ((DateTime)caseRecord.get(caseField)).formatGmt('MM/dd/yyyy HH:mm:ss') + ' UTC';
-            } else{
+            } else if(fieldResult.getType() == Schema.DisplayType.DATE && caseRecord.get(caseField) != null){
+                fieldValue = DateTime.newInstance((Date)caseRecord.get(caseField), Time.newInstance(0,0,0,0)).formatGmt('MM/dd/yyyy');
+            }else{
                 fieldValue = (String)caseRecord.get(caseField);
             }
 
