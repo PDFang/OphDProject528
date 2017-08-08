@@ -263,12 +263,12 @@ public class XMPersonManagementController{
 
     // retrieves all available product cluster groups for the contact's account. In addition, groups selected for the xMatters person
     @RemoteAction
-    public static string getProductGroups(String contactId){
+    public static string getProductGroups(String contactId, String type){
 
         XMGroupProductCluster[] xmGroupList;
 
         try{
-            xmGroupList = XMPersonManagementHelper.getProductGroups(contactId);
+            xmGroupList = XMPersonManagementHelper.getProductGroups(contactId, type);
         }catch(Exception ex){
             xmGroupList = new XMGroupProductCluster[]{};
         }

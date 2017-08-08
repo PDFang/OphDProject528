@@ -237,11 +237,11 @@ public class XMPersonManagementHelper {
 
     }
 
-    public static XMGroupProductCluster[] getProductGroups(String contactId){
+    public static XMGroupProductCluster[] getProductGroups(String contactId, String type){
 
         XMGroupProductCluster[] xmGroupList = new XMGroupProductCluster[]{};
 
-        XMBusinessLayer groupLayer = new XMBusinessLayer(contactId);
+        XMBusinessLayer groupLayer = new XMBusinessLayer(contactId, type);
         Map<String, XMGroupProductCluster> groupMap = groupLayer.GetGroupListByUserid();
 
         if(groupMap == null){
