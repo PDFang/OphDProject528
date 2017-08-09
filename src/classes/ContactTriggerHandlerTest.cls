@@ -28,7 +28,7 @@ public class ContactTriggerHandlerTest {
     }
 
     // validate person is deactivated when contact is disassociated
-    static testMethod void testContactDisassociation(){
+/*    static testMethod void testContactDisassociation(){
 
         Contact testContact = [
                 Select Id, AccountId, xmPerson__c from Contact
@@ -52,7 +52,7 @@ public class ContactTriggerHandlerTest {
         system.assertEquals(true, ContactTriggerHandler.isValidatePersonStatusExecuted, 'Should have executed Contact trigger handler method.');
         system.assertEquals(true, ContactTriggerHandler.calloutXMRestPerson, 'Should have called xMatters REST API');
 
-    }
+    }*/
 
     // validate person is deactivated when associated contact is deleted
     static testMethod void testContactDeletion(){
