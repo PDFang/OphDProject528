@@ -2,11 +2,12 @@ public class XMBusinessLayer  {
 
     private string guid = null;
     private Set<id> acc = new Set<id>();
+    private string notificationType = null;
     private XMPersonManagementHelper helper;
 
     public XMBusinessLayer(){}
 
-    public XMBusinessLayer(string contactId) {
+    public XMBusinessLayer(string contactId, string type) {
 
         List<Contact> contacts = [select xmPerson__c, AccountId, xmPerson__r.xmPersonUID__c from contact where id = :contactId];
 
@@ -23,6 +24,7 @@ public class XMBusinessLayer  {
         }
 
         guid = contacts[0].xmPerson__r.xmPersonUID__c;
+        notificationType = type;
     }
 
     public Map<String, XMGroupProductCluster> GetGroupListByUserid(){
@@ -174,7 +176,7 @@ public class XMBusinessLayer  {
     }
 
 
-
+  
 
     public void AddMissingDevicesToList(XMDeviceWrapper[] newDeviceList, List<XMGroupProductCluster> xmGroupClusterObjList) {
         try{
@@ -302,7 +304,10 @@ public class XMBusinessLayer  {
         if (groupData.PartnerPrefix == null || groupData.PartnerPrefix == '')
         {
             //default partner designation
-            groupData.PartnerPrefix = 'INC';
+            if(notificationType == 'MaintType')
+                groupData.PartnerPrefix = 'MAINT';
+            else
+                groupData.PartnerPrefix = 'INC';
         }
         XmattersGroupName = 'IP_'+ groupData.partnerPrefix + '_' + groupData.product + '_'  + groupData.cluster;
         return XmattersGroupName.replace(' ','');
