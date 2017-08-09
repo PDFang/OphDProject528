@@ -1,5 +1,5 @@
 @isTest
-public class XMRestPersonTests {
+    public class XMRestPersonTests {
     public static testMethod void createPerson_WillReturnCorrectJson(){
         XMRestPeopleMockHttpGenerator httpMock = new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
 

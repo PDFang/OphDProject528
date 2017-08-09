@@ -103,6 +103,32 @@ private class ImplementedProductTriggerHandlerTest {
 
     }
 
+
+    static testMethod void xmGroupChangeRequestschedulerTest() {
+
+        createAccount();
+
+        XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+        Test.setMock(HttpCalloutMock.class, fakeResponse);
+        setUp();
+        test.startTest();
+
+        ImplementedProduct__c ip1 = [select Id, Status__c, DeactivatedDate__c from ImplementedProduct__c ];
+        ip1.Status__c = 'Deactivated';
+        ip1.DeactivatedDate__c = System.today();
+        update ip1;
+        xmGroupChangeRequestScheduler sh1 = new xmGroupChangeRequestScheduler();
+        String sch = '0  00 1 3 * ?';
+        system.schedule('Test', sch, sh1);
+        test.stopTest();
+
+        xmGroupChangeRequest__c request = [select Id, Account__c, Status__c from xmGroupChangeRequest__c limit 1];
+        system.assertEquals('Processed', request.Status__c);
+
+        System.debug('request.Status__c =>' + request.Status__c);
+
+    }
+
     static void setUp(){
 
         xmPerson__c person = new xmPerson__c(
