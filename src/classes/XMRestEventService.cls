@@ -70,7 +70,7 @@ public class XMRestEventService {
         }
 
         // Build the properties needed to fill out the email template in xMatters
-        Map<String, String> propertyMap = addAdditionalSalesforceDataToFormProperties(eventCase, xmNotificationRecord.Request_Type__c);
+        Map<String, String> propertyMap = addAdditionalSalesforceDataToFormProperties(eventCase, isMaintenance);
         propertyMap.put('xmNotificationId', xmNotificationRecord.Id);
         XMEventData.templateProperties = propertyMap;
 
@@ -91,7 +91,7 @@ public class XMRestEventService {
      *  back that map for serialization
      */
     @TestVisible
-    private Map<String,String> addAdditionalSalesforceDataToFormProperties(Case caseRecord, String notificationType){
+    private Map<String,String> addAdditionalSalesforceDataToFormProperties(Case caseRecord, Boolean isMaintenance){
 
         Map<String, String> propertyMap = new Map<String, String>();
 
@@ -100,8 +100,8 @@ public class XMRestEventService {
         for(Case_to_xMatters_Field_Mapping__mdt caseMapping: caseToXMattersFieldMappings){
 
             // check if the field belonged to the type
-            if((caseMapping.Maintenance__c == false && notificationType == 'Maintenance Notification')
-                    || (caseMapping.Event__c == false && (notificationType == 'Event Initial Confirmation' || notificationType == 'Event Resolved' || notificationType == 'Event Platforms Add'))) {
+            if ((isMaintenance && !caseMapping.Maintenance__c) || !caseMapping.Event__c)
+            {
                 continue;
             }
 
