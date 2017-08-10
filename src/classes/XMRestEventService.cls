@@ -6,7 +6,7 @@ public class XMRestEventService {
     public XMRestEventService(){
         restWrapper = new XMRestWrapper(); //TODO: Allow injection? Not sure yet
         this.nodeMap = ProductEventMap__c.getAll();
-        this.caseToXMattersFieldMappings = [select Salesforce_Case_Field__c, xMatters_Form_Field__c  from Case_to_xMatters_Field_Mapping__mdt];
+        this.caseToXMattersFieldMappings = [select Salesforce_Case_Field__c, xMatters_Form_Field__c, Maintenance__c, Event__c  from Case_to_xMatters_Field_Mapping__mdt];
     }
 
     /*
