@@ -65,7 +65,7 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
 
             for(ChangeRequestxmPersonProduct request: lstCRxmPersonProducts){
                 string productxmPerson =  request.xmPersonId + '~' + request.groupData.Product + '~' + request.groupData.Cluster;
-               system.debug('productxmPerson =>' + productxmPerson);
+                system.debug('productxmPerson =>' + productxmPerson);
                 if (!activeProductxmPerson.containsKey(productxmPerson)){
                     XMGroupChangeRequestItem item = new XMGroupChangeRequestItem();
                     item.groupName = request.groupData.XmattersGroupName;
@@ -107,17 +107,12 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
 
     }
 
-    private void sendErrorEmail(Exception ex, String recordId){
-
-    }
-
-
     public map<string,boolean> ProductActiveOnAnotherAccount(set<string> xmPersonIds, set<string> productIds, set<string> clusters,  Map<String, ProductEventMap__c> nodeMap){
         map<string,list<string>> acctXmPersonIds = new map<string,list<string>>();
         map<string, boolean> activeProductxmPerson = new map<string, boolean>();
         XMBusinessLayer businessLayer =  new XMBusinessLayer();
 
-      //  system.debug('clusters ==>' + clusters);
+        //  system.debug('clusters ==>' + clusters);
         for (contact con :  [Select AccountId, xmPerson__r.xmPersonUID__c from Contact Where xmPerson__c in :xmPersonIds and xmPerson__c != null]){
             if(!acctXmPersonIds.containsKey(con.AccountId)){
                 acctXmPersonIds.put(con.AccountId, new list<string> {con.xmPerson__r.xmPersonUID__c} );
@@ -131,7 +126,7 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
         //system.debug('productIds ==>' + productIds);
         if (acctXmPersonIds.size() > 0){
             //need to check if other accounts has the same active product
-           // system.debug('acctXmPersonIds ==>' + acctXmPersonIds);
+            // system.debug('acctXmPersonIds ==>' + acctXmPersonIds);
             for(ImplementedProduct__c product : [select Account__c, product__c, Account__r.inContact_Cluster__c,Account__r.inView_Cluster__c, Account__r.Verint_Cluster__c,Account__r.NICE_QM_Cluster__c,Account__r.NICE_WFM_Cluster__c  FROM ImplementedProduct__c where product__C in: productIds and DeactivatedDate__c = null and
             Account__c in : acctXmPersonIds.keySet() and (Account__r.inContact_Cluster__c in: clusters or
             Account__r.inView_Cluster__c in : clusters or Account__r.Verint_Cluster__c in: clusters or Account__r.NICE_QM_Cluster__c in :clusters or Account__r.NICE_WFM_Cluster__c in : clusters)]){

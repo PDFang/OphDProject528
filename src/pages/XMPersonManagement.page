@@ -359,7 +359,16 @@
                     <div class="row" style="margin-top : 5px;">
                         <div class="col-md-5"> <input class="form-control" id="SearchText" onkeyup="SearchProducts(this.value)" type="text" placeholder="Search Products">
                             <span class="glyphicon glyphicon-search" style="font-size: normal"></span></input></div>
-                        <div class="col-md-7"></div>
+                        <div class="col-md-7">
+                            <div class="form-group">
+                                <label for="notificationtype" style="padding-right:5px;">Notification Type</label>
+                                <select class="form-control" id="notificationtype" onchange="updateGrouptable(this);" style="width:26%;">
+                                    <option selected="true">Event Notification</option>
+                                    <option>Maintenance Notification</option>
+                                </select>
+                            </div>
+
+                        </div>
                     </div>
                     <div id="groupList"></div>
                     <div style="margin-top:8px;" class="row" >
@@ -449,13 +458,21 @@
 
      $(document).ready(function() {
             loaddeviceAndGroups();
+            var notificationtype = $("#notificationtype");
+            notificationtype.data("prev",notificationtype.val());
+            if($("div[id$='duplicateContacts']").length > 0){
                 twistSection($("div[id$='duplicateContacts']").find('img')[0]);
+            }
+
+
          });
 
     function setFocusOnLoad() {}
     var timeframes = [];
     var devices = [];
     var deviceData = new Object();
+    var notificationType = "eventType";
+
     function AddPerson(){
         callNotificationManage();
 
@@ -465,6 +482,8 @@
 	function loaddeviceAndGroups(){
         setupDeviceList();
 		setupGroupList();
+
+
      }
     function associateContactCall(){
         callAssociateContact();
@@ -715,6 +734,7 @@
               $('#warning').modal('show');
              console.log('error =>' + message);
         }
+
 
          function hideError(){
              $("div#java-errors").css("display", "none");
@@ -1169,6 +1189,7 @@
                       read: function(options){
                                XMPersonManagementController.getProductGroups(
                                       '{!$CurrentPage.parameters.id}',
+                                        notificationType,
                                       function(result,event)
                                       {
                                           if (event.status) {
@@ -1352,6 +1373,37 @@
               }
           }
       }
+
+      function updateGrouptable(obj){
+         var groupSelectionChange = false;
+         $("div.k-grid-content").find('.row-chk').each(function(idx, item){
+              var row = $(item).closest("tr");
+             if($(row).hasClass('k-state-selected')){
+                 groupSelectionChange = true;
+                 return;
+             }
+         });
+
+         if(groupSelectionChange){
+             $(obj).val($(obj).data("prev"));
+             displayError('There are some unsaved changes on the grid. Please save the groups for this Notification type first');
+              return;
+         }
+
+         //notificationType
+         if($(obj).val() == 'Maintenance Notification'){
+             notificationType = 'MaintType';
+         }
+         else{
+              notificationType = 'eventType';
+         }
+        $(obj).data("prev",$(obj).val());
+         setupGroupList();
+
+      }
+
+
+
   function updateGroups(){
       console.log('checkedIds => ' + checkedIds);
       var grid = $("#groupList").data("kendoGrid");
