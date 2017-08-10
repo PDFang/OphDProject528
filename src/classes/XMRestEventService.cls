@@ -6,7 +6,7 @@ public class XMRestEventService {
     public XMRestEventService(){
         restWrapper = new XMRestWrapper(); //TODO: Allow injection? Not sure yet
         this.nodeMap = ProductEventMap__c.getAll();
-        this.caseToXMattersFieldMappings = [select Salesforce_Case_Field__c, xMatters_Form_Field__c  from Case_to_xMatters_Field_Mapping__mdt];
+        this.caseToXMattersFieldMappings = [select Salesforce_Case_Field__c, xMatters_Form_Field__c, Maintenance__c, Event__c  from Case_to_xMatters_Field_Mapping__mdt];
     }
 
     /*
@@ -31,11 +31,16 @@ public class XMRestEventService {
         if(xmNotificationRecord.Request_Type__c == 'Event Platforms Add'){
             platformsAffected = xmNotificationRecord.AddedPlatforms__c;
             inboundIntegrationGuid = (config != null) ? config.XM_Add_Platform_Inbound_GUID__c : null;
-        } else {
+        } else if (xmNotificationRecord.Request_Type__c == 'Maintenance Notification'
+                || xmNotificationRecord.Request_Type__c == 'Event Initial Confirmation'
+                || xmNotificationRecord.Request_Type__c == 'Event Resolved' ){
             platformsAffected = eventCase.PlatformsImpacted__c;
             inboundIntegrationGuid = (config != null) ? config.XM_Event_Notification_Inbound_GUID__c : null;
         }
-
+        else
+        {
+            throw new CalloutException('Invalid Request Type ' + xmNotificationRecord.Request_Type__c);
+        }
 
         xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c);
 
@@ -60,7 +65,7 @@ public class XMRestEventService {
         }
 
         // Build the properties needed to fill out the email template in xMatters
-        Map<String, String> propertyMap = addAdditionalSalesforceDataToFormProperties(eventCase);
+        Map<String, String> propertyMap = addAdditionalSalesforceDataToFormProperties(eventCase, xmNotificationRecord.Request_Type__c);
         propertyMap.put('xmNotificationId', xmNotificationRecord.Id);
         XMEventData.templateProperties = propertyMap;
 
@@ -81,12 +86,19 @@ public class XMRestEventService {
      *  back that map for serialization
      */
     @TestVisible
-    private Map<String,String> addAdditionalSalesforceDataToFormProperties(Case caseRecord){
+    private Map<String,String> addAdditionalSalesforceDataToFormProperties(Case caseRecord, String notificationType){
+
         Map<String, String> propertyMap = new Map<String, String>();
 
         Map<String, Schema.sObjectField> caseFields = Schema.sObjectType.Case.Fields.getMap();
 
         for(Case_to_xMatters_Field_Mapping__mdt caseMapping: caseToXMattersFieldMappings){
+
+            // check if the field belonged to the type
+            if((caseMapping.Maintenance__c == false && notificationType == 'Maintenance Notification')
+                    || (caseMapping.Event__c == false && (notificationType == 'Event Initial Confirmation' || notificationType == 'Event Resolved' || notificationType == 'Event Platforms Add'))) {
+                continue;
+            }
 
             system.debug('addAdditionalSalesforceDataToFormProperties() ==> adding property to mapping: ' + caseMapping);
 
