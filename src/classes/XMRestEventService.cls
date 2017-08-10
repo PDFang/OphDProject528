@@ -18,6 +18,11 @@ public class XMRestEventService {
 
         Case eventCase = getCaseFromxmNotification(xmNotificationRecord);
 
+        Map<ID,Schema.RecordTypeInfo> recordTypeMapById = Schema.SObjectType.Case.getRecordTypeInfosByID();
+
+        String caseRecordType = recordTypeMapById.get(eventCase.RecordTypeId).getName();
+        Boolean isMaintenance = (caseRecordType == 'Maintenance Notification');
+
         XMEventData xmEventData = new XMEventData();
 
         AppConfiguration__c config = AppConfiguration__c.getInstance();
@@ -42,7 +47,7 @@ public class XMRestEventService {
             throw new CalloutException('Invalid Request Type ' + xmNotificationRecord.Request_Type__c);
         }
 
-        xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c);
+        xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c, isMaintenance);
 
         // Build the specific event details needed to process the event.
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();
@@ -132,7 +137,7 @@ public class XMRestEventService {
      */
     private Case getCaseFromxmNotification(XMNotification__c xmNotification){
 
-        Set<String> caseFields = new Set<String>{'PlatformsImpacted__c' ,'Id'}; // Add default fields that we care about
+        Set<String> caseFields = new Set<String>{'PlatformsImpacted__c' ,'Id', 'RecordTypeId'}; // Add default fields that we care about
         system.debug('getCaseFromxmNotification() ===> CaseFields that we care about: ' + caseFields);
 
         // Loop through the fields in custom data meta data to add fields we care about
@@ -156,7 +161,7 @@ public class XMRestEventService {
      * Converts the product and platform to a group name that we can add to the event
      * Example: IP_INC_Dialer_C13
      */
-    private String[] convertProductAndPlatformToGroupName(string platforms, string product){
+    private String[] convertProductAndPlatformToGroupName(string platforms, string product, boolean isMaintenance){
         String[] groupArray = new List<string>();
         system.debug('convertProductAndPlatformToGroupName() ==> Platforms: ' + platforms + ' Product: ' + product);
 

@@ -1,5 +1,5 @@
 @isTest
-public class OpportunityTriggerHelperTest {
+    public class OpportunityTriggerHelperTest {
 
     static final String ACCOUNT_TYPE_CUSTOMERS = 'Customers';
     static final String ACCOUNT_TYPE_PARTNERS = 'Partners';
