@@ -35,6 +35,9 @@ public class CaseEventNotificationExtension
     private string recordTypeName;
     public static list<string> clusters;
 
+
+    private static boolean isxMattersNotificationsTurnedOff = false;
+
     Static Set<String> caseFields = new Set<String>{
             'Id', 'RecordTypeId', 'StartDateTImeUTC__c', 'EndDateTimeUTC__c', 'EventType__c', 'Subject', 'Description', 'ProductImpacted__c', 'CustomersMayExperienceTheFollowing__c',
             'CustomerAction__c', 'Status', 'CaseNumber', 'PlatformsImpacted__c', 'Owner.Name', 'Account.Id', 'NumberOfAccountsImpacted__c'
@@ -52,14 +55,6 @@ public class CaseEventNotificationExtension
 
         if(c.Id != null)
         {
-            // Added the below query to accomodate all custom fields  for this P1 issue
-            //ISSUE: P1 - Service Console - Maint Notification Standard Text Errors     
-/*
-            c = [select Id,RecordTypeId, StartDateTImeUTC__c,EndDateTimeUTC__c, EventType__c, Subject,  Description, ProductImpacted__c, CustomersMayExperienceTheFollowing__c
-                    ,CustomerAction__c, Status, CaseNumber, PlatformsImpacted__c, Owner.Name, Account.Id, NumberOfAccountsImpacted__c
-            FROM Case where Id =: c.Id];
-            System.debug('Case Record is' + c);
-*/
             Map<ID,Schema.RecordTypeInfo> recordTypeMapById = Schema.SObjectType.Case.getRecordTypeInfosByID();
             recordTypeName = recordTypeMapById.get(c.RecordTypeId).getName();
 
@@ -74,13 +69,23 @@ public class CaseEventNotificationExtension
                 allowNotifications = true;
             }
 
+
+            AppConfiguration__c appConfig = AppConfiguration__c.getInstance();
+            if(appConfig != null && appConfig.XM_Turn_Off_Maintenance_Notifications__c){
+                isxMattersNotificationsTurnedOff = true;
+            }
+
             Map<String, ProductEventMap__c> productEventMap = ProductEventMap__c.getAll();
 
             ProductEventMap__c productEventInfo = productEventMap.get(c.ProductImpacted__c);
             System.debug('CaseEventNotificationExtension(): productEventInfo - ' + productEventInfo);
 
-
-            if(recordTypeName == 'Maintenance Notification' && productEventInfo != null && !productEventInfo.SelectCustomers__c){
+            // Record Type - Maintenance Notification
+            // Product Impacted - Not for Select Customers
+            // xMatters Maintenance Notification turned on
+            if(recordTypeName == 'Maintenance Notification' && productEventInfo != null && !productEventInfo.SelectCustomers__c
+                    && !isxMattersNotificationsTurnedOff)
+            {
                 enableXmatters = true;
                 xMattersFieldMapping = getxMattersFieldMapping();
                 caseFields.addAll(xMattersFieldMapping);
@@ -91,13 +96,8 @@ public class CaseEventNotificationExtension
 
             List<String> soqlColumns = new List<String>(caseFields);
 
-            String soql = 'Select ' + String.join(soqlColumns, ',') + ' FROM Case where Id = :c.Id';
+            String soql = 'Select ' + String.join(soqlColumns, ',') + ' FROM Case where Id = \'' + c.Id + '\'';
             c = Database.query(soql);
-
-            /*c = [select Id,RecordTypeId, StartDateTImeUTC__c,EndDateTimeUTC__c, EventType__c, Subject,  Description, ProductImpacted__c, CustomersMayExperienceTheFollowing__c
-                    ,CustomerAction__c, Status, CaseNumber, PlatformsImpacted__c, Owner.Name, Account.Id, NumberOfAccountsImpacted__c
-            FROM Case where Id =: c.Id];*/
-
             System.debug('Case Record is' + c);
 
             accountIds = new Set<Id>();
@@ -515,6 +515,10 @@ public class CaseEventNotificationExtension
     public pagereference sendNotificationViaXmatters(){
 
         try{
+            if(isxMattersNotificationsTurnedOff){ // safety check
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.INFO, 'xMatters Maintenance Notification is disabled. Please contact your administrator.'));
+                return null;
+            }
             xmNotification__c xmNotification = new xmNotification__c(
                     Case__c = c.Id,
                     Request_Date__c = system.now(),
@@ -523,6 +527,8 @@ public class CaseEventNotificationExtension
             );
 
             insert xmNotification;
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Maintenance Notification request submitted successfully.'));
+
         }catch(Exception ex){
             system.debug('sendNotificationViaXmatters(): Exception - ' + ex);
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Failed to Send Maintenance Notification. ' + ex.getDmlMessage(0)));
