@@ -63,6 +63,7 @@ public class XMRestEventService {
         eventGroupInfo.salesforceCaseId = eventCase.Id;
         eventGroupInfo.partnerList = getSupportedPartners();
         eventGroupInfo.xmNotificationId = xmNotificationRecord.Id;
+        eventGroupInfo.emergencyMaintenance = (isMaintenance && eventCase.EmergencyMaintenance__c);
         xmEventData.eventGroupInfo = eventGroupInfo;
 
         //get the picklist API Name to pass as the eventType
@@ -106,12 +107,11 @@ public class XMRestEventService {
         for(Case_to_xMatters_Field_Mapping__mdt caseMapping: caseToXMattersFieldMappings){
 
             // check if the field belonged to the type
-            if ((isMaintenance && !caseMapping.Maintenance__c) || !caseMapping.Event__c)
-            {
+            if( (caseMapping.Event__c && !isMaintenance) || (caseMapping.Maintenance__c && isMaintenance) ) {
+                system.debug('addAdditionalSalesforceDataToFormProperties() ==> adding property to mapping: ' + caseMapping);
+            } else{
                 continue;
             }
-
-            system.debug('addAdditionalSalesforceDataToFormProperties() ==> adding property to mapping: ' + caseMapping);
 
             String caseField = caseMapping.Salesforce_Case_Field__c;
             if(String.isBlank(caseField) || !caseFields.containsKey(caseField)){
@@ -143,7 +143,7 @@ public class XMRestEventService {
      */
     private Case getCaseFromxmNotification(XMNotification__c xmNotification){
 
-        Set<String> caseFields = new Set<String>{'PlatformsImpacted__c' ,'Id', 'RecordTypeId'}; // Add default fields that we care about
+        Set<String> caseFields = new Set<String>{'PlatformsImpacted__c' ,'Id', 'RecordTypeId', 'EmergencyMaintenance__c'}; // Add default fields that we care about
         system.debug('getCaseFromxmNotification() ===> CaseFields that we care about: ' + caseFields);
 
         // Loop through the fields in custom data meta data to add fields we care about
