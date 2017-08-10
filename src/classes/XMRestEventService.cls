@@ -16,7 +16,10 @@ public class XMRestEventService {
      */
     public String startExternalEventProcessing(XMNotification__c xmNotificationRecord){
 
+        system.debug('startExternalEventProcessing() ===> xmNotificationRecord - ' + xmNotificationRecord);
+
         Case eventCase = getCaseFromxmNotification(xmNotificationRecord);
+        system.debug('startExternalEventProcessing() ===> eventCase - ' + eventCase);
 
         Map<ID,Schema.RecordTypeInfo> recordTypeMapById = Schema.SObjectType.Case.getRecordTypeInfosByID();
 
@@ -42,10 +45,13 @@ public class XMRestEventService {
             platformsAffected = eventCase.PlatformsImpacted__c;
             inboundIntegrationGuid = (config != null) ? config.XM_Event_Notification_Inbound_GUID__c : null;
         }
-        else
+
+        if(String.isBlank(inboundIntegrationGuid))
         {
-            throw new CalloutException('Invalid Request Type ' + xmNotificationRecord.Request_Type__c);
+            throw new CalloutException('Inbound Integration GUID not found for Request Type \'' + xmNotificationRecord.Request_Type__c + '\'');
         }
+
+        system.debug('startExternalEventProcessing() ===> inboundIntegrationGuid - ' + inboundIntegrationGuid);
 
         xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c, isMaintenance);
 
