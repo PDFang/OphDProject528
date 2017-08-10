@@ -304,12 +304,12 @@ public class XMBusinessLayer  {
         if (groupData.PartnerPrefix == null || groupData.PartnerPrefix == '')
         {
             //default partner designation
-            if(notificationType == 'MaintType')
-                groupData.PartnerPrefix = 'MAINT';
-            else
-                groupData.PartnerPrefix = 'INC';
+            groupData.PartnerPrefix = 'INC';
         }
         XmattersGroupName = 'IP_'+ groupData.partnerPrefix + '_' + groupData.product + '_'  + groupData.cluster;
+        if(notificationType == 'MaintType')
+            XmattersGroupName = XmattersGroupName + '_' + 'MAINT';
+
         return XmattersGroupName.replace(' ','');
     }
 
@@ -321,6 +321,9 @@ public class XMBusinessLayer  {
         String responseBody;
         String successMessage;
         Boolean isGroupCreated;
+
+        List<xmGroupChangeRequest__c> groupChangeRequestList = new List<xmGroupChangeRequest__c>();
+        xmPerson__c xmPerson ;
 
         try
         {
@@ -349,7 +352,21 @@ public class XMBusinessLayer  {
                             if (isUserMemberofGroup(groupObj.XmattersGroupName, deviceObj,xmCurrentGroupList) == false)
                             {
                                 system.debug('** Adding user to group ** ==>' + groupObj.XmattersGroupName );
-                                responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, deviceObj.id, 'Device');
+
+
+                                xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
+//                                        Account__c = '',
+//                                        Contact__c = '',
+//                                        ImplementedProduct__c = '',
+                                        NotificationProfile__r = xmPerson,
+                                        xMDeviceId__c = deviceObj.Id,
+                                        Status__c = 'In Queue',
+                                        Action__c = 'Add'
+                                        //xmGroupChangeRequestHeader__c = groupCRAccount.get(act.Id)
+                                );
+
+                                groupChangeRequestList.add(grpChangeRequest);
+                                //responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, deviceObj.id, 'Device');
                             }
                         }
                         else {
@@ -358,7 +375,22 @@ public class XMBusinessLayer  {
                             if (isGroupCreated) {
                                 xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
                                 if (xmGroupModelList.size() > 0) {
-                                    responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, deviceObj.id, 'Device');
+                                    system.debug('** Adding user to group ** ==>' + groupObj.XmattersGroupName );
+
+
+                                    xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
+//                                        Account__c = '',
+//                                        Contact__c = '',
+//                                        ImplementedProduct__c = '',
+                                            NotificationProfile__r = xmPerson,
+                                            xMDeviceId__c = deviceObj.Id,
+                                            Status__c = 'In Queue',
+                                            Action__c = 'Add'
+                                            //xmGroupChangeRequestHeader__c = groupCRAccount.get(act.Id)
+                                    );
+
+                                    groupChangeRequestList.add(grpChangeRequest);
+                                    //responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, deviceObj.id, 'Device');
                                 }
                             }
                         }
@@ -369,12 +401,30 @@ public class XMBusinessLayer  {
                             System.debug('Group List');
                             if(isUserMemberofGroup(groupObj.XmattersGroupName,deviceObj,xmCurrentGroupList) == true) {
                                 System.debug('Found in users group list -> ' + groupObj.XmattersGroupName );
-                                xmRestGroupObj.RemoveUserFromAGroup(groupObj.XmattersGroupName, deviceObj.id);
+                                //xmRestGroupObj.RemoveUserFromAGroup(groupObj.XmattersGroupName, deviceObj.id);
+
+                                xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
+//                                        Account__c = '',
+//                                        Contact__c = '',
+//                                        ImplementedProduct__c = '',
+                                        NotificationProfile__r = xmPerson,
+                                        xMDeviceId__c = deviceObj.Id,
+                                        Status__c = 'In Queue',
+                                        Action__c = 'Remove'
+                                        //xmGroupChangeRequestHeader__c = groupCRAccount.get(act.Id)
+                                );
+
+                                groupChangeRequestList.add(grpChangeRequest);
                             }
                         }
                     }
                 }
 
+            }
+
+            if(groupChangeRequestList.size() >0){
+                system.debug ('***  groupChangeRequestList ==> ' + groupChangeRequestList);
+                insert groupChangeRequestList;
             }
         }
         catch(XMCalloutException xmCalloutException)
@@ -384,7 +434,9 @@ public class XMBusinessLayer  {
 
         catch(Exception ex)
         {
+
             XMCalloutException xmCalloutException = new XMCalloutException(ex.getMessage());
+            system.debug ('***  xmCalloutException.Message ==> ' + xmCalloutException.Message);
             xmCalloutException.Message = ex.getMessage();
 
             throw xmCalloutException;
