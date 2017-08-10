@@ -1,6 +1,6 @@
 public class CaseEventNotificationExtension
 {
-    private Case c;
+    public Case c{get; private set;}
     private Set<Id> accountIds;
     private Id templateId;
     private Map<Id, EmailTemplate> templates;
@@ -22,6 +22,8 @@ public class CaseEventNotificationExtension
 
     // For product eligible for select Customers enable legacy notification otherwise enable xMatters notification
     public boolean enableXmatters{public get;private set;}
+    // Fields mapped in Case_to_xMatters_Field_Mapping__mdt
+    public List<String> xMattersFieldMapping{get; private set;}
 
     private final List<RecordType> recordTypes;
     private ID selRecordTypeId;
@@ -33,6 +35,10 @@ public class CaseEventNotificationExtension
     private string recordTypeName;
     public static list<string> clusters;
 
+    Static Set<String> caseFields = new Set<String>{
+            'Id', 'RecordTypeId', 'StartDateTImeUTC__c', 'EndDateTimeUTC__c', 'EventType__c', 'Subject', 'Description', 'ProductImpacted__c', 'CustomersMayExperienceTheFollowing__c',
+            'CustomerAction__c', 'Status', 'CaseNumber', 'PlatformsImpacted__c', 'Owner.Name', 'Account.Id', 'NumberOfAccountsImpacted__c'
+    };
 
     public CaseEventNotificationExtension(ApexPages.StandardController controller)
     {
@@ -48,11 +54,12 @@ public class CaseEventNotificationExtension
         {
             // Added the below query to accomodate all custom fields  for this P1 issue
             //ISSUE: P1 - Service Console - Maint Notification Standard Text Errors     
+/*
             c = [select Id,RecordTypeId, StartDateTImeUTC__c,EndDateTimeUTC__c, EventType__c, Subject,  Description, ProductImpacted__c, CustomersMayExperienceTheFollowing__c
                     ,CustomerAction__c, Status, CaseNumber, PlatformsImpacted__c, Owner.Name, Account.Id, NumberOfAccountsImpacted__c
             FROM Case where Id =: c.Id];
             System.debug('Case Record is' + c);
-
+*/
             Map<ID,Schema.RecordTypeInfo> recordTypeMapById = Schema.SObjectType.Case.getRecordTypeInfosByID();
             recordTypeName = recordTypeMapById.get(c.RecordTypeId).getName();
 
@@ -72,12 +79,26 @@ public class CaseEventNotificationExtension
             ProductEventMap__c productEventInfo = productEventMap.get(c.ProductImpacted__c);
             System.debug('CaseEventNotificationExtension(): productEventInfo - ' + productEventInfo);
 
+
             if(recordTypeName == 'Maintenance Notification' && productEventInfo != null && !productEventInfo.SelectCustomers__c){
                 enableXmatters = true;
+                xMattersFieldMapping = getxMattersFieldMapping();
+                caseFields.addAll(xMattersFieldMapping);
                 return;
             }else{
                 enableXmatters = false;
             }
+
+            List<String> soqlColumns = new List<String>(caseFields);
+
+            String soql = 'Select ' + String.join(soqlColumns, ',') + ' FROM Case where Id = :c.Id';
+            c = Database.query(soql);
+
+            /*c = [select Id,RecordTypeId, StartDateTImeUTC__c,EndDateTimeUTC__c, EventType__c, Subject,  Description, ProductImpacted__c, CustomersMayExperienceTheFollowing__c
+                    ,CustomerAction__c, Status, CaseNumber, PlatformsImpacted__c, Owner.Name, Account.Id, NumberOfAccountsImpacted__c
+            FROM Case where Id =: c.Id];*/
+
+            System.debug('Case Record is' + c);
 
             accountIds = new Set<Id>();
             csmEmails = new String[]{};
@@ -472,6 +493,23 @@ public class CaseEventNotificationExtension
         currPage.getParameters().put('id',c.id);
         currPage.setRedirect(true);
         return currPage;
+    }
+
+    private List<String> getxMattersFieldMapping(){
+
+        List<String> xMattersFieldMapping = new List<String>();
+
+        Set<String> sfFields = new Set<String>();
+        for(Case_to_xMatters_Field_Mapping__mdt mdt : [
+                Select Salesforce_Case_Field__c From Case_to_xMatters_Field_Mapping__mdt where Maintenance__c = true order by Sort_Order__c
+        ]){
+            sfFields.add(mdt.Salesforce_Case_Field__c);
+        }
+
+        xMattersFieldMapping.addAll(sfFields);
+
+        return xMattersFieldMapping;
+
     }
 
     public pagereference sendNotificationViaXmatters(){

@@ -156,9 +156,13 @@
 
         </apex:pageBlock>
 
-        <apex:pageBlock id="xmBlock" rendered="{!enableXmatters}" title="Maintenance Notification">
-            xMatters!!!!!!!!!
+        <apex:pageBlock id="xmBlock" rendered="{!enableXmatters}">
 
+            <apex:pageBlockSection id="mainPage" columns="1" collapsible="false" title="Maintenance Notification">
+                <apex:repeat var="field" value="{!xMattersFieldMapping}">
+                    <apex:outputField value="{!c[field]}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
             <apex:commandButton styleClass="k-button" value="Send Notification" action="{!sendNotificationViaXmatters}" reRender="all" />
         </apex:pageBlock>
 
