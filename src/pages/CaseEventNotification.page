@@ -20,7 +20,7 @@
             <apex:messages id="msg" styleClass="warning-message" />
         </apex:outputPanel>
 
-        <apex:pageBlock id="emailBlock" rendered="{!NOT(renderConfirm)}">
+        <apex:pageBlock id="emailBlock" rendered="{!AND(NOT(renderConfirm), NOT(enableXmatters))}">
 
             <apex:pageBlockSection collapsible="false" id="detail" title="{!Case.RecordType.Name} Detail">
                 <apex:pageBlockSectionItem >
@@ -138,7 +138,7 @@
 
         </apex:pageBlock>
 
-        <apex:pageBlock id="confirm" rendered="{!renderConfirm}" title="Notification was succesfully sent to {!emailsSent} addresses!">
+        <apex:pageBlock id="confirm" rendered="{!AND(renderConfirm, NOT(enableXmatters))}" title="Notification was succesfully sent to {!emailsSent} addresses!">
 
             <apex:pageBlockSection columns="1" collapsible="false">
                 <apex:pageBlockSectionItem >
@@ -154,6 +154,16 @@
                 </apex:pageBlockSectionItem>
             </apex:pageblockSection>
 
+        </apex:pageBlock>
+
+        <apex:pageBlock id="xmBlock" rendered="{!enableXmatters}">
+
+            <apex:pageBlockSection id="mainPage" columns="1" collapsible="false" title="Maintenance Notification">
+                <apex:repeat var="field" value="{!xMattersFieldMapping}">
+                    <apex:outputField value="{!c[field]}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:commandButton styleClass="k-button" value="Send Notification" action="{!sendNotificationViaXmatters}" reRender="all" />
         </apex:pageBlock>
 
         <apex:actionFunction action="{!Cancel}" name="GoToCase"/>

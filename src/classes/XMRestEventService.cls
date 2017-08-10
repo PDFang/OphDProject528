@@ -6,7 +6,7 @@ public class XMRestEventService {
     public XMRestEventService(){
         restWrapper = new XMRestWrapper(); //TODO: Allow injection? Not sure yet
         this.nodeMap = ProductEventMap__c.getAll();
-        this.caseToXMattersFieldMappings = [select Salesforce_Case_Field__c, xMatters_Form_Field__c  from Case_to_xMatters_Field_Mapping__mdt];
+        this.caseToXMattersFieldMappings = [select Salesforce_Case_Field__c, xMatters_Form_Field__c, Maintenance__c, Event__c  from Case_to_xMatters_Field_Mapping__mdt];
     }
 
     /*
@@ -16,7 +16,15 @@ public class XMRestEventService {
      */
     public String startExternalEventProcessing(XMNotification__c xmNotificationRecord){
 
+        system.debug('startExternalEventProcessing() ===> xmNotificationRecord - ' + xmNotificationRecord);
+
         Case eventCase = getCaseFromxmNotification(xmNotificationRecord);
+        system.debug('startExternalEventProcessing() ===> eventCase - ' + eventCase);
+
+        Map<ID,Schema.RecordTypeInfo> recordTypeMapById = Schema.SObjectType.Case.getRecordTypeInfosByID();
+
+        String caseRecordType = recordTypeMapById.get(eventCase.RecordTypeId).getName();
+        Boolean isMaintenance = (caseRecordType == 'Maintenance Notification');
 
         XMEventData xmEventData = new XMEventData();
 
@@ -31,13 +39,21 @@ public class XMRestEventService {
         if(xmNotificationRecord.Request_Type__c == 'Event Platforms Add'){
             platformsAffected = xmNotificationRecord.AddedPlatforms__c;
             inboundIntegrationGuid = (config != null) ? config.XM_Add_Platform_Inbound_GUID__c : null;
-        } else {
+        } else if (xmNotificationRecord.Request_Type__c == 'Maintenance Notification'
+                || xmNotificationRecord.Request_Type__c == 'Event Initial Confirmation'
+                || xmNotificationRecord.Request_Type__c == 'Event Resolved' ){
             platformsAffected = eventCase.PlatformsImpacted__c;
             inboundIntegrationGuid = (config != null) ? config.XM_Event_Notification_Inbound_GUID__c : null;
         }
 
+        if(String.isBlank(inboundIntegrationGuid))
+        {
+            throw new CalloutException('Inbound Integration GUID not found for Request Type \'' + xmNotificationRecord.Request_Type__c + '\'');
+        }
 
-        xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c);
+        system.debug('startExternalEventProcessing() ===> inboundIntegrationGuid - ' + inboundIntegrationGuid);
+
+        xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c, isMaintenance);
 
         // Build the specific event details needed to process the event.
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();
@@ -60,7 +76,7 @@ public class XMRestEventService {
         }
 
         // Build the properties needed to fill out the email template in xMatters
-        Map<String, String> propertyMap = addAdditionalSalesforceDataToFormProperties(eventCase);
+        Map<String, String> propertyMap = addAdditionalSalesforceDataToFormProperties(eventCase, isMaintenance);
         propertyMap.put('xmNotificationId', xmNotificationRecord.Id);
         XMEventData.templateProperties = propertyMap;
 
@@ -81,12 +97,19 @@ public class XMRestEventService {
      *  back that map for serialization
      */
     @TestVisible
-    private Map<String,String> addAdditionalSalesforceDataToFormProperties(Case caseRecord){
+    private Map<String,String> addAdditionalSalesforceDataToFormProperties(Case caseRecord, Boolean isMaintenance){
+
         Map<String, String> propertyMap = new Map<String, String>();
 
         Map<String, Schema.sObjectField> caseFields = Schema.sObjectType.Case.Fields.getMap();
 
         for(Case_to_xMatters_Field_Mapping__mdt caseMapping: caseToXMattersFieldMappings){
+
+            // check if the field belonged to the type
+            if ((isMaintenance && !caseMapping.Maintenance__c) || !caseMapping.Event__c)
+            {
+                continue;
+            }
 
             system.debug('addAdditionalSalesforceDataToFormProperties() ==> adding property to mapping: ' + caseMapping);
 
@@ -120,7 +143,7 @@ public class XMRestEventService {
      */
     private Case getCaseFromxmNotification(XMNotification__c xmNotification){
 
-        Set<String> caseFields = new Set<String>{'PlatformsImpacted__c' ,'Id'}; // Add default fields that we care about
+        Set<String> caseFields = new Set<String>{'PlatformsImpacted__c' ,'Id', 'RecordTypeId'}; // Add default fields that we care about
         system.debug('getCaseFromxmNotification() ===> CaseFields that we care about: ' + caseFields);
 
         // Loop through the fields in custom data meta data to add fields we care about
@@ -144,7 +167,7 @@ public class XMRestEventService {
      * Converts the product and platform to a group name that we can add to the event
      * Example: IP_INC_Dialer_C13
      */
-    private String[] convertProductAndPlatformToGroupName(string platforms, string product){
+    private String[] convertProductAndPlatformToGroupName(string platforms, string product, boolean isMaintenance){
         String[] groupArray = new List<string>();
         system.debug('convertProductAndPlatformToGroupName() ==> Platforms: ' + platforms + ' Product: ' + product);
 
@@ -170,6 +193,9 @@ public class XMRestEventService {
             }
 
             String groupString = ('IP_{PartnerPrefix}_' + product + '_' + cluster).replace(' ', '');
+            if(isMaintenance){
+                groupString += '_MAINT';
+            }
             groupArray.add(groupString);
 
             system.debug('convertProductAndPlatformToGroupName() ==> Adding group to list' + groupString);
