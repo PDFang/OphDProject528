@@ -71,6 +71,7 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                     item.groupName = request.groupData.XmattersGroupName;
                     item.personId = request.xmPersonId;
                     item.ChangeRequestId = request.ChangeRequestId;
+                    item.Period = '24X7';  //needs to be updated
                     item.Action= request.Action;
                     requestItems.add(item);
                 }
