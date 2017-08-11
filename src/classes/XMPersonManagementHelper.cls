@@ -257,9 +257,9 @@ public class XMPersonManagementHelper {
 
     }
 
-    public static void updateXmGroupSubscription(XMGroupProductCluster[] xmGroupList, string xmPersonGuid ){
+    public static void updateXmGroupSubscription(XMGroupProductCluster[] xmGroupList, string xmPersonGuid, string notificationType ){
 
-        XMBusinessLayer groupLayer = new XMBusinessLayer();
+        XMBusinessLayer groupLayer = new XMBusinessLayer(null,notificationType);
         string message = groupLayer.UpdateXMUserToGroups(xmGroupList, xmPersonGuid);
         system.debug('updateXmGroupSubscription(): message - ' + message);
 

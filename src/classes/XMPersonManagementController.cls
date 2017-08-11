@@ -279,7 +279,7 @@ public class XMPersonManagementController{
 
     // add or remove xMatters person to/from the group
     @RemoteAction
-    public static string updateGroupSubscription(String groupJson , String contactId){
+    public static string updateGroupSubscription(String groupJson , String contactId, string notificationtype){
 
         String result;
         String message = '';
@@ -290,7 +290,7 @@ public class XMPersonManagementController{
             XMGroupProductCluster[] xmGroupList = (XMGroupProductCluster[])JSON.deserialize(groupJson, List<XMGroupProductCluster>.class);
             system.debug('updateGroups(): xmGroupList - '+xmGroupList);
 
-            XMPersonManagementHelper.updateXmGroupSubscription(xmGroupList, xmPersonGuid);
+            XMPersonManagementHelper.updateXmGroupSubscription(xmGroupList, xmPersonGuid, notificationtype);
             result = 'Success';
 
         }catch(Exception ex){
