@@ -162,8 +162,28 @@
                 <apex:repeat var="field" value="{!xMattersFieldMapping}">
                     <apex:outputField value="{!c[field]}" />
                 </apex:repeat>
+
+                <apex:pageBlockSectionItem >
+                    <apex:actionStatus id="xmNotificationStatus">
+                        <apex:facet name="stop">
+                            <apex:outputPanel >
+                                <apex:commandButton styleClass="k-button" value="Send Notification" action="{!sendNotificationViaXmatters}" reRender="all" onComplete="StyleButtons();"  status="xmNotificationStatus"/>
+                                <a id="cancel-button" href="#" onclick="CancelRequest()" class="k-button">Cancel</a>
+                            </apex:outputPanel>
+                        </apex:facet>
+
+                        <apex:facet name="start">
+                            <apex:outputPanel >
+                                <apex:image value="/img/loading32.gif" style="height: 15px;" />
+                                <apex:commandButton value="Processing..." status="xmNotificationStatus" disabled="true" />
+                            </apex:outputPanel>
+                        </apex:facet>
+                    </apex:actionStatus>
+                </apex:pageBlockSectionItem>
+
             </apex:pageBlockSection>
-            <apex:commandButton styleClass="k-button" value="Send Notification" action="{!sendNotificationViaXmatters}" reRender="all" />
+
+            <!--<apex:commandButton styleClass="k-button" value="Send Notification" action="{!sendNotificationViaXmatters}" reRender="all" />-->
         </apex:pageBlock>
 
         <apex:actionFunction action="{!Cancel}" name="GoToCase"/>
