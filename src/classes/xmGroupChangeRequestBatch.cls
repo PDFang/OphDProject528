@@ -81,6 +81,7 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                     XMGroupChangeRequestItem item = new XMGroupChangeRequestItem();
                     item.groupName = request.groupData.XmattersGroupName;
                     item.personId = request.xmPersonId;
+                    item.period = null; //clear this for now
                     item.ChangeRequestId = request.ChangeRequestId;
                     item.Action= request.Action;
                     requestItems.add(item);

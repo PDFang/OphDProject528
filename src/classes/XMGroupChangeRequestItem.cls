@@ -8,5 +8,6 @@ public with sharing class XMGroupChangeRequestItem {
     public string personId {get;set;}
     public string deviceId{get;set;}
     public string Action {get;set;}
+    public string Period {get;set;}
 
 }

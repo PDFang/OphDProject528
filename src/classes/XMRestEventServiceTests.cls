@@ -9,6 +9,11 @@ public class XMRestEventServiceTests {
 
         Case eventCase = [SELECT Id, CaseNumber, PlatformsImpacted__c, ProductImpacted__c FROM Case WHERE Id = :createdCase.Id];
 
+        // Create Application Configuration
+        AppConfiguration__c appConfig = new AppConfiguration__c();
+        appConfig.XM_Event_Notification_Inbound_GUID__c  = 'testGuid';
+        insert appconfig;
+
         // Create XMNotificationObject
         XMNotification__c xMattersNotification = new XMNotification__c();
         xMattersNotification.Case__c = eventCase.Id;
@@ -50,6 +55,11 @@ public class XMRestEventServiceTests {
 
         Case eventCase = [SELECT Id, CaseNumber, PlatformsImpacted__c, ProductImpacted__c FROM Case WHERE Id = :createdCase.Id];
 
+        // Create Application Configuration
+        AppConfiguration__c appConfig = new AppConfiguration__c();
+        appConfig.XM_Add_Platform_Inbound_GUID__c =  'testGuid';
+        insert appconfig;
+
         // Create XMNotificationObject
         XMNotification__c xMattersNotification = new XMNotification__c();
         xMattersNotification.Case__c = eventCase.Id;
@@ -83,6 +93,43 @@ public class XMRestEventServiceTests {
         system.assertEquals(eventCase.CaseNumber, actualEventData.templateProperties.get('caseNumber'));
     }
 
+    public testMethod static void startExternalEventProcessing_NoIntegrationGUIDWillThrowException(){
+
+        XMRestEventServiceHttpMock httpMockCallout = new XMRestEventServiceHttpMock(200,'Complete','[{"Name": "sForceTest1"}]',null);
+        CalloutException testException = null;
+
+        insertProductEventMap();
+        Case createdCase = insertCase('DIA', 'Transport Services');
+
+        Case eventCase = [SELECT Id, CaseNumber, PlatformsImpacted__c, ProductImpacted__c FROM Case WHERE Id = :createdCase.Id];
+
+        // Create XMNotificationObject
+        XMNotification__c xMattersNotification = new XMNotification__c();
+        xMattersNotification.Case__c = eventCase.Id;
+        xMattersNotification.Request_Type__c = 'Maintenance Notification';
+        xMattersNotification.Status__c = 'New';
+        xMattersNotification.Request_Date__c = system.today();
+        xMattersNotification.AddedPlatforms__c = 'DIA Circuit';
+
+        insert xMattersNotification;
+
+        // Start test and perform fake callout
+        Test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, httpMockCallout);
+
+        XMRestEventService service = new XMRestEventService();
+        try{
+            service.startExternalEventProcessing(xMattersNotification);
+        } catch(CalloutException testCalloutException){
+            testException = testCalloutException;
+        }
+
+        test.stopTest();
+
+        // check the error message
+        system.assert('Inbound Integration GUID not found for Request Type \'Maintenance Notification\'' == testException.getMessage());
+    }
 
     private static void insertProductEventMap(){
 
