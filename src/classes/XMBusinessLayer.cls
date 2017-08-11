@@ -9,9 +9,9 @@ public class XMBusinessLayer  {
 
     public XMBusinessLayer(string contactId, string type) {
 
-        List<Contact> contacts = [select xmPerson__c, AccountId, xmPerson__r.xmPersonUID__c from contact where id = :contactId];
+        List<Contact> contacts = new list<Contact>([select xmPerson__c, AccountId, xmPerson__r.xmPersonUID__c from contact where id = :contactId]);
 
-        if(contacts[0].xmPerson__c != null){
+        if(contacts.size() > 0 && contacts[0].xmPerson__c != null){
             for (Contact con : [
                     select Id, xmPerson__c, AccountId
                     from Contact
@@ -19,11 +19,13 @@ public class XMBusinessLayer  {
             ]) {
                 acc.add(con.AccountId);
             }
-        }else{
+            guid = contacts[0].xmPerson__r.xmPersonUID__c;
+        }else if(contacts.size() > 0){
             acc.add(contacts[0].AccountId);
         }
 
-        guid = contacts[0].xmPerson__r.xmPersonUID__c;
+        system.debug('type =>' + type);
+
         notificationType = type;
     }
 
@@ -79,6 +81,52 @@ public class XMBusinessLayer  {
         AddMissingDevicesToList(newDeviceList, xmSalesForceGroupMap.values());
         System.debug('ListReturnedToSF -->' + ':' + xmSalesForceGroupMap.values());
 
+        List<xmGroupChangeRequest__c> groupChangeRequestList = new List<xmGroupChangeRequest__c>();
+        string queryString = 'Select Id, Status__c, xMDeviceId__c, Action__c, ImplementedProduct__r.Product__c, Account__r.inContact_Cluster__c, Account__r.Verint_Cluster__c,' +
+                'Account__r.NICE_WFM_Cluster__c,Account__r.NICE_QM_Cluster__c from xmGroupChangeRequest__c where Status__c = \'In Queue\'' +
+                ' and NotificationProfile__r.xmPersonUID__c =: guid';
+        if(notificationType == 'MaintType')
+            queryString += ' and Maintenance__c = true';
+        groupChangeRequestList = Database.query(queryString);
+
+        for(XMGroupProductCluster groupProductCluster:xmSalesForceGroupMap.values()){
+            for(xmGroupChangeRequest__c xmGrpChangeRequest :groupChangeRequestList){
+                System.debug('xmGrpChangeRequest.Account__r.inContact_Cluster__c +' + xmGrpChangeRequest.Account__r.inContact_Cluster__c );
+                System.debug('xmGrpChangeRequest.Account__r.Verint_Cluster__c + '  + xmGrpChangeRequest.Account__r.Verint_Cluster__c );
+                System.debug('xmGrpChangeRequest.Account__r.NICE_WFM_Cluster__c + ' + xmGrpChangeRequest.Account__r.NICE_WFM_Cluster__c );
+                System.debug('xmGrpChangeRequest.Account__r.NICE_QM_Cluster__c + ' + xmGrpChangeRequest.Account__r.NICE_QM_Cluster__c);
+                System.debug(' groupProductCluster.Cluster -->' +  groupProductCluster.Cluster);
+                System.debug('groupProductCluster.Product -->' + groupProductCluster.Product);
+
+
+                if(xmGrpChangeRequest.ImplementedProduct__r.Product__c == groupProductCluster.Product
+                        && (xmGrpChangeRequest.Account__r.inContact_Cluster__c + ' - ' + groupProductCluster.Product  == groupProductCluster.Cluster
+                        || xmGrpChangeRequest.Account__r.Verint_Cluster__c + ' - ' + groupProductCluster.Product == groupProductCluster.Cluster
+                        || xmGrpChangeRequest.Account__r.NICE_WFM_Cluster__c + ' - ' + groupProductCluster.Product == groupProductCluster.Cluster
+                        || xmGrpChangeRequest.Account__r.NICE_QM_Cluster__c + ' - ' + groupProductCluster.Product == groupProductCluster.Cluster )){
+                    for(xmPersonMemberModel deviceObj : groupProductCluster.Devices){
+                        System.debug('xmGrpChangeRequest.Status__c -->' + ':' + xmGrpChangeRequest.Status__c);
+                        System.debug('deviceObj.Id' + ':' + deviceObj.Id);
+                        System.debug('xmGrpChangeRequest.xMDeviceId__c' + ':' + xmGrpChangeRequest.xMDeviceId__c);
+                        System.debug('xmGrpChangeRequest.Id;' + ':' + xmGrpChangeRequest.Id);
+                        if(deviceObj.Id == xmGrpChangeRequest.xMDeviceId__c){
+                            deviceObj.grRecordId = xmGrpChangeRequest.Id;
+                            System.debug('groupProductCluster.grRecordId' + ':' + deviceObj.grRecordId);
+                            System.debug('xmGrpChangeRequest.Status__c' + ':' + xmGrpChangeRequest.Status__c);
+                            System.debug('deviceObj.checked' + ':' + deviceObj.checked);
+                            if(xmGrpChangeRequest.Status__c == 'In Queue' && xmGrpChangeRequest.Action__c == 'Add')
+                                deviceObj.checked = true;
+                            else if(xmGrpChangeRequest.Status__c == 'In Queue' && xmGrpChangeRequest.Action__c == 'Remove')
+                                deviceObj.checked = false;
+
+                            System.debug('deviceObj.checked' + ':' + deviceObj.checked);
+                        }
+                    }
+                }
+            }
+            System.debug('groupProductCluster -->' + ':' + groupProductCluster);
+        }
+        System.debug('xmSalesForceGroupMap -->' + ':' + xmSalesForceGroupMap);
         return xmSalesForceGroupMap;
     }
 
@@ -176,43 +224,43 @@ public class XMBusinessLayer  {
     }
 
 
-  
+
 
     public void AddMissingDevicesToList(XMDeviceWrapper[] newDeviceList, List<XMGroupProductCluster> xmGroupClusterObjList) {
         try{
-               System.debug('AddMissingDevicesToList --> entered');
-               //System.debug('AddMissingDevicesToList --> ' + xmGroupClusterObjList) ;
-               for (XMGroupProductCluster xmGroupCluster : xmGroupClusterObjList) {
-                   System.debug('AddMissingDevicesToList --> looping through the list');
-                   for (XMDeviceWrapper device : newDeviceList) {
-                       boolean skip = false;
-                       for (xmPersonMemberModel xmModel: xmGroupCluster.Devices) {
-                           System.debug('AddMissingDevicesToList compare xmModel Type--> ' + xmModel );
-                           System.debug('AddMissingDevicesToList compare device Type--> ' + device );
-                           if (xmModel.targetName.contains(device.name)) {
-                               skip = true;
-                               xmModel.checked = true;
-                               System.debug('AddMissingDevicesToList --> record already present');
-                            }
-                       }
-                       if (skip == false) {
-                           System.debug('AddMissingDevicesToList --> adding a record');
-                           System.debug('Record being added -->' + device);
-                           xmPersonMemberModel xmNewModel = new xmPersonMemberModel();
-                           xmNewModel.checked = false;
-                           xmNewModel.recipientType = device.deviceType;
-                           xmNewModel.id = device.deviceId;
-                           xmNewModel.targetName = device.name;
-                           xmGroupCluster.Devices.add(xmNewModel);
-                       }
-                   }
-               }
+            System.debug('AddMissingDevicesToList --> entered');
+            //System.debug('AddMissingDevicesToList --> ' + xmGroupClusterObjList) ;
+            for (XMGroupProductCluster xmGroupCluster : xmGroupClusterObjList) {
+                System.debug('AddMissingDevicesToList --> looping through the list');
+                for (XMDeviceWrapper device : newDeviceList) {
+                    boolean skip = false;
+                    for (xmPersonMemberModel xmModel: xmGroupCluster.Devices) {
+                        System.debug('AddMissingDevicesToList compare xmModel Type--> ' + xmModel );
+                        System.debug('AddMissingDevicesToList compare device Type--> ' + device );
+                        if (xmModel.targetName.contains(device.name)) {
+                            skip = true;
+                            xmModel.checked = true;
+                            System.debug('AddMissingDevicesToList --> record already present');
+                        }
+                    }
+                    if (skip == false) {
+                        System.debug('AddMissingDevicesToList --> adding a record');
+                        System.debug('Record being added -->' + device);
+                        xmPersonMemberModel xmNewModel = new xmPersonMemberModel();
+                        xmNewModel.checked = false;
+                        xmNewModel.recipientType = device.deviceType;
+                        xmNewModel.id = device.deviceId;
+                        xmNewModel.targetName = device.name;
+                        xmGroupCluster.Devices.add(xmNewModel);
+                    }
+                }
+            }
 
-       }
-       catch(Exception ex)
-       {
-           System.debug('Error in AddMissingDevicesToList  -->'  + ex.getMessage());
-       }
+        }
+        catch(Exception ex)
+        {
+            System.debug('Error in AddMissingDevicesToList  -->'  + ex.getMessage());
+        }
     }
 
     //Returns a list of salesforce product based groups an account belongs to
@@ -230,44 +278,44 @@ public class XMBusinessLayer  {
         //systXMem.debug (includedProducts);
         Map<String, XMGroupProductCluster> groupListMap = new Map<String, XMGroupProductCluster>();
         for ( ImplementedProduct__c product : [SELECT   Account__c,Product__c,
-                                                Account__r.ParentId,
-                                                Account__r.inContact_Cluster__c, Account__r.Verint_Cluster__c,
-                                                Account__r.NICE_WFM_Cluster__c,Account__r.XMPartnerPrefix__c, Account__r.NICE_QM_Cluster__c,
-                                                Account__r.Parent.XMPartnerPrefix__c
-                                                FROM ImplementedProduct__c
-                                                WHERE Account__c in :acc  and Account__r.CG_Disconnect_Date__c = NULL
-                                                AND(GoLiveDate__c <= TODAY
-                                                OR EstimatedGoLiveDate__c <= NEXT_N_DAYS : 14)
-                                                AND Status__c not in('Canceled', 'Deactivated')])
-         {
-             system.debug ( 'product -->' + product);
-             ProductEventMap__c productMap = nodeMap.get(product.Product__c);
-             system.debug (productMap);
-             if (productMap != null) {
-                 if (product.Account__r.Parent != null)
-                 {
-                     partnerPrefix =  product.Account__r.Parent.XMPartnerPrefix__c;
-                 }
-                 else if ( product.Account__r.XMPartnerPrefix__c !=null)
-                 {
-                     partnerPrefix =  product.Account__r.XMPartnerPrefix__c;
-                 }
-                 ProductClusterMapClass prodMap = new ProductClusterMapClass(
-                         productMap.Name,
-                         product.Account__r.inContact_Cluster__c,
-                         product.Account__r.Verint_Cluster__c,
-                         product.Account__r.NICE_WFM_Cluster__c,
-                         product.Account__r.NICE_QM_Cluster__c,
-                         partnerPrefix ,
-                         productMap
-                        );
+                Account__r.ParentId,
+                Account__r.inContact_Cluster__c, Account__r.Verint_Cluster__c,
+                Account__r.NICE_WFM_Cluster__c,Account__r.XMPartnerPrefix__c, Account__r.NICE_QM_Cluster__c,
+                Account__r.Parent.XMPartnerPrefix__c
+        FROM ImplementedProduct__c
+        WHERE Account__c in :acc  and Account__r.CG_Disconnect_Date__c = NULL
+        AND(GoLiveDate__c <= TODAY
+        OR EstimatedGoLiveDate__c <= NEXT_N_DAYS : 14)
+        AND Status__c not in('Canceled', 'Deactivated')])
+        {
+            system.debug ( 'product -->' + product);
+            ProductEventMap__c productMap = nodeMap.get(product.Product__c);
+            system.debug (productMap);
+            if (productMap != null) {
+                if (product.Account__r.Parent != null)
+                {
+                    partnerPrefix =  product.Account__r.Parent.XMPartnerPrefix__c;
+                }
+                else if ( product.Account__r.XMPartnerPrefix__c !=null)
+                {
+                    partnerPrefix =  product.Account__r.XMPartnerPrefix__c;
+                }
+                ProductClusterMapClass prodMap = new ProductClusterMapClass(
+                        productMap.Name,
+                        product.Account__r.inContact_Cluster__c,
+                        product.Account__r.Verint_Cluster__c,
+                        product.Account__r.NICE_WFM_Cluster__c,
+                        product.Account__r.NICE_QM_Cluster__c,
+                        partnerPrefix ,
+                        productMap
+                );
 
-                 XMGroupProductCluster groupData = GetGroupDataMap(prodMap);
-                 groupListMap.put(groupData.XmattersGroupName,groupData);
-                }
-                else{
-                    system.debug('Warning product not found in the product map!!!');
-                }
+                XMGroupProductCluster groupData = GetGroupDataMap(prodMap);
+                groupListMap.put(groupData.XmattersGroupName,groupData);
+            }
+            else{
+                system.debug('Warning product not found in the product map!!!');
+            }
         }
         return groupListMap;
     }
@@ -291,7 +339,7 @@ public class XMBusinessLayer  {
         groupData.PartnerPrefix = prodMapClass.PartnerPrefix;
         groupData.XmattersGroupName = GetGroupName(groupData);
 
-       return groupData;
+        return groupData;
     }
 
     public string GetGroupName(XMGroupProductCluster groupData){
@@ -316,14 +364,40 @@ public class XMBusinessLayer  {
     //Update the contacts xmatters group memebership
     public String UpdateXMUserToGroups(List<XMGroupProductCluster> groupList, String userID)
     {
+        system.debug('notification type ' + notificationType);
         List<XMGroupModel> xmGroupModelList = new List<XMGroupModel>();
         XMRestGroup xmRestGroupObj = new XMRestGroup();
         String responseBody;
         String successMessage;
         Boolean isGroupCreated;
+        system.debug('UpdateXMUserToGroups => ***- Starting -***');
+
+        List<Contact> contactList = [
+                Select Id, AccountId, xmPerson__c, XmattersUid__c from Contact where xmPerson__r.xmPersonUID__c = :userID
+        ];
+        System.debug('contactList = >' + contactList);
+
+        Set<id> accountIds = new Set<id>();
+        for(Contact c: contactList){
+            accountIds.add(c.AccountId);
+        }
+        System.debug('accountIds = >' + accountIds);
+
+        Set<String> products = new Set<String>();
+        for(XMGroupProductCluster p: groupList){
+            products.add(p.Product);
+        }
+
+        System.debug('products = >' + products);
+
+        Map<string, ImplementedProduct__c> implementedProduct = new Map<string, ImplementedProduct__c>();
+        for(ImplementedProduct__c impl: [SELECT  Id, Product__c from ImplementedProduct__c where Product__c in: products and Account__c in: accountIds]){
+            implementedProduct.put(impl.Product__c, impl);
+        }
 
         List<xmGroupChangeRequest__c> groupChangeRequestList = new List<xmGroupChangeRequest__c>();
         xmPerson__c xmPerson ;
+        system.debug('groupList => ' + groupList );
 
         try
         {
@@ -334,16 +408,51 @@ public class XMBusinessLayer  {
             List<XMGroupProductCluster> xmCurrentGroupList = GetXMGroupList(xmList,userID);
             system.debug('UpdateXMUserToGroups current list of groups => ' + xmCurrentGroupList );
 
+            List<xmGroupChangeRequest__c> isExistsGroupChangeRequest = [SELECT Id, xMDeviceId__c, Account__c, Account__r.inContact_Cluster__c, Account__r.Verint_Cluster__c,
+                    Account__r.NICE_WFM_Cluster__c,Account__r.NICE_QM_Cluster__c
+            from xmGroupChangeRequest__c where Contact__c =: contactList[0].Id
+            and Status__c =: 'In Queue' and (Account__r.inContact_Cluster__c =: groupList[0].Cluster
+            or Account__r.Cluster__c =: groupList[0].Cluster or Account__r.Verint_Cluster__c =: groupList[0].Cluster
+            or Account__r.NICE_WFM_Cluster__c =: groupList[0].Cluster or Account__r.NICE_QM_Cluster__c =: groupList[0].Cluster)];
+
+
+            System.debug('isExistsGroupChangeRequest = >' + isExistsGroupChangeRequest);
+
+            Map<String, xmGroupChangeRequest__c> groupChangeRequestMap = new Map<String, xmGroupChangeRequest__c>();
+            for(xmGroupChangeRequest__c objChangeRequest: isExistsGroupChangeRequest){
+                System.debug('objChangeRequest.Account__r.inContact_Cluster__c = >' + objChangeRequest.Account__r.inContact_Cluster__c);
+                string groupChangeRequestString;
+                string cluster;
+                if(objChangeRequest.Account__r.inContact_Cluster__c != NULL)
+                    cluster =  objChangeRequest.Account__r.inContact_Cluster__c;
+                if(objChangeRequest.Account__r.Verint_Cluster__c != NULL)
+                    cluster =  objChangeRequest.Account__r.Verint_Cluster__c;
+                if(objChangeRequest.Account__r.NICE_WFM_Cluster__c != NULL)
+                    cluster =  objChangeRequest.Account__r.NICE_WFM_Cluster__c;
+                if(objChangeRequest.Account__r.NICE_QM_Cluster__c != NULL)
+                    cluster =  objChangeRequest.Account__r.NICE_QM_Cluster__c;
+
+                groupChangeRequestString  = objChangeRequest.xMDeviceId__c + '_' + groupList[0].Product + '_' + cluster;
+                groupChangeRequestMap.put(groupChangeRequestString, objChangeRequest);
+
+            }
+
+            System.debug('groupChangeRequestMap = >' + groupChangeRequestMap);
+
             for(XMGroupProductCluster groupObj:groupList)
             {
-                for(xmPersonMemberModel deviceObj:groupObj.Devices){
 
+                for(xmPersonMemberModel deviceObj:groupObj.Devices){
+                    System.debug('deviceObj.grRecordId = >' + deviceObj.grRecordId);
                     //List<XMGroupMemberModel> xmList  = xmRestGroupObj.GetXMPersonGroupsById(userID);
                     //system.debug('UpdateXMUserToGroups list of groups by id => ' + xmList );
                     //List<XMGroupProductCluster> xmCurrentGroupList = GetXMGroupList(xmList,userID);
                     //system.debug('UpdateXMUserToGroups current list of groups => ' + xmCurrentGroupList );
-
                     System.debug('xmCurrentGroupList = >' + xmCurrentGroupList);
+                    System.debug('groupObj = >' + groupObj);
+                    System.debug('groupObj.Product = >' + groupObj.Product);
+                    System.debug('deviceObj = >' + deviceObj);
+                    System.debug('implementedProduct = >' + implementedProduct);
                     if (deviceObj.checked == true) {
                         xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
                         system.debug('xmGroupModelList =>' + xmGroupModelList);
@@ -354,18 +463,23 @@ public class XMBusinessLayer  {
                                 system.debug('** Adding user to group ** ==>' + groupObj.XmattersGroupName );
 
 
+
                                 xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
-//                                        Account__c = '',
-//                                        Contact__c = '',
-//                                        ImplementedProduct__c = '',
-                                        NotificationProfile__r = xmPerson,
+                                        Account__c = contactList[0].AccountId,
+                                        Contact__c = contactList[0].Id,
+                                        ImplementedProduct__c = implementedProduct.get(groupObj.Product).Id,
+                                        NotificationProfile__c = contactList[0].xmPerson__c,
                                         xMDeviceId__c = deviceObj.Id,
                                         Status__c = 'In Queue',
                                         Action__c = 'Add'
                                         //xmGroupChangeRequestHeader__c = groupCRAccount.get(act.Id)
                                 );
+                                if(notificationType == 'MaintType')
+                                    grpChangeRequest.Maintenance__c = true;
+
 
                                 groupChangeRequestList.add(grpChangeRequest);
+
                                 //responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, deviceObj.id, 'Device');
                             }
                         }
@@ -376,51 +490,63 @@ public class XMBusinessLayer  {
                                 xmGroupModelList = xmRestGroupObj.GetAllGroupsByPrefix(groupObj.XmattersGroupName);
                                 if (xmGroupModelList.size() > 0) {
                                     system.debug('** Adding user to group ** ==>' + groupObj.XmattersGroupName );
+                                    //string grpChangeReqString = deviceObj.Id  + '_' + groupList[0].Product + '_' + groupList[0].Cluster;
+                                    //system.debug('** grpChangeReqString ** ==>' + grpChangeReqString );
 
 
                                     xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
-//                                        Account__c = '',
-//                                        Contact__c = '',
-//                                        ImplementedProduct__c = '',
-                                            NotificationProfile__r = xmPerson,
+                                            Account__c = contactList[0].AccountId,
+                                            Contact__c = contactList[0].Id,
+                                            ImplementedProduct__c = implementedProduct.get(groupObj.Product).Id,
+                                            NotificationProfile__c = contactList[0].xmPerson__c,
                                             xMDeviceId__c = deviceObj.Id,
                                             Status__c = 'In Queue',
                                             Action__c = 'Add'
                                             //xmGroupChangeRequestHeader__c = groupCRAccount.get(act.Id)
                                     );
+                                    if(notificationType == 'MaintType')
+                                        grpChangeRequest.Maintenance__c = true;
 
                                     groupChangeRequestList.add(grpChangeRequest);
+
+
+
                                     //responseBody = xmRestGroupObj.AddUserToGroup(groupObj.XmattersGroupName, deviceObj.id, 'Device');
                                 }
                             }
                         }
                     }
                     else{
-                        if (xmCurrentGroupList != null && xmCurrentGroupList.isEmpty() == false)
-                        {
+                        if (xmCurrentGroupList != null && xmCurrentGroupList.isEmpty() == false) {
                             System.debug('Group List');
-                            if(isUserMemberofGroup(groupObj.XmattersGroupName,deviceObj,xmCurrentGroupList) == true) {
-                                System.debug('Found in users group list -> ' + groupObj.XmattersGroupName );
-                                //xmRestGroupObj.RemoveUserFromAGroup(groupObj.XmattersGroupName, deviceObj.id);
+                            if (isUserMemberofGroup(groupObj.XmattersGroupName, deviceObj, xmCurrentGroupList) == true) {
+                                System.debug('Found in users group list -> ' + groupObj.XmattersGroupName);
 
                                 xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
-//                                        Account__c = '',
-//                                        Contact__c = '',
-//                                        ImplementedProduct__c = '',
-                                        NotificationProfile__r = xmPerson,
+                                        Account__c = contactList[0].AccountId,
+                                        Contact__c = contactList[0].Id,
+                                        ImplementedProduct__c = implementedProduct.get(groupObj.Product).Id,
+                                        NotificationProfile__c = contactList[0].xmPerson__c,
                                         xMDeviceId__c = deviceObj.Id,
                                         Status__c = 'In Queue',
-                                        Action__c = 'Remove'
+                                        Action__c = 'Add'
                                         //xmGroupChangeRequestHeader__c = groupCRAccount.get(act.Id)
                                 );
+                                if (notificationType == 'MaintType')
+                                    grpChangeRequest.Maintenance__c = true;
+
 
                                 groupChangeRequestList.add(grpChangeRequest);
+
                             }
+
+
                         }
                     }
                 }
 
             }
+
 
             if(groupChangeRequestList.size() >0){
                 system.debug ('***  groupChangeRequestList ==> ' + groupChangeRequestList);
@@ -446,13 +572,13 @@ public class XMBusinessLayer  {
         if(successMessage != '' && successMessage != null)
             return successMessage;
         else
-            return 'There are some issues in adding user to the selected group, please try again or call administrator.';
+                return 'There are some issues in adding user to the selected group, please try again or call administrator.';
     }
     private boolean isUserMemberofGroup (string groupName,xmPersonMemberModel device,  List<XMGroupProductCluster> xmCurrentGroupList ){
 
         for ( XMGroupProductCluster xm : xmCurrentGroupList ){
             if (xm.XmattersGroupName == groupName){
-                    system.debug('*** groupName => ' + groupName);
+                system.debug('*** groupName => ' + groupName);
 
                 for (xmPersonMemberModel currentDevice :xm.Devices){
                     system.debug('***Current Device --> ' + currentDevice);
@@ -471,15 +597,15 @@ public class XMBusinessLayer  {
     }
 
     public class ProductClusterMapClass{
-       public string Product;
-       public string InContactCluster;
-       Public string VerintCluster;
-       Public string NiceWFMCluster;
-       Public string NiceQMCLuster;
-       Public string PartnerPrefix;
-       Public ProductEventMap__c ProductMap;
+        public string Product;
+        public string InContactCluster;
+        Public string VerintCluster;
+        Public string NiceWFMCluster;
+        Public string NiceQMCLuster;
+        Public string PartnerPrefix;
+        Public ProductEventMap__c ProductMap;
         public ProductClusterMapClass(string product, string inContactCluster, string verintCluster,
-                                      string niceWFMCluster, string niceQMCLuster, string partnerPrefix, ProductEventMap__c productMap){
+                string niceWFMCluster, string niceQMCLuster, string partnerPrefix, ProductEventMap__c productMap){
 
             this.Product = product;
             this.InContactCluster = inContactCluster;
