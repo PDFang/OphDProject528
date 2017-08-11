@@ -89,16 +89,20 @@ public class CaseEventNotificationExtension
                 enableXmatters = true;
                 xMattersFieldMapping = getxMattersFieldMapping();
                 caseFields.addAll(xMattersFieldMapping);
-                return;
             }else{
                 enableXmatters = false;
             }
 
             List<String> soqlColumns = new List<String>(caseFields);
+            System.debug('soqlColumns - ' + soqlColumns);
 
             String soql = 'Select ' + String.join(soqlColumns, ',') + ' FROM Case where Id = \'' + c.Id + '\'';
             c = Database.query(soql);
             System.debug('Case Record is' + c);
+
+            if(enableXmatters){
+                return;
+            }
 
             accountIds = new Set<Id>();
             csmEmails = new String[]{};
@@ -507,6 +511,7 @@ public class CaseEventNotificationExtension
         }
 
         xMattersFieldMapping.addAll(sfFields);
+        system.debug('getxMattersFieldMapping(): xMattersFieldMapping - ' + xMattersFieldMapping);
 
         return xMattersFieldMapping;
 

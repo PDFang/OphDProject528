@@ -1447,6 +1447,7 @@
        XMPersonManagementController.updateGroupSubscription(
           JSON.stringify(groupData),
            '{!$CurrentPage.parameters.id}',
+           notificationType,
           function(result,event)
           {
             if (event.status) {
