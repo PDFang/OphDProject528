@@ -11,7 +11,45 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
 
     protected override void afterUpdate(){
 
-        // TBD: resend request to xMatters
+        updateCaseRecord( (List<xmNotification__c>)trigger.new, (Map<Id, xmNotification__c>)trigger.oldMap);
+
+    }
+
+    // update Case when the notification status is Completed
+    private static void updateCaseRecord(List<xmNotification__c> notificationList, Map<Id, xmNotification__c> oldMap){
+
+        if(oldMap == null){
+            return;
+        }
+
+        Set<Id> caseIds = new Set<Id>();
+
+        for(xmNotification__c notification : notificationList){
+
+            if(notification.Status__c == 'Completed' && oldMap.get(notification.Id).Status__c != 'Completed'){
+                caseIds.add(notification.Case__c);
+            }
+        }
+
+        if(caseIds.isEmpty()){
+            return;
+        }
+
+        Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
+        Id maintenanceRecordTypeId = recordTypeMap.get('Maintenance Notification').getRecordTypeId();
+
+        List<Case> caseList = new List<Case>();
+
+        for(Case caseRecord : [Select Id, RecordTypeId, Status from Case where Id IN :caseIds]){
+            if(caseRecord.RecordTypeId == maintenanceRecordTypeId ){
+                caseRecord.Status = 'Notification Sent';
+                caseList.add(caseRecord);
+            }
+        }
+
+        if(caseList.size() > 0){
+            Database.update(caseList, false);
+        }
 
     }
 
