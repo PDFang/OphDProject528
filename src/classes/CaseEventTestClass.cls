@@ -547,6 +547,96 @@ private class CaseEventTestClass {
 
     }
 
+    static testMethod void TestMaintenanceNotificationViaXmatters(){
+
+        createSiteConfig();
+
+        ProductEventMap__c pem = new ProductEventMap__c();
+        pem.Name = 'inContact';
+        pem.Product__c = 'inContact';
+        pem.ImplementedProduct__c = 'inContact';
+        pem.Platform__c = 'Cluster - inContact';
+        pem.HasClusters__c = true;
+
+        insert pem;
+
+        AppConfiguration__c config = new AppConfiguration__c();
+        config.XM_Turn_Off_Maintenance_Notifications__c = false;
+        insert config;
+
+        //create test account
+        Account a = inContactBaseClass.CreateAccount('Test');
+        a.Site = 'Test';
+        a.CS_AM__c = UserInfo.getUserId();
+        a.inContact_Cluster__c = 'C6';
+
+        insert a;
+
+        Contact con = inContactBaseClass.CreateContact(a.Id, 'test', 'test', 'test@test.com');
+        con.Contact_Role__c = 'Maintenance Notification';
+        insert con;
+
+        Opportunity o = new Opportunity();
+        o.RecordTypeId = inContactBaseClass.SelectRecordTypeIDByName('Historical Products', 'Opportunity');
+        o.Name = 'test';
+        o.CloseDate = system.today().addDays(30);
+        o.StageName = 'Open';
+        o.AccountId = a.Id;
+
+        insert o;
+
+        ImplementedProduct__c ip = new ImplementedProduct__c();
+        ip.Account__c = a.Id;
+        ip.GoLiveDate__c = system.today().addMonths(- 4);
+        ip.Product__c = 'inContact';
+        ip.Opportunity__c = o.Id;
+        ip.Status__c = 'Implemented';
+
+        insert ip;
+
+
+        Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
+        Map<String, Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
+
+        //set default assignment rule
+        database.DMLOptions dmo = new database.DMLOptions();
+        dmo.assignmentRuleHeader.useDefaultRule = true;
+
+        //create Maintenance case
+        Case testMaintenance = new Case(
+                RecordTypeId = rtMapByName.get('Maintenance Notification').getRecordTypeId(),
+                Subject = 'Test Maintenance Notification',
+                Description = 'Test Maintenance Notification',
+                Status = 'New',
+                EventType__c = 'Service Disruption',
+                PlatformsImpacted__c = 'C6 - inContact',
+                ProductImpacted__c = 'inContact',
+                InternalEvent__c = false,
+                Priority = 'P1'
+        );
+
+        testMaintenance.setOptions(dmo);
+
+        insert testMaintenance;
+
+
+        Test.startTest();
+
+        CaseEventNotificationExtension testExtension = new CaseEventNotificationExtension(new ApexPages.StandardController(testMaintenance));
+
+        system.assertEquals(true, testExtension.enableXmatters, 'xMatters maintenance notification should be enabled.');
+        system.assert(testExtension.xMattersFieldMapping.size() > 0, 'Case Field to xMatters form property mapping is empty.');
+
+        testExtension.sendNotificationViaXmatters();
+
+        Test.stopTest();
+
+        List<xmNotification__c> xmNotifications = [Select Id from  xmNotification__c where Case__c = :testMaintenance.Id];
+        system.assertEquals(1, xmNotifications.size(), 'Notification record should be created.');
+
+
+    }
+
     static testMethod void TestNotificationProxy()
     {
 
