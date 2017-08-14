@@ -174,13 +174,13 @@ public class CaseTriggerHandler extends TriggerHandler
                 //status is equal to Confirmed or Being Worked and no Event Confirmation notification has been sent
                 if (((newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed')
                         || (newCase.Status == 'Being Worked' && oldCase.Status != 'Being Worked'))
-                        && !newCase.EventEmailSent__c) {
+                        && !newCase.xmEvent_Notification_Sent__c) {
                     System.debug('Initial event');
                     processList.add(newCase);
                 }
                 else if (((newCase.Status == 'Resolved' && oldCase.Status != 'Resolved')
                         || (newCase.Status == 'Closed' && oldCase.Status != 'Closed'))
-                        && newCase.EventEmailSent__c
+                        && newCase.xmEvent_Notification_Sent__c
                         && !newCase.EventHasBeenResolvedOrClosed__c) {
                     //track that this case has been
 
