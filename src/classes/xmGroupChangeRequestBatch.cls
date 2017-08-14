@@ -115,12 +115,22 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
 
     global void finish(Database.BatchableContext BC)
     {
+        List<CronTrigger> jobs = new list<CronTrigger>([SELECT Id, CronJobDetail.Name, CronJobDetail.JobType
+                                                        FROM CronTrigger WHERE State = 'WAITING' and CronJobDetail.Name like 'Group_Chnage_Request_batch%']);
 
-        DateTime scheduledTime = DateTime.now().addMinutes( 30 );
-        String timeString = scheduledTime.format( 'yyyy-MM-dd HH:mm:ss' );
-        String cronString = scheduledTime.format( 's m H d M ? yyyy' );
-        system.debug('cronstring =>' + cronString);
-        System.schedule( 'Group Chnage Request batch - ' + timeString + ' (' + Math.random() + ')', cronString, new xmGroupChangeRequestScheduler() );
+        if( jobs.size() < 1){
+            integer interval = integer.valueOf(Label.Group_CR_Batch_interval);
+            DateTime scheduledTime = DateTime.now().addMinutes( interval );
+            String timeString = scheduledTime.format( 'yyyy-MM-dd HH:mm:ss' );
+            String cronString = scheduledTime.format( 's m H d M ? yyyy' );
+            system.debug('cronstring =>' + cronString);
+            System.schedule( 'Group_Chnage_Request_batch - ' + timeString + ' (' + Math.random() + ')', cronString, new xmGroupChangeRequestScheduler() );
+        }
+
+        for(CronTrigger job : [SELECT Id FROM CronTrigger WHERE State != 'WAITING' and CronJobDetail.Name like 'Group_Chnage_Request_batch%']){
+            system.abortJob(job.Id);
+        }
+
     }
 
     public map<string,boolean> ProductActiveOnAnotherAccount(set<string> xmPersonIds, set<string> productIds, set<string> clusters,  Map<String, ProductEventMap__c> nodeMap){
