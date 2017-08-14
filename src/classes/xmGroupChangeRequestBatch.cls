@@ -109,14 +109,14 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
         }
     }
 
-
-
-
     global void finish(Database.BatchableContext BC)
     {
 
-
-
+        DateTime scheduledTime = DateTime.now().addMinutes( 30 );
+        String timeString = scheduledTime.format( 'yyyy-MM-dd HH:mm:ss' );
+        String cronString = scheduledTime.format( 's m H d M ? yyyy' );
+        system.debug('cronstring =>' + cronString);
+        System.schedule( 'Group Chnage Request batch - ' + timeString + ' (' + Math.random() + ')', cronString, new xmGroupChangeRequestScheduler() );
     }
 
     public map<string,boolean> ProductActiveOnAnotherAccount(set<string> xmPersonIds, set<string> productIds, set<string> clusters,  Map<String, ProductEventMap__c> nodeMap){
