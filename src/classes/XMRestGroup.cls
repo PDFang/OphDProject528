@@ -38,7 +38,7 @@ public with sharing class XMRestGroup {
         return null;
     }
     //
-    public List<XMGroupMemberModel> GetXMPersonGroupsById (string personId){
+    public List<XMGroupMemberModel> GetXMPersonGroupsById (string personId, string type){
         XMRestWrapper wrapper = new XMRestWrapper();
         string jsonList;
 
@@ -58,11 +58,21 @@ public with sharing class XMRestGroup {
                     if (parser.getCurrentToken() == JSONToken.START_OBJECT) {
 
                         XMGroupMemberModel model = (XMGroupMemberModel) parser.readValueAs(XMGroupMemberModel.class);
+
                         if(model.member != null){
                             model.member.checked = true;
                         }
                         system.debug('model  =>' + model);
-                        groupList.Add(model);
+
+                        if(model != null && model.group1 != null){
+                            if(type == 'MaintType' && model.group1.targetName.contains('MAINT'))
+                                groupList.Add(model);
+                            else if(type != 'MaintType' && !model.group1.targetName.contains('MAINT'))
+                                groupList.Add(model);
+                        }
+
+
+                        system.debug('groupList' + groupList);
 
                     }
                 }
