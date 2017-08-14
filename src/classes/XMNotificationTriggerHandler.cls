@@ -22,12 +22,15 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
             return;
         }
 
+        system.debug('updateCaseRecord(): notificationList - ' + notificationList);
+
         Set<Id> caseIds = new Set<Id>();
 
         for(xmNotification__c notification : notificationList){
 
             if(notification.Status__c == 'Completed' && oldMap.get(notification.Id).Status__c != 'Completed'){
-                caseIds.add(notification.Case__c);
+                if(notification.Request_Type__c == 'Maintenance Notification')
+                    caseIds.add(notification.Case__c);
             }
         }
 
@@ -47,8 +50,16 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
             }
         }
 
+        system.debug('updateCaseRecord(): caseList - ' + caseList);
+
         if(caseList.size() > 0){
-            Database.update(caseList, false);
+            Database.SaveResult[] results = Database.update(caseList, false);
+            for(Database.SaveResult result : results){
+                if(result.isSuccess() == false){
+                    system.debug('updateCaseRecord(): record update failed - ' + result.getErrors()[0].getMessage());
+                    system.assert(false, result.getErrors()[0].getMessage() );
+                }
+            }
         }
 
     }
