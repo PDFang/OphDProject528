@@ -8,6 +8,7 @@ public with sharing class xmPersonMemberModel {
     public string recipientType { get; set; }
     public xmGroupLinkModel links { get; set; }
     public boolean checked {get; set;}
+    public string grRecordId {get; set;}
 
 }
 
