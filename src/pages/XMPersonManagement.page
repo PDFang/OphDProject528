@@ -1418,23 +1418,25 @@
 
       $("div.k-grid-content").find('.row-chk').each(function(idx, item){
             var row = $(item).closest("tr");
-            if($(row).hasClass('k-state-selected'))
-                groupSelectionChange = true;
-            dataItem = grid.dataItem(row);
-            if(dataItem){
-                var  groupRow = new Object();
-                groupRow.Product = dataItem.Product;
-                groupRow.Cluster = dataItem.Cluster ;
-                groupRow.PartnerPrefix = dataItem.PartnerPrefix;
-                groupRow.XmattersGroupName = dataItem.XmattersGroupName ;
-                groupRow.selected = item.checked;
-                groupRow.Devices = dataItem.Devices;
-                var removespclChar = dataItem.XmattersGroupName.replace(/[^a-zA-Z0-9]/g, '');
-                setCheckedFlag(groupRow.Devices, $('.'+ removespclChar + '_1').is(':checked'), "Work Email");
-                setCheckedFlag(groupRow.Devices, $('.'+ removespclChar + '_2').is(':checked'), "Secondary Email");
-                setCheckedFlag(groupRow.Devices, $('.'+ removespclChar + '_3').is(':checked'), "SMS");
-                groupData.push(groupRow);
+            if($(row).hasClass('k-state-selected')){
+                 groupSelectionChange = true;
+                dataItem = grid.dataItem(row);
+                if(dataItem){
+                    var  groupRow = new Object();
+                    groupRow.Product = dataItem.Product;
+                    groupRow.Cluster = dataItem.Cluster ;
+                    groupRow.PartnerPrefix = dataItem.PartnerPrefix;
+                    groupRow.XmattersGroupName = dataItem.XmattersGroupName ;
+                    groupRow.selected = item.checked;
+                    groupRow.Devices = dataItem.Devices;
+                    var removespclChar = dataItem.XmattersGroupName.replace(/[^a-zA-Z0-9]/g, '');
+                    setCheckedFlag(groupRow.Devices, $('.'+ removespclChar + '_1').is(':checked'), "Work Email");
+                    setCheckedFlag(groupRow.Devices, $('.'+ removespclChar + '_2').is(':checked'), "Secondary Email");
+                    setCheckedFlag(groupRow.Devices, $('.'+ removespclChar + '_3').is(':checked'), "SMS");
+                    groupData.push(groupRow);
+                }
             }
+
         });
 
 
