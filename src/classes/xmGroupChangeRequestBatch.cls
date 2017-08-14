@@ -5,7 +5,7 @@
 global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, Database.Stateful, Database.AllowsCallouts {
     private string queryString;
     global xmGroupChangeRequestBatch(){
-        queryString = 'Select Id, Action__c, Account__c, Contact__r.xmPerson__c, Contact__c, ImplementedProduct__c, xMDeviceId__c, NotificationProfile__c, NotificationProfile__r.xmPersonUID__c,' +
+        queryString = 'Select Id, Action__c, Account__c, Maintenance__c, Contact__r.xmPerson__c, Contact__c, ImplementedProduct__c, xMDeviceId__c, NotificationProfile__c, NotificationProfile__r.xmPersonUID__c,' +
                 ' Account__r.inContact_Cluster__c, Account__r.inView_Cluster__c, Account__r.Parentid, Account__r.Verint_Cluster__c,Account__r.NICE_WFM_Cluster__c,Account__r.XMPartnerPrefix__c, ' +
                 'Account__r.NICE_QM_Cluster__c,Account__r.Parent.XMPartnerPrefix__c,ImplementedProduct__r.Product__c from xmGroupChangeRequest__C ' +
                 'where status__c = \'In Queue\' order by NotificationProfile__r.xmPersonUID__c' ;
@@ -35,6 +35,10 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                 // system.debug('changeRequest.ImplementedProduct__r.Product__c => +' + changeRequest.ImplementedProduct__r.Product__c);
                 ProductEventMap__c productMap = nodeMap.get(changeRequest.ImplementedProduct__r.Product__c);
                 // system.debug (productMap);
+                businessLayer.notificationType = null;
+                if(changeRequest.Maintenance__c)
+                    businessLayer.notificationType = 'MaintType';
+
                 if (productMap != null) {
                     if (changeRequest.Account__r.Parent != null) {
                         partnerPrefix = changeRequest.Account__r.Parent.XMPartnerPrefix__c;
