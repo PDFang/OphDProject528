@@ -3,6 +3,8 @@ public class XMRestEventService {
     private Map<String, ProductEventMap__c> nodeMap;
     private List<Case_to_xMatters_Field_Mapping__mdt> caseToXMattersFieldMappings;
 
+    static string xmDatetimeDefaultPattern = 'EEEE, MMMM dd, yyyy HH:mm:ss';
+
     public XMRestEventService(){
         restWrapper = new XMRestWrapper(); //TODO: Allow injection? Not sure yet
         this.nodeMap = ProductEventMap__c.getAll();
@@ -104,6 +106,10 @@ public class XMRestEventService {
 
         Map<String, Schema.sObjectField> caseFields = Schema.sObjectType.Case.Fields.getMap();
 
+        AppConfiguration__c config = AppConfiguration__c.getInstance();
+        String xmDatetimePattern = (config != null && String.isNotBlank(config.XM_Property_Datetime_Pattern__c) )
+                ? config.XM_Property_Datetime_Pattern__c : xmDatetimeDefaultPattern;
+
         for(Case_to_xMatters_Field_Mapping__mdt caseMapping: caseToXMattersFieldMappings){
 
             // check if the field belonged to the type
@@ -122,7 +128,13 @@ public class XMRestEventService {
             String fieldValue = null;
             // format datetime in UTC
             if(fieldResult.getType() == Schema.DisplayType.DATETIME && caseRecord.get(caseField) != null){
-                fieldValue = ((DateTime)caseRecord.get(caseField)).formatGmt('MM/dd/yyyy HH:mm:ss') + ' UTC';
+                try{
+                    fieldValue = ((DateTime)caseRecord.get(caseField)).formatGmt(xmDatetimePattern) + ' UTC';
+                }catch(Exception ex){
+                    system.debug('addAdditionalSalesforceDataToFormProperties() ==> field value: ' + fieldValue);
+                    fieldValue = ((DateTime)caseRecord.get(caseField)).formatGmt(xmDatetimeDefaultPattern) + ' UTC';
+                }
+
             } else if(fieldResult.getType() == Schema.DisplayType.DATE && caseRecord.get(caseField) != null){
                 fieldValue = DateTime.newInstance((Date)caseRecord.get(caseField), Time.newInstance(0,0,0,0)).formatGmt('MM/dd/yyyy');
             }else{
