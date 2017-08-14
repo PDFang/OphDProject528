@@ -36,7 +36,7 @@ public class CaseEventNotificationExtension
     public static list<string> clusters;
 
 
-    private static boolean isxMattersNotificationsTurnedOff = false;
+    private static boolean isxMattersMaintenanceNotificationsTurnedOff = false;
 
     Static Set<String> caseFields = new Set<String>{
             'Id', 'RecordTypeId', 'StartDateTImeUTC__c', 'EndDateTimeUTC__c', 'EventType__c', 'Subject', 'Description', 'ProductImpacted__c', 'CustomersMayExperienceTheFollowing__c',
@@ -72,8 +72,9 @@ public class CaseEventNotificationExtension
 
             AppConfiguration__c appConfig = AppConfiguration__c.getInstance();
             if(appConfig != null && appConfig.XM_Turn_Off_Maintenance_Notifications__c){
-                isxMattersNotificationsTurnedOff = true;
+                isxMattersMaintenanceNotificationsTurnedOff = true;
             }
+            System.debug('CaseEventNotificationExtension(): isxMattersMaintenanceNotificationsTurnedOff - ' + isxMattersMaintenanceNotificationsTurnedOff);
 
             Map<String, ProductEventMap__c> productEventMap = ProductEventMap__c.getAll();
 
@@ -84,7 +85,7 @@ public class CaseEventNotificationExtension
             // Product Impacted - Not for Select Customers
             // xMatters Maintenance Notification turned on
             if(recordTypeName == 'Maintenance Notification' && productEventInfo != null && !productEventInfo.SelectCustomers__c
-                    && !isxMattersNotificationsTurnedOff)
+                    && !isxMattersMaintenanceNotificationsTurnedOff)
             {
                 enableXmatters = true;
                 xMattersFieldMapping = getxMattersFieldMapping();
@@ -520,7 +521,7 @@ public class CaseEventNotificationExtension
     public pagereference sendNotificationViaXmatters(){
 
         try{
-            if(isxMattersNotificationsTurnedOff){ // safety check
+            if(isxMattersMaintenanceNotificationsTurnedOff){ // safety check
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.INFO, 'xMatters Maintenance Notification is disabled. Please contact your administrator.'));
                 return null;
             }
