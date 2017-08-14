@@ -28,6 +28,7 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
             set<string> xmPersonIds = new set<string>();
             set<string> productIds = new set<string>();
             set<string> clusters = new set<string>();
+            set<string> accountXmPersonIds = new set<string>();
             list<ChangeRequestxmPersonProduct> lstCRxmPersonProducts = new list<ChangeRequestxmPersonProduct>();
 
             for (xmGroupChangeRequest__C changeRequest : scope ) {
@@ -62,6 +63,7 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                     clusters.add( changeRequest.Account__r.inView_Cluster__c);
                     clusters.add( changeRequest.Account__r.NICE_QM_Cluster__c);
                     clusters.add( changeRequest.Account__r.NICE_WFM_Cluster__c);
+                    accountXmPersonIds.add( changeRequest.Account__c + '-' + changeRequest.NotificationProfile__c);
                     if(changeRequest.xMDeviceId__c != null){
                         XMGroupChangeRequestItem item = new XMGroupChangeRequestItem();
                         item.groupName = groupData.XmattersGroupName;
@@ -76,7 +78,8 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
 
                 }
             }
-            map<string, boolean> activeProductxmPerson = ProductActiveOnAnotherAccount(xmPersonIds,productIds, clusters, nodeMap);
+            map<string, boolean> activeProductxmPerson = ProductActiveOnAnotherAccount(accountXmPersonIds, xmPersonIds,productIds, clusters, nodeMap);
+            system.debug('activeProductxmPerson =>' + activeProductxmPerson);
 
             for(ChangeRequestxmPersonProduct request: lstCRxmPersonProducts){
                 string productxmPerson =  request.xmPersonId + '~' + request.groupData.Product + '~' + request.groupData.Cluster;
@@ -133,19 +136,20 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
 
     }
 
-    public map<string,boolean> ProductActiveOnAnotherAccount(set<string> xmPersonIds, set<string> productIds, set<string> clusters,  Map<String, ProductEventMap__c> nodeMap){
+    public map<string,boolean> ProductActiveOnAnotherAccount(set<string> accountXmPersonIds, set<string> xmPersonIds, set<string> productIds, set<string> clusters,  Map<String, ProductEventMap__c> nodeMap){
         map<string,list<string>> acctXmPersonIds = new map<string,list<string>>();
         map<string, boolean> activeProductxmPerson = new map<string, boolean>();
         XMBusinessLayer businessLayer =  new XMBusinessLayer();
 
         //  system.debug('clusters ==>' + clusters);
-        for (contact con :  [Select AccountId, xmPerson__r.xmPersonUID__c from Contact Where xmPerson__c in :xmPersonIds and xmPerson__c != null]){
-            if(!acctXmPersonIds.containsKey(con.AccountId)){
-                acctXmPersonIds.put(con.AccountId, new list<string> {con.xmPerson__r.xmPersonUID__c} );
-            }else{
-                acctXmPersonIds.get(con.AccountId).add(con.xmPerson__r.xmPersonUID__c);
+        for (contact con :  [Select AccountId,xmPerson__c, xmPerson__r.xmPersonUID__c from Contact Where xmPerson__c in :xmPersonIds and xmPerson__c != null]){
+            if(!accountXmPersonIds.contains(con.AccountId + '-' + con.xmPerson__c)){
+                if(!acctXmPersonIds.containsKey(con.AccountId)){
+                    acctXmPersonIds.put(con.AccountId, new list<string> {con.xmPerson__r.xmPersonUID__c} );
+                }else{
+                    acctXmPersonIds.get(con.AccountId).add(con.xmPerson__r.xmPersonUID__c);
+                }
             }
-
         }
 
         //system.debug('acctXmPersonIds ==>' + acctXmPersonIds);
