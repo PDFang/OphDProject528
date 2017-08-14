@@ -121,23 +121,60 @@ public class CaseTriggerHandler extends TriggerHandler
         List<Case> processList = new List<Case>();
         string platformsAdded = '',
                 requestType = '';
+
+        //for each case that is resolved or closed, determine whether the resolved notification
+        //has already been sent
+        Set<Id> caseIds = new Set<Id>();
+        for(Case c : newList) {
+            if(c.Status == 'Resolved' || c.Status == 'Closed') {
+                caseIds.add(c.Id);
+            }
+        }
+
+        //retrieve the newest resolved notification, if there is one, for the cases in the set
+        List<AggregateResult> resolvedNotifications = [Select Case__c
+                                                         from xmNotification__c
+                                                         where Status__c = 'Completed' and Request_Type__c = 'Event Resolved'
+                                                            and Case__c in :caseIds
+                                                         group by Request_Type__c, Case__c];
+        caseIds.clear();
+        for(AggregateResult notification : resolvedNotifications) {
+            caseIds.add((Id)notification.get('Case__c'));
+        }
+
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
             // Is Event confirmed
             system.debug('createXmNotification(): new status - ' + newCase.Status);
             system.debug('createXmNotification(): old status - ' + oldCase.Status);
 
-            if(newCase.RecordTypeId == eventRecordType && oldCase != null && !newCase.InternalEvent__c )
+            //ensure the case is an Event, and it was not just created (oldCase is not null), and
+            //that it was not internal
+            //and that the non event checkbox is unchecked
+            if(newCase.RecordTypeId == eventRecordType && oldCase != null && !newCase.InternalEvent__c && !newCase.NonEvent__c)
             {
+                //the Priority of the case must be in the list of xmEventNotificationPriorities or don't send
                 if(String.isNotBlank(xmEventNotificationPriorities) && !xmEventNotificationPriorities.containsIgnoreCase(newCase.Priority)){
                     continue;
                 }
 
-                if ((newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed')
-                        || (newCase.Status == 'Resolved' && oldCase.Status != 'Resolved')){
-
+                //status is equal to Confirmed or Being Worked and no Event Confirmation notification has been sent
+                if (((newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed')
+                        || (newCase.Status == 'Being Worked' && oldCase.Status != 'Being Worked'))
+                        && !newCase.EventEmailSent__c) {
                     System.debug('Initial event');
                     processList.add(newCase);
+                }
+                else if (((newCase.Status == 'Resolved' && oldCase.Status != 'Resolved')
+                        || (newCase.Status == 'Closed' && oldCase.Status != 'Closed'))
+                        && newCase.EventEmailSent__c
+                        && !newCase.EventHasBeenResolvedOrClosed__c) {
+
+                    //if a resolved notification has not been sent, then send it
+                    if(!caseIds.contains(newCase.Id)) {
+                        System.debug('Resolved event');
+                        processList.add(newCase);
+                    }
                 }
                 else if(newCase.Status == 'Confirmed' &&
                         newCase.PlatformsImpacted__c != oldCase.PlatformsImpacted__c){

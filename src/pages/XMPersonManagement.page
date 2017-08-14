@@ -1277,6 +1277,7 @@
          //on click of the checkbox:
       function selectRow(obj) {
        var checked = obj.checked;
+
        $("#groupList").find('.row-chk').each(function(idx, item){
             var row = $(item).closest("tr");
             if(checked){
@@ -1297,6 +1298,7 @@
            row = $(obj).closest("tr"),
            initialCheck = false;
 
+
            $(row).children().find("input").each(function(idx, item){
                     var itemCheck = item.checked,
                     itemInitialcheck = $(item).attr("initial-check") == "true" ? true : false;
@@ -1306,9 +1308,11 @@
 
 
        if (initialCheck) {
+           $(obj).addClass('selectedCheckbox');
             row.addClass("k-state-selected");
             } else {
             //-remove selection
+            $(obj).removeClass('selectedCheckbox');
             row.removeClass("k-state-selected");
        }
      }
@@ -1366,12 +1370,17 @@
           });
       }
 
-      function setCheckedFlag(devices, value, type){
+      function setCheckedFlag(devices, value, inputobj, type){
+          var deviceList = new Object() ;
           for(i=0; i < devices.length; i++) {
-              if(devices[i].targetName.indexOf(type) !== -1){
+              if(devices[i].targetName.indexOf(type) !== -1 && $(inputobj).hasClass('selectedCheckbox')){
                   devices[i].checked = value;
+                  deviceList = devices[i];
+
               }
           }
+
+          return deviceList;
       }
 
       function updateGrouptable(obj){
@@ -1428,11 +1437,12 @@
                     groupRow.PartnerPrefix = dataItem.PartnerPrefix;
                     groupRow.XmattersGroupName = dataItem.XmattersGroupName ;
                     groupRow.selected = item.checked;
-                    groupRow.Devices = dataItem.Devices;
                     var removespclChar = dataItem.XmattersGroupName.replace(/[^a-zA-Z0-9]/g, '');
-                    setCheckedFlag(groupRow.Devices, $('.'+ removespclChar + '_1').is(':checked'), "Work Email");
-                    setCheckedFlag(groupRow.Devices, $('.'+ removespclChar + '_2').is(':checked'), "Secondary Email");
-                    setCheckedFlag(groupRow.Devices, $('.'+ removespclChar + '_3').is(':checked'), "SMS");
+                    var devices = []
+                    devices.push(setCheckedFlag(dataItem.Devices, $('.'+ removespclChar + '_1').is(':checked'), $('.'+ removespclChar + '_1'), "Work Email"));
+                    devices.push(setCheckedFlag(dataItem.Devices, $('.'+ removespclChar + '_2').is(':checked'), $('.'+ removespclChar + '_2'),  "Secondary Email"));
+                    devices.push(setCheckedFlag(dataItem.Devices, $('.'+ removespclChar + '_3').is(':checked'), $('.'+ removespclChar + '_3'), "SMS"));
+                    groupRow.Devices = devices;
                     groupData.push(groupRow);
                 }
             }
@@ -1446,6 +1456,8 @@
           displayError('No group selection change was made. Please make a selection to update group subscription');
           return;
       }
+
+      console.log('groupData ++>' + JSON.stringify(groupData));
        XMPersonManagementController.updateGroupSubscription(
           JSON.stringify(groupData),
            '{!$CurrentPage.parameters.id}',
