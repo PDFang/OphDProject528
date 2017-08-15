@@ -7,6 +7,8 @@ public class XMPersonManagementController{
     public boolean isPersonMatch{get;private set;}
     public boolean isPersonRemoved{get;private set;}
     private string xmPersonGuid;
+    public boolean displayBatchStatusText{get;private set;}
+    public string nextFireTime{get;private set;}
 
     public string getTimezone(){
         return person != null ? person.timezone : null;
@@ -43,6 +45,8 @@ public class XMPersonManagementController{
         contactId = (string)controller.getId();
         isPersonRemoved = false;
         loadContact();
+        displayBatchStatusText = false;
+        batchStatus();
 
     }
 
@@ -309,6 +313,32 @@ public class XMPersonManagementController{
         generator.writeStringField('result', result);
         generator.writeStringField('message', message);
         return generator.getAsString();
+
+    }
+
+    public void batchStatus(){
+
+        list<xmGroupChangeRequest__c> groupChangeRequests
+                = new list<xmGroupChangeRequest__c>([select id from xmGroupChangeRequest__c where NotificationProfile__c =: xmPersonId and xMDeviceId__c != null and Status__c = 'In Queue']);
+
+
+        List<CronTrigger> jobs = new list<CronTrigger>([SELECT Id, NextFireTime  FROM CronTrigger WHERE State = 'WAITING' and CronJobDetail.Name like 'Group_Chnage_Request_batch%' order by CreatedDate desc Limit 1]);
+
+        if(jobs.size() > 0){
+            long milliseconds = jobs[0].NextFireTime.getTime() - Datetime.now().getTime();
+            Long seconds = milliseconds / 1000;
+            Long minutes = seconds / 60;
+            if(minutes >= 1)
+                nextFireTime = string.valueOf(minutes) + ' minutes';
+            else
+                 nextFireTime = string.valueOf(seconds) + ' seconds';
+        }
+
+
+        if(groupChangeRequests.size() > 0){
+            displayBatchStatusText = true;
+        }
+
 
     }
 

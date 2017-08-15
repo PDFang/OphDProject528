@@ -5,7 +5,7 @@
 global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, Database.Stateful, Database.AllowsCallouts {
     private string queryString;
     global xmGroupChangeRequestBatch(){
-        queryString = 'Select Id, Action__c, Account__c, Contact__r.xmPerson__c, Contact__c, ImplementedProduct__c, Maintenance__c , xMDeviceId__c, NotificationProfile__c, NotificationProfile__r.xmPersonUID__c,' +
+        queryString = 'Select Id, Action__c, Account__c, Maintenance__c, Contact__r.xmPerson__c, Contact__c, ImplementedProduct__c, xMDeviceId__c, NotificationProfile__c, NotificationProfile__r.xmPersonUID__c,' +
                 ' Account__r.inContact_Cluster__c, Account__r.inView_Cluster__c, Account__r.Parentid, Account__r.Verint_Cluster__c,Account__r.NICE_WFM_Cluster__c,Account__r.XMPartnerPrefix__c, ' +
                 'Account__r.NICE_QM_Cluster__c,Account__r.Parent.XMPartnerPrefix__c,ImplementedProduct__r.Product__c from xmGroupChangeRequest__C ' +
                 'where status__c = \'In Queue\' order by NotificationProfile__r.xmPersonUID__c' ;
@@ -28,6 +28,7 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
             set<string> xmPersonIds = new set<string>();
             set<string> productIds = new set<string>();
             set<string> clusters = new set<string>();
+            set<string> accountXmPersonIds = new set<string>();
             list<ChangeRequestxmPersonProduct> lstCRxmPersonProducts = new list<ChangeRequestxmPersonProduct>();
 
             for (xmGroupChangeRequest__C changeRequest : scope ) {
@@ -36,11 +37,8 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                 ProductEventMap__c productMap = nodeMap.get(changeRequest.ImplementedProduct__r.Product__c);
                 // system.debug (productMap);
                 businessLayer.notificationType = null;
-                system.debug('changeRequest.Maintenance__c =>' + changeRequest.Maintenance__c);
                 if(changeRequest.Maintenance__c)
                     businessLayer.notificationType = 'MaintType';
-
-                system.debug('businessLayer.notificationType =>' + businessLayer.notificationType);
 
                 if (productMap != null) {
                     if (changeRequest.Account__r.Parent != null) {
@@ -65,6 +63,7 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                     clusters.add( changeRequest.Account__r.inView_Cluster__c);
                     clusters.add( changeRequest.Account__r.NICE_QM_Cluster__c);
                     clusters.add( changeRequest.Account__r.NICE_WFM_Cluster__c);
+                    accountXmPersonIds.add( changeRequest.Account__c + '-' + changeRequest.NotificationProfile__c);
                     if(changeRequest.xMDeviceId__c != null){
                         XMGroupChangeRequestItem item = new XMGroupChangeRequestItem();
                         item.groupName = groupData.XmattersGroupName;
@@ -79,7 +78,8 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
 
                 }
             }
-            map<string, boolean> activeProductxmPerson = ProductActiveOnAnotherAccount(xmPersonIds,productIds, clusters, nodeMap);
+            map<string, boolean> activeProductxmPerson = ProductActiveOnAnotherAccount(accountXmPersonIds, xmPersonIds,productIds, clusters, nodeMap);
+            system.debug('activeProductxmPerson =>' + activeProductxmPerson);
 
             for(ChangeRequestxmPersonProduct request: lstCRxmPersonProducts){
                 string productxmPerson =  request.xmPersonId + '~' + request.groupData.Product + '~' + request.groupData.Cluster;
@@ -118,27 +118,38 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
 
     global void finish(Database.BatchableContext BC)
     {
+        List<CronTrigger> jobs = new list<CronTrigger>([SELECT Id, CronJobDetail.Name, CronJobDetail.JobType
+                                                        FROM CronTrigger WHERE State = 'WAITING' and CronJobDetail.Name like 'Group_Chnage_Request_batch%']);
 
-        //DateTime scheduledTime = DateTime.now().addMinutes( 30 );
-        //String timeString = scheduledTime.format( 'yyyy-MM-dd HH:mm:ss' );
-        //String cronString = scheduledTime.format( 's m H d M ? yyyy' );
-        //system.debug('cronstring =>' + cronString);
-        //System.schedule( 'Group Chnage Request batch - ' + timeString + ' (' + Math.random() + ')', cronString, new xmGroupChangeRequestScheduler() );
+        if( jobs.size() < 1){
+            integer interval = integer.valueOf(Label.Group_CR_Batch_interval);
+            DateTime scheduledTime = DateTime.now().addMinutes( interval );
+            String timeString = scheduledTime.format( 'yyyy-MM-dd HH:mm:ss' );
+            String cronString = scheduledTime.format( 's m H d M ? yyyy' );
+            system.debug('cronstring =>' + cronString);
+            System.schedule( 'Group_Chnage_Request_batch - ' + timeString + ' (' + Math.random() + ')', cronString, new xmGroupChangeRequestScheduler() );
+        }
+
+        for(CronTrigger job : [SELECT Id FROM CronTrigger WHERE State != 'WAITING' and CronJobDetail.Name like 'Group_Chnage_Request_batch%']){
+            system.abortJob(job.Id);
+        }
+
     }
 
-    public map<string,boolean> ProductActiveOnAnotherAccount(set<string> xmPersonIds, set<string> productIds, set<string> clusters,  Map<String, ProductEventMap__c> nodeMap){
+    public map<string,boolean> ProductActiveOnAnotherAccount(set<string> accountXmPersonIds, set<string> xmPersonIds, set<string> productIds, set<string> clusters,  Map<String, ProductEventMap__c> nodeMap){
         map<string,list<string>> acctXmPersonIds = new map<string,list<string>>();
         map<string, boolean> activeProductxmPerson = new map<string, boolean>();
         XMBusinessLayer businessLayer =  new XMBusinessLayer();
 
         //  system.debug('clusters ==>' + clusters);
-        for (contact con :  [Select AccountId, xmPerson__r.xmPersonUID__c from Contact Where xmPerson__c in :xmPersonIds and xmPerson__c != null]){
-            if(!acctXmPersonIds.containsKey(con.AccountId)){
-                acctXmPersonIds.put(con.AccountId, new list<string> {con.xmPerson__r.xmPersonUID__c} );
-            }else{
-                acctXmPersonIds.get(con.AccountId).add(con.xmPerson__r.xmPersonUID__c);
+        for (contact con :  [Select AccountId,xmPerson__c, xmPerson__r.xmPersonUID__c from Contact Where xmPerson__c in :xmPersonIds and xmPerson__c != null]){
+            if(!accountXmPersonIds.contains(con.AccountId + '-' + con.xmPerson__c)){
+                if(!acctXmPersonIds.containsKey(con.AccountId)){
+                    acctXmPersonIds.put(con.AccountId, new list<string> {con.xmPerson__r.xmPersonUID__c} );
+                }else{
+                    acctXmPersonIds.get(con.AccountId).add(con.xmPerson__r.xmPersonUID__c);
+                }
             }
-
         }
 
         //system.debug('acctXmPersonIds ==>' + acctXmPersonIds);

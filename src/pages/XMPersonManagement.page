@@ -152,6 +152,10 @@
         font-size: 33px;
     }
 
+    .hiddenText{
+        display:none;
+    }
+
     </style>
 
     <apex:form >
@@ -184,7 +188,7 @@
                             <div class="alert alert-info message-alert">
                                 <p style="float:left;padding-right:10px;padding-top:5px;">
                                     <!--We found a match for this Contact in Xmatters; Please click on Associate button to associate this contact with the Xmatters Person-->
-                                    {!$Label.XM_Notification_Associate_Contact}
+                                        {!$Label.XM_Notification_Associate_Contact}
                                 </p>
                                 <apex:actionStatus id="associateContact" >
                                     <apex:facet name="stop">
@@ -205,7 +209,7 @@
                             <div class="alert alert-info message-alert">
                                 <p style="float:left; padding-right:10px;padding-top:5px;">
                                     <!--No Matching Person record Found in Xmatters for this contact. Please click Add to create a record in Xmatters-->
-                                    {!$Label.XM_Notification_Add_Person}
+                                        {!$Label.XM_Notification_Add_Person}
                                 </p>
                                 <apex:actionStatus id="addPersonStatus" >
                                     <apex:facet name="stop">
@@ -222,17 +226,17 @@
                             </div>
                         </apex:outputPanel>
                         <apex:outputPanel rendered="{!IsXmPerson}" style="margin-left:15px;" >
-                                <apex:actionStatus id="dissociatePersonStatus" >
-                                    <apex:facet name="stop">
-                                        <apex:commandButton value="Dissociate" title="Dissociate xmPerson from this contact" onClick="callDissociateContact('{!currentContact.Id}');return false;"  status="dissociatePersonStatus"/>
-                                    </apex:facet>
-                                    <apex:facet name="start">
-                                        <apex:outputPanel >
-                                            <apex:image value="/img/loading32.gif" style="height: 15px;"/>
-                                            <apex:commandButton styleClass="k-button"  value="Removing..." status="dissociatePersonStatus" disabled="true"/>
-                                        </apex:outputPanel>
-                                    </apex:facet>
-                                </apex:actionStatus>
+                            <apex:actionStatus id="dissociatePersonStatus" >
+                                <apex:facet name="stop">
+                                    <apex:commandButton value="Dissociate" title="Dissociate xmPerson from this contact" onClick="callDissociateContact('{!currentContact.Id}');return false;"  status="dissociatePersonStatus"/>
+                                </apex:facet>
+                                <apex:facet name="start">
+                                    <apex:outputPanel >
+                                        <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                                        <apex:commandButton styleClass="k-button"  value="Removing..." status="dissociatePersonStatus" disabled="true"/>
+                                    </apex:outputPanel>
+                                </apex:facet>
+                            </apex:actionStatus>
                         </apex:outputPanel>
 
                     </apex:outputPanel>
@@ -285,7 +289,7 @@
             </div>
 
 
-                <apex:pageBlock id="contactList" rendered="{!contactList.size > 0}">
+            <apex:pageBlock id="contactList" rendered="{!contactList.size > 0}">
                 <apex:pageBlockSection collapsible="true"  columns="1" showHeader="true" title="Duplicate Contacts" id="duplicateContacts">
 
                     <apex:dataTable value="{!contactList}" var="con"  styleClass="table table-bordered table-condensed" >
@@ -368,6 +372,17 @@
                                 </select>
                             </div>
 
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3"> </div>
+                        <div class="col-md-9">
+                            <apex:outputPanel id="helpTextPanel">
+                                <apex:outputPanel rendered="{!displayBatchStatusText}">
+                                    <p class="text-danger"> Note: There are Pending Group Subscription update(s) which may take up to 30 minutes to process. Next Batch will run in approx. {!nextFireTime} </p>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                            <apex:actionPoller action="{!batchStatus}" reRender="helpTextPanel" interval="15"/>
                         </div>
                     </div>
                     <div id="groupList"></div>
@@ -1183,6 +1198,7 @@
     }
 
     function setupGroupList(){
+
         var groups =new kendo.data.DataSource({
                     autosync:true,
                     transport:{
@@ -1477,6 +1493,7 @@
                   var grid = $("#groupList").data("kendoGrid");
                   grid.destroy();
                   setupGroupList();
+                  $('p.text-primary').removeClass('hiddenText');
                }
                else{
                    $('#loading').modal('hide');

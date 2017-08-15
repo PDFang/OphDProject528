@@ -41,6 +41,7 @@ public class CaseTriggerHandler extends TriggerHandler
 
     protected override void beforeUpdate(){
         CalculateIncidentNetScore((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
+        setCaseStatusFlags((List<Case>) trigger.new, (Map<Id, Case>)trigger.oldMap);
     }
 
     protected override void afterInsert(){
@@ -53,6 +54,18 @@ public class CaseTriggerHandler extends TriggerHandler
             createXmNotification((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
         if(!isProxyServiceTurnedOff)
             CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
+    }
+
+    private void setCaseStatusFlags(List<Case> updateList, Map<Id, Case> oldMap) {
+        for(Case updatedCase : updateList) {
+            Case oldCase = (oldMap != null) ? oldMap.get(updatedCase.Id) : null;
+            if(updatedCase.RecordTypeId == eventRecordType && !updatedCase.EventHasBeenResolvedOrClosed__c
+                    &&((updatedCase.Status == 'Resolved' && oldCase.Status != 'Resolved')
+                    || (updatedCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed'))) {
+                //set the flag showing that the event has been in resolved or closed status
+                updatedCase.EventHasBeenResolvedOrClosed__c = true;
+            }
+        }
     }
 
     private void SetRecordTypeIds()
@@ -161,14 +174,15 @@ public class CaseTriggerHandler extends TriggerHandler
                 //status is equal to Confirmed or Being Worked and no Event Confirmation notification has been sent
                 if (((newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed')
                         || (newCase.Status == 'Being Worked' && oldCase.Status != 'Being Worked'))
-                        && !newCase.EventEmailSent__c) {
+                        && !newCase.xmEvent_Notification_Sent__c) {
                     System.debug('Initial event');
                     processList.add(newCase);
                 }
                 else if (((newCase.Status == 'Resolved' && oldCase.Status != 'Resolved')
                         || (newCase.Status == 'Closed' && oldCase.Status != 'Closed'))
-                        && newCase.EventEmailSent__c
+                        && newCase.xmEvent_Notification_Sent__c
                         && !newCase.EventHasBeenResolvedOrClosed__c) {
+                    //track that this case has been
 
                     //if a resolved notification has not been sent, then send it
                     if(!caseIds.contains(newCase.Id)) {
