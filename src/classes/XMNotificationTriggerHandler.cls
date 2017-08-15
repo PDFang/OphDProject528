@@ -59,7 +59,6 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
             for(Database.SaveResult result : results){
                 if(result.isSuccess() == false){
                     system.debug('updateCaseRecord(): record update failed - ' + result.getErrors()[0].getMessage());
-                    system.assert(false, result.getErrors()[0].getMessage() );
                 }
             }
         }
