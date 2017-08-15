@@ -101,8 +101,6 @@ public class XMBusinessLayer  {
         for(XMGroupProductCluster groupProductCluster:xmSalesForceGroupMap.values()){
 //            if(!groupProductCluster.Cluster.contains(' - '))
 //                groupProductCluster.Cluster = groupProductCluster.Cluster.replace('-',' - ');
-            System.debug('groupProductCluster.Product -->' + groupProductCluster.Product);
-            System.debug('groupProductCluster.Cluster -->' + groupProductCluster.Cluster);
             for(xmGroupChangeRequest__c xmGrpChangeRequest :groupChangeRequestList){
                 ProductEventMap__c productMap = nodeMap.get(xmGrpChangeRequest.ImplementedProduct__r.Product__c);
                 if(productMap != null)
@@ -121,12 +119,10 @@ public class XMBusinessLayer  {
 
                     if(groupData.Product == groupProductCluster.Product
                             && groupData.Cluster  == groupProductCluster.Cluster){
-                        System.debug('I am inside IF -->');
                         for(xmPersonMemberModel deviceObj : groupProductCluster.Devices){
                             System.debug('deviceObj.Id -->' + deviceObj.Id);
                             System.debug('xmGrpChangeRequest.xMDeviceId__c -->' + xmGrpChangeRequest.xMDeviceId__c);
                             if(deviceObj.Id == xmGrpChangeRequest.xMDeviceId__c){
-                                System.debug('I am inside another IF -->');
                                 deviceObj.grRecordId = xmGrpChangeRequest.Id;
                                 if(xmGrpChangeRequest.Status__c == 'In Queue' && xmGrpChangeRequest.Action__c == 'Add')
                                     deviceObj.checked = true;
@@ -136,10 +132,6 @@ public class XMBusinessLayer  {
                         }
                     }
                 }
-                System.debug('xmGrpChangeRequest.ImplementedProduct__r.Product__c -->' + xmGrpChangeRequest.ImplementedProduct__r.Product__c);
-
-
-
             }
         }
         //System.debug('xmSalesForceGroupMap -->' + ':' + xmSalesForceGroupMap);
