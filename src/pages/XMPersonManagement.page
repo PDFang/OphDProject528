@@ -375,14 +375,14 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-3"> </div>
-                        <div class="col-md-9">
+                        <div class="col-md-2"> </div>
+                        <div class="col-md-10">
                             <apex:outputPanel id="helpTextPanel">
                                 <apex:outputPanel rendered="{!displayBatchStatusText}">
                                     <p class="text-danger"> Note: There are Pending Group Subscription update(s) which may take up to 30 minutes to process. Next Batch will run in approx. {!nextFireTime} </p>
                                 </apex:outputPanel>
                             </apex:outputPanel>
-                            <apex:actionPoller action="{!batchStatus}" reRender="helpTextPanel" interval="15"/>
+                            <apex:actionPoller action="{!batchStatus}" reRender="helpTextPanel" interval="10"/>
                         </div>
                     </div>
                     <div id="groupList"></div>

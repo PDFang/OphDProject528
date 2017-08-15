@@ -338,6 +338,9 @@ public class XMPersonManagementController{
         if(groupChangeRequests.size() > 0){
             displayBatchStatusText = true;
         }
+        else{
+            displayBatchStatusText = false;
+        }
 
 
     }
