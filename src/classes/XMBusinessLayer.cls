@@ -387,31 +387,6 @@ public class XMBusinessLayer  {
         try
         {
 
-            List<xmGroupChangeRequest__c> isExistsGroupChangeRequest = [SELECT Id, xMDeviceId__c, Account__c, Account__r.inContact_Cluster__c, Account__r.Verint_Cluster__c,
-                    Account__r.NICE_WFM_Cluster__c,Account__r.NICE_QM_Cluster__c
-            from xmGroupChangeRequest__c where Contact__c =: contactList[0].Id
-            and Status__c =: 'In Queue' and (Account__r.inContact_Cluster__c =: groupList[0].Cluster
-            or Account__r.Cluster__c =: groupList[0].Cluster or Account__r.Verint_Cluster__c =: groupList[0].Cluster
-            or Account__r.NICE_WFM_Cluster__c =: groupList[0].Cluster or Account__r.NICE_QM_Cluster__c =: groupList[0].Cluster)];
-
-            Map<String, xmGroupChangeRequest__c> groupChangeRequestMap = new Map<String, xmGroupChangeRequest__c>();
-            for(xmGroupChangeRequest__c objChangeRequest: isExistsGroupChangeRequest){
-                string groupChangeRequestString;
-                string cluster;
-                if(objChangeRequest.Account__r.inContact_Cluster__c != NULL)
-                    cluster =  objChangeRequest.Account__r.inContact_Cluster__c;
-                if(objChangeRequest.Account__r.Verint_Cluster__c != NULL)
-                    cluster =  objChangeRequest.Account__r.Verint_Cluster__c;
-                if(objChangeRequest.Account__r.NICE_WFM_Cluster__c != NULL)
-                    cluster =  objChangeRequest.Account__r.NICE_WFM_Cluster__c;
-                if(objChangeRequest.Account__r.NICE_QM_Cluster__c != NULL)
-                    cluster =  objChangeRequest.Account__r.NICE_QM_Cluster__c;
-
-                groupChangeRequestString  = objChangeRequest.xMDeviceId__c + '_' + groupList[0].Product + '_' + cluster;
-                groupChangeRequestMap.put(groupChangeRequestString, objChangeRequest);
-
-            }
-
             for(XMGroupProductCluster groupObj:groupList)
             {
 
