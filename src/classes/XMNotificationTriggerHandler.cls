@@ -1,6 +1,3 @@
-/**
- * Created by mohandaas.rangaswamy on 5/26/2017.
- */
 public class XMNotificationTriggerHandler extends TriggerHandler{
 
     protected override void afterInsert(){
@@ -29,7 +26,7 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
         for(xmNotification__c notification : notificationList){
 
             if(notification.Status__c == 'Completed' && oldMap.get(notification.Id).Status__c != 'Completed'){
-                if(notification.Request_Type__c == 'Maintenance Notification')
+                if(notification.Request_Type__c == 'Maintenance Notification' || notification.Request_Type__c == 'Event Initial Confirmation')
                     caseIds.add(notification.Case__c);
             }
         }
@@ -40,6 +37,7 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
 
         Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
         Id maintenanceRecordTypeId = recordTypeMap.get('Maintenance Notification').getRecordTypeId();
+        Id eventRecordTypeId = recordTypeMap.get('Event').getRecordTypeId();
 
         List<Case> caseList = new List<Case>();
 
@@ -47,6 +45,10 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
             if(caseRecord.RecordTypeId == maintenanceRecordTypeId ){
                 caseRecord.Status = 'Notification Sent';
                 caseList.add(caseRecord);
+            }
+            else if (caseRecord.RecordTypeId == eventRecordTypeId) {
+                //set a flag saying the event confirmation has been sent
+                caseRecord.xmEvent_Notification_Sent__c = true;
             }
         }
 
@@ -57,7 +59,6 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
             for(Database.SaveResult result : results){
                 if(result.isSuccess() == false){
                     system.debug('updateCaseRecord(): record update failed - ' + result.getErrors()[0].getMessage());
-                    system.assert(false, result.getErrors()[0].getMessage() );
                 }
             }
         }
