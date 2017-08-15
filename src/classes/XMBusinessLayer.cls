@@ -426,7 +426,8 @@ public class XMBusinessLayer  {
                                     ImplementedProduct__c = implementedProduct.get(groupObj.Product).Id,
                                     NotificationProfile__c = contactList[0].xmPerson__c,
                                     xMDeviceId__c = deviceObj.Id,
-                                    Status__c = 'In Queue'
+                                    Status__c = 'In Queue',
+                                    Device_Type__c = deviceObj.targetName.contains('|') ? deviceObj.targetName.split('\\|')[1] : deviceObj.targetName
                             );
                             if(notificationType == 'MaintType')
                                 grpChangeRequest.Maintenance__c = true;
