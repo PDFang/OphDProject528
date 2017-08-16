@@ -18,6 +18,8 @@ public class CaseTriggerHandler extends TriggerHandler
     private static SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(inContactBaseClass.OrgId15Digit);
     public static boolean callActionHub = true;
 
+    private Static Map<String, ETMS_Trouble_Report_State_Status__mdt> etmsTroubleStateStatusMap;
+
 
     public CaseTriggerHandler()
     {
@@ -32,16 +34,25 @@ public class CaseTriggerHandler extends TriggerHandler
                 isxMattersNotificationsTurnedOff = config.XM_Turn_Off_Event_Notifications__c;
                 xmEventNotificationPriorities = config.XM_Event_Notification_Priorities__c;
             }
+            etmsTroubleStateStatusMap = new Map<String, ETMS_Trouble_Report_State_Status__mdt>();
+            for(ETMS_Trouble_Report_State_Status__mdt mdt : [
+                    Select Case_Status__c, Trouble_Report_State__c, Trouble_Report_Status__c
+                    From ETMS_Trouble_Report_State_Status__mdt
+            ]){
+                etmsTroubleStateStatusMap.put(mdt.Case_Status__c, mdt);
+            }
         }
     }
 
     protected override void beforeInsert(){
         CalculateIncidentNetScore((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
+        setTroubleReportStateStatus((List<Case>) trigger.new, (Map<Id, Case>)trigger.oldMap);
     }
 
     protected override void beforeUpdate(){
         CalculateIncidentNetScore((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
         setCaseStatusFlags((List<Case>) trigger.new, (Map<Id, Case>)trigger.oldMap);
+        setTroubleReportStateStatus((List<Case>) trigger.new, (Map<Id, Case>)trigger.oldMap);
     }
 
     protected override void afterInsert(){
@@ -61,7 +72,7 @@ public class CaseTriggerHandler extends TriggerHandler
             Case oldCase = (oldMap != null) ? oldMap.get(updatedCase.Id) : null;
             if(updatedCase.RecordTypeId == eventRecordType && !updatedCase.EventHasBeenResolvedOrClosed__c
                     &&((updatedCase.Status == 'Resolved' && oldCase.Status != 'Resolved')
-                    || (updatedCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed'))) {
+                    || (updatedCase.Status == 'Closed' && oldCase.Status != 'Closed'))) {
                 //set the flag showing that the event has been in resolved or closed status
                 updatedCase.EventHasBeenResolvedOrClosed__c = true;
             }
@@ -181,7 +192,7 @@ public class CaseTriggerHandler extends TriggerHandler
                 else if (((newCase.Status == 'Resolved' && oldCase.Status != 'Resolved')
                         || (newCase.Status == 'Closed' && oldCase.Status != 'Closed'))
                         && newCase.xmEvent_Notification_Sent__c
-                        && !newCase.EventHasBeenResolvedOrClosed__c) {
+                        && !oldCase.EventHasBeenResolvedOrClosed__c) {
                     //track that this case has been
 
                     //if a resolved notification has not been sent, then send it
@@ -259,20 +270,61 @@ public class CaseTriggerHandler extends TriggerHandler
 
     }
 
+    // set Trouble Report State and Status
+    private void setTroubleReportStateStatus(List<Case> newList, Map<Id, Case> oldMap){
+
+        if(oldMap == null){
+            return;
+        }
+        for(Case newCase : newList) {
+            Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
+            if(newCase.RecordTypeId == incidentRecordType && newCase.AccountBillingGroup__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
+                && (oldCase == null || oldCase != null && newCase.Status != oldCase.Status )
+                && etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey(newCase.Status))
+            {
+                newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get(newCase.Status).Trouble_Report_State__c;
+                newCase.ETMS_Trouble_Report_Status__c = etmsTroubleStateStatusMap.get(newCase.Status).Trouble_Report_Status__c;
+            }
+        }
+    }
+
     //push incidents to partner case proxy service
     private void CallPartnerCaseProxyService(List<Case> newList, Map<Id, Case> oldMap){
 
         Set<Id> accountIdSet = new Set<Id>();
         List<Case> processList = new List<Case>();
         for(Case newCase : newList){
+
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
-            // Is new incident (or) 3rd Party vendor Ticket is null and Push To Partner is checked
-            if(newCase.AccountId != null && newCase.RecordTypeId == incidentRecordType
-                    && (oldCase == null || (newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null)) ){
-                processList.add(newCase);
-                accountIdSet.add(newCase.AccountId);
+            // Not an Incident
+            if(newCase.AccountId == null || newCase.RecordTypeId != incidentRecordType){
+                continue;
             }
+            // Is new incident
+            if(oldCase == null){
+                system.debug('CallPartnerCaseProxyService(): New Incident - ' + newCase.CaseNumber);
+            }
+            // 3rd Party vendor Ticket is null and Push To Partner is checked
+            else if (newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null) {
+                system.debug('CallPartnerCaseProxyService(): Push to Partner - ' + newCase.CaseNumber);
+            }
+            // Case status is changed
+            else if(newCase.Status != oldCase.Status && newCase.X3rdPartyVendorTicket__c != null
+                && (newCase.ETMS_Trouble_Report_State__c != oldCase.ETMS_Trouble_Report_State__c || newCase.ETMS_Trouble_Report_Status__c != oldCase.ETMS_Trouble_Report_Status__c) )
+            {
+                system.debug('CallPartnerCaseProxyService(): Case status changed from ' + oldCase.Status + ' to ' + newCase.CaseNumber);
+                system.debug('CallPartnerCaseProxyService(): Trouble report status  - ' + newCase.ETMS_Trouble_Report_Status__c);
+                system.debug('CallPartnerCaseProxyService():  Trouble report state - ' + newCase.ETMS_Trouble_Report_State__c);
+            }
+            else {
+                continue;
+            }
+
+            processList.add(newCase);
+            accountIdSet.add(newCase.AccountId);
+
         }
+
         if(accountIdSet.isEmpty()){
             return;
         }
@@ -282,18 +334,27 @@ public class CaseTriggerHandler extends TriggerHandler
         ]);
         system.debug('CallPartnerCaseProxyService(): accountMap - ' + accountMap);
 
-        Set<Id> createdIdSet = new Set<Id>();
+        Set<Id> createIdSet = new Set<Id>();
+        Set<Id> updateIdSet = new Set<Id>();
+
         for(Case newCase: processList){
             Account acct = accountMap.get(newCase.AccountId);
             // Is account billing group 'Verizon'
             if(acct != null && acct.Billing_Group__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON){
-                createdIdSet.add(newCase.Id);
+                if(newCase.X3rdPartyVendorTicket__c == null){
+                    createIdSet.add(newCase.Id);
+                } else{
+                    updateIdSet.add(newCase.Id);
+                }
+
             }
         }
-        system.debug('CallPartnerCaseProxyService(): createdIdSet - ' + createdIdSet);
-        if(createdIdSet.size() > 0 && !system.isFuture() && !system.isBatch()){
-            CallPartnerCaseProxyServiceFuture(createdIdSet);
+        system.debug('CallPartnerCaseProxyService(): createIdSet - ' + createIdSet);
+        if(createIdSet.size() > 0 && !system.isFuture() && !system.isBatch()){
+            CallPartnerCaseProxyServiceFuture(createIdSet);
         }
+
+        // TBD: send case status update to Verizon
 
     } // end of CallPartnerCaseProxyService()
 

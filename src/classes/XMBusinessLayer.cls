@@ -24,7 +24,7 @@ public class XMBusinessLayer  {
             acc.add(contacts[0].AccountId);
         }
 
-        system.debug('type =>' + type);
+        system.debug('acc =>' + acc);
 
         notificationType = type;
     }
@@ -91,7 +91,7 @@ public class XMBusinessLayer  {
         if(notificationType == 'MaintType')
             queryString += ' and Maintenance__c = true';
         else
-            queryString += ' and Maintenance__c = false';
+                queryString += ' and Maintenance__c = false';
 
         Map<String, ProductEventMap__c> nodeMap;
         nodeMap = ProductEventMap__c.getAll();
@@ -123,6 +123,7 @@ public class XMBusinessLayer  {
                             System.debug('deviceObj.Id -->' + deviceObj.Id);
                             System.debug('xmGrpChangeRequest.xMDeviceId__c -->' + xmGrpChangeRequest.xMDeviceId__c);
                             if(deviceObj.Id == xmGrpChangeRequest.xMDeviceId__c){
+
                                 deviceObj.grRecordId = xmGrpChangeRequest.Id;
                                 if(xmGrpChangeRequest.Status__c == 'In Queue' && xmGrpChangeRequest.Action__c == 'Add')
                                     deviceObj.checked = true;
@@ -343,7 +344,7 @@ public class XMBusinessLayer  {
         }
 
         Map<string, ImplementedProduct__c> implementedProduct = new Map<string, ImplementedProduct__c>();
-        for(ImplementedProduct__c impl: [SELECT  Id, Product__c from ImplementedProduct__c where Product__c in: products and Account__c in: accountIds]){
+        for(ImplementedProduct__c impl: [SELECT  Id, Product__c, Account__c from ImplementedProduct__c where Product__c in: products and Account__c in: accountIds]){
             implementedProduct.put(impl.Product__c, impl);
         }
 
@@ -365,25 +366,25 @@ public class XMBusinessLayer  {
 //                        if(!groupObj.Product.contains(' - '))
 //                            groupObj.Product = groupObj.Product.replace('-',' - ');
 
-                            xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
-                                    Account__c = contactList[0].AccountId,
-                                    Contact__c = contactList[0].Id,
-                                    ImplementedProduct__c = implementedProduct.get(groupObj.Product).Id,
-                                    NotificationProfile__c = contactList[0].xmPerson__c,
-                                    xMDeviceId__c = deviceObj.Id,
-                                    Status__c = 'In Queue',
-                                    Device_Type__c = deviceObj.targetName.contains('|') ? deviceObj.targetName.split('\\|')[1] : deviceObj.targetName
-                            );
-                            if(notificationType == 'MaintType')
-                                grpChangeRequest.Maintenance__c = true;
+                        xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
+                                Account__c = implementedProduct.get(groupObj.Product).Account__c,
+                                Contact__c = contactList[0].Id,
+                                ImplementedProduct__c = implementedProduct.get(groupObj.Product).Id,
+                                NotificationProfile__c = contactList[0].xmPerson__c,
+                                xMDeviceId__c = deviceObj.Id,
+                                Status__c = 'In Queue',
+                                Device_Type__c = deviceObj.targetName.contains('|') ? deviceObj.targetName.split('\\|')[1] : deviceObj.targetName
+                        );
+                        if(notificationType == 'MaintType')
+                            grpChangeRequest.Maintenance__c = true;
 
-                            if (deviceObj.checked == true) {
-                                grpChangeRequest.Action__c = 'Add';
-                            }
-                            else
+                        if (deviceObj.checked == true) {
+                            grpChangeRequest.Action__c = 'Add';
+                        }
+                        else
                                 grpChangeRequest.Action__c = 'Remove';
 
-                            groupChangeRequestList.add(grpChangeRequest);
+                        groupChangeRequestList.add(grpChangeRequest);
                     }
                 }
 
