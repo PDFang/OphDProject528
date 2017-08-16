@@ -9,7 +9,7 @@ global class XMPersonGroupUploadBatch implements Database.Batchable<Sobject>, Da
         queryString = 'select Id,(select Id, XmattersUid__c, xmPerson__c from Contacts where xmPerson__c != null';
 
         queryString += ' ),(select Id from Implemented_Products__r where Status__c =\'Implemented\'' ;
-        queryString += ' ) from Account where CG_Disconnect_Date__c = null and Id = \'0013C00000824QW\'';
+        queryString += ' ) from Account where CG_Disconnect_Date__c = null';
         System.debug('queryString =>' + queryString);
     }
 

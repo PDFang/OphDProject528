@@ -50,7 +50,7 @@ public class XMBusinessLayer  {
         //system.debug('XMGroupList -->' + xmGrouplist);
         if(xmGrouplist != null)
         {
-            xmFinalList = GetXMGroupList(xmGrouplist,guid);
+            xmFinalList = GetFinalGroupList(xmSalesForceGroupMap,xmGrouplist);
             //System.debug('xmFinalList-->' + xmFinalList);
         }
         List<XMGroupProductCluster> returnXMFinalProductClusterList = new List<XMGroupProductCluster>();
@@ -93,24 +93,42 @@ public class XMBusinessLayer  {
         else
             queryString += ' and Maintenance__c = false';
 
+        Map<String, ProductEventMap__c> nodeMap;
+        nodeMap = ProductEventMap__c.getAll();
+
+
         groupChangeRequestList = Database.query(queryString);
         for(XMGroupProductCluster groupProductCluster:xmSalesForceGroupMap.values()){
-            if(!groupProductCluster.Cluster.contains(' - '))
-                groupProductCluster.Cluster = groupProductCluster.Cluster.replace('-',' - ');
-
+//            if(!groupProductCluster.Cluster.contains(' - '))
+//                groupProductCluster.Cluster = groupProductCluster.Cluster.replace('-',' - ');
             for(xmGroupChangeRequest__c xmGrpChangeRequest :groupChangeRequestList){
-                if(xmGrpChangeRequest.ImplementedProduct__r.Product__c == groupProductCluster.Product
-                        && (xmGrpChangeRequest.Account__r.inContact_Cluster__c + ' - ' + groupProductCluster.Product  == groupProductCluster.Cluster
-                        || xmGrpChangeRequest.Account__r.Verint_Cluster__c + ' - ' + groupProductCluster.Product == groupProductCluster.Cluster
-                        || xmGrpChangeRequest.Account__r.NICE_WFM_Cluster__c + ' - ' + groupProductCluster.Product == groupProductCluster.Cluster
-                        || xmGrpChangeRequest.Account__r.NICE_QM_Cluster__c + ' - ' + groupProductCluster.Product == groupProductCluster.Cluster )){
-                    for(xmPersonMemberModel deviceObj : groupProductCluster.Devices){
-                        if(deviceObj.Id == xmGrpChangeRequest.xMDeviceId__c){
-                            deviceObj.grRecordId = xmGrpChangeRequest.Id;
-                            if(xmGrpChangeRequest.Status__c == 'In Queue' && xmGrpChangeRequest.Action__c == 'Add')
-                                deviceObj.checked = true;
-                            else if(xmGrpChangeRequest.Status__c == 'In Queue' && xmGrpChangeRequest.Action__c == 'Remove')
-                                deviceObj.checked = false;
+                ProductEventMap__c productMap = nodeMap.get(xmGrpChangeRequest.ImplementedProduct__r.Product__c);
+                if(productMap != null)
+                {
+                    ProductClusterMapClass prodMap = new ProductClusterMapClass(
+                            productMap.Name,
+                            xmGrpChangeRequest.Account__r.inContact_Cluster__c,
+                            xmGrpChangeRequest.Account__r.Verint_Cluster__c,
+                            xmGrpChangeRequest.Account__r.NICE_WFM_Cluster__c,
+                            xmGrpChangeRequest.Account__r.NICE_QM_Cluster__c,
+                            '' ,
+                            productMap
+                    );
+
+                    XMGroupProductCluster groupData = GetGroupDataMap(prodMap);
+
+                    if(groupData.Product == groupProductCluster.Product
+                            && groupData.Cluster  == groupProductCluster.Cluster){
+                        for(xmPersonMemberModel deviceObj : groupProductCluster.Devices){
+                            System.debug('deviceObj.Id -->' + deviceObj.Id);
+                            System.debug('xmGrpChangeRequest.xMDeviceId__c -->' + xmGrpChangeRequest.xMDeviceId__c);
+                            if(deviceObj.Id == xmGrpChangeRequest.xMDeviceId__c){
+                                deviceObj.grRecordId = xmGrpChangeRequest.Id;
+                                if(xmGrpChangeRequest.Status__c == 'In Queue' && xmGrpChangeRequest.Action__c == 'Add')
+                                    deviceObj.checked = true;
+                                else if(xmGrpChangeRequest.Status__c == 'In Queue' && xmGrpChangeRequest.Action__c == 'Remove')
+                                    deviceObj.checked = false;
+                            }
                         }
                     }
                 }
@@ -120,77 +138,23 @@ public class XMBusinessLayer  {
         return xmSalesForceGroupMap;
     }
 
-    //Parses ist of XM low level models into one that is used by the business layer
-    private List<XMGroupProductCluster> GetXMGroupList(List<XMGroupMemberModel> groupList, string userId)
+    private List<XMGroupProductCluster> GetFinalGroupList(Map<String, XMGroupProductCluster> xmSalesForceGroupMap, List<XMGroupMemberModel> xmGrouplist)
     {
-        try{
-            List<XMGroupProductCluster> xmGroupClusterObjList = new List<XMGroupProductCluster>();
-            Integer i = 0;
-//            System.debug('GetXMGroupList --> called');
-//
-//            System.debug('userid -->' + ':' + userId);
-
-
-
-            for (XMGroupMemberModel groupObj : groupList)
-            {
-
-                i++;
-                boolean isSkipped = false;
-
-                XMGroupProductCluster xmGroupClusterObj = new XMGroupProductCluster();
-                if(groupObj.group1 != null)
-                {
-                    if(groupObj.group1.targetName.substring(0,2) == 'IP')
-                    {
-                        for(XMGroupProductCluster xmGroupCluster : xmGroupClusterObjList)
-                        {
-                            if(xmGroupCluster.XmattersGroupName == groupObj.group1.targetName)
-                            {
-                                if(groupObj.member != null){
-                                    groupObj.member.checked = true;
-                                    xmGroupCluster.Devices.add(groupObj.member);
-                                    isSkipped = true;
-
-                                }
-                            }
+        for (XMGroupMemberModel xmGroupObj : xmGrouplist){
+            if(xmGroupObj.group1 != null){
+                string xmGroupTargetName = xmGroupObj.group1.targetName;
+                if(xmGroupTargetName.substring(0,2) == 'IP') {
+                    if (xmSalesForceGroupMap.containsKey(xmGroupTargetName)) {
+                        if (xmGroupObj.member != null) {
+                            xmGroupObj.member.checked = true;
+                            xmSalesForceGroupMap.get(xmGroupTargetName).Devices.add(xmGroupObj.member);
                         }
-                        if(!isSkipped)
-                        {
-                            List<String> splitTargetName = groupObj.group1.targetName.split('_');
-                            xmGroupClusterObj.PartnerPrefix = splitTargetName[1];
-                            xmGroupClusterObj.Product = splitTargetName[2];
-                            xmGroupClusterObj.Cluster = splitTargetName[3];
-                            //xmGroupClusterObj.Devices.add(sdfsf);
-                            if(groupObj.member != null){
-
-                                xmGroupClusterObj.Devices.add(groupObj.member);
-                            }
-                            xmGroupClusterObj.XmattersGroupName = groupObj.group1.targetName;
-
-                            xmGroupClusterObjList.add(xmGroupClusterObj);
-                        }
-
                     }
-                    String testName = 'xmGroupClusterObj' + String.valueOf(i);
-
-                    //System.debug(testName + ':' + xmGroupClusterObj);
                 }
-                else{
-                    System.debug('Warning empty group name');
-                }
-
-
             }
-
-
-            return xmGroupClusterObjList;
         }
-        catch(Exception ex)
-        {
-            System.debug('GetXMGroupList  -->'  + ex.getMessage());
-            throw ex;
-        }
+
+        return xmSalesForceGroupMap.values();
     }
 
 
@@ -372,6 +336,9 @@ public class XMBusinessLayer  {
 
         Set<String> products = new Set<String>();
         for(XMGroupProductCluster p: groupList){
+//            if(!p.Product.contains(' - '))
+//                p.Product = p.Product.replace('-',' - ');
+
             products.add(p.Product);
         }
 
@@ -387,31 +354,6 @@ public class XMBusinessLayer  {
         try
         {
 
-            List<xmGroupChangeRequest__c> isExistsGroupChangeRequest = [SELECT Id, xMDeviceId__c, Account__c, Account__r.inContact_Cluster__c, Account__r.Verint_Cluster__c,
-                    Account__r.NICE_WFM_Cluster__c,Account__r.NICE_QM_Cluster__c
-            from xmGroupChangeRequest__c where Contact__c =: contactList[0].Id
-            and Status__c =: 'In Queue' and (Account__r.inContact_Cluster__c =: groupList[0].Cluster
-            or Account__r.Cluster__c =: groupList[0].Cluster or Account__r.Verint_Cluster__c =: groupList[0].Cluster
-            or Account__r.NICE_WFM_Cluster__c =: groupList[0].Cluster or Account__r.NICE_QM_Cluster__c =: groupList[0].Cluster)];
-
-            Map<String, xmGroupChangeRequest__c> groupChangeRequestMap = new Map<String, xmGroupChangeRequest__c>();
-            for(xmGroupChangeRequest__c objChangeRequest: isExistsGroupChangeRequest){
-                string groupChangeRequestString;
-                string cluster;
-                if(objChangeRequest.Account__r.inContact_Cluster__c != NULL)
-                    cluster =  objChangeRequest.Account__r.inContact_Cluster__c;
-                if(objChangeRequest.Account__r.Verint_Cluster__c != NULL)
-                    cluster =  objChangeRequest.Account__r.Verint_Cluster__c;
-                if(objChangeRequest.Account__r.NICE_WFM_Cluster__c != NULL)
-                    cluster =  objChangeRequest.Account__r.NICE_WFM_Cluster__c;
-                if(objChangeRequest.Account__r.NICE_QM_Cluster__c != NULL)
-                    cluster =  objChangeRequest.Account__r.NICE_QM_Cluster__c;
-
-                groupChangeRequestString  = objChangeRequest.xMDeviceId__c + '_' + groupList[0].Product + '_' + cluster;
-                groupChangeRequestMap.put(groupChangeRequestString, objChangeRequest);
-
-            }
-
             for(XMGroupProductCluster groupObj:groupList)
             {
 
@@ -420,13 +362,17 @@ public class XMBusinessLayer  {
                     grRecorIdList.add(deviceObj.grRecordId);
 
                     if(deviceObj.id != null && deviceObj.id != ''){
+//                        if(!groupObj.Product.contains(' - '))
+//                            groupObj.Product = groupObj.Product.replace('-',' - ');
+
                             xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
                                     Account__c = contactList[0].AccountId,
                                     Contact__c = contactList[0].Id,
                                     ImplementedProduct__c = implementedProduct.get(groupObj.Product).Id,
                                     NotificationProfile__c = contactList[0].xmPerson__c,
                                     xMDeviceId__c = deviceObj.Id,
-                                    Status__c = 'In Queue'
+                                    Status__c = 'In Queue',
+                                    Device_Type__c = deviceObj.targetName.contains('|') ? deviceObj.targetName.split('\\|')[1] : deviceObj.targetName
                             );
                             if(notificationType == 'MaintType')
                                 grpChangeRequest.Maintenance__c = true;

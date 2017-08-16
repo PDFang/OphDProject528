@@ -375,22 +375,25 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-3"> </div>
-                        <div class="col-md-9">
+                        <div class="col-md-2"> </div>
+                        <div class="col-md-10">
                             <apex:outputPanel id="helpTextPanel">
                                 <apex:outputPanel rendered="{!displayBatchStatusText}">
-                                    <p class="text-danger"> Note: There are Pending Group Subscription update(s) which may take up to 30 minutes to process. Next Batch will run in approx. {!nextFireTime} </p>
+                                    <p class="text-danger"> Note: There are pending group subscription updates which may take up to 30 minutes to process. The next update will run in approximately {!nextFireTime} </p>
                                 </apex:outputPanel>
                             </apex:outputPanel>
-                            <apex:actionPoller action="{!batchStatus}" reRender="helpTextPanel" interval="15"/>
+                            <apex:actionPoller action="{!batchStatus}" reRender="helpTextPanel" interval="10"/>
                         </div>
                     </div>
                     <div id="groupList"></div>
                     <div style="margin-top:8px;" class="row" >
+
                         <div class="col-md-9 col-md-push-3">
                             <a class="k-button btn btn-primary" onclick="updateGroups();" style="float:right;background: #0275d8; color:white;">Update Group Subscription</a>
+                            <a class="k-button btn btn-secondary" onclick="setupGroupList();" style="float:right;background: #0275d8; color:white;">Clear All Selection</a>
+
                         </div>
-                        <div class="col-md-3 col-md-pull-9"></div>
+
 
                     </div>
                 </apex:pageBlock>
@@ -1411,7 +1414,7 @@
 
          if(groupSelectionChange){
              $(obj).val($(obj).data("prev"));
-             displayError('There are some unsaved changes on the grid. Please save the groups for this Notification type first');
+             displayError('There are some unsaved changes on the grid. Please save the groups for this notification type first');
               return;
          }
 
@@ -1488,7 +1491,7 @@
                   $("#header-chb").prop("checked", false);
                   $("div#success").css("display", "block");
                   $("div#success").empty();
-                  $('<strong>Groups were updated successfully</strong>').appendTo("div#success");
+                  $('<strong>Batch update was added succesfully.</strong>').appendTo("div#success");
                   $('#warning').modal('show');
                   var grid = $("#groupList").data("kendoGrid");
                   grid.destroy();
