@@ -664,8 +664,10 @@
                                 "DeviceValue" : {from:"deviceValue",
                                                  type: "string",
                                                  validation: {
+
                                                     deviceValueValidation: function (input) {
-                                                       if (input.is("[name='DeviceValue']") && input.val() != "") {
+                                                       /* if (input.is("[name='DeviceValue']") && input.val() != "") {
+                                                           input.attr("data-deviceValueValidation-msg", "");
                                                             var deviceType = $("[name='DeviceType']").val();
                                                             if(deviceType.includes("Email")){
                                                                  input.attr("data-deviceValueValidation-msg", " Invalid Email address");
@@ -673,6 +675,11 @@
                                                                  return re.test(input.val().trim());
                                                             }else{
                                                                 input.attr("data-deviceValueValidation-msg", " Invalid Phone number");
+                                                                //var tempstring = input.val().trim();
+                                                                //if (tempstring.substring(0,1) !== '+')
+                                                                //{
+                                                                //    input.val('+' + input.val());
+                                                                //}
                                                                 var re = /^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-\s\./0-9]*$/g;
                                                                 return re.test(input.val().trim());
 
@@ -680,7 +687,7 @@
                                                         }else if(input.is("[name='DeviceValue']") && input.val() == ""){
                                                             input.attr("data-deviceValueValidation-msg", " Device Value is required");
                                                             return false;
-                                                        }
+                                                        }*/
                                                         return true;
                                                     }
                                                  }
