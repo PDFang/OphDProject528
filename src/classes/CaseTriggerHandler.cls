@@ -267,8 +267,10 @@ public class CaseTriggerHandler extends TriggerHandler
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
             // Is new incident (or) 3rd Party vendor Ticket is null and Push To Partner is checked
+            // (or) Case status is changed
             if(newCase.AccountId != null && newCase.RecordTypeId == incidentRecordType
-                    && (oldCase == null || (newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null)) ){
+                    && ( oldCase == null || (newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null)
+                    || (newCase.Status != oldCase.Status && newCase.X3rdPartyVendorTicket__c != null) ) ){
                 processList.add(newCase);
                 accountIdSet.add(newCase.AccountId);
             }
@@ -282,17 +284,24 @@ public class CaseTriggerHandler extends TriggerHandler
         ]);
         system.debug('CallPartnerCaseProxyService(): accountMap - ' + accountMap);
 
-        Set<Id> createdIdSet = new Set<Id>();
+        Set<Id> createIdSet = new Set<Id>();
+        Set<Id> updateIdSet = new Set<Id>();
+
         for(Case newCase: processList){
             Account acct = accountMap.get(newCase.AccountId);
             // Is account billing group 'Verizon'
             if(acct != null && acct.Billing_Group__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON){
-                createdIdSet.add(newCase.Id);
+                if(newCase.X3rdPartyVendorTicket__c == null){
+                    createIdSet.add(newCase.Id);
+                } else{
+                    updateIdSet.add(newCase.Id);
+                }
+
             }
         }
-        system.debug('CallPartnerCaseProxyService(): createdIdSet - ' + createdIdSet);
-        if(createdIdSet.size() > 0 && !system.isFuture() && !system.isBatch()){
-            CallPartnerCaseProxyServiceFuture(createdIdSet);
+        system.debug('CallPartnerCaseProxyService(): createIdSet - ' + createIdSet);
+        if(createIdSet.size() > 0 && !system.isFuture() && !system.isBatch()){
+            CallPartnerCaseProxyServiceFuture(createIdSet);
         }
 
     } // end of CallPartnerCaseProxyService()
