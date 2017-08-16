@@ -450,6 +450,7 @@ private class CaseTriggerHandlerTest {
                 PlatformsImpacted__c = 'C6 - inContact',
                 ProductImpacted__c = 'Test Product',
                 InternalEvent__c = false,
+                xmEvent_Notification_Sent__c = true,
                 Priority = 'P1'
         );
 
