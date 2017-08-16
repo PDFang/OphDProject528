@@ -46,11 +46,13 @@ public class CaseTriggerHandler extends TriggerHandler
 
     protected override void beforeInsert(){
         CalculateIncidentNetScore((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
+        setTroubleReportStateStatus((List<Case>) trigger.new, (Map<Id, Case>)trigger.oldMap);
     }
 
     protected override void beforeUpdate(){
         CalculateIncidentNetScore((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
         setCaseStatusFlags((List<Case>) trigger.new, (Map<Id, Case>)trigger.oldMap);
+        setTroubleReportStateStatus((List<Case>) trigger.new, (Map<Id, Case>)trigger.oldMap);
     }
 
     protected override void afterInsert(){
@@ -268,6 +270,24 @@ public class CaseTriggerHandler extends TriggerHandler
 
     }
 
+    // set Trouble Report State and Status
+    private void setTroubleReportStateStatus(List<Case> newList, Map<Id, Case> oldMap){
+
+        if(oldMap == null){
+            return;
+        }
+        for(Case newCase : newList) {
+            Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
+            if(newCase.RecordTypeId == incidentRecordType && newCase.AccountBillingGroup__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
+                && (oldCase == null || oldCase != null && newCase.Status != oldCase.Status )
+                && etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey(newCase.Status))
+            {
+                newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get(newCase.Status).Trouble_Report_State__c;
+                newCase.ETMS_Trouble_Report_Status__c = etmsTroubleStateStatusMap.get(newCase.Status).Trouble_Report_Status__c;
+            }
+        }
+    }
+
     //push incidents to partner case proxy service
     private void CallPartnerCaseProxyService(List<Case> newList, Map<Id, Case> oldMap){
 
@@ -289,9 +309,12 @@ public class CaseTriggerHandler extends TriggerHandler
                 system.debug('CallPartnerCaseProxyService(): Push to Partner - ' + newCase.CaseNumber);
             }
             // Case status is changed
-            else if(newCase.Status != oldCase.Status && newCase.X3rdPartyVendorTicket__c != null){
-                system.debug('CallPartnerCaseProxyService(): Case status changed - ' + newCase.CaseNumber);
-
+            else if(newCase.Status != oldCase.Status && newCase.X3rdPartyVendorTicket__c != null
+                && (newCase.ETMS_Trouble_Report_State__c != oldCase.ETMS_Trouble_Report_State__c || newCase.ETMS_Trouble_Report_Status__c != oldCase.ETMS_Trouble_Report_Status__c) )
+            {
+                system.debug('CallPartnerCaseProxyService(): Case status changed from ' + oldCase.Status + ' to ' + newCase.CaseNumber);
+                system.debug('CallPartnerCaseProxyService(): Trouble report status  - ' + newCase.ETMS_Trouble_Report_Status__c);
+                system.debug('CallPartnerCaseProxyService():  Trouble report state - ' + newCase.ETMS_Trouble_Report_State__c);
             }
             else {
                 continue;
@@ -330,6 +353,8 @@ public class CaseTriggerHandler extends TriggerHandler
         if(createIdSet.size() > 0 && !system.isFuture() && !system.isBatch()){
             CallPartnerCaseProxyServiceFuture(createIdSet);
         }
+
+        // TBD: send case status update to Verizon
 
     } // end of CallPartnerCaseProxyService()
 
