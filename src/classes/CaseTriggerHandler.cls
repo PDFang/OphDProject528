@@ -61,7 +61,7 @@ public class CaseTriggerHandler extends TriggerHandler
             Case oldCase = (oldMap != null) ? oldMap.get(updatedCase.Id) : null;
             if(updatedCase.RecordTypeId == eventRecordType && !updatedCase.EventHasBeenResolvedOrClosed__c
                     &&((updatedCase.Status == 'Resolved' && oldCase.Status != 'Resolved')
-                    || (updatedCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed'))) {
+                    || (updatedCase.Status == 'Closed' && oldCase.Status != 'Closed'))) {
                 //set the flag showing that the event has been in resolved or closed status
                 updatedCase.EventHasBeenResolvedOrClosed__c = true;
             }
@@ -181,7 +181,7 @@ public class CaseTriggerHandler extends TriggerHandler
                 else if (((newCase.Status == 'Resolved' && oldCase.Status != 'Resolved')
                         || (newCase.Status == 'Closed' && oldCase.Status != 'Closed'))
                         && newCase.xmEvent_Notification_Sent__c
-                        && !newCase.EventHasBeenResolvedOrClosed__c) {
+                        && !oldCase.EventHasBeenResolvedOrClosed__c) {
                     //track that this case has been
 
                     //if a resolved notification has not been sent, then send it
