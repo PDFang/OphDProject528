@@ -379,7 +379,7 @@
                         <div class="col-md-10">
                             <apex:outputPanel id="helpTextPanel">
                                 <apex:outputPanel rendered="{!displayBatchStatusText}">
-                                    <p class="text-danger"> Note: There are Pending Group Subscription update(s) which may take up to 30 minutes to process. Next Batch will run in approx. {!nextFireTime} </p>
+                                    <p class="text-danger"> Note: There is a pending group subscription update which may take up to 30 minutes to process. Next Batch will run in approx. {!nextFireTime} </p>
                                 </apex:outputPanel>
                             </apex:outputPanel>
                             <apex:actionPoller action="{!batchStatus}" reRender="helpTextPanel" interval="10"/>
@@ -1488,7 +1488,7 @@
                   $("#header-chb").prop("checked", false);
                   $("div#success").css("display", "block");
                   $("div#success").empty();
-                  $('<strong>Groups were updated successfully</strong>').appendTo("div#success");
+                  $('<strong>Batch update was added succesfully.</strong>').appendTo("div#success");
                   $('#warning').modal('show');
                   var grid = $("#groupList").data("kendoGrid");
                   grid.destroy();
