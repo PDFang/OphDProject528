@@ -6,10 +6,9 @@ global class XMPersonGroupUploadBatch implements Database.Batchable<Sobject>, Da
 
     public string queryString;
     global XMPersonGroupUploadBatch(){
-        queryString = 'select Id,(select Id, XmattersUid__c, xmPerson__c from Contacts where xmPerson__c != null';
-
-        queryString += ' ),(select Id from Implemented_Products__r where Status__c =\'Implemented\'' ;
-        queryString += ' ) from Account where CG_Disconnect_Date__c = null';
+        queryString = 'select Id,(select Id, XmattersUid__c, xmPerson__c, Contact_Role__c from Contacts where xmPerson__c != null'
+                      +' AND Contact_Role__c in (\'Event Notification\', \'Maintenance Notification\') ),(select Id from Implemented_Products__r where Status__c =\'Implemented\''
+                      +' ) from Account where CG_Disconnect_Date__c = null';
         System.debug('queryString =>' + queryString);
     }
 
@@ -26,33 +25,35 @@ global class XMPersonGroupUploadBatch implements Database.Batchable<Sobject>, Da
                 for(ImplementedProduct__c imp: act.Implemented_Products__r){
 
                     for(Contact cont: act.Contacts){
-
                         xmPerson__c xmPerson ;
+                        if(cont.Contact_Role__c.contains('Event Notification')){
+                            xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
+                                    Account__c = act.Id,
+                                    Contact__c = cont.Id,
+                                    ImplementedProduct__c = imp.Id,
+                                    Status__c = 'In Queue',
+                                    Action__c = 'Add',
+                                    NotificationProfile__c = cont.xmPerson__c
+                            );
+                            System.debug('grpChangeRequest : ' + grpChangeRequest);
+                            groupChangeRequestList.add(grpChangeRequest);
+                        }
+                       if(cont.Contact_Role__c.contains('Maintenance Notification')){
+                            xmGroupChangeRequest__c grpChangeRequestMaint = new xmGroupChangeRequest__c(
+                                   Account__c = act.Id,
+                                   Contact__c = cont.Id,
+                                   ImplementedProduct__c = imp.Id,
+                                   Status__c = 'In Queue',
+                                   Action__c = 'Add',
+                                   Maintenance__c = true,
+                                   NotificationProfile__c = cont.xmPerson__c
+                           );
+                           System.debug('grpChangeRequest : ' + grpChangeRequestMaint);
+                           groupChangeRequestList.add(grpChangeRequestMaint);
+                       }
 
 
-                        xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
-                                Account__c = act.Id,
-                                Contact__c = cont.Id,
-                                ImplementedProduct__c = imp.Id,
-                                Status__c = 'In Queue',
-                                Action__c = 'Add',
-                                NotificationProfile__c = cont.xmPerson__c
-                        );
-                        xmGroupChangeRequest__c grpChangeRequestMaint = new xmGroupChangeRequest__c(
-                                Account__c = act.Id,
-                                Contact__c = cont.Id,
-                                ImplementedProduct__c = imp.Id,
-                                Status__c = 'In Queue',
-                                Action__c = 'Add',
-                                Maintenance__c = true,
-                                NotificationProfile__c = cont.xmPerson__c
-                        );
 
-                        System.debug('grpChangeRequest : ' + grpChangeRequest);
-                        System.debug('grpChangeRequest : ' + grpChangeRequestMaint);
-
-                        groupChangeRequestList.add(grpChangeRequest);
-                        groupChangeRequestList.add(grpChangeRequestMaint);
 
                     }
                 }
