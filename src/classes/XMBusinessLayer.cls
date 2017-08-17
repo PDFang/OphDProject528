@@ -343,14 +343,38 @@ public class XMBusinessLayer  {
             products.add(p.Product);
         }
 
+        Map<String, ProductEventMap__c> nodeMap;
+        nodeMap = ProductEventMap__c.getAll();
+
         Map<string, ImplementedProduct__c> implementedProduct = new Map<string, ImplementedProduct__c>();
-        for(ImplementedProduct__c impl: [SELECT  Id, Product__c, Account__c from ImplementedProduct__c where Product__c in: products and Account__c in: accountIds]){
-            implementedProduct.put(impl.Product__c, impl);
+        for(ImplementedProduct__c impl: [SELECT  Id, Product__c, Account__c, Account__r.inContact_Cluster__c, Account__r.Verint_Cluster__c, Account__r.NICE_WFM_Cluster__c,
+                Account__r.NICE_QM_Cluster__c from ImplementedProduct__c where Product__c in: products and Account__c in: accountIds]){
+
+            ProductEventMap__c productMap = nodeMap.get(impl.Product__c);
+            if(productMap != null)
+            {
+                ProductClusterMapClass prodMap = new ProductClusterMapClass(
+                        productMap.Name,
+                        impl.Account__r.inContact_Cluster__c,
+                        impl.Account__r.Verint_Cluster__c,
+                        impl.Account__r.NICE_WFM_Cluster__c,
+                        impl.Account__r.NICE_QM_Cluster__c,
+                        '' ,
+                        productMap
+                );
+
+                XMGroupProductCluster grpData = GetGroupDataMap(prodMap);
+                implementedProduct.put(impl.Product__c + grpData.Cluster, impl);
+            }
+
+
         }
 
         List<xmGroupChangeRequest__c> groupChangeRequestList = new List<xmGroupChangeRequest__c>();
         Set<string> grRecorIdList = new Set<String>();
         xmPerson__c xmPerson ;
+
+
 
         try
         {
@@ -367,14 +391,15 @@ public class XMBusinessLayer  {
 //                            groupObj.Product = groupObj.Product.replace('-',' - ');
 
                         xmGroupChangeRequest__c grpChangeRequest = new xmGroupChangeRequest__c(
-                                Account__c = implementedProduct.get(groupObj.Product).Account__c,
+                                Account__c = implementedProduct.get(groupObj.Product + groupObj.Cluster).Account__c,
                                 Contact__c = contactList[0].Id,
-                                ImplementedProduct__c = implementedProduct.get(groupObj.Product).Id,
+                                ImplementedProduct__c = implementedProduct.get(groupObj.Product + groupObj.Cluster).Id,
                                 NotificationProfile__c = contactList[0].xmPerson__c,
                                 xMDeviceId__c = deviceObj.Id,
                                 Status__c = 'In Queue',
                                 Device_Type__c = deviceObj.targetName.contains('|') ? deviceObj.targetName.split('\\|')[1] : deviceObj.targetName
                         );
+
                         if(notificationType == 'MaintType')
                             grpChangeRequest.Maintenance__c = true;
 
