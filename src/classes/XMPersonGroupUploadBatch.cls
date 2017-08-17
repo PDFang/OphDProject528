@@ -5,7 +5,9 @@
 global class XMPersonGroupUploadBatch implements Database.Batchable<Sobject>, Database.Stateful, Database.AllowsCallouts  {
 
     public string queryString;
+    public List<xmGroupChangeRequest__c> groupChangeRequestList;
     global XMPersonGroupUploadBatch(){
+
         queryString = 'select Id,(select Id, XmattersUid__c, xmPerson__c, Contact_Role__c from Contacts where xmPerson__c != null'
                       +' AND Contact_Role__c in (\'Event Notification\', \'Maintenance Notification\') ),(select Id from Implemented_Products__r where Status__c =\'Implemented\''
                       +' ) from Account where CG_Disconnect_Date__c = null';
@@ -19,11 +21,9 @@ global class XMPersonGroupUploadBatch implements Database.Batchable<Sobject>, Da
     global void execute(Database.BatchableContext BC, List<Account> scope)
     {
         try{
-            List<xmGroupChangeRequest__c> groupChangeRequestList = new List<xmGroupChangeRequest__c>();
+             groupChangeRequestList = new List<xmGroupChangeRequest__c>();
             for(Account act: scope){
-
                 for(ImplementedProduct__c imp: act.Implemented_Products__r){
-
                     for(Contact cont: act.Contacts){
                         xmPerson__c xmPerson ;
                         if(cont.Contact_Role__c.contains('Event Notification')){
@@ -70,8 +70,28 @@ global class XMPersonGroupUploadBatch implements Database.Batchable<Sobject>, Da
         }
     }
 
-    global void finish(Database.BatchableContext BC)
-    {
+    global void finish(Database.BatchableContext BC) {
 
+            AsyncApexJob a = [Select Id, Status,ExtendedStatus,NumberOfErrors, JobItemsProcessed,
+                              TotalJobItems, CreatedBy.Email   from AsyncApexJob where Id =:BC.getJobId()];
+	        String OrgId15Digit = UserInfo.getOrganizationId().left(15);
+	        SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(OrgId15Digit);
+            Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+            String[] toAddresses;
+            if(!test.isRunningTest()){
+                toAddresses = new String[]{siteConfig.DeveloperErrorEmail__c};
+	            mail.setSenderDisplayName(siteConfig.DeveloperErrorFromName__c);
+            }
+            else{
+            toAddresses = new String[]{'test@test.com'};
+	         mail.setSenderDisplayName('Test Sender');
+            }
+
+            mail.setToAddresses(toAddresses);
+            mail.setSubject('Upload xmGroup Records Batch ' + a.Status);
+            mail.setPlainTextBody('Records processed ' + a.TotalJobItems + 'with '+ a.NumberOfErrors + ' failures.');
+            Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
     }
+
+
 }
