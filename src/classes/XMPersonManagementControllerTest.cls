@@ -5,6 +5,7 @@ private class XMPersonManagementControllerTest {
     static final String CUSTOMER_CONTACT = 'Customer-Other';
 
     static Account testAccount;
+    static xmGroupChangeRequest__c groupChangeRequest;
 
     static testMethod void testContactNoXmPerson() {
 
@@ -275,16 +276,93 @@ private class XMPersonManagementControllerTest {
         XMRestGroupMockHttpGenerator xmGroupMock = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
         Test.setMock(HttpCalloutMock.class, xmGroupMock);
 
-        string productGroups = XMPersonManagementController.getProductGroups(testContact.Id);
+        string productGroups = XMPersonManagementController.getProductGroups(testContact.Id, 'MaintType');
+        string productGroups1 = XMPersonManagementController.getProductGroups(testContact.Id, null);
+
+        System.debug('productGroups -->' + ':' + productGroups);
+        System.debug('productGroups1 -->' + ':' + productGroups1);
 
         XMGroupProductCluster[] xmGroupList = (XMGroupProductCluster[])JSON.deserialize(productGroups, List<XMGroupProductCluster>.class);
+        XMGroupProductCluster[] xmGroupList1 = (XMGroupProductCluster[])JSON.deserialize(productGroups1, List<XMGroupProductCluster>.class);
         system.assertNotEquals(0, xmGroupList.size());
+        system.assertNotEquals(0, xmGroupList1.size());
+
+        xmGroupList[0].selected = true;
+        xmGroupList1[0].selected = true;
+
+        xmGroupList[0].Devices = new List<xmPersonMemberModel>();
+        xmGroupList1[0].Devices = new List<xmPersonMemberModel>();
+        xmPersonMemberModel testObj = new xmPersonMemberModel();
+        testObj.id = 'cdcebcb4-8601-4dc7-b9cd-6a521914f37d';
+        testObj.checked = true;
+        testObj.targetName = 'Test01';
+
+        xmPersonMemberModel testObj1 = new xmPersonMemberModel();
+        testObj1.id = 'cdcebcb4-8601-4dc7-b9cd-6a521914f37d';
+        testObj1.checked = false;
+        testObj1.targetName = 'Test01';
+
+        xmGroupList[0].Devices.add(testObj);
+        xmGroupList1[0].Devices.add(testObj1);
+
+        string result1 = XMPersonManagementController.updateGroupSubscription( JSON.Serialize(xmGroupList1), testContact.Id, null);
+        string result = XMPersonManagementController.updateGroupSubscription( JSON.Serialize(xmGroupList), testContact.Id, 'MaintType');
+
+        system.assertNotEquals(null, result);
+        system.assertNotEquals(null, result1);
+
+        system.assertNotEquals(0, xmGroupList.size());
+        system.assertNotEquals(0, xmGroupList1.size());
 
         test.stopTest();
 
-        xmGroupList[0].selected = true;
-        string result = XMPersonManagementController.updateGroupSubscription( JSON.Serialize(xmGroupList), testContact.Id);
-        system.assertNotEquals(null, result);
+
+    }
+
+    static testmethod void testGetProductGroups(){
+
+        createAccount();
+        createImplementedProduct();
+
+        xmPerson__c person = new xmPerson__c(
+                xmPersonUID__c = 'aefgh-1234-cdeft'
+        );
+        insert person;
+
+        Map<String, RecordTypeInfo> recordTypeMap = Schema.SObjectType.Contact.getRecordTypeInfosByName();
+        Contact testContact = new Contact(
+                FirstName = 'XMPersonManagementControllerTest',
+                LastName = 'Contact',
+                Email = 'contact1@incontact.com',
+                RecordTypeId = recordTypeMap.get(CUSTOMER_CONTACT).getRecordTypeId(),
+                AccountId = testAccount.Id,
+                xmPerson__c = person.Id
+        );
+
+        insert testContact;
+
+        groupChangeRequest.NotificationProfile__c = person.Id;
+        update  groupChangeRequest;
+
+        test.startTest();
+
+        XMRestGroupMockHttpGenerator xmGroupMock = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+        Test.setMock(HttpCalloutMock.class, xmGroupMock);
+
+        string productGroups = XMPersonManagementController.getProductGroups(testContact.Id, 'MaintType');
+        string productGroups1 = XMPersonManagementController.getProductGroups(testContact.Id, null);
+
+        XMGroupProductCluster[] xmGroupList = (XMGroupProductCluster[])JSON.deserialize(productGroups, List<XMGroupProductCluster>.class);
+        XMGroupProductCluster[] xmGroupList1 = (XMGroupProductCluster[])JSON.deserialize(productGroups1, List<XMGroupProductCluster>.class);
+        system.assertNotEquals(0, xmGroupList.size());
+        system.assertNotEquals(0, xmGroupList1.size());
+
+        XMBusinessLayer testObj = new XMBusinessLayer();
+
+        string testEmail = testObj.GetExistingXMPersonId('tom@tombtest.com');
+
+        test.stopTest();
+
 
     }
 
@@ -331,6 +409,14 @@ private class XMPersonManagementControllerTest {
         pem.HasClusters__c = true;
 
         insert pem;
+
+        groupChangeRequest = new xmGroupChangeRequest__c();
+        groupChangeRequest.Account__c = testAccount.Id;
+        groupChangeRequest.Action__c = 'Add';
+        groupChangeRequest.Device_Type__c = 'Work Email';
+        groupChangeRequest.ImplementedProduct__c = ip.Id;
+        groupChangeRequest.Maintenance__c = true;
+        insert groupChangeRequest;
 
     }
 
