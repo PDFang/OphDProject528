@@ -5,8 +5,11 @@
 @IsTest
 private class ImplementedProductTriggerHandlerTest {
     static Account testAccount;
+    static Account testAccount1;
     static final String CUSTOMER_ACCOUNT = 'Customers';
     static final String CUSTOMER_CONTACT = 'Customer-Other';
+
+    static xmGroupChangeRequest__c groupChangeRequest;
 
     static testMethod void xmDeviceRemoveTest() {
 
@@ -86,8 +89,6 @@ private class ImplementedProductTriggerHandlerTest {
 
         test.startTest();
 
-
-
         ImplementedProduct__c ip1 = [select Id, Status__c, DeactivatedDate__c from ImplementedProduct__c ];
         ip1.Status__c = 'Deactivated';
         ip1.DeactivatedDate__c = System.today();
@@ -102,7 +103,6 @@ private class ImplementedProductTriggerHandlerTest {
         System.debug('request.Status__c =>' + request.Status__c);
 
     }
-
 
     static testMethod void xmGroupChangeRequestschedulerTest() {
 
@@ -142,6 +142,17 @@ private class ImplementedProductTriggerHandlerTest {
 
         insert testContact;
 
+        Contact testContact1 = new Contact(
+                FirstName = 'xmDeviceNewTest',
+                LastName = 'Contact1',
+                Email = 'contact1@incontact.com',
+                RecordTypeId = recordTypeMap.get(CUSTOMER_CONTACT).getRecordTypeId(),
+                AccountId = testAccount1.Id,
+                xmPerson__c = person.Id
+        );
+
+        insert testContact1;
+
         Opportunity o = new Opportunity();
         o.RecordTypeId = inContactBaseClass.SelectRecordTypeIDByName('Historical Products', 'Opportunity');
         o.Name = 'test';
@@ -169,6 +180,17 @@ private class ImplementedProductTriggerHandlerTest {
 
         insert pem;
 
+        groupChangeRequest = new xmGroupChangeRequest__c();
+        groupChangeRequest.Account__c = testAccount.Id;
+        groupChangeRequest.Action__c = 'Add';
+        groupChangeRequest.Device_Type__c = 'Work Email';
+        groupChangeRequest.ImplementedProduct__c = ip1.Id;
+        groupChangeRequest.Maintenance__c = true;
+        groupChangeRequest.NotificationProfile__c = person.Id;
+        groupChangeRequest.xMDeviceId__c = 'cdcebcb4-8601-4dc7-b9cd-6a521914f37d';
+
+        insert groupChangeRequest;
+
     }
 
 
@@ -188,6 +210,19 @@ private class ImplementedProductTriggerHandlerTest {
                 inContact_Cluster__c =  'C9'
         );
         insert testAccount;
+
+        testAccount1 = new Account(
+                Name = 'xmDeviceNewTest Account',
+                Type = 'Customer',
+                CadebillAccountNo__c = 877123,
+                RecordTypeId = accountRecordTypeMap.get(CUSTOMER_ACCOUNT).getRecordTypeId(),
+                Cluster__c = 'C3',
+                NICE_QM_Cluster__c = 'EN1',
+                NICE_WFM_Cluster__c = 'NWFM 1-2',
+                Verint_Cluster__c = 'V1',
+                inContact_Cluster__c =  'C9'
+        );
+        insert testAccount1;
 
     }
 
