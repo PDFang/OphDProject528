@@ -312,9 +312,13 @@ public class CaseTriggerHandler extends TriggerHandler
             else if(newCase.Status != oldCase.Status && newCase.X3rdPartyVendorTicket__c != null
                 && (newCase.ETMS_Trouble_Report_State__c != oldCase.ETMS_Trouble_Report_State__c || newCase.ETMS_Trouble_Report_Status__c != oldCase.ETMS_Trouble_Report_Status__c) )
             {
-                system.debug('CallPartnerCaseProxyService(): Case status changed from ' + oldCase.Status + ' to ' + newCase.CaseNumber);
-                system.debug('CallPartnerCaseProxyService(): Trouble report status  - ' + newCase.ETMS_Trouble_Report_Status__c);
-                system.debug('CallPartnerCaseProxyService():  Trouble report state - ' + newCase.ETMS_Trouble_Report_State__c);
+                system.debug('CallPartnerCaseProxyService(): Case status changed from '
+                        + oldCase.Status + ' to ' + newCase.CaseNumber);
+                system.debug('CallPartnerCaseProxyService(): Trouble report status changed from  - '
+                        + oldCase.ETMS_Trouble_Report_Status__c + ' to ' + newCase.ETMS_Trouble_Report_Status__c);
+                system.debug('CallPartnerCaseProxyService(): Trouble report state changed from  - '
+                        + oldCase.ETMS_Trouble_Report_State__c + ' to ' + newCase.ETMS_Trouble_Report_State__c);
+
             }
             else {
                 continue;
@@ -341,7 +345,7 @@ public class CaseTriggerHandler extends TriggerHandler
             Account acct = accountMap.get(newCase.AccountId);
             // Is account billing group 'Verizon'
             if(acct != null && acct.Billing_Group__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON){
-                if(newCase.X3rdPartyVendorTicket__c == null){
+                if(oldMap == null || !oldMap.containsKey(newCase.Id)){
                     createIdSet.add(newCase.Id);
                 } else{
                     updateIdSet.add(newCase.Id);
@@ -349,12 +353,17 @@ public class CaseTriggerHandler extends TriggerHandler
 
             }
         }
+
         system.debug('CallPartnerCaseProxyService(): createIdSet - ' + createIdSet);
         if(createIdSet.size() > 0 && !system.isFuture() && !system.isBatch()){
             CallPartnerCaseProxyServiceFuture(createIdSet);
         }
 
-        // TBD: send case status update to Verizon
+        system.debug('CallPartnerCaseProxyService(): updateIdSet - ' + updateIdSet);
+        if(updateIdSet.size() > 0 && !system.isFuture() && !system.isBatch()){
+            CallUpdatePartnerCaseProxyServiceFuture(updateIdSet);
+        }
+
 
     } // end of CallPartnerCaseProxyService()
 
@@ -362,6 +371,13 @@ public class CaseTriggerHandler extends TriggerHandler
     private static void CallPartnerCaseProxyServiceFuture(Set<Id> caseIds){
 
         PartnerCaseProxyServiceHelper.PushCaseToProxyService(caseIds);
+
+    }
+
+    @future(callout=true)
+    private static void CallUpdatePartnerCaseProxyServiceFuture(Set<Id> caseIds){
+
+        PartnerCaseProxyServiceHelper.PushCaseStatusUpdateToProxyService(caseIds);
 
     }
     
