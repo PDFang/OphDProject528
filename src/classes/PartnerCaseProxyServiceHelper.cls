@@ -26,7 +26,8 @@ public with sharing class PartnerCaseProxyServiceHelper {
                     Select Id, CaseNumber, Priority, Description, CreatedDate, X3rdPartyVendorTicket__c,
                             status, Product_or_Service__c, Request_Type__c, Database__c, Releases__c,
                             Account.Name, Account.Billing_Group__c, Account.CadebillAccountNo__c,
-                            Contact.Name, Contact.Phone, OwnerId, Owner.Name, Owner.Phone, Push_To_Partner__c
+                            Contact.Name, Contact.Phone, OwnerId, Owner.Name, Owner.Phone, Push_To_Partner__c,
+                            ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c
                     from Case
                     where Id IN :caseIds
                     and Account.Billing_Group__c = :BILLING_GROUP_VERIZON
