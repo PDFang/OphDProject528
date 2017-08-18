@@ -681,7 +681,20 @@
                                                                  }
                                                                  return true;
                                                             }else{
-                                                               // input.attr("data-deviceValueValidation-msg", " Invalid Phone number");
+                                                                var tempstring = input.val().trim();
+                                                                if (tempstring.substring(0,2) !== '+1' && tempstring.length == 10)
+                                                                {
+                                                                    input.val('+1' + input.val());
+                                                                    dataItem = deviceGrid.dataItem($(input).closest("tr"));
+                                                                    dataItem.DeviceValue = input.val().trim();
+                                                                }
+                                                                tempstring = input.val().trim();
+                                                                if (tempstring.substring(0,1) !== '+' && tempstring.length == 11)
+                                                                {
+                                                                    input.val('+' + input.val());
+                                                                    dataItem = deviceGrid.dataItem($(input).closest("tr"));
+                                                                    dataItem.DeviceValue = input.val().trim();
+                                                                }
                                                                 var re = /^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-\s\./0-9]*$/g;
                                                                 if(!re.test(input.val().trim())){
                                                                      input.attr("data-deviceValueValidation-msg", " Invalid Phone number");
@@ -691,7 +704,7 @@
 
                                                             }
                                                         }else if(input.is("[name='DeviceValue']") && input.val() == ""){
-                                                             dataItem.DeviceValue = input.val().trim();
+                                                            //dataItem.DeviceValue = input.val().trim();
                                                             input.attr("data-deviceValueValidation-msg", " Device Value is required");
                                                             return false;
                                                         }

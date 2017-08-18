@@ -207,7 +207,13 @@ public class XMPersonManagementHelper {
 
         } else if(deviceName.contains('Phone')){
             XMSmsDevice smsDevice = new XMSmsDevice();
-            smsDevice.phoneNumber = '+1' + deviceValue;
+            if (deviceValue.substring(0,2) != '+1'){
+                smsDevice.phoneNumber = '+1' + deviceValue;
+            }
+            else
+            {
+                smsDevice.phoneNumber = deviceValue;
+            }
             device = smsDevice;
         }
         device.name = deviceName;
