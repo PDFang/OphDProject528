@@ -14,7 +14,7 @@ public with sharing class PartnerCaseProxyServiceHelper {
     @TestVisible
     private static boolean isCaseCommentPushed = false;
 
-
+    // when a new case is created
     public static void PushCaseToProxyService(Set<Id> caseIds){
 
         system.debug('PushCaseToProxyService(): caseIds - ' + caseIds);
@@ -68,6 +68,7 @@ public with sharing class PartnerCaseProxyServiceHelper {
         
     } // end of PushCaseToProxyService
 
+    // when a case is updated that results change in trouble report state or status
     public static void PushCaseStatusUpdateToProxyService(Set<Id> caseIds){
 
         system.debug('PushCaseStatusUpdateToProxyService(): caseIds - ' + caseIds);
@@ -103,6 +104,7 @@ public with sharing class PartnerCaseProxyServiceHelper {
 
     }
 
+    // when a new case comment is created
     public static void PushCaseCommentToProxyService(Set<Id> commentIds){
 
         system.debug('PushCaseCommentToProxyService(): commentIds - ' + commentIds);
