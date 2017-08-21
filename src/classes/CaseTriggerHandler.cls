@@ -2,6 +2,7 @@ public class CaseTriggerHandler extends TriggerHandler
 {
     private static boolean staticValuesSet = false;
     private static boolean isProxyServiceTurnedOff = false;
+    @TestVisible
     private static Integer noOfProxyServiceCallouts = 0;
     private static boolean isxMattersNotificationsTurnedOff = false;
     private static String xmEventNotificationPriorities = 'P1;P2;';
@@ -281,8 +282,7 @@ public class CaseTriggerHandler extends TriggerHandler
                 newCase.ETMS_Trouble_Report_State__c = null;
                 newCase.ETMS_Trouble_Report_Status__c = null;
             } else if(newCase.RecordTypeId == incidentRecordType && newCase.AccountBillingGroup__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
-                && (oldCase == null || oldCase != null && newCase.Status != oldCase.Status )
-                && etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey(newCase.Status))
+                && newCase.Status != oldCase.Status && etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey(newCase.Status))
             {
                 newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get(newCase.Status).Trouble_Report_State__c;
                 newCase.ETMS_Trouble_Report_Status__c = etmsTroubleStateStatusMap.get(newCase.Status).Trouble_Report_Status__c;

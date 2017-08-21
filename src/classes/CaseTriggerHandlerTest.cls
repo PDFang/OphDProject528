@@ -320,6 +320,57 @@ private class CaseTriggerHandlerTest {
                 Product_or_Service__c = 'Service Disruption',
                 Request_Type__c = testEtmsCode[0].Request_Type__c,
                 Database__c = testEtmsCode[0].Reason__c,
+                Releases__c = testEtmsCode[0].Reason_Detail__c,
+                X3rdPartyVendorTicket__c = '20170821'
+        );
+        Database.DMLOptions dmo = new Database.DMLOptions();
+        dmo.AssignmentRuleHeader.useDefaultRule = true;
+        testIncident.setOptions(dmo);
+        insert testIncident;
+
+        CaseTriggerHandler.noOfProxyServiceCallouts = 0;
+        testIncident.Status = 'Waiting on Customer';
+        update testIncident;
+
+        // Performing DML Before Mock Callouts to avoid uncommitted work pending error
+        test.startTest();
+        Test.setMock(WebServiceMock.class, new PartnerCaseProxyServiceMockTest());
+        test.stopTest();
+
+        ETMS_Trouble_Report_State_Status__mdt[] mdt = [
+                Select Case_Status__c, Trouble_Report_State__c, Trouble_Report_Status__c
+                From ETMS_Trouble_Report_State_Status__mdt
+                where Case_Status__c = :testIncident.Status
+        ];
+
+        system.assertNotEquals(0, mdt.size(), 'Case Status and ETMS Trouble Report State/Status mapping not found.');
+
+        Case incident = [SELECT ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c from Case where Id = :testIncident.Id LIMIT 1];
+        system.assertEquals(mdt[0].Trouble_Report_State__c, incident.ETMS_Trouble_Report_State__c);
+        system.assertEquals(mdt[0].Trouble_Report_Status__c, incident.ETMS_Trouble_Report_Status__c);
+
+        // make sure the trigger makes a callout to proxy service
+        system.assertEquals(true, PartnerCaseProxyServiceHelper.isCasePushed);
+
+    } // end of testPartnerCaseProxyServiceUpdate()
+
+    static testMethod void testPartnerCaseProxyServiceRetry() {
+
+        Account verizonAccount = [Select Id from Account where Billing_Group__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON LIMIT 1];
+        Contact verizonContact = [Select Id from Contact where AccountId = :verizonAccount.Id LIMIT 1];
+        ETMS_Codes__c[] testEtmsCode = ETMS_Codes__c.getAll().values();
+
+        // create an incident
+        Map<String,Schema.RecordTypeInfo> testIncidentTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
+        Case testIncident = new Case(
+                RecordTypeId = testIncidentTypeMap.get('Incident').getRecordTypeId(),
+                Subject = 'Verizon Test',
+                Status = 'New',
+                AccountId = verizonAccount.Id,
+                ContactId = verizonContact.Id,
+                Product_or_Service__c = 'Service Disruption',
+                Request_Type__c = testEtmsCode[0].Request_Type__c,
+                Database__c = testEtmsCode[0].Reason__c,
                 Releases__c = testEtmsCode[0].Reason_Detail__c
         );
         Database.DMLOptions dmo = new Database.DMLOptions();
@@ -327,9 +378,11 @@ private class CaseTriggerHandlerTest {
         testIncident.setOptions(dmo);
         insert testIncident;
 
+        CaseTriggerHandler.noOfProxyServiceCallouts = 0;
         testIncident.Status = 'Assigned';
         testIncident.Push_To_Partner__c = true;
         update testIncident;
+
         // Performing DML Before Mock Callouts to avoid uncommitted work pending error
         test.startTest();
         Test.setMock(WebServiceMock.class, new PartnerCaseProxyServiceMockTest());
@@ -340,7 +393,7 @@ private class CaseTriggerHandlerTest {
         // make sure the trigger makes a callout to proxy service
         system.assertEquals(true, PartnerCaseProxyServiceHelper.isCasePushed);
 
-    } // end of testPartnerCaseProxyServiceUpdate()
+    } // end of testPartnerCaseProxyServiceRetry()
 
     // test XMNotification record is created when an Event is confirmed
     static testMethod void testEventInitialConfirmationNotification() {
