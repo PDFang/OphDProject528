@@ -49,7 +49,6 @@ public class CaseTriggerHandler extends TriggerHandler
     protected override void beforeInsert(){
         CalculateIncidentNetScore((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
         setTroubleReportStateStatus((List<Case>) trigger.new, (Map<Id, Case>)trigger.oldMap);
-        setTroubleReportStateStatus((List<Case>) trigger.new, (Map<Id, Case>)trigger.oldMap);
     }
 
     protected override void beforeUpdate(){
@@ -278,11 +277,13 @@ public class CaseTriggerHandler extends TriggerHandler
 
         for(Case newCase : newList) {
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
-            if(oldMap == null || !oldMap.containsKey(newCase.Id)){
-                newCase.ETMS_Trouble_Report_State__c = null;
-                newCase.ETMS_Trouble_Report_Status__c = null;
-            } else if(newCase.RecordTypeId == incidentRecordType && newCase.AccountBillingGroup__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
-                && newCase.Status != oldCase.Status && etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey(newCase.Status))
+
+            if(newCase.isClone()){
+                newCase.ETMS_Trouble_Report_State__c = Decimal.valueOf(Case.ETMS_Trouble_Report_State__c.getDescribe().getDefaultValueFormula());
+                newCase.ETMS_Trouble_Report_Status__c = Decimal.valueOf(Case.ETMS_Trouble_Report_Status__c.getDescribe().getDefaultValueFormula());
+            }
+            if(newCase.RecordTypeId == incidentRecordType && newCase.AccountBillingGroup__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
+                && oldCase != null && newCase.Status != oldCase.Status && etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey(newCase.Status))
             {
                 newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get(newCase.Status).Trouble_Report_State__c;
                 newCase.ETMS_Trouble_Report_Status__c = etmsTroubleStateStatusMap.get(newCase.Status).Trouble_Report_Status__c;
