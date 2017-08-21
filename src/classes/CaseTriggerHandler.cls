@@ -347,7 +347,7 @@ public class CaseTriggerHandler extends TriggerHandler
             Account acct = accountMap.get(newCase.AccountId);
             // Is account billing group 'Verizon'
             if(acct != null && acct.Billing_Group__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON){
-                if(oldMap == null || !oldMap.containsKey(newCase.Id)){
+                if(oldMap == null || (oldMap.containsKey(newCase.Id) && newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null) ){
                     createIdSet.add(newCase.Id);
                 } else{
                     updateIdSet.add(newCase.Id);
