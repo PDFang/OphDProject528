@@ -2,7 +2,7 @@
  * Created by mohandaas.rangaswamy on 3/3/2017.
  */
 
-public with sharing class PartnerCaseProxyServiceHelper {
+public class PartnerCaseProxyServiceHelper {
 
     public static final String BILLING_GROUP_VERIZON = 'Verizon';
     public static final String DEFAULT_ETMS_TROUBLE_TYPE = 'Other';
@@ -88,6 +88,7 @@ public with sharing class PartnerCaseProxyServiceHelper {
 
             if(caseUpdateArray.size() > 0){
                 callUpdatePartnerCase(caseUpdateArray);
+                if(test.isRunningTest()) isCasePushed = true;
             }
 
         } catch (system.CalloutException ex) {
@@ -124,6 +125,7 @@ public with sharing class PartnerCaseProxyServiceHelper {
 
             if(caseUpdateArray.size() > 0){
                 callUpdatePartnerCase(caseUpdateArray);
+                if(test.isRunningTest()) isCaseCommentPushed = true;
             }
 
         } catch (system.CalloutException ex) {
@@ -148,7 +150,6 @@ public with sharing class PartnerCaseProxyServiceHelper {
         PartnerCaseProxyService.ArrayOfPartnerCaseUpdate caseUpdateRequest = new PartnerCaseProxyService.ArrayOfPartnerCaseUpdate();
         caseUpdateRequest.PartnerCaseUpdate = caseUpdateArray;
         proxy.UpdatePartnerCase(caseUpdateRequest, BILLING_GROUP_VERIZON);
-        if(test.isRunningTest()) isCaseCommentPushed = true;
 
     }
 

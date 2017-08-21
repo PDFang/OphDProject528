@@ -2,6 +2,8 @@ public class CaseTriggerHandler extends TriggerHandler
 {
     private static boolean staticValuesSet = false;
     private static boolean isProxyServiceTurnedOff = false;
+    @TestVisible
+    private static Integer noOfProxyServiceCallouts = 0;
     private static boolean isxMattersNotificationsTurnedOff = false;
     private static String xmEventNotificationPriorities = 'P1;P2;';
     private static Id eventRecordType;
@@ -47,6 +49,7 @@ public class CaseTriggerHandler extends TriggerHandler
     protected override void beforeInsert(){
         CalculateIncidentNetScore((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
         setTroubleReportStateStatus((List<Case>) trigger.new, (Map<Id, Case>)trigger.oldMap);
+        setTroubleReportStateStatus((List<Case>) trigger.new, (Map<Id, Case>)trigger.oldMap);
     }
 
     protected override void beforeUpdate(){
@@ -56,14 +59,14 @@ public class CaseTriggerHandler extends TriggerHandler
     }
 
     protected override void afterInsert(){
-        if(!isProxyServiceTurnedOff)
+        if(!isProxyServiceTurnedOff && noOfProxyServiceCallouts == 0)
             CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
     }
 
     protected override void afterUpdate(){
         if(!isxMattersNotificationsTurnedOff)
             createXmNotification((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
-        if(!isProxyServiceTurnedOff)
+        if(!isProxyServiceTurnedOff && noOfProxyServiceCallouts == 0)
             CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
     }
 
@@ -273,14 +276,13 @@ public class CaseTriggerHandler extends TriggerHandler
     // set Trouble Report State and Status
     private void setTroubleReportStateStatus(List<Case> newList, Map<Id, Case> oldMap){
 
-        if(oldMap == null){
-            return;
-        }
         for(Case newCase : newList) {
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
-            if(newCase.RecordTypeId == incidentRecordType && newCase.AccountBillingGroup__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
-                && (oldCase == null || oldCase != null && newCase.Status != oldCase.Status )
-                && etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey(newCase.Status))
+            if(oldMap == null || !oldMap.containsKey(newCase.Id)){
+                newCase.ETMS_Trouble_Report_State__c = null;
+                newCase.ETMS_Trouble_Report_Status__c = null;
+            } else if(newCase.RecordTypeId == incidentRecordType && newCase.AccountBillingGroup__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
+                && newCase.Status != oldCase.Status && etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey(newCase.Status))
             {
                 newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get(newCase.Status).Trouble_Report_State__c;
                 newCase.ETMS_Trouble_Report_Status__c = etmsTroubleStateStatusMap.get(newCase.Status).Trouble_Report_Status__c;
@@ -345,7 +347,7 @@ public class CaseTriggerHandler extends TriggerHandler
             Account acct = accountMap.get(newCase.AccountId);
             // Is account billing group 'Verizon'
             if(acct != null && acct.Billing_Group__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON){
-                if(oldMap == null || !oldMap.containsKey(newCase.Id)){
+                if(oldMap == null || (oldMap.containsKey(newCase.Id) && newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null) ){
                     createIdSet.add(newCase.Id);
                 } else{
                     updateIdSet.add(newCase.Id);
@@ -357,11 +359,13 @@ public class CaseTriggerHandler extends TriggerHandler
         system.debug('CallPartnerCaseProxyService(): createIdSet - ' + createIdSet);
         if(createIdSet.size() > 0 && !system.isFuture() && !system.isBatch()){
             CallPartnerCaseProxyServiceFuture(createIdSet);
+            noOfProxyServiceCallouts++;
         }
 
         system.debug('CallPartnerCaseProxyService(): updateIdSet - ' + updateIdSet);
         if(updateIdSet.size() > 0 && !system.isFuture() && !system.isBatch()){
             CallUpdatePartnerCaseProxyServiceFuture(updateIdSet);
+            noOfProxyServiceCallouts++;
         }
 
 
