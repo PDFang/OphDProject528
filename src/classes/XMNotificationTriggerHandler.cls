@@ -49,6 +49,7 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
             else if (caseRecord.RecordTypeId == eventRecordTypeId) {
                 //set a flag saying the event confirmation has been sent
                 caseRecord.xmEvent_Notification_Sent__c = true;
+                caseList.add(caseRecord);
             }
         }
 

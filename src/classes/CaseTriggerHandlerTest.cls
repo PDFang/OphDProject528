@@ -535,6 +535,20 @@ private class CaseTriggerHandlerTest {
         system.assertEquals(1, notifications.size(), 'One xmNotification record should be created.');
         system.assertEquals( new CaseTriggerHandler().getXmNotificationRequestType(testEvent), notifications[0].Request_Type__c, 'Request type is incorrect.');
 
+        system.assertEquals(true, [Select EventHasBeenResolvedOrClosed__c from Case Where Id = :testEvent.Id].EventHasBeenResolvedOrClosed__c, 'EventHasBeenResolvedOrClosed flag not set to true.' );
+
+        testEvent.status = 'Closed';
+        testEvent.IgnoreEventStatusLock__c = true;
+        update testEvent;
+
+        notifications = [
+                Select Request_Type__c
+                from xmNotification__c
+                where Case__c = :testEvent.Id
+        ];
+
+        system.assertEquals(1, notifications.size(), 'There should not be more than one xmNotification record but actual '+ notifications.size());
+
     }
 
     @TestSetup
