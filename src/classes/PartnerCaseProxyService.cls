@@ -5,6 +5,26 @@ public class PartnerCaseProxyService {
         private String[] apex_schema_type_info = new String[]{'http://tempuri.org/','true','false'};
         private String[] field_order_type_info = new String[]{};
     }
+    public class ArrayOfPartnerCaseUpdate {
+        public PartnerCaseProxyService.PartnerCaseUpdate[] PartnerCaseUpdate;
+        private String[] PartnerCaseUpdate_type_info = new String[]{'PartnerCaseUpdate','http://tempuri.org/',null,'0','-1','true'};
+        private String[] apex_schema_type_info = new String[]{'http://tempuri.org/','true','false'};
+        private String[] field_order_type_info = new String[]{'PartnerCaseUpdate'};
+    }
+    public class PartnerCaseUpdate {
+        public DateTime UpdateDateTime;
+        public String CaseNumber;
+        public String Comment;
+        public Integer TroubleReportStatus;
+        public Integer TroubleReportState;
+        private String[] UpdateDateTime_type_info = new String[]{'UpdateDateTime','http://tempuri.org/',null,'1','1','false'};
+        private String[] CaseNumber_type_info = new String[]{'CaseNumber','http://tempuri.org/',null,'0','1','false'};
+        private String[] Comment_type_info = new String[]{'Comment','http://tempuri.org/',null,'0','1','false'};
+        private String[] TroubleReportStatus_type_info = new String[]{'TroubleReportStatus','http://tempuri.org/',null,'1','1','true'};
+        private String[] TroubleReportState_type_info = new String[]{'TroubleReportState','http://tempuri.org/',null,'1','1','true'};
+        private String[] apex_schema_type_info = new String[]{'http://tempuri.org/','true','false'};
+        private String[] field_order_type_info = new String[]{'UpdateDateTime','CaseNumber','Comment','TroubleReportStatus','TroubleReportState'};
+    }
     public class ArrayOfSalesforceCase {
         public PartnerCaseProxyService.SalesforceCase[] SalesforceCase;
         private String[] SalesforceCase_type_info = new String[]{'SalesforceCase','http://tempuri.org/',null,'0','-1','true'};
@@ -15,20 +35,8 @@ public class PartnerCaseProxyService {
         private String[] apex_schema_type_info = new String[]{'http://tempuri.org/','true','false'};
         private String[] field_order_type_info = new String[]{};
     }
-    public class PartnerCaseCommentUpdate {
-        public DateTime UpdateDateTime;
-        public String VendorTicketNumber;
-        public String Comment;
-        public String AccountName;
-        private String[] UpdateDateTime_type_info = new String[]{'UpdateDateTime','http://tempuri.org/',null,'1','1','false'};
-        private String[] VendorTicketNumber_type_info = new String[]{'VendorTicketNumber','http://tempuri.org/',null,'0','1','false'};
-        private String[] Comment_type_info = new String[]{'Comment','http://tempuri.org/',null,'0','1','false'};
-        private String[] AccountName_type_info = new String[]{'AccountName','http://tempuri.org/',null,'0','1','false'};
-        private String[] apex_schema_type_info = new String[]{'http://tempuri.org/','true','false'};
-        private String[] field_order_type_info = new String[]{'UpdateDateTime','VendorTicketNumber','Comment','AccountName'};
-    }
     public class UpdatePartnerCase_element {
-        public PartnerCaseProxyService.ArrayOfPartnerCaseCommentUpdate caseUpdates;
+        public PartnerCaseProxyService.ArrayOfPartnerCaseUpdate caseUpdates;
         public String partnerId;
         private String[] caseUpdates_type_info = new String[]{'caseUpdates','http://tempuri.org/',null,'0','1','false'};
         private String[] partnerId_type_info = new String[]{'partnerId','http://tempuri.org/',null,'0','1','false'};
@@ -85,12 +93,6 @@ public class PartnerCaseProxyService {
         private String[] apex_schema_type_info = new String[]{'http://tempuri.org/','true','false'};
         private String[] field_order_type_info = new String[]{'SalesforceId','Number_x','Comment','Description','ContactName','ContactPhone','OwnerName','OwnerPhone','CadebillAccountNumber','EventTime','Country','AccountName','Priority','Product','RequestType','Reason','ReasonDetails','EtmsTroubleType','TroubleTypeDescription'};
     }
-    public class ArrayOfPartnerCaseCommentUpdate {
-        public PartnerCaseProxyService.PartnerCaseCommentUpdate[] PartnerCaseCommentUpdate;
-        private String[] PartnerCaseCommentUpdate_type_info = new String[]{'PartnerCaseCommentUpdate','http://tempuri.org/',null,'0','-1','true'};
-        private String[] apex_schema_type_info = new String[]{'http://tempuri.org/','true','false'};
-        private String[] field_order_type_info = new String[]{'PartnerCaseCommentUpdate'};
-    }
     public class PartnerCaseProxySoap {
         public String endpoint_x = 'https://labproxy.ucn.net/PartnerProxyService/PartnerCaseProxy.asmx';
         public Map<String,String> inputHttpHeaders_x;
@@ -100,7 +102,7 @@ public class PartnerCaseProxyService {
         public String clientCertPasswd_x;
         public Integer timeout_x;
         private String[] ns_map_type_info = new String[]{'http://tempuri.org/', 'PartnerCaseProxyService'};
-        public void UpdatePartnerCase(PartnerCaseProxyService.ArrayOfPartnerCaseCommentUpdate caseUpdates,String partnerId) {
+        public void UpdatePartnerCase(PartnerCaseProxyService.ArrayOfPartnerCaseUpdate caseUpdates,String partnerId) {
             PartnerCaseProxyService.UpdatePartnerCase_element request_x = new PartnerCaseProxyService.UpdatePartnerCase_element();
             request_x.caseUpdates = caseUpdates;
             request_x.partnerId = partnerId;

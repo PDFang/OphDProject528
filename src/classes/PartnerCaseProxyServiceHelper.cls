@@ -2,7 +2,7 @@
  * Created by mohandaas.rangaswamy on 3/3/2017.
  */
 
-public with sharing class PartnerCaseProxyServiceHelper {
+public class PartnerCaseProxyServiceHelper {
 
     public static final String BILLING_GROUP_VERIZON = 'Verizon';
     public static final String DEFAULT_ETMS_TROUBLE_TYPE = 'Other';
@@ -14,7 +14,7 @@ public with sharing class PartnerCaseProxyServiceHelper {
     @TestVisible
     private static boolean isCaseCommentPushed = false;
 
-
+    // when a new case is created
     public static void PushCaseToProxyService(Set<Id> caseIds){
 
         system.debug('PushCaseToProxyService(): caseIds - ' + caseIds);
@@ -68,31 +68,67 @@ public with sharing class PartnerCaseProxyServiceHelper {
         
     } // end of PushCaseToProxyService
 
+    // when a case is updated that results change in trouble report state or status
+    public static void PushCaseStatusUpdateToProxyService(Set<Id> caseIds){
+
+        system.debug('PushCaseStatusUpdateToProxyService(): caseIds - ' + caseIds);
+        try {
+            PartnerCaseProxyService.PartnerCaseUpdate[] caseUpdateArray = new PartnerCaseProxyService.PartnerCaseUpdate[]{
+            };
+            for (Case newCase : [
+                    Select Id, CaseNumber, X3rdPartyVendorTicket__c, LastModifiedDate,
+                            ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c
+                    from Case
+                    where Id IN :caseIds
+                    and Account.Billing_Group__c = :BILLING_GROUP_VERIZON
+            ]) {
+                PartnerCaseProxyService.PartnerCaseUpdate partnerCaseUpdate = createPartnerCaseUpdate(newCase);
+                caseUpdateArray.add(partnerCaseUpdate);
+            }
+
+            if(caseUpdateArray.size() > 0){
+                callUpdatePartnerCase(caseUpdateArray);
+                if(test.isRunningTest()) isCasePushed = true;
+            }
+
+        } catch (system.CalloutException ex) {
+            system.debug('PushCaseStatusUpdateToProxyService(): CalloutException - ' + ex);
+            String subject = String.join(new List<Id>(caseIds), ',');
+            subject = subject + ' - PartnerCaseProxyService callout failed.';
+            SendErrorEmail( ex, subject);
+        }catch(system.Exception ex){
+            system.debug('PushCaseStatusUpdateToProxyService(): Exception - ' + ex);
+            String subject = String.join(new List<Id>(caseIds), ',');
+            subject = subject + ' - Failed to callout PartnerCaseProxyService.';
+            SendErrorEmail( ex, subject);
+        }
+
+    }
+
+    // when a new case comment is created
     public static void PushCaseCommentToProxyService(Set<Id> commentIds){
 
         system.debug('PushCaseCommentToProxyService(): commentIds - ' + commentIds);
         try {
-            PartnerCaseProxyService.PartnerCaseCommentUpdate[] caseCommentArray = new PartnerCaseProxyService.PartnerCaseCommentUpdate[]{};
+            PartnerCaseProxyService.PartnerCaseUpdate[] caseUpdateArray = new PartnerCaseProxyService.PartnerCaseUpdate[]{
+            };
             for (CaseComment newComment : [
                     Select Id, CommentBody, IsPublished, CreatedDate, CreatorName,
-                            Parent.CaseNumber, Parent.Status, Parent.X3rdPartyVendorTicket__c,
-                            Parent.Account.Name, Parent.Account.Billing_Group__c, Parent.Account.CadebillAccountNo__c
+                            Parent.CaseNumber, Parent.Status, Parent.X3rdPartyVendorTicket__c
                     from CaseComment
                     where Id IN :commentIds
                     and Parent.Account.Billing_Group__c = :BILLING_GROUP_VERIZON
             ]) {
-                PartnerCaseProxyService.PartnerCaseCommentUpdate partnerComment = createPartnerCaseComment(newComment);
-                caseCommentArray.add(partnerComment);
+                PartnerCaseProxyService.PartnerCaseUpdate partnerCaseUpdate = createPartnerCaseUpdate(newComment);
+                caseUpdateArray.add(partnerCaseUpdate);
             }
 
-            PartnerCaseProxyService.PartnerCaseProxySoap proxy = new PartnerCaseProxyService.PartnerCaseProxySoap();
-            proxy.endpoint_x = 'callout:PartnerCaseProxyService';
-            // callout
-            PartnerCaseProxyService.ArrayOfPartnerCaseCommentUpdate caseCommentRequest = new PartnerCaseProxyService.ArrayOfPartnerCaseCommentUpdate();
-            caseCommentRequest.PartnerCaseCommentUpdate = caseCommentArray;
-            proxy.UpdatePartnerCase(caseCommentRequest, BILLING_GROUP_VERIZON);
-            if(test.isRunningTest()) isCaseCommentPushed = true;
-        }catch (system.CalloutException ex) {
+            if(caseUpdateArray.size() > 0){
+                callUpdatePartnerCase(caseUpdateArray);
+                if(test.isRunningTest()) isCaseCommentPushed = true;
+            }
+
+        } catch (system.CalloutException ex) {
             system.debug('PushCaseCommentToProxyService(): CalloutException - ' + ex);
             String subject = String.join(new List<Id>(commentIds), ',');
             subject = subject + ' - PartnerCaseProxyService callout failed.';
@@ -105,6 +141,17 @@ public with sharing class PartnerCaseProxyServiceHelper {
         }
 
     } // end of PushCaseCommentToProxyService
+
+    private static void callUpdatePartnerCase(PartnerCaseProxyService.PartnerCaseUpdate[] caseUpdateArray){
+
+        PartnerCaseProxyService.PartnerCaseProxySoap proxy = new PartnerCaseProxyService.PartnerCaseProxySoap();
+        proxy.endpoint_x = 'callout:PartnerCaseProxyService';
+        // callout
+        PartnerCaseProxyService.ArrayOfPartnerCaseUpdate caseUpdateRequest = new PartnerCaseProxyService.ArrayOfPartnerCaseUpdate();
+        caseUpdateRequest.PartnerCaseUpdate = caseUpdateArray;
+        proxy.UpdatePartnerCase(caseUpdateRequest, BILLING_GROUP_VERIZON);
+
+    }
 
     private static PartnerCaseProxyService.SalesforceCase createPartnerCase(Case sfCase){
 
@@ -159,16 +206,28 @@ public with sharing class PartnerCaseProxyServiceHelper {
 
     } // end of createPartnerCase()
 
-    private static PartnerCaseProxyService.PartnerCaseCommentUpdate createPartnerCaseComment(CaseComment sfCaseComment){
+    private static PartnerCaseProxyService.PartnerCaseUpdate createPartnerCaseUpdate(CaseComment sfCaseComment){
 
-        system.debug('createPartnerCaseComment(): sfCaseComment - ' + sfCaseComment);
-        PartnerCaseProxyService.PartnerCaseCommentUpdate partnerComment = new PartnerCaseProxyService.PartnerCaseCommentUpdate();
-        partnerComment.AccountName = sfCaseComment.Parent.Account.Name;
-        partnerComment.Comment = sfCaseComment.CommentBody;
-        partnerComment.UpdateDateTime = sfCaseComment.CreatedDate;
-        partnerComment.VendorTicketNumber = sfCaseComment.Parent.X3rdPartyVendorTicket__c;
-        system.debug('createPartnerCaseComment(): partnerComment - ' + partnerComment);
-        return partnerComment;
+        system.debug('createPartnerCaseUpdate(): sfCaseComment - ' + sfCaseComment);
+        PartnerCaseProxyService.PartnerCaseUpdate partnerCaseUpdate = new PartnerCaseProxyService.PartnerCaseUpdate();
+        partnerCaseUpdate.Comment = sfCaseComment.CommentBody;
+        partnerCaseUpdate.UpdateDateTime = sfCaseComment.CreatedDate;
+        partnerCaseUpdate.CaseNumber = sfCaseComment.Parent.CaseNumber;
+        system.debug('createPartnerCaseUpdate(): partnerCaseUpdate - ' + partnerCaseUpdate);
+        return partnerCaseUpdate;
+
+    }
+
+    private static PartnerCaseProxyService.PartnerCaseUpdate createPartnerCaseUpdate(Case sfCase){
+
+        system.debug('createPartnerCaseUpdate(): sfCase - ' + sfCase);
+        PartnerCaseProxyService.PartnerCaseUpdate partnerCaseUpdate = new PartnerCaseProxyService.PartnerCaseUpdate();
+        partnerCaseUpdate.TroubleReportState = (Integer)sfCase.ETMS_Trouble_Report_State__c;
+        partnerCaseUpdate.TroubleReportStatus = (Integer)sfCase.ETMS_Trouble_Report_Status__c;
+        partnerCaseUpdate.UpdateDateTime = sfCase.LastModifiedDate;
+        partnerCaseUpdate.CaseNumber = sfCase.CaseNumber;
+        system.debug('createPartnerCaseUpdate(): partnerCaseUpdate - ' + partnerCaseUpdate);
+        return partnerCaseUpdate;
 
     }
 
