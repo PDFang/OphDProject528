@@ -131,7 +131,11 @@ public class LicenseTriggerTest {
        CHANNEL_ORDERS__Service_Order__c so = [select CHANNEL_ORDERS__Customer_Org_ID__c from CHANNEL_ORDERS__Service_Order__c where CHANNEL_ORDERS__Customer__c =: cust.Id];
        system.assertEquals('00D5B0000008bOp', so.CHANNEL_ORDERS__Customer_Org_ID__c);
 	   CHANNEL_ORDERS__Service_Order_Detail__c sod = [select CHANNEL_ORDERS__Quantity__c from CHANNEL_ORDERS__Service_Order_Detail__c where CHANNEL_ORDERS__Product_Name__r.Name =: 'ISVForce inContact Agent Console (Per User)'];
-       system.assertEquals(10, sod.CHANNEL_ORDERS__Quantity__c);         
+       system.assertEquals(10, sod.CHANNEL_ORDERS__Quantity__c);
+       EDA__c edaRecord = [select Id, License__c from EDA__c];
+	    system.debug('edaRecord =>' + edaRecord);
+
+       system.assertEquals(lic.Id, edaRecord.License__c, 'Matching License found');
       test.stopTest();  
     }
     public static testmethod void existingOrderTest(){
@@ -215,7 +219,13 @@ public class LicenseTriggerTest {
          
          CHANNEL_ORDERS__Service_Order__c so = [select CHANNEL_ORDERS__Order_Type__c from CHANNEL_ORDERS__Service_Order__c where CHANNEL_ORDERS__Order_Type__c =:'Add-On' limit 1]; 	
          
-          system.assertEquals('Add-On', so.CHANNEL_ORDERS__Order_Type__c);  
+	     system.assertEquals('Add-On', so.CHANNEL_ORDERS__Order_Type__c);
+
+	    EDA__c[] edaRecord = [select Id, License__c from EDA__c];
+	    system.debug('edaRecord =>' + edaRecord);
+
+	    system.assertEquals(2, edaRecord.size(), '2 Service orders found');
+
          test.stopTest();  
     }
     public static testmethod void licenseReductiOnTest(){

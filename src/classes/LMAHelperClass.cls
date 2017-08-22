@@ -10,10 +10,12 @@ public class LMAHelperClass {
         set<Id> custIds = new set<Id>();       
         list<CHANNEL_ORDERS__Customer__c> lstCusts = new list<CHANNEL_ORDERS__Customer__c>();
         set<string> orgIds = new set<string>();
-        
+
+
+
         // get all orgIds
 		for(sfLma__License__c lic : lstLicenses){
-            orgIds.add(lic.sfLma__Subscriber_Org_ID__c);
+	            orgIds.add(lic.sfLma__Subscriber_Org_ID__c);
         }
         
         // get all related account details for the licenses
@@ -108,19 +110,15 @@ public class LMAHelperClass {
         list<CHANNEL_ORDERS__Service_Order__c> lstSO = new list<CHANNEL_ORDERS__Service_Order__c>();
         list<CHANNEL_ORDERS__Service_Order_Detail__c> lstSoDetails = new list<CHANNEL_ORDERS__Service_Order_Detail__c>();
         Id productIds;
-        // set the product names
+	    list<EDA__c> EDArecords = new list<EDA__c>();
+	    map<Id, list<id>> licenseServiceOrders = new map<Id, list<Id>>();
+			    // set the product names
         set<string> productNames = new set<string>{'ISVForce inContact Agent Console (Per User)'};
 		set<Id> stNewOrders = new set<Id>();  
-        
-        
-        
-        // check for any existing SO type = 'Initial' -- No need to check existing orders
-      //  existingOrders =  LMAHelperClass.checkExistingOrders(custIds, mpOrderType); -- No need to check existing orders
-          // get the actual customers needed
-       /** for(Id customer : custIds){
-            if(!existingOrders.contains(customer))
-                requiredcustomers.add(customer);
-        }**/
+
+
+
+
        system.debug('productNames ==>' + productNames);
         if(custIds.size() > 0)
         {
@@ -146,8 +144,11 @@ public class LMAHelperClass {
                        CHANNEL_ORDERS__Date_Customer_Accepted_SFDC_Svc_Agrmnt__c = system.today(),
               		   CHANNEL_ORDERS__Service_Order_Status__c = 'Received'
                     );
-                    
-                 lstSO.add(so);   
+
+                 lstSO.add(so);
+
+
+
                 }
                 
                 
@@ -162,7 +163,7 @@ public class LMAHelperClass {
                        		stNewOrders.add(sr.getId());                      
                         
                     }
-                   
+
                    for(CHANNEL_ORDERS__Service_Order__c so : [select Id, CHANNEL_ORDERS__Customer_Org_ID__c
                                                               from CHANNEL_ORDERS__Service_Order__c 
                                                               where Id in :stNewOrders])
@@ -176,12 +177,35 @@ public class LMAHelperClass {
                             sodetail.CHANNEL_ORDERS__Customer_Price_Per_Month__c = 15;
                             sodetail.CHANNEL_ORDERS__Quantity__c = mpSeatNumber.get(so.CHANNEL_ORDERS__Customer_Org_ID__c);
                             
-                            lstSoDetails.add(sodetail);                           
-                       
+                            lstSoDetails.add(sodetail);
+
+	                   // Add linecense to orders
+	                   for(sfLma__License__c license : lstLicenses){
+		                   if(so.CHANNEL_ORDERS__Customer_Org_ID__c ==  license.sfLma__Subscriber_Org_ID__c){
+			                   if(licenseServiceOrders.containsKey(license.Id))
+				                   licenseServiceOrders.get(license.Id).add(so.Id);
+			                   else
+					               licenseServiceOrders.put(license.Id, new list<Id>{so.Id});
+		                   }
+	                   }
+
                    }
-                   
-                   
-                   
+
+	               if(licenseServiceOrders.size() > 0){
+		               for(Id licenseId : licenseServiceOrders.keySet()){
+			               for(Id soId : licenseServiceOrders.get(licenseId)){
+				               EDA__c eda = new EDA__c();
+				               eda.License__c = licenseId;
+				               eda.Service_Order__c = soId;
+				               EDArecords.add(eda);
+			               }
+		               }
+	               }
+
+                   if(EDArecords.size() > 0){
+	                   insert EDArecords;
+                   }
+
                    if(lstSoDetails.size() > 0)
                        insert lstSoDetails;
                 }    
