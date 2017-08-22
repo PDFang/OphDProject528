@@ -310,7 +310,7 @@ public class XMBusinessLayer  {
             //default partner designation
             groupData.PartnerPrefix = 'INC';
         }
-	    groupData.product = groupData.product.contains('/')? groupData.product.replace('/', '-') : groupData.product;
+	    string productName = groupData.product.contains('/')? groupData.product.replace('/', '-') : groupData.product;
         XmattersGroupName = 'IP_'+ groupData.partnerPrefix + '_' + groupData.product + '_'  + groupData.cluster;
         if(notificationType == 'MaintType')
             XmattersGroupName = XmattersGroupName + '_' + 'MAINT';
