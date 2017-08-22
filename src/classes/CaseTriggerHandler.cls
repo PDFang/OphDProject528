@@ -262,9 +262,9 @@ public class CaseTriggerHandler extends TriggerHandler
 
         String requestType = null;
 
-        if(newCase.RecordTypeId == eventRecordType && newCase.Status == 'Resolved'){
+        if(newCase.RecordTypeId == eventRecordType && newCase.Status == 'Resolved' || newCase.Status == 'Closed'){
             requestType = 'Event Resolved';
-        } else if(newCase.RecordTypeId == eventRecordType && newCase.Status == 'Confirmed'){
+        } else if(newCase.RecordTypeId == eventRecordType && newCase.Status == 'Confirmed' || newCase.Status == 'Being Worked'){
             requestType = 'Event Initial Confirmation';
         }
 
