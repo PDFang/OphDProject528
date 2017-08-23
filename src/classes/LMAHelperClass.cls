@@ -217,7 +217,7 @@ public class LMAHelperClass {
     } 
      
 
-	public static void orderSubmitDetermination(){
+	public static set<id> orderSubmitDetermination(boolean fromPage){
 	    // get current year
 
 		map<string, List<CHANNEL_ORDERS__Service_Order_Detail__c>> serviceOrderDetailsByOrgId = new map<string, List<CHANNEL_ORDERS__Service_Order_Detail__c>>();
@@ -290,10 +290,14 @@ public class LMAHelperClass {
 			    for(String orgId : serviceOrderDetailsByOrgId.keySet()){
 				    decimal reductionAmountDecimal = 0;
 				    for(CHANNEL_ORDERS__Service_Order_Detail__c orderDetail : serviceOrderDetailsByOrgId.get(orgId)){
+					    system.debug('orderDetail =>' + orderDetail.CHANNEL_ORDERS__Partner_Order__c);
 					    if(orderDetail.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c == 'Reduction'
 							    || orderDetail.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c == 'Cancellation Order'){
 						    reductionAmountDecimal += orderDetail.CHANNEL_ORDERS__Quantity__c;
+						    system.debug('reductionAmountDecimal =>' + reductionAmountDecimal);
+
 						    if(totalamountByOrgIdPreEDA.containsKey(orgId)){
+							    system.debug('PRE EDA Amount =>' + totalamountByOrgIdPreEDA.get(orgId));
 							    if(reductionAmountDecimal > totalamountByOrgIdPreEDA.get(orgId)){
 								    totalQuantityPOSTEDA += reductionAmountDecimal - totalamountByOrgIdPreEDA.get(orgId);
 							    }
@@ -304,28 +308,36 @@ public class LMAHelperClass {
 					    }else{
 						    totalQuantityPOSTEDA += orderDetail.CHANNEL_ORDERS__Quantity__c;
 					    }
+					    system.debug('totalQuantityPOSTEDA =>' + totalQuantityPOSTEDA);
 
 					    if(totalQuantityPOSTEDA > edaCutoffList[0].EDACutoffLicense__c){
 						    serviceOrderIds.add(orderDetail.CHANNEL_ORDERS__Partner_Order__c);
 					    }
 				    }
 			    }
+				if(fromPage)
+					return serviceOrderIds;
 
-			    for(EDA__c eda : [select Id, Service_Order__c from EDA__c where Service_Order__c in : serviceOrderIds]){
-				    UpdateEDAList.add(new EDA__c(
-						    Id = eda.Id,
-						    AutoSubmit__c = true
-				    ));
+			    else{
+				    for(EDA__c eda : [select Id, Service_Order__c from EDA__c where Service_Order__c in : serviceOrderIds]){
+					    UpdateEDAList.add(new EDA__c(
+							    Id = eda.Id,
+							    AutoSubmit__c = true
+					    ));
+				    }
+
+				    if(UpdateEDAList.size() > 0)
+					    update UpdateEDAList;
+					return null;
 			    }
 
-			    if(UpdateEDAList.size() > 0)
-				    update UpdateEDAList;
-
 		    }
+
 	    }catch (Exception ex){
 		    inContactBaseClass.SendErrorEmail(ex, 'Error in Calculating total EDA records - LMA/COA');
-	    }
 
+	    }
+		return null;
 
 
 
