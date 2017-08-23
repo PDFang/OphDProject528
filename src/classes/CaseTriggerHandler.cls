@@ -283,10 +283,18 @@ public class CaseTriggerHandler extends TriggerHandler
                 newCase.ETMS_Trouble_Report_Status__c = Decimal.valueOf(Case.ETMS_Trouble_Report_Status__c.getDescribe().getDefaultValueFormula());
             }
             if(newCase.RecordTypeId == incidentRecordType && newCase.AccountBillingGroup__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
-                && oldCase != null && newCase.Status != oldCase.Status && etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey(newCase.Status))
-            {
-                newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get(newCase.Status).Trouble_Report_State__c;
-                newCase.ETMS_Trouble_Report_Status__c = etmsTroubleStateStatusMap.get(newCase.Status).Trouble_Report_Status__c;
+                && oldCase != null && newCase.Status != oldCase.Status){
+                // 'Waiting on Customer', 'Waiting on Customer - No Auto Close', 'Resolved' and 'Closed' have been mapped
+                if(etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey(newCase.Status)){
+                    newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get(newCase.Status).Trouble_Report_State__c;
+                    newCase.ETMS_Trouble_Report_Status__c = etmsTroubleStateStatusMap.get(newCase.Status).Trouble_Report_Status__c;
+                } else if(closedStatuses.contains(newCase.Status) && etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey('Closed')){
+                    newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get('Closed').Trouble_Report_State__c;
+                    newCase.ETMS_Trouble_Report_Status__c = etmsTroubleStateStatusMap.get('Closed').Trouble_Report_Status__c;
+                } else{
+                    newCase.ETMS_Trouble_Report_State__c = Decimal.valueOf(Case.ETMS_Trouble_Report_State__c.getDescribe().getDefaultValueFormula());
+                    newCase.ETMS_Trouble_Report_Status__c = Decimal.valueOf(Case.ETMS_Trouble_Report_Status__c.getDescribe().getDefaultValueFormula());
+                }
             }
         }
     }
