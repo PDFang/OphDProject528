@@ -204,6 +204,8 @@ public class LMAHelperClass {
 
                    if(EDArecords.size() > 0){
 	                   insert EDArecords;
+
+
                    }
 
                    if(lstSoDetails.size() > 0)
@@ -214,8 +216,121 @@ public class LMAHelperClass {
         
     } 
      
-        
-        
+
+	public static void orderSubmitDetermination(){
+	    // get current year
+
+		map<string, List<CHANNEL_ORDERS__Service_Order_Detail__c>> serviceOrderDetailsByOrgId = new map<string, List<CHANNEL_ORDERS__Service_Order_Detail__c>>();
+	    set<string> reductionQuantityByOrgId = new set<string>();
+	    map<string, decimal> totalamountByOrgIdPreEDA = new map<string, decimal>();
+	    set<id> serviceOrderIds = new set<Id>();
+	    list<EDA__c> UpdateEDAList = new list<EDA__c>();
+	    decimal reductionQuantity = 0.0,
+			    totalQuantityPreEDA = 0.0,
+			    totalQuantityPOSTEDA = 0.0;
+
+	    integer yearInteger = system.today().month() == 1 ?  system.today().year() - 1 : system.today().year();
+	    string currentYear = 'X' + yearInteger;
+
+	    try{
+		    list<EDA_Cutoff__mdt> edaCutoffList = new list<EDA_Cutoff__mdt>([select Id, EDACutoffDate__c, EDACutoffLicense__c from EDA_CutOff__mdt where DeveloperName = : currentYear limit 1]);
+
+
+
+		    if(edaCutoffList.size() > 0){
+			    for(CHANNEL_ORDERS__Service_Order_Detail__c orderDetail : [select Id, CHANNEL_ORDERS__Partner_Order__c, CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c,
+					                                                       CHANNEL_ORDERS__Quantity__c,CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c
+			                                                               From CHANNEL_ORDERS__Service_Order_Detail__c
+			                                                               where CreatedDate > : edaCutoffList[0].EDACutoffDate__c order by  CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c])
+			    {
+				    string orgId = orderDetail.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c;
+				    if(serviceOrderDetailsByOrgId.containsKey(orgId)){
+					    serviceOrderDetailsByOrgId.get(orgId).add(orderDetail);
+				    }else
+						    serviceOrderDetailsByOrgId.put(orgId, new list<CHANNEL_ORDERS__Service_Order_Detail__c>{orderDetail});
+
+
+				    if(orderDetail.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c == 'Reduction'
+						    || orderDetail.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c == 'Cancellation Order'){
+					    reductionQuantityByOrgId.add(orgId);
+				    }
+			    }
+
+			    for(CHANNEL_ORDERS__Service_Order_Detail__c orderBeforeCutOff : [select Id, CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c, CHANNEL_ORDERS__Quantity__c
+			                                                                     FROM CHANNEL_ORDERS__Service_Order_Detail__c
+			                                                                     where CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c in: reductionQuantityByOrgId
+			    and CreatedDate <  : edaCutoffList[0].EDACutoffDate__c  order by  CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c]){
+
+				    string orgId = orderBeforeCutOff.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c;
+
+				    if(totalamountByOrgIdPreEDA.containsKey(orgId)){
+					    if(orderBeforeCutOff.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c == 'Initial'
+							    || orderBeforeCutOff.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c == 'Add-on' ){
+
+						    totalQuantityPreEDA = orderBeforeCutOff.CHANNEL_ORDERS__Quantity__c + totalamountByOrgIdPreEDA.get(orgId);
+
+
+					    }else{
+						    totalQuantityPreEDA = totalamountByOrgIdPreEDA.get(orgId) - orderBeforeCutOff.CHANNEL_ORDERS__Quantity__c;
+					    }
+					    totalamountByOrgIdPreEDA.put(orgId, totalQuantityPreEDA);
+				    }else{
+					    if(orderBeforeCutOff.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c == 'Initial'
+							    || orderBeforeCutOff.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c == 'Add-on' ){
+						    totalamountByOrgIdPreEDA.put(orgId, orderBeforeCutOff.CHANNEL_ORDERS__Quantity__c);
+					    }else{
+						    decimal reductionValue = 0 - orderBeforeCutOff.CHANNEL_ORDERS__Quantity__c;
+						    totalamountByOrgIdPreEDA.put(orgId, reductionValue);
+					    }
+
+				    }
+			    }
+
+
+			    for(String orgId : serviceOrderDetailsByOrgId.keySet()){
+				    decimal reductionAmountDecimal = 0;
+				    for(CHANNEL_ORDERS__Service_Order_Detail__c orderDetail : serviceOrderDetailsByOrgId.get(orgId)){
+					    if(orderDetail.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c == 'Reduction'
+							    || orderDetail.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c == 'Cancellation Order'){
+						    reductionAmountDecimal += orderDetail.CHANNEL_ORDERS__Quantity__c;
+						    if(totalamountByOrgIdPreEDA.containsKey(orgId)){
+							    if(reductionAmountDecimal > totalamountByOrgIdPreEDA.get(orgId)){
+								    totalQuantityPOSTEDA += reductionAmountDecimal - totalamountByOrgIdPreEDA.get(orgId);
+							    }
+						    }else{
+							    totalQuantityPOSTEDA -= orderDetail.CHANNEL_ORDERS__Quantity__c;
+						    }
+
+					    }else{
+						    totalQuantityPOSTEDA += orderDetail.CHANNEL_ORDERS__Quantity__c;
+					    }
+
+					    if(totalQuantityPOSTEDA > edaCutoffList[0].EDACutoffLicense__c){
+						    serviceOrderIds.add(orderDetail.CHANNEL_ORDERS__Partner_Order__c);
+					    }
+				    }
+			    }
+
+			    for(EDA__c eda : [select Id, Service_Order__c from EDA__c where Service_Order__c in : serviceOrderIds]){
+				    UpdateEDAList.add(new EDA__c(
+						    Id = eda.Id,
+						    AutoSubmit__c = true
+				    ));
+			    }
+
+			    if(UpdateEDAList.size() > 0)
+				    update UpdateEDAList;
+
+		    }
+	    }catch (Exception ex){
+		    inContactBaseClass.SendErrorEmail(ex, 'Error in Calculating total EDA records - LMA/COA');
+	    }
+
+
+
+
+
+	}
         
         
     
