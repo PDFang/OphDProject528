@@ -185,9 +185,11 @@ public class CaseTriggerHandler extends TriggerHandler
                 }
 
                 //status is equal to Confirmed or Being Worked and no Event Confirmation notification has been sent
-                if (((newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed')
-                        || (newCase.Status == 'Being Worked' && oldCase.Status != 'Being Worked'))
-                        && !newCase.xmEvent_Notification_Sent__c) {
+                if (((newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed') //status changed to Confirmed
+                        || (newCase.Status == 'Being Worked' && oldCase.Status != 'Being Worked') //status changed to Being Worked
+                        || (newCase.InternalEvent__c && !oldCase.InternalEvent__c) //changed from internal event
+                        || (newCase.Priority != oldCase.Priority)) //changed the priority
+                        && !newCase.xmEvent_Notification_Sent__c) {  //no notification sent
                     System.debug('Initial event');
                     processList.add(newCase);
                 }
