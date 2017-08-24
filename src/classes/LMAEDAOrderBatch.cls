@@ -24,13 +24,14 @@ global class LMAEDAOrderBatch implements Database.Batchable<Sobject>, Database.S
     global void execute(Database.BatchableContext BC, List<EDA__c> scope)
     {
 
-        try{
+        //try{
             System.debug('scope.size() =>' + scope);
 
             if(scope.size() > 0){
                 for(EDA__c s : scope){
                     try{
-                        CHANNEL_ORDERS.ServiceOrderProcessor.sendOrder(s.Service_Order__c);
+                        if(!Test.isRunningTest())
+                            CHANNEL_ORDERS.ServiceOrderProcessor.sendOrder(s.Service_Order__c);
                         s.Status__c = 'Processed';
                         processedServiceOrderIds.Add(s.Service_Order__r.Name);
                         System.debug('s.Status__c processed =>' + s.Status__c);
@@ -45,11 +46,11 @@ global class LMAEDAOrderBatch implements Database.Batchable<Sobject>, Database.S
 
                 update scope;
             }
-        }Catch(Exception ex){
-            exceptionOccured = true;
-            String body = 'An error occured - ' + ex.getMessage() + ' at the stack ' + ex.getStackTraceString();
-            SendEmail('Error Occured in Batch Class - LMAEDAOrderBatch', body);
-        }
+//        }Catch(Exception ex){
+//            exceptionOccured = true;
+//            String body = 'An error occured - ' + ex.getMessage() + ' at the stack ' + ex.getStackTraceString();
+//            SendEmail('Error Occured in Batch Class - LMAEDAOrderBatch', body);
+//        }
     }
 
     global void finish(Database.BatchableContext BC)
@@ -65,23 +66,20 @@ global class LMAEDAOrderBatch implements Database.Batchable<Sobject>, Database.S
     }
 
     private void SendEmail(string subject, string body){
-        try
-        {
-            Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-            String OrgId15Digit = UserInfo.getOrganizationId().left(15);
-            SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(OrgId15Digit);
-            String[] toAddresses = new String[]{siteConfig.DeveloperErrorEmail__c};
-            mail.setToAddresses(toAddresses);
-            mail.setSubject(subject);
-            mail.setHtmlBody(body);
-            if(!Test.isRunningTest())
-                Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
-        }
 
-        catch (Exception ex)
-        {
+        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+        String OrgId15Digit = UserInfo.getOrganizationId().left(15);
+        SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(OrgId15Digit);
+        String[] toAddresses = new String[]{};
+        if(!Test.isRunningTest())
+            toAddresses = new String[]{siteConfig.DeveloperErrorEmail__c};
+        else
+            toAddresses = new String[]{'test@Test.com'};
+        mail.setToAddresses(toAddresses);
+        mail.setSubject(subject);
+        mail.setHtmlBody(body);
+        Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
 
-        }
     }
 
 
