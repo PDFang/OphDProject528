@@ -185,19 +185,14 @@ public class CaseTriggerHandler extends TriggerHandler
                 }
 
                 //status is equal to Confirmed or Being Worked and no Event Confirmation notification has been sent
-                if (((newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed') //status changed to Confirmed
-                        || (newCase.Status == 'Being Worked' && oldCase.Status != 'Being Worked') //status changed to Being Worked
-                        || (newCase.InternalEvent__c && !oldCase.InternalEvent__c) //changed from internal event
-                        || (newCase.Priority != oldCase.Priority)) //changed the priority
-                        && !newCase.xmEvent_Notification_Sent__c) {  //no notification sent
+                if((newCase.Status == 'Confirmed' || newCase.Status == 'Being Worked') //status is Confirmed or Being Worked
+                        && !newCase.xmEvent_Notification_Sent__c) { //no notification has been sent
                     System.debug('Initial event');
                     processList.add(newCase);
                 }
-                else if (((newCase.Status == 'Resolved' && oldCase.Status != 'Resolved')
-                        || (newCase.Status == 'Closed' && oldCase.Status != 'Closed'))
-                        && newCase.xmEvent_Notification_Sent__c
-                        && !oldCase.EventHasBeenResolvedOrClosed__c) {
-                    //track that this case has been
+                else if((newCase.Status == 'Resolved' || newCase.Status == 'Closed') //event is Resolved or Closed
+                        && newCase.xmEvent_Notification_Sent__c  //an event Confirmation has been sent
+                        && !oldCase.EventHasBeenResolvedOrClosed__c) { //check to ensure that the event has never been resolved or closed
 
                     //if a resolved notification has not been sent, then send it
                     if(!caseIds.contains(newCase.Id)) {
