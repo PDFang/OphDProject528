@@ -218,8 +218,7 @@ public class LMAHelperClass {
 	}
 
 
-	public static set<id> orderSubmitDetermination(boolean fromPage){
-		// get current year
+	public static void orderSubmitDetermination(){
 
 		map<string, List<CHANNEL_ORDERS__Service_Order_Detail__c>> serviceOrderDetailsByOrgId = new map<string, List<CHANNEL_ORDERS__Service_Order_Detail__c>>();
 		set<string> reductionQuantityByOrgId = new set<string>();
@@ -230,19 +229,21 @@ public class LMAHelperClass {
 				totalQuantityPreEDA = 0.0,
 				totalQuantityPOSTEDA = 0.0;
 
+		// get current year -- if Jan get previous year
 		integer yearInteger = system.today().month() == 1 ?  system.today().year() - 1 : system.today().year();
 		string currentYear = 'X' + yearInteger;
+		if(Test.isRunningTest())
+			currentYear = 'XTest';
 
 		try{
+
 			list<EDA_Cutoff__mdt> edaCutoffList = new list<EDA_Cutoff__mdt>([select Id, EDACutoffDate__c, EDACutoffLicense__c from EDA_CutOff__mdt where DeveloperName = : currentYear limit 1]);
-
-
-
 			if(edaCutoffList.size() > 0){
+				// Get Channel orders after Effective date.
 				for(CHANNEL_ORDERS__Service_Order_Detail__c orderDetail : [select Id, CHANNEL_ORDERS__Partner_Order__c, CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c,
-						CHANNEL_ORDERS__Quantity__c,CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c
-				From CHANNEL_ORDERS__Service_Order_Detail__c
-				where CreatedDate > : edaCutoffList[0].EDACutoffDate__c order by  CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c])
+																		CHANNEL_ORDERS__Quantity__c,CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c
+																		From CHANNEL_ORDERS__Service_Order_Detail__c
+																		where CreatedDate > : edaCutoffList[0].EDACutoffDate__c order by  CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c])
 				{
 					string orgId = orderDetail.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c;
 					if(serviceOrderDetailsByOrgId.containsKey(orgId)){
@@ -256,11 +257,11 @@ public class LMAHelperClass {
 						reductionQuantityByOrgId.add(orgId);
 					}
 				}
-
+				// Get orders where there were orders before cuttoff date.
 				for(CHANNEL_ORDERS__Service_Order_Detail__c orderBeforeCutOff : [select Id, CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c, CHANNEL_ORDERS__Quantity__c, CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c
-				FROM CHANNEL_ORDERS__Service_Order_Detail__c
-				where CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c in: reductionQuantityByOrgId
-				and CreatedDate <  : edaCutoffList[0].EDACutoffDate__c  order by  CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c]){
+																				FROM CHANNEL_ORDERS__Service_Order_Detail__c
+																				where CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c in: reductionQuantityByOrgId
+																				and CreatedDate <  : edaCutoffList[0].EDACutoffDate__c  order by  CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c]){
 
 					string orgId = orderBeforeCutOff.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c;
 					decimal quantityABS = Math.abs(orderBeforeCutOff.CHANNEL_ORDERS__Quantity__c);
@@ -294,7 +295,7 @@ public class LMAHelperClass {
 
 					}
 				}
-
+				// Fianlly calculate the amount.
 				system.debug('PRE EDA TOTAL Amount =>' + totalamountByOrgIdPreEDA);
 				for(String orgId : serviceOrderDetailsByOrgId.keySet()){
 					decimal reductionAmountDecimal = 0;
@@ -326,12 +327,9 @@ public class LMAHelperClass {
 					}
 				}
 
-				system.debug('Final POST EDA NUmber =>' + totalQuantityPOSTEDA);
+					system.debug('Final POST EDA NUmber =>' + totalQuantityPOSTEDA);
 
-				if(fromPage)
-					return serviceOrderIds;
 
-				else{
 					for(EDA__c eda : [select Id, Service_Order__c from EDA__c where Service_Order__c in : serviceOrderIds]){
 						UpdateEDAList.add(new EDA__c(
 								Id = eda.Id,
@@ -341,19 +339,12 @@ public class LMAHelperClass {
 
 					if(UpdateEDAList.size() > 0)
 						update UpdateEDAList;
-					return null;
-				}
-
-			}
+		    }
 
 		}catch (Exception ex){
 			inContactBaseClass.SendErrorEmail(ex, 'Error in Calculating total EDA records - LMA/COA');
 
 		}
-		return null;
-
-
-
 
 	}
 

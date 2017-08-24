@@ -95,7 +95,7 @@ public class LMAOrderAutoSubmitDeterminationTest {
 	public static testmethod void orderAutoSubmissionTest(){
 		setup();
 
-
+		list<EDA_Cutoff__mdt> edaCutoffList = new list<EDA_Cutoff__mdt>([select Id, EDACutoffDate__c, EDACutoffLicense__c from EDA_CutOff__mdt where DeveloperName = : 'XTest' limit 1]);
 		Id recordTypeId = [select Id from RecordType where Name = 'Active' and SobjectType = 'sfLma__License__c'].Id;
 		list<sfLma__License__c> licenses = new list<sfLma__License__c>([select Id, sfLma__Status__c, sfLma__Subscriber_Org_ID__c, RecordTypeId from sfLma__License__c]);
 
@@ -119,11 +119,12 @@ public class LMAOrderAutoSubmitDeterminationTest {
 		}
 
 
+
 		for(CHANNEL_ORDERS__Service_Order_Detail__c sod1 :[select Id, CHANNEL_ORDERS__Quantity__c from CHANNEL_ORDERS__Service_Order_Detail__c
 															where CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c = :licenses[0].sfLma__Subscriber_Org_ID__c])
 		{
 			//system.debug('channel orders for license 1 ====>' + sod1);
-			Test.setCreatedDate(sod1.Id, System.now().addDays(-4));
+			Test.setCreatedDate(sod1.Id, edaCutoffList[0].EDACutoffDate__c.addDays(-4));
 		}
 
 		Test.startTest();
@@ -163,7 +164,7 @@ public class LMAOrderAutoSubmitDeterminationTest {
 															 and CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c = 'Reduction'];
 
 		System.debug('sod2 ==> ' + sod2.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c);
-		set<id> soIds = LMAHelperClass.orderSubmitDetermination(false);
+		LMAHelperClass.orderSubmitDetermination();
 
 		EDA__c eda = [select Id, AutoSubmit__c from EDA__c where Service_Order__c =: sod2.CHANNEL_ORDERS__Partner_Order__c];
 		System.assertEquals(true, eda.AutoSubmit__c);
