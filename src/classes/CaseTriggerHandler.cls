@@ -41,7 +41,7 @@ public class CaseTriggerHandler extends TriggerHandler
                     Select Case_Status__c, Trouble_Report_State__c, Trouble_Report_Status__c
                     From ETMS_Trouble_Report_State_Status__mdt
             ]){
-                etmsTroubleStateStatusMap.put(mdt.Case_Status__c, mdt);
+                etmsTroubleStateStatusMap.put(mdt.Case_Status__c.toLowerCase(), mdt);
             }
         }
     }
@@ -185,19 +185,14 @@ public class CaseTriggerHandler extends TriggerHandler
                 }
 
                 //status is equal to Confirmed or Being Worked and no Event Confirmation notification has been sent
-                if (((newCase.Status == 'Confirmed' && oldCase.Status != 'Confirmed') //status changed to Confirmed
-                        || (newCase.Status == 'Being Worked' && oldCase.Status != 'Being Worked') //status changed to Being Worked
-                        || (newCase.InternalEvent__c && !oldCase.InternalEvent__c) //changed from internal event
-                        || (newCase.Priority != oldCase.Priority)) //changed the priority
-                        && !newCase.xmEvent_Notification_Sent__c) {  //no notification sent
+                if((newCase.Status == 'Confirmed' || newCase.Status == 'Being Worked') //status is Confirmed or Being Worked
+                        && !newCase.xmEvent_Notification_Sent__c) { //no notification has been sent
                     System.debug('Initial event');
                     processList.add(newCase);
                 }
-                else if (((newCase.Status == 'Resolved' && oldCase.Status != 'Resolved')
-                        || (newCase.Status == 'Closed' && oldCase.Status != 'Closed'))
-                        && newCase.xmEvent_Notification_Sent__c
-                        && !oldCase.EventHasBeenResolvedOrClosed__c) {
-                    //track that this case has been
+                else if((newCase.Status == 'Resolved' || newCase.Status == 'Closed') //event is Resolved or Closed
+                        && newCase.xmEvent_Notification_Sent__c  //an event Confirmation has been sent
+                        && !oldCase.EventHasBeenResolvedOrClosed__c) { //check to ensure that the event has never been resolved or closed
 
                     //if a resolved notification has not been sent, then send it
                     if(!caseIds.contains(newCase.Id)) {
@@ -277,25 +272,39 @@ public class CaseTriggerHandler extends TriggerHandler
     // set Trouble Report State and Status
     private void setTroubleReportStateStatus(List<Case> newList, Map<Id, Case> oldMap){
 
+        Decimal defaultState = Decimal.valueOf(Case.ETMS_Trouble_Report_State__c.getDescribe().getDefaultValueFormula());
+        Decimal defaultStatus = Decimal.valueOf(Case.ETMS_Trouble_Report_Status__c.getDescribe().getDefaultValueFormula());
+
         for(Case newCase : newList) {
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
 
             if(newCase.isClone()){
-                newCase.ETMS_Trouble_Report_State__c = Decimal.valueOf(Case.ETMS_Trouble_Report_State__c.getDescribe().getDefaultValueFormula());
-                newCase.ETMS_Trouble_Report_Status__c = Decimal.valueOf(Case.ETMS_Trouble_Report_Status__c.getDescribe().getDefaultValueFormula());
+                newCase.ETMS_Trouble_Report_State__c = defaultState;
+                newCase.ETMS_Trouble_Report_Status__c = defaultStatus;
             }
             if(newCase.RecordTypeId == incidentRecordType && newCase.AccountBillingGroup__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
                 && oldCase != null && newCase.Status != oldCase.Status){
+
+                String statusLowerCase = newCase.Status.toLowerCase();
                 // 'Waiting on Customer', 'Waiting on Customer - No Auto Close', 'Resolved' and 'Closed' have been mapped
-                if(etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey(newCase.Status)){
-                    newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get(newCase.Status).Trouble_Report_State__c;
-                    newCase.ETMS_Trouble_Report_Status__c = etmsTroubleStateStatusMap.get(newCase.Status).Trouble_Report_Status__c;
+                if(etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey(statusLowerCase)){
+                    newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get(statusLowerCase).Trouble_Report_State__c;
+                    newCase.ETMS_Trouble_Report_Status__c = etmsTroubleStateStatusMap.get(statusLowerCase).Trouble_Report_Status__c;
                 } else if(closedStatuses.contains(newCase.Status) && etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey('Closed')){
                     newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get('Closed').Trouble_Report_State__c;
                     newCase.ETMS_Trouble_Report_Status__c = etmsTroubleStateStatusMap.get('Closed').Trouble_Report_Status__c;
                 } else{
-                    newCase.ETMS_Trouble_Report_State__c = Decimal.valueOf(Case.ETMS_Trouble_Report_State__c.getDescribe().getDefaultValueFormula());
-                    newCase.ETMS_Trouble_Report_Status__c = Decimal.valueOf(Case.ETMS_Trouble_Report_Status__c.getDescribe().getDefaultValueFormula());
+                    newCase.ETMS_Trouble_Report_State__c = defaultState;
+                    newCase.ETMS_Trouble_Report_Status__c = defaultStatus;
+                }
+
+                // Is the case Reopened i.e changed from Deferred, Resolved or Closed status
+                if(newCase.ETMS_Trouble_Report_State__c == defaultState && newCase.ETMS_Trouble_Report_Status__c == defaultStatus
+                        && oldCase.ETMS_Trouble_Report_State__c != defaultState && oldCase.ETMS_Trouble_Report_Status__c != defaultStatus
+                        && etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey('Re-Opened'))
+                {
+                    newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get('Re-Opened').Trouble_Report_State__c;
+                    newCase.ETMS_Trouble_Report_Status__c = etmsTroubleStateStatusMap.get('Re-Opened').Trouble_Report_Status__c;
                 }
             }
         }
