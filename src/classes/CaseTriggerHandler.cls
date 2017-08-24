@@ -290,21 +290,26 @@ public class CaseTriggerHandler extends TriggerHandler
                 if(etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey(statusLowerCase)){
                     newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get(statusLowerCase).Trouble_Report_State__c;
                     newCase.ETMS_Trouble_Report_Status__c = etmsTroubleStateStatusMap.get(statusLowerCase).Trouble_Report_Status__c;
-                } else if(closedStatuses.contains(newCase.Status) && etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey('Closed')){
-                    newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get('Closed').Trouble_Report_State__c;
+                } else if(closedStatuses.contains(newCase.Status) && etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey('closed')){
+                    newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get('closed').Trouble_Report_State__c;
                     newCase.ETMS_Trouble_Report_Status__c = etmsTroubleStateStatusMap.get('Closed').Trouble_Report_Status__c;
                 } else{
                     newCase.ETMS_Trouble_Report_State__c = defaultState;
                     newCase.ETMS_Trouble_Report_Status__c = defaultStatus;
                 }
 
+                system.debug('setTroubleReportStateStatus(): Trouble report status changed from  - '
+                        + oldCase.ETMS_Trouble_Report_Status__c + ' to ' + newCase.ETMS_Trouble_Report_Status__c);
+                system.debug('setTroubleReportStateStatus(): Trouble report state changed from  - '
+                        + oldCase.ETMS_Trouble_Report_State__c + ' to ' + newCase.ETMS_Trouble_Report_State__c);
+
                 // Is the case Reopened i.e changed from Deferred, Resolved or Closed status
                 if(newCase.ETMS_Trouble_Report_State__c == defaultState && newCase.ETMS_Trouble_Report_Status__c == defaultStatus
                         && oldCase.ETMS_Trouble_Report_State__c != defaultState && oldCase.ETMS_Trouble_Report_Status__c != defaultStatus
-                        && etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey('Re-Opened'))
+                        && etmsTroubleStateStatusMap != null && etmsTroubleStateStatusMap.containsKey('re-opened'))
                 {
-                    newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get('Re-Opened').Trouble_Report_State__c;
-                    newCase.ETMS_Trouble_Report_Status__c = etmsTroubleStateStatusMap.get('Re-Opened').Trouble_Report_Status__c;
+                    newCase.ETMS_Trouble_Report_State__c = etmsTroubleStateStatusMap.get('re-opened').Trouble_Report_State__c;
+                    newCase.ETMS_Trouble_Report_Status__c = etmsTroubleStateStatusMap.get('re-opened').Trouble_Report_Status__c;
                 }
             }
         }
