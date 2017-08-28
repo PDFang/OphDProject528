@@ -16,7 +16,7 @@ public class xMGroupRequestHelper extends TriggerHandler {
                 headers.add(header);
             }
             insert(headers);
-        }
+    }
         catch (Exception ex){
             inContactBaseClass.SendErrorEmail(ex, 'Error in CreateGroupChangeRequestHeader');
 
@@ -116,17 +116,31 @@ public class xMGroupRequestHelper extends TriggerHandler {
                                 xmGroupChangeRequestHeader__c = groupCRAccount.get(act.Id)
                         );
 
+                        xmGroupChangeRequest__c grpChangeRequest1 = new xmGroupChangeRequest__c(
+                                Account__c = act.Id,
+                                Contact__c = cont.Id,
+                                ImplementedProduct__c = imp.Id,
+                                NotificationProfile__r = xmPerson,
+                                Status__c = 'In Queue',
+                                Action__c = 'Remove',
+                                Maintenance__c = true,
+                                xmGroupChangeRequestHeader__c = groupCRAccount.get(act.Id)
+                        );
+
                         if(cont.xmPerson__c == null){
                             xmPerson = new xmPerson__c(
                                     xmPersonUID__c =  cont.XmattersUid__c
                             );
                             grpChangeRequest.NotificationProfile__r = xmPerson;
+                            grpChangeRequest1.NotificationProfile__r = xmPerson;
                         }
                         else {
                             grpChangeRequest.NotificationProfile__c = cont.xmPerson__c;
+                            grpChangeRequest1.NotificationProfile__c = cont.xmPerson__c;
                         }
                         System.debug('grpChangeRequest : ' + grpChangeRequest);
                         groupChangeRequestList.add(grpChangeRequest);
+                        groupChangeRequestList.add(grpChangeRequest1);
 
 
 
