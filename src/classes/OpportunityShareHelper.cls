@@ -7,6 +7,13 @@ public class OpportunityShareHelper {
     static Map<ID, List<User>> accountUserMap = null; // key account Id
     static Map<Id, List<Account_Partner__c>> partnerMap = null; // key customer Id
 
+    public static final Set<String> opportunityRecordTypeSet = new Set<String>{
+            'GSD PS Request',
+            'PM - Standard',
+            'New Opportunity',
+            'Qualified Opportunity'
+    };
+
     public class OpportunityShareHelperException extends Exception{}
 
     // Share Opportunities with partner account users
@@ -20,7 +27,10 @@ public class OpportunityShareHelper {
         for(Opportunity record : newList){
             Opportunity oldRecord = ( oldMap != null ) ? oldMap.get(record.Id) : null;
             // Partner account
-            if(record.Partner_Account__c != null && ( oldRecord == null || oldRecord.Partner_Account__c != record.Partner_Account__c ) ){
+            if((record.Partner_Account__c != null && ( oldRecord == null || oldRecord.Partner_Account__c != record.Partner_Account__c )) ||
+               (record.Sub_Agent_Account__c != null && ( oldRecord == null || oldRecord.Sub_Agent_Account__c != record.Sub_Agent_Account__c )) ||
+               (record.Certified_Implementation_Partner__c != null && ( oldRecord == null ||
+                       oldRecord.Certified_Implementation_Partner__c != record.Certified_Implementation_Partner__c ))    ){
                 recordIdSet.add(record.Id);
             }
             // iCE Partner account
@@ -46,12 +56,18 @@ public class OpportunityShareHelper {
         List<Opportunity> recordList = new List<Opportunity>();
         Set<Id> partnerIdSet = new Set<Id>();
         for(Opportunity record : [
-                Select Id, Partner_Account__c, iCE_Partner__c, RecordType.Name from Opportunity
-                where Id IN :recordIdSet and (Partner_Account__c != null or iCE_Partner__c != null)
+                Select Id, Partner_Account__c, iCE_Partner__c, RecordType.Name, Certified_Implementation_Partner__c, Sub_Agent_Account__c from Opportunity
+                where Id IN :recordIdSet and (Partner_Account__c != null or iCE_Partner__c != null or Sub_Agent_Account__c != null or Certified_Implementation_Partner__c != null)
         ]){
             recordList.add(record);
             if(record.Partner_Account__c != null){
                 partnerIdSet.add(record.Partner_Account__c);
+            }
+            if(record.Sub_Agent_Account__c != null && opportunityRecordTypeSet.contains(record.RecordType.Name)){
+                partnerIdSet.add(record.Sub_Agent_Account__c);
+            }
+            if(record.Certified_Implementation_Partner__c != null && opportunityRecordTypeSet.contains(record.RecordType.Name)){
+                partnerIdSet.add(record.Certified_Implementation_Partner__c);
             }
             if(record.iCE_Partner__c != null){
                 partnerIdSet.add(record.iCE_Partner__c);
@@ -75,6 +91,12 @@ public class OpportunityShareHelper {
             List<User> userList = new List<User>();
             if(record.Partner_Account__c != null && lAccountUserMap.containsKey(record.Partner_Account__c)){
                 userList.addAll(lAccountUserMap.get(record.Partner_Account__c));
+            }
+            if(record.Sub_Agent_Account__c != null && lAccountUserMap.containsKey(record.Sub_Agent_Account__c)){
+                userList.addAll(lAccountUserMap.get(record.Sub_Agent_Account__c));
+            }
+            if(record.Certified_Implementation_Partner__c != null && lAccountUserMap.containsKey(record.Certified_Implementation_Partner__c)){
+                userList.addAll(lAccountUserMap.get(record.Certified_Implementation_Partner__c));
             }
             if(record.iCE_Partner__c != null && lAccountUserMap.containsKey(record.iCE_Partner__c)){
                 userList.addAll(lAccountUserMap.get(record.iCE_Partner__c));
@@ -122,6 +144,14 @@ public class OpportunityShareHelper {
             if( oldRecord != null && oldRecord.Partner_Account__c != null && oldRecord.Partner_Account__c != record.Partner_Account__c ){
                 recordIdSet.add(record.Id);
                 partnerIdSet.add(oldRecord.Partner_Account__c);
+            }
+            if( oldRecord != null && oldRecord.Certified_Implementation_Partner__c != null && oldRecord.Certified_Implementation_Partner__c != record.Certified_Implementation_Partner__c ){
+                recordIdSet.add(record.Id);
+                partnerIdSet.add(oldRecord.Certified_Implementation_Partner__c);
+            }
+            if( oldRecord != null && oldRecord.Sub_Agent_Account__c != null && oldRecord.Sub_Agent_Account__c != record.Sub_Agent_Account__c ){
+                recordIdSet.add(record.Id);
+                partnerIdSet.add(oldRecord.Sub_Agent_Account__c);
             }
             // Partner account updated and previous value not blank
             if( oldRecord != null && oldRecord.iCE_Partner__c != null && oldRecord.iCE_Partner__c != record.iCE_Partner__c ){
