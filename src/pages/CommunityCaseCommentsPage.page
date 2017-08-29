@@ -8,14 +8,12 @@
     <div id="casecomments" class="slds-scope" />
 
     <script>
-    //Tell your Visualforce page to use ExposeVF Lightning app
         $Lightning.use("c:CommunityCaseCommentApp", function() {
-            // Write a function that creates the component on the page
           $Lightning.createComponent("c:CommunityCaseComment",
           {caseId : "{!$CurrentPage.parameters.id}"},
           "casecomments",
           function(cmp) {
-            // do some stuff
+              //nothing
           });
         });
     </script>
