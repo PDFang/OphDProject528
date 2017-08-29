@@ -38,9 +38,35 @@ public with sharing class CaseAccountHighlightsExtension
     public void CreateJIRABug() {
         try {
             //call into some wrapper class to create the JIRA bug
+
+            HttpRequest request = new HttpRequest();
+
+            String body = '{"Project" : "{0}", "IssueType" : "{1}"}';
+            String.format(body, new String[]{ 'IC', '10004'});
+            request.setBody(body);
+
+            request.setEndpoint('http://tlvjiratst02:8080/rest/customware/connector/1.0/1/Case/' + c.Id + '/issue/create.json');
+
+            request.setHeader('Authorization', 'Basic ' + EncodingUtil.base64Encode(Blob.valueOf('salesforceuser' + ':' + '1qaz2wsx')));
+
+            request.setMethod('POST');
+            request.setHeader('Content-Type', 'application/json');
+
+
+            system.debug('CreateJIRABug(): request - ' + request);
+            Http h = new Http();
+
+
+            HttpResponse response = h.send(request);
+            system.debug('CreateJIRABug(): response -  ' + response.getBody());
+
+            String returnResponse = response.getBody();
+
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, returnResponse));
+
         }
         catch(Exception ex) {
-
+            system.debug('CreateJIRABug(): ex -  ' + ex);
         }
     }
 
