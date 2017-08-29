@@ -5,5 +5,5 @@
       doInit : function(component, event, helper) {
         //retrieve case comments during component initialization
         helper.loadComments(component);
-      }
+    }
 })
