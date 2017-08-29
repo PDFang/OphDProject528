@@ -34,6 +34,16 @@ public with sharing class CaseAccountHighlightsExtension
             inContactBaseClass.SendErrorEmail(ex,c.Id);
         }
     }
+
+    public void CreateJIRABug() {
+        try {
+            //call into some wrapper class to create the JIRA bug
+        }
+        catch(Exception ex) {
+
+        }
+    }
+
     
     public PageReference Save()
     {

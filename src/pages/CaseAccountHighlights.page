@@ -21,19 +21,19 @@
                   <apex:outputField value="{!Case.ExistsIn__c}" rendered="false"/>
                   <apex:outputField value="{!Case.FoundBy__c}" rendered="false"/>
                   <apex:outputPanel styleClass="known-issue-highlight-header banner-strip" style="width:150px;" layout="block" >
-                      <apex:actionStatus id="tfsStatus" layout="block">
+                      <apex:actionStatus id="jiraStatus" layout="block">
                            <apex:facet name="start">
-                               <apex:image value="/img/loading32.gif" style="height: 15px;"/> (creating TFS item)...
+                               <apex:image value="/img/loading32.gif" style="height: 15px;"/> (creating JIRA Bug)...
                            </apex:facet>
                            <apex:facet name="stop">
-                              <apex:commandLink action="{!CreateTfsItem}" status="tfsStatus" value="Create TFS Item" oncomplete="return refreshPage()"/>
+                              <apex:commandLink action="{!CreateTfsItem}" status="jiraStatus" value="Create JIRA Bug" oncomplete="return refreshPage()"/>
                            </apex:facet>
                        </apex:actionStatus>
                   </apex:outputPanel>
                   <apex:actionFunction action="{!save}" name="saveFunction"/>
               </apex:form>
-              
-              <div id="support-instructions" style="display:none;"> 
+
+              <div id="support-instructions" style="display:none;">
                   {!Case.Account.SupportInstructions__c}
               </div>
               
@@ -61,7 +61,7 @@
               </apex:outputPanel>
               <apex:outputPanel styleClass="event-highlight-header banner-strip" layout="block" rendered="{!NOT(ISBLANK(Case.ParentId))}">
                   <apex:outputText >Event: </apex:outputText>&nbsp;
-                  <apex:outputLink target="blank" value="{!URLFOR($Action.Case.View, Case.ParentId)}" >{!Case.Parent.CaseNumber}</apex:outputLink>
+                  <apex:outputLink target="_blank" value="{!URLFOR($Action.Case.View, Case.ParentId)}" >{!Case.Parent.CaseNumber}</apex:outputLink>
               </apex:outputPanel>
           </apex:panelGrid>
     </c:AccountHighlightComponent>
