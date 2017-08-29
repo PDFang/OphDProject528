@@ -2,7 +2,7 @@
  * Created by ravish.chawla on 8/29/2017.
  */
 
-public with sharing class CommunityCaseCommentController {
+public without sharing class CommunityCaseCommentController {
 
     public CommunityCaseCommentController(){
 
