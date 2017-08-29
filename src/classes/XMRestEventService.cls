@@ -204,7 +204,8 @@ public class XMRestEventService {
                 cluster = 'NONE';
             }
 
-            String groupString = ('IP_{PartnerPrefix}_' + product + '_' + cluster).replace(' ', '');
+            String groupString = ('IP_{PartnerPrefix}_' + product + '_' + cluster).replace(' ', '').replace('/','-');
+
             if(isMaintenance){
                 groupString += '_MAINT';
             }

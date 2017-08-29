@@ -27,6 +27,12 @@ private class XMNotificationTriggerHandlerTest {
 
         system.assertEquals('Processed', xmNotification.Status__c, 'xmNotification status update failed.');
 
+        xmNotification.Status__c = 'Completed';
+        update xmNotification;
+
+        system.assertEquals(true, [Select xmEvent_Notification_Sent__c from Case Where Id = :testEvent.Id].xmEvent_Notification_Sent__c, 'xmEvent Notification Sent flag not set to true.' );
+
+
     }
 
     // test callout to xMatters event service for sending Maintenance Notification

@@ -42,7 +42,7 @@ public with sharing class XMRestGroup {
         XMRestWrapper wrapper = new XMRestWrapper();
         string jsonList;
 
-        string url = 'people/' + personId + '/group-memberships';
+        string url = 'people/' + personId + '/group-memberships?offset=0&limit=1000';
         system.debug ( 'url --> ' + url);
 
         jsonList = wrapper.performCallOut(url, 'GET', null);

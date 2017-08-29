@@ -8,9 +8,10 @@ global class XMPersonGroupUploadBatch implements Database.Batchable<Sobject>, Da
     public List<xmGroupChangeRequest__c> groupChangeRequestList;
     global XMPersonGroupUploadBatch(){
 
-        queryString = 'select Id,(select Id, XmattersUid__c, xmPerson__c, Contact_Role__c from Contacts where xmPerson__c != null'
-                      +' AND Contact_Role__c in (\'Event Notification\', \'Maintenance Notification\') ),(select Id from Implemented_Products__r where Status__c =\'Implemented\''
-                      +' ) from Account where CG_Disconnect_Date__c = null';
+        queryString = 'Select Id, AccountId from Contact where xmPerson__c != null'
+                      +' AND Contact_Role__c INCLUDES (\'Event Notification\', \'Maintenance Notification\') and Account.CG_Disconnect_Date__c = null';
+
+
         System.debug('queryString =>' + queryString);
     }
 
@@ -18,11 +19,25 @@ global class XMPersonGroupUploadBatch implements Database.Batchable<Sobject>, Da
         return Database.getQueryLocator(queryString);
     }
 
-    global void execute(Database.BatchableContext BC, List<Account> scope)
+    global void execute(Database.BatchableContext BC, List<Contact> scope)
     {
         try{
+            set<id> accountIds = new set<Id>();
+            set<id> contactIds = new set<Id>();
+            for(Contact c : scope){
+                accountIds.add(c.AccountId);
+                contactIds.add(c.Id);
+            }
+
+            string accountQuery = 'select Id,(select Id, XmattersUid__c, xmPerson__c, Contact_Role__c from Contacts where Id in :contactIds'
+                                  + ' ),(select Id from Implemented_Products__r where Status__c =\'Implemented\''
+                                  + ' ) from Account where id in :accountIds';
+
+			system.debug('accountQuery =>' +accountQuery);
+            list<Account> lstAccounts = Database.query(accountQuery);
+
              groupChangeRequestList = new List<xmGroupChangeRequest__c>();
-            for(Account act: scope){
+            for(Account act: lstAccounts){
                 for(ImplementedProduct__c imp: act.Implemented_Products__r){
                     for(Contact cont: act.Contacts){
                         xmPerson__c xmPerson ;
@@ -89,7 +104,7 @@ global class XMPersonGroupUploadBatch implements Database.Batchable<Sobject>, Da
 
             mail.setToAddresses(toAddresses);
             mail.setSubject('Upload xmGroup Records Batch ' + a.Status);
-            mail.setPlainTextBody('Records processed ' + a.TotalJobItems + 'with '+ a.NumberOfErrors + ' failures.');
+            mail.setPlainTextBody('Records processed ' + a.TotalJobItems + ' with '+ a.NumberOfErrors + ' failures.');
             Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
     }
 
