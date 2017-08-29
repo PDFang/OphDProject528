@@ -1,0 +1,33 @@
+<aura:component  implements="forceCommunity:availableForAllPageTypes" access="Global" controller="CommunityCaseCommentController" description="CommunityCaseComment">
+<aura:attribute access="global" name="caseId" default="" type="string"></aura:attribute>
+<aura:attribute access="private" name="CaseCommentList"  type="CaseComment[]"></aura:attribute>
+<aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+<div>
+    <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+        <thead>
+        <tr class="slds-text-title_caps">
+            <th scope="col">
+                <div class="slds-truncate" title="Created Date">Created Date</div>
+            </th>
+            <th scope="col">
+                <div class="slds-truncate" title="Comment">Comment</div>
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+            <aura:iteration items="{!v.CaseCommentList}" var="item">
+                <tr>
+                    <td data-label="CreatedDate">
+                        <div class="slds-truncate" title="CreatedDate">{!item.CreatedDate}</div>
+                    </td>
+                    <td data-label="CommentBody">
+                        <div class="slds-truncate" title="Comment">{!item.CommentBody}</div>
+                    </td>
+                </tr>
+            </aura:iteration>
+        </tbody>
+    </table>
+</div>
+</aura:component>
+
+
