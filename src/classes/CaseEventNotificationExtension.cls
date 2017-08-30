@@ -506,7 +506,7 @@ public class CaseEventNotificationExtension
 
         Set<String> sfFields = new Set<String>();
         for(Case_to_xMatters_Field_Mapping__mdt mdt : [
-                Select Salesforce_Case_Field__c From Case_to_xMatters_Field_Mapping__mdt where Maintenance__c = true order by Sort_Order__c
+                Select Sort_Order__c, Salesforce_Case_Field__c From Case_to_xMatters_Field_Mapping__mdt where Maintenance__c = true order by Sort_Order__c NULLS LAST
         ]){
             sfFields.add(mdt.Salesforce_Case_Field__c);
         }

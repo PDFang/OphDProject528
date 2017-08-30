@@ -37,10 +37,14 @@ public with sharing class CaseAccountHighlightsExtension
 
     public void CreateJIRABug() {
         try {
-            //call into some wrapper class to create the JIRA bug
+            JiraRestWrapper wrapper = new JiraRestWrapper();
+            String returnResponse = wrapper.CreateJIRABug(c.Id);
+
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, returnResponse));
+
         }
         catch(Exception ex) {
-
+            system.debug('CreateJIRABug(): ex -  ' + ex);
         }
     }
 
