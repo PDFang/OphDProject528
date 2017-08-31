@@ -163,6 +163,40 @@ private class CaseAssignmentTestClass {
 		c.Severity__c = 'S4';
 		c.Priority = 'P4';
 		update c;
+
+
+
+	}
+
+	// test incident case update to Advanced tech support
+	public static testMethod void updateCaseComment(){
+
+		//insertQueeueFuture();
+		Group g1 = [select Id from Group where DeveloperName = 'TechSupportQueue' limit 1];
+		Id sfQueue = '00G70000001ciT7';
+		Account a = inContactBaseClass.CreateAccount('testName');
+		insert a;
+
+		Contact ct = inContactBaseClass.CreateContact(a.Id, 'firstName', 'lastName', 'email@test.com');
+		insert ct;
+		//Case c = [SELECT Id, OwnerId, Priority, Freqeuncy__c, Number_of_Customers_Affected__c, Severity__c FROM Case WHERE Priority = 'P1' AND Status != 'New' AND OwnerID = :sfQueue LIMIT 1];
+		Case c = inContactBaseClass.CreateCase(a.Id, ct.Id, inContactBaseClass.SelectRecordTypeIDByName('Incident', 'Case'), 'test subject');
+		c.OwnerId =sfQueue;
+		c.Origin = 'Web';
+		c.Severity__c = 'S1';
+		c.Priority = 'P1';
+
+		insert c;
+		system.debug('g1.Id ===>' + g1.Id);
+		c.SLA_Halfway__c = true;
+		c.OwnerId = g1.Id;
+		update c;
+
+		CaseComment [] comments = [select Id, CommentBody from CaseComment where ParentId = :c.Id];
+		system.assertEquals(1, comments.size());
+
+
+
 	}
 	
 	static testMethod void TestCaseReassignExtension()
