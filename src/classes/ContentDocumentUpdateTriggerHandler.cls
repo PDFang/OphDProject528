@@ -6,7 +6,7 @@ public class ContentDocumentUpdateTriggerHandler extends TriggerHandler {
         DeletePartnerDocumentManager((List<ContentDocument>) trigger.old);
     }
 
-    // Deletes associated partner document manager record
+    // Delete associated partner document manager records
     private void DeletePartnerDocumentManager(List<ContentDocument> oldList){
         system.debug('deletePartnerDocumentManager(): oldList - '+ oldList);
 
@@ -29,7 +29,7 @@ public class ContentDocumentUpdateTriggerHandler extends TriggerHandler {
 
         system.debug('deletePartnerDocumentManager(): deleteList - '+ deleteList);
 
-
+        // Execute the deletion
         if(deleteList.size() > 0){
             delete deleteList;
         }
