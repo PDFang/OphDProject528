@@ -53,7 +53,7 @@ public class ProjectShareHelper {
             Project__c oldRecord = ( oldMap != null ) ? oldMap.get(record.Id) : null;
             if(
                 // PS SaaS Project - new or account updated
-                ( record.Account__c != null && ( oldRecord == null || oldRecord.Account__c != record.Account__c ) && (psSaasProjectIdSet.contains(record.RecordTypeId) || readOnlyRecordTypesSet.contains(record.RecordTypeId)) )
+                ( record.Account__c != null && ( oldRecord == null || oldRecord.Account__c != record.Account__c ) && (psSaasProjectIdSet.contains(record.RecordTypeId) || readOnlyRecordTypeIdSet.contains(record.RecordTypeId)) )
                 // PS Premise Project - new or implementation partner updated
                 || (record.ImplementationPartner__c != null && ( oldRecord == null || oldRecord.ImplementationPartner__c != record.ImplementationPartner__c ) && psPremiseProjectIdSet.contains(record.RecordTypeId) )
                 // Record type changed to PS SaaS Project and previous record type other than PS SaaS Project
@@ -61,7 +61,7 @@ public class ProjectShareHelper {
                 // Record type changed to PS Premise Project and previous record type other than PS Premise Project
                 || (oldRecord != null && !psPremiseProjectIdSet.contains(oldRecord.RecordTypeId) && psPremiseProjectIdSet.contains(record.RecordTypeId) && record.ImplementationPartner__c != null)
                 // Reord type changed to “Connectivity Design” and “Dedicated Provisioning”
-                || (oldRecord != null && !readOnlyRecordTypesSet.contains(oldRecord.RecordTypeId) && readOnlyRecordTypesSet.contains(record.RecordTypeId) && record.Account__c != null)
+                || (oldRecord != null && !readOnlyRecordTypeIdSet.contains(oldRecord.RecordTypeId) && readOnlyRecordTypeIdSet.contains(record.RecordTypeId) && record.Account__c != null)
             ){
                 recordIdSet.add(record.Id);
             }

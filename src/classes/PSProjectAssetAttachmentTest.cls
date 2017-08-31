@@ -127,11 +127,15 @@ public with sharing class PSProjectAssetAttachmentTest {
         test.startTest();
         system.debug('*** starting Test Run ***');
         //Act
-        set<SBQQ__QuoteLine__c> QouteLines = new set<SBQQ__QuoteLine__c>();
-        QouteLines.Add(QuoteLine);
+        set <id>QouteLineids = new set <id>();
+        for(SBQQ__QuoteLine__c quoteLine : [select Id from SBQQ__QuoteLine__c]){
+            QouteLineids.add(quoteLine.id);
+        }
 
-        system.debug('*** Qoute Lines ==>' + QouteLines);
-        set<Asset> Assets =  new set<Asset> ();
+
+        system.debug('*** Qoute Lines ==>' + QouteLineids);
+
+        list<Asset> Assets =  new list<Asset> ();
         Assets.Add(TestAsset);
 
 
@@ -140,15 +144,12 @@ public with sharing class PSProjectAssetAttachmentTest {
         for(Asset a : Assets){
             Assetids.add(a.Id);
         }
-        system.debug(' ***Assets ==>' + AssetIds);
-        set <id>QouteLineids = new set <id>();
-        for (SBQQ__QuoteLine__c line :QouteLines)
-        {
-            QouteLineids.add(line.Id);
-        }
+
 
         set<Id> subsciptions = new set<Id>();
-        subsciptions.add(subscription.Id);
+        for(SubscriptionReplica__c replica : [select Id from SubscriptionReplica__c]){
+            subscriptions.add(replica.id);
+        }
 
 
         system.debug('*** Qoute Lines ==>' + QouteLineids);
