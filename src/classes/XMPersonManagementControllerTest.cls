@@ -357,10 +357,6 @@ private class XMPersonManagementControllerTest {
         system.assertNotEquals(0, xmGroupList.size());
         system.assertNotEquals(0, xmGroupList1.size());
 
-        XMBusinessLayer testObj = new XMBusinessLayer();
-
-        string testEmail = testObj.GetExistingXMPersonId('tom@tombtest.com');
-
         test.stopTest();
 
 
