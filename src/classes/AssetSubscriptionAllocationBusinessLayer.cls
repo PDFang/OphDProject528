@@ -139,8 +139,8 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
         assetAllocations = new List<AssetSubscriptionAllocationModel>();
 
-        String soql = 'Select Project__c, Percent_Allocation__c, Asset__c, Asset__r.Quantity, Asset__r.Budgeted_Hours__c, '
-                + 'Quantity_Allocation__c, Hours_Allocated__c '
+        String soql = 'Select Project__c, Name, Percent_Allocation__c, Asset__c, Asset__r.Quantity, Asset__r.Budgeted_Hours__c, '
+                + 'Quantity_Allocation__c, Hours_Allocated__c, Asset__r.Total_Allocated_Quantity__c, Asset__r.Total_Allocated_Hours__c '
                 + 'from Project_Asset_Allocation__c where ';
 
         if(currentProject != null){
@@ -192,7 +192,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
         subscriptionAllocations = new List<AssetSubscriptionAllocationModel>();
 
-        String soql = 'Select Project__c, Subscription__c, Subscription__r.Quantity__c, Subscription__r.Budgeted_Hours__c, Percent_Allocation__c, Quantity_Allocation__c, Hours_Allocated__c '
+        String soql = 'Select Project__c, Subscription__c, Name, Subscription__r.Quantity__c, Subscription__r.Budgeted_Hours__c, Percent_Allocation__c, Quantity_Allocation__c, Hours_Allocated__c, Subscription__r.Total_Allocated_Quantity__c, Subscription__r.Total_Allocated_Hours__c '
                 + 'from Project_Subscription_Allocation__c where ';
         if(currentProject != null){
             soql += ' Project__c = \'' + currentProject.Id + '\'';
@@ -269,6 +269,8 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
         system.debug('createAssetAllocation(): currentAsset - ' + currentAsset);
         system.debug('createAssetAllocation(): currentProject - ' + currentProject);
+
+        system.debug('Passed');
 
         AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentAsset, currentProject, assetAllocations.size());
         assetAllocations.add(newModel);
