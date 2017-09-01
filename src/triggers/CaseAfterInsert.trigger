@@ -16,8 +16,12 @@ trigger CaseAfterInsert on Case (after insert, after update)
     Map<Id,String> eventCaseIds = new Map<Id,String>();
     Map<Id, Id> caseAccountIds = new Map<Id,Id>();
     Case[] autoEventCases = new Case[]{};
-
-
+    Id techSupportQueueId;
+    // get tech support queue
+    list<Group> grpList = new list<Group>([select Id from Group where developerName = 'TechSupportQueue' and Type = 'Queue' Limit 1]);
+    if(grpList.size() > 0){
+        techSupportQueueId = grpList[0].Id;
+    }
     Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
     Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
 
@@ -28,7 +32,7 @@ trigger CaseAfterInsert on Case (after insert, after update)
     {
         Case c = trigger.new[i];
         Case oldCase;
-
+        system.debug('owner########'+ c.OwnerId);
 
         if(trigger.isInsert)
         {
@@ -106,6 +110,13 @@ trigger CaseAfterInsert on Case (after insert, after update)
             eventCaseIds.put(c.Id,bodyString);
             system.debug('comments########'+comments);
 
+        }else if(c.RecordTypeId == incidentRecType && (c.SLA_Halfway__c && (trigger.isInsert || (trigger.isUpdate && oldCase.SLA_Halfway__c != c.SLA_Halfway__c))
+                 || (c.OwnerId == techSupportQueueId && (trigger.isInsert || (trigger.isUpdate && oldCase.OwnerId != c.OwnerId))))){
+            CaseComment cc = new CaseComment();
+            cc.ParentId = c.Id;
+            cc.CommentBody = Label.AdvancedTechSupportCaseComment;
+            cc.IsPublished = true;
+            comments.add(cc);
         }
     }
 

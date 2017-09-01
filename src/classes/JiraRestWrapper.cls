@@ -13,10 +13,11 @@ public class JiraRestWrapper {
         request.setBody(body);
 
         //request.setEndpoint('http://tlvjiratst02:8080/rest/customware/connector/1.0/1/Case/' + c.Id + '/issue/create.json');
+        //request.setHeader('Authorization', 'Basic ' + EncodingUtil.base64Encode(Blob.valueOf('salesforceuser' + ':' + '1qaz2wsx')));
 
-        request.setEndpoint('https://labproxy.ucn.net/JIRAProxy/api/issue/CreateIssue');
+        request.setEndpoint('callout:JIRA_Proxy_Service' + '/issue/CreateIssue');
+        //request.setHeader('Authorization', '{!$Credential.AuthorizationMethod} {!$Credential.AuthorizationHeaderValue}');
 
-        request.setHeader('Authorization', 'Basic ' + EncodingUtil.base64Encode(Blob.valueOf('salesforceuser' + ':' + '1qaz2wsx')));
 
         request.setMethod('POST');
         request.setHeader('Content-Type', 'application/json');
