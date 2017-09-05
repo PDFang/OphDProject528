@@ -1,4 +1,4 @@
-public class ContentDocumentUpdateTriggerHandler extends TriggerHandler {
+public class ContentDocumentTriggerHandler extends TriggerHandler {
 
     protected override void afterDelete()
     {
