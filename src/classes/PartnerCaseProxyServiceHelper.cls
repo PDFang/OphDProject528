@@ -7,6 +7,7 @@ public class PartnerCaseProxyServiceHelper {
     public static final String BILLING_GROUP_VERIZON = 'Verizon';
     public static final String DEFAULT_ETMS_TROUBLE_TYPE = 'Other';
     public static final String DEFAULT_ETMS_TROUBLE_Description = 'Other';
+    public static final String PRODUCT_TOLLFREE = 'Toll Free';
 
     private static Map<String, List<ETMS_Codes__c>> requestTypeEtmsMap = null;
     @TestVisible
@@ -27,7 +28,7 @@ public class PartnerCaseProxyServiceHelper {
                             status, Product_or_Service__c, Request_Type__c, Database__c, Releases__c,
                             Account.Name, Account.Billing_Group__c, Account.CadebillAccountNo__c,
                             Contact.Name, Contact.Phone, OwnerId, Owner.Name, Owner.Phone, Push_To_Partner__c,
-                            ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c
+                            ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c, Dial_From_ANI__c, Dial_To_DNIS__c
                     from Case
                     where Id IN :caseIds
                     and Account.Billing_Group__c = :BILLING_GROUP_VERIZON
@@ -187,6 +188,11 @@ public class PartnerCaseProxyServiceHelper {
         partnerCase.Priority = sfCase.Priority;
         partnerCase.Product = sfCase.Product_or_Service__c;
         partnerCase.RequestType = sfCase.Request_Type__c;
+        if(sfCase.Product_or_Service__c == PRODUCT_TOLLFREE){
+//            partnerCase.DialFrom = sfCase.Dial_From_ANI__c;
+//            partnerCase.DialTo = sfCase.Dial_To_DNIS__c;
+        }
+
         partnerCase.Reason = sfCase.Database__c;
         partnerCase.ReasonDetails = sfCase.Releases__c;
         partnerCase.EtmsTroubleType = DEFAULT_ETMS_TROUBLE_TYPE;
