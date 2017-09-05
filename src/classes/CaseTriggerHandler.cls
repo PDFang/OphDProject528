@@ -347,6 +347,11 @@ public class CaseTriggerHandler extends TriggerHandler
                         + oldCase.ETMS_Trouble_Report_State__c + ' to ' + newCase.ETMS_Trouble_Report_State__c);
 
             }
+            // Product or Service is changed to 'Toll Free'
+            else if(newCase.Product_or_Service__c == 'Toll Free' && newCase.Product_or_Service__c != oldCase.Product_or_Service__c)
+            {
+                system.debug('CallPartnerCaseProxyService(): Product or Service is changed - ' + newCase.CaseNumber);
+            }
             else {
                 continue;
             }
@@ -373,6 +378,9 @@ public class CaseTriggerHandler extends TriggerHandler
             // Is account billing group 'Verizon'
             if(acct != null && acct.Billing_Group__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON){
                 if(oldMap == null || (oldMap.containsKey(newCase.Id) && newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null) ){
+                    createIdSet.add(newCase.Id);
+                } else if(oldMap != null && oldMap.containsKey(newCase.Id) && newCase.Product_or_Service__c == 'Toll Free' && oldMap.get(newCase.Id).Product_or_Service__c != 'Toll Free'){
+                    // create second Verizon ETMS ticket
                     createIdSet.add(newCase.Id);
                 } else{
                     updateIdSet.add(newCase.Id);
