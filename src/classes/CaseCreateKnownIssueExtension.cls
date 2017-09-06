@@ -5,6 +5,7 @@ public with sharing class CaseCreateKnownIssueExtension
     
     public Case relatedCase{get;set;}
     public Boolean createTfsItem {get;set;}
+    public Boolean createJiraBug {get;set;}
     public Boolean canCreateKnownIssue {public get; private set;}
     public TFSWorkItem__c workItem {get;set;}
     public Boolean success {get; set;}
@@ -125,8 +126,15 @@ public with sharing class CaseCreateKnownIssueExtension
         
         try
         {
+
+            if(createJiraBug){
+                JiraRestWrapper wrapper = new JiraRestWrapper();
+                String returnResponse = wrapper.CreateJIRABug(c.Id);
+                system.debug('SaveCase(): returnResponse -  ' + returnResponse);
+            }
+
         
-            if(createTfsItem)
+            /*if(createTfsItem)
             {
                     TfsAssignment__c tfsTeam = TfsAssignment__c.getValues(relatedCase.ProductImpacted__c); 
                     
@@ -146,9 +154,10 @@ public with sharing class CaseCreateKnownIssueExtension
                     
                     relatedCase.TfsWorkItem__c = workItem.Id;
                     TfsAccess.CreateTfsItem(workItem.Id, relatedCase.Summary__c, relatedCase.InternalNotes__c,relatedCase.Steps_To_Recreate__c, tfsTeam.Team__c);
-            }
+            }*/
             relatedCase.IsVisibleInSelfService = true;
             system.debug(relatedCase.TFSWorkItem__c);
+
 
             string priorityString = [select Priority From Case where Id = :c.Id Limit 1].Priority;
             if(priorityString == 'P1')
