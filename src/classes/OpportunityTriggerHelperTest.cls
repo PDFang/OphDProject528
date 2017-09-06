@@ -103,6 +103,7 @@
                 Name = 'ProjectTriggerHandlerTest Opp 1',
                 AccountId = accountList[0].Id,
                 Partner_Account__c = accountList[1].Id,
+                Sub_Agent_Account__c = accountList[1].Id,
                 RecordTypeId = recordTypeMap.get(OPPORTUNITY_TYPE_NEW),
                 StageName = OpportunityTriggerHelper.OPPORTUNITY_STAGE_TWO,
                 CloseDate = Date.today(),
@@ -136,6 +137,7 @@
 
         // remove Partner Account
         testOpp.Partner_Account__c = null;
+        testOpp.Sub_Agent_Account__c = null;
         update testOpp;
         shareList = [
                 Select Id from OpportunityShare

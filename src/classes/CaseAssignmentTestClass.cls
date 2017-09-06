@@ -163,6 +163,40 @@ private class CaseAssignmentTestClass {
 		c.Severity__c = 'S4';
 		c.Priority = 'P4';
 		update c;
+
+
+
+	}
+
+	// test incident case update to Advanced tech support
+	public static testMethod void updateCaseComment(){
+
+		//insertQueeueFuture();
+		Group g1 = [select Id from Group where DeveloperName = 'TechSupportQueue' limit 1];
+		Id sfQueue = '00G70000001ciT7';
+		Account a = inContactBaseClass.CreateAccount('testName');
+		insert a;
+
+		Contact ct = inContactBaseClass.CreateContact(a.Id, 'firstName', 'lastName', 'email@test.com');
+		insert ct;
+		//Case c = [SELECT Id, OwnerId, Priority, Freqeuncy__c, Number_of_Customers_Affected__c, Severity__c FROM Case WHERE Priority = 'P1' AND Status != 'New' AND OwnerID = :sfQueue LIMIT 1];
+		Case c = inContactBaseClass.CreateCase(a.Id, ct.Id, inContactBaseClass.SelectRecordTypeIDByName('Incident', 'Case'), 'test subject');
+		c.OwnerId =sfQueue;
+		c.Origin = 'Web';
+		c.Severity__c = 'S1';
+		c.Priority = 'P1';
+
+		insert c;
+		system.debug('g1.Id ===>' + g1.Id);
+		c.SLA_Halfway__c = true;
+		c.OwnerId = g1.Id;
+		update c;
+
+		CaseComment [] comments = [select Id, CommentBody from CaseComment where ParentId = :c.Id];
+		system.assertEquals(1, comments.size());
+
+
+
 	}
 	
 	static testMethod void TestCaseReassignExtension()
@@ -171,6 +205,10 @@ private class CaseAssignmentTestClass {
         Account a = inContactBaseClass.CreateAccount('testName');
         a.Site = 'Test';
         a.CS_AM__c = UserInfo.getUserId();
+        a.CSM__c = UserInfo.getUserId();
+        a.TechnicalSuccessManagerprimary__c = UserInfo.getUserId();
+        a.TSA__c = UserInfo.getUserId();
+        a.TSA_Manager__c = UserInfo.getUserId();
                 
         insert a;
         System.debug('Insert accounts.');
@@ -237,6 +275,85 @@ private class CaseAssignmentTestClass {
         
         extension.commentBody = 'Test Comment';
         extension.Save();
+    }
+
+    static testmethod void KnowIssueClosedTest(){
+
+        ProductEventMap__c testEventMap = new ProductEventMap__c();
+        testEventMap.HasClusters__c = true;
+        testEventMap.Name = 'Test Product';
+        testEventMap.ImplementedProduct__c = 'Test Product';
+        testEventMap.Product__c = 'Test Product';
+        testEventMap.Platform__c = 'Cluster - inContact';
+        insert testEventMap;
+
+        Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SobjectType.Case.getRecordTypeInfosByName();
+
+        // known issue
+        Case knownIssue = new Case(
+                //AccountId = testAccount.Id,
+                RecordTypeId = recordTypeMap.get('Known Issue').getRecordTypeId(),
+                Type = 'Known Issue',
+                Status = 'New',
+                KB_Attached__c = false,
+                Subject = 'KnowIssueClosedTest',
+                Description = 'KnowIssueClosedTest',
+                Origin = 'Email',
+                ProductImpacted__c = 'Test Product',
+                PlatformsImpacted__c = 'C1 - inContact'
+
+        );
+
+        //set default assignment rule
+        database.DMLOptions dmo = new database.DMLOptions();
+        dmo.assignmentRuleHeader.useDefaultRule = true;
+        knownIssue.setOptions(dmo);
+
+        insert knownIssue;
+
+        Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
+        Account testAccount = new Account(
+                Name = 'KnowIssueClosedTest Account',
+                Type = 'Customer',
+                RecordTypeId = accountRecordTypeMap.get('Customers').getRecordTypeId(),
+                IsPartner__c = false,
+                CustomerSegment__c = 'Strategic',
+                GYRStatus__c = 'Green',
+                inContact_Cluster__c = 'C7'
+        );
+
+        insert testAccount;
+
+        Case incident = new Case(
+                AccountId = testAccount.Id,
+                RecordTypeId = recordTypeMap.get('Incident').getRecordTypeId(),
+                Type = 'Incident',
+                Status = 'New',
+                KB_Attached__c = false,
+                Subject = 'KnowIssueClosedTest',
+                Description = 'KnowIssueClosedTest',
+                Origin = 'Web',
+                Priority = 'P3'
+        );
+        incident.setOptions(dmo);
+        insert incident;
+
+        test.startTest();
+
+        // attach to KI
+        incident.KnownIssue__c = knownIssue.Id;
+        update incident;
+
+        test.stopTest();
+
+        Case ki = [Select PlatformsImpacted__c from Case where Id = :knownIssue.Id ];
+        system.assert(ki.PlatformsImpacted__c.containsIgnoreCase('C7 - inContact'), ki.PlatformsImpacted__c);
+
+
+        // close KI
+        knownIssue.Status = 'Closed';
+        update knownIssue;
+
     }
 
 }

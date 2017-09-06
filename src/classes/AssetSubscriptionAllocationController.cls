@@ -40,6 +40,12 @@ public with sharing class AssetSubscriptionAllocationController {
 
     private AssetSubscriptionAllocationBusinessLayer businessLayer;
 
+    public Decimal remainingQuantity {get; set;}
+    public Decimal remainingPercentage {get; set;}
+
+    public Decimal remainingSubscriptionQuantity {get; set;}
+    public Decimal remainingSubscriptionPercentage {get; set;}
+
     // constructor
     public AssetSubscriptionAllocationController(){
 
@@ -60,6 +66,8 @@ public with sharing class AssetSubscriptionAllocationController {
 
         try{
             businessLayer.createAssetAllocation();
+            getAssetRemainingQuantityNPercentage();
+
         } catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while creating a new asset allocation. ' + ex.getMessage()));
             system.debug('createAssetAllocation(): Exception - ' + ex);
@@ -91,6 +99,7 @@ public with sharing class AssetSubscriptionAllocationController {
             if(success){
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Saved Successfully.'));
                 businessLayer = new AssetSubscriptionAllocationBusinessLayer(currentId);
+                getAssetRemainingQuantityNPercentage();
             } else{
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line item(s) has error.'));
             }
@@ -108,6 +117,7 @@ public with sharing class AssetSubscriptionAllocationController {
 
         try{
             businessLayer.createSubscriptionAllocation();
+            //getSubscriptionRemainingQuantityNPercentage();
         } catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while creating a new subscription allocation. ' + ex.getMessage()));
             system.debug('createSubscriptionAllocation(): Exception - ' + ex);
@@ -139,6 +149,7 @@ public with sharing class AssetSubscriptionAllocationController {
             if (success){
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Saved Successfully.'));
                 businessLayer = new AssetSubscriptionAllocationBusinessLayer(currentId);
+                getSubscriptionRemainingQuantityNPercentage();
             } else{
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line item(s) has error.'));
             }
@@ -187,6 +198,46 @@ public with sharing class AssetSubscriptionAllocationController {
     public pagereference cancel(){
 
         return new PageReference('/'+currentId).setRedirect(true);
+    }
+
+    public void getAssetRemainingQuantityNPercentage(){
+        if(Asset != null){
+            if(Asset.Quantity != null && Asset.Quantity > 0)
+                if(Asset.Total_Allocated_Quantity__c == null || Asset.Total_Allocated_Quantity__c == 0)
+                    remainingQuantity = Asset.Quantity;
+                else
+                    remainingQuantity = Asset.Quantity - Asset.Total_Allocated_Quantity__c;
+            else
+                remainingQuantity = 0;
+
+            if(Asset.Budgeted_Hours__c != null && Asset.Budgeted_Hours__c > 0)
+                if(Asset.Total_Allocated_Hours__c == null || Asset.Total_Allocated_Hours__c == 0)
+                    remainingPercentage = 100 - ((0/Asset.Budgeted_Hours__c) * 100);
+                else
+                    remainingPercentage = 100 -  (Asset.Total_Allocated_Hours__c/Asset.Budgeted_Hours__c) * 100;
+            else
+                remainingPercentage = 0;
+        }
+    }
+
+    public void getSubscriptionRemainingQuantityNPercentage(){
+        if(Subscription != null){
+            if(Subscription.Quantity__c != null && Subscription.Quantity__c > 0)
+                if(Subscription.Total_Allocated_Quantity__c == null || Subscription.Total_Allocated_Quantity__c == 0)
+                    remainingSubscriptionQuantity = Subscription.Quantity__c;
+                else
+                    remainingSubscriptionQuantity = Subscription.Quantity__c - Subscription.Total_Allocated_Quantity__c;
+            else
+                remainingSubscriptionQuantity = 0;
+
+            if(Subscription.Budgeted_Hours__c != null && Subscription.Budgeted_Hours__c > 0)
+                if(Subscription.Total_Allocated_Hours__c == null || Subscription.Total_Allocated_Hours__c == 0)
+                    remainingSubscriptionPercentage = 100 - ((0/Subscription.Budgeted_Hours__c) * 100);
+                else
+                    remainingSubscriptionPercentage = 100 -  (Subscription.Total_Allocated_Hours__c/Subscription.Budgeted_Hours__c) * 100;
+            else
+                remainingSubscriptionPercentage = 0;
+        }
     }
 
 }

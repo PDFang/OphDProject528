@@ -1,0 +1,21 @@
+<!--
+ - Created by arnab.karsarkar on 8/29/2017.
+ -->
+
+<apex:page id="CommunityCaseCommentsPage" standardController="Case">
+    <apex:includeLightning />
+    <apex:slds />
+    <div id="casecomments" class="slds-scope" />
+
+    <script>
+        $Lightning.use("c:CommunityCaseCommentApp", function() {
+          $Lightning.createComponent("c:CommunityCaseComment",
+          {caseId : "{!$CurrentPage.parameters.id}"},
+          "casecomments",
+          function(cmp) {
+              //nothing
+          });
+        });
+    </script>
+
+</apex:page>
