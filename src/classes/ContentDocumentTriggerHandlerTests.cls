@@ -1,5 +1,5 @@
 @isTest
-private with sharing class ContentDocumentTriggerHandlerTests {
+private class ContentDocumentTriggerHandlerTests {
     static testMethod void testDeletePartnerDocumentManager() {
         List<ContentVersion> contentVersions = new List<ContentVersion>();
 
