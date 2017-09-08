@@ -12,6 +12,9 @@ private class ProjectTriggerHandlerTest {
     static final String OPPORTUNITY_TYPE_NEW = 'New Opportunity';
     static final String CASE_TYPE_INCIDENT = 'Incident';
     static final String CASE_TYPE_EVENT = 'Event';
+    static final String PROJECT_TYPE_CONNECTIVITY_DESIGN = 'Connectivity Design';
+    static final String PROJECT_TYPE_DEDICATED_PROVISIONING = 'Dedicated Provisioning';
+
 
     static final Set<String> recordTypeSet = new Set<String>
     {
@@ -24,7 +27,9 @@ private class ProjectTriggerHandlerTest {
             PROJECT_TYPE_PARENT_SAAS,
             PROJECT_TYPE_PARENT_PREMISE,
             PROJECT_TYPE_PHASE_PREMISE,
-            CASE_TYPE_EVENT
+            CASE_TYPE_EVENT,
+            PROJECT_TYPE_CONNECTIVITY_DESIGN,
+            PROJECT_TYPE_DEDICATED_PROVISIONING
     };
 
     static Map<String, Id> recordTypeMap = null;
@@ -106,6 +111,14 @@ private class ProjectTriggerHandlerTest {
         phase1.Projected_Deadline__c = system.today().addMonths(1);
         phase1.ParentProject__c = parentProject.Id;
         insert phase1;
+
+        Project__c phase2 = new Project__c();
+        phase2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_CONNECTIVITY_DESIGN);
+        phase2.Opportunity__c = oppList[1].Id;
+        phase2.Account__c = accountList[1].Id;
+        phase2.Projected_Deadline__c = system.today().addMonths(1);
+        phase2.ParentProject__c = parentProject.Id;
+        insert phase2;
 
         test.startTest();
         phase1.Projected_Deadline__c = system.today().addYears(1);
