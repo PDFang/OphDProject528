@@ -76,6 +76,19 @@ public class AccountImpactCalculationImpl implements AccountImpactCalculationInt
         return score * multiplier;
     }
 
+    public Double CalculatePartnerAccountScore(String recordTypeName, Double multiplier){
+        Double score;
+
+        if(recordTypeName == 'Resell Customers' || recordTypeName == 'Resell Partner') {
+            score = 1;
+        }
+        else {
+            score = 0;
+        }
+
+        return score * multiplier;
+    }
+
     public Double CalculateBrandVisibilityScore(String brandVisible, Double multiplier){
         Double score;
 
