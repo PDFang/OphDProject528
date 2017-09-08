@@ -14,10 +14,6 @@
 
                 <apex:facet name="caption">Subscriptions</apex:facet>
                 <apex:column>
-                    <apex:facet name="header">Account</apex:facet>
-                    <apex:outputLink target = "_Parent" value="/{!replica.AccountId}">{!Account.Name}</apex:outputLink>
-                </apex:column>
-                <apex:column>
                     <apex:facet name="header">Subscription</apex:facet>
                     <apex:outputLink target = "_blank" value="/{!replica.Id}">{!replica.Name}</apex:outputLink>
                 </apex:column>
@@ -35,7 +31,7 @@
                 </apex:column>
                 <apex:column>
                     <apex:facet name="header">Bundled</apex:facet>
-                    <apex:outputText >{!replica.Existing}</apex:outputText>
+                    <apex:outputText >{!replica.Bundled}</apex:outputText>
                 </apex:column>
                 <apex:column>
                     <apex:facet name="header">Quantity</apex:facet>

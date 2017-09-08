@@ -12,7 +12,7 @@ public with sharing class SubscriptionData {
     public string ProductId{get;set;}
     public string Active{get;set;}
     public boolean Existing{get;set;}
-    public string Bundled{get;set;}
+    public boolean Bundled{get;set;}
     public decimal Quantity{get;set;}
     public decimal ListUnitPrice{get;set;}
     public decimal SalesUnitPrice{get;set;}

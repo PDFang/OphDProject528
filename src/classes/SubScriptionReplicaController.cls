@@ -8,11 +8,8 @@ public with sharing class SubScriptionReplicaController {
 
     public SubScriptionReplicaController(ApexPages.StandardController controller){
         string accountId = (string)controller.getId();
-        string accountName = (string)controller.);
         Account acc = new Account();
         acc.id = accountId;
-        acc.Name = accountName;
-
         this.Replicas = GetSubscriptionReplicas(acc);
     }
 
