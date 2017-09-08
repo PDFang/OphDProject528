@@ -1,6 +1,5 @@
 
 <apex:page standardController="Account" extensions="SubScriptionReplicaController" id="SubscriptionReplicaList">
-    <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
@@ -9,49 +8,51 @@
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
-    <apex:dataTable value="{!Replicas}" var="replica" id="SubscriptionReplica" rowClasses="odd,even" styleClass="table table-bordered table-condensed" >
 
-            <apex:facet name="caption">Subscriptions</apex:facet>
-            <apex:facet name="footer">Footer</apex:facet>
-            <apex:column>
-                <apex:facet name="header">Account</apex:facet>
-                <apex:outputLink value="/{!replica.AccountId}">{!Account.Name}</apex:outputLink>
-        </apex:column>
-            <apex:column>
-                <apex:facet name="header">Subscription</apex:facet>
-                <apex:outputLink value="/{!replica.Id}">{!replica.Name}</apex:outputLink>
-            </apex:column>
-            <apex:column>
-                <apex:facet name="header">Product</apex:facet>
-                <apex:outputText value="{!replica.ProductName}" escape="false"></apex:outputText>
-            </apex:column>
-            <apex:column>
-                <apex:facet name="header">Active</apex:facet>
-                <apex:outputText >{!replica.Active}</apex:outputText>
-            </apex:column>
-            <apex:column>
-                <apex:facet name="header">Existing</apex:facet>
-                <apex:outputText >{!replica.Existing}</apex:outputText>
-            </apex:column>
-            <apex:column>
-                <apex:facet name="header">Bundled</apex:facet>
-                <apex:outputText >{!replica.Existing}</apex:outputText>
-            </apex:column>
-            <apex:column>
-                <apex:facet name="header">Quantity</apex:facet>
-                <apex:outputText >{!replica.Quantity}</apex:outputText>
-            </apex:column>
-            <apex:column>
-                <apex:facet name="header">List Unit Price</apex:facet>
-                <apex:outputText >{!replica.ListUnitPrice }</apex:outputText>
-            </apex:column>
-            <apex:column>
-                <apex:facet name="header">Sales Unit Price</apex:facet>
-                <apex:outputText >{!replica.SalesUnitPrice}</apex:outputText>
-            </apex:column>
-            <apex:column>
-                <apex:facet name="header">Sales Total</apex:facet>
-                <apex:outputText >{!replica.SalesTotal}</apex:outputText>
-            </apex:column>
-    </apex:dataTable>
+    <div class="listRelatedObject customnotabBlock bRelatedList first bPageBlock brandSecondaryBrd secondaryPalette" >
+        <apex:dataTable value="{!Replicas}" var="replica" id="SubscriptionReplica" rowClasses="odd,even" styleClass="table table-bordered table-condensed" >
+
+                <apex:facet name="caption">Subscriptions</apex:facet>
+                <apex:column>
+                    <apex:facet name="header">Account</apex:facet>
+                    <apex:outputLink target = "_Parent" value="/{!replica.AccountId}">{!Account.Name}</apex:outputLink>
+                </apex:column>
+                <apex:column>
+                    <apex:facet name="header">Subscription</apex:facet>
+                    <apex:outputLink target = "_blank" value="/{!replica.Id}">{!replica.Name}</apex:outputLink>
+                </apex:column>
+                <apex:column>
+                    <apex:facet name="header">Product</apex:facet>
+                    <apex:outputText  value="{!replica.ProductName}" escape="false"></apex:outputText>
+                </apex:column>
+                <apex:column>
+                    <apex:facet name="header">Active</apex:facet>
+                    <apex:outputText >{!replica.Active}</apex:outputText>
+                </apex:column>
+                <apex:column>
+                    <apex:facet name="header">Existing</apex:facet>
+                    <apex:outputText >{!replica.Existing}</apex:outputText>
+                </apex:column>
+                <apex:column>
+                    <apex:facet name="header">Bundled</apex:facet>
+                    <apex:outputText >{!replica.Existing}</apex:outputText>
+                </apex:column>
+                <apex:column>
+                    <apex:facet name="header">Quantity</apex:facet>
+                    <apex:outputText >{!replica.Quantity}</apex:outputText>
+                </apex:column>
+                <apex:column>
+                    <apex:facet name="header">List Unit Price</apex:facet>
+                    <apex:outputText >{!replica.ListUnitPrice }</apex:outputText>
+                </apex:column>
+                <apex:column>
+                    <apex:facet name="header">Sales Unit Price</apex:facet>
+                    <apex:outputText >{!replica.SalesUnitPrice}</apex:outputText>
+                </apex:column>
+                <apex:column>
+                    <apex:facet name="header">Sales Total</apex:facet>
+                    <apex:outputText >{!replica.SalesTotal}</apex:outputText>
+                </apex:column>
+        </apex:dataTable>
+    </div>
 </apex:page>
