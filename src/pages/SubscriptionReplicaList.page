@@ -15,47 +15,43 @@
             <apex:facet name="footer">Footer</apex:facet>
             <apex:column>
                 <apex:facet name="header">Account</apex:facet>
-                <apex:outputLink value="/{!replica.AccountLookup__c}">{!replica.AccountLookup__c}</apex:outputLink>
-            </apex:column>
+                <apex:outputLink value="/{!replica.AccountId}">{!Account.Name}</apex:outputLink>
+        </apex:column>
             <apex:column>
                 <apex:facet name="header">Subscription</apex:facet>
-                <apex:outputLink value="/{!replica.Id}">{!replica.Id}</apex:outputLink>
+                <apex:outputLink value="/{!replica.Id}">{!replica.Name}</apex:outputLink>
             </apex:column>
             <apex:column>
                 <apex:facet name="header">Product</apex:facet>
-                <apex:outputText >{!replica.Product__c}</apex:outputText>
+                <apex:outputText value="{!replica.ProductName}" escape="false"></apex:outputText>
             </apex:column>
             <apex:column>
                 <apex:facet name="header">Active</apex:facet>
-                <apex:outputText >{!replica.Active__c}</apex:outputText>
-            </apex:column>
-            <apex:column>
-                <apex:facet name="header">Active</apex:facet>
-                <apex:outputText >{!replica.Active__c}</apex:outputText>
+                <apex:outputText >{!replica.Active}</apex:outputText>
             </apex:column>
             <apex:column>
                 <apex:facet name="header">Existing</apex:facet>
-                <apex:outputText >{!replica.Existing__c}</apex:outputText>
+                <apex:outputText >{!replica.Existing}</apex:outputText>
             </apex:column>
             <apex:column>
                 <apex:facet name="header">Bundled</apex:facet>
-                <apex:outputText >{!replica.Existing__c}</apex:outputText>
+                <apex:outputText >{!replica.Existing}</apex:outputText>
             </apex:column>
             <apex:column>
                 <apex:facet name="header">Quantity</apex:facet>
-                <apex:outputText >{!replica.Quantity__c}</apex:outputText>
+                <apex:outputText >{!replica.Quantity}</apex:outputText>
             </apex:column>
             <apex:column>
                 <apex:facet name="header">List Unit Price</apex:facet>
-                <apex:outputText >{!replica.ListUnitPrice__c }</apex:outputText>
+                <apex:outputText >{!replica.ListUnitPrice }</apex:outputText>
             </apex:column>
             <apex:column>
                 <apex:facet name="header">Sales Unit Price</apex:facet>
-                <apex:outputText >{!replica.SalesUnitPrice__c}</apex:outputText>
+                <apex:outputText >{!replica.SalesUnitPrice}</apex:outputText>
             </apex:column>
             <apex:column>
                 <apex:facet name="header">Sales Total</apex:facet>
-                <apex:outputText >{!replica.SalesTotal__c}</apex:outputText>
+                <apex:outputText >{!replica.SalesTotal}</apex:outputText>
             </apex:column>
     </apex:dataTable>
 </apex:page>
