@@ -55,6 +55,8 @@
             <br />
             <apex:outputText value ="Remaining Percentage to allocate is : {!remainingPercentage}%" style="font-weight: bold !important; font-size:10pt !important; color:red" rendered="{!NOT(ISNULL(remainingPercentage))}">
             </apex:outputText>
+            <apex:outputText value ="Remaining Hours to allocate are : {!remainingBudgetedHours}" style="font-weight: bold !important; font-size:10pt !important; color:red" rendered="{!NOT(ISNULL(remainingBudgetedHours))}">
+            </apex:outputText>
             <apex:pageBlockButtons title="" location="bottom">
                 <apex:commandButton title="New" value="New" action="{!createAssetAllocation}" reRender="pgblock1"/>
                 <apex:commandButton title="Save" value="Save" action="{!saveAssetAllocation}" reRender="pgblock1"/>
@@ -94,7 +96,8 @@
                         <apex:outputField value="{!entry.assetAllocation.Percent_Allocation__c}" rendered="{!NOT(entry.isPercentageAllocation)}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Hours">
-                        <apex:outputField value="{!entry.assetAllocation.Hours_Allocated__c}"/>
+                        <apex:inputField value="{!entry.assetAllocation.Hours_Allocated__c}" rendered="{!entry.isAllocatedHours}"/>
+                        <apex:outputField value="{!entry.assetAllocation.Hours_Allocated__c}" rendered="{!NOT(entry.isAllocatedHours)}"/>
                     </apex:column>
                 </apex:pageBlockTable>
 
@@ -108,6 +111,8 @@
             </apex:outputText>
             <br />
             <apex:outputText value ="Remaining Percentage to allocate is : {!remainingSubscriptionPercentage}%" style="font-weight: bold !important; font-size:10pt !important; color:red" rendered="{!NOT(ISNULL(remainingSubscriptionPercentage))}">
+            </apex:outputText>
+            <apex:outputText value ="Remaining Hours to allocate are : {!remainingBudgetedHours}" style="font-weight: bold !important; font-size:10pt !important; color:red" rendered="{!NOT(ISNULL(remainingBudgetedHours))}">
             </apex:outputText>
             <apex:pageBlockButtons title="" location="bottom">
                 <apex:commandButton title="New" value="New" action="{!createSubscriptionAllocation}" reRender="pgblock2"/>
@@ -149,7 +154,8 @@
                         <apex:outputField value="{!entry.subscriptionAllocation.Percent_Allocation__c}" rendered="{!NOT(entry.isPercentageAllocation)}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Hours">
-                        <apex:outputField value="{!entry.subscriptionAllocation.Hours_Allocated__c}"/>
+                        <apex:inputField value="{!entry.subscriptionAllocation.Hours_Allocated__c}" rendered="{!entry.isAllocatedHours}"/>
+                        <apex:outputField value="{!entry.subscriptionAllocation.Hours_Allocated__c}" rendered="{!NOT(entry.isAllocatedHours)}"/>
                     </apex:column>
                 </apex:pageBlockTable>
 
