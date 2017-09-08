@@ -341,6 +341,10 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 model.assetAllocation.Hours_Allocated__c = model.assetAllocation.Percent_Allocation__c * model.assetAllocation.Asset__r.Budgeted_Hours__c / 100;
             }
 
+            if(model.isAllocatedHours && model.assetAllocation.Hours_Allocated__c > 0){
+                model.assetAllocation.Percent_Allocation__c = 100 * model.assetAllocation.Hours_Allocated__c/model.assetAllocation.Asset__r.Budgeted_Hours__c;
+            }
+
             if(!(model.assetAllocation.Hours_Allocated__c > 0) && !(model.assetAllocation.Quantity_Allocation__c > 0)){
                 model.isError = true;
                 model.message = 'Either allocated quantity or allocated hours must be greater than or equal to one.';
@@ -473,6 +477,10 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
             if(model.isPercentageAllocation && model.subscriptionAllocation.Percent_Allocation__c > 0){
                 model.subscriptionAllocation.Hours_Allocated__c = model.subscriptionAllocation.Percent_Allocation__c * model.subscriptionAllocation.Subscription__r.Budgeted_Hours__c / 100;
+            }
+
+            if(model.isAllocatedHours && model.subscriptionAllocation.Hours_Allocated__c > 0){
+                model.subscriptionAllocation.Percent_Allocation__c = 100 * model.subscriptionAllocation.Hours_Allocated__c/model.subscriptionAllocation.Subscription__r.Budgeted_Hours__c;
             }
 
             if(!(model.subscriptionAllocation.Hours_Allocated__c > 0) && !(model.subscriptionAllocation.Quantity_Allocation__c > 0)){

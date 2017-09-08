@@ -42,6 +42,7 @@ public with sharing class AssetSubscriptionAllocationController {
 
     public Decimal remainingQuantity {get; set;}
     public Decimal remainingPercentage {get; set;}
+    public Decimal remainingBudgetedHours {get; set;}
 
     public Decimal remainingSubscriptionQuantity {get; set;}
     public Decimal remainingSubscriptionPercentage {get; set;}
@@ -117,7 +118,7 @@ public with sharing class AssetSubscriptionAllocationController {
 
         try{
             businessLayer.createSubscriptionAllocation();
-            //getSubscriptionRemainingQuantityNPercentage();
+            getSubscriptionRemainingQuantityNPercentage();
         } catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while creating a new subscription allocation. ' + ex.getMessage()));
             system.debug('createSubscriptionAllocation(): Exception - ' + ex);
@@ -202,41 +203,62 @@ public with sharing class AssetSubscriptionAllocationController {
 
     public void getAssetRemainingQuantityNPercentage(){
         if(Asset != null){
-            if(Asset.Quantity != null && Asset.Quantity > 0)
+            if(Asset.Quantity != null && Asset.Quantity > 1)
                 if(Asset.Total_Allocated_Quantity__c == null || Asset.Total_Allocated_Quantity__c == 0)
                     remainingQuantity = Asset.Quantity;
                 else
                     remainingQuantity = Asset.Quantity - Asset.Total_Allocated_Quantity__c;
-            else
-                remainingQuantity = 0;
 
-            if(Asset.Budgeted_Hours__c != null && Asset.Budgeted_Hours__c > 0)
+            if(Asset.Budgeted_Hours__c != null && Asset.Budgeted_Hours__c > 0){
                 if(Asset.Total_Allocated_Hours__c == null || Asset.Total_Allocated_Hours__c == 0)
-                    remainingPercentage = 100 - ((0/Asset.Budgeted_Hours__c) * 100);
+                    if(Asset.Quantity <= 1)
+                        remainingPercentage = 100 - ((0/Asset.Budgeted_Hours__c) * 100);
+                    else
+                        remainingBudgetedHours = Asset.Budgeted_Hours__c;
                 else
-                    remainingPercentage = 100 -  (Asset.Total_Allocated_Hours__c/Asset.Budgeted_Hours__c) * 100;
-            else
-                remainingPercentage = 0;
+                    if(Asset.Quantity <= 1)
+                        remainingPercentage = 100 -  (Asset.Total_Allocated_Hours__c/Asset.Budgeted_Hours__c) * 100;
+                    else
+                        remainingBudgetedHours = Asset.Budgeted_Hours__c - Asset.Total_Allocated_Hours__c;
+            }
+
+            else{
+                if(Asset.Quantity <= 1)
+                    remainingPercentage = 0;
+                else
+                    remainingBudgetedHours = 0;
+            }
+
         }
     }
 
     public void getSubscriptionRemainingQuantityNPercentage(){
         if(Subscription != null){
-            if(Subscription.Quantity__c != null && Subscription.Quantity__c > 0)
+            if(Subscription.Quantity__c != null && Subscription.Quantity__c > 1)
                 if(Subscription.Total_Allocated_Quantity__c == null || Subscription.Total_Allocated_Quantity__c == 0)
                     remainingSubscriptionQuantity = Subscription.Quantity__c;
                 else
                     remainingSubscriptionQuantity = Subscription.Quantity__c - Subscription.Total_Allocated_Quantity__c;
-            else
-                remainingSubscriptionQuantity = 0;
 
-            if(Subscription.Budgeted_Hours__c != null && Subscription.Budgeted_Hours__c > 0)
+            if(Subscription.Budgeted_Hours__c != null && Subscription.Budgeted_Hours__c > 0){
                 if(Subscription.Total_Allocated_Hours__c == null || Subscription.Total_Allocated_Hours__c == 0)
-                    remainingSubscriptionPercentage = 100 - ((0/Subscription.Budgeted_Hours__c) * 100);
+                    if(Subscription.Quantity__c <= 1)
+                        remainingSubscriptionPercentage = 100 - ((0/Subscription.Budgeted_Hours__c) * 100);
+                    else
+                        remainingBudgetedHours = Subscription.Budgeted_Hours__c;
                 else
-                    remainingSubscriptionPercentage = 100 -  (Subscription.Total_Allocated_Hours__c/Subscription.Budgeted_Hours__c) * 100;
-            else
-                remainingSubscriptionPercentage = 0;
+                    if(Subscription.Quantity__c <= 1)
+                        remainingSubscriptionPercentage = 100 -  (Subscription.Total_Allocated_Hours__c/Subscription.Budgeted_Hours__c) * 100;
+                    else
+                        remainingBudgetedHours = Subscription.Budgeted_Hours__c - Subscription.Total_Allocated_Hours__c;
+            }
+
+            else{
+                if(Subscription.Quantity__c <= 1)
+                    remainingSubscriptionPercentage = 0;
+                else
+                    remainingBudgetedHours = 0;
+            }
         }
     }
 
