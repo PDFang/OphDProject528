@@ -4,6 +4,8 @@
 @isTest
 global class PartnerCaseProxyServiceMockTest implements WebServiceMock{
 
+    public Object request;
+
     global void doInvoke(
             Object stub,
             Object request,
@@ -15,6 +17,7 @@ global class PartnerCaseProxyServiceMockTest implements WebServiceMock{
             String responseName,
             String responseType) {
 
+        this.request = request;
         if(request instanceof PartnerCaseProxyService.CreatePartnerCase_element ){
             response.put('response_x', new PartnerCaseProxyService.CreatePartnerCaseResponse_element());
         }else if(request instanceof PartnerCaseProxyService.UpdatePartnerCase_element ){
