@@ -57,7 +57,7 @@ public class AccountTriggerHandler extends TriggerHandler  {
 
         List<Account> accountList = new List<Account>();
         for(Account accountRecord :[
-                Select Id, Social_Media_Presence__c, CustomerSegment__c, Brand_Visibility__c, Industry_Leadership_Vocality__c,
+                Select Id, RecordType.Name, Social_Media_Presence__c, CustomerSegment__c, Brand_Visibility__c, Industry_Leadership_Vocality__c,
                         Risk_of_Leaving__c, GYRStatus__c, Age_of_Customer_in_Months__c, IsPartner__c, Referenceable__c,
                         Account_Net_Score__c
                 from Account
@@ -74,7 +74,7 @@ public class AccountTriggerHandler extends TriggerHandler  {
     }
 
     private boolean recalculateScore(Account newRecord, Account oldRecord){
-        return newRecord.IsPartner__c != oldRecord.IsPartner__c
+        return newRecord.RecordTypeId != oldRecord.RecordTypeId
                 || (newRecord.CustomerSegment__c != oldRecord.CustomerSegment__c && (newRecord.CustomerSegment__c == 'Strategic' || oldRecord.CustomerSegment__c == 'Strategic') )
                 || newRecord.Brand_Visibility__c != oldRecord.Brand_Visibility__c
                 || newRecord.Industry_Leadership_Vocality__c != oldRecord.Industry_Leadership_Vocality__c

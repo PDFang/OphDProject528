@@ -223,7 +223,8 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 Asset selAsset = getAsset(model.assetAllocation.Asset__c);
                 if(selAsset != null){
                     model.isQuantityAllocation = (selAsset.Quantity > 1);
-                    model.isPercentageAllocation = (selAsset.Budgeted_Hours__c > 0);
+                    model.isPercentageAllocation = (selAsset.Budgeted_Hours__c > 0 && selAsset.Quantity <= 1);
+                    model.isAllocatedHours = (selAsset.Quantity > 1);
                     model.assetAllocation.Asset__r = selAsset;
                 }else{
                     model.isError = true;
@@ -250,7 +251,8 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
                 if(selSubscription != null){
                     model.isQuantityAllocation = (selSubscription.Quantity__c > 1);
-                    model.isPercentageAllocation = (selSubscription.Budgeted_Hours__c > 0);
+                    model.isPercentageAllocation = (selSubscription.Budgeted_Hours__c > 0 && selSubscription.Quantity__c <= 1);
+                    model.isAllocatedHours = (selSubscription.Quantity__c > 1);
                     model.subscriptionAllocation.Subscription__r = selSubscription;
                 }else{
                     model.isError = true;
@@ -339,6 +341,10 @@ public class AssetSubscriptionAllocationBusinessLayer {
             }
             if(model.isPercentageAllocation && model.assetAllocation.Percent_Allocation__c > 0){
                 model.assetAllocation.Hours_Allocated__c = model.assetAllocation.Percent_Allocation__c * model.assetAllocation.Asset__r.Budgeted_Hours__c / 100;
+            }
+
+            if(model.isAllocatedHours && model.assetAllocation.Hours_Allocated__c > 0){
+                model.assetAllocation.Percent_Allocation__c = 100 * model.assetAllocation.Hours_Allocated__c/model.assetAllocation.Asset__r.Budgeted_Hours__c;
             }
 
             if(!(model.assetAllocation.Hours_Allocated__c > 0) && !(model.assetAllocation.Quantity_Allocation__c > 0)){
@@ -473,6 +479,12 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
             if(model.isPercentageAllocation && model.subscriptionAllocation.Percent_Allocation__c > 0){
                 model.subscriptionAllocation.Hours_Allocated__c = model.subscriptionAllocation.Percent_Allocation__c * model.subscriptionAllocation.Subscription__r.Budgeted_Hours__c / 100;
+            }
+
+            System.debug('model.subscriptionAllocation.Hours_Allocated__c' + model.subscriptionAllocation.Hours_Allocated__c);
+
+            if(model.isAllocatedHours && model.subscriptionAllocation.Hours_Allocated__c > 0){
+                model.subscriptionAllocation.Percent_Allocation__c = 100 * model.subscriptionAllocation.Hours_Allocated__c/model.subscriptionAllocation.Subscription__r.Budgeted_Hours__c;
             }
 
             if(!(model.subscriptionAllocation.Hours_Allocated__c > 0) && !(model.subscriptionAllocation.Quantity_Allocation__c > 0)){

@@ -176,10 +176,10 @@ public class ImpactCalculationService
                     : this.accountImpactCalculation.CalculateStrategicAccountScore(accountRecord.CustomerSegment__c, GetMultiplierValue('strategic account'));
             system.debug('CalculateAccountNetScore(): strategicAccountScore - ' + strategicAccountScore + ' , CustomerSegment__c - ' + accountRecord.CustomerSegment__c);
 
-            Double partnerAccountScore = accountRecord.IsPartner__c == null
+            Double partnerAccountScore = accountRecord.RecordType.Name == null
                     ? 0
-                    : this.accountImpactCalculation.CalculatePartnerAccountScore(accountRecord.IsPartner__c, GetMultiplierValue('partner account'));
-            system.debug('CalculateAccountNetScore(): partnerAccountScore - ' + partnerAccountScore + ' , IsPartner__c - ' + accountRecord.IsPartner__c);
+                    : this.accountImpactCalculation.CalculatePartnerAccountScore(accountRecord.RecordType.Name, GetMultiplierValue('partner account'));
+            system.debug('CalculateAccountNetScore(): partnerAccountScore - ' + partnerAccountScore + ' , RecordTypeName - ' + accountRecord.RecordType.Name);
 
             Double brandVisibilityScore = accountRecord.Brand_Visibility__c == null
                     ? 0

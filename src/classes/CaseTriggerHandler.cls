@@ -281,6 +281,7 @@ public class CaseTriggerHandler extends TriggerHandler
             if(newCase.isClone()){
                 newCase.ETMS_Trouble_Report_State__c = defaultState;
                 newCase.ETMS_Trouble_Report_Status__c = defaultStatus;
+                newCase.X3rdPartyVendorTicket__c = null;
             }
             if(newCase.RecordTypeId == incidentRecordType && newCase.AccountBillingGroup__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
                 && oldCase != null && newCase.Status != oldCase.Status){
@@ -377,15 +378,21 @@ public class CaseTriggerHandler extends TriggerHandler
             Account acct = accountMap.get(newCase.AccountId);
             // Is account billing group 'Verizon'
             if(acct != null && acct.Billing_Group__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON){
+                Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
+
                 if(oldMap == null || (oldMap.containsKey(newCase.Id) && newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null) ){
                     createIdSet.add(newCase.Id);
-                } else if(oldMap != null && oldMap.containsKey(newCase.Id) && newCase.Product_or_Service__c == PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE
+                } else if(oldMap != null && oldMap.containsKey(newCase.Id) && newCase.X3rdPartyVendorTicket__c != null
+                    && (newCase.ETMS_Trouble_Report_State__c != oldCase.ETMS_Trouble_Report_State__c || newCase.ETMS_Trouble_Report_Status__c != oldCase.ETMS_Trouble_Report_Status__c))
+                {
+                    updateIdSet.add(newCase.Id);
+                }
+
+                // create second Verizon ETMS ticket
+                if(oldMap != null && oldMap.containsKey(newCase.Id) && newCase.Product_or_Service__c == PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE
                     && oldMap.get(newCase.Id).Product_or_Service__c != PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE)
                 {
-                    // create second Verizon ETMS ticket
                     createIdSet.add(newCase.Id);
-                } else{
-                    updateIdSet.add(newCase.Id);
                 }
 
             }

@@ -9,6 +9,7 @@ public class PartnerCaseProxyServiceHelper {
     public static final String DEFAULT_ETMS_TROUBLE_Description = 'Other';
     public static final String PRODUCT_TOLLFREE = 'Toll Free';
     public static final String PRODUCT_DIALTF = 'DIALTF';
+    public static final String PRODUCT_HOSTING = 'HOSTING';
 
     private static Map<String, List<ETMS_Codes__c>> requestTypeEtmsMap = null;
     @TestVisible
@@ -187,14 +188,15 @@ public class PartnerCaseProxyServiceHelper {
         partnerCase.EventTime = sfCase.CreatedDate;
         partnerCase.AccountName = sfCase.Account.Name;
         partnerCase.Priority = sfCase.Priority;
-        // set Product property value as null so it uses the default value set in proxy service
+        // Product property default value PRODUCT_HOSTING
         //partnerCase.Product = sfCase.Product_or_Service__c;
-        partnerCase.Product = null;
         partnerCase.RequestType = sfCase.Request_Type__c;
         if(sfCase.Product_or_Service__c == PRODUCT_TOLLFREE){
             partnerCase.DialFrom = String.isBlank(sfCase.Dial_From_ANI__c) ? null : sfCase.Dial_From_ANI__c.replace(' ','');
             partnerCase.DialTo = String.isBlank(sfCase.Dial_To_DNIS__c) ? null : sfCase.Dial_To_DNIS__c.replace(' ','');
             partnerCase.Product = PRODUCT_DIALTF;
+        } else{
+            partnerCase.Product = PRODUCT_HOSTING;
         }
 
         partnerCase.Reason = sfCase.Database__c;
