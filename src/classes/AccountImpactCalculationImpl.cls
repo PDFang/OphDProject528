@@ -63,19 +63,6 @@ public class AccountImpactCalculationImpl implements AccountImpactCalculationInt
         return score * multiplier;
     }
 
-    public Double CalculatePartnerAccountScore(Boolean partnerAccount, Double multiplier){
-        Double score;
-
-        if(partnerAccount == true) {
-            score = 1;
-        }
-        else {
-            score = 0;
-        }
-
-        return score * multiplier;
-    }
-
     public Double CalculatePartnerAccountScore(String recordTypeName, Double multiplier){
         Double score;
 

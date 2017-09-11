@@ -3,7 +3,6 @@ public interface AccountImpactCalculationInterface {
     Double CalculateRiskOfLeavingScore(String risk, Double multiplier);
     Double CalculateGYRColor(String score);
     Double CalculateStrategicAccountScore(String strategicAccount, Double multiplier);
-    Double CalculatePartnerAccountScore(Boolean partnerAccount, Double multiplier);
     Double CalculatePartnerAccountScore(String recordTypeName, Double multiplier);
     Double CalculateBrandVisibilityScore(String brandVisible, Double multiplier);
     Double CalculateIndustryLeaderScore(String industryLeader, Double multiplier);
