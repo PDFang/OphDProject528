@@ -29,6 +29,10 @@ public with sharing class AccountImpactCalculationStub implements AccountImpactC
         return PartnerAccountScore;
     }
 
+    public Double CalculatePartnerAccountScore(String recordTypeName, Double multiplier){
+        return PartnerAccountScore;
+    }
+
     public Double CalculateBrandVisibilityScore(String brandVisible, Double multiplier){
         return BrandVisibilityScore;
     }

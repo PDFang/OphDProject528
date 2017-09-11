@@ -296,12 +296,65 @@ private class CaseTriggerHandlerTest {
         insert testIncident;
         // Performing DML Before Mock Callouts to avoid uncommitted work pending error
         test.startTest();
-        Test.setMock(WebServiceMock.class, new PartnerCaseProxyServiceMockTest());
+        PartnerCaseProxyServiceMockTest proxyServiceMock = new PartnerCaseProxyServiceMockTest();
+        Test.setMock(WebServiceMock.class, proxyServiceMock);
         test.stopTest();
+
+        PartnerCaseProxyService.CreatePartnerCase_element request = (PartnerCaseProxyService.CreatePartnerCase_element)proxyServiceMock.request;
         // make sure the trigger makes a callout to proxy service
         system.assertEquals(true, PartnerCaseProxyServiceHelper.isCasePushed);
+        system.assertEquals(PartnerCaseProxyServiceHelper.PRODUCT_HOSTING, request.newCases.SalesforceCase[0].Product);
+
 
     } // end of testPartnerCaseProxyServiceCreate()
+
+    static testMethod void testPartnerCaseProxyServiceSecondCreate() {
+
+        Account verizonAccount = [Select Id from Account where Billing_Group__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON LIMIT 1];
+        Contact verizonContact = [Select Id from Contact where AccountId = :verizonAccount.Id LIMIT 1];
+
+        ETMS_Codes__c[] testEtmsCode = ETMS_Codes__c.getAll().values();
+
+        // create an incident
+        Map<String,Schema.RecordTypeInfo> testIncidentTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
+        Case testIncident = new Case(
+                RecordTypeId = testIncidentTypeMap.get('Incident').getRecordTypeId(),
+                Subject = 'Verizon Test',
+                Status = 'New',
+                AccountId = verizonAccount.Id,
+                ContactId = verizonContact.Id,
+                Product_or_Service__c = 'Service Disruption',
+                Request_Type__c = testEtmsCode[0].Request_Type__c,
+                Database__c = testEtmsCode[0].Reason__c,
+                Releases__c = testEtmsCode[0].Reason_Detail__c
+        );
+
+        Database.DMLOptions dmo = new Database.DMLOptions();
+        dmo.AssignmentRuleHeader.useDefaultRule = true;
+        testIncident.setOptions(dmo);
+        insert testIncident;
+
+        CaseTriggerHandler.noOfProxyServiceCallouts = 0;
+        testIncident.Status = 'Work in Progress';
+        testIncident.Request_Type__c = 'Connectivity';
+        testIncident.Product_or_Service__c = 'Toll Free';
+        testIncident.Dial_From_ANI__c = '8008772525';
+        testIncident.Dial_To_DNIS__c = '8002115252';
+        update testIncident;
+
+        // Performing DML Before Mock Callouts to avoid uncommitted work pending error
+        test.startTest();
+        PartnerCaseProxyServiceMockTest proxyServiceMock = new PartnerCaseProxyServiceMockTest();
+        Test.setMock(WebServiceMock.class, proxyServiceMock);
+        test.stopTest();
+
+        PartnerCaseProxyService.CreatePartnerCase_element request = (PartnerCaseProxyService.CreatePartnerCase_element)proxyServiceMock.request;
+
+        // make sure the trigger makes a callout to proxy service
+        system.assertEquals(true, PartnerCaseProxyServiceHelper.isCasePushed);
+        system.assertEquals(PartnerCaseProxyServiceHelper.PRODUCT_DIALTF, request.newCases.SalesforceCase[0].Product);
+
+    } // end of testPartnerCaseProxyServiceSecondCreate()
 
     static testMethod void testPartnerCaseProxyServiceUpdate() {
 
