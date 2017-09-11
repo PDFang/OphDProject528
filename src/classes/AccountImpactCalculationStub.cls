@@ -25,10 +25,6 @@ public with sharing class AccountImpactCalculationStub implements AccountImpactC
         return StrategicAccountScore;
     }
 
-    public Double CalculatePartnerAccountScore(Boolean partnerAccount, Double multiplier){
-        return PartnerAccountScore;
-    }
-
     public Double CalculatePartnerAccountScore(String recordTypeName, Double multiplier){
         return PartnerAccountScore;
     }
