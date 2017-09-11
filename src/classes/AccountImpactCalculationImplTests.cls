@@ -52,8 +52,8 @@ public class AccountImpactCalculationImplTests {
     public static testMethod void CalculatePartnerAccountScore_WillReturnCorrectScore(){
         AccountImpactCalculationImpl imp = new AccountImpactCalculationImpl();
 
-        Double partnerTrueScore = imp.CalculatePartnerAccountScore(true, 5);
-        Double defaultScore = imp.CalculatePartnerAccountScore(false, 1);
+        Double partnerTrueScore = imp.CalculatePartnerAccountScore('Resell Partner', 5);
+        Double defaultScore = imp.CalculatePartnerAccountScore('Test Type', 1);
 
         system.assertEquals(5, partnerTrueScore, 'CalculatePartnerAccountScore = true calculation is Incorrect');
         system.assertEquals(0, defaultScore, 'CalculatePartnerAccountScore = false calculation is Incorrect');
