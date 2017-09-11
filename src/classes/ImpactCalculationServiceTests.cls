@@ -34,13 +34,15 @@ public class ImpactCalculationServiceTests {
     }
 
     static testMethod void CalculateAccountScore_WillSetScoreCorrectly() {
+        Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
+
         Account[] accountList = new Account[]{
                 new Account(
                         Name = 'My little Account',
                         Risk_of_Leaving__c = 'High', // High
                         GYRStatus__c = 'Red',  // 1,
                         CustomerSegment__c = 'Strategic', // 1
-                        IsPartner__c = false, //0,
+                        RecordTypeId = accountRecordTypeMap.get('Customers').getRecordTypeId(),
                         Brand_Visibility__c = 'no', // 0,
                         Industry_Leadership_Vocality__c = 'no', // 0
                         Social_Media_Presence__c = 'no', // 0
@@ -52,7 +54,7 @@ public class ImpactCalculationServiceTests {
         accountImpactCalculationStub.AgeOfCustomerInMonthsScore = 1;
         accountImpactCalculationStub.RiskOfLeavingScore = 1;
         accountImpactCalculationStub.StrategicAccountScore = 1;
-        accountImpactCalculationStub.PartnerAccountScore = 1;
+        accountImpactCalculationStub.PartnerAccountScore = 0;
         accountImpactCalculationStub.BrandVisibilityScore = 1;
         accountImpactCalculationStub.IndustryLeaderScore = 1;
         accountImpactCalculationStub.SocialMediaPresenceScore = 1;
@@ -63,8 +65,9 @@ public class ImpactCalculationServiceTests {
 
         impactService.CalculateAccountNetScore(accountList);
 
+
         for(Account accountRecord : accountList){
-            system.assertEquals(8, accountRecord.Account_Net_Score__c);
+            system.assertEquals(7, accountRecord.Account_Net_Score__c);
         }
     }
 
