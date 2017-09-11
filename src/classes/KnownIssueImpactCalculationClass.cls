@@ -88,8 +88,6 @@ public without sharing class KnownIssueImpactCalculationClass {
 
 
                 newCase.KIImpactScore__c = netKnownIssueScore;
-                //newCase.Priority = KnownIssueIncidentMaxPriority.get(KnownIssuCase.Id);
-                system.debug('Priority ===> ' + KnownIssuCase.Priority);
 
                 updKnowIssueList.add(newCase);
             }
