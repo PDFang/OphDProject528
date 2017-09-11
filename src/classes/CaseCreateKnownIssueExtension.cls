@@ -160,8 +160,6 @@ public with sharing class CaseCreateKnownIssueExtension
 
 
             string priorityString = [select Priority From Case where Id = :c.Id Limit 1].Priority;
-            if(priorityString == 'P1')
-                relatedCase.Priority = 'P1';
 
             insert relatedCase;
 
