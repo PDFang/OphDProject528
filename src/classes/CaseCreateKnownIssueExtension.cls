@@ -4,10 +4,8 @@ public with sharing class CaseCreateKnownIssueExtension
     public string recordTypeName {get;set;}
     
     public Case relatedCase{get;set;}
-    public Boolean createTfsItem {get;set;}
     public Boolean createJiraBug {get;set;}
     public Boolean canCreateKnownIssue {public get; private set;}
-    public TFSWorkItem__c workItem {get;set;}
     public Boolean success {get; set;}
 
     public CaseCreateKnownIssueExtension(ApexPages.StandardController controller) 
@@ -20,9 +18,8 @@ public with sharing class CaseCreateKnownIssueExtension
          {
              controller.addFields(fields);
          }
-        
-        createTfsItem = false;
-        workItem = new TFSWorkItem__c();
+
+        createJiraBug = false;
         this.c = (Case)controller.getRecord();
         
         if(c.get(recordTypeName.replace(' ', '') + '__c') != null)
@@ -129,39 +126,13 @@ public with sharing class CaseCreateKnownIssueExtension
 
             if(createJiraBug){
                 JiraRestWrapper wrapper = new JiraRestWrapper();
-                String returnResponse = wrapper.CreateJIRABug(c.Id);
-                system.debug('SaveCase(): returnResponse -  ' + returnResponse);
+                String jiraKey = wrapper.CreateJIRABug(c.Id);
+                system.debug('SaveCase(): jiraKey -  ' + jiraKey);
+                relatedCase.JIRA_Key__c = jiraKey;
             }
 
-        
-            /*if(createTfsItem)
-            {
-                    TfsAssignment__c tfsTeam = TfsAssignment__c.getValues(relatedCase.ProductImpacted__c); 
-                    
-                    if(tfsTeam == null)
-                    {
-                        tfsTeam = TfsAssignment__c.getValues('Default');
-                    }                  
-            
-            
-                    workItem.Title__c = relatedCase.Subject;       
-                    workItem.StepsToReproduce__c = relatedCase.Steps_To_Recreate__c;
-                    workItem.Name = 'Processing ' + c.CaseNumber + '...';
-                    workItem.FoundBy__c = relatedCase.FOundBy__c;
-                    workItem.ExistsIn__c = relatedCase.ExistsIn__c;
-                        workItem.Team__c = tfsTeam.Team__c;
-                    insert workItem;
-                    
-                    relatedCase.TfsWorkItem__c = workItem.Id;
-                    TfsAccess.CreateTfsItem(workItem.Id, relatedCase.Summary__c, relatedCase.InternalNotes__c,relatedCase.Steps_To_Recreate__c, tfsTeam.Team__c);
-            }*/
             relatedCase.IsVisibleInSelfService = true;
             system.debug(relatedCase.TFSWorkItem__c);
-
-
-            string priorityString = [select Priority From Case where Id = :c.Id Limit 1].Priority;
-            if(priorityString == 'P1')
-                relatedCase.Priority = 'P1';
 
             insert relatedCase;
 

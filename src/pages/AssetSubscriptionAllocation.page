@@ -83,7 +83,7 @@
                     <apex:column headervalue="Asset Allocation Id">
                         <apex:outputLink value="/{!entry.assetAllocation.Id}">{!entry.assetAllocation.Name}</apex:outputLink>
                     </apex:column>
-                    <apex:column headervalue="Phase Project">
+                    <apex:column headervalue="Project Phase">
                         <apex:inputField value="{!entry.assetAllocation.Project__c}" required="false" rendered="{!AND(ISBLANK(entry.assetAllocation.Id), ISNULL(project))}"/>
                         <apex:outputField value="{!entry.assetAllocation.Project__c}" rendered="{!OR(NOT(ISBLANK(entry.assetAllocation.Id)), NOT(ISNULL(project)))}"/>
                     </apex:column>
@@ -141,7 +141,7 @@
                     <apex:column headervalue="Subscription Allocation Id">
                         <apex:outputLink value="/{!entry.subscriptionAllocation.Id}">{!entry.subscriptionAllocation.Name}</apex:outputLink>
                     </apex:column>
-                    <apex:column headervalue="Phase Project">
+                    <apex:column headervalue="Project Phase">
                         <apex:inputField value="{!entry.subscriptionAllocation.Project__c}" required="false" rendered="{!AND(ISBLANK(entry.subscriptionAllocation.Id), ISNULL(project))}"/>
                         <apex:outputField value="{!entry.subscriptionAllocation.Project__c}" rendered="{!OR(NOT(ISBLANK(entry.subscriptionAllocation.Id)), NOT(ISNULL(project)))}"/>
                     </apex:column>
