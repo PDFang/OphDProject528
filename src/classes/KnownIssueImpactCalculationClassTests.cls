@@ -32,7 +32,7 @@ public class KnownIssueImpactCalculationClassTests {
         //for(Case KnownIssuCase : knownIssueList){
         Case[] newCase = [Select KIImpactScore__c, Priority from Case where Id = : knownIssueList[0].Id limit 1];
         system.assertEquals(4.0, newCase[0].KIImpactScore__c);
-        system.assertEquals('P1', newCase[0].Priority);
+        system.assertEquals('P3', newCase[0].Priority);
         //}
 
     }
