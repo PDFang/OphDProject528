@@ -15,11 +15,12 @@ public with sharing class SubScriptionReplicaHelper {
 
             repData.Name = replica.Name;
             repdata.AccountId = replica.AccountLookup__c;
-            repdata.ProductName = replica.ImplementedProduct__c;
+            repdata.ProductName = replica.Product__c;
             repdata.ProductId = replica.Product__c;
+
             repdata.Active = replica.Active__c;
-            repdata.Existing = replica.Existing__c;
-            repdata.Bundled = replica.Bundled__c;
+            repdata.Existing = SetYesNo(replica.Existing__c);
+            repdata.Bundled = SetYesNo(replica.Bundled__c);
             repdata.Quantity = replica.Quantity__c;
             repdata.ListUnitPrice = replica.ListUnitPrice__c;
             repdata.SalesUnitPrice = replica.SalesUnitPrice__c;
@@ -33,5 +34,14 @@ public with sharing class SubScriptionReplicaHelper {
 
     }
 
+    private string SetYesNo(boolean value){
+            if (value == true) {
+                return 'Yes';
+            }
+                else
+            {
+                return 'No';
+            }
+    }
 
 }
