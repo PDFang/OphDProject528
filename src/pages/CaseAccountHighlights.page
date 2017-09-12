@@ -26,7 +26,7 @@
                                <apex:image value="/img/loading32.gif" style="height: 15px;"/> (creating JIRA Bug)...
                            </apex:facet>
                            <apex:facet name="stop">
-                              <apex:commandLink action="{!CreateTfsItem}" status="jiraStatus" value="Create JIRA Bug" oncomplete="return refreshPage()"/>
+                              <apex:commandLink action="{!CreateJIRABug}" status="jiraStatus" value="Create JIRA Bug" oncomplete="return refreshPage()"/>
                            </apex:facet>
                        </apex:actionStatus>
                   </apex:outputPanel>
