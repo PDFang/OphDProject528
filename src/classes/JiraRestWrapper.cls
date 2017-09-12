@@ -18,6 +18,8 @@ public class JiraRestWrapper {
 
     public String CreateJIRABug(String caseId) {
 
+        system.debug('CreateJIRABug(): caseId - ' + caseId);
+
         HttpRequest request = new HttpRequest();
 
         CreateRequest newRequest = new CreateRequest();
@@ -31,21 +33,13 @@ public class JiraRestWrapper {
         system.debug('CreateJIRABug(): body - ' + body);
         request.setBody(body);
 
-//        request.setEndpoint('http://tlvjiratst02:8080/rest/customware/connector/1.0/1/Case/' + caseId + '/issue/create.json');
-//        request.setHeader('Authorization', 'Basic ' + EncodingUtil.base64Encode(Blob.valueOf('salesforceuser' + ':' + '1qaz2wsx')));
-
         request.setEndpoint('callout:JIRA_Proxy_Service' + '/issue/CreateIssue');
-        //request.setHeader('Authorization', '{!$Credential.AuthorizationMethod} {!$Credential.AuthorizationHeaderValue}');
-
-
         request.setMethod('POST');
         request.setHeader('Content-Type', 'application/json');
 
-
         system.debug('CreateJIRABug(): request - ' + request);
+
         Http h = new Http();
-
-
         HttpResponse response = h.send(request);
 
         String returnResponse = response.getBody();
@@ -53,7 +47,7 @@ public class JiraRestWrapper {
 
         String jiraKey = null;
 
-        if(response.getStatusCode() == 200 && String.isNotBlank(returnResponse)){
+        if(response.getStatusCode() == 200){
             CreateResponse result = (CreateResponse)JSON.deserialize(returnResponse, CreateResponse.Class);
             system.debug('CreateJIRABug(): result -  ' + result);
             jiraKey = result.issueKey;
