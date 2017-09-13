@@ -106,9 +106,6 @@
                         <apex:inputField value="{!entry.assetAllocation.Hours_Allocated__c}" rendered="{!entry.isAllocatedHours}"/>
                         <apex:outputField value="{!entry.assetAllocation.Hours_Allocated__c}" rendered="{!NOT(entry.isAllocatedHours)}"/>
                     </apex:column>
-                    <apex:column headervalue="Remaining Quantity">
-                        <apex:outputText value="{!entry.assetAllocation.RemainingQuantity__c}" />
-                    </apex:column>
                 </apex:pageBlockTable>
 
             </apex:pageBlockSection>
@@ -117,12 +114,17 @@
         <apex:pageBlock title="" id="pgblock2" mode="edit" rendered="{!Not(ISNULL(Subscription)) || Not(ISNULL(Project))}">
 
             <apex:pageMessages />
+            <apex:outputText value ="{!SubscriptionName}" style="font-weight: bold !important; font-size:10pt !important; color:red" rendered="{! (Not(ISNULL(SubscriptionName)) || Not(ISNULL(Project))) && ISNULL(remainingSubscriptionPercentage) }" >
+            </apex:outputText>
+            <br/>
             <apex:outputText value ="Remaining Quantity to allocate is : {!remainingSubscriptionQuantity}" style="font-weight: bold !important; font-size:10pt !important; color:red" rendered="{!NOT(ISNULL(remainingSubscriptionQuantity))}" >
             </apex:outputText>
-            <br />
+            <apex:outputText value ="{!SubscriptionName}" style="font-weight: bold !important; font-size:10pt !important; color:red" rendered="{! (Not(ISNULL(SubscriptionName)) || Not(ISNULL(Project))) && Not(ISNULL(remainingSubscriptionPercentage)) }" >
+            </apex:outputText>
+            <br/>
             <apex:outputText value ="Remaining Percentage to allocate is : {!remainingSubscriptionPercentage}%" style="font-weight: bold !important; font-size:10pt !important; color:red" rendered="{!NOT(ISNULL(remainingSubscriptionPercentage))}">
             </apex:outputText>
-            <apex:outputText value ="Remaining Hours to allocate are : {!remainingBudgetedHours}" style="font-weight: bold !important; font-size:10pt !important; color:red" rendered="{!NOT(ISNULL(remainingBudgetedHours))}">
+            <apex:outputText value ="Remaining Hours to allocate are : {!remainingSubscriptionBudgetedHours}" style="font-weight: bold !important; font-size:10pt !important; color:red" rendered="{!NOT(ISNULL(remainingSubscriptionBudgetedHours))}">
             </apex:outputText>
             <apex:pageBlockButtons title="" location="bottom">
                 <apex:commandButton title="New" value="New" action="{!createSubscriptionAllocation}" reRender="pgblock2"/>

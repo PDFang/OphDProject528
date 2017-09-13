@@ -12,6 +12,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
     public Decimal remainingSubscriptionQuantity;
     public Decimal remainingSubscriptionPercentage;
+    public Decimal remainingSubscriptionBudgetedHours;
 
     public String assetName;
     public String subscriptionName;
@@ -25,8 +26,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
             'RecordType.Name',
             'Quantity',
             'Budgeted_Hours__c',
-            'Parent_Project__c',
-            'RemainingQuantity__c'
+            'Parent_Project__c'
     };
 
     static Set<String> subscriptionFields = new Set<String>{
@@ -152,7 +152,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
         assetAllocations = new List<AssetSubscriptionAllocationModel>();
 
-        String soql = 'Select Project__c, Name, RemainingQuantity__c, ProjectPhase__c, Percent_Allocation__c, Asset__c, Asset__r.Quantity, Asset__r.Budgeted_Hours__c, '
+        String soql = 'Select Project__c, Name, ProjectPhase__c, Percent_Allocation__c, Asset__c, Asset__r.Quantity, Asset__r.Budgeted_Hours__c, '
                 + 'Quantity_Allocation__c, Hours_Allocated__c, Asset__r.Total_Allocated_Quantity__c, Asset__r.Total_Allocated_Hours__c '
                 + 'from Project_Asset_Allocation__c where ';
 
@@ -237,7 +237,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 if(selAsset != null){
                     model.isQuantityAllocation = (selAsset.Quantity > 1);
                     model.isPercentageAllocation = (selAsset.Budgeted_Hours__c > 0 && selAsset.Quantity <= 1);
-                    model.isAllocatedHours = (selAsset.Quantity > 1);
+                    model.isAllocatedHours = (selAsset.Quantity > 1 && selAsset.Budgeted_Hours__c > 0);
                     model.assetAllocation.Asset__r = selAsset;
                 }else{
                     model.isError = true;
@@ -270,7 +270,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 if(selSubscription != null){
                     model.isQuantityAllocation = (selSubscription.Quantity__c > 1);
                     model.isPercentageAllocation = (selSubscription.Budgeted_Hours__c > 0 && selSubscription.Quantity__c <= 1);
-                    model.isAllocatedHours = (selSubscription.Quantity__c > 1);
+                    model.isAllocatedHours = (selSubscription.Quantity__c > 1 && selSubscription.Budgeted_Hours__c > 0);
                     model.subscriptionAllocation.Subscription__r = selSubscription;
                 }else{
                     model.isError = true;
@@ -279,7 +279,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
                 remainingSubscriptionQuantity = null;
                 remainingSubscriptionPercentage = null;
-                remainingBudgetedHours = null;
+                remainingSubscriptionBudgetedHours = null;
                 subscriptionName = selSubscription.Name;
                 getSubscriptionRemainingQuantityNPercentage(selSubscription);
                 system.debug('changeSubscription(): model - ' + model);
@@ -624,19 +624,19 @@ public class AssetSubscriptionAllocationBusinessLayer {
                     if(Subscription.Quantity__c <= 1)
                         remainingSubscriptionPercentage = 100 - ((0/Subscription.Budgeted_Hours__c) * 100);
                     else
-                        remainingBudgetedHours = Subscription.Budgeted_Hours__c;
+                        remainingSubscriptionBudgetedHours = Subscription.Budgeted_Hours__c;
                 else
                     if(Subscription.Quantity__c <= 1)
                         remainingSubscriptionPercentage = 100 -  (Subscription.Total_Allocated_Hours__c/Subscription.Budgeted_Hours__c) * 100;
                     else
-                        remainingBudgetedHours = Subscription.Budgeted_Hours__c - Subscription.Total_Allocated_Hours__c;
+                        remainingSubscriptionBudgetedHours = Subscription.Budgeted_Hours__c - Subscription.Total_Allocated_Hours__c;
             }
 
             else{
                 if(Subscription.Quantity__c <= 1)
                     remainingSubscriptionPercentage = 0;
                 else
-                    remainingBudgetedHours = 0;
+                    remainingSubscriptionBudgetedHours = 0;
             }
         }
     }

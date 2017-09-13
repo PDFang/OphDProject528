@@ -9,14 +9,6 @@ public with sharing class AssetSubscriptionAllocationController {
         }
     }
 
-    // selected asset record
-    public Asset SelAsset{
-        get {
-            return businessLayer != null
-                    ? businessLayer.selAsset : null;
-        }
-    }
-
     // current subscription record
     public SubscriptionReplica__c Subscription{
         get {
@@ -55,9 +47,6 @@ public with sharing class AssetSubscriptionAllocationController {
         }
     }
 
-//    public Decimal remainingQuantity {
-//        get; set;
-//    }
     public Decimal remainingPercentage {
         get {
             return businessLayer != null
@@ -81,6 +70,13 @@ public with sharing class AssetSubscriptionAllocationController {
         get {
             return businessLayer != null
                     ? businessLayer.remainingSubscriptionPercentage : null;
+        }
+    }
+
+    public Decimal remainingSubscriptionBudgetedHours {
+        get {
+            return businessLayer != null
+                    ? businessLayer.remainingSubscriptionBudgetedHours : null;
         }
     }
 
@@ -119,9 +115,6 @@ public with sharing class AssetSubscriptionAllocationController {
         try{
             businessLayer.createAssetAllocation();
             businessLayer.getAssetRemainingQuantityNPercentage(Asset);
-//            if(Asset != null)
-//                remainingQuantity = Asset.RemainingQuantity__c;
-
         } catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while creating a new asset allocation. ' + ex.getMessage()));
             system.debug('createAssetAllocation(): Exception - ' + ex);
