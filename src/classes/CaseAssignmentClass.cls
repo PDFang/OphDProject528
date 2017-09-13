@@ -84,7 +84,7 @@ public class CaseAssignmentClass
 			}
 		}
 	}
-
+	@future
 	public static void AssignCaseToAdvancedTechSupport(set<id> caseIds){
 		if(caseIds.size() > 0){
 			list<case> lstCases = new List<case>();
