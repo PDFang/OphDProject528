@@ -26,8 +26,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
             'Quantity',
             'Budgeted_Hours__c',
             'Parent_Project__c',
-            'RemainingQuantity__c',
-            'ProjectPhaseAsset__c'
+            'RemainingQuantity__c'
     };
 
     static Set<String> subscriptionFields = new Set<String>{
