@@ -73,6 +73,13 @@ public with sharing class AssetSubscriptionAllocationController {
         }
     }
 
+    public Decimal remainingSubscriptionBudgetedHours {
+        get {
+            return businessLayer != null
+                    ? businessLayer.remainingSubscriptionBudgetedHours : null;
+        }
+    }
+
     public String AssetName {
         get {
             return businessLayer != null
