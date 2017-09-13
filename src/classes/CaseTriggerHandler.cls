@@ -435,7 +435,7 @@ public class CaseTriggerHandler extends TriggerHandler
         system.debug('createJiraBugForKI(): CaseCreateKnownIssueExtension.createJiraBug - ' + CaseCreateKnownIssueExtension.createJiraBug);
         system.debug('createJiraBugForKI(): known issues - ' + newList.size());
 
-        if(!CaseCreateKnownIssueExtension.createJiraBug || newList.size() > 1){
+        if(CaseCreateKnownIssueExtension.createJiraBug == null || !CaseCreateKnownIssueExtension.createJiraBug || newList.size() > 1){
             system.debug('createJiraBugForKI(): skipped @future callout');
             return;
         }
