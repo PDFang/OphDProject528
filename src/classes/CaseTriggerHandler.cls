@@ -281,6 +281,7 @@ public class CaseTriggerHandler extends TriggerHandler
             if(newCase.isClone()){
                 newCase.ETMS_Trouble_Report_State__c = defaultState;
                 newCase.ETMS_Trouble_Report_Status__c = defaultStatus;
+                newCase.X3rdPartyVendorTicket__c = null;
             }
             if(newCase.RecordTypeId == incidentRecordType && newCase.AccountBillingGroup__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
                 && oldCase != null && newCase.Status != oldCase.Status){
@@ -347,6 +348,11 @@ public class CaseTriggerHandler extends TriggerHandler
                         + oldCase.ETMS_Trouble_Report_State__c + ' to ' + newCase.ETMS_Trouble_Report_State__c);
 
             }
+            // Product or Service is changed to 'Toll Free'
+            else if(newCase.Product_or_Service__c == PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE && newCase.Product_or_Service__c != oldCase.Product_or_Service__c)
+            {
+                system.debug('CallPartnerCaseProxyService(): Product or Service is changed - ' + newCase.CaseNumber);
+            }
             else {
                 continue;
             }
@@ -372,10 +378,21 @@ public class CaseTriggerHandler extends TriggerHandler
             Account acct = accountMap.get(newCase.AccountId);
             // Is account billing group 'Verizon'
             if(acct != null && acct.Billing_Group__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON){
+                Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
+
                 if(oldMap == null || (oldMap.containsKey(newCase.Id) && newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null) ){
                     createIdSet.add(newCase.Id);
-                } else{
+                } else if(oldMap != null && oldMap.containsKey(newCase.Id) && newCase.X3rdPartyVendorTicket__c != null
+                    && (newCase.ETMS_Trouble_Report_State__c != oldCase.ETMS_Trouble_Report_State__c || newCase.ETMS_Trouble_Report_Status__c != oldCase.ETMS_Trouble_Report_Status__c))
+                {
                     updateIdSet.add(newCase.Id);
+                }
+
+                // create second Verizon ETMS ticket
+                if(oldMap != null && oldMap.containsKey(newCase.Id) && newCase.Product_or_Service__c == PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE
+                    && oldMap.get(newCase.Id).Product_or_Service__c != PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE)
+                {
+                    createIdSet.add(newCase.Id);
                 }
 
             }

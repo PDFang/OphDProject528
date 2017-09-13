@@ -9,6 +9,14 @@ public with sharing class AssetSubscriptionAllocationController {
         }
     }
 
+    // selected asset record
+    public Asset SelAsset{
+        get {
+            return businessLayer != null
+                    ? businessLayer.selAsset : null;
+        }
+    }
+
     // current subscription record
     public SubscriptionReplica__c Subscription{
         get {
@@ -40,6 +48,56 @@ public with sharing class AssetSubscriptionAllocationController {
 
     private AssetSubscriptionAllocationBusinessLayer businessLayer;
 
+    public Decimal remainingQuantity {
+        get {
+            return businessLayer != null
+                    ? businessLayer.remainingQuantity : null;
+        }
+    }
+
+//    public Decimal remainingQuantity {
+//        get; set;
+//    }
+    public Decimal remainingPercentage {
+        get {
+            return businessLayer != null
+                    ? businessLayer.remainingPercentage : null;
+        }
+    }
+    public Decimal remainingBudgetedHours {
+        get {
+            return businessLayer != null
+                    ? businessLayer.remainingBudgetedHours : null;
+        }
+    }
+
+    public Decimal remainingSubscriptionQuantity {
+        get {
+            return businessLayer != null
+                    ? businessLayer.remainingSubscriptionQuantity : null;
+        }
+    }
+    public Decimal remainingSubscriptionPercentage {
+        get {
+            return businessLayer != null
+                    ? businessLayer.remainingSubscriptionPercentage : null;
+        }
+    }
+
+    public String AssetName {
+        get {
+            return businessLayer != null
+                    ? businessLayer.assetName : null;
+        }
+    }
+
+    public String SubscriptionName {
+        get {
+            return businessLayer != null
+                    ? businessLayer.subscriptionName : null;
+        }
+    }
+
     // constructor
     public AssetSubscriptionAllocationController(){
 
@@ -60,6 +118,10 @@ public with sharing class AssetSubscriptionAllocationController {
 
         try{
             businessLayer.createAssetAllocation();
+            businessLayer.getAssetRemainingQuantityNPercentage(Asset);
+//            if(Asset != null)
+//                remainingQuantity = Asset.RemainingQuantity__c;
+
         } catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while creating a new asset allocation. ' + ex.getMessage()));
             system.debug('createAssetAllocation(): Exception - ' + ex);
@@ -91,6 +153,7 @@ public with sharing class AssetSubscriptionAllocationController {
             if(success){
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Saved Successfully.'));
                 businessLayer = new AssetSubscriptionAllocationBusinessLayer(currentId);
+                businessLayer.getAssetRemainingQuantityNPercentage(Asset);
             } else{
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line item(s) has error.'));
             }
@@ -108,6 +171,7 @@ public with sharing class AssetSubscriptionAllocationController {
 
         try{
             businessLayer.createSubscriptionAllocation();
+            businessLayer.getSubscriptionRemainingQuantityNPercentage(Subscription);
         } catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while creating a new subscription allocation. ' + ex.getMessage()));
             system.debug('createSubscriptionAllocation(): Exception - ' + ex);
@@ -139,6 +203,7 @@ public with sharing class AssetSubscriptionAllocationController {
             if (success){
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Saved Successfully.'));
                 businessLayer = new AssetSubscriptionAllocationBusinessLayer(currentId);
+                businessLayer.getSubscriptionRemainingQuantityNPercentage(Subscription);
             } else{
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line item(s) has error.'));
             }
@@ -159,6 +224,8 @@ public with sharing class AssetSubscriptionAllocationController {
             system.debug('changeAsset(): rowId - ' + rowId);
 
             businessLayer.changeAsset(Integer.valueOf(rowid));
+//            if(SelAsset != null)
+//                remainingQuantity = SelAsset.RemainingQuantity__c;
 
         } catch (Exception ex){
             system.debug('changeAsset(): Exception - ' + ex);

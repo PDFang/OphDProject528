@@ -14,7 +14,7 @@ public  class XMRestGroupTest {
 
         Test.setMock(HttpCalloutMock.class, fakeResponse);
         XMRestGroup xm = new XMRestGroup();
-        List<XMGroupMemberModel> d =  xm.GetXMPersonGroupsById('Test01');
+        List<XMGroupMemberModel> d =  xm.GetXMPersonGroupsById('Test01', 'eventType');
         test.stopTest();
         system.debug(d);
 

@@ -71,6 +71,8 @@ public class PartnerCaseProxyService {
         public String ReasonDetails;
         public String EtmsTroubleType;
         public String TroubleTypeDescription;
+        public String DialFrom;
+        public String DialTo;
         private String[] SalesforceId_type_info = new String[]{'SalesforceId','http://tempuri.org/',null,'0','1','false'};
         private String[] Number_x_type_info = new String[]{'Number','http://tempuri.org/',null,'0','1','false'};
         private String[] Comment_type_info = new String[]{'Comment','http://tempuri.org/',null,'0','1','false'};
@@ -90,11 +92,13 @@ public class PartnerCaseProxyService {
         private String[] ReasonDetails_type_info = new String[]{'ReasonDetails','http://tempuri.org/',null,'0','1','false'};
         private String[] EtmsTroubleType_type_info = new String[]{'EtmsTroubleType','http://tempuri.org/',null,'0','1','false'};
         private String[] TroubleTypeDescription_type_info = new String[]{'TroubleTypeDescription','http://tempuri.org/',null,'0','1','false'};
+        private String[] DialFrom_type_info = new String[]{'DialFrom','http://tempuri.org/',null,'0','1','false'};
+        private String[] DialTo_type_info = new String[]{'DialTo','http://tempuri.org/',null,'0','1','false'};
         private String[] apex_schema_type_info = new String[]{'http://tempuri.org/','true','false'};
-        private String[] field_order_type_info = new String[]{'SalesforceId','Number_x','Comment','Description','ContactName','ContactPhone','OwnerName','OwnerPhone','CadebillAccountNumber','EventTime','Country','AccountName','Priority','Product','RequestType','Reason','ReasonDetails','EtmsTroubleType','TroubleTypeDescription'};
+        private String[] field_order_type_info = new String[]{'SalesforceId','Number_x','Comment','Description','ContactName','ContactPhone','OwnerName','OwnerPhone','CadebillAccountNumber','EventTime','Country','AccountName','Priority','Product','RequestType','Reason','ReasonDetails','EtmsTroubleType','TroubleTypeDescription','DialFrom','DialTo'};
     }
     public class PartnerCaseProxySoap {
-        public String endpoint_x = 'https://labproxy.ucn.net/PartnerProxyService/PartnerCaseProxy.asmx';
+        public String endpoint_x = 'http://localhost:32164/PartnerCaseProxy.asmx';
         public Map<String,String> inputHttpHeaders_x;
         public Map<String,String> outputHttpHeaders_x;
         public String clientCertName_x;

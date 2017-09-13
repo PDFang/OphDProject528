@@ -205,6 +205,10 @@ private class CaseAssignmentTestClass {
         Account a = inContactBaseClass.CreateAccount('testName');
         a.Site = 'Test';
         a.CS_AM__c = UserInfo.getUserId();
+        a.CSM__c = UserInfo.getUserId();
+        a.TechnicalSuccessManagerprimary__c = UserInfo.getUserId();
+        a.TSA__c = UserInfo.getUserId();
+        a.TSA_Manager__c = UserInfo.getUserId();
                 
         insert a;
         System.debug('Insert accounts.');
@@ -271,6 +275,85 @@ private class CaseAssignmentTestClass {
         
         extension.commentBody = 'Test Comment';
         extension.Save();
+    }
+
+    static testmethod void KnowIssueClosedTest(){
+
+        ProductEventMap__c testEventMap = new ProductEventMap__c();
+        testEventMap.HasClusters__c = true;
+        testEventMap.Name = 'Test Product';
+        testEventMap.ImplementedProduct__c = 'Test Product';
+        testEventMap.Product__c = 'Test Product';
+        testEventMap.Platform__c = 'Cluster - inContact';
+        insert testEventMap;
+
+        Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SobjectType.Case.getRecordTypeInfosByName();
+
+        // known issue
+        Case knownIssue = new Case(
+                //AccountId = testAccount.Id,
+                RecordTypeId = recordTypeMap.get('Known Issue').getRecordTypeId(),
+                Type = 'Known Issue',
+                Status = 'New',
+                KB_Attached__c = false,
+                Subject = 'KnowIssueClosedTest',
+                Description = 'KnowIssueClosedTest',
+                Origin = 'Email',
+                ProductImpacted__c = 'Test Product',
+                PlatformsImpacted__c = 'C1 - inContact'
+
+        );
+
+        //set default assignment rule
+        database.DMLOptions dmo = new database.DMLOptions();
+        dmo.assignmentRuleHeader.useDefaultRule = true;
+        knownIssue.setOptions(dmo);
+
+        insert knownIssue;
+
+        Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
+        Account testAccount = new Account(
+                Name = 'KnowIssueClosedTest Account',
+                Type = 'Customer',
+                RecordTypeId = accountRecordTypeMap.get('Customers').getRecordTypeId(),
+                IsPartner__c = false,
+                CustomerSegment__c = 'Strategic',
+                GYRStatus__c = 'Green',
+                inContact_Cluster__c = 'C7'
+        );
+
+        insert testAccount;
+
+        Case incident = new Case(
+                AccountId = testAccount.Id,
+                RecordTypeId = recordTypeMap.get('Incident').getRecordTypeId(),
+                Type = 'Incident',
+                Status = 'New',
+                KB_Attached__c = false,
+                Subject = 'KnowIssueClosedTest',
+                Description = 'KnowIssueClosedTest',
+                Origin = 'Web',
+                Priority = 'P3'
+        );
+        incident.setOptions(dmo);
+        insert incident;
+
+        test.startTest();
+
+        // attach to KI
+        incident.KnownIssue__c = knownIssue.Id;
+        update incident;
+
+        test.stopTest();
+
+        Case ki = [Select PlatformsImpacted__c from Case where Id = :knownIssue.Id ];
+        system.assert(ki.PlatformsImpacted__c.containsIgnoreCase('C7 - inContact'), ki.PlatformsImpacted__c);
+
+
+        // close KI
+        knownIssue.Status = 'Closed';
+        update knownIssue;
+
     }
 
 }

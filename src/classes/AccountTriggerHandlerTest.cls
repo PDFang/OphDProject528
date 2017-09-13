@@ -135,7 +135,7 @@ private class AccountTriggerHandlerTest {
         Double riskOfLeavingScore = accountScoreCalculator.CalculateRiskOfLeavingScore(testAccount.Risk_of_Leaving__c, (Double)riskOfLeavingMultiplier.Multiplier__c);
         Double gyrStatusScore = accountScoreCalculator.CalculateGYRColor(testAccount.GYRStatus__c);
         Double stategicAccountScore = accountScoreCalculator.CalculateStrategicAccountScore(testAccount.CustomerSegment__c, (Double)stategicAccountMultiplier.Multiplier__c);
-        Double partnerAccountScore = accountScoreCalculator.CalculatePartnerAccountScore(testAccount.IsPartner__c, (Double)partnerAccountMultiplier.Multiplier__c);
+        Double partnerAccountScore = accountScoreCalculator.CalculatePartnerAccountScore(testAccount.RecordType.Name, (Double)partnerAccountMultiplier.Multiplier__c);
         Double brandVisibilityScore = accountScoreCalculator.CalculateBrandVisibilityScore(testAccount.Brand_Visibility__c, (Double)brandVisibilityMultiplier.Multiplier__c);
         Double industryLeaderScore = accountScoreCalculator.CalculateIndustryLeaderScore(testAccount.Industry_Leadership_Vocality__c, (Double)industryLeaderMultiplier.Multiplier__c);
         Double socialMediaScore = accountScoreCalculator.CalculateSocialMediaPresenceScore(testAccount.Social_Media_Presence__c, (Double)socialMediaMultiplier.Multiplier__c);
@@ -234,12 +234,11 @@ private class AccountTriggerHandlerTest {
         insert multipliers;
         insert testAccount;
 
-        Account testIncident = [Select Id, Risk_of_Leaving__c, GYRStatus__c, CustomerSegment__c, IsPartner__c, Brand_Visibility__c,Industry_Leadership_Vocality__c,Social_Media_Presence__c,Referenceable__c  from Account where Id = :testAccount.Id];
+        Account testIncident = [Select Id, RecordType.Name, Risk_of_Leaving__c, GYRStatus__c, CustomerSegment__c, IsPartner__c, Brand_Visibility__c,Industry_Leadership_Vocality__c,Social_Media_Presence__c,Referenceable__c  from Account where Id = :testAccount.Id];
 
         testIncident.Risk_of_Leaving__c = 'Medium';
         testIncident.CustomerSegment__c = 'Large';
         testIncident.GYRStatus__c = 'Yellow';
-        testIncident.IsPartner__c = true;
         testIncident.Brand_Visibility__c = 'Yes';
         testIncident.Industry_Leadership_Vocality__c = 'No';
         testIncident.Social_Media_Presence__c = 'no';
@@ -256,7 +255,7 @@ private class AccountTriggerHandlerTest {
         Double riskOfLeavingScore = accountScoreCalculator.CalculateRiskOfLeavingScore(testIncident.Risk_of_Leaving__c, (Double)riskOfLeavingMultiplier.Multiplier__c);
         Double gyrStatusScore = accountScoreCalculator.CalculateGYRColor(testIncident.GYRStatus__c);
         Double stategicAccountScore = accountScoreCalculator.CalculateStrategicAccountScore(testIncident.CustomerSegment__c, (Double)stategicAccountMultiplier.Multiplier__c);
-        Double partnerAccountScore = accountScoreCalculator.CalculatePartnerAccountScore(testIncident.IsPartner__c, (Double)partnerAccountMultiplier.Multiplier__c);
+        Double partnerAccountScore = accountScoreCalculator.CalculatePartnerAccountScore(testIncident.RecordType.Name, (Double)partnerAccountMultiplier.Multiplier__c);
         Double brandVisibilityScore = accountScoreCalculator.CalculateBrandVisibilityScore(testIncident.Brand_Visibility__c, (Double)brandVisibilityMultiplier.Multiplier__c);
         Double industryLeaderScore = accountScoreCalculator.CalculateIndustryLeaderScore(testIncident.Industry_Leadership_Vocality__c, (Double)industryLeaderMultiplier.Multiplier__c);
         Double socialMediaScore = accountScoreCalculator.CalculateSocialMediaPresenceScore(testIncident.Social_Media_Presence__c, (Double)socialMediaMultiplier.Multiplier__c);
@@ -355,7 +354,7 @@ private class AccountTriggerHandlerTest {
         Double riskOfLeavingScore = accountScoreCalculator.CalculateRiskOfLeavingScore(accountsToInsert[0].Risk_of_Leaving__c, (Double)riskOfLeavingMultiplier.Multiplier__c);
         Double gyrStatusScore = accountScoreCalculator.CalculateGYRColor(accountsToInsert[0].GYRStatus__c);
         Double stategicAccountScore = accountScoreCalculator.CalculateStrategicAccountScore(accountsToInsert[0].CustomerSegment__c, (Double)stategicAccountMultiplier.Multiplier__c);
-        Double partnerAccountScore = accountScoreCalculator.CalculatePartnerAccountScore(accountsToInsert[0].IsPartner__c, (Double)partnerAccountMultiplier.Multiplier__c);
+        Double partnerAccountScore = accountScoreCalculator.CalculatePartnerAccountScore(accountsToInsert[0].RecordType.Name, (Double)partnerAccountMultiplier.Multiplier__c);
         Double brandVisibilityScore = accountScoreCalculator.CalculateBrandVisibilityScore(accountsToInsert[0].Brand_Visibility__c, (Double)brandVisibilityMultiplier.Multiplier__c);
         Double industryLeaderScore = accountScoreCalculator.CalculateIndustryLeaderScore(accountsToInsert[0].Industry_Leadership_Vocality__c, (Double)industryLeaderMultiplier.Multiplier__c);
         Double socialMediaScore = accountScoreCalculator.CalculateSocialMediaPresenceScore(accountsToInsert[0].Social_Media_Presence__c, (Double)socialMediaMultiplier.Multiplier__c);

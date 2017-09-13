@@ -4,6 +4,18 @@ public class AssetSubscriptionAllocationBusinessLayer {
     public SubscriptionReplica__c currentSubscription;
     public Project__c currentProject;
 
+    public Asset selAsset;
+
+    public Decimal remainingQuantity;
+    public Decimal remainingPercentage;
+    public Decimal remainingBudgetedHours;
+
+    public Decimal remainingSubscriptionQuantity;
+    public Decimal remainingSubscriptionPercentage;
+
+    public String assetName;
+    public String subscriptionName;
+
     public List<AssetSubscriptionAllocationModel> assetAllocations{get; set;}
     public List<AssetSubscriptionAllocationModel> subscriptionAllocations{get; set;}
 
@@ -13,7 +25,8 @@ public class AssetSubscriptionAllocationBusinessLayer {
             'RecordType.Name',
             'Quantity',
             'Budgeted_Hours__c',
-            'Parent_Project__c'
+            'Parent_Project__c',
+            'RemainingQuantity__c'
     };
 
     static Set<String> subscriptionFields = new Set<String>{
@@ -139,8 +152,8 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
         assetAllocations = new List<AssetSubscriptionAllocationModel>();
 
-        String soql = 'Select Project__c, Percent_Allocation__c, Asset__c, Asset__r.Quantity, Asset__r.Budgeted_Hours__c, '
-                + 'Quantity_Allocation__c, Hours_Allocated__c '
+        String soql = 'Select Project__c, Name, RemainingQuantity__c, ProjectPhase__c, Percent_Allocation__c, Asset__c, Asset__r.Quantity, Asset__r.Budgeted_Hours__c, '
+                + 'Quantity_Allocation__c, Hours_Allocated__c, Asset__r.Total_Allocated_Quantity__c, Asset__r.Total_Allocated_Hours__c '
                 + 'from Project_Asset_Allocation__c where ';
 
         if(currentProject != null){
@@ -192,7 +205,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
         subscriptionAllocations = new List<AssetSubscriptionAllocationModel>();
 
-        String soql = 'Select Project__c, Subscription__c, Subscription__r.Quantity__c, Subscription__r.Budgeted_Hours__c, Percent_Allocation__c, Quantity_Allocation__c, Hours_Allocated__c '
+        String soql = 'Select Project__c, Subscription__c, Name, ProjectPhase__c, Subscription__r.Quantity__c, Subscription__r.Budgeted_Hours__c, Percent_Allocation__c, Quantity_Allocation__c, Hours_Allocated__c, Subscription__r.Total_Allocated_Quantity__c, Subscription__r.Total_Allocated_Hours__c '
                 + 'from Project_Subscription_Allocation__c where ';
         if(currentProject != null){
             soql += ' Project__c = \'' + currentProject.Id + '\'';
@@ -220,15 +233,21 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
                 system.debug('changeAsset(): currentAsset - ' + model.assetAllocation.Asset__c);
 
-                Asset selAsset = getAsset(model.assetAllocation.Asset__c);
+                selAsset = getAsset(model.assetAllocation.Asset__c);
                 if(selAsset != null){
                     model.isQuantityAllocation = (selAsset.Quantity > 1);
-                    model.isPercentageAllocation = (selAsset.Budgeted_Hours__c > 0);
+                    model.isPercentageAllocation = (selAsset.Budgeted_Hours__c > 0 && selAsset.Quantity <= 1);
+                    model.isAllocatedHours = (selAsset.Quantity > 1);
                     model.assetAllocation.Asset__r = selAsset;
                 }else{
                     model.isError = true;
                     model.message = 'Asset not found';
                 }
+                remainingQuantity = null;
+                remainingBudgetedHours = null;
+                remainingPercentage = null;
+                assetName = selAsset.Name;
+                getAssetRemainingQuantityNPercentage(selAsset);
 
                 system.debug('changeAsset(): model - ' + model);
             }
@@ -250,13 +269,19 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
                 if(selSubscription != null){
                     model.isQuantityAllocation = (selSubscription.Quantity__c > 1);
-                    model.isPercentageAllocation = (selSubscription.Budgeted_Hours__c > 0);
+                    model.isPercentageAllocation = (selSubscription.Budgeted_Hours__c > 0 && selSubscription.Quantity__c <= 1);
+                    model.isAllocatedHours = (selSubscription.Quantity__c > 1);
                     model.subscriptionAllocation.Subscription__r = selSubscription;
                 }else{
                     model.isError = true;
                     model.message = 'Subscription not found';
                 }
 
+                remainingSubscriptionQuantity = null;
+                remainingSubscriptionPercentage = null;
+                remainingBudgetedHours = null;
+                subscriptionName = selSubscription.Name;
+                getSubscriptionRemainingQuantityNPercentage(selSubscription);
                 system.debug('changeSubscription(): model - ' + model);
 
             }
@@ -269,6 +294,8 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
         system.debug('createAssetAllocation(): currentAsset - ' + currentAsset);
         system.debug('createAssetAllocation(): currentProject - ' + currentProject);
+
+        system.debug('Passed');
 
         AssetSubscriptionAllocationModel newModel = new AssetSubscriptionAllocationModel(currentAsset, currentProject, assetAllocations.size());
         assetAllocations.add(newModel);
@@ -338,6 +365,12 @@ public class AssetSubscriptionAllocationBusinessLayer {
             if(model.isPercentageAllocation && model.assetAllocation.Percent_Allocation__c > 0){
                 model.assetAllocation.Hours_Allocated__c = model.assetAllocation.Percent_Allocation__c * model.assetAllocation.Asset__r.Budgeted_Hours__c / 100;
             }
+
+            if(model.isAllocatedHours && model.assetAllocation.Hours_Allocated__c > 0){
+                model.assetAllocation.Percent_Allocation__c = 100 * model.assetAllocation.Hours_Allocated__c/model.assetAllocation.Asset__r.Budgeted_Hours__c;
+            }
+            else if(model.isAllocatedHours && (model.assetAllocation.Hours_Allocated__c <= 0 || model.assetAllocation.Hours_Allocated__c == null))
+                model.assetAllocation.Percent_Allocation__c = null;
 
             if(!(model.assetAllocation.Hours_Allocated__c > 0) && !(model.assetAllocation.Quantity_Allocation__c > 0)){
                 model.isError = true;
@@ -473,6 +506,14 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 model.subscriptionAllocation.Hours_Allocated__c = model.subscriptionAllocation.Percent_Allocation__c * model.subscriptionAllocation.Subscription__r.Budgeted_Hours__c / 100;
             }
 
+            System.debug('model.subscriptionAllocation.Hours_Allocated__c' + model.subscriptionAllocation.Hours_Allocated__c);
+
+            if(model.isAllocatedHours && model.subscriptionAllocation.Hours_Allocated__c > 0){
+                model.subscriptionAllocation.Percent_Allocation__c = 100 * model.subscriptionAllocation.Hours_Allocated__c/model.subscriptionAllocation.Subscription__r.Budgeted_Hours__c;
+            }
+            else if(model.isAllocatedHours && (model.subscriptionAllocation.Hours_Allocated__c <= 0 || model.subscriptionAllocation.Hours_Allocated__c == null))
+                model.subscriptionAllocation.Percent_Allocation__c = null;
+
             if(!(model.subscriptionAllocation.Hours_Allocated__c > 0) && !(model.subscriptionAllocation.Quantity_Allocation__c > 0)){
                 model.isError = true;
                 model.message = 'Either allocated quantity or allocated hours must be greater than or equal to one.';
@@ -526,6 +567,78 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
         return true;
 
+    }
+//
+//    public Decimal getRemainingQuantity(){
+//        if(currentAsset != null)
+//            return currentAsset.RemainingQuantity__c;
+//        else if (selAsset != null)
+//            return selAsset.RemainingQuantity__c;
+//
+//        return null;
+//    }
+
+    public void getAssetRemainingQuantityNPercentage(Asset Asset){
+        system.debug('Asset' + Asset);
+        if(Asset != null){
+            system.debug('Asset.Quantity' + Asset.Quantity);
+            if(Asset.Quantity != null && Asset.Quantity > 1)
+                if(Asset.Total_Allocated_Quantity__c == null || Asset.Total_Allocated_Quantity__c == 0)
+                    remainingQuantity = Asset.Quantity;
+                else
+                    remainingQuantity = Asset.Quantity - Asset.Total_Allocated_Quantity__c;
+
+            if(Asset.Budgeted_Hours__c != null && Asset.Budgeted_Hours__c > 0){
+                if(Asset.Total_Allocated_Hours__c == null || Asset.Total_Allocated_Hours__c == 0)
+                    if(Asset.Quantity <= 1)
+                        remainingPercentage = 100 - ((0/Asset.Budgeted_Hours__c) * 100);
+                    else
+                        remainingBudgetedHours = Asset.Budgeted_Hours__c;
+                else
+                    if(Asset.Quantity <= 1)
+                        remainingPercentage = 100 -  (Asset.Total_Allocated_Hours__c/Asset.Budgeted_Hours__c) * 100;
+                    else
+                        remainingBudgetedHours = Asset.Budgeted_Hours__c - Asset.Total_Allocated_Hours__c;
+            }
+
+            else{
+                if(Asset.Quantity <= 1)
+                    remainingPercentage = 0;
+                else
+                    remainingBudgetedHours = 0;
+            }
+
+        }
+    }
+
+    public void getSubscriptionRemainingQuantityNPercentage(SubscriptionReplica__c Subscription){
+        if(Subscription != null){
+            if(Subscription.Quantity__c != null && Subscription.Quantity__c > 1)
+                if(Subscription.Total_Allocated_Quantity__c == null || Subscription.Total_Allocated_Quantity__c == 0)
+                    remainingSubscriptionQuantity = Subscription.Quantity__c;
+                else
+                    remainingSubscriptionQuantity = Subscription.Quantity__c - Subscription.Total_Allocated_Quantity__c;
+
+            if(Subscription.Budgeted_Hours__c != null && Subscription.Budgeted_Hours__c > 0){
+                if(Subscription.Total_Allocated_Hours__c == null || Subscription.Total_Allocated_Hours__c == 0)
+                    if(Subscription.Quantity__c <= 1)
+                        remainingSubscriptionPercentage = 100 - ((0/Subscription.Budgeted_Hours__c) * 100);
+                    else
+                        remainingBudgetedHours = Subscription.Budgeted_Hours__c;
+                else
+                    if(Subscription.Quantity__c <= 1)
+                        remainingSubscriptionPercentage = 100 -  (Subscription.Total_Allocated_Hours__c/Subscription.Budgeted_Hours__c) * 100;
+                    else
+                        remainingBudgetedHours = Subscription.Budgeted_Hours__c - Subscription.Total_Allocated_Hours__c;
+            }
+
+            else{
+                if(Subscription.Quantity__c <= 1)
+                    remainingSubscriptionPercentage = 0;
+                else
+                    remainingBudgetedHours = 0;
+            }
+        }
     }
 
     // parse database errors
