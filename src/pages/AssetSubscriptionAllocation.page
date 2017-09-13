@@ -49,10 +49,14 @@
         <apex:pageBlock title="" id="pgblock1" mode="edit" rendered="{!Not(ISNULL(Asset))|| Not(ISNULL(Project))}">
 
             <apex:pageMessages />
-
+            <apex:outputText value ="{!AssetName}" style="font-weight: bold !important; font-size:10pt !important; color:red" rendered="{! (Not(ISNULL(AssetName)) || Not(ISNULL(Project))) && ISNULL(remainingPercentage) }" >
+            </apex:outputText>
+            <br/>
             <apex:outputText value ="Remaining Quantity to allocate is : {!remainingQuantity}" style="font-weight: bold !important; font-size:10pt !important; color:red" rendered="{!NOT(ISNULL(remainingQuantity))}" >
             </apex:outputText>
-            <br />
+            <apex:outputText value ="{!AssetName}" style="font-weight: bold !important; font-size:10pt !important; color:red" rendered="{! (Not(ISNULL(AssetName)) || Not(ISNULL(Project))) && Not(ISNULL(remainingPercentage)) }" >
+            </apex:outputText>
+            <br/>
             <apex:outputText value ="Remaining Percentage to allocate is : {!remainingPercentage}%" style="font-weight: bold !important; font-size:10pt !important; color:red" rendered="{!NOT(ISNULL(remainingPercentage))}">
             </apex:outputText>
             <apex:outputText value ="Remaining Hours to allocate are : {!remainingBudgetedHours}" style="font-weight: bold !important; font-size:10pt !important; color:red" rendered="{!NOT(ISNULL(remainingBudgetedHours))}">
@@ -83,9 +87,12 @@
                     <apex:column headervalue="Asset Allocation Id">
                         <apex:outputLink value="/{!entry.assetAllocation.Id}">{!entry.assetAllocation.Name}</apex:outputLink>
                     </apex:column>
-                    <apex:column headervalue="Project Phase">
+                    <apex:column headervalue="Project Number">
                         <apex:inputField value="{!entry.assetAllocation.Project__c}" required="false" rendered="{!AND(ISBLANK(entry.assetAllocation.Id), ISNULL(project))}"/>
                         <apex:outputField value="{!entry.assetAllocation.Project__c}" rendered="{!OR(NOT(ISBLANK(entry.assetAllocation.Id)), NOT(ISNULL(project)))}"/>
+                    </apex:column>
+                    <apex:column headervalue="Project Phase">
+                        <apex:outputField value="{!entry.assetAllocation.ProjectPhase__c}" rendered="{!(NOT(ISNULL(entry.assetAllocation.ProjectPhase__c)))}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Quantity">
                         <apex:inputField value="{!entry.assetAllocation.Quantity_Allocation__c}" rendered="{!entry.isQuantityAllocation}"/>
@@ -98,6 +105,9 @@
                     <apex:column headervalue="Allocated Hours">
                         <apex:inputField value="{!entry.assetAllocation.Hours_Allocated__c}" rendered="{!entry.isAllocatedHours}"/>
                         <apex:outputField value="{!entry.assetAllocation.Hours_Allocated__c}" rendered="{!NOT(entry.isAllocatedHours)}"/>
+                    </apex:column>
+                    <apex:column headervalue="Remaining Quantity">
+                        <apex:outputText value="{!entry.assetAllocation.RemainingQuantity__c}" />
                     </apex:column>
                 </apex:pageBlockTable>
 
@@ -141,9 +151,12 @@
                     <apex:column headervalue="Subscription Allocation Id">
                         <apex:outputLink value="/{!entry.subscriptionAllocation.Id}">{!entry.subscriptionAllocation.Name}</apex:outputLink>
                     </apex:column>
-                    <apex:column headervalue="Project Phase">
+                    <apex:column headervalue="Project Number">
                         <apex:inputField value="{!entry.subscriptionAllocation.Project__c}" required="false" rendered="{!AND(ISBLANK(entry.subscriptionAllocation.Id), ISNULL(project))}"/>
                         <apex:outputField value="{!entry.subscriptionAllocation.Project__c}" rendered="{!OR(NOT(ISBLANK(entry.subscriptionAllocation.Id)), NOT(ISNULL(project)))}"/>
+                    </apex:column>
+                    <apex:column headervalue="Project Phase">
+                        <apex:outputField value="{!entry.subscriptionAllocation.ProjectPhase__c}" rendered="{!(NOT(ISNULL(entry.subscriptionAllocation.ProjectPhase__c)))}"/>
                     </apex:column>
                     <apex:column headervalue="Allocated Quantity">
                         <apex:inputField value="{!entry.subscriptionAllocation.Quantity_Allocation__c}" rendered="{!entry.isQuantityAllocation}"/>
