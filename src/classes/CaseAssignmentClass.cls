@@ -85,6 +85,20 @@ public class CaseAssignmentClass
 		}
 	}
 
+	public static void AssignCaseToAdvancedTechSupport(set<id> caseIds){
+		if(caseIds.size() > 0){
+			list<case> lstCases = new List<case>();
+			list<Group> grpList = new list<Group>([select Id from Group where developerName = 'AdvancedTechnicalSupportQueue' and Type = 'Queue' Limit 1]);
+			for(Id caseId : caseIds){
+				lstCases.add(new Case(Id = caseId,
+						OwnerId = grpList[0].Id
+				));
+			}
+
+			update lstCases;
+		}
+	}
+
 	// cleanup the below method in the next release
 //	public static void setCasePriority(Case c, Boolean isUpdate)
 //	{

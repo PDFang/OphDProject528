@@ -5,6 +5,7 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
     public static final String ICE_PARTNER = 'iCE';
 
     private static final Set<String> psSaaSProjectSet = ProjectShareHelper.psSaaSProjectSet;
+    private static final Set<String> readOnlyRecordTypesSet = ProjectShareHelper.readOnlyRecordTypesSet;
 
     private static Map<Id, List<User>> accountUserMap = null; // key partner account ID
     private static Map<Id, User> partnerUserMap = null; // key user ID
@@ -275,6 +276,17 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
             }
             projectList.add(project);
         }
+        for(Project__c project : [
+                Select Id, Account__c from Project__c
+                where Account__c IN :customerIdSet and RecordType.Name in :readOnlyRecordTypesSet
+        ]){
+            List<Project__c> projectList = accountProjectMap.get(project.Account__c);
+            if(projectList == null) {
+                projectList = new List<Project__c>();
+                accountProjectMap.put(project.Account__c, projectList);
+            }
+            projectList.add(project);
+        }
         if(accountProjectMap.isEmpty()){
             return;
         }
@@ -375,7 +387,7 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
         system.debug(' **** deleteProjectShare() : customerIdSet - '+customerIdSet);
         // Get PS SaaS projects
         Map<Id, Project__c> projectMap = new Map<Id, Project__c>([
-                Select Id, Account__c from Project__c where Account__c IN :customerIdSet and RecordType.Name in :psSaaSProjectSet
+                Select Id, Account__c from Project__c where Account__c IN :customerIdSet and (RecordType.Name in :psSaaSProjectSet or RecordType.Name in :readOnlyRecordTypesSet)
         ]);
         if(projectMap.isEmpty()){
             return;
