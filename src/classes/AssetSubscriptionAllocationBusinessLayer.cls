@@ -25,8 +25,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
             'RecordType.Name',
             'Quantity',
             'Budgeted_Hours__c',
-            'Parent_Project__c',
-            'RemainingQuantity__c'
+            'Parent_Project__c'
     };
 
     static Set<String> subscriptionFields = new Set<String>{
@@ -152,7 +151,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
         assetAllocations = new List<AssetSubscriptionAllocationModel>();
 
-        String soql = 'Select Project__c, Name, RemainingQuantity__c, ProjectPhase__c, Percent_Allocation__c, Asset__c, Asset__r.Quantity, Asset__r.Budgeted_Hours__c, '
+        String soql = 'Select Project__c, Name, ProjectPhase__c, Percent_Allocation__c, Asset__c, Asset__r.Quantity, Asset__r.Budgeted_Hours__c, '
                 + 'Quantity_Allocation__c, Hours_Allocated__c, Asset__r.Total_Allocated_Quantity__c, Asset__r.Total_Allocated_Hours__c '
                 + 'from Project_Asset_Allocation__c where ';
 
@@ -235,9 +234,9 @@ public class AssetSubscriptionAllocationBusinessLayer {
 
                 selAsset = getAsset(model.assetAllocation.Asset__c);
                 if(selAsset != null){
-                    model.isQuantityAllocation = (selAsset.Quantity > 1);
+                    model.isQuantityAllocation = (selAsset.Quantity > 1 && selAsset.Total_Allocated_Quantity__c < selAsset.Quantity);
                     model.isPercentageAllocation = (selAsset.Budgeted_Hours__c > 0 && selAsset.Quantity <= 1);
-                    model.isAllocatedHours = (selAsset.Quantity > 1);
+                    model.isAllocatedHours = (selAsset.Quantity > 1 && selAsset.Total_Allocated_Hours__c < selAsset.Budgeted_Hours__c);
                     model.assetAllocation.Asset__r = selAsset;
                 }else{
                     model.isError = true;
@@ -268,9 +267,9 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 SubscriptionReplica__c selSubscription = getSubscription(model.subscriptionAllocation.Subscription__c);
 
                 if(selSubscription != null){
-                    model.isQuantityAllocation = (selSubscription.Quantity__c > 1);
+                    model.isQuantityAllocation = (selSubscription.Quantity__c > 1 && selSubscription.Total_Allocated_Quantity__c < selSubscription.Quantity__c);
                     model.isPercentageAllocation = (selSubscription.Budgeted_Hours__c > 0 && selSubscription.Quantity__c <= 1);
-                    model.isAllocatedHours = (selSubscription.Quantity__c > 1);
+                    model.isAllocatedHours = (selSubscription.Quantity__c > 1 && selSubscription.Budgeted_Hours__c > selSubscription.Total_Allocated_Hours__c);
                     model.subscriptionAllocation.Subscription__r = selSubscription;
                 }else{
                     model.isError = true;
@@ -343,7 +342,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 continue;
             }
 
-            if(!model.isPercentageAllocation && !model.isQuantityAllocation){
+            if(!model.isAllocatedHours && !model.isQuantityAllocation){
                 model.isError = true;
                 model.message = 'Asset has no quantity and budgeted hours. Please delete this row and try again.';
                 error = true;
@@ -481,7 +480,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
                 continue;
             }
 
-            if(!model.isPercentageAllocation && !model.isQuantityAllocation){
+            if(!model.isAllocatedHours && !model.isQuantityAllocation){
                 model.isError = true;
                 model.message = 'Subscription has no quantity and budgeted hours. Please delete this row and try again..';
                 error = true;
