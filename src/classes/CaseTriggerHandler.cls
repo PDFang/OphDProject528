@@ -458,8 +458,12 @@ public class CaseTriggerHandler extends TriggerHandler
     @Future(callout=true)
     private static void createJiraBugForKIFuture(String caseId){
 
-        JiraRestWrapper wrapper = new JiraRestWrapper();
-        wrapper.CreateJIRABug(caseId);
+        try{
+            JiraRestWrapper wrapper = new JiraRestWrapper();
+            wrapper.CreateJIRABug(caseId);
+        }catch(Exception ex) {
+            inContactBaseClass.SendErrorEmail(ex,caseId);
+        }
 
     }
 }
