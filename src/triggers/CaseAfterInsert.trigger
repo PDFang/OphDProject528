@@ -15,6 +15,7 @@ trigger CaseAfterInsert on Case (after insert, after update)
     List<CaseComment> comments = new List<CaseComment>();
     Map<Id,String> eventCaseIds = new Map<Id,String>();
     Map<Id, Id> caseAccountIds = new Map<Id,Id>();
+    set<id> assigntoAdvancedTechSupportIds = new set<Id>();
     Case[] autoEventCases = new Case[]{};
     Id techSupportQueueId;
     // get tech support queue
@@ -112,6 +113,8 @@ trigger CaseAfterInsert on Case (after insert, after update)
 
         }else if(c.RecordTypeId == incidentRecType && (c.SLA_Halfway__c && (trigger.isInsert || (trigger.isUpdate && oldCase.SLA_Halfway__c != c.SLA_Halfway__c))
                  || (c.OwnerId == techSupportQueueId && (trigger.isInsert || (trigger.isUpdate && oldCase.OwnerId != c.OwnerId))))){
+
+            assigntoAdvancedTechSupportIds.add(c.Id);
             CaseComment cc = new CaseComment();
             cc.ParentId = c.Id;
             cc.CommentBody = Label.AdvancedTechSupportCaseComment;
@@ -137,6 +140,11 @@ trigger CaseAfterInsert on Case (after insert, after update)
     {
         CaseAssignmentClass.InsertCaseTeamMembers(caseAccountIds, trigger.new);
     }
+
+    if(!assigntoAdvancedTechSupportIds.isEmpty()){
+        CaseAssignmentClass.AssignCaseToAdvancedTechSupport(assigntoAdvancedTechSupportIds);
+    }
+
 
     
 }

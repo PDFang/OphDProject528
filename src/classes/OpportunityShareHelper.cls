@@ -8,7 +8,7 @@ public class OpportunityShareHelper {
     static Map<Id, List<Account_Partner__c>> partnerMap = null; // key customer Id
 
     public static final Set<String> opportunityRecordTypeSet = new Set<String>{
-            'GSD PS Request',
+            'GSD PS Requests',
             'PM - Standard',
             'New Opportunity',
             'Qualified Opportunity'

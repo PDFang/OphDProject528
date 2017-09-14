@@ -19,7 +19,7 @@ public class AssetSubscriptionAllocationModel {
         );
         this.isQuantityAllocation = (currentAsset != null && currentAsset.Quantity > 1);
         this.isPercentageAllocation = (currentAsset != null && currentAsset.Budgeted_Hours__c > 0 && currentAsset.Quantity <= 1);
-        this.isAllocatedHours = (currentAsset != null && currentAsset.Quantity > 1);
+        this.isAllocatedHours = (currentAsset != null && currentAsset.Quantity > 1 && currentAsset.Budgeted_Hours__c > 0);
         this.rowid = row;
         this.isDelete = false;
 
@@ -30,7 +30,7 @@ public class AssetSubscriptionAllocationModel {
         this.assetAllocation = allocation;
         this.isQuantityAllocation = (allocation.Asset__c != null && allocation.Asset__r.Quantity > 1);
         this.isPercentageAllocation = (allocation.Asset__c != null && allocation.Asset__r.Budgeted_Hours__c > 0 && allocation.Asset__r.Quantity <= 1);
-        this.isAllocatedHours = (allocation.Asset__c != null && allocation.Asset__r.Quantity > 1);
+        this.isAllocatedHours = (allocation.Asset__c != null && allocation.Asset__r.Quantity > 1 && allocation.Asset__r.Budgeted_Hours__c > 0);
         this.rowid = row;
         this.isDelete = false;
 
@@ -45,7 +45,7 @@ public class AssetSubscriptionAllocationModel {
         );
         this.isQuantityAllocation = (currentSubscription != null && currentSubscription.Quantity__c > 1);
         this.isPercentageAllocation = (currentSubscription != null && currentSubscription.Budgeted_Hours__c > 0 && currentSubscription.Quantity__c <= 1);
-        this.isAllocatedHours = (currentSubscription != null && currentSubscription.Quantity__c > 1);
+        this.isAllocatedHours = (currentSubscription != null && currentSubscription.Quantity__c > 1 && currentSubscription.Budgeted_Hours__c > 0);
         this.rowid = row;
         this.isDelete = false;
 
@@ -56,7 +56,7 @@ public class AssetSubscriptionAllocationModel {
         this.subscriptionAllocation = allocation;
         this.isQuantityAllocation = (allocation.Subscription__c != null && allocation.Subscription__r.Quantity__c > 1);
         this.isPercentageAllocation = (allocation.Subscription__c != null && allocation.Subscription__r.Budgeted_Hours__c > 0 && allocation.Subscription__r.Quantity__c <= 1);
-        this.isAllocatedHours = (allocation.Subscription__c != null && allocation.Subscription__r.Quantity__c > 1);
+        this.isAllocatedHours = (allocation.Subscription__c != null && allocation.Subscription__r.Quantity__c > 1 && allocation.Subscription__r.Budgeted_Hours__c > 0);
         this.rowid = row;
         this.isDelete = false;
 
