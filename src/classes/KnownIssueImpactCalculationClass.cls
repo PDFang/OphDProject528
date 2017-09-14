@@ -1,7 +1,6 @@
 /**
  * Created by arnab.karsarkar on 3/15/2017.
  */
-
 public without sharing class KnownIssueImpactCalculationClass {
 
     private KnownIssuesImpactCalculationInterface impactCalculator;
