@@ -1,6 +1,7 @@
 public class CaseTriggerHandler extends TriggerHandler 
 {
     private static boolean staticValuesSet = false;
+    private static boolean createJiraBug = false;
     private static boolean isProxyServiceTurnedOff = false;
     @TestVisible
     private static Integer noOfProxyServiceCallouts = 0;
@@ -58,6 +59,7 @@ public class CaseTriggerHandler extends TriggerHandler
     }
 
     protected override void afterInsert(){
+        createJiraBugForKI((List<Case>) trigger.new);
         if(!isProxyServiceTurnedOff && noOfProxyServiceCallouts == 0)
             CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
     }
@@ -426,6 +428,38 @@ public class CaseTriggerHandler extends TriggerHandler
         PartnerCaseProxyServiceHelper.PushCaseStatusUpdateToProxyService(caseIds);
 
     }
-    
 
+
+    private void createJiraBugForKI(List<Case> newList){
+
+        system.debug('createJiraBugForKI(): CaseCreateKnownIssueExtension.createJiraBug - ' + CaseCreateKnownIssueExtension.createJiraBug);
+        system.debug('createJiraBugForKI(): known issues - ' + newList.size());
+
+        if(CaseCreateKnownIssueExtension.createJiraBug == null || !CaseCreateKnownIssueExtension.createJiraBug || newList.size() > 1){
+            system.debug('createJiraBugForKI(): skipped @future callout');
+            return;
+        }
+
+        List<Id> caseIds = new List<Id>();
+        for(Case newCase : newList){
+            if(newCase.RecordTypeId == knownIssueRecordType && String.isBlank(newCase.JIRA_Key__c)){
+                caseIds.add(newCase.Id);
+            }
+        }
+
+        system.debug('createJiraBugForKI(): caseIds - ' + caseIds);
+
+        if(caseIds.size() > 0 && !system.isFuture() && !system.isBatch()){
+            createJiraBugForKIFuture(caseIds[0]);
+        }
+
+    }
+
+    @Future(callout=true)
+    private static void createJiraBugForKIFuture(String caseId){
+
+        JiraRestWrapper wrapper = new JiraRestWrapper();
+        wrapper.CreateJIRABug(caseId);
+
+    }
 }
