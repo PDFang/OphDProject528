@@ -203,6 +203,37 @@ public class LMAOrderAutoSubmitDeterminationTest {
 		system.assertEquals(1, objEDAAssert.size());
 	}
 
+	public static testmethod void LMAEDAOrderBatchSchedulerTest(){
+
+		setup();
+
+
+
+//		list<EDA_Cutoff__mdt> edaCutoffList = new list<EDA_Cutoff__mdt>([select Id, EDACutoffDate__c, EDACutoffLicense__c from EDA_CutOff__mdt where DeveloperName = : 'XTest' limit 1]);
+		Id recordTypeId = [select Id from RecordType where Name = 'Active' and SobjectType = 'sfLma__License__c'].Id;
+		list<sfLma__License__c> licenses = new list<sfLma__License__c>([select Id, sfLma__Status__c, sfLma__Subscriber_Org_ID__c, RecordTypeId from sfLma__License__c]);
+
+		licenses[0].sfLma__Status__c = 'Active';
+		licenses[0].RecordTypeId = recordTypeId;
+		// update first License - Initial order
+		update licenses[0];
+
+		List<EDA__C> objEDA = [SELECT License__c, Service_Order__c from EDA__c where Status__c = 'In Queue'];
+
+		objEDA[0].AutoSubmit__c = true;
+		update objEDA[0];
+
+		Test.startTest();
+		EDA__c testEDA = [SELECT License__c, Service_Order__c from EDA__c where AutoSubmit__c = true and Status__c = 'In Queue' LIMIT 1];
+
+		LMAEDAOrderBatchScheduler scheduler = new LMAEDAOrderBatchScheduler();
+		String sch = '0 0 23 * * ?';
+		system.schedule('Test LMA Scheduler', sch, scheduler);
+
+		Test.stopTest();
+		List<EDA__C> objEDAAssert = [SELECT License__c, Service_Order__c from EDA__c where Status__c = 'Processed' and AutoSubmit__c = true];
+		system.assertEquals(1, objEDAAssert.size());
+	}
 
 
 }
