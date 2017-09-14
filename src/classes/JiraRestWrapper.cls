@@ -1,8 +1,8 @@
-/**
- * Created by mohandaas.rangaswamy on 8/29/2017.
- */
-
 public class JiraRestWrapper {
+
+    static final string createUrl = '/issue/CreateIssue';
+
+    public class JiraCalloutException extends Exception{}
 
     private class CreateRequest{
         protected String SObjectType;
@@ -11,16 +11,16 @@ public class JiraRestWrapper {
         protected String IssueType;
     }
 
-    private class CreateResponse{
+    public class CreateResponse{
         protected String issueKey;
         protected String[] errors;
     }
 
     public String CreateJIRABug(String caseId) {
 
-        system.debug('CreateJIRABug(): caseId - ' + caseId);
+        String jiraKey = null;
 
-        HttpRequest request = new HttpRequest();
+        system.debug('CreateJIRABug(): caseId - ' + caseId);
 
         CreateRequest newRequest = new CreateRequest();
         newRequest.SObjectType = 'Case';
@@ -28,33 +28,39 @@ public class JiraRestWrapper {
         newRequest.Project = 'IC';
         newRequest.IssueType = '10004';
 
-        //String body = '{"SObjectType": "Case", "Id": "'+ caseId + '", "Project" : "IC", "IssueType" : "10004"}';
         String body = JSON.serialize(newRequest);
         system.debug('CreateJIRABug(): body - ' + body);
-        request.setBody(body);
 
-        request.setEndpoint('callout:JIRA_Proxy_Service' + '/issue/CreateIssue');
-        request.setMethod('POST');
-        request.setHeader('Content-Type', 'application/json');
-
-        system.debug('CreateJIRABug(): request - ' + request);
-
-        Http h = new Http();
-        HttpResponse response = h.send(request);
+        HttpResponse response = sendRequest(body);
 
         String returnResponse = response.getBody();
         system.debug('CreateJIRABug(): returnResponse -  ' + returnResponse);
 
-        String jiraKey = null;
-
-        if(response.getStatusCode() == 200){
-            CreateResponse result = (CreateResponse)JSON.deserialize(returnResponse, CreateResponse.Class);
+        if (response.getStatusCode() == 200) {
+            CreateResponse result = (CreateResponse) JSON.deserialize(returnResponse, CreateResponse.Class);
             system.debug('CreateJIRABug(): result -  ' + result);
             jiraKey = result.issueKey;
+        } else{
+            throw new JiraCalloutException(returnResponse);
         }
 
-
         return jiraKey;
+
+    }
+
+    private HttpResponse sendRequest(string body){
+
+        HttpRequest request = new HttpRequest();
+        request.setBody(body);
+        request.setEndpoint('callout:JIRA_Proxy_Service' + createUrl);
+        request.setMethod('POST');
+        request.setHeader('Content-Type', 'application/json');
+
+        system.debug('sendRequest(): request - ' + request);
+
+        Http h = new Http();
+        HttpResponse response = h.send(request);
+        return response;
 
     }
 
