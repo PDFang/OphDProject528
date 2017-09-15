@@ -1003,8 +1003,13 @@ private class InContactTestClass
 
     static testMethod void TestCaseAccountHighlightsExtension()
     {
-        //set mock for creating TFS Item
+        //set mock for creating TFS Item (leave it for coverage purpose until TFS logic removed)
         Test.setMock(WebServiceMock.class, new ITfsIntegrationProxy());
+
+        //set mock for creating Jira Item
+        JiraRestWrapperMockHttpGenerator httpMock = new JiraRestWrapperMockHttpGenerator(200,'OK','[{"Name": "testCase"}]',null);
+        Test.setMock(HttpCalloutMock.class, httpMock);
+
         CaseAssignmentClass.isTest = true;
         Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
         Map<String, Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
@@ -1019,7 +1024,8 @@ private class InContactTestClass
         ApexPages.StandardController controller = new ApexPages.StandardController(knownIssue);
         CaseAccountHighlightsExtension extension = new CaseAccountHighlightsExtension(controller);
 
-        extension.CreateTfsItem();
+        extension.CreateTfsItem(); // creating TFS Item (leave it for coverage purpose until TFS logic removed)
+        extension.CreateJIRABug();
         extension.Save();
         Test.stopTest();
     }
@@ -1078,7 +1084,7 @@ private class InContactTestClass
         ApexPages.StandardController controller = new ApexPages.StandardController(baseCase);
         CaseCreateKnownIssueExtension extension = new CaseCreateKnownIssueExtension(controller);
 
-        extension.createTfsItem = true;
+        //extension.createTfsItem = true;
         extension.ClearKnownIssue();
         test.startTest();
         boolean canCreateKnownIssue = extension.canCreateKnownIssue;
