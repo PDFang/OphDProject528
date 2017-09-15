@@ -1038,6 +1038,10 @@ private class InContactTestClass
         //set mock for creating TFS Item
         Test.setMock(WebServiceMock.class, new ITfsIntegrationProxy());
 
+        //set mock for creating Jira Item
+        JiraRestWrapperMockHttpGenerator httpMock = new JiraRestWrapperMockHttpGenerator(200,'OK','[{"Name": "testCase"}]',null);
+        Test.setMock(HttpCalloutMock.class, httpMock);
+
         Apexpages.currentpage().getParameters().put('recordType', 'Known Issue');
         Case baseCase = new Case();
         baseCase.Subject = 'subject';
@@ -1084,7 +1088,7 @@ private class InContactTestClass
         ApexPages.StandardController controller = new ApexPages.StandardController(baseCase);
         CaseCreateKnownIssueExtension extension = new CaseCreateKnownIssueExtension(controller);
 
-        //extension.createTfsItem = true;
+        CaseTriggerHandler.createJiraBug = true;
         extension.ClearKnownIssue();
         test.startTest();
         boolean canCreateKnownIssue = extension.canCreateKnownIssue;
