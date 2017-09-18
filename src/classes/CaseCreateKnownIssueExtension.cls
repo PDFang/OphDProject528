@@ -129,10 +129,7 @@ public with sharing class CaseCreateKnownIssueExtension
             // asynchronous callout refer CaseTriggerHandler.createJiraBugForKI()
             if(createJiraBug){
                 system.debug('User requested to create a JIRA bug for KI - ' + relatedCase.Id);
-//                relatedCase.JIRA_Summary__c = relatedCase.Subject;
-//                relatedCase.JIRA_Description__c = relatedCase.Summary__c;
-//                relatedCase.JIRA_Found_By__c = relatedCase.FoundBy__c;
-//                CaseTriggerHandler.createJiraBug = true;
+                CaseTriggerHandler.createJiraBug = true;
             }
 
             insert relatedCase;
