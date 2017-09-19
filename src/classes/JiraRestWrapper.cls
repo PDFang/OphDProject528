@@ -1,8 +1,12 @@
-/**
- * Created by mohandaas.rangaswamy on 8/29/2017.
- */
-
 public class JiraRestWrapper {
+
+    static final string createUrl = '/issue/CreateIssue';
+
+    string issueTypeId = '10004';
+    string project = 'IC';
+    Boolean jiraIntegrationTurnedOff = false;
+
+    public class JiraCalloutException extends Exception{}
 
     private class CreateRequest{
         protected String SObjectType;
@@ -11,50 +15,72 @@ public class JiraRestWrapper {
         protected String IssueType;
     }
 
-    private class CreateResponse{
+    public class CreateResponse{
         protected String issueKey;
         protected String[] errors;
     }
 
+    public JiraRestWrapper(){
+
+        AppConfiguration__c config = AppConfiguration__c.getInstance();
+        if(config != null){
+            issueTypeId = String.isNotBlank(config.Default_JIRA_Issue_Type_ID__c) ? config.Default_JIRA_Issue_Type_ID__c : issueTypeId;
+            project = String.isNotBlank(config.Default_JIRA_Project__c) ? config.Default_JIRA_Project__c : project;
+            jiraIntegrationTurnedOff = config.Turn_Off_JIRA_Integration__c;
+        }
+
+    }
+
     public String CreateJIRABug(String caseId) {
+
+        String jiraKey = null;
 
         system.debug('CreateJIRABug(): caseId - ' + caseId);
 
-        HttpRequest request = new HttpRequest();
+        if(jiraIntegrationTurnedOff){
+            system.debug('CreateJIRABug(): JIRA Integration is Turned Off Good Bye ');
+            return null;
+        }
 
         CreateRequest newRequest = new CreateRequest();
         newRequest.SObjectType = 'Case';
         newRequest.Id = caseId;
-        newRequest.Project = 'IC';
-        newRequest.IssueType = '10004';
+        newRequest.Project = project;
+        newRequest.IssueType = issueTypeId;
 
-        //String body = '{"SObjectType": "Case", "Id": "'+ caseId + '", "Project" : "IC", "IssueType" : "10004"}';
         String body = JSON.serialize(newRequest);
         system.debug('CreateJIRABug(): body - ' + body);
-        request.setBody(body);
 
-        request.setEndpoint('callout:JIRA_Proxy_Service' + '/issue/CreateIssue');
-        request.setMethod('POST');
-        request.setHeader('Content-Type', 'application/json');
-
-        system.debug('CreateJIRABug(): request - ' + request);
-
-        Http h = new Http();
-        HttpResponse response = h.send(request);
+        HttpResponse response = sendRequest(body);
 
         String returnResponse = response.getBody();
         system.debug('CreateJIRABug(): returnResponse -  ' + returnResponse);
 
-        String jiraKey = null;
-
-        if(response.getStatusCode() == 200){
-            CreateResponse result = (CreateResponse)JSON.deserialize(returnResponse, CreateResponse.Class);
+        if (response.getStatusCode() == 200) {
+            CreateResponse result = (CreateResponse) JSON.deserialize(returnResponse, CreateResponse.Class);
             system.debug('CreateJIRABug(): result -  ' + result);
             jiraKey = result.issueKey;
+        } else{
+            throw new JiraCalloutException(returnResponse);
         }
 
-
         return jiraKey;
+
+    }
+
+    private HttpResponse sendRequest(string body){
+
+        HttpRequest request = new HttpRequest();
+        request.setBody(body);
+        request.setEndpoint('callout:JIRA_Proxy_Service' + createUrl);
+        request.setMethod('POST');
+        request.setHeader('Content-Type', 'application/json');
+
+        system.debug('sendRequest(): request - ' + request);
+
+        Http h = new Http();
+        HttpResponse response = h.send(request);
+        return response;
 
     }
 

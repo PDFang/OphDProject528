@@ -38,13 +38,12 @@ public with sharing class CaseAccountHighlightsExtension
     public void CreateJIRABug() {
         try {
             JiraRestWrapper wrapper = new JiraRestWrapper();
-            String returnResponse = wrapper.CreateJIRABug(c.Id);
-
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, returnResponse));
-
+            String jiraKey = wrapper.CreateJIRABug(c.Id);
+            system.debug('Bug ' + jiraKey + ' created successfully.');
         }
         catch(Exception ex) {
-            system.debug('CreateJIRABug(): ex -  ' + ex);
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
+            inContactBaseClass.SendErrorEmail(ex,c.Id);
         }
     }
 

@@ -123,21 +123,20 @@ public with sharing class CaseCreateKnownIssueExtension
         
         try
         {
-
-            if(createJiraBug){
-                JiraRestWrapper wrapper = new JiraRestWrapper();
-                String jiraKey = wrapper.CreateJIRABug(c.Id);
-                system.debug('SaveCase(): jiraKey -  ' + jiraKey);
-                relatedCase.JIRA_Key__c = jiraKey;
-            }
-
             relatedCase.IsVisibleInSelfService = true;
             system.debug(relatedCase.TFSWorkItem__c);
+            // Known Issue must be created before making a callout to JIRA as it requires Salesfore ID
+            // asynchronous callout refer CaseTriggerHandler.createJiraBugForKI()
+            if(createJiraBug){
+                system.debug('User requested to create a JIRA bug for KI - ' + relatedCase.Id);
+                CaseTriggerHandler.createJiraBug = true;
+            }
 
             insert relatedCase;
 
             c.put(recordTypeName.replace(' ', '') + '__c',relatedCase.Id);
             update c;
+
             // // Call the KNown Issue Impact Calculation Class
             list<Case> listKnownIssues = new List<case>();
             listKnownIssues.add(relatedCase);
@@ -145,12 +144,10 @@ public with sharing class CaseCreateKnownIssueExtension
             KnownIssueImpactCalculationClass KICalc = new KnownIssueImpactCalculationClass(KIImpactCalc);
             KICalc.CalculateKnownIssueScore(listKnownIssues);
             success = true;
-            return;// null;//casePage;
         }
         catch(Exception ex)
         {
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage() + ' - stack trace - ' + ex.getStackTraceString()));
-            return;// null;
         }
         
         return;// null;

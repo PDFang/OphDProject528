@@ -72,7 +72,7 @@ public class LMAOrderAutoSubmitDeterminationTest {
 
 		// insert Contract
 		CHANNEL_ORDERS__Partner_Contract_Terms__c cont = new CHANNEL_ORDERS__Partner_Contract_Terms__c(
-				Name = 'inContact_ISVForce_USD',
+				Name = Label.LMAContractName,
 				CHANNEL_ORDERS__Partner_API_Key__c = 'a7bdgbdjbgf84',
 				CHANNEL_ORDERS__Default_Contract_Currency__c = 'USD'
 		);
@@ -80,7 +80,7 @@ public class LMAOrderAutoSubmitDeterminationTest {
 		insert cont;
 
 		CHANNEL_ORDERS__Partner_Product_Catalog__c prod = new CHANNEL_ORDERS__Partner_Product_Catalog__c(
-				Name = 'ISVForce inContact Agent Console (Per User)',
+				Name = Label.LMAProductName,
 				CHANNEL_ORDERS__Product_ID__c = 'test',
 				CHANNEL_ORDERS__Partner_Contract_Terms__c = cont.Id
 		);
@@ -164,11 +164,19 @@ public class LMAOrderAutoSubmitDeterminationTest {
 															 and CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c = 'Reduction'];
 
 		System.debug('sod2 ==> ' + sod2.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c);
-		LMAHelperClass.orderSubmitDetermination();
+		EDA__c[] edaList = [select Id from EDA__c];
+		set<id> edaIds = new set<Id>();
+		for(EDA__c eda : edaList){
+			edaIds.add(eda.Id);
+		}
 
-		EDA__c eda = [select Id, AutoSubmit__c from EDA__c where Service_Order__c =: sod2.CHANNEL_ORDERS__Partner_Order__c];
-		System.assertEquals(true, eda.AutoSubmit__c);
+		LMAHelperClass.orderSubmitDetermination(edaIds);
+
+
 		Test.stopTest();
+
+		EDA__c[] eda = [select Id, AutoSubmit__c from EDA__c where Service_Order__c =: sod2.CHANNEL_ORDERS__Partner_Order__c];
+	//	System.assertEquals(false, eda.AutoSubmit__c);
 
 	}
 
@@ -199,10 +207,40 @@ public class LMAOrderAutoSubmitDeterminationTest {
 
 
 		Test.stopTest();
-		List<EDA__C> objEDAAssert = [SELECT License__c, Service_Order__c from EDA__c where Status__c = 'Processed' and AutoSubmit__c = true];
+		List<EDA__C> objEDAAssert = [SELECT License__c, Service_Order__c from EDA__c where Status__c = 'Submitted' and AutoSubmit__c = true];
 		system.assertEquals(1, objEDAAssert.size());
 	}
 
+	public static testmethod void LMAEDAOrderBatchSchedulerTest(){
+
+		setup();
+
+
+
+//		list<EDA_Cutoff__mdt> edaCutoffList = new list<EDA_Cutoff__mdt>([select Id, EDACutoffDate__c, EDACutoffLicense__c from EDA_CutOff__mdt where DeveloperName = : 'XTest' limit 1]);
+		Id recordTypeId = [select Id from RecordType where Name = 'Active' and SobjectType = 'sfLma__License__c'].Id;
+		list<sfLma__License__c> licenses = new list<sfLma__License__c>([select Id, sfLma__Status__c, sfLma__Subscriber_Org_ID__c, RecordTypeId from sfLma__License__c]);
+
+		licenses[0].sfLma__Status__c = 'Active';
+		licenses[0].RecordTypeId = recordTypeId;
+		// update first License - Initial order
+		update licenses[0];
+
+		List<EDA__C> objEDA = [SELECT License__c, Service_Order__c from EDA__c where Status__c = 'In Queue'];
+
+		objEDA[0].AutoSubmit__c = true;
+		update objEDA[0];
+
+		Test.startTest();
+		EDA__c testEDA = [SELECT License__c, Service_Order__c from EDA__c where AutoSubmit__c = true and Status__c = 'In Queue' LIMIT 1];
+
+		LMAEDAOrderBatchScheduler scheduler = new LMAEDAOrderBatchScheduler();
+		String sch = '0 0 23 * * ?';
+		system.schedule('Test LMA Scheduler', sch, scheduler);
+
+		Test.stopTest();
+
+	}
 
 
 }
