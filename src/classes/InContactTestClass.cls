@@ -490,6 +490,7 @@ private class InContactTestClass
         gyr.GYRStartDate__c = system.today();
         gyr.GYRStatus__c = 'Black';
         gyr.ReasonSummary__c = 'No Reason';
+        gyr.Competitor_Lost_To__c = 'Cisco';
         gyr.ScheduledTermination__c = system.today();
 
         insert gyr;
@@ -1003,8 +1004,13 @@ private class InContactTestClass
 
     static testMethod void TestCaseAccountHighlightsExtension()
     {
-        //set mock for creating TFS Item
+        //set mock for creating TFS Item (leave it for coverage purpose until TFS logic removed)
         Test.setMock(WebServiceMock.class, new ITfsIntegrationProxy());
+
+        //set mock for creating Jira Item
+        JiraRestWrapperMockHttpGenerator httpMock = new JiraRestWrapperMockHttpGenerator(200,'OK','[{"Name": "testCase"}]',null);
+        Test.setMock(HttpCalloutMock.class, httpMock);
+
         CaseAssignmentClass.isTest = true;
         Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
         Map<String, Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
@@ -1019,7 +1025,8 @@ private class InContactTestClass
         ApexPages.StandardController controller = new ApexPages.StandardController(knownIssue);
         CaseAccountHighlightsExtension extension = new CaseAccountHighlightsExtension(controller);
 
-        extension.CreateTfsItem();
+        extension.CreateTfsItem(); // creating TFS Item (leave it for coverage purpose until TFS logic removed)
+        extension.CreateJIRABug();
         extension.Save();
         Test.stopTest();
     }
@@ -1031,6 +1038,10 @@ private class InContactTestClass
 
         //set mock for creating TFS Item
         Test.setMock(WebServiceMock.class, new ITfsIntegrationProxy());
+
+        //set mock for creating Jira Item
+        JiraRestWrapperMockHttpGenerator httpMock = new JiraRestWrapperMockHttpGenerator(200,'OK','[{"Name": "testCase"}]',null);
+        Test.setMock(HttpCalloutMock.class, httpMock);
 
         Apexpages.currentpage().getParameters().put('recordType', 'Known Issue');
         Case baseCase = new Case();
@@ -1078,7 +1089,7 @@ private class InContactTestClass
         ApexPages.StandardController controller = new ApexPages.StandardController(baseCase);
         CaseCreateKnownIssueExtension extension = new CaseCreateKnownIssueExtension(controller);
 
-        extension.createTfsItem = true;
+        CaseTriggerHandler.createJiraBug = true;
         extension.ClearKnownIssue();
         test.startTest();
         boolean canCreateKnownIssue = extension.canCreateKnownIssue;

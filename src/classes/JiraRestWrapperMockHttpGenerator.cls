@@ -21,12 +21,20 @@ public class JiraRestWrapperMockHttpGenerator implements HttpCalloutMock{
         if(statuscode == 200){
             res.setBody(buildSuccessResponseBody());
         }
+        else {
+            res.setBody(buildFailureResponseBody());
+        }
 
         return res;
     }
 
     private String buildSuccessResponseBody(){
         string body = '{"issueKey": "testIssueKey"}';
+        return body;
+    }
+
+    private String buildFailureResponseBody(){
+        string body = '{"issueKey": "", "error": [ "errorresponse" ]}';
         return body;
     }
 }
