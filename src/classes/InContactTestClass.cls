@@ -490,6 +490,7 @@ private class InContactTestClass
         gyr.GYRStartDate__c = system.today();
         gyr.GYRStatus__c = 'Black';
         gyr.ReasonSummary__c = 'No Reason';
+        gyr.Competitor_Lost_To__c = 'Cisco';
         gyr.ScheduledTermination__c = system.today();
 
         insert gyr;
