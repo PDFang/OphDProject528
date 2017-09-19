@@ -1,0 +1,8 @@
+<!--
+ - Created by arnab.karsarkar on 9/19/2017.
+ -->
+
+<apex:page id="AddEscalationComment" standardController="Issues__c" extensions="AddEscalationCommentController">
+
+
+</apex:page>
