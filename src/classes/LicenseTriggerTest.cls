@@ -59,7 +59,7 @@ public class LicenseTriggerTest {
         
         // insert Contract 
         CHANNEL_ORDERS__Partner_Contract_Terms__c cont = new CHANNEL_ORDERS__Partner_Contract_Terms__c(
-        	Name = 'inContact_ISVForce_USD',
+        	Name = Label.LMAContractName,
             CHANNEL_ORDERS__Partner_API_Key__c = 'a7bdgbdjbgf84',
             CHANNEL_ORDERS__Default_Contract_Currency__c = 'USD'            
         );
@@ -67,7 +67,7 @@ public class LicenseTriggerTest {
         insert cont;
         
         CHANNEL_ORDERS__Partner_Product_Catalog__c prod = new CHANNEL_ORDERS__Partner_Product_Catalog__c(
-			Name = 'ISVForce inContact Agent Console (Per User)',
+			Name = Label.LMAProductName,
 			CHANNEL_ORDERS__Product_ID__c = 'test',
 			CHANNEL_ORDERS__Partner_Contract_Terms__c = cont.Id            
         );
@@ -94,7 +94,7 @@ public class LicenseTriggerTest {
         system.assertEquals('US', cor.CHANNEL_ORDERS__Customer_Country__c); 
         CHANNEL_ORDERS__Service_Order__c so = [select CHANNEL_ORDERS__Customer_Org_ID__c from CHANNEL_ORDERS__Service_Order__c where CHANNEL_ORDERS__Customer__c =: cor.Id Limit 1];
        // system.assertEquals('00D5B0000008bOp', so.CHANNEL_ORDERS__Customer_Org_ID__c);
-		CHANNEL_ORDERS__Service_Order_Detail__c sod = [select CHANNEL_ORDERS__Quantity__c from CHANNEL_ORDERS__Service_Order_Detail__c where CHANNEL_ORDERS__Product_Name__r.Name =: 'ISVForce inContact Agent Console (Per User)' Limit 1];
+		CHANNEL_ORDERS__Service_Order_Detail__c sod = [select CHANNEL_ORDERS__Quantity__c from CHANNEL_ORDERS__Service_Order_Detail__c where CHANNEL_ORDERS__Product_Name__r.Name =: Label.LMAProductName Limit 1];
      //   system.assertEquals(10, sod.CHANNEL_ORDERS__Quantity__c);
        test.stopTest();
     }

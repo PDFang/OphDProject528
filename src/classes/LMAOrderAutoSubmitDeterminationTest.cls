@@ -72,7 +72,7 @@ public class LMAOrderAutoSubmitDeterminationTest {
 
 		// insert Contract
 		CHANNEL_ORDERS__Partner_Contract_Terms__c cont = new CHANNEL_ORDERS__Partner_Contract_Terms__c(
-				Name = 'inContact_ISVForce_USD',
+				Name = Label.LMAContractName,
 				CHANNEL_ORDERS__Partner_API_Key__c = 'a7bdgbdjbgf84',
 				CHANNEL_ORDERS__Default_Contract_Currency__c = 'USD'
 		);
@@ -80,7 +80,7 @@ public class LMAOrderAutoSubmitDeterminationTest {
 		insert cont;
 
 		CHANNEL_ORDERS__Partner_Product_Catalog__c prod = new CHANNEL_ORDERS__Partner_Product_Catalog__c(
-				Name = 'ISVForce inContact Agent Console (Per User)',
+				Name = Label.LMAProductName,
 				CHANNEL_ORDERS__Product_ID__c = 'test',
 				CHANNEL_ORDERS__Partner_Contract_Terms__c = cont.Id
 		);
@@ -207,7 +207,7 @@ public class LMAOrderAutoSubmitDeterminationTest {
 
 
 		Test.stopTest();
-		List<EDA__C> objEDAAssert = [SELECT License__c, Service_Order__c from EDA__c where Status__c = 'Processed' and AutoSubmit__c = true];
+		List<EDA__C> objEDAAssert = [SELECT License__c, Service_Order__c from EDA__c where Status__c = 'Submitted' and AutoSubmit__c = true];
 		system.assertEquals(1, objEDAAssert.size());
 	}
 
