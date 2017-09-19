@@ -1,7 +1,6 @@
 public class CaseTriggerHandler extends TriggerHandler 
 {
     private static boolean staticValuesSet = false;
-    private static boolean createJiraBug = false;
     private static boolean isProxyServiceTurnedOff = false;
     @TestVisible
     private static Integer noOfProxyServiceCallouts = 0;
@@ -20,7 +19,7 @@ public class CaseTriggerHandler extends TriggerHandler
     private static Set<String> closedStatuses;
     private static SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(inContactBaseClass.OrgId15Digit);
     public static boolean callActionHub = true;
-
+    public static boolean createJiraBug = false;
     private Static Map<String, ETMS_Trouble_Report_State_Status__mdt> etmsTroubleStateStatusMap;
 
 
@@ -432,14 +431,15 @@ public class CaseTriggerHandler extends TriggerHandler
 
     private void createJiraBugForKI(List<Case> newList){
 
-        system.debug('createJiraBugForKI(): CaseCreateKnownIssueExtension.createJiraBug - ' + CaseCreateKnownIssueExtension.createJiraBug);
+        system.debug('createJiraBugForKI(): createJiraBug - ' + createJiraBug);
         system.debug('createJiraBugForKI(): known issues - ' + newList.size());
 
-        if(CaseCreateKnownIssueExtension.createJiraBug == null || !CaseCreateKnownIssueExtension.createJiraBug || newList.size() > 1){
+        if(createJiraBug == false || newList.size() > 1){
             system.debug('createJiraBugForKI(): skipped @future callout');
             return;
         }
 
+        createJiraBug = false;
         List<Id> caseIds = new List<Id>();
         for(Case newCase : newList){
             if(newCase.RecordTypeId == knownIssueRecordType && String.isBlank(newCase.JIRA_Key__c)){
@@ -458,8 +458,12 @@ public class CaseTriggerHandler extends TriggerHandler
     @Future(callout=true)
     private static void createJiraBugForKIFuture(String caseId){
 
-        JiraRestWrapper wrapper = new JiraRestWrapper();
-        wrapper.CreateJIRABug(caseId);
+        try{
+            JiraRestWrapper wrapper = new JiraRestWrapper();
+            wrapper.CreateJIRABug(caseId);
+        }catch(Exception ex) {
+            inContactBaseClass.SendErrorEmail(ex,caseId);
+        }
 
     }
 }

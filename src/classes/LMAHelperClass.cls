@@ -217,8 +217,8 @@ public class LMAHelperClass {
 
 	}
 
-
-	public static void orderSubmitDetermination(){
+	@future
+	public static void orderSubmitDetermination(set<Id> edaIds){
 
 		map<string, List<CHANNEL_ORDERS__Service_Order_Detail__c>> serviceOrderDetailsByOrgId = new map<string, List<CHANNEL_ORDERS__Service_Order_Detail__c>>();
 		set<string> reductionQuantityByOrgId = new set<string>();
@@ -243,7 +243,7 @@ public class LMAHelperClass {
 				for(CHANNEL_ORDERS__Service_Order_Detail__c orderDetail : [select Id, CHANNEL_ORDERS__Partner_Order__c, CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c,
 																		CHANNEL_ORDERS__Quantity__c,CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c
 																		From CHANNEL_ORDERS__Service_Order_Detail__c
-																		where CreatedDate > : edaCutoffList[0].EDACutoffDate__c order by  CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c])
+																		where CreatedDate > : edaCutoffList[0].EDACutoffDate__c order by  CHANNEL_ORDERS__Partner_Order__r.CreatedDate asc])
 				{
 					string orgId = orderDetail.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c;
 					if(serviceOrderDetailsByOrgId.containsKey(orgId)){
@@ -261,24 +261,24 @@ public class LMAHelperClass {
 				for(CHANNEL_ORDERS__Service_Order_Detail__c orderBeforeCutOff : [select Id, CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c, CHANNEL_ORDERS__Quantity__c, CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c
 																				FROM CHANNEL_ORDERS__Service_Order_Detail__c
 																				where CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c in: reductionQuantityByOrgId
-																				and CreatedDate <  : edaCutoffList[0].EDACutoffDate__c  order by  CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c]){
+																				and CreatedDate <  : edaCutoffList[0].EDACutoffDate__c  order by  CHANNEL_ORDERS__Partner_Order__r.CreatedDate asc]){
 
 					string orgId = orderBeforeCutOff.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Customer_Org_ID__c;
 					decimal quantityABS = Math.abs(orderBeforeCutOff.CHANNEL_ORDERS__Quantity__c);
-					system.debug('org id pre EDA =====> ' + orgId);
-					system.debug('order type  =====> ' + orderBeforeCutOff.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c);
+					//system.debug('org id pre EDA =====> ' + orgId);
+					//system.debug('order type  =====> ' + orderBeforeCutOff.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c);
 
 					if(totalamountByOrgIdPreEDA.containsKey(orgId)){
 						if(orderBeforeCutOff.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c == 'Initial'
 								|| orderBeforeCutOff.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c == 'Add-on' ){
 
 							totalQuantityPreEDA = quantityABS + totalamountByOrgIdPreEDA.get(orgId);
-							system.debug('totalQuantityPreEDA inside 1st if =>' + totalQuantityPreEDA);
+							//system.debug('totalQuantityPreEDA inside 1st if =>' + totalQuantityPreEDA);
 
 
 						}else{
 							totalQuantityPreEDA = totalamountByOrgIdPreEDA.get(orgId) - quantityABS;
-							system.debug('totalQuantityPreEDA inside 1st if else =>' + totalQuantityPreEDA);
+							//system.debug('totalQuantityPreEDA inside 1st if else =>' + totalQuantityPreEDA);
 						}
 						totalamountByOrgIdPreEDA.put(orgId, totalQuantityPreEDA);
 					}else{
@@ -286,7 +286,7 @@ public class LMAHelperClass {
 								|| orderBeforeCutOff.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c == 'Add-on' ){
 							totalamountByOrgIdPreEDA.put(orgId, quantityABS);
 
-							system.debug('quantityABS inside else =>' + quantityABS);
+							//system.debug('quantityABS inside else =>' + quantityABS);
 						}else{
 							decimal reductionValue = 0 - quantityABS;
 							totalamountByOrgIdPreEDA.put(orgId, reductionValue);
@@ -305,10 +305,10 @@ public class LMAHelperClass {
 						if(orderDetail.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c == 'Reduction'
 								|| orderDetail.CHANNEL_ORDERS__Partner_Order__r.CHANNEL_ORDERS__Order_Type__c == 'Cancellation Order'){
 							reductionAmountDecimal += absoluteQuantity;
-							system.debug('reductionAmountDecimal =>' + reductionAmountDecimal);
+							//system.debug('reductionAmountDecimal =>' + reductionAmountDecimal);
 
 							if(totalamountByOrgIdPreEDA.containsKey(orgId)){
-								system.debug('PRE EDA Amount =>' + totalamountByOrgIdPreEDA.get(orgId));
+								//system.debug('PRE EDA Amount =>' + totalamountByOrgIdPreEDA.get(orgId));
 								if(reductionAmountDecimal > totalamountByOrgIdPreEDA.get(orgId)){
 									totalQuantityPOSTEDA += reductionAmountDecimal - totalamountByOrgIdPreEDA.get(orgId);
 								}
@@ -319,31 +319,27 @@ public class LMAHelperClass {
 						}else{
 							totalQuantityPOSTEDA += absoluteQuantity;
 						}
-						system.debug('totalQuantityPOSTEDA =>' + totalQuantityPOSTEDA);
-
-						if(totalQuantityPOSTEDA > edaCutoffList[0].EDACutoffLicense__c){
-							serviceOrderIds.add(orderDetail.CHANNEL_ORDERS__Partner_Order__c);
-						}
+						//system.debug('totalQuantityPOSTEDA =>' + totalQuantityPOSTEDA);
 					}
 				}
 
-					system.debug('Final POST EDA NUmber =>' + totalQuantityPOSTEDA);
+				system.debug('Final POST EDA NUmber =>' + totalQuantityPOSTEDA);
 
-
-					for(EDA__c eda : [select Id, Service_Order__c from EDA__c where Service_Order__c in : serviceOrderIds]){
+				if(totalQuantityPOSTEDA > edaCutoffList[0].EDACutoffLicense__c){
+					for(Id eda : edaIds){
 						UpdateEDAList.add(new EDA__c(
-								Id = eda.Id,
+								Id = eda,
 								AutoSubmit__c = true
 						));
 					}
 
 					if(UpdateEDAList.size() > 0)
 						update UpdateEDAList;
+				}
 		    }
 
 		}catch (Exception ex){
 			inContactBaseClass.SendErrorEmail(ex, 'Error in Calculating total EDA records - LMA/COA');
-
 		}
 
 	}

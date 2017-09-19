@@ -4,7 +4,7 @@ public with sharing class CaseCreateKnownIssueExtension
     public string recordTypeName {get;set;}
     
     public Case relatedCase{get;set;}
-    public static Boolean createJiraBug {get;set;}
+    public Boolean createJiraBug {get;set;}
     public Boolean canCreateKnownIssue {public get; private set;}
     public Boolean success {get; set;}
 
@@ -125,14 +125,14 @@ public with sharing class CaseCreateKnownIssueExtension
         {
             relatedCase.IsVisibleInSelfService = true;
             system.debug(relatedCase.TFSWorkItem__c);
-
-            insert relatedCase;
-
             // Known Issue must be created before making a callout to JIRA as it requires Salesfore ID
             // asynchronous callout refer CaseTriggerHandler.createJiraBugForKI()
             if(createJiraBug){
                 system.debug('User requested to create a JIRA bug for KI - ' + relatedCase.Id);
+                CaseTriggerHandler.createJiraBug = true;
             }
+
+            insert relatedCase;
 
             c.put(recordTypeName.replace(' ', '') + '__c',relatedCase.Id);
             update c;
@@ -148,8 +148,6 @@ public with sharing class CaseCreateKnownIssueExtension
         catch(Exception ex)
         {
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage() + ' - stack trace - ' + ex.getStackTraceString()));
-        } finally {
-            createJiraBug = false;
         }
         
         return;// null;
