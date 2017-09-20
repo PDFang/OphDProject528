@@ -228,6 +228,13 @@ public class PartnerCaseProxyServiceHelper {
                 }
             }
         }
+
+        String logString = 'Product {0}, NEID {1}, ServiceId {2}, EtmsTroubleType {3}, TroubleTypeDescription {4}';
+        logString = String.format(logString, new String[]{
+                partnerCase.Product, partnerCase.NEID, partnerCase.ServiceId, partnerCase.EtmsTroubleType, partnerCase.TroubleTypeDescription
+        });
+        system.debug('logString - ' + logString);
+
         system.debug('createPartnerCase(): partnerCase - ' + partnerCase);
         return partnerCase;
 
