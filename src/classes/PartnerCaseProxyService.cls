@@ -73,6 +73,8 @@ public class PartnerCaseProxyService {
         public String TroubleTypeDescription;
         public String DialFrom;
         public String DialTo;
+        public String NEID;
+        public String ServiceId;
         private String[] SalesforceId_type_info = new String[]{'SalesforceId','http://tempuri.org/',null,'0','1','false'};
         private String[] Number_x_type_info = new String[]{'Number','http://tempuri.org/',null,'0','1','false'};
         private String[] Comment_type_info = new String[]{'Comment','http://tempuri.org/',null,'0','1','false'};
@@ -94,8 +96,10 @@ public class PartnerCaseProxyService {
         private String[] TroubleTypeDescription_type_info = new String[]{'TroubleTypeDescription','http://tempuri.org/',null,'0','1','false'};
         private String[] DialFrom_type_info = new String[]{'DialFrom','http://tempuri.org/',null,'0','1','false'};
         private String[] DialTo_type_info = new String[]{'DialTo','http://tempuri.org/',null,'0','1','false'};
+        private String[] NEID_type_info = new String[]{'NEID','http://tempuri.org/',null,'0','1','false'};
+        private String[] ServiceId_type_info = new String[]{'ServiceId','http://tempuri.org/',null,'0','1','false'};
         private String[] apex_schema_type_info = new String[]{'http://tempuri.org/','true','false'};
-        private String[] field_order_type_info = new String[]{'SalesforceId','Number_x','Comment','Description','ContactName','ContactPhone','OwnerName','OwnerPhone','CadebillAccountNumber','EventTime','Country','AccountName','Priority','Product','RequestType','Reason','ReasonDetails','EtmsTroubleType','TroubleTypeDescription','DialFrom','DialTo'};
+        private String[] field_order_type_info = new String[]{'SalesforceId','Number_x','Comment','Description','ContactName','ContactPhone','OwnerName','OwnerPhone','CadebillAccountNumber','EventTime','Country','AccountName','Priority','Product','RequestType','Reason','ReasonDetails','EtmsTroubleType','TroubleTypeDescription','DialFrom','DialTo','NEID','ServiceId'};
     }
     public class PartnerCaseProxySoap {
         public String endpoint_x = 'http://localhost:32164/PartnerCaseProxy.asmx';
