@@ -153,6 +153,9 @@
                     <apex:column headervalue="Subscription Allocation Id">
                         <apex:outputLink value="/{!entry.subscriptionAllocation.Id}">{!entry.subscriptionAllocation.Name}</apex:outputLink>
                     </apex:column>
+                    <apex:column headervalue="Product">
+                        <apex:outputField value="{!entry.subscriptionAllocation.Product__c}"></apex:outputField>
+                    </apex:column>
                     <apex:column headervalue="Project Number">
                         <apex:inputField value="{!entry.subscriptionAllocation.Project__c}" required="false" rendered="{!AND(ISBLANK(entry.subscriptionAllocation.Id), ISNULL(project))}"/>
                         <apex:outputField value="{!entry.subscriptionAllocation.Project__c}" rendered="{!OR(NOT(ISBLANK(entry.subscriptionAllocation.Id)), NOT(ISNULL(project)))}"/>

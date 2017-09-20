@@ -10,6 +10,9 @@ public class PartnerCaseProxyServiceHelper {
     public static final String PRODUCT_TOLLFREE = 'Toll Free';
     public static final String PRODUCT_DIALTF = 'DIALTF';
     public static final String PRODUCT_HOSTING = 'HOSTING';
+    public static final String PRODUCT_GENERAL = 'GENERAL';
+
+    private static final String PARTNER_CUSTOMER_ID_PREFIX = 'IC-';
 
     private static Map<String, List<ETMS_Codes__c>> requestTypeEtmsMap = null;
     @TestVisible
@@ -28,9 +31,10 @@ public class PartnerCaseProxyServiceHelper {
             for (Case newCase : [
                     Select Id, CaseNumber, Priority, Description, CreatedDate, X3rdPartyVendorTicket__c,
                             status, Product_or_Service__c, Request_Type__c, Database__c, Releases__c,
-                            Account.Name, Account.Billing_Group__c, Account.CadebillAccountNo__c,
+                            Account.Name, Account.Billing_Group__c, Account.CadebillAccountNo__c, Account.Partner_Customer_Account_ID__c,
                             Contact.Name, Contact.Phone, OwnerId, Owner.Name, Owner.Phone, Push_To_Partner__c,
-                            ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c, Dial_From_ANI__c, Dial_To_DNIS__c
+                            ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c, Dial_From_ANI__c, Dial_To_DNIS__c,
+                            Customer_s_Toll_Free_POC__c
                     from Case
                     where Id IN :caseIds
                     and Account.Billing_Group__c = :BILLING_GROUP_VERIZON
@@ -191,12 +195,23 @@ public class PartnerCaseProxyServiceHelper {
         // Product property default value PRODUCT_HOSTING
         //partnerCase.Product = sfCase.Product_or_Service__c;
         partnerCase.RequestType = sfCase.Request_Type__c;
+
+        String cadebillAccountNoText = sfCase.Account.CadebillAccountNo__c != null
+                ? sfCase.Account.CadebillAccountNo__c.format().remove(',') : null;
+
         if(sfCase.Product_or_Service__c == PRODUCT_TOLLFREE){
             partnerCase.DialFrom = String.isBlank(sfCase.Dial_From_ANI__c) ? null : sfCase.Dial_From_ANI__c.replace(' ','');
             partnerCase.DialTo = String.isBlank(sfCase.Dial_To_DNIS__c) ? null : sfCase.Dial_To_DNIS__c.replace(' ','');
+            partnerCase.NEID = sfCase.Customer_s_Toll_Free_POC__c;
+            partnerCase.ServiceId = sfCase.Customer_s_Toll_Free_POC__c;
             partnerCase.Product = PRODUCT_DIALTF;
         } else{
-            partnerCase.Product = PRODUCT_HOSTING;
+            partnerCase.NEID = cadebillAccountNoText;
+            String serviceId = String.isNotBlank(sfCase.Account.Partner_Customer_Account_ID__c)
+                    ? sfCase.Account.Partner_Customer_Account_ID__c : cadebillAccountNoText;
+            partnerCase.ServiceId = String.isNotBlank(serviceId) ? serviceId.removeStartIgnoreCase(PARTNER_CUSTOMER_ID_PREFIX) : null;
+            partnerCase.Product = (String.isNotBlank(serviceId) && serviceId.startsWithIgnoreCase(PARTNER_CUSTOMER_ID_PREFIX))
+                    ? PRODUCT_GENERAL : PRODUCT_HOSTING;
         }
 
         partnerCase.Reason = sfCase.Database__c;

@@ -2,6 +2,10 @@ public class JiraRestWrapper {
 
     static final string createUrl = '/issue/CreateIssue';
 
+    string issueTypeId = '10004';
+    string project = 'IC';
+    Boolean jiraIntegrationTurnedOff = false;
+
     public class JiraCalloutException extends Exception{}
 
     private class CreateRequest{
@@ -16,17 +20,33 @@ public class JiraRestWrapper {
         protected String[] errors;
     }
 
+    public JiraRestWrapper(){
+
+        AppConfiguration__c config = AppConfiguration__c.getInstance();
+        if(config != null){
+            issueTypeId = String.isNotBlank(config.Default_JIRA_Issue_Type_ID__c) ? config.Default_JIRA_Issue_Type_ID__c : issueTypeId;
+            project = String.isNotBlank(config.Default_JIRA_Project__c) ? config.Default_JIRA_Project__c : project;
+            jiraIntegrationTurnedOff = config.Turn_Off_JIRA_Integration__c;
+        }
+
+    }
+
     public String CreateJIRABug(String caseId) {
 
         String jiraKey = null;
 
         system.debug('CreateJIRABug(): caseId - ' + caseId);
 
+        if(jiraIntegrationTurnedOff){
+            system.debug('CreateJIRABug(): JIRA Integration is Turned Off Good Bye ');
+            return null;
+        }
+
         CreateRequest newRequest = new CreateRequest();
         newRequest.SObjectType = 'Case';
         newRequest.Id = caseId;
-        newRequest.Project = 'IC';
-        newRequest.IssueType = '10004';
+        newRequest.Project = project;
+        newRequest.IssueType = issueTypeId;
 
         String body = JSON.serialize(newRequest);
         system.debug('CreateJIRABug(): body - ' + body);
