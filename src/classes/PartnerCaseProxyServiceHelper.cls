@@ -202,14 +202,14 @@ public class PartnerCaseProxyServiceHelper {
         if(sfCase.Product_or_Service__c == PRODUCT_TOLLFREE){
             partnerCase.DialFrom = String.isBlank(sfCase.Dial_From_ANI__c) ? null : sfCase.Dial_From_ANI__c.replace(' ','');
             partnerCase.DialTo = String.isBlank(sfCase.Dial_To_DNIS__c) ? null : sfCase.Dial_To_DNIS__c.replace(' ','');
-            String neid = sfCase.Customer_s_Toll_Free_POC__c;
-            String serviceId = sfCase.Customer_s_Toll_Free_POC__c;
+            partnerCase.NEID = sfCase.Customer_s_Toll_Free_POC__c;
+            partnerCase.ServiceId = sfCase.Customer_s_Toll_Free_POC__c;
             partnerCase.Product = PRODUCT_DIALTF;
         } else{
-            String neid = cadebillAccountNoText;
+            partnerCase.NEID = cadebillAccountNoText;
             String serviceId = String.isNotBlank(sfCase.Account.Partner_Customer_Account_ID__c)
                     ? sfCase.Account.Partner_Customer_Account_ID__c : cadebillAccountNoText;
-            serviceId = serviceId.removeStartIgnoreCase(PARTNER_CUSTOMER_ID_PREFIX);
+            partnerCase.ServiceId = String.isNotBlank(serviceId) ? serviceId.removeStartIgnoreCase(PARTNER_CUSTOMER_ID_PREFIX) : null;
             partnerCase.Product = (String.isNotBlank(serviceId) && serviceId.startsWithIgnoreCase(PARTNER_CUSTOMER_ID_PREFIX))
                     ? PRODUCT_GENERAL : PRODUCT_HOSTING;
         }
