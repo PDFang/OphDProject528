@@ -8,13 +8,19 @@ public without sharing class AddEscalationCommentController {
 	public Issues__c escalation;
 	public string escalationCommnet{get; set;}
 	public Date commnetDate{get; set;}
+	//public Date commnetDate{get; set;}
 
 	public AddEscalationCommentController(ApexPages.StandardController controller){
 		this.escalation = (Issues__c)controller.getRecord();
 
+
 	}
 
 	public PageReference SaveComment(){
+		if(commnetDate == null || escalationCommnet == null){
+			ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Required fields are missing. Comment and Comment Date fields are required.'));
+			return null;
+		}
 		Escalation_Comment__c comment = new Escalation_Comment__c(
 							Comment__c = escalationCommnet,
 							Date__c = commnetDate,
@@ -33,4 +39,11 @@ public without sharing class AddEscalationCommentController {
 		return null;
 
 	}
+
+	public PageReference cancel(){
+		PageReference escalationPage = new PageReference('/' + escalation.Id);
+		escalationPage.setRedirect(true);
+		return escalationPage;
+	}
+
 }
