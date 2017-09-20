@@ -2,7 +2,30 @@
  - Created by arnab.karsarkar on 9/19/2017.
  -->
 
-<apex:page id="AddEscalationComment" standardController="Issues__c" extensions="AddEscalationCommentController">
+<apex:page id="AddEscalationComment" standardController="Issues__c" extensions="AddEscalationCommentController" docType="HTML-5.0">
+    <apex:sectionHeader title="Escalation Comments" subtitle="Add New"/>
+    <!-- Begin Form -->
+    <apex:form >
+        <apex:pageBlock title="Add a new Comment" mode="edit">
+            <apex:pageMessages id="message"/>
+            <!-- Fields -->
+            <apex:pageBlockSection columns="1" showHeader="true">
+                <apex:pageBlockSectionItem >
+                    <apex:outputText value="Comment Date"/>
+                    <apex:input type="date" value="{!commnetDate}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputText value="Comment"/>
+                    <apex:inputTextarea value="{!escalationCommnet}" rows="4" cols="100"/>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
 
+            <!-- Button Section -->
+            <apex:pageBlockButtons location="bottom">
+                <apex:commandButton value="Add Comment" action="{!SaveComment}" reRender="message"/>
+                <apex:commandButton value="Cancel" action="{!cancel}" />
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+    </apex:form>
 
 </apex:page>
