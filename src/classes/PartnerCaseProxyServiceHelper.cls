@@ -11,7 +11,7 @@ public class PartnerCaseProxyServiceHelper {
     public static final String PRODUCT_DIALTF = 'DIALTF';
     public static final String PRODUCT_HOSTING = 'HOSTING';
     public static final String PRODUCT_GENERAL = 'GENERAL';
-
+    @TestVisible
     private static final String PARTNER_CUSTOMER_ID_PREFIX = 'IC-';
 
     private static Map<String, List<ETMS_Codes__c>> requestTypeEtmsMap = null;
