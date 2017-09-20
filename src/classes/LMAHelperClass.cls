@@ -114,7 +114,7 @@ public class LMAHelperClass {
 		list<EDA__c> EDArecords = new list<EDA__c>();
 		map<Id, list<id>> licenseServiceOrders = new map<Id, list<Id>>();
 		// set the product names
-		set<string> productNames = new set<string>{'ISVForce inContact Agent Console (Per User)'};
+		set<string> productNames = new set<string>{Label.LMAProductName};
 		set<Id> stNewOrders = new set<Id>();
 
 
@@ -125,7 +125,7 @@ public class LMAHelperClass {
 		{
 
 			// get the contract
-			CHANNEL_ORDERS__Partner_Contract_Terms__c ct = [select Id from CHANNEL_ORDERS__Partner_Contract_Terms__c where Name =: 'inContact_ISVForce_USD' limit 1];
+			CHANNEL_ORDERS__Partner_Contract_Terms__c ct = [select Id from CHANNEL_ORDERS__Partner_Contract_Terms__c where Name =: Label.LMAContractName limit 1];
 			// get all the products
 			productIds = [select Id, Name from CHANNEL_ORDERS__Partner_Product_Catalog__c
 			where Name in :productNames limit 1].id;

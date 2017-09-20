@@ -6,6 +6,7 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
 
     private static boolean staticValuesSet = false;
     private static boolean isProxyServiceTurnedOff = false;
+    //private static boolean isSetCommentDuringUpdate = false;
 
     public CaseCommentTriggerHandler()
     {
@@ -25,24 +26,22 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
         }
         CopyCustomComments ((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
     }
-    protected override void afterUpdate(){
-        CopyCustomComments ((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
-    }
 
     public static void UpdateCustomComments(List<CaseComment> newList, Map<Id, CaseComment> oldMap){
-
+        system.debug('Calling UpdateCustomComments');
         List<Case_Comment_Custom__c> commentList = new List<Case_Comment_Custom__c>();
         for(CaseComment newComment : newList){
             if(newComment.IsPublished == false){
                 commentList.add(GetNewCustomComment(newComment));
             }
         }
+        //need the ID -- 
         Update(commentList);
     }
 
 
     public static void CopyCustomComments(List<CaseComment> newList, Map<Id, CaseComment> oldMap){
-
+        system.debug('Calling CopyCustomComments');
         List<Case_Comment_Custom__c> commentList = new List<Case_Comment_Custom__c>();
         for(CaseComment newComment : newList){
             if(newComment.IsPublished == false){
@@ -58,6 +57,7 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
     }
 
     private static Case_Comment_Custom__c GetNewCustomComment(CaseComment newComment){
+        system.debug('GetNewCustomComment');
         Case_Comment_Custom__c comment = new Case_Comment_Custom__c();
         comment.ParentId__c = NewComment.ParentId;
         comment.CommentBody__c = NewComment.CommentBody;
