@@ -43,7 +43,7 @@
                 <!-- <apex:inputField value="{!changeReq.Build__c}"
                     rendered="{!UseMaintenanceWindow}" />-->
                 <apex:inputField value="{!changeReq.RF_Cluster_s__c}" rendered="{!UseMaintenanceWindow}"/>
-                <apex:inputField id="Release" value="{!changeReq.RF_Release__c}" rendered="{!UseMaintenanceWindow}"/>
+                <apex:inputField id="Release" value="{!changeReq.ReleasePicklist__c}" rendered="{!UseMaintenanceWindow}"/>
                 <apex:inputField required="true"
                     value="{!changeReq.RF_Contingency_Owner__c}" rendered="{!UseMaintenanceWindow}"/>
                 <apex:inputField id="mwStart" required="true"
@@ -260,27 +260,7 @@ span.k-widget.k-datetimepicker.k-header,span.k-widget.k-datepicker.k-header, spa
                    $(this).children('input').kendoDateTimePicker();
            });
     }
-    
-       var releaseDataSource = new kendo.data.DataSource({
-                              transport: {
-                                read: function(options){
-                                    Visualforce.remoting.Manager.invokeAction(
-                                          '{!$RemoteAction.CcrViewExtension.ReleaseValueList}',
-                                          '{!changeReq.Id}',
-                                          function(result,event)
-                                          {
-                                              //console.log(JSON.parse(result));
-                                              if (event.status) {
-                                                  
-                                                  options.success(JSON.parse(result));
-                                                } 
-                                          },
-                                          {escape: false}
-                                   );
-                                }
-                              }
-                            });
-    
+
     $(document).ready(function () {  
     console.log('Inside ready function');
         $('<a>').css('text-decoration', 'underline').css('margin-left', '1em')
@@ -289,10 +269,7 @@ span.k-widget.k-datetimepicker.k-header,span.k-widget.k-datepicker.k-header, spa
         $('.k-button.btn').removeClass('btn'); 
         ChangeSelectsIntoButtons();
         SetupDateTimePickers();
-        $('input[id*="Release"]').kendoDropDownList({
-            dataSource: releaseDataSource,
-            optionLabel: " " 
-        });
+
         $("#ChangeReasonDefinitions").kendoWindow({
             title: "Change Reason Definitions",
             resizable: false
