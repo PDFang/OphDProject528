@@ -1089,12 +1089,14 @@ private class InContactTestClass
         ApexPages.StandardController controller = new ApexPages.StandardController(baseCase);
         CaseCreateKnownIssueExtension extension = new CaseCreateKnownIssueExtension(controller);
 
+        List<Case> InsertedKnownIssues = [select Id, Priority from Case where Subject = 'KnowIssueImpactCalculationTest'];
         CaseTriggerHandler.createJiraBug = true;
         extension.ClearKnownIssue();
         test.startTest();
         boolean canCreateKnownIssue = extension.canCreateKnownIssue;
         extension.Save();
         baseCase.KnownIssue__c = knownIssueList[0].Id;
+        System.assertEquals('P3', InsertedKnownIssues[0].Priority);
         extension.SaveCase();
 
         test.stopTest();

@@ -50,7 +50,7 @@
                     rendered="{!UseClusterAndRelease}" />
                 <apex:inputField value="{!ChangeControlRequest__c.Cluster__c}"
                     rendered="{!UseClusterAndRelease}" />
-                <apex:inputField id="Release" value="{!ChangeControlRequest__c.Release__c}"
+                <apex:inputField id="Release" value="{!ChangeControlRequest__c.ReleasePicklist__c}"
                     rendered="{!UseClusterAndRelease}" />
                 <apex:outputPanel rendered="{!UseMaintenanceWindow && NOT(UseClusterAndRelease)}"></apex:outputPanel>
                 <apex:inputField required="true"
@@ -257,27 +257,7 @@ span.k-widget.k-datetimepicker.k-header,span.k-widget.k-datepicker.k-header, spa
                    $(this).children('input').kendoDateTimePicker();
            });
     }
-    
-       var releaseDataSource = new kendo.data.DataSource({
-                              transport: {
-                                read: function(options){
-                                    Visualforce.remoting.Manager.invokeAction(
-                                          '{!$RemoteAction.CcrViewExtension.ReleaseValueList}',
-                                          '{!ChangeControlRequest__c.Id}',
-                                          function(result,event)
-                                          {
-                                              //console.log(JSON.parse(result));
-                                              if (event.status) {
-                                                  
-                                                  options.success(JSON.parse(result));
-                                                } 
-                                          },
-                                          {escape: false}
-                                   );
-                                }
-                              }
-                            });
-    
+
     $(document).ready(function () {  
         $('<a>').css('text-decoration', 'underline').css('margin-left', '1em')
             .click(function(){$('#ChangeReasonDefinitions').data('kendoWindow').center().open();})
@@ -285,10 +265,7 @@ span.k-widget.k-datetimepicker.k-header,span.k-widget.k-datepicker.k-header, spa
         $('.k-button.btn').removeClass('btn'); 
         ChangeSelectsIntoButtons();
         SetupDateTimePickers();
-        $('input[id*="Release"]').kendoDropDownList({
-            dataSource: releaseDataSource,
-            optionLabel: " " 
-        });
+
         $("#ChangeReasonDefinitions").kendoWindow({
             title: "Change Reason Definitions",
             resizable: false
