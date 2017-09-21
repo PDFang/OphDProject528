@@ -409,7 +409,7 @@ private class CaseTriggerHandlerTest {
 
         system.assertNotEquals(0, mdt.size(), 'Case Status and ETMS Trouble Report State/Status mapping not found.');
 
-        Case incident = [SELECT Status, SLA_Halfway__c, ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c from Case where Id = :testIncident.Id LIMIT 1];
+        Case incident = [SELECT Status, ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c from Case where Id = :testIncident.Id LIMIT 1];
         system.assertEquals(testIncident.Status, incident.Status, incident);
         system.assertEquals(mdt[0].Trouble_Report_State__c, incident.ETMS_Trouble_Report_State__c);
         system.assertEquals(mdt[0].Trouble_Report_Status__c, incident.ETMS_Trouble_Report_Status__c);
