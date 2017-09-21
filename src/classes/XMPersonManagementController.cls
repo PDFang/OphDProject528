@@ -4,6 +4,7 @@ public class XMPersonManagementController{
     public Contact currentContact{get;private set;}
     public XMPersonWrapper person{get;set;}
     public List<Contact> contactList{get;private set;}
+    public List<AssociatedContactList> customContactList{get;private set;}
     public boolean isPersonMatch{get;private set;}
     public boolean isPersonRemoved{get;private set;}
     private string xmPersonGuid;
@@ -43,6 +44,7 @@ public class XMPersonManagementController{
     public XMPersonManagementController(ApexPages.StandardController controller){
 
         contactId = (string)controller.getId();
+	    customContactList = new list<AssociatedContactList>();
         isPersonRemoved = false;
         loadContact();
         displayBatchStatusText = false;
@@ -73,10 +75,8 @@ public class XMPersonManagementController{
 
             if(string.isNotBlank(contactEmail)){
                 // get duplicate contacts
-                Map<Id, Contact> contactMap = helper.getContactsByEmail(contactEmail);
-                contactMap.remove(contactId);
-                contactList.addAll(contactMap.values());
-                for(Contact cont : contactMap.values()){
+	            findDuplicateContacts();
+                for(Contact cont : contactList){
                     if(cont.xmPerson__c != null && !isPersonMatch) {
                         // duplicate contact is associated with a person record
                         isPersonMatch = true;
@@ -114,7 +114,9 @@ public class XMPersonManagementController{
             Map<Id, Contact> contactMap = helper.getContactsByEmail(contactEmail);
             contactMap.remove(contactId);
             contactList.addAll(contactMap.values());
+
         }
+	    customContactList = helper.getContactsWithProducts(contactList);
 
     }
 
