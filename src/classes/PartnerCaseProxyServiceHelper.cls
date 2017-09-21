@@ -11,7 +11,7 @@ public class PartnerCaseProxyServiceHelper {
     public static final String PRODUCT_DIALTF = 'DIALTF';
     public static final String PRODUCT_HOSTING = 'HOSTING';
     public static final String PRODUCT_GENERAL = 'GENERAL';
-
+    @TestVisible
     private static final String PARTNER_CUSTOMER_ID_PREFIX = 'IC-';
 
     private static Map<String, List<ETMS_Codes__c>> requestTypeEtmsMap = null;
@@ -228,6 +228,13 @@ public class PartnerCaseProxyServiceHelper {
                 }
             }
         }
+
+        String logString = 'Product {0}, NEID {1}, ServiceId {2}, EtmsTroubleType {3}, TroubleTypeDescription {4}';
+        logString = String.format(logString, new String[]{
+                partnerCase.Product, partnerCase.NEID, partnerCase.ServiceId, partnerCase.EtmsTroubleType, partnerCase.TroubleTypeDescription
+        });
+        system.debug('logString - ' + logString);
+
         system.debug('createPartnerCase(): partnerCase - ' + partnerCase);
         return partnerCase;
 

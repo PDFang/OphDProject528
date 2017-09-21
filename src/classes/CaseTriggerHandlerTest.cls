@@ -271,7 +271,10 @@ private class CaseTriggerHandlerTest {
 
     static testMethod void testPartnerCaseProxyServiceCreate() {
 
-        Account verizonAccount = [Select Id from Account where Billing_Group__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON LIMIT 1];
+        Account verizonAccount = [
+                Select Id, CadebillAccountNo__c, Partner_Customer_Account_ID__c
+                from Account where Billing_Group__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON LIMIT 1
+        ];
         Contact verizonContact = [Select Id from Contact where AccountId = :verizonAccount.Id LIMIT 1];
 
         ETMS_Codes__c[] testEtmsCode = ETMS_Codes__c.getAll().values();
@@ -303,8 +306,15 @@ private class CaseTriggerHandlerTest {
         PartnerCaseProxyService.CreatePartnerCase_element request = (PartnerCaseProxyService.CreatePartnerCase_element)proxyServiceMock.request;
         // make sure the trigger makes a callout to proxy service
         system.assertEquals(true, PartnerCaseProxyServiceHelper.isCasePushed);
-        system.assertEquals(PartnerCaseProxyServiceHelper.PRODUCT_HOSTING, request.newCases.SalesforceCase[0].Product);
-
+        system.assertEquals(PartnerCaseProxyServiceHelper.PRODUCT_GENERAL, request.newCases.SalesforceCase[0].Product);
+        system.assertEquals(
+                verizonAccount.CadebillAccountNo__c.format().remove(','),
+                request.newCases.SalesforceCase[0].NEID
+        );
+        system.assertEquals(
+                verizonAccount.Partner_Customer_Account_ID__c.removeStartIgnoreCase(PartnerCaseProxyServiceHelper.PARTNER_CUSTOMER_ID_PREFIX),
+                request.newCases.SalesforceCase[0].ServiceId
+        );
 
     } // end of testPartnerCaseProxyServiceCreate()
 
@@ -340,6 +350,7 @@ private class CaseTriggerHandlerTest {
         testIncident.Product_or_Service__c = 'Toll Free';
         testIncident.Dial_From_ANI__c = '8008772525';
         testIncident.Dial_To_DNIS__c = '8002115252';
+        testIncident.Customer_s_Toll_Free_POC__c = '8775253636';
         update testIncident;
 
         // Performing DML Before Mock Callouts to avoid uncommitted work pending error
@@ -374,21 +385,21 @@ private class CaseTriggerHandlerTest {
                 Request_Type__c = testEtmsCode[0].Request_Type__c,
                 Database__c = testEtmsCode[0].Reason__c,
                 Releases__c = testEtmsCode[0].Reason_Detail__c,
-                X3rdPartyVendorTicket__c = '20170821'
+                X3rdPartyVendorTicket__c = '20170821',
+                Origin = 'Chat'
         );
         Database.DMLOptions dmo = new Database.DMLOptions();
         dmo.AssignmentRuleHeader.useDefaultRule = true;
         testIncident.setOptions(dmo);
         insert testIncident;
 
-        CaseTriggerHandler.noOfProxyServiceCallouts = 0;
-        testIncident.Status = 'Waiting on Customer';
-        update testIncident;
-
-        // Performing DML Before Mock Callouts to avoid uncommitted work pending error
         test.startTest();
         Test.setMock(WebServiceMock.class, new PartnerCaseProxyServiceMockTest());
-        test.stopTest();
+
+        CaseTriggerHandler.noOfProxyServiceCallouts = 0;
+        testIncident.Reason__c = 'Access/Login';
+        testIncident.Status = 'Waiting on Customer';
+        update testIncident;
 
         ETMS_Trouble_Report_State_Status__mdt[] mdt = [
                 Select Case_Status__c, Trouble_Report_State__c, Trouble_Report_Status__c
@@ -398,9 +409,12 @@ private class CaseTriggerHandlerTest {
 
         system.assertNotEquals(0, mdt.size(), 'Case Status and ETMS Trouble Report State/Status mapping not found.');
 
-        Case incident = [SELECT ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c from Case where Id = :testIncident.Id LIMIT 1];
+        Case incident = [SELECT Status, SLA_Halfway__c, ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c from Case where Id = :testIncident.Id LIMIT 1];
+        system.assertEquals(testIncident.Status, incident.Status, incident);
         system.assertEquals(mdt[0].Trouble_Report_State__c, incident.ETMS_Trouble_Report_State__c);
         system.assertEquals(mdt[0].Trouble_Report_Status__c, incident.ETMS_Trouble_Report_Status__c);
+
+        test.stopTest();
 
         // make sure the trigger makes a callout to proxy service
         system.assertEquals(true, PartnerCaseProxyServiceHelper.isCasePushed);
@@ -633,7 +647,9 @@ private class CaseTriggerHandlerTest {
                 Name = 'Verizon Test Account',
                 Billing_Group__c = PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON,
                 Type = 'Partner',
-                RecordTypeId = accountRecordTypeMap.get('Partners').getRecordTypeId()
+                RecordTypeId = accountRecordTypeMap.get('Partners').getRecordTypeId(),
+                CadebillAccountNo__c = 877121,
+                Partner_Customer_Account_ID__c = 'IC-877121'
         );
 
         insert verizonAccount;

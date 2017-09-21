@@ -47,6 +47,7 @@ private class CreateMaintNotificationControllerTest {
 
 
         //create test case
+        List<Group> queueIds = new List<Group>([Select g.ID from Group g Where g.Name = 'Customer Communications Queue' LIMIT 1]);
         Case c = new Case();
         c.AccountId = testAccount.Id;
         c.Subject = testAccount.Name;
@@ -63,6 +64,7 @@ private class CreateMaintNotificationControllerTest {
         c.Severity__c = 'S4';
         c.RF_Change_Request__c = changeRequest.Id;
 
+
         c.setOptions(dmo);
 
         insert c;
@@ -76,14 +78,16 @@ private class CreateMaintNotificationControllerTest {
         createMainNotCon.contactUsString = 'test';
         createMainNotCon.newCase.ProductImpacted__c = 'testProImpact';
         createMainNotCon.newCase.PlatformsImpacted__c = 'testPlatImpact';
+        createMainNotCon.newCase.OwnerId = queueIds[0].Id;
         createMainNotCon.getContactInfo();
         createMainNotCon.goBack();
         createMainNotCon.createMaintenanceRecord();
         Case c1 = new Case();
-        c1 = [SELECT CaseNumber, Status, Subject, Description, ProductImpacted__c, PlatformsImpacted__c FROM Case WHERE subject = :changeRequest.RF_Summary__c];
+        c1 = [SELECT CaseNumber, Status, Subject, OwnerId, Description, ProductImpacted__c, PlatformsImpacted__c FROM Case WHERE subject = :changeRequest.RF_Summary__c];
 
         system.assertNotEquals(createMainNotCon, null);
         system.assertNotEquals(c1, null);
+        system.assertEquals(c1.OwnerId, queueIds[0].Id);
         Test.stopTest();
     }
 }

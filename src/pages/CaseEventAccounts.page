@@ -187,7 +187,7 @@
                         <apex:pageBlockTable value="{!acctIncidents}" var="a">
                             <apex:column rendered="{!canEdit}" >
                                 <apex:commandLink action="{!RemoveAccount}" rerender="main" title="Remove Account">
-                                    <apex:image value="https://images.ucn.net/salesforce/delete_icon_x.png" />
+                                    <apex:image value="{! $Label.RemoveAccountIcon}" />
                                     <!-- position count is used to reference the index of the collection -->
                                           <apex:param name="acctIdMaster" value="{!a.acct.Id}" assignTo="{!selectedAccountFromMasterList}"/>
                                 </apex:commandLink> 
