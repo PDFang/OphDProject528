@@ -111,8 +111,8 @@ trigger CaseAfterInsert on Case (after insert, after update)
             eventCaseIds.put(c.Id,bodyString);
             system.debug('comments########'+comments);
 
-        }else if(c.RecordTypeId == incidentRecType && (c.SLA_Halfway__c && (trigger.isInsert || (trigger.isUpdate && oldCase.SLA_Halfway__c != c.SLA_Halfway__c))
-                 || (c.OwnerId == techSupportQueueId && (trigger.isInsert || (trigger.isUpdate && oldCase.OwnerId != c.OwnerId))))){
+        }else if(c.RecordTypeId == incidentRecType && (c.SLA_Halfway__c && c.OwnerId == techSupportQueueId && (trigger.isInsert || (trigger.isUpdate && oldCase.SLA_Halfway__c != c.SLA_Halfway__c)))
+                 || (c.OwnerId == techSupportQueueId && c.SLA_Halfway__c && (trigger.isInsert || (trigger.isUpdate && oldCase.OwnerId != c.OwnerId)))){
 
             assigntoAdvancedTechSupportIds.add(c.Id);
             CaseComment cc = new CaseComment();
