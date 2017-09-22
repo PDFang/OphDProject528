@@ -85,7 +85,7 @@ global class PartnerCaseRestService {
 
         } catch(Exception ex){
             response.statusCode = 500;
-            response.responseBody = Blob.valueOf(ex.getMessage());
+            response.responseBody = Blob.valueOf(ex.getTypeName());
             String subject = (incident != null) ? incident.Id : 'NONE';
             subject += (request != null) ? ' Trouble Report Id: ' + request.troubleReportId : '';
             inContactBaseClass.SendErrorEmail( ex, subject);
