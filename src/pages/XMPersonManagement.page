@@ -1274,7 +1274,8 @@
     }
 
     function setupGroupList(){
-
+        var groupSize = 0,
+            gridHeight = 300;
         var groups =new kendo.data.DataSource({
                     autosync:true,
                     transport:{
@@ -1288,7 +1289,33 @@
                                               if(result.length > 1){
                                                   options.success(JSON.parse(result));
                                               }
-                                              console.log('groups =>' + JSON.stringify(result));
+                                              //console.log('groups =>' + JSON.stringify(result));
+                                              //console.log('groups size=>' + JSON.parse(result).length);
+                                              groupSize = JSON.parse(result).length;
+                                              switch (groupSize){
+                                                  case 0:
+                                                    gridHeight = 200;
+                                                    break;
+                                                  case 1:
+                                                    gridHeight = 200;
+                                                    break;
+                                                  case 2:
+                                                    gridHeight = 300;
+                                                    break;
+                                                  case 3:
+                                                    gridHeight = 300;
+                                                    break;
+                                                  case 4:
+                                                    gridHeight = 400;
+                                                    break;
+                                                  case 5:
+                                                    gridHeight = 500;
+                                                    break;
+                                                  default:
+                                                   gridHeight = 600;
+                                                   break;
+                                              }
+                                              resizeGrid(gridHeight);
                                               hideError();
 
                                             } else if (event.type === 'exception') {
@@ -1324,11 +1351,13 @@
                   }
               });
 
+
+
+
           var groupGrid =    $("#groupList").kendoGrid({
                   dataSource: groups,
                   scrollable: true,
                   noRecords: true,
-                  height: 600,
                   columns: [
 //                      {
 //                                field:"selected",
@@ -1361,10 +1390,17 @@
 
               });
 
-
-
-
     }
+
+    function resizeGrid(gridHeight){
+          var gridElement = $("#groupList");
+        var dataArea = gridElement.find(".k-grid-content");
+        var newHeight = gridHeight;
+        var diff = gridElement.innerHeight() - dataArea.innerHeight();
+        gridElement.height(newHeight);
+        dataArea.height(newHeight - diff);
+    }
+
         var checkedIds = {};
          //on click of the checkbox:
       function selectRow(obj) {
