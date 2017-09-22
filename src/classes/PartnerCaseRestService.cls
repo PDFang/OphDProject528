@@ -77,6 +77,7 @@ global class PartnerCaseRestService {
                         IsPublished = false,
                         ParentId = incident.Id
                 );
+                CaseCommentTriggerHandler.bypassProxyService = true;
                 insert newCaseComment;
             }
 
