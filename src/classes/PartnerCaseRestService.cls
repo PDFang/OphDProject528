@@ -1,5 +1,5 @@
 @RestResource(urlMapping = '/PartnerCase/*')
-global class PartnerCaseRestService {
+global with sharing class PartnerCaseRestService {
 
     public class UpdateRequest{
         public String troubleReportId;
