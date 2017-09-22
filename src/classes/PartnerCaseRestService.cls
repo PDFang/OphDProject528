@@ -29,6 +29,8 @@ global class PartnerCaseRestService {
                 Case[] incidentList = [
                         Select Id, Status, ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c, X3rdPartyVendorTicket__c
                         from Case Where X3rdPartyVendorTicket__c = :request.troubleReportId
+                        and AccountBillingGroup__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
+                        and RecordType.Name = 'Incident'
                 ];
                 if(incidentList.size() > 0){
                     incident = incidentList[0];
