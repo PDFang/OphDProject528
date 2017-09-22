@@ -8,12 +8,12 @@ private class CaseEventTestClass {
         sbx.AutoEventEmails__c = true;
         sbx.DaysToDisplayKnownIssues__c = 30;
         sbx.OrgId__c = inContactBaseClass.OrgId15Digit;
-		sbx.EventResolvedPriorities__c = 'P1;P2;';
+        sbx.EventResolvedPriorities__c = 'P1;P2;';
         sbx.EventResolvedEmails__c = true;
-        
+
         insert sbx;
-        
-        
+
+
 
     }
 
@@ -729,7 +729,7 @@ private class CaseEventTestClass {
         c2.setOptions(dmo2);
 
         insert c2;
-
+        test.startTest();
         //Test StandardTextExtension
         ApexPages.StandardController stdCtrl = new ApexPages.StandardController(c);
         CaseEventStatusChangeExtension cecExt = new CaseEventStatusChangeExtension(stdCtrl);
@@ -748,13 +748,14 @@ private class CaseEventTestClass {
         cecExt.SelectedRecordTypeId = rto[1].getValue();
         Id rtId = cecExt.SelectedRecordTypeId;
         c.Status = 'TEST';
-        
+
         boolean sendResolvedEmailVisible = cecExt.ShowSendEventResolvedEmail;
         boolean getCurrentSendEmail = cecExt.SetSendEventResovledEmail;
-        
+
 
         cecExt.Save();
         cecExt.RefreshPage();
+        test.stopTest();
     }
 
     static testMethod void TestRCAButtonBannerExtension()
@@ -1029,7 +1030,7 @@ private class CaseEventTestClass {
 
 
     }
-        //@isTest(SeeAllData=true)
+    //@isTest(SeeAllData=true)
     static testMethod void TestTrustWebService()
     {
         createSiteConfig();
@@ -1098,13 +1099,13 @@ private class CaseEventTestClass {
         insert ip;
 
         ImplementedProduct__c ip1 = new ImplementedProduct__c
-        (
-            Account__c = partnerCustomer.Id,
-            Opportunity__c = o.Id,
-            GoLiveDate__c = system.today() - 1,
-            Status__c = 'Implemented',
-            Product__c = 'WFM 2.0'  
-        );
+                (
+                        Account__c = partnerCustomer.Id,
+                        Opportunity__c = o.Id,
+                        GoLiveDate__c = system.today() - 1,
+                        Status__c = 'Implemented',
+                        Product__c = 'WFM 2.0'
+                );
 
         insert ip1;
 
@@ -1233,95 +1234,95 @@ private class CaseEventTestClass {
         List<Account> accounts = new List<Account> ();
         List<ImplementedProduct__c> implementedProducts = new List<ImplementedProduct__c> ();
         List<Opportunity> lstOpportunities = new List<Opportunity>();
-        
-            Account accountRecord = inContactBaseClass.CreateAccount('Test Account');
-            accountRecord.Site = 'Test';
-            accountRecord.CS_AM__c = UserInfo.getUserId();
-            accountRecord.inContact_Cluster__c = 'C6';
-            accountRecord.CadebillAccountNo__c = 99999;
-            accountRecord.Verint_Cluster__c = 'V2';
-        
-            Database.insert(accountRecord, false);
-            Opportunity opp 
-                        = new Opportunity(
-                                          Name = 'Opportunity test',
-                                          AccountId = accountRecord.Id,
-                                          CloseDate = System.today(),
-                                          StageName = 'Completed',
-                                          RecordTypeId =opportunityRecordType
-                                          );
-            
-            Database.insert(opp, false);    
-            
-            ImplementedProduct__c ip1 = new ImplementedProduct__c
-            (
-             Account__c = opp.AccountId,
-             Opportunity__c = opp.Id,
-             GoLiveDate__c = system.today() - 1,
-             Status__c = 'Implemented',
-             Product__c = 'inContact'
-            );
-            insert ip1;
-            ImplementedProduct__c ip2 = new ImplementedProduct__c
-            (
-             Account__c = opp.AccountId,
-             Opportunity__c = opp.Id,
-             GoLiveDate__c = system.today() - 1,
-             Status__c = 'Implemented',
-             Product__c = 'WFM 2.0'
-            );
-            insert ip2;
-        
+
+        Account accountRecord = inContactBaseClass.CreateAccount('Test Account');
+        accountRecord.Site = 'Test';
+        accountRecord.CS_AM__c = UserInfo.getUserId();
+        accountRecord.inContact_Cluster__c = 'C6';
+        accountRecord.CadebillAccountNo__c = 99999;
+        accountRecord.Verint_Cluster__c = 'V2';
+
+        Database.insert(accountRecord, false);
+        Opportunity opp
+                = new Opportunity(
+                        Name = 'Opportunity test',
+                        AccountId = accountRecord.Id,
+                        CloseDate = System.today(),
+                        StageName = 'Completed',
+                        RecordTypeId =opportunityRecordType
+                );
+
+        Database.insert(opp, false);
+
+        ImplementedProduct__c ip1 = new ImplementedProduct__c
+                (
+                        Account__c = opp.AccountId,
+                        Opportunity__c = opp.Id,
+                        GoLiveDate__c = system.today() - 1,
+                        Status__c = 'Implemented',
+                        Product__c = 'inContact'
+                );
+        insert ip1;
+        ImplementedProduct__c ip2 = new ImplementedProduct__c
+                (
+                        Account__c = opp.AccountId,
+                        Opportunity__c = opp.Id,
+                        GoLiveDate__c = system.today() - 1,
+                        Status__c = 'Implemented',
+                        Product__c = 'WFM 2.0'
+                );
+        insert ip2;
+
         //set default assignment rule       
         database.DMLOptions dmo = new database.DMLOptions();
         dmo.assignmentRuleHeader.useDefaultRule = true;
 
         //create test case      
         Case caseRecordInContact = new Case
-        (
-         Subject = 'Test Event Incontact',
-         EventType__c = 'Service Disruption',
-         RecordTypeId = eventRecordType,
-         PlatformsImpacted__c = 'C6 - inContact',
-         ProductImpacted__c = 'ACD',
-         Status = 'New'
-        );
+                (
+                        Subject = 'Test Event Incontact',
+                        EventType__c = 'Service Disruption',
+                        RecordTypeId = eventRecordType,
+                        PlatformsImpacted__c = 'C6 - inContact',
+                        ProductImpacted__c = 'ACD',
+                        Status = 'New'
+                );
 
         caseRecordInContact.setOptions(dmo);
         insert caseRecordInContact;
 
         Case caseRecordVerint = new Case
-        (
-         Subject = 'Test Event Verint',
-         EventType__c = 'Service Disruption',
-         RecordTypeId = eventRecordType,
-         PlatformsImpacted__c = 'V2 - WFO',
-         ProductImpacted__c = 'WFM 2.0',
-         Status = 'New'
-        );
-    
+                (
+                        Subject = 'Test Event Verint',
+                        EventType__c = 'Service Disruption',
+                        RecordTypeId = eventRecordType,
+                        PlatformsImpacted__c = 'V2 - WFO',
+                        ProductImpacted__c = 'WFM 2.0',
+                        Status = 'New'
+                );
+
         caseRecordVerint.setOptions(dmo);
         insert caseRecordVerint;
 
         ProductEventMap__c productEventMapInContact = new ProductEventMap__c
-        (
-         Name = 'ACD',
-         Product__c = 'ACD',
-         ImplementedProduct__c = 'inContact',
-         Platform__c = 'Cluster - inContact',
-         HasClusters__c = true       
-        );
+                (
+                        Name = 'ACD',
+                        Product__c = 'ACD',
+                        ImplementedProduct__c = 'inContact',
+                        Platform__c = 'Cluster - inContact',
+                        HasClusters__c = true
+                );
 
         insert productEventMapInContact;
 
         ProductEventMap__c productEventMapVerint = new ProductEventMap__c
-        (
-         Name = 'WFM 2.0',
-         Product__c = 'WFM 2.0',
-         ImplementedProduct__c = 'WFM 2.0',
-         Platform__c = 'Cluster - WFO',
-         HasClusters__c = true
-        );
+                (
+                        Name = 'WFM 2.0',
+                        Product__c = 'WFM 2.0',
+                        ImplementedProduct__c = 'WFM 2.0',
+                        Platform__c = 'Cluster - WFO',
+                        HasClusters__c = true
+                );
 
         insert productEventMapVerint;
     }
@@ -1332,7 +1333,7 @@ private class CaseEventTestClass {
         createSiteConfig();
         Setup();
         List<Account> lstAcct = new List<Account>();
-        
+
         for (Case caseRecord: [SELECT Id, PlatformsImpacted__c, RecordTypeId, ProductImpacted__c  FROM Case])
         {
             lstAcct = new List<Account>();

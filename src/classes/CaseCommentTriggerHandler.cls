@@ -8,6 +8,8 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
     private static boolean isProxyServiceTurnedOff = false;
     //private static boolean isSetCommentDuringUpdate = false;
 
+    public static boolean bypassProxyService = false;
+
     public CaseCommentTriggerHandler()
     {
         if(!staticValuesSet)
@@ -21,7 +23,7 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
     }
 
     protected override void afterInsert(){
-        if(!isProxyServiceTurnedOff){
+        if(!isProxyServiceTurnedOff && !bypassProxyService){
             CallPartnerCaseProxyService((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
         }
         CopyCustomComments ((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
@@ -67,6 +69,7 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
         }
         comment.IsDeleted__c = NewComment.IsDeleted;
         comment.IsPublished__c = newComment.IsPublished;
+        comment.Case_Comments_Id__c = (string) newComment.id;
         //comment.Id = NewComment.Id;
         return comment;
     }

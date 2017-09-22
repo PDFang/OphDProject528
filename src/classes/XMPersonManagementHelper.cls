@@ -38,7 +38,7 @@ public class XMPersonManagementHelper {
     public Contact getContactById(String contactId){
 
         Contact[] contactList = [
-                select Name, FirstName, LastName, Email, Phone, Id, AccountId, Account.CadebillAccountNoText__c,
+                select Name, FirstName, LastName, Email, Phone, Id, AccountId,Account.ParentId, Account.CadebillAccountNoText__c,
                         Account.Name, xmPerson__c, XmattersUid__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
                 from Contact where Id =: contactId
         ];
@@ -54,7 +54,7 @@ public class XMPersonManagementHelper {
             system.debug ('getContactsByEmail ==> called');
 
             return new Map<Id, Contact>([
-                    select FirstName, LastName, Email,Phone, Id, AccountId, Account.CadebillAccountNoText__c,
+                    select FirstName, LastName, Email,Phone, Id, AccountId,Account.ParentId, Account.CadebillAccountNoText__c,
                             Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
                     from Contact where Email =: email
             ]);
@@ -65,6 +65,71 @@ public class XMPersonManagementHelper {
             return null;
         }
     }
+
+    public list<AssociatedContactList> getContactsWithProducts(list<Contact> contacts){
+	    set<id> accIds = new set<Id>();
+	    map<id, list<XMGroupProductCluster>> acctProductList = new map<Id, list<XMGroupProductCluster>>();
+	    list<AssociatedContactList> contactProductList = new list<AssociatedContactList>();
+
+	    XMBusinessLayer businessLayer =  new XMBusinessLayer();
+	    Map<String, ProductEventMap__c> nodeMap;
+	    nodeMap = ProductEventMap__c.getAll();
+	    businessLayer.notificationType = null;
+	    for(Contact c : contacts){
+		    accIds.add(c.AccountId);
+		    if(c.Account.ParentId != null)
+			    accIds.add(c.Account.ParentId);
+	    }
+	    for(ImplementedProduct__c product : [SELECT   Account__c,Product__c, Account__r.ParentId, Account__r.inContact_Cluster__c, Account__r.Verint_Cluster__c,
+										    Account__r.NICE_WFM_Cluster__c,Account__r.XMPartnerPrefix__c, Account__r.NICE_QM_Cluster__c,Account__r.Parent.XMPartnerPrefix__c
+	                                        FROM ImplementedProduct__c
+								            WHERE Account__c in :accIds  and Account__r.CG_Disconnect_Date__c = NULL
+										    AND(GoLiveDate__c <= TODAY  OR EstimatedGoLiveDate__c <= NEXT_N_DAYS : 14)
+										    AND Status__c in('New', 'Implemented')]){
+
+		    ProductEventMap__c productMap = nodeMap.get(product.Product__c);
+		    if (productMap != null) {
+
+			    XMBusinessLayer.ProductClusterMapClass prodMap = new XMBusinessLayer.ProductClusterMapClass(
+					    productMap.Name,
+					    product.Account__r.inContact_Cluster__c,
+					    product.Account__r.Verint_Cluster__c,
+					    product.Account__r.NICE_WFM_Cluster__c,
+					    product.Account__r.NICE_QM_Cluster__c,
+					    'NONE',
+					    productMap
+			    );
+			    XMGroupProductCluster groupData = businessLayer.GetGroupDataMap(prodMap);
+			    if(acctProductList.containsKey(product.Account__c)){
+				    acctProductList.get(product.Account__c).add(groupData);
+			    }else{
+				     acctProductList.put(product.Account__c, new list<XMGroupProductCluster>{groupData});
+			    }
+		    }
+	    }
+
+	    for(Contact con : contacts){
+
+		    AssociatedContactList contactProduct = new AssociatedContactList();
+		    contactProduct.AccountName = con.Account.Name;
+		    contactProduct.AccountId = con.AccountId;
+		    if(acctProductList.containsKey(con.AccountId)){
+			    contactProduct.ProductClusters.addAll(acctProductList.get(con.AccountId));
+			    if(con.Account.ParentId != null){
+				    contactProduct.ProductClusters.addAll(acctProductList.get(con.Account.ParentId));
+			    }
+		    }
+		    contactProduct.ContactFirstName = con.FirstName;
+		    contactProduct.ContactLastName = con.LastName;
+		    contactProduct.ContactId = con.Id;
+		    contactProduct.CadebillAccountNum = con.Account.CadebillAccountNoText__c;
+		    contactProduct.xmPersonId = con.xmPerson__c;
+		    contactProductList.add(contactProduct);
+	    }
+	    return contactProductList;
+
+    }
+
 
     public void associateContact(String contactId, String xmPersonId){
 

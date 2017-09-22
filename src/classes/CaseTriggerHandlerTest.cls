@@ -385,22 +385,21 @@ private class CaseTriggerHandlerTest {
                 Request_Type__c = testEtmsCode[0].Request_Type__c,
                 Database__c = testEtmsCode[0].Reason__c,
                 Releases__c = testEtmsCode[0].Reason_Detail__c,
-                X3rdPartyVendorTicket__c = '20170821'
+                X3rdPartyVendorTicket__c = '20170821',
+                Origin = 'Chat'
         );
         Database.DMLOptions dmo = new Database.DMLOptions();
         dmo.AssignmentRuleHeader.useDefaultRule = true;
         testIncident.setOptions(dmo);
         insert testIncident;
 
-        CaseTriggerHandler.noOfProxyServiceCallouts = 0;
-        testIncident.SLA_Halfway__c = false;
-        testIncident.Status = 'Waiting on Customer';
-        update testIncident;
-
-        // Performing DML Before Mock Callouts to avoid uncommitted work pending error
         test.startTest();
         Test.setMock(WebServiceMock.class, new PartnerCaseProxyServiceMockTest());
-        test.stopTest();
+
+        CaseTriggerHandler.noOfProxyServiceCallouts = 0;
+        testIncident.Reason__c = 'Access/Login';
+        testIncident.Status = 'Waiting on Customer';
+        update testIncident;
 
         ETMS_Trouble_Report_State_Status__mdt[] mdt = [
                 Select Case_Status__c, Trouble_Report_State__c, Trouble_Report_Status__c
@@ -411,9 +410,11 @@ private class CaseTriggerHandlerTest {
         system.assertNotEquals(0, mdt.size(), 'Case Status and ETMS Trouble Report State/Status mapping not found.');
 
         Case incident = [SELECT Status, ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c from Case where Id = :testIncident.Id LIMIT 1];
-        system.assertEquals(testIncident.Status, incident.Status);
+        system.assertEquals(testIncident.Status, incident.Status, incident);
         system.assertEquals(mdt[0].Trouble_Report_State__c, incident.ETMS_Trouble_Report_State__c);
         system.assertEquals(mdt[0].Trouble_Report_Status__c, incident.ETMS_Trouble_Report_Status__c);
+
+        test.stopTest();
 
         // make sure the trigger makes a callout to proxy service
         system.assertEquals(true, PartnerCaseProxyServiceHelper.isCasePushed);
