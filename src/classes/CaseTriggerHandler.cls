@@ -20,6 +20,7 @@ public class CaseTriggerHandler extends TriggerHandler
     private static SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(inContactBaseClass.OrgId15Digit);
     public static boolean callActionHub = true;
     public static boolean createJiraBug = false;
+    public static boolean bypassProxyService = false;
     private Static Map<String, ETMS_Trouble_Report_State_Status__mdt> etmsTroubleStateStatusMap;
 
 
@@ -59,14 +60,14 @@ public class CaseTriggerHandler extends TriggerHandler
 
     protected override void afterInsert(){
         createJiraBugForKI((List<Case>) trigger.new);
-        if(!isProxyServiceTurnedOff && noOfProxyServiceCallouts == 0)
+        if(!isProxyServiceTurnedOff && noOfProxyServiceCallouts == 0 && !bypassProxyService)
             CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
     }
 
     protected override void afterUpdate(){
         if(!isxMattersNotificationsTurnedOff)
             createXmNotification((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
-        if(!isProxyServiceTurnedOff && noOfProxyServiceCallouts == 0)
+        if(!isProxyServiceTurnedOff && noOfProxyServiceCallouts == 0 && !bypassProxyService)
             CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
     }
 
