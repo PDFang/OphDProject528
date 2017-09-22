@@ -244,6 +244,26 @@ public with sharing class AssetSubscriptionAllocationController {
 
     }
 
+    public pagereference saveCHQuantities(){
+
+        try{
+            //System.debug('Asset.QuantityCancelled__c' + Asset.QuantityCancelled__c);
+            Boolean success =  businessLayer.saveCHQuantities(Asset.QuantityCancelled__c, Asset.QuantityonHold__c);
+            if (success){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Saved Successfully.'));
+            } else{
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line item(s) has error.'));
+            }
+
+        } catch (Exception ex){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while saving subscription allocations. ' + ex.getMessage()));
+            system.debug('saveSubscriptionAllocation(): Exception - ' + ex);
+            system.debug('saveSubscriptionAllocation(): ' + ex.getStackTraceString());
+        }
+        return null;
+
+    }
+
     public pagereference cancel(){
 
         return new PageReference('/'+currentId).setRedirect(true);
