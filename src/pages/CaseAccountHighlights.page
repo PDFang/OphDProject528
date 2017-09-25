@@ -26,7 +26,7 @@
                                <apex:image value="/img/loading32.gif" style="height: 15px;"/> creating JIRA Bug...
                            </apex:facet>
                            <apex:facet name="stop">
-                               <apex:commandLink action="{!CreateJIRABug}" status="createStatus" value="Create JIRA Bug" oncomplete="return refreshPage()" rendered="{!Case.RecordType.Name = 'Known Issue'}"/>
+                               <apex:commandLink action="{!CreateJIRABug}" status="createStatus" value="Create JIRA Bug" oncomplete="return refreshPage()"/>
                            </apex:facet>
                        </apex:actionStatus>
                   </apex:outputPanel>
