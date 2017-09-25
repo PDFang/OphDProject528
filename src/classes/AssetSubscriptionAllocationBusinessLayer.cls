@@ -26,7 +26,9 @@ public class AssetSubscriptionAllocationBusinessLayer {
             'RecordType.Name',
             'Quantity',
             'Budgeted_Hours__c',
-            'Parent_Project__c'
+            'Parent_Project__c',
+            'QuantityCancelled__c',
+            'QuantityonHold__c'
     };
 
     static Set<String> subscriptionFields = new Set<String>{
@@ -239,6 +241,20 @@ public class AssetSubscriptionAllocationBusinessLayer {
                     model.isPercentageAllocation = (selAsset.Budgeted_Hours__c > 0 && selAsset.Quantity <= 1);
                     model.isAllocatedHours = (selAsset.Quantity > 1 && selAsset.Budgeted_Hours__c > 0);
                     model.assetAllocation.Asset__r = selAsset;
+
+                    List<Asset> assetList = new List<Asset>([select RemainingQuantity__c, Remaining_Hours__c,
+                            Remaning_Percentage__c from Asset where Id =: selAsset.Id LIMIT 1]);
+
+                    if(model.isQuantityAllocation){
+                        model.assetAllocation.Quantity_Allocation__c = assetList[0].RemainingQuantity__c;
+                    }
+                    if(model.isAllocatedHours){
+                        model.assetAllocation.Hours_Allocated__c = assetList[0].Remaining_Hours__c;
+                    }
+                    if(model.isPercentageAllocation){
+                        model.assetAllocation.Percent_Allocation__c = assetList[0].Remaning_Percentage__c;
+                    }
+
                 }else{
                     model.isError = true;
                     model.message = 'Asset not found';
@@ -272,6 +288,20 @@ public class AssetSubscriptionAllocationBusinessLayer {
                     model.isPercentageAllocation = (selSubscription.Budgeted_Hours__c > 0 && selSubscription.Quantity__c <= 1);
                     model.isAllocatedHours = (selSubscription.Quantity__c > 1 && selSubscription.Budgeted_Hours__c > 0);
                     model.subscriptionAllocation.Subscription__r = selSubscription;
+
+                    List<SubscriptionReplica__c> subscriptionList = new List<SubscriptionReplica__c>([select RemainingQuantity__c, Remaining_Hours__c,
+                            Remaning_Percentage__c from SubscriptionReplica__c where Id =: selSubscription.Id LIMIT 1]);
+
+                    if(model.isQuantityAllocation){
+                        model.subscriptionAllocation.Quantity_Allocation__c = subscriptionList[0].RemainingQuantity__c;
+                    }
+                    if(model.isAllocatedHours){
+                        model.subscriptionAllocation.Hours_Allocated__c = subscriptionList[0].Remaining_Hours__c;
+                    }
+                    if(model.isPercentageAllocation){
+                        model.subscriptionAllocation.Percent_Allocation__c = subscriptionList[0].Remaning_Percentage__c;
+                    }
+
                 }else{
                     model.isError = true;
                     model.message = 'Subscription not found';
@@ -568,6 +598,17 @@ public class AssetSubscriptionAllocationBusinessLayer {
         return true;
 
     }
+
+
+    // delete subscription allocation row from the list
+    public Boolean saveCHQuantities(Decimal cancelQuantity, Decimal onHoldQuantity){
+        currentAsset.QuantityCancelled__c = cancelQuantity;
+        currentAsset.QuantityonHold__c = onHoldQuantity;
+
+        update currentAsset;
+
+        return true;
+    }
 //
 //    public Decimal getRemainingQuantity(){
 //        if(currentAsset != null)
@@ -575,7 +616,7 @@ public class AssetSubscriptionAllocationBusinessLayer {
 //        else if (selAsset != null)
 //            return selAsset.RemainingQuantity__c;
 //
-//        return null;
+//        return false;
 //    }
 
     public void getAssetRemainingQuantityNPercentage(Asset Asset){

@@ -7,10 +7,14 @@ public class ProjectTriggerHandler extends TriggerHandler{
     }
 
     public override void afterUpdate(){
+
         calculateProjectedDeadline(trigger.new);
         CallTFSService(trigger.new);
+        calculatePhaseImpQuantityNPercentage(trigger.new);
+
         new ProjectShareHelper().deleteShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         new ProjectShareHelper().addShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
+
         //new PartnerShareHelper().deleteShare(trigger.new, trigger.oldMap);
         //new PartnerShareHelper().addShare(trigger.new, trigger.oldMap);       
     }
@@ -56,7 +60,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
     }    
     
     private static void calculateProjectedDeadline(list<Project__c> newList){
-        
+        System.debug('newList in calculateProjectedDeadline' + newList);
         Map<Id, Project__c> oldMap = (Map<Id, Project__c>)( trigger.oldMap );
         Set<Id> vaildRecordTypeIdSet = new Set<Id>();        
         Map<String,Schema.RecordTypeInfo> rtMapByName = Schema.SObjectType.Project__c.getRecordTypeInfosByName();
@@ -114,4 +118,105 @@ public class ProjectTriggerHandler extends TriggerHandler{
         }
         
     } // end of calculateProjectedDeadline()
+
+    //Assign Phase Implemented Quantity, Percentage and Status
+    private static void calculatePhaseImpQuantityNPercentage(List<Project__c> newList){
+        Set<String> phaseProjectRecordTypeSet = new Set<String>{
+                'PS Project Phase Premise WFO',
+                'PS Project Phase SaaS'
+        };
+
+        System.debug('phaseProjectRecordTypeSet' + phaseProjectRecordTypeSet);
+
+        System.debug('newList in calculatePhaseImpQuantityNPercentage' + newList);
+
+        for(Project__c newProject : newList){
+            List<Project__c> projectRecordType = [Select RecordType.Name from Project__c where Id =: newProject.Id LIMIT 1];
+
+                System.debug('newProject.RecordType.Name' + newProject.RecordType.Name);
+                System.debug('projectRecordType' + projectRecordType[0].RecordType.Name);
+                System.debug('newProject.Phase_Status__c' + newProject.Phase_Status__c);
+                if(phaseProjectRecordTypeSet.contains(projectRecordType[0].RecordType.Name)){
+                    System.debug('projectRecordType[0].RecordType.Name' + projectRecordType[0].RecordType.Name);
+                    if(newProject.Phase_Status__c == 'Closed' || newProject.ActualProjectGoLiveDate__c != null){
+                        System.debug('newProject.Phase_Status__c' + newProject.Phase_Status__c);
+
+                        List<Project_Asset_Allocation__c> listProjectAssetAllocations = new List<Project_Asset_Allocation__c>(
+                        [Select Id, Asset__c, Phase_Allocated__c,Phase_Implemented__c, Phase_Implemented_Quantity__c,
+                                Quantity_Allocation__c from  Project_Asset_Allocation__c where Project__c =: newProject.Id]);
+
+                        List<Project_Asset_Allocation__c> updateProjectAssetAllocationsList = new List<Project_Asset_Allocation__c>();
+
+
+                        System.debug('listProjectAssetAllocations' + listProjectAssetAllocations);
+                        List<Asset> updateAssetList = new List<Asset>();
+                        Set<Id> assetIds = new Set<Id>();
+                        for(Project_Asset_Allocation__c projectAssetAllocation: listProjectAssetAllocations){
+
+                            projectAssetAllocation.Phase_Implemented_Quantity__c = projectAssetAllocation.Quantity_Allocation__c;
+                            projectAssetAllocation.Phase_Implemented__c = projectAssetAllocation.Phase_Allocated__c;
+                            updateProjectAssetAllocationsList.add(projectAssetAllocation);
+
+                            if(!assetIds.contains(projectAssetAllocation.Asset__c)){
+                                assetIds.add(projectAssetAllocation.Asset__c);
+                                List<Asset> updateAsset = new List<Asset>([SELECT Id, Status, Name, Total_Allocated_Quantity__c, Total_Allocated__c,
+                                        Phase_Implemented_Percentage__c, Phase_Implemented_Quantity__c from Asset where Id =: projectAssetAllocation.Asset__c limit 1]);
+
+                                updateAsset[0].Phase_Implemented_Quantity__c = updateAsset[0].Total_Allocated_Quantity__c;
+                                updateAsset[0].Phase_Implemented_Percentage__c = updateAsset[0].Total_Allocated__c;
+                                updateAsset[0].Status = '4 - Delivered';
+
+                                updateAssetList.add(updateAsset[0]);
+                            }
+                            System.debug('assetIds' + assetIds);
+                        }
+                        System.debug('updateAssetList' + updateAssetList);
+                        update updateProjectAssetAllocationsList;
+                        update updateAssetList;
+
+
+                        List<Project_Subscription_Allocation__c> listProjectSubscriptionAllocations = new List<Project_Subscription_Allocation__c>(
+                        [Select Id, Subscription__c, Phase_Implemented_Quantity__c, Phase_Implemented__c,
+                                Phase_Allocated__c, Quantity_Allocation__c from  Project_Subscription_Allocation__c where Project__c =: newProject.Id]);
+
+                        System.debug('listProjectSubscriptionAllocations' + listProjectSubscriptionAllocations);
+                        List<SubscriptionReplica__c> updateSubscriptionCustomList = new List<SubscriptionReplica__c>();
+                        List<SBQQ__Subscription__c> updateSubscriptionList = new List<SBQQ__Subscription__c>();
+                        Set<Id> subscriptionIds = new Set<Id>();
+
+                        List<Project_Subscription_Allocation__c> upProjectSubscriptionAllocationsList = new List<Project_Subscription_Allocation__c>();
+
+                        for(Project_Subscription_Allocation__c projectSubscriptionAllocation: listProjectSubscriptionAllocations){
+
+                            projectSubscriptionAllocation.Phase_Implemented_Quantity__c = projectSubscriptionAllocation.Quantity_Allocation__c;
+                            projectSubscriptionAllocation.Phase_Implemented__c = projectSubscriptionAllocation.Phase_Allocated__c;
+                            upProjectSubscriptionAllocationsList.add(projectSubscriptionAllocation);
+
+                            if(!subscriptionIds.contains(projectSubscriptionAllocation.Subscription__c)){
+                                subscriptionIds.add(projectSubscriptionAllocation.Subscription__c);
+                                List<SubscriptionReplica__c> updateSubscriptionCustom = new List<SubscriptionReplica__c>([SELECT Id, Status__c, Subscription__c, Name, Total_Allocated_Quantity__c, Total_Allocated__c,
+                                        Phase_Implemented_Percentage__c, Phase_Implemented_Quantity__c from SubscriptionReplica__c where Id =: projectSubscriptionAllocation.Subscription__c limit 1]);
+
+                                List<SBQQ__Subscription__c> updateSubscription = new List<SBQQ__Subscription__c>([SELECT Id, Status__c from SBQQ__Subscription__c where Id =: updateSubscriptionCustom[0].Subscription__c limit 1]);
+
+                                updateSubscriptionCustom[0].Phase_Implemented_Quantity__c = updateSubscriptionCustom[0].Total_Allocated_Quantity__c;
+                                updateSubscriptionCustom[0].Phase_Implemented_Percentage__c = updateSubscriptionCustom[0].Total_Allocated__c;
+                                updateSubscription[0].Status__c = '4 - Delivered';
+
+                                updateSubscriptionList.add(updateSubscription[0]);
+                                updateSubscriptionCustomList.add(updateSubscriptionCustom[0]);
+                            }
+                            System.debug('subscriptionIds' + subscriptionIds);
+                        }
+                        System.debug('updateSubscriptionCustomList' + updateSubscriptionCustomList);
+                        update upProjectSubscriptionAllocationsList;
+                        update updateSubscriptionList;
+                        update updateSubscriptionCustomList;
+
+                    }
+                }
+
+        }
+
+    }
 }

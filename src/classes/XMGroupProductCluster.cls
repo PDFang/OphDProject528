@@ -4,6 +4,7 @@ public class XMGroupProductCluster {
     public string PartnerPrefix {get;set;}
     public boolean selected {get;set;}
     public string XmattersGroupName {get;set;}
+    public string AccountId{get;set;}
     public List<xmPersonMemberModel> Devices{get;set;}
 
     public XMGroupProductCluster(){
