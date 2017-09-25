@@ -1,15 +1,15 @@
 public class XMPersonManagementHelper {
 
     public static final Set<String> xmDeviceTypes = new Set<String>{
-        'EMAIL',
-        'TEXT_PHONE'
+            'EMAIL',
+            'TEXT_PHONE'
     };
 
     public static final Set<String> deviceTypes = new Set<String>{
-        'Work Email',
-        'Secondary Email',
-        'SMS Phone'
-        //'Secondary SMS Phone'
+            'Work Email',
+            'Secondary Email',
+            'SMS Phone'
+            //'Secondary SMS Phone'
     };
 
     public static List<SelectOption> getTimezones(){
@@ -67,50 +67,50 @@ public class XMPersonManagementHelper {
     }
 
     public list<AssociatedContactList> getContactsWithProducts(list<Contact> contacts){
-	    set<id> accIds = new set<Id>();
-	    map<id, list<XMGroupProductCluster>> acctProductList = new map<Id, list<XMGroupProductCluster>>();
-	    list<AssociatedContactList> contactProductList = new list<AssociatedContactList>();
+        set<id> accIds = new set<Id>();
+        map<id, list<XMGroupProductCluster>> acctProductList = new map<Id, list<XMGroupProductCluster>>();
+        list<AssociatedContactList> contactProductList = new list<AssociatedContactList>();
 
-	    XMBusinessLayer businessLayer =  new XMBusinessLayer();
-	    Map<String, ProductEventMap__c> nodeMap;
-	    nodeMap = ProductEventMap__c.getAll();
-	    businessLayer.notificationType = null;
-	    for(Contact c : contacts){
-		    accIds.add(c.AccountId);
-		    if(c.Account.ParentId != null)
-			    accIds.add(c.Account.ParentId);
-	    }
-	    Map<String, XMGroupProductCluster> xmSalesForceGroupMap = businessLayer.GetSalesForceGroupData(accIds);
+        XMBusinessLayer businessLayer =  new XMBusinessLayer();
+        Map<String, ProductEventMap__c> nodeMap;
+        nodeMap = ProductEventMap__c.getAll();
+        businessLayer.notificationType = null;
+        for(Contact c : contacts){
+            accIds.add(c.AccountId);
+            if(c.Account.ParentId != null)
+                accIds.add(c.Account.ParentId);
+        }
+        Map<String, XMGroupProductCluster> xmSalesForceGroupMap = businessLayer.GetSalesForceGroupData(accIds);
 
 
-	    for(XMGroupProductCluster productCluster : xmSalesForceGroupMap.values()){
-			    if(productCluster.Cluster == 'NONE')
-				    productCluster.Cluster = 'No Cluster';
-			    if(acctProductList.containsKey(productCluster.AccountId)){
-				    acctProductList.get(productCluster.AccountId).add(productCluster);
-			    }else{
-				     acctProductList.put(productCluster.AccountId, new list<XMGroupProductCluster>{productCluster});
-			    }
-	    }
+        for(XMGroupProductCluster productCluster : xmSalesForceGroupMap.values()){
+            if(productCluster.Cluster == 'NONE')
+                productCluster.Cluster = 'No Cluster';
+            if(acctProductList.containsKey(productCluster.AccountId)){
+                acctProductList.get(productCluster.AccountId).add(productCluster);
+            }else{
+                acctProductList.put(productCluster.AccountId, new list<XMGroupProductCluster>{productCluster});
+            }
+        }
 
-	    for(Contact con : contacts){
-		    AssociatedContactList contactProduct = new AssociatedContactList();
-		    contactProduct.AccountName = con.Account.Name;
-		    contactProduct.AccountId = con.AccountId;
-		    if(acctProductList.containsKey(con.AccountId)){
-			    contactProduct.ProductClusters.addAll(acctProductList.get(con.AccountId));
-			    if(con.Account.ParentId != null){
-				    contactProduct.ProductClusters.addAll(acctProductList.get(con.Account.ParentId));
-			    }
-		    }
-		    contactProduct.ContactFirstName = con.FirstName;
-		    contactProduct.ContactLastName = con.LastName;
-		    contactProduct.ContactId = con.Id;
-		    contactProduct.CadebillAccountNum = con.Account.CadebillAccountNoText__c;
-		    contactProduct.xmPersonId = con.xmPerson__c;
-		    contactProductList.add(contactProduct);
-	    }
-	    return contactProductList;
+        for(Contact con : contacts){
+            AssociatedContactList contactProduct = new AssociatedContactList();
+            contactProduct.AccountName = con.Account.Name;
+            contactProduct.AccountId = con.AccountId;
+            if(acctProductList.containsKey(con.AccountId)){
+                contactProduct.ProductClusters.addAll(acctProductList.get(con.AccountId));
+                if(con.Account.ParentId != null && acctProductList.containsKey(con.Account.ParentId)){
+                    contactProduct.ProductClusters.addAll(acctProductList.get(con.Account.ParentId));
+                }
+            }
+            contactProduct.ContactFirstName = con.FirstName;
+            contactProduct.ContactLastName = con.LastName;
+            contactProduct.ContactId = con.Id;
+            contactProduct.CadebillAccountNum = con.Account.CadebillAccountNoText__c;
+            contactProduct.xmPersonId = con.xmPerson__c;
+            contactProductList.add(contactProduct);
+        }
+        return contactProductList;
 
     }
 
@@ -157,7 +157,7 @@ public class XMPersonManagementHelper {
 
             return personWrapper;
         }
-       return null;
+        return null;
 
     }
 
