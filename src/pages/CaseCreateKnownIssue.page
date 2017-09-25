@@ -128,10 +128,6 @@
                 </apex:pageBlockSection>
                 <apex:outputPanel id="tfsFields">
                     <apex:pageBlockSection columns="1">
-                            <apex:pageBlockSectionItem rendered="{!NOT(createJiraBug)}">
-                                <apex:outputLabel for="bug">Existing JIRA Bug</apex:outputLabel>
-                                <apex:inputField id="bug" value="{!relatedCase.JIRA_Key__c}"/>
-                            </apex:pageBlockSectionItem>
                             <apex:inputField value="{!relatedCase.ExistsIn__c}" required="true" rendered="{!createJiraBug}"/>
                             <apex:inputField value="{!relatedCase.FoundBy__c}" required="true" rendered="{!createJiraBug}"/>
                     </apex:pageBlockSection>
