@@ -5,7 +5,7 @@ global with sharing class PartnerCaseRestService {
         public String troubleReportId;
         public String troubleReportState;
         public String troubleReportStatus;
-        public String comment;
+        public String[] comments;
     }
 
     @HttpPost
@@ -22,6 +22,8 @@ global with sharing class PartnerCaseRestService {
         try{
             String requestBody = req.requestBody.toString();
             request = (UpdateRequest) JSON.deserialize(requestBody, UpdateRequest.Class);
+
+            system.debug('updateIncident(): request - ' + request);
 
             // retrieve incident
             if(String.isNotBlank(request.troubleReportId)){
@@ -40,7 +42,7 @@ global with sharing class PartnerCaseRestService {
 
             if(incident == null){
                 response.statusCode = 400;
-                response.responseBody = Blob.valueOf('INVALID_REPORT_ID');
+                response.responseBody = Blob.valueOf('INVALID_TROUBLE_REPORT_ID');
                 return;
             }
 
@@ -60,7 +62,7 @@ global with sharing class PartnerCaseRestService {
 
                 if(mdtList.size() == 0){
                     response.statusCode = 400;
-                    response.responseBody = Blob.valueOf('INVALID_STATE_OR_STATUS');
+                    response.responseBody = Blob.valueOf('INVALID_TROUBLE_REPORT_STATE_OR_STATUS');
                     return;
                 }
                 // change incident status
@@ -73,23 +75,33 @@ global with sharing class PartnerCaseRestService {
             }
 
             // add case comment
-            if(String.isNotBlank(request.comment)){
-                CaseComment newCaseComment = new CaseComment(
-                        CommentBody = request.comment,
-                        IsPublished = false,
-                        ParentId = incident.Id
-                );
+            if(request.comments != null && request.comments.size() > 0){
+
+                CaseComment[] commentList = new CaseComment[]{};
+
+                for(String comment : request.comments){
+                    CaseComment newCaseComment = new CaseComment(
+                            CommentBody = comment,
+                            IsPublished = false,
+                            ParentId = incident.Id
+                    );
+                    commentList.add(newCaseComment);
+                }
+
                 CaseCommentTriggerHandler.bypassProxyService = true;
-                insert newCaseComment;
+                insert commentList;
             }
 
             response.statusCode = 200;
             response.responseBody = Blob.valueOf('SUCCESS');
 
         } catch(Exception ex){
+            system.debug('updateIncident(): Exception - ' + ex);
+
             response.statusCode = 500;
             response.responseBody = Blob.valueOf(ex.getTypeName());
-            String subject = (incident != null) ? incident.Id : 'NONE';
+
+            String subject = (incident != null) ? (String)incident.id : 'NONE';
             subject += (request != null) ? ' Trouble Report Id: ' + request.troubleReportId : '';
             inContactBaseClass.SendErrorEmail( ex, subject);
         }
