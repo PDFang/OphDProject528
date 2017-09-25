@@ -12,7 +12,7 @@
             <div style="color:red"><apex:messages id="msg" /></div>
         </apex:outputPanel>
 
-              <apex:form rendered="{!OR(AND(ISBLANK(Case.TfsWorkItem__c), Case.RecordType.Name = 'Problem'), AND(ISBLANK(Case.JIRA_Key__c), Case.RecordType.Name = 'Known Issue'))}" >
+              <apex:form rendered="{!AND(ISBLANK(Case.JIRA_Key__c), Case.RecordType.Name = 'Known Issue')}" >
                   <apex:outputField value="{!Case.Subject}" rendered="false"/>
                   <apex:outputField value="{!Case.Summary__c}" rendered="false"/>
                   <apex:outputField value="{!Case.Steps_to_Recreate__c}" rendered="false"/>
@@ -23,10 +23,9 @@
                   <apex:outputPanel styleClass="known-issue-highlight-header banner-strip" style="width:150px;" layout="block" >
                       <apex:actionStatus id="createStatus" layout="block">
                            <apex:facet name="start">
-                               <apex:image value="/img/loading32.gif" style="height: 15px;"/> creating...
+                               <apex:image value="/img/loading32.gif" style="height: 15px;"/> creating JIRA Bug...
                            </apex:facet>
                            <apex:facet name="stop">
-                                <apex:commandLink action="{!CreateTfsItem}" status="createStatus" value="Create TFS Item" oncomplete="return refreshPage()" rendered="{!Case.RecordType.Name = 'Problem'}"/>
                                <apex:commandLink action="{!CreateJIRABug}" status="createStatus" value="Create JIRA Bug" oncomplete="return refreshPage()" rendered="{!Case.RecordType.Name = 'Known Issue'}"/>
                            </apex:facet>
                        </apex:actionStatus>
