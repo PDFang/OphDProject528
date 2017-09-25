@@ -108,12 +108,10 @@
                 <apex:pageBlockSection columns="1" title="Create {!recordTypeName}" collapsible="false">
                     
                     <apex:pageBlockSectionItem >
-                            <!--<apex:outputLabel for="tfs">Create TFS Item</apex:outputLabel>
-                            <apex:inputCheckbox value="{!createTfsItem}">
+                            <apex:outputLabel for="tfs">Create JIRA Bug</apex:outputLabel>
+                            <apex:inputCheckbox value="{!createJiraBug}">
                                 <apex:actionSupport event="onclick" reRender="tfsFields" oncomplete="StyleButtons()"/>
-                            </apex:inputCheckbox>-->
-                        <apex:outputLabel for="tfs">Create JIRA Bug</apex:outputLabel>
-                        <apex:inputCheckbox value="{!createJiraBug}"/>
+                            </apex:inputCheckbox>
                     </apex:pageBlockSectionItem>
                 </apex:pageBlockSection>
             
@@ -128,16 +126,16 @@
                     <apex:inputField value="{!relatedCase.PlatformsImpacted__c}" required="true"/>
                     
                 </apex:pageBlockSection>
-                <!--<apex:outputPanel id="tfsFields">
-                <apex:pageBlockSection columns="1">
-                        <apex:pageBlockSectionItem rendered="{!NOT(createTfsItem)}">
-                            <apex:outputLabel for="bug">Existing TFS Work Item</apex:outputLabel>
-                            <apex:inputField id="bug" value="{!relatedCase.TfsWorkItem__c}"/>
-                        </apex:pageBlockSectionItem>
-                        <apex:inputField value="{!relatedCase.ExistsIn__c}" required="true" rendered="{!createTfsItem}"/>
-                        <apex:inputField value="{!relatedCase.FoundBy__c}" required="true" rendered="{!createTfsItem}"/>
-                </apex:pageBlockSection>
-                </apex:outputPanel>-->
+                <apex:outputPanel id="tfsFields">
+                    <apex:pageBlockSection columns="1">
+                            <apex:pageBlockSectionItem rendered="{!NOT(createJiraBug)}">
+                                <apex:outputLabel for="bug">Existing JIRA Bug</apex:outputLabel>
+                                <apex:inputField id="bug" value="{!relatedCase.JIRA_Key__c}"/>
+                            </apex:pageBlockSectionItem>
+                            <apex:inputField value="{!relatedCase.ExistsIn__c}" required="true" rendered="{!createJiraBug}"/>
+                            <apex:inputField value="{!relatedCase.FoundBy__c}" required="true" rendered="{!createJiraBug}"/>
+                    </apex:pageBlockSection>
+                </apex:outputPanel>
             </apex:outputPanel>
             <apex:pageBlockButtons location="bottom" >
                 <apex:actionStatus id="mySaveStatus1" >
