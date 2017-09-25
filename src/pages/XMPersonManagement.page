@@ -260,7 +260,7 @@
                                 <apex:outputPanel rendered="{!(isPersonMatch && !IsXmPerson)}">
                                         <apex:actionStatus id="associateContact" >
                                             <apex:facet name="stop">
-                                                <apex:commandButton value="Associate Contact" onClick="associateContactCall(); return false;" status="associateContact"/>
+                                                <apex:commandButton value="Enable" onClick="associateContactCall(); return false;" status="associateContact"/>
                                             </apex:facet>
                                             <apex:facet name="start">
                                                 <apex:outputPanel >
@@ -286,7 +286,7 @@
                                 <apex:outputPanel rendered="{!IsXmPerson}" style="margin-left:15px;" >
                                     <apex:actionStatus id="dissociatePersonStatus" >
                                         <apex:facet name="stop">
-                                            <apex:commandButton value="Dissociate" title="Dissociate xmPerson from this contact" onClick="callDissociateContact('{!currentContact.Id}');return false;"  status="dissociatePersonStatus"/>
+                                            <apex:commandButton value="Disable Contact" title="Dissociate xmPerson from this contact" onClick="callDissociateContact('{!currentContact.Id}');return false;"  status="dissociatePersonStatus"/>
                                         </apex:facet>
                                         <apex:facet name="start">
                                             <apex:outputPanel >

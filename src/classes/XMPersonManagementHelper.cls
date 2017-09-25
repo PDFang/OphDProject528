@@ -80,38 +80,20 @@ public class XMPersonManagementHelper {
 		    if(c.Account.ParentId != null)
 			    accIds.add(c.Account.ParentId);
 	    }
-	    for(ImplementedProduct__c product : [SELECT   Account__c,Product__c, Account__r.ParentId, Account__r.inContact_Cluster__c, Account__r.Verint_Cluster__c,
-										    Account__r.NICE_WFM_Cluster__c,Account__r.XMPartnerPrefix__c, Account__r.NICE_QM_Cluster__c,Account__r.Parent.XMPartnerPrefix__c
-	                                        FROM ImplementedProduct__c
-								            WHERE Account__c in :accIds  and Account__r.CG_Disconnect_Date__c = NULL
-										    AND(GoLiveDate__c <= TODAY  OR EstimatedGoLiveDate__c <= NEXT_N_DAYS : 14)
-										    AND Status__c in('New', 'Implemented')]){
+	    Map<String, XMGroupProductCluster> xmSalesForceGroupMap = businessLayer.GetSalesForceGroupData(accIds);
 
-		    ProductEventMap__c productMap = nodeMap.get(product.Product__c);
-		    if (productMap != null) {
 
-			    XMBusinessLayer.ProductClusterMapClass prodMap = new XMBusinessLayer.ProductClusterMapClass(
-					    productMap.Name,
-					    product.Account__r.inContact_Cluster__c,
-					    product.Account__r.Verint_Cluster__c,
-					    product.Account__r.NICE_WFM_Cluster__c,
-					    product.Account__r.NICE_QM_Cluster__c,
-					    'NONE',
-					    productMap
-			    );
-			    XMGroupProductCluster groupData = businessLayer.GetGroupDataMap(prodMap);
-			    if(groupData.Cluster == 'NONE')
-				    groupData.Cluster = 'No Cluster';
-			    if(acctProductList.containsKey(product.Account__c)){
-				    acctProductList.get(product.Account__c).add(groupData);
+	    for(XMGroupProductCluster productCluster : businessLayer.values()){
+			    if(productCluster.Cluster == 'NONE')
+				    productCluster.Cluster = 'No Cluster';
+			    if(acctProductList.containsKey(productCluster.AccountId)){
+				    acctProductList.get(productCluster.AccountId).add(productCluster);
 			    }else{
-				     acctProductList.put(product.Account__c, new list<XMGroupProductCluster>{groupData});
+				     acctProductList.put(productCluster.AccountId, new list<XMGroupProductCluster>{productCluster});
 			    }
-		    }
 	    }
 
 	    for(Contact con : contacts){
-
 		    AssociatedContactList contactProduct = new AssociatedContactList();
 		    contactProduct.AccountName = con.Account.Name;
 		    contactProduct.AccountId = con.AccountId;
