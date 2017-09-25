@@ -38,7 +38,7 @@ public class XMPersonManagementHelper {
     public Contact getContactById(String contactId){
 
         Contact[] contactList = [
-                select Name, FirstName, LastName, Email, Phone, Id, AccountId,Account.ParentId, Account.CadebillAccountNoText__c,
+                select Name, FirstName, LastName, Email, MobilePhone, Phone, Id, AccountId,Account.ParentId, Account.CadebillAccountNoText__c,
                         Account.Name, xmPerson__c, XmattersUid__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
                 from Contact where Id =: contactId
         ];
@@ -54,7 +54,7 @@ public class XMPersonManagementHelper {
             system.debug ('getContactsByEmail ==> called');
 
             return new Map<Id, Contact>([
-                    select FirstName, LastName, Email,Phone, Id, AccountId,Account.ParentId, Account.CadebillAccountNoText__c,
+                    select FirstName, LastName, Email, MobilePhone, Phone, Id, AccountId,Account.ParentId, Account.CadebillAccountNoText__c,
                             Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
                     from Contact where Email =: email
             ]);
@@ -100,6 +100,8 @@ public class XMPersonManagementHelper {
 					    productMap
 			    );
 			    XMGroupProductCluster groupData = businessLayer.GetGroupDataMap(prodMap);
+			    if(groupData.Cluster == 'NONE')
+				    groupData.Cluster = 'No Cluster';
 			    if(acctProductList.containsKey(product.Account__c)){
 				    acctProductList.get(product.Account__c).add(groupData);
 			    }else{
