@@ -83,7 +83,7 @@ public class XMPersonManagementHelper {
 	    Map<String, XMGroupProductCluster> xmSalesForceGroupMap = businessLayer.GetSalesForceGroupData(accIds);
 
 
-	    for(XMGroupProductCluster productCluster : businessLayer.values()){
+	    for(XMGroupProductCluster productCluster : xmSalesForceGroupMap.values()){
 			    if(productCluster.Cluster == 'NONE')
 				    productCluster.Cluster = 'No Cluster';
 			    if(acctProductList.containsKey(productCluster.AccountId)){
