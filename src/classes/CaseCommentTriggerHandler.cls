@@ -26,19 +26,19 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
         if(!isProxyServiceTurnedOff && !bypassProxyService){
             CallPartnerCaseProxyService((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
         }
-        CopyCustomComments ((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
+        //CopyCustomComments ((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
     }
 
     public static void UpdateCustomComments(List<CaseComment> newList, Map<Id, CaseComment> oldMap){
-        system.debug('Calling UpdateCustomComments');
-        List<Case_Comment_Custom__c> commentList = new List<Case_Comment_Custom__c>();
-        for(CaseComment newComment : newList){
-            if(newComment.IsPublished == false){
-                commentList.add(GetNewCustomComment(newComment));
+       system.debug('Calling UpdateCustomComments');
+       List<Case_Comment_Custom__c> commentList = new List<Case_Comment_Custom__c>();
+       for(CaseComment newComment : newList){
+           if(newComment.IsPublished == false){
+               commentList.add(GetNewCustomComment(newComment));
             }
         }
-        //need the ID -- 
-        Update(commentList);
+        //need the ID --
+       Update(commentList);
     }
 
 
