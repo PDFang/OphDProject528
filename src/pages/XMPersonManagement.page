@@ -188,7 +188,6 @@
                         <apex:outputField value="{!currentContact.LastName}"/>
                         <apex:outputField value="{!currentContact.Account.CadebillAccountNoText__c}"/>
                         <apex:outputField value="{!currentContact.Email}" label="Salesforce Contact Email" id="contactEmail"/>
-                        <apex:outputField value="{!currentContact.Phone}" label="Salesforce Contact Phone" id="contactPhone"/>
                     </apex:pageBlockSection>
                 </apex:pageBlock>
 
@@ -261,7 +260,7 @@
                                 <apex:outputPanel rendered="{!(isPersonMatch && !IsXmPerson)}">
                                         <apex:actionStatus id="associateContact" >
                                             <apex:facet name="stop">
-                                                <apex:commandButton value="Associate Contact" onClick="associateContactCall(); return false;" status="associateContact"/>
+                                                <apex:commandButton value="Enable" onClick="associateContactCall(); return false;" status="associateContact"/>
                                             </apex:facet>
                                             <apex:facet name="start">
                                                 <apex:outputPanel >
@@ -287,7 +286,7 @@
                                 <apex:outputPanel rendered="{!IsXmPerson}" style="margin-left:15px;" >
                                     <apex:actionStatus id="dissociatePersonStatus" >
                                         <apex:facet name="stop">
-                                            <apex:commandButton value="Dissociate" title="Dissociate xmPerson from this contact" onClick="callDissociateContact('{!currentContact.Id}');return false;"  status="dissociatePersonStatus"/>
+                                            <apex:commandButton value="Disable Contact" title="Dissociate xmPerson from this contact" onClick="callDissociateContact('{!currentContact.Id}');return false;"  status="dissociatePersonStatus"/>
                                         </apex:facet>
                                         <apex:facet name="start">
                                             <apex:outputPanel >
@@ -864,7 +863,7 @@
             if(selectedVal == 'SMS Phone'){
                var htmlText = "<br/><p class='mesageTF' style='font-size:13px; white-space:nowrap;'>You can manage time frames after you add the device.</p>";
                 $(timeFrameCell).append(htmlText);
-                var phoneNumber = "{!currentContact.Phone}";
+                var phoneNumber = "{!currentContact.MobilePhone}";
                 phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
                 $(deviceValueCell).find("input.k-input").val(phoneNumber);
             }else{
@@ -1005,19 +1004,19 @@
                                     + '<label for="DaysInput" class="col-2 col-form-label">Days</label>'
                                     + '<div class="weekDays-selector">'
                                     + '<input type="checkbox" id="weekday-mon'+name+'" class="weekday monday '+name+'"/>'
-                                    + '<label for="weekday-mon'+i+'">Mon</label>'
+                                    + '<label for="weekday-mon'+name+'">Mon</label>'
                                     + '<input type="checkbox" id="weekday-tue'+name+'" class="weekday tuesday '+name+'"/>'
-                                    + '<label for="weekday-tue'+i+'">Tue</label>'
+                                    + '<label for="weekday-tue'+name+'">Tue</label>'
                                     + '<input type="checkbox" id="weekday-wed'+name+'" class="weekday wednesday '+name+'"/>'
-                                    + '<label for="weekday-wed'+i+'">Wed</label>'
+                                    + '<label for="weekday-wed'+name+'">Wed</label>'
                                     + '<input type="checkbox" id="weekday-thu'+name+'" class="weekday thursday '+name+'"/>'
-                                    + '<label for="weekday-thu'+i+'">Thu</label>'
+                                    + '<label for="weekday-thu'+name+'">Thu</label>'
                                     + '<input type="checkbox" id="weekday-fri'+name+'" class="weekday friday '+name+'"/>'
-                                    + '<label for="weekday-fri'+i+'">Fri</label>'
+                                    + '<label for="weekday-fri'+name+'">Fri</label>'
                                     + '<input type="checkbox" id="weekday-sat'+name+'" class="weekday saturday '+name+'"/>'
-                                    + '<label for="weekday-sat'+i+'">Sat</label>'
+                                    + '<label for="weekday-sat'+name+'">Sat</label>'
                                     + '<input type="checkbox" id="weekday-sun'+name+'" class="weekday sunday '+name+'"/>'
-                                    + '<label for="weekday-sun'+i+'">Sun</label>'
+                                    + '<label for="weekday-sun'+name+'">Sun</label>'
                                     + '</div> </div></div>';
 
 
@@ -1274,7 +1273,8 @@
     }
 
     function setupGroupList(){
-
+        var groupSize = 0,
+            gridHeight = 300;
         var groups =new kendo.data.DataSource({
                     autosync:true,
                     transport:{
@@ -1288,7 +1288,33 @@
                                               if(result.length > 1){
                                                   options.success(JSON.parse(result));
                                               }
-                                              console.log('groups =>' + JSON.stringify(result));
+                                              //console.log('groups =>' + JSON.stringify(result));
+                                              //console.log('groups size=>' + JSON.parse(result).length);
+                                              groupSize = JSON.parse(result).length;
+                                              switch (groupSize){
+                                                  case 0:
+                                                    gridHeight = 200;
+                                                    break;
+                                                  case 1:
+                                                    gridHeight = 200;
+                                                    break;
+                                                  case 2:
+                                                    gridHeight = 300;
+                                                    break;
+                                                  case 3:
+                                                    gridHeight = 300;
+                                                    break;
+                                                  case 4:
+                                                    gridHeight = 400;
+                                                    break;
+                                                  case 5:
+                                                    gridHeight = 500;
+                                                    break;
+                                                  default:
+                                                   gridHeight = 600;
+                                                   break;
+                                              }
+                                              resizeGrid(gridHeight);
                                               hideError();
 
                                             } else if (event.type === 'exception') {
@@ -1324,11 +1350,13 @@
                   }
               });
 
+
+
+
           var groupGrid =    $("#groupList").kendoGrid({
                   dataSource: groups,
                   scrollable: true,
                   noRecords: true,
-                  height: 600,
                   columns: [
 //                      {
 //                                field:"selected",
@@ -1361,10 +1389,17 @@
 
               });
 
-
-
-
     }
+
+    function resizeGrid(gridHeight){
+          var gridElement = $("#groupList");
+        var dataArea = gridElement.find(".k-grid-content");
+        var newHeight = gridHeight;
+        var diff = gridElement.innerHeight() - dataArea.innerHeight();
+        gridElement.height(newHeight);
+        dataArea.height(newHeight - diff);
+    }
+
         var checkedIds = {};
          //on click of the checkbox:
       function selectRow(obj) {
