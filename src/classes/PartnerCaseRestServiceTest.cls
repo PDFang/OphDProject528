@@ -43,6 +43,7 @@ private class PartnerCaseRestServiceTest {
 
 
         RestRequest request = new RestRequest();
+        request.requestURI = '/PartnerCase';
         request.requestBody = Blob.valueOf(JSON.serialize(updateRequest));
         request.headers.put('Content-Type', 'application/json');
         request.httpMethod = 'POST';
@@ -78,6 +79,7 @@ private class PartnerCaseRestServiceTest {
         updateRequest.comments = new String[]{'comment 1', 'comment 2'};
 
         RestRequest request = new RestRequest();
+        request.requestURI = '/PartnerCase';
         request.requestBody = Blob.valueOf(JSON.serialize(updateRequest));
         request.headers.put('Content-Type', 'application/json');
         request.httpMethod = 'POST';
@@ -127,6 +129,7 @@ private class PartnerCaseRestServiceTest {
         updateRequest.troubleReportState = '92457';
 
         RestRequest request = new RestRequest();
+        request.requestURI = '/PartnerCase';
         request.requestBody = Blob.valueOf(JSON.serialize(updateRequest));
         request.headers.put('Content-Type', 'application/json');
         request.httpMethod = 'POST';
@@ -148,8 +151,9 @@ private class PartnerCaseRestServiceTest {
 
         test.startTest();
 
+        // no body
         RestRequest request = new RestRequest();
-        //request.requestBody = Blob.valueOf('{"troubleReportId":"20170925", "comments": "Comment 1"}');
+        request.requestURI = '/PartnerCase';
         request.headers.put('Content-Type', 'application/json');
         request.httpMethod = 'POST';
         RestContext.request = request;
