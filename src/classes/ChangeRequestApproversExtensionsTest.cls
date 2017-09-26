@@ -15,7 +15,7 @@ private class ChangeRequestApproversExtensionsTest {
        															  Urgency__c = 'HIGH',
        															  RFCType__c = 'NORMAL',
        															  Cluster__c = 'B2;B3',
-       															  Release__c = 'Future',
+       															  ReleasePicklist__c = 'Architecture',
        															  ContingencyOwner__c = userInfo.getUserId(),
        															  ContingencyDeadline__c = system.today()+ 4,
        															  Description__c = 'Test summary',

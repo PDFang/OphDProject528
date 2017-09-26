@@ -1,0 +1,46 @@
+<apex:page controller="CustomCaseCommentAddController" docType="html-5.0">
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+
+    <apex:form id="form">
+        <div class="container">
+        <apex:pageBlock title="Case Comments" >
+                <div class="row">
+                        <div class="col-md-12">
+                            <div class="col-md-1">
+                            <apex:outputLabel value="Public"></apex:outputLabel>
+                            </div>
+                            <div class="col-md-3">
+                            <apex:inputCheckbox value="{!isPublic}"></apex:inputCheckbox>
+                            </div>
+                        </div>
+
+
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="col-md-1">
+                            <apex:outputLabel value="Comment"></apex:outputLabel>
+                        </div>
+                        <div class="col-md-3">
+                            <apex:inputTextarea value="{!commentBody}"></apex:inputTextarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                <apex:commandLink styleClass="btn" action="{!CreateComment}" value="Save" reRender="target">
+                    <apex:param name="isPublic" assignTo="{!comment.isPublic}" value="param1" />
+                    <apex:param name="commentBody" assignTo="{!comment.CaseComment}" value="param2" />
+                </apex:commandLink>
+                <apex:commandLink styleClass="btn" action="{!CancelCreate}" value="Cancel" reRender="target">
+                    <apex:param name="isPublic" assignTo="{!comment.isPublic}" value="param1" />
+                    <apex:param name="commentBody" assignTo="{!comment.CaseComment}" value="param2" />
+                </apex:commandLink>
+                    </div>
+                </div>
+        </apex:pageBlock>
+        </div>
+    </apex:form>
+</apex:page>
