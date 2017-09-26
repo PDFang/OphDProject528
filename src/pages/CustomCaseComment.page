@@ -11,8 +11,8 @@
                 </apex:pageBlockButtons>
                 <apex:dataTable value="{!commentList}" var="comment" id="SubscriptionReplica" rowClasses="odd,even" styleClass="table table-bordered table-condensed" >
                     <apex:column headerValue="Action">
-                        <apex:outputLink value="/{!comment.caseCommentsId}/e?parent_id={!caseId}&retURL=/{!caseId}" rendered="{!comment.isPublic}">Edit</apex:outputLink>
-                        <apex:outputLink value="/apex/CustomCommentEdit?Commment_Id={!comment.caseCommentsId}/e?parent_id={!caseId}&retURL=/{!caseId}" rendered="{!comment.isPublic == false}">Edit</apex:outputLink>
+                        <apex:outputLink value="/{!comment.caseCommentsId}/e?parent_id={!caseId}&retURL=/{!caseId}">Edit</apex:outputLink>
+                        <apex:outputLink value="/apex/CustomCommentEdit?Commment_Id={!comment.caseCommentsId}/e?parent_id={!caseId}&retURL=/{!caseId}" rendered="false">Edit</apex:outputLink>
                     </apex:column>
                     <apex:column rendered="false">
                         <apex:facet name="header">Parent</apex:facet>

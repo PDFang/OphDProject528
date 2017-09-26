@@ -34,6 +34,10 @@
                     <apex:param name="isPublic" assignTo="{!comment.isPublic}" value="param1" />
                     <apex:param name="commentBody" assignTo="{!comment.CaseComment}" value="param2" />
                 </apex:commandLink>
+                <apex:commandLink styleClass="btn" action="{!CancelCreate}" value="Cancel" reRender="target">
+                    <apex:param name="isPublic" assignTo="{!comment.isPublic}" value="param1" />
+                    <apex:param name="commentBody" assignTo="{!comment.CaseComment}" value="param2" />
+                </apex:commandLink>
                     </div>
                 </div>
         </apex:pageBlock>

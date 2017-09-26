@@ -39,7 +39,7 @@ public with sharing class CustomCaseCommentAddController {
         if (commentBody != null){
             system.debug ('Upserting');
             CustomCaseCommentData UpsertComment = new CustomCaseCommentData();
-            UpsertComment.CaseComment = CommentBody__c;
+            UpsertComment.CaseComment = commentBody;
             UpsertComment.isPublic = isPublic;
             UpsertComment.ParentId = caseId;
             helper.SaveComment(UpsertComment);
@@ -49,8 +49,10 @@ public with sharing class CustomCaseCommentAddController {
         pr.setRedirect(true);
         return pr;
     }
-    public PageReference CancelAction(){
-        return null;
+    public PageReference CancelCreate(){
+        PageReference pr = new PageReference(redirectUrl);
+        pr.setRedirect(true);
+        return pr;
     }
 
 }
