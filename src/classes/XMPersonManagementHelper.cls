@@ -1,15 +1,15 @@
 public class XMPersonManagementHelper {
 
     public static final Set<String> xmDeviceTypes = new Set<String>{
-        'EMAIL',
-        'TEXT_PHONE'
+            'EMAIL',
+            'TEXT_PHONE'
     };
 
     public static final Set<String> deviceTypes = new Set<String>{
-        'Work Email',
-        'Secondary Email',
-        'SMS Phone'
-        //'Secondary SMS Phone'
+            'Work Email',
+            'Secondary Email',
+            'SMS Phone'
+            //'Secondary SMS Phone'
     };
 
     public static List<SelectOption> getTimezones(){
@@ -38,7 +38,7 @@ public class XMPersonManagementHelper {
     public Contact getContactById(String contactId){
 
         Contact[] contactList = [
-                select Name, FirstName, LastName, Email, Phone, Id, AccountId, Account.CadebillAccountNoText__c,
+                select Name, FirstName, LastName, Email, MobilePhone, Phone, Id, AccountId,Account.ParentId, Account.CadebillAccountNoText__c,
                         Account.Name, xmPerson__c, XmattersUid__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
                 from Contact where Id =: contactId
         ];
@@ -54,9 +54,9 @@ public class XMPersonManagementHelper {
             system.debug ('getContactsByEmail ==> called');
 
             return new Map<Id, Contact>([
-                    select FirstName, LastName, Email,Phone, Id, AccountId, Account.CadebillAccountNoText__c,
+                    select FirstName, LastName, Email, MobilePhone, Phone, Id, AccountId,Account.ParentId, Account.CadebillAccountNoText__c,
                             Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
-                    from Contact where Email =: email
+                    from Contact where Email =: email and Deactivated__c = :false
             ]);
         }
         catch (Exception e)
@@ -65,6 +65,55 @@ public class XMPersonManagementHelper {
             return null;
         }
     }
+
+    public list<AssociatedContactList> getContactsWithProducts(list<Contact> contacts){
+        set<id> accIds = new set<Id>();
+        map<id, list<XMGroupProductCluster>> acctProductList = new map<Id, list<XMGroupProductCluster>>();
+        list<AssociatedContactList> contactProductList = new list<AssociatedContactList>();
+
+        XMBusinessLayer businessLayer =  new XMBusinessLayer();
+        Map<String, ProductEventMap__c> nodeMap;
+        nodeMap = ProductEventMap__c.getAll();
+        businessLayer.notificationType = null;
+        for(Contact c : contacts){
+            accIds.add(c.AccountId);
+            if(c.Account.ParentId != null)
+                accIds.add(c.Account.ParentId);
+        }
+        Map<String, XMGroupProductCluster> xmSalesForceGroupMap = businessLayer.GetSalesForceGroupData(accIds);
+
+
+        for(XMGroupProductCluster productCluster : xmSalesForceGroupMap.values()){
+            if(productCluster.Cluster == 'NONE')
+                productCluster.Cluster = 'No Cluster';
+            if(acctProductList.containsKey(productCluster.AccountId)){
+                acctProductList.get(productCluster.AccountId).add(productCluster);
+            }else{
+                acctProductList.put(productCluster.AccountId, new list<XMGroupProductCluster>{productCluster});
+            }
+        }
+
+        for(Contact con : contacts){
+            AssociatedContactList contactProduct = new AssociatedContactList();
+            contactProduct.AccountName = con.Account.Name;
+            contactProduct.AccountId = con.AccountId;
+            if(acctProductList.containsKey(con.AccountId)){
+                contactProduct.ProductClusters.addAll(acctProductList.get(con.AccountId));
+                if(con.Account.ParentId != null && acctProductList.containsKey(con.Account.ParentId)){
+                    contactProduct.ProductClusters.addAll(acctProductList.get(con.Account.ParentId));
+                }
+            }
+            contactProduct.ContactFirstName = con.FirstName;
+            contactProduct.ContactLastName = con.LastName;
+            contactProduct.ContactId = con.Id;
+            contactProduct.CadebillAccountNum = con.Account.CadebillAccountNoText__c;
+            contactProduct.xmPersonId = con.xmPerson__c;
+            contactProductList.add(contactProduct);
+        }
+        return contactProductList;
+
+    }
+
 
     public void associateContact(String contactId, String xmPersonId){
 
@@ -108,7 +157,7 @@ public class XMPersonManagementHelper {
 
             return personWrapper;
         }
-       return null;
+        return null;
 
     }
 

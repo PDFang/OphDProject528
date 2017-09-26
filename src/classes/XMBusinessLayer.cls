@@ -245,6 +245,7 @@ public class XMBusinessLayer  {
                 );
 
                 XMGroupProductCluster groupData = GetGroupDataMap(prodMap);
+                groupData.AccountId = product.Account__c;
                 groupListMap.put(groupData.XmattersGroupName,groupData);
             }
             else{

@@ -8,13 +8,7 @@
         &nbsp;«&nbsp;<apex:outputLink value="/aA1"> Back to List: Change Control Requests</apex:outputLink>
     </div>
   <apex:detail inlineEdit="true"/>
-  
-    <div id="releaseFormContainer"  style="display:none;" >
-        <apex:form id="releaseForm">
-            <apex:inputField style="width:300px;" id="releaseField" value="{!BMCServiceDesk__Change_Request__c.RF_Release__c}"/>
-            <apex:commandButton value="Save" action="{!save}"/>
-        </apex:form>
-    </div> 
+
     <style type="text/css">
 .k-button:hover {
     text-decoration: none
@@ -69,44 +63,13 @@ span.k-widget.k-datetimepicker.k-header,span.k-widget.k-datepicker.k-header, spa
           }, 
           50);
       });
-      
-      
-        $("#releaseFormContainer").kendoWindow({
-            title: "Release",
-            resizable: false
-        });
+
    });
-            if (sforce.console.isInConsole()){ 
-                sforce.console.setTabTitle('{!BMCServiceDesk__Change_Request__c.Name}');
-            }
-   
-   var releaseDataSource = new kendo.data.DataSource({
-                              transport: {
-                                read: function(options){
-                                	 var array = '{!releaseValueList}';
-                                	 if(array != undefined && array != null && 
-                                	 	array!=''){
-                                	 	var newArr = JSON.parse(array);	
-                                	 }
-                                	 if(newArr != null){
-                                		options.success(newArr);
-                                	}
-                                }
-                              }
-                            });
-   
-   function OpenReleaseForm(){
-       
-        var release = document.getElementById("{!$Component.releaseForm.releaseField}"); 
-        console.log('openReleaseForm'+release);
-        $(release).kendoDropDownList({
-            dataSource: releaseDataSource ,
-            optionLabel: " "
-            
-        });
-       $('#releaseFormContainer').data('kendoWindow').center().open();
-   }
-   
+
+    if (sforce.console.isInConsole()){
+        sforce.console.setTabTitle('{!BMCServiceDesk__Change_Request__c.Name}');
+    }
+
    function SelectButtonClick(selectButton){
         if($(selectButton).hasClass('k-state-selected')){
            //$(selectButton).parent().siblings('select').val('');

@@ -1,0 +1,41 @@
+<apex:page standardController="Case" extensions="CustomCaseCommentController" id="CustomCommentList">
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+
+    <div class="listRelatedObject customnotabBlock bRelatedList first bPageBlock brandSecondaryBrd secondaryPalette" >
+        <apex:form >
+            <apex:pageBlock title="Case Comments" >
+                <apex:pageBlockButtons location="top">
+                    <apex:commandLink styleClass="btn" target="_blank" action="{!NewPrivateComment}" value="New"/>
+                </apex:pageBlockButtons>
+                <apex:dataTable value="{!commentList}" var="comment" id="SubscriptionReplica" rowClasses="odd,even" styleClass="table table-bordered table-condensed" >
+                    <apex:column headerValue="Action">
+                        <apex:outputLink value="/{!comment.caseCommentsId}/e?parent_id={!caseId}&retURL=/{!caseId}">Edit</apex:outputLink>
+                        <apex:outputLink value="/apex/CustomCommentEdit?Commment_Id={!comment.caseCommentsId}/e?parent_id={!caseId}&retURL=/{!caseId}" rendered="false">Edit</apex:outputLink>
+                    </apex:column>
+                    <apex:column rendered="false">
+                        <apex:facet name="header">Parent</apex:facet>
+                        <apex:outputText >{!comment.ParentId}</apex:outputText>
+                    </apex:column>
+                    <apex:column >
+                        <apex:facet name="header">Comment Date</apex:facet>
+                        <apex:outputText >{!comment.CreateDate}</apex:outputText>
+                    </apex:column>
+                    <apex:column >
+                        <apex:facet name="header">Created By</apex:facet>
+                        <apex:outputText >{!comment.CreatedBy}</apex:outputText>
+                    </apex:column>
+                    <apex:column >
+                        <apex:facet name="header">Comment</apex:facet>
+                        <apex:outputText >{!comment.CaseComment}</apex:outputText>
+                    </apex:column>
+                    <apex:column rendered="false" >
+                        <apex:facet  name="header">Case Comment Id</apex:facet>
+                        <apex:outputText >{!comment.caseCommentsId}</apex:outputText>
+                    </apex:column>
+                </apex:dataTable>
+            </apex:pageBlock>
+        </apex:form>
+    </div>
+</apex:page>

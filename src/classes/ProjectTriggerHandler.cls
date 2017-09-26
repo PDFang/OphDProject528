@@ -7,10 +7,14 @@ public class ProjectTriggerHandler extends TriggerHandler{
     }
 
     public override void afterUpdate(){
+
         calculateProjectedDeadline(trigger.new);
         CallTFSService(trigger.new);
+        calculatePhaseImpQuantityNPercentage(trigger.new, (Map<Id, Project__c>)trigger.oldMap);
+
         new ProjectShareHelper().deleteShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         new ProjectShareHelper().addShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
+
         //new PartnerShareHelper().deleteShare(trigger.new, trigger.oldMap);
         //new PartnerShareHelper().addShare(trigger.new, trigger.oldMap);       
     }
@@ -56,7 +60,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
     }    
     
     private static void calculateProjectedDeadline(list<Project__c> newList){
-        
+        System.debug('newList in calculateProjectedDeadline' + newList);
         Map<Id, Project__c> oldMap = (Map<Id, Project__c>)( trigger.oldMap );
         Set<Id> vaildRecordTypeIdSet = new Set<Id>();        
         Map<String,Schema.RecordTypeInfo> rtMapByName = Schema.SObjectType.Project__c.getRecordTypeInfosByName();
@@ -114,4 +118,103 @@ public class ProjectTriggerHandler extends TriggerHandler{
         }
         
     } // end of calculateProjectedDeadline()
+
+    //Assign Phase Implemented Quantity, Percentage and Status
+    private static void calculatePhaseImpQuantityNPercentage(List<Project__c> newList, Map<Id, Project__c> oldMap){
+        Set<String> phaseProjectRecordTypeSet = new Set<String>{
+                'PS Project Phase Premise WFO',
+                'PS Project Phase SaaS'
+        };
+
+        System.debug('phaseProjectRecordTypeSet' + phaseProjectRecordTypeSet);
+
+        System.debug('newList in calculatePhaseImpQuantityNPercentage' + newList);
+
+        Set<Id> projectIds = new Set<Id>();
+
+        Map<String, Schema.RecordTypeInfo> recordTypeNameMap = Schema.SObjectType.Project__c.getRecordTypeInfosByName();
+        Set<Id> psPhaseProjectIdSet = new Set<Id>();
+        for(String psPhaseProject :  phaseProjectRecordTypeSet){
+            psPhaseProjectIdSet.add(recordTypeNameMap.get(psPhaseProject).recordTypeId);
+        }
+
+        for(Project__c newProject : newList) {
+            System.debug('newProject.RecordType.Name' + newProject.RecordType.Name);
+            System.debug('newProject.Phase_Status__c' + newProject.Phase_Status__c);
+            if (psPhaseProjectIdSet.contains(newProject.RecordTypeId)) {
+                //System.debug('projectRecordType[0].RecordType.Name' + projectRecordType[0].RecordType.Name);
+                if ((newProject.Phase_Status__c == 'Closed' && oldMap.get(newProject.Id).Phase_Status__c != 'Closed')
+                        || (newProject.ActualProjectGoLiveDate__c != null && oldMap.get(newProject.Id).ActualProjectGoLiveDate__c == null)) {
+                    System.debug('newProject.Phase_Status__c' + newProject.Phase_Status__c);
+                    projectIds.add(newProject.Id);
+                }
+            }
+        }
+
+        List<Project_Asset_Allocation__c> listProjectAssetAllocations = new List<Project_Asset_Allocation__c>(
+        [Select Id, Asset__c, Phase_Allocated__c,Phase_Implemented__c, Phase_Implemented_Quantity__c,
+                Quantity_Allocation__c from  Project_Asset_Allocation__c where Project__c IN : projectIds]);
+
+        List<Project_Asset_Allocation__c> updateProjectAssetAllocationsList = new List<Project_Asset_Allocation__c>();
+        Set<Id> assetIds = new Set<Id>();
+        List<Asset> updateAssetList = new List<Asset>();
+
+        for(Project_Asset_Allocation__c projectAssetAllocation: listProjectAssetAllocations){
+            updateProjectAssetAllocationsList.add(new Project_Asset_Allocation__c(Id = projectAssetAllocation.Id,
+                    Phase_Implemented_Quantity__c = projectAssetAllocation.Quantity_Allocation__c,
+                    Phase_Implemented__c = projectAssetAllocation.Phase_Allocated__c));
+            assetIds.add(projectAssetAllocation.Asset__c);
+        }
+
+        if(updateProjectAssetAllocationsList.size() > 0)
+            update updateProjectAssetAllocationsList;
+
+
+        List<Project_Subscription_Allocation__c> listProjectSubscriptionAllocations = new List<Project_Subscription_Allocation__c>(
+        [Select Id, Subscription__c, Phase_Implemented_Quantity__c, Phase_Implemented__c, Subscription__r.Subscription__c,
+                Phase_Allocated__c, Quantity_Allocation__c from  Project_Subscription_Allocation__c where Project__c IN : projectIds]);
+
+        System.debug('listProjectSubscriptionAllocations' + listProjectSubscriptionAllocations);
+        List<SBQQ__Subscription__c> updateSubscriptionList = new List<SBQQ__Subscription__c>();
+        Set<Id> subscriptionIds = new Set<Id>();
+
+        List<Project_Subscription_Allocation__c> upProjectSubscriptionAllocationsList = new List<Project_Subscription_Allocation__c>();
+
+        for(Project_Subscription_Allocation__c projectSubscriptionAllocation: listProjectSubscriptionAllocations) {
+            upProjectSubscriptionAllocationsList.add(new Project_Subscription_Allocation__c(Id = projectSubscriptionAllocation.Id,
+                    Phase_Implemented_Quantity__c = projectSubscriptionAllocation.Quantity_Allocation__c,
+                    Phase_Implemented__c = projectSubscriptionAllocation.Phase_Allocated__c));
+
+            if (!subscriptionIds.contains(projectSubscriptionAllocation.Subscription__c)) {
+                subscriptionIds.add(projectSubscriptionAllocation.Subscription__c);
+                updateSubscriptionList.add(new SBQQ__Subscription__c(Id = projectSubscriptionAllocation.Subscription__r.Subscription__c, Status__c = '4 - Delivered'));
+            }
+        }
+
+        if(upProjectSubscriptionAllocationsList.size() > 0)
+            update upProjectSubscriptionAllocationsList;
+
+        if(updateSubscriptionList.size() > 0)
+            update updateSubscriptionList;
+
+
+        updateAssetList = new List<Asset>([SELECT Id, Quantity, Status, Total_Implemented_Quantity__c, QuantityCancelled__c, FullyImplemented__c from Asset where Id IN : assetIds ]);
+
+        for(Asset updateAsset: updateAssetList){
+            System.debug('updateAsset' + updateAsset);
+            Decimal cancelledQuantity = 0.00;
+            if(updateAsset.QuantityCancelled__c != null)
+                cancelledQuantity = updateAsset.QuantityCancelled__c;
+
+            updateAsset.Status = '4 - Delivered';
+
+            if((updateAsset.Total_Implemented_Quantity__c + cancelledQuantity >= updateAsset.Quantity)){
+                updateAsset.FullyImplemented__c = true;
+            }
+        }
+
+        if(updateAssetList.size() > 0)
+            update updateAssetList;
+
+    }
 }

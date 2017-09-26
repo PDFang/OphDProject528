@@ -8,13 +8,7 @@
         &nbsp;«&nbsp;<apex:outputLink value="/a1S"> Back to List: Change Control Requests</apex:outputLink>
     </div>
   <apex:detail inlineEdit="true"   />
-  
-    <div id="releaseFormContainer"  style="display:none;" >
-        <apex:form id="releaseForm">
-            <apex:inputField style="width:300px;" id="releaseField" value="{!ChangeControlRequest__c.Release__c}"/>
-            <apex:commandButton value="Save" action="{!save}"/>
-        </apex:form>
-    </div> 
+
     <style type="text/css">
 .k-button:hover {
     text-decoration: none
@@ -77,44 +71,11 @@ span.k-widget.k-datetimepicker.k-header,span.k-widget.k-datepicker.k-header, spa
         });
         
    });
-    
-    
-            if (sforce.console.isInConsole()){
-                sforce.console.setTabTitle('{!ChangeControlRequest__c.Name}');
-            }
-   
-   var releaseDataSource = new kendo.data.DataSource({
-                              transport: {
-                                read: function(options){
-                                    Visualforce.remoting.Manager.invokeAction(
-                                          '{!$RemoteAction.CcrViewExtension.ReleaseValueList}',
-                                          '{!ChangeControlRequest__c.Id}',
-                                          function(result,event)
-                                          {
-                                              //console.log(JSON.parse(result));
-                                              if (event.status) {
-                                                  
-                                                  options.success(JSON.parse(result));
-                                                } 
-                                          },
-                                          {escape: false}
-                                   );
-                                }
-                              }
-                            });
-   
-   function OpenReleaseForm(){
-       
-        var release = document.getElementById("{!$Component.releaseForm.releaseField}");
-        $(release).kendoDropDownList({
-            dataSource: releaseDataSource ,
-            optionLabel: " "
-            
-        });
-       $('#releaseFormContainer').data('kendoWindow').center().open();
-   }
-   
-   
+
+    if (sforce.console.isInConsole()){
+        sforce.console.setTabTitle('{!ChangeControlRequest__c.Name}');
+    }
+
    function SelectButtonClick(selectButton){
         if($(selectButton).hasClass('k-state-selected')){
            //$(selectButton).parent().siblings('select').val('');

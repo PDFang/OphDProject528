@@ -23,6 +23,23 @@ public class AssetSubscriptionAllocationModel {
         this.rowid = row;
         this.isDelete = false;
 
+        if(currentAsset != null){
+            List<Asset> assetList = new List<Asset>([select RemainingQuantity__c, Remaining_Hours__c,
+                    Remaning_Percentage__c from Asset where Id =: currentAsset.Id LIMIT 1]);
+
+            if(this.isQuantityAllocation){
+                this.assetAllocation.Quantity_Allocation__c = assetList[0].RemainingQuantity__c;
+            }
+            if(this.isAllocatedHours){
+                this.assetAllocation.Hours_Allocated__c = assetList[0].Remaining_Hours__c;
+            }
+            if(this.isPercentageAllocation){
+                this.assetAllocation.Percent_Allocation__c = assetList[0].Remaning_Percentage__c;
+            }
+        }
+
+
+
     }
 
     public AssetSubscriptionAllocationModel(Project_Asset_Allocation__c allocation, Integer row){
@@ -48,6 +65,21 @@ public class AssetSubscriptionAllocationModel {
         this.isAllocatedHours = (currentSubscription != null && currentSubscription.Quantity__c > 1 && currentSubscription.Budgeted_Hours__c > 0);
         this.rowid = row;
         this.isDelete = false;
+
+        if(currentSubscription != null){
+            List<SubscriptionReplica__c> subscriptionList = new List<SubscriptionReplica__c>([select RemainingQuantity__c, Remaining_Hours__c,
+                    Remaning_Percentage__c from SubscriptionReplica__c where Id =: currentSubscription.Id LIMIT 1]);
+
+            if(this.isQuantityAllocation){
+                this.subscriptionAllocation.Quantity_Allocation__c = subscriptionList[0].RemainingQuantity__c;
+            }
+            if(this.isAllocatedHours){
+                this.subscriptionAllocation.Hours_Allocated__c = subscriptionList[0].Remaining_Hours__c;
+            }
+            if(this.isPercentageAllocation){
+                this.subscriptionAllocation.Percent_Allocation__c = subscriptionList[0].Remaning_Percentage__c;
+            }
+        }
 
     }
 
