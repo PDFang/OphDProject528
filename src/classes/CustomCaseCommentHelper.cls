@@ -14,7 +14,7 @@ public with sharing class CustomCaseCommentHelper {
     }
 
     public list<Case_Comment_Custom__c> GetCustomComments(Case currentCase){
-        list<Case_Comment_Custom__c> retlist = [SELECT Case_Comments_Id__c,CommentBody__c,IsPublished__c ,CommentCreatedDate__c,ConnectionReceivedId,ConnectionSentId,CreatedById,CreatedDate,CreatorName__c,Id,IsDeleted FROM Case_Comment_Custom__c where parentId__c =:currentCase.id];
+        list<Case_Comment_Custom__c> retlist = [SELECT Case_Comments_Id__c,CommentBody__c,IsPublished__c ,CommentCreatedDate__c,ConnectionReceivedId,ConnectionSentId,CreatedById,CreatedDate,CreatorName__c,Id,IsDeleted FROM Case_Comment_Custom__c where IsPublished__c = false and parentId__c =:currentCase.id];
         return retlist;
     }
 
@@ -40,7 +40,7 @@ public with sharing class CustomCaseCommentHelper {
         return finalList;
     }
 
-    public CustomCaseCommentData GetCustomCommentData(CaseComment comment){
+    private CustomCaseCommentData GetCustomCommentData(CaseComment comment){
         CustomCaseCommentData commentData = new CustomCaseCommentData();
         commentData.caseCommentsId = comment.id;
         commentData.CreatedBy = comment.CreatorName;
@@ -51,13 +51,24 @@ public with sharing class CustomCaseCommentHelper {
         return commentData;
 
     }
-    public CustomCaseCommentData GetCustomCommentData( Case_Comment_Custom__c comment){
+    private CustomCaseCommentData GetCustomCommentData( Case_Comment_Custom__c comment){
         CustomCaseCommentData commentData = new CustomCaseCommentData();
         commentData.caseCommentsId = comment.Case_Comments_Id__c;
         commentData.CreatedBy = comment.CreatorName__c;
         commentData.CaseComment = comment.CommentBody__c;
         commentData.CreateDate = comment.CommentCreatedDate__c;
         commentData.isPublic = comment.IsPublished__c;
+        return commentData;
+    }
+    private Case_Comment_Custom__c GetDbCustomData( CustomCaseCommentData comment){
+        Case_Comment_Custom__c commentData = new Case_Comment_Custom__c();
+        case newCase = new Case();
+        commentData.Case_Comments_Id__c = comment.caseCommentsId;
+        commentData.CommentBody__c = comment.CaseComment;
+        commentData.IsPublished__c = comment.isPublic;
+        commentData.ParentId__c = comment.ParentId;
+        commentData.CommentCreatedDate__c = DateTime.Now();
+        CommentData.CreatorName__c =  UserInfo.getUserName();
         return commentData;
     }
 
@@ -70,5 +81,9 @@ public with sharing class CustomCaseCommentHelper {
         return false;
     }
 
+    public void SaveComment(CustomCaseCommentData Upsertcomment){
+        Case_Comment_Custom__c comment = GetDbCustomData(Upsertcomment);
+        insert(comment);
+    }
 }
 
