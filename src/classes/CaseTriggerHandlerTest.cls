@@ -365,6 +365,15 @@ private class CaseTriggerHandlerTest {
         system.assertEquals(true, PartnerCaseProxyServiceHelper.isCasePushed);
         system.assertEquals(PartnerCaseProxyServiceHelper.PRODUCT_DIALTF, request.newCases.SalesforceCase[0].Product);
 
+        system.assertEquals(
+                testIncident.Customer_s_Toll_Free_POC__c,
+                request.newCases.SalesforceCase[0].NEID
+        );
+        system.assertEquals(
+                testIncident.Customer_s_Toll_Free_POC__c,
+                request.newCases.SalesforceCase[0].ServiceId
+        );
+
     } // end of testPartnerCaseProxyServiceSecondCreate()
 
     static testMethod void testPartnerCaseProxyServiceUpdate() {
