@@ -5,14 +5,19 @@
 public with sharing class CustomCaseCommentController {
     public Id caseId {get; set;}
     public List<CustomCaseCommentData> commentList {get;set;}
+    public CustomCaseCommentData comment {get;set;}
 
     public CustomCaseCommentController( ApexPages.StandardController controller){
+
+        comment = new CustomCaseCommentData();
         string id = (string)controller.getId();
-        Case newCase = new Case();
-        newCase.id = Id;
-        caseId = Id;
-        system.debug('caseId ->' + caseId);
-        this.commentList = getCommentList(newCase);
+        if (id != null) {
+            Case newCase = new Case();
+            newCase.id = Id;
+            caseId = Id;
+            system.debug('caseId ->' + caseId);
+            this.commentList = getCommentList(newCase);
+        }
     }
     //get view
     //save/update method
@@ -20,10 +25,25 @@ public with sharing class CustomCaseCommentController {
         CustomCaseCommentHelper helper = new CustomCaseCommentHelper();
         return helper.GetAggregateData(newCase);
     }
-    public PageReference NewComment()
+    public PageReference NewPublicComment()
     {
         PageReference pr = new PageReference('/00a/e?parent_id='+ caseId + '&retURL=%2F' + caseId);
         pr.setRedirect(true);
         return pr;
+    }
+    public PageReference NewPrivateComment()
+    {
+        PageReference pr = new PageReference('/apex/CustomCommentEdit?parent_id='+ caseId + '&retURL=%2F' + caseId);
+        pr.setRedirect(true);
+        return pr;
+    }
+
+    public boolean SaveAction(CustomCaseCommentData Upsertcomment){
+        CustomCaseCommentHelper helper = new CustomCaseCommentHelper();
+        helper.SaveComment(Upsertcomment);
+        return true;
+    }
+    public PageReference CancelAction(){
+        return null;
     }
 }
