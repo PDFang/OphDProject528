@@ -9,12 +9,12 @@ public with sharing class CustomCaseCommentHelper {
 
     public list<CaseComment> GetCaseComments(Case currentCase){
 
-        list<CaseComment> retlist = [SELECT CommentBody,CreatedDate,CreatorName,Id,IsDeleted,IsPublished,ParentId FROM CaseComment where parentId =:currentCase.id];
+        list<CaseComment> retlist = [SELECT CommentBody,CreatedDate,CreatorName,Id,IsDeleted,IsPublished,ParentId FROM CaseComment where parentId =:currentCase.id order by CreatedDate desc];
         return retlist;
     }
 
     public list<Case_Comment_Custom__c> GetCustomComments(Case currentCase){
-        list<Case_Comment_Custom__c> retlist = [SELECT Case_Comments_Id__c,CommentBody__c,IsPublished__c ,CommentCreatedDate__c,ConnectionReceivedId,ConnectionSentId,CreatedById,CreatedDate,CreatorName__c,Id,IsDeleted FROM Case_Comment_Custom__c where IsPublished__c = false and parentId__c =:currentCase.id order by commentCreatedDate__c];
+        list<Case_Comment_Custom__c> retlist = [SELECT Case_Comments_Id__c,CommentBody__c,IsPublished__c ,CommentCreatedDate__c,ConnectionReceivedId,ConnectionSentId,CreatedById,CreatedDate,CreatorName__c,Id,IsDeleted FROM Case_Comment_Custom__c where IsPublished__c = false and parentId__c =:currentCase.id order by commentCreatedDate__c desc];
         return retlist;
     }
 
