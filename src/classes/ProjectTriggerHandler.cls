@@ -216,5 +216,22 @@ public class ProjectTriggerHandler extends TriggerHandler{
         if(updateAssetList.size() > 0)
             update updateAssetList;
 
+        List<SubscriptionReplica__c> updateSubscriptionCustomList = new List<SubscriptionReplica__c>(
+        [SELECT Id, Quantity__c, Status__c, Total_Implemented_Quantity__c, QuantityCancelled__c, FullyImplemented__c from SubscriptionReplica__c where Id IN : subscriptionIds]);
+
+        for(SubscriptionReplica__c updateSubscriptionCustom: updateSubscriptionCustomList){
+            System.debug('updateSubscriptionCustom' + updateSubscriptionCustom);
+            Decimal cancelledQuantity = 0.00;
+            if(updateSubscriptionCustom.QuantityCancelled__c != null)
+                cancelledQuantity = updateSubscriptionCustom.QuantityCancelled__c;
+
+            if((updateSubscriptionCustom.Total_Implemented_Quantity__c + cancelledQuantity >= updateSubscriptionCustom.Quantity__c)){
+                updateSubscriptionCustom.FullyImplemented__c = true;
+            }
+        }
+
+        if(updateSubscriptionCustomList.size() > 0)
+            update updateSubscriptionCustomList;
+
     }
 }
