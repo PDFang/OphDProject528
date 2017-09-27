@@ -163,9 +163,9 @@ public with sharing class CaseCreateKnownIssueExtension
     
     public static string getJIRADescription(Case relatedCase){
 
-        String description = 'Summary\n' + relatedCase.Summary__c
-                + '\n\nSteps to Recreate\n' + relatedCase.Steps_to_Recreate__c
-                + '\n\nInternal Notes\n' + relatedCase.InternalNotes__c;
+        String description = 'Summary:\n' + relatedCase.Summary__c
+                + '\n\nSteps to Recreate:\n' + relatedCase.Steps_to_Recreate__c
+                + '\n\nInternal Notes:\n' + relatedCase.InternalNotes__c;
 
         return description;
 
