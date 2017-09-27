@@ -43,8 +43,6 @@ public with sharing class CaseCreateKnownIssueExtension
             }
             relatedCase.Subject = c.Subject;
             relatedCase.Steps_to_Recreate__c = c.Steps_to_Recreate__c;
-            relatedCase.TFSID__c = c.TFSID__c;
-            relatedCase.TfsItemState__c = c.TfsItemState__c;
             relatedCase.ProductImpacted__c = c.ProductImpacted__c;
             relatedCase.PlatformsImpacted__c = c.PlatformsImpacted__c ;
             relatedCase.FoundBy__c = c.FoundBy__c ;
@@ -131,10 +129,10 @@ public with sharing class CaseCreateKnownIssueExtension
                 system.debug('User requested to create a JIRA bug for KI - ' + relatedCase.Id);
                 CaseTriggerHandler.createJiraBug = true;
                 //need to populate the Description field with concatenated
-                //summary + steps to reproduce + work around
+                //summary + steps to reproduce + internal notes
                 relatedCase.JIRA_Description__c = 'Summary\n' + relatedCase.Summary__c
                         + '\n\nSteps to Recreate\n' + relatedCase.Steps_to_Recreate__c
-                        + '\n\nWorkaround\n' + relatedCase.Workaround__c;
+                        + '\n\nInternal Notes\n' + relatedCase.InternalNotes__c;
                 relatedCase.JIRA_Summary__c = relatedCase.Subject;
             }
 
