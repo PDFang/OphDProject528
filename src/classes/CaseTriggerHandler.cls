@@ -353,10 +353,10 @@ public class CaseTriggerHandler extends TriggerHandler
 
             }
             // Product or Service is changed to 'Toll Free'
-            else if(newCase.Product_or_Service__c == PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE && newCase.Product_or_Service__c != oldCase.Product_or_Service__c)
-            {
-                system.debug('CallPartnerCaseProxyService(): Product or Service is changed - ' + newCase.CaseNumber);
-            }
+//            else if(newCase.Product_or_Service__c == PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE && newCase.Product_or_Service__c != oldCase.Product_or_Service__c)
+//            {
+//                system.debug('CallPartnerCaseProxyService(): Product or Service is changed - ' + newCase.CaseNumber);
+//            }
             else {
                 continue;
             }
@@ -393,11 +393,11 @@ public class CaseTriggerHandler extends TriggerHandler
                 }
 
                 // create second Verizon ETMS ticket
-                if(oldMap != null && oldMap.containsKey(newCase.Id) && newCase.Product_or_Service__c == PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE
-                    && oldMap.get(newCase.Id).Product_or_Service__c != PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE)
-                {
-                    createIdSet.add(newCase.Id);
-                }
+//                if(oldMap != null && oldMap.containsKey(newCase.Id) && newCase.Product_or_Service__c == PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE
+//                    && oldMap.get(newCase.Id).Product_or_Service__c != PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE)
+//                {
+//                    createIdSet.add(newCase.Id);
+//                }
 
             }
         }

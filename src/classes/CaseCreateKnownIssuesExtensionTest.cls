@@ -3,15 +3,12 @@ private class CaseCreateKnownIssuesExtensionTest {
 
     static testMethod void createKnownIssueWithoutException() {
 
-        //set mock for creating Jira Item
-        JiraRestWrapperMockHttpGenerator httpMock = new JiraRestWrapperMockHttpGenerator(200,'OK','[{"Name": "testCase"}]',null);
-        Test.setMock(HttpCalloutMock.class, httpMock);
+        Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
 
-        Apexpages.currentpage().getParameters().put('recordType', 'Known Issue');
         Case baseCase = new Case();
         baseCase.Subject = 'subject';
         baseCase.Steps_to_Recreate__c = 'steps to recreate';
-
+        baseCase.RecordTypeId = recordTypeMap.get('Incident').getRecordTypeId();
         baseCase.TfsItemState__c = 'state';
         baseCase.ProductImpacted__c = 'product';
         baseCase.PlatformsImpacted__c = 'platforms';
@@ -22,7 +19,7 @@ private class CaseCreateKnownIssuesExtensionTest {
         baseCase.setOptions(dmo);
         insert baseCase;
 
-        Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SobjectType.Case.getRecordTypeInfosByName();
+        /*Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SobjectType.Case.getRecordTypeInfosByName();
         list<Case> knownIssueList = new list<Case>{
                 new Case(
                         //AccountId = testAccount.Id,
@@ -40,22 +37,32 @@ private class CaseCreateKnownIssuesExtensionTest {
         for(Case c : knownIssueList){
             c.setOptions(dmo);
         }
-        insert knownIssueList;
+        insert knownIssueList;*/
+
+        Test.startTest();
+
+        //set mock for creating Jira Item
+        JiraRestWrapperMockHttpGenerator httpMock = new JiraRestWrapperMockHttpGenerator(200,'OK','[{"Name": "testCase"}]',null);
+        Test.setMock(HttpCalloutMock.class, httpMock);
+
+        Apexpages.currentpage().getParameters().put('recordType', 'Known Issue');
 
         ApexPages.StandardController controller = new ApexPages.StandardController(baseCase);
         CaseCreateKnownIssueExtension extension = new CaseCreateKnownIssueExtension(controller);
 
-        List<Case> InsertedKnownIssues = [select Id, Priority from Case where Subject = 'KnowIssueImpactCalculationTest'];
-        CaseTriggerHandler.createJiraBug = true;
+        system.assertEquals(true, extension.canCreateKnownIssue);
         extension.createJiraBug = true;
-        extension.ClearKnownIssue();
-
-        Test.startTest();
-        boolean canCreateKnownIssue = extension.canCreateKnownIssue;
         extension.Save();
-        baseCase.KnownIssue__c = knownIssueList[0].Id;
-        System.assertEquals('P3', InsertedKnownIssues[0].Priority);
         extension.SaveCase();
         Test.stopTest();
+
+        Case[] knownIssues = [Select Id from Case where RecordType.Name = 'Known Issue'];
+        system.assertEquals(1, knownIssues.size());
+
+        Case incident = [Select Id, KnownIssue__c from Case where Id = :baseCase.Id];
+        system.assertEquals(knownIssues[0].Id, incident.KnownIssue__c);
+
+        extension.ClearKnownIssue();
+
     }
 }
