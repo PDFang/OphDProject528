@@ -159,7 +159,7 @@ public class TestUtilities
        															  BMCServiceDesk__Change_Type__c = 'NORMAL',
        															  RF_Cluster_s__c = 'B2;B3',
        															  BMCServiceDesk__FKStatus__c = status.get('OPENED'),
-       															  RF_Release__c = 'Future',
+       															  ReleasePicklist__c = 'Architecture',
        															  RF_Contingency_Owner__c = userInfo.getUserId(),
        															  RF_Contingency_Deadline__c = system.today()+ 4,
        															  BMCServiceDesk__Change_Description__c = 'Test summary',

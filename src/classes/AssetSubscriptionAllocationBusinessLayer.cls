@@ -36,7 +36,9 @@ public class AssetSubscriptionAllocationBusinessLayer {
             'Name',
             'Quantity__c',
             'Budgeted_Hours__c',
-            'ParentProject__c'
+            'ParentProject__c',
+            'QuantityCancelled__c',
+            'QuantityonHold__c'
     };
 
     static Set<String> projectFields = new Set<String>{
@@ -600,12 +602,22 @@ public class AssetSubscriptionAllocationBusinessLayer {
     }
 
 
-    // delete subscription allocation row from the list
+    // save Asset Quantity Hold and Cancelled row from the list
     public Boolean saveCHQuantities(Decimal cancelQuantity, Decimal onHoldQuantity){
         currentAsset.QuantityCancelled__c = cancelQuantity;
         currentAsset.QuantityonHold__c = onHoldQuantity;
 
         update currentAsset;
+
+        return true;
+    }
+
+    // save Subscription Quantity Hold and Cancelled row from the list
+    public Boolean saveCHSubsQuantities(Decimal cancelQuantity, Decimal onHoldQuantity){
+        currentSubscription.QuantityCancelled__c = cancelQuantity;
+        currentSubscription.QuantityonHold__c = onHoldQuantity;
+
+        update currentSubscription;
 
         return true;
     }
