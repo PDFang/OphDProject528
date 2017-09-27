@@ -19,6 +19,7 @@ public class CaseTriggerHandler extends TriggerHandler
     private static Set<String> closedStatuses;
     private static SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(inContactBaseClass.OrgId15Digit);
     public static boolean callActionHub = true;
+    public static String JIRA_KEY_TEMP = 'Processing...';
     public static boolean createJiraBug = false;
     public static boolean bypassProxyService = false;
     private Static Map<String, ETMS_Trouble_Report_State_Status__mdt> etmsTroubleStateStatusMap;
@@ -59,12 +60,13 @@ public class CaseTriggerHandler extends TriggerHandler
     }
 
     protected override void afterInsert(){
-        createJiraBugForKI((List<Case>) trigger.new);
+        createJiraBugForKI((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
         if(!isProxyServiceTurnedOff && noOfProxyServiceCallouts == 0 && !bypassProxyService)
             CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
     }
 
     protected override void afterUpdate(){
+        createJiraBugForKI((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
         if(!isxMattersNotificationsTurnedOff)
             createXmNotification((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
         if(!isProxyServiceTurnedOff && noOfProxyServiceCallouts == 0 && !bypassProxyService)
@@ -430,7 +432,7 @@ public class CaseTriggerHandler extends TriggerHandler
     }
 
 
-    private void createJiraBugForKI(List<Case> newList){
+    private void createJiraBugForKI(List<Case> newList, Map<Id, Case> oldMap){
 
         system.debug('createJiraBugForKI(): createJiraBug - ' + createJiraBug);
         system.debug('createJiraBugForKI(): known issues - ' + newList.size());
@@ -443,7 +445,10 @@ public class CaseTriggerHandler extends TriggerHandler
         createJiraBug = false;
         List<Id> caseIds = new List<Id>();
         for(Case newCase : newList){
-            if(newCase.RecordTypeId == knownIssueRecordType && String.isBlank(newCase.JIRA_Key__c)){
+            Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
+            if(newCase.RecordTypeId == knownIssueRecordType && oldCase == null && String.isBlank(newCase.JIRA_Key__c)
+                    || (oldCase != null && oldCase.JIRA_Key__c != newCase.JIRA_Key__c && newCase.JIRA_Key__c == JIRA_KEY_TEMP))
+            {
                 caseIds.add(newCase.Id);
             }
         }
@@ -459,11 +464,21 @@ public class CaseTriggerHandler extends TriggerHandler
     @Future(callout=true)
     private static void createJiraBugForKIFuture(String caseId){
 
+        String jiraKey = null;
         try{
             JiraRestWrapper wrapper = new JiraRestWrapper();
-            wrapper.CreateJIRABug(caseId);
+            jiraKey = wrapper.CreateJIRABug(caseId);
         }catch(Exception ex) {
             inContactBaseClass.SendErrorEmail(ex,caseId);
+        }
+
+        // clear the TEMP key in case of error
+        if(String.isBlank(jiraKey)){
+            Case knownIssue = new Case(
+                    Id = caseId,
+                    JIRA_Key__c = null
+            );
+            update knownIssue;
         }
 
     }

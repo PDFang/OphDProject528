@@ -12,7 +12,7 @@
             <div style="color:red"><apex:messages id="msg" /></div>
         </apex:outputPanel>
 
-              <apex:form rendered="{!AND(ISBLANK(Case.JIRA_Key__c), Case.RecordType.Name = 'Known Issue')}" >
+              <apex:form rendered="{!AND(ISBLANK(Case.JIRA_Key__c), !$Setup.AppConfiguration__c.Turn_Off_JIRA_Integration__c, Case.RecordType.Name = 'Known Issue')}" >
                   <apex:outputField value="{!Case.Subject}" rendered="false"/>
                   <apex:outputField value="{!Case.Summary__c}" rendered="false"/>
                   <apex:outputField value="{!Case.Steps_to_Recreate__c}" rendered="false"/>

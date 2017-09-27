@@ -107,7 +107,7 @@
                 
                 <apex:pageBlockSection columns="1" title="Create {!recordTypeName}" collapsible="false">
                     
-                    <apex:pageBlockSectionItem >
+                    <apex:pageBlockSectionItem rendered="{!!$Setup.AppConfiguration__c.Turn_Off_JIRA_Integration__c}">
                             <apex:outputLabel for="tfs">Create JIRA Bug</apex:outputLabel>
                             <apex:inputCheckbox value="{!createJiraBug}">
                                 <apex:actionSupport event="onclick" reRender="tfsFields" oncomplete="StyleButtons()"/>
