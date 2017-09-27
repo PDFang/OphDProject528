@@ -51,9 +51,9 @@ private class CaseCreateKnownIssuesExtensionTest {
         CaseCreateKnownIssueExtension extension = new CaseCreateKnownIssueExtension(controller);
 
         system.assertEquals(true, extension.canCreateKnownIssue);
-
+        extension.createJiraBug = true;
         extension.Save();
-
+        extension.SaveCase();
         Test.stopTest();
 
         Case[] knownIssues = [Select Id from Case where RecordType.Name = 'Known Issue'];
