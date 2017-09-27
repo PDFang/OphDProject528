@@ -43,6 +43,7 @@ private class PartnerCaseRestServiceTest {
 
 
         RestRequest request = new RestRequest();
+        request.requestURI = '/PartnerCase';
         request.requestBody = Blob.valueOf(JSON.serialize(updateRequest));
         request.headers.put('Content-Type', 'application/json');
         request.httpMethod = 'POST';
@@ -64,14 +65,22 @@ private class PartnerCaseRestServiceTest {
         CaseComment[] comments = [Select Id from CaseComment where ParentId = :testIncident.Id];
         system.assertEquals(updateRequest.comments.size(), comments.size(), 'Case comment update failed.');
 
+        // make sure the proxy service callout didn't happen
+        system.assertEquals(false, PartnerCaseProxyServiceHelper.isCasePushed);
+
     }
 
     static testMethod void invalidTroubleReportIdTest(){
 
         test.startTest();
 
+        PartnerCaseRestService.UpdateRequest updateRequest = new PartnerCaseRestService.UpdateRequest();
+        updateRequest.troubleReportId = 'XAQWER23432';
+        updateRequest.comments = new String[]{'comment 1', 'comment 2'};
+
         RestRequest request = new RestRequest();
-        request.requestBody = Blob.valueOf('{"troubleReportId":"20170925", "troubleReportState" : "1", "troubleReportStatus":"8", "comments":["Comment 1", "Comment 2"]}');
+        request.requestURI = '/PartnerCase';
+        request.requestBody = Blob.valueOf(JSON.serialize(updateRequest));
         request.headers.put('Content-Type', 'application/json');
         request.httpMethod = 'POST';
         RestContext.request = request;
@@ -113,8 +122,15 @@ private class PartnerCaseRestServiceTest {
 
         test.startTest();
 
+        PartnerCaseRestService.UpdateRequest updateRequest = new PartnerCaseRestService.UpdateRequest();
+        updateRequest.troubleReportId = testIncident.X3rdPartyVendorTicket__c;
+        updateRequest.comments = new String[]{'comment 1', 'comment 2'};
+        updateRequest.troubleReportStatus = '18478';
+        updateRequest.troubleReportState = '92457';
+
         RestRequest request = new RestRequest();
-        request.requestBody = Blob.valueOf('{"troubleReportId":"20170925", "troubleReportState" : "1000", "troubleReportStatus":"8000"}');
+        request.requestURI = '/PartnerCase';
+        request.requestBody = Blob.valueOf(JSON.serialize(updateRequest));
         request.headers.put('Content-Type', 'application/json');
         request.httpMethod = 'POST';
         RestContext.request = request;
@@ -128,6 +144,28 @@ private class PartnerCaseRestServiceTest {
 
         system.assertEquals(400, response.statusCode);
         system.assertEquals('INVALID_TROUBLE_REPORT_STATE_OR_STATUS', response.responseBody.toString());
+
+    }
+
+    static testMethod void exceptionHandlingTest(){
+
+        test.startTest();
+
+        // no body
+        RestRequest request = new RestRequest();
+        request.requestURI = '/PartnerCase';
+        request.headers.put('Content-Type', 'application/json');
+        request.httpMethod = 'POST';
+        RestContext.request = request;
+
+        RestResponse response = new RestResponse();
+        RestContext.response = response;
+
+        PartnerCaseRestService.updateIncident();
+
+        test.stopTest();
+
+        system.assertEquals(500, response.statusCode);
 
     }
 

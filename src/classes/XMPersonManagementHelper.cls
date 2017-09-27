@@ -56,7 +56,7 @@ public class XMPersonManagementHelper {
             return new Map<Id, Contact>([
                     select FirstName, LastName, Email, MobilePhone, Phone, Id, AccountId,Account.ParentId, Account.CadebillAccountNoText__c,
                             Account.Name, xmPerson__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
-                    from Contact where Email =: email
+                    from Contact where Email =: email and Deactivated__c = :false
             ]);
         }
         catch (Exception e)

@@ -1004,9 +1004,6 @@ private class InContactTestClass
 
     static testMethod void TestCaseAccountHighlightsExtension()
     {
-        //set mock for creating TFS Item (leave it for coverage purpose until TFS logic removed)
-        Test.setMock(WebServiceMock.class, new ITfsIntegrationProxy());
-
         //set mock for creating Jira Item
         JiraRestWrapperMockHttpGenerator httpMock = new JiraRestWrapperMockHttpGenerator(200,'OK','[{"Name": "testCase"}]',null);
         Test.setMock(HttpCalloutMock.class, httpMock);
@@ -1025,7 +1022,6 @@ private class InContactTestClass
         ApexPages.StandardController controller = new ApexPages.StandardController(knownIssue);
         CaseAccountHighlightsExtension extension = new CaseAccountHighlightsExtension(controller);
 
-        extension.CreateTfsItem(); // creating TFS Item (leave it for coverage purpose until TFS logic removed)
         extension.CreateJIRABug();
         extension.Save();
         Test.stopTest();
