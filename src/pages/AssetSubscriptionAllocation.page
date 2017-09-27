@@ -46,7 +46,7 @@
             </apex:pageBlockSection>
         </apex:pageBlock>
 
-        <apex:pageBlock id="pgblockCHQuantity" title="Cancelled/Hold Quantitys" rendered="{!Not(ISNULL(Asset)) && !Not(ISNULL(Subscription))}">
+        <apex:pageBlock id="pgblockCHQuantity" title="Asset Cancelled/Hold Quantities" rendered="{!Not(ISNULL(Asset)) && !Not(ISNULL(Subscription))}">
             <apex:pageMessages />
             <apex:pageBlockButtons title="" location="bottom">
                 <apex:commandButton title="Save" value="Save" action="{!saveCHQuantities}" reRender="pgblockCHQuantity"/>
@@ -54,6 +54,17 @@
             <apex:pageBlockSection columns="2" rendered="{!Not(ISNULL(Asset))}">
                 <apex:inputText id="txtQuantityCancelled" value="{!Asset.QuantityCancelled__c}"/>
                 <apex:inputText id="txtQuantityHold" value="{!Asset.QuantityonHold__c}"/>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:pageBlock id="pgblockCHSubsQuantity" title="Subscription Cancelled/Hold Quantities" rendered="{!Not(ISNULL(Subscription)) && !Not(ISNULL(Asset))}">
+            <apex:pageMessages />
+            <apex:pageBlockButtons title="" location="bottom">
+                <apex:commandButton title="Save" value="Save" action="{!saveCHSubsQuantities}" reRender="pgblockCHSubsQuantity"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="2" rendered="{!Not(ISNULL(Subscription))}">
+                <apex:inputText id="txtQuantityCancelled" value="{!Subscription.QuantityCancelled__c}"/>
+                <apex:inputText id="txtQuantityHold" value="{!Subscription.QuantityonHold__c}"/>
             </apex:pageBlockSection>
         </apex:pageBlock>
 
