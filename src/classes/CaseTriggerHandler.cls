@@ -19,7 +19,7 @@ public class CaseTriggerHandler extends TriggerHandler
     private static Set<String> closedStatuses;
     private static SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(inContactBaseClass.OrgId15Digit);
     public static boolean callActionHub = true;
-    public static String JIRA_KEY_TEMP = 'Processing...';
+    public static String JIRA_KEY_TEMP = Label.JIRA_Temporary_Key;
     public static boolean createJiraBug = false;
     public static boolean bypassProxyService = false;
     private Static Map<String, ETMS_Trouble_Report_State_Status__mdt> etmsTroubleStateStatusMap;
