@@ -438,6 +438,28 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
 
     } // deleteProjectShare()
 
+    private static void removePartnerContactFromCase(List<Account_Partner__c> partnerList){
+
+        if(partnerList == null || partnerList.isEmpty())
+        {
+            return;
+        }
+
+        Set<Id> customerIdSet = new set<Id>();
+        Set<Id> partnerIdSet = new set<Id>();
+        set<Id> groupIdSet = new set<Id>();
+        set<Id> recordIdSet = new set<Id>();
+
+        for(Account_Partner__c partner : partnerList) {
+            if ((partner.Partner__c == null && partner.PublicGroupId__c == null) || string.isBlank(partner.Partner_Type__c)) {
+                continue;
+            }
+            partnerIdSet.add(partner.Partner__c);
+            customerIdSet.add(partner.Customer__c);
+            recordIdSet.add(partner.Id);
+        }
+    }
+
     /* Assign permission set to partner users based on partner type */
     private static void assignPermissionSet(List<Account_Partner__c> partnerList){
 		if(partnerList == null || partnerList.isEmpty())
