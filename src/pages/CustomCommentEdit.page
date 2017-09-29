@@ -24,18 +24,16 @@
                             <apex:outputLabel value="Comment"></apex:outputLabel>
                         </div>
                         <div class="col-md-3">
-                            <apex:inputTextarea value="{!commentBody}"></apex:inputTextarea>
+                            <apex:inputTextarea rows="10" cols="100" value="{!commentBody}"></apex:inputTextarea>
                         </div>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-12">
                 <apex:commandLink styleClass="btn" action="{!CreateComment}" value="Save" reRender="target">
-                    <apex:param name="isPublic" assignTo="{!comment.isPublic}" value="param1" />
                     <apex:param name="commentBody" assignTo="{!comment.CaseComment}" value="param2" />
                 </apex:commandLink>
                 <apex:commandLink styleClass="btn" action="{!CancelCreate}" value="Cancel" reRender="target">
-                    <apex:param name="isPublic" assignTo="{!comment.isPublic}" value="param1" />
                     <apex:param name="commentBody" assignTo="{!comment.CaseComment}" value="param2" />
                 </apex:commandLink>
                     </div>

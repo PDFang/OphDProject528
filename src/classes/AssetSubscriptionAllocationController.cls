@@ -256,9 +256,29 @@ public with sharing class AssetSubscriptionAllocationController {
             }
 
         } catch (Exception ex){
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while saving subscription allocations. ' + ex.getMessage()));
-            system.debug('saveSubscriptionAllocation(): Exception - ' + ex);
-            system.debug('saveSubscriptionAllocation(): ' + ex.getStackTraceString());
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while saving Asset Cancelled and Hold quantities. ' + ex.getMessage()));
+            system.debug('saveCHQuantities(): Exception - ' + ex);
+            system.debug('saveCHQuantities(): ' + ex.getStackTraceString());
+        }
+        return null;
+
+    }
+
+    public pagereference saveCHSubsQuantities(){
+
+        try{
+            //System.debug('Asset.QuantityCancelled__c' + Asset.QuantityCancelled__c);
+            Boolean success =  businessLayer.saveCHSubsQuantities(Subscription.QuantityCancelled__c, Subscription.QuantityonHold__c);
+            if (success){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Saved Successfully.'));
+            } else{
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'One or more line item(s) has error.'));
+            }
+
+        } catch (Exception ex){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error while saving subscription Cancelled and Hold quantities. ' + ex.getMessage()));
+            system.debug('saveCHSubsQuantities(): Exception - ' + ex);
+            system.debug('saveCHSubsQuantities(): ' + ex.getStackTraceString());
         }
         return null;
 
