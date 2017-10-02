@@ -456,13 +456,13 @@ public class CaseTriggerHandler extends TriggerHandler
         system.debug('createJiraBugForKI(): caseIds - ' + caseIds);
 
         if(caseIds.size() > 0 && !system.isFuture() && !system.isBatch()){
-            createJiraBugForKIFuture(caseIds[0]);
+            createJiraBugForKIFuture(caseIds[0], newCase.JIRA_Key__c == JIRA_KEY_TEMP);
         }
 
     }
 
     @Future(callout=true)
-    private static void createJiraBugForKIFuture(String caseId){
+    private static void createJiraBugForKIFuture(String caseId, boolean isTempKey){
 
         String jiraKey = null;
         try{
@@ -473,7 +473,7 @@ public class CaseTriggerHandler extends TriggerHandler
         }
 
         // clear the TEMP key in case of error
-        if(String.isBlank(jiraKey)){
+        if(String.isBlank(jiraKey) && isTempKey){
             Case knownIssue = new Case(
                     Id = caseId,
                     JIRA_Key__c = null

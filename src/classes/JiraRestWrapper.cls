@@ -4,6 +4,7 @@ public class JiraRestWrapper {
 
     string issueTypeId = '10004';
     string project = 'IC';
+    integer timeout = 60000;
     Boolean jiraIntegrationTurnedOff = false;
 
     public class JiraCalloutException extends Exception{}
@@ -27,6 +28,7 @@ public class JiraRestWrapper {
             issueTypeId = String.isNotBlank(config.Default_JIRA_Issue_Type_ID__c) ? config.Default_JIRA_Issue_Type_ID__c : issueTypeId;
             project = String.isNotBlank(config.Default_JIRA_Project__c) ? config.Default_JIRA_Project__c : project;
             jiraIntegrationTurnedOff = config.Turn_Off_JIRA_Integration__c;
+            timeout = (Integer)config.Default_JIRA_Timeout__c;
         }
 
     }
@@ -75,7 +77,7 @@ public class JiraRestWrapper {
         request.setEndpoint('callout:JIRA_Proxy_Service' + createUrl);
         request.setMethod('POST');
         request.setHeader('Content-Type', 'application/json');
-
+        request.setTimeout(timeout);
         system.debug('sendRequest(): request - ' + request);
 
         Http h = new Http();
