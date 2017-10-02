@@ -28,7 +28,7 @@ public class JiraRestWrapper {
             issueTypeId = String.isNotBlank(config.Default_JIRA_Issue_Type_ID__c) ? config.Default_JIRA_Issue_Type_ID__c : issueTypeId;
             project = String.isNotBlank(config.Default_JIRA_Project__c) ? config.Default_JIRA_Project__c : project;
             jiraIntegrationTurnedOff = config.Turn_Off_JIRA_Integration__c;
-            timeout = (Integer)config.Default_JIRA_Timeout__c;
+            timeout = config.Default_JIRA_Timeout__c != null ? (Integer)config.Default_JIRA_Timeout__c : timeout;
         }
 
     }
