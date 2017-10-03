@@ -528,8 +528,11 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
             updateCases.add(newCase);
         }
 
+        system.debug('updateCaseContact() : updateCases - '+ updateCases);
+
         if(updateCases.size() > 0){
-            Database.update(updateCases);
+            Database.SaveResult[] results = Database.update(updateCases, false);
+            system.debug('updateCaseContact() : results - '+ results);
         }
 
     }
