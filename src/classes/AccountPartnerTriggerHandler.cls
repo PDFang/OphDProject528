@@ -4,6 +4,9 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
     public static final String PREMISE_IMPLEMENTATION_PARTNER = 'Certified Implementation Partner - Premise';
     public static final String ICE_PARTNER = 'iCE';
 
+    @TestVisible
+    private static string archivedPartnerCaseContactId = Label.inContact_Archived_Partner_Case_ContactId;
+
     private static final Set<String> psSaaSProjectSet = ProjectShareHelper.psSaaSProjectSet;
     private static final Set<String> readOnlyRecordTypesSet = ProjectShareHelper.readOnlyRecordTypesSet;
 
@@ -28,6 +31,7 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
     public override void afterDelete()
     {
         deleteAccountShare(trigger.old);
+        removePartnerContactFromCase(trigger.old);
         deleteProjectShare(trigger.old);
         unassignPermissionSet(trigger.old);
     }
@@ -438,26 +442,96 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
 
     } // deleteProjectShare()
 
+    // When a partner is removed as an account partner from a customer account
+    // the partner contact record is replaced with “inContact Archive Partner Case Contact” on any cases related to the customer account
     private static void removePartnerContactFromCase(List<Account_Partner__c> partnerList){
 
-        if(partnerList == null || partnerList.isEmpty())
+        Contact[] defaultContact = [Select Id, Name from Contact where Id = :archivedPartnerCaseContactId];
+        system.debug('removePartnerContactFromCase() : defaultContact - '+defaultContact);
+
+        if(partnerList == null || partnerList.isEmpty() || defaultContact.size() == 0)
         {
             return;
         }
+        system.debug('removePartnerContactFromCase() : partnerList - '+partnerList);
+
 
         Set<Id> customerIdSet = new set<Id>();
         Set<Id> partnerIdSet = new set<Id>();
-        set<Id> groupIdSet = new set<Id>();
-        set<Id> recordIdSet = new set<Id>();
+        List<Account_Partner__c> processList = new List<Account_Partner__c>();
 
         for(Account_Partner__c partner : partnerList) {
-            if ((partner.Partner__c == null && partner.PublicGroupId__c == null) || string.isBlank(partner.Partner_Type__c)) {
+            if (partner.Partner__c == null || partner.Customer__c == null) {
                 continue;
             }
             partnerIdSet.add(partner.Partner__c);
             customerIdSet.add(partner.Customer__c);
-            recordIdSet.add(partner.Id);
+            processList.add(partner);
         }
+
+        system.debug('removePartnerContactFromCase() : customerIdSet - '+customerIdSet);
+
+        Map<Id, Case[]> customerCaseMap = new Map<Id, Case[]>();
+        for(Case caseRecord : [
+                Select Id, AccountId, ContactId, Contact.AccountId, PartnerContact__c
+                from Case
+                where AccountId IN :customerIdSet and Contact.AccountId IN :partnerIdSet
+        ]){
+            Case[] cases = customerCaseMap.get(caseRecord.AccountId);
+            if(cases == null){
+                cases = new Case[]{};
+                customerCaseMap.put(caseRecord.AccountId, cases);
+            }
+            cases.add(caseRecord);
+        }
+
+        system.debug('removePartnerContactFromCase() : customerCaseMap - '+ customerCaseMap);
+
+        Set<String> caseContactKeySet = new Set<String>();
+
+        for(Account_Partner__c partner : processList){
+            Case[] cases = customerCaseMap.get(partner.Customer__c);
+            if(cases == null){
+                continue;
+            }
+            for(Case caseRecord : cases){
+
+                system.debug('removePartnerContactFromCase() : caseRecord - '+ caseRecord);
+
+                if(caseRecord.Contact.AccountId == partner.Partner__c){
+                    // concatenate case id and contact id
+                    caseContactKeySet.add(caseRecord.Id + '-' + caseRecord.ContactId);
+                }
+            }
+        }
+
+        system.debug('removePartnerContactFromCase() : caseContactKeySet - '+ caseContactKeySet);
+
+        if(caseContactKeySet.size() > 0 && !system.isFuture() && !system.isBatch()){
+            updateCaseContact(caseContactKeySet, defaultContact[0].Id);
+        }
+
+    }
+
+    @Future
+    private static void updateCaseContact(Set<String> caseContactKeySet, Id defaultContactId){
+
+        Case[] updateCases = new Case[]{};
+
+        for(String caseContactKey : caseContactKeySet){
+            List<String> keyList = caseContactKey.split('-');
+            Case newCase = new Case(
+                    Id = keyList[0],
+                    PartnerContact__c = keyList[1],
+                    ContactId = defaultContactId
+            );
+            updateCases.add(newCase);
+        }
+
+        if(updateCases.size() > 0){
+            Database.update(updateCases);
+        }
+
     }
 
     /* Assign permission set to partner users based on partner type */
