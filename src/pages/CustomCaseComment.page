@@ -10,8 +10,8 @@
                     <apex:commandLink styleClass="btn" target="_blank" action="{!NewPrivateComment}" value="New"/>
                 </apex:pageBlockButtons>
                 <apex:dataTable value="{!commentList}" var="comment" id="SubscriptionReplica" rowClasses="odd,even" styleClass="table table-bordered table-condensed" >
-                    <apex:column headerValue="Action">
-                        <apex:outputLink value="/{!comment.caseCommentsId}/e?parent_id={!caseId}&retURL=/{!caseId}">Edit</apex:outputLink>
+                    <apex:column headerValue="Action" rendered="false">
+                        <apex:outputLink value="/{!comment.caseCommentsId}/e?parent_id={!caseId}&retURL=/{!caseId}" rendered="false">Edit</apex:outputLink>
                         <apex:outputLink value="/apex/CustomCommentEdit?Commment_Id={!comment.caseCommentsId}/e?parent_id={!caseId}&retURL=/{!caseId}" rendered="false">Edit</apex:outputLink>
                     </apex:column>
                     <apex:column rendered="false">

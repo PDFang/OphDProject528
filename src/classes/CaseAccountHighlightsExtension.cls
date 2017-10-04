@@ -14,9 +14,7 @@ public with sharing class CaseAccountHighlightsExtension
         try {
             system.debug('CreateJIRABug(): case -  ' + c);
 
-            c.JIRA_Description__c = 'Summary\n' + c.Summary__c
-                    + '\n\nSteps to Recreate\n' + c.Steps_to_Recreate__c
-                    + '\n\nInternal Notes\n' + c.InternalNotes__c;
+            c.JIRA_Description__c = CaseCreateKnownIssueExtension.getJIRADescription(c);
             c.JIRA_Summary__c = c.Subject;
             c.JIRA_Key__c = CaseTriggerHandler.JIRA_KEY_TEMP;
             CaseTriggerHandler.createJiraBug = true;

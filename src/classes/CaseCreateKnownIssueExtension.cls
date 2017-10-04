@@ -130,9 +130,7 @@ public with sharing class CaseCreateKnownIssueExtension
                 CaseTriggerHandler.createJiraBug = true;
                 //need to populate the Description field with concatenated
                 //summary + steps to reproduce + internal notes
-                relatedCase.JIRA_Description__c = 'Summary\n' + relatedCase.Summary__c
-                        + '\n\nSteps to Recreate\n' + relatedCase.Steps_to_Recreate__c
-                        + '\n\nInternal Notes\n' + relatedCase.InternalNotes__c;
+                relatedCase.JIRA_Description__c = getJIRADescription(relatedCase);
                 relatedCase.JIRA_Summary__c = relatedCase.Subject;
             }
 
@@ -163,6 +161,14 @@ public with sharing class CaseCreateKnownIssueExtension
         c.put(recordTypeName.replace(' ', '') + '__c',null);
     }
     
-    
+    public static string getJIRADescription(Case relatedCase){
+
+        String description = 'Summary:\n' + relatedCase.Summary__c
+                + '\n\nSteps to Recreate:\n' + relatedCase.Steps_to_Recreate__c
+                + '\n\nInternal Notes:\n' + relatedCase.InternalNotes__c;
+
+        return description;
+
+    }
 
 }
