@@ -353,10 +353,10 @@ public class CaseTriggerHandler extends TriggerHandler
 
             }
             // Product or Service is changed to 'Toll Free'
-//            else if(newCase.Product_or_Service__c == PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE && newCase.Product_or_Service__c != oldCase.Product_or_Service__c)
-//            {
-//                system.debug('CallPartnerCaseProxyService(): Product or Service is changed - ' + newCase.CaseNumber);
-//            }
+            else if(newCase.Product_or_Service__c == PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE && newCase.Product_or_Service__c != oldCase.Product_or_Service__c)
+            {
+                system.debug('CallPartnerCaseProxyService(): Product or Service is changed - ' + newCase.CaseNumber);
+            }
             else {
                 continue;
             }
@@ -393,11 +393,11 @@ public class CaseTriggerHandler extends TriggerHandler
                 }
 
                 // create second Verizon ETMS ticket
-//                if(oldMap != null && oldMap.containsKey(newCase.Id) && newCase.Product_or_Service__c == PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE
-//                    && oldMap.get(newCase.Id).Product_or_Service__c != PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE)
-//                {
-//                    createIdSet.add(newCase.Id);
-//                }
+                if(oldMap != null && oldMap.containsKey(newCase.Id) && newCase.Product_or_Service__c == PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE
+                    && oldMap.get(newCase.Id).Product_or_Service__c != PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE)
+                {
+                    createIdSet.add(newCase.Id);
+                }
 
             }
         }
@@ -456,13 +456,13 @@ public class CaseTriggerHandler extends TriggerHandler
         system.debug('createJiraBugForKI(): caseIds - ' + caseIds);
 
         if(caseIds.size() > 0 && !system.isFuture() && !system.isBatch()){
-            createJiraBugForKIFuture(caseIds[0]);
+            createJiraBugForKIFuture(caseIds[0], newList[0].JIRA_Key__c == JIRA_KEY_TEMP);
         }
 
     }
 
     @Future(callout=true)
-    private static void createJiraBugForKIFuture(String caseId){
+    private static void createJiraBugForKIFuture(String caseId, boolean isTempKey){
 
         String jiraKey = null;
         try{
@@ -473,7 +473,7 @@ public class CaseTriggerHandler extends TriggerHandler
         }
 
         // clear the TEMP key in case of error
-        if(String.isBlank(jiraKey)){
+        if(String.isBlank(jiraKey) && isTempKey){
             Case knownIssue = new Case(
                     Id = caseId,
                     JIRA_Key__c = null

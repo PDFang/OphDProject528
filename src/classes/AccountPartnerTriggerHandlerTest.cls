@@ -211,9 +211,17 @@ private class AccountPartnerTriggerHandlerTest {
         );
         insert partnerList;
 
+        // set default case contact
+        AccountPartnerTriggerHandler.archivedPartnerCaseContactId = contactList[5].Id;
+
         test.startTest();
         delete new List<Account_Partner__c>{partnerList[0], partnerList[1], partnerList[2]};
         test.stopTest();
+
+        for(Case c: [SELECT Id, ContactId, PartnerContact__c from Case]){
+            system.assertEquals(AccountPartnerTriggerHandler.archivedPartnerCaseContactId, c.ContactId);
+            system.assertNotEquals(null, c.PartnerContact__c);
+        }
 
         system.runAs(userList[0]){
             List<Account> accounts = [SELECT Id from Account where RecordType.Name = :ACCOUNT_TYPE_CUSTOMERS];
@@ -542,6 +550,7 @@ private class AccountPartnerTriggerHandlerTest {
                 Subject = 'AccountPartnerTriggerHandlerTest',
                 Status = 'New',
                 AccountId = accountList[0].Id,
+                ContactId = contactList[2].Id,
                 EventType__c = 'Service Disruption'
         );
         database.DMLOptions dmo = new database.DMLOptions();
@@ -554,6 +563,7 @@ private class AccountPartnerTriggerHandlerTest {
                 Subject = 'AccountPartnerTriggerHandlerTest',
                 Status = 'New',
                 AccountId = accountList[1].Id,
+                ContactId = contactList[3].Id,
                 EventType__c = 'Service Disruption'
         );
         case2.setOptions(dmo);
