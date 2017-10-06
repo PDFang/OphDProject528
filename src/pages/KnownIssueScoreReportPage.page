@@ -529,7 +529,7 @@
                       read: function(e){
                            value = $(element).val();
                           console.log('value =>' + value);
-                               var result =  GetFilter(value, "TFS Id", e);
+                               var result =  GetFilter(value, "JIRA Id", e);
 
                             }
                        },
@@ -645,7 +645,7 @@
                       read: function(e){
                            value = $(element).val();
                           console.log('value =>' + value);
-                               var result =  GetFilter(value, "TFS Status", e);
+                               var result =  GetFilter(value, "JIRA Status", e);
 
                             }
                        },
