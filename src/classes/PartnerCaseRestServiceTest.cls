@@ -24,6 +24,8 @@ private class PartnerCaseRestServiceTest {
         testIncident.setOptions(dmo);
         insert testIncident;
 
+        String caseNumber = [Select Id, CaseNumber from Case Where Id = :testIncident.Id].CaseNumber;
+
         ETMS_Trouble_Report_State_Status__mdt[] mdtList = [
                 Select Case_Status__c, Trouble_Report_State__c, Trouble_Report_Status__c
                 From ETMS_Trouble_Report_State_Status__mdt
@@ -36,7 +38,7 @@ private class PartnerCaseRestServiceTest {
         system.assert(mdtList.size() > 0, 'No records in ETMS_Trouble_Report_State_Status__mdt for SF Inbound.');
 
         PartnerCaseRestService.UpdateRequest updateRequest = new PartnerCaseRestService.UpdateRequest();
-        updateRequest.troubleReportId = testIncident.X3rdPartyVendorTicket__c;
+        updateRequest.troubleReportId = caseNumber;
         updateRequest.comments = new String[]{'comment 1', 'comment 2'};
         updateRequest.troubleReportStatus = mdtList[0].Trouble_Report_Status__c.toPlainString();
         updateRequest.troubleReportState = mdtList[0].Trouble_Report_State__c.toPlainString();

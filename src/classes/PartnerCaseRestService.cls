@@ -30,14 +30,15 @@ global with sharing class PartnerCaseRestService {
 
                 Case[] incidentList = [
                         Select Id, Status, ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c, X3rdPartyVendorTicket__c
-                        from Case Where X3rdPartyVendorTicket__c = :request.troubleReportId
+                        from Case Where CaseNumber = :request.troubleReportId
                         and AccountBillingGroup__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
                         and RecordType.Name = 'Incident'
+                        and X3rdPartyVendorTicket__c != null
                 ];
                 if(incidentList.size() > 0){
                     incident = incidentList[0];
                 }
-
+                system.debug('updateIncident(): incidentList - ' + incidentList);
             }
 
             if(incident == null){
