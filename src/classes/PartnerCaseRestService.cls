@@ -49,8 +49,14 @@ global with sharing class PartnerCaseRestService {
             // get status mapped to trouble report state and status
             if(String.isNotBlank(request.troubleReportState) && String.isNotBlank(request.troubleReportStatus)){
 
-                Decimal troubleReportState = request.troubleReportState.isNumeric() ? Decimal.valueOf(request.troubleReportState) : null;
-                Decimal troubleReportStatus = request.troubleReportStatus.isNumeric() ? Decimal.valueOf(request.troubleReportStatus) : null;
+                Decimal troubleReportState, troubleReportStatus = null;
+                try{
+                    troubleReportState = Decimal.valueOf(request.troubleReportState);
+                    troubleReportStatus = Decimal.valueOf(request.troubleReportStatus);
+                } catch(Exception ex){
+                    system.debug('updateIncident(): Exception - ' + ex);
+                }
+
                 system.debug('updateIncident(): troubleReportState - ' + troubleReportState + ' , troubleReportStatus - ' + troubleReportStatus);
 
                 ETMS_Trouble_Report_State_Status__mdt[] mdtList = [
