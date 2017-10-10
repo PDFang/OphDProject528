@@ -19,6 +19,7 @@ public class UpdateTotalMATAmount {
                    and SBQQ__Quote__r.SBQQ__Opportunity2__r.RecordTypeId NOT IN :wfoRecordTypeIds
                    and SBQQ__Product__r.Family in : stProdFam
                    and SBQQ__Quote__r.SBQQ__Primary__c =: true
+                   and SBQQ__Existing__c = false
                    Group By SBQQ__Quote__r.SBQQ__Opportunity2__c];
         try{
               for(AggregateResult agr : sumOfQuotelines){

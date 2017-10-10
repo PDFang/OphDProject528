@@ -62,7 +62,7 @@ public class QuoteTotalMatUpdateTest {
        
         SBQQ__QuoteLine__c ql = new SBQQ__QuoteLine__c();
         ql.SBQQ__Product__c = p.Id;
-        ql.SBQQ__Existing__c = true;
+        ql.SBQQ__Existing__c = false;
         ql.SBQQ__NetPrice__c  = 20.00;
         ql.SBQQ__Quantity__c = 5;
         ql.SBQQ__Quote__c = quote.Id;
@@ -71,7 +71,7 @@ public class QuoteTotalMatUpdateTest {
         
         SBQQ__QuoteLine__c ql2= new SBQQ__QuoteLine__c();
         ql2.SBQQ__Product__c = p1.Id;
-        ql2.SBQQ__Existing__c = true;
+        ql2.SBQQ__Existing__c = false;
         ql2.SBQQ__NetPrice__c  = 30.00;
         ql2.SBQQ__Quantity__c = 5;        
         ql2.SBQQ__Quote__c = quote.Id;
