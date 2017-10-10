@@ -12,6 +12,9 @@ public with sharing class KnownIssueViewHelper {
 
 
     public static String GetKnownIsssues(){
+        AppConfiguration__c config = AppConfiguration__c.getInstance();
+
+
         list<Case> knownIssueLists = QueryCases();
         list<KIDataItemClass> dataItems = new list<KIDataItemClass>();
         for(Case ki : knownIssueLists){
@@ -25,11 +28,11 @@ public with sharing class KnownIssueViewHelper {
             dataItem.KICreatedDate = ki.CreatedDate;
             dataItem.KINumOfIncidents = Integer.valueOf(ki.NumberOfIncidents__c);
             dataItem.KIASVValue = ki.ASVValue__c == null ? null : ki.ASVValue__c.setScale(2);
-            dataItem.KITFSId = string.valueOf(ki.KITFSIDText__c);
-            dataItem.KITFSLink = 'http://corptfsapp01.ucn.net:8080/tfs/DefaultCollection/inContact/_workitems#_a=edit&id=' + dataItem.KITFSId; // use AppConfiguration custom settings
-            dataItem.KITFSIteration = ki.TfsWorkItem__r.Iteration__c;
-            dataItem.KITFSTeam = ki.TfsWorkItem__r.Team__c;
-            dataItem.KITFSStatus = ki.TfsWorkItem__r.State__c;
+            dataItem.KIJIRAId = ki.JIRA_Key__c;
+            dataItem.KIJIRALink = config.JIRA_Bug_URL__c + ki.JIRA_Key__c; // use AppConfiguration custom settings
+            dataItem.KIJIRAIteration = ki.JIRA_Sprint__c;
+            dataItem.KIJIRATeam = ki.JIRA_Team__c;
+            dataItem.KIJIRAStatus = ki.JIRA_Status__c;
             dataItem.KIAge = date.valueOf(ki.CreatedDate).daysBetween(system.today());
             dataItem.KIFormattedCreatedDt = GetformattedDate(date.valueOf(ki.CreatedDate));
             dataItem.KIScoreChange = ki.KIImpactScore__c > ki.KIImpactScoreHistorical__c ? 'Up'
@@ -61,14 +64,14 @@ public with sharing class KnownIssueViewHelper {
         for(Case ki : knownIssueLists){
             string value;
             if(!valueset.contains(value)){
-                if(thisFieldName == 'KITFSIDText__c')
-                    valueset.add(string.valueOf(ki.KITFSIDText__c));
-                else if (thisFieldName == 'TfsWorkItem__r.State__c')
-                    valueset.add(ki.TfsWorkItem__r.State__c);
-                else if (thisFieldName == 'TfsWorkItem__r.Team__c')
-                    valueset.add(ki.TfsWorkItem__r.Team__c);
-                else if (thisFieldName == 'TfsWorkItem__r.Iteration__c')
-                    valueset.add(ki.TfsWorkItem__r.Iteration__c);
+                if(thisFieldName == 'JIRA_Key__c')
+                    valueset.add(string.valueOf(ki.JIRA_Key__c));
+                else if (thisFieldName == 'JIRA_Status__c')
+                    valueset.add(ki.JIRA_Status__c);
+                else if (thisFieldName == 'JIRA_Team__c')
+                    valueset.add(ki.JIRA_Team__c);
+                else if (thisFieldName == 'JIRA_Sprint__c')
+                    valueset.add(ki.JIRA_Sprint__c);
                 else{
                     value = (string) ki.get(thisFieldName);
                     valueset.add(value);
@@ -100,8 +103,8 @@ public with sharing class KnownIssueViewHelper {
     private static list<case> QueryCases(){
 
         string knownIssueQuery = 'Select Id,Broken_by_Recent_Release__c, CaseNumber, KIImpactScore__c,NumberOfIncidents__c,ASVValue__c,  '
-                + ' KIImpactScoreHistorical__c, Status, Subject,Priority, CreatedDate,TfsWorkItem__r.Iteration__c, TfsWorkItem__r.TFSItemLink__c, '
-                + ' KITFSIDText__c, TfsWorkItem__r.Team__c, TfsWorkItem__r.State__c'
+                + ' KIImpactScoreHistorical__c, Status, Subject,Priority, CreatedDate,JIRA_Sprint__c, JIRA_Bug_Link__c, '
+                + ' JIRA_Key__c, JIRA_Team__c, JIRA_Status__c'
                 + ' From Case ';
 
                 knownIssueQuery += FormQueryString(new map<string, string>());
@@ -135,20 +138,20 @@ public with sharing class KnownIssueViewHelper {
     private static string GetFieldMaps(string fieldName){
         if(fieldName == 'KI')
             return 'CaseNumber';
-        if(fieldName == 'TFS Id')
-            return 'KITFSIDText__c';
+        if(fieldName == 'JIRA Id')
+            return 'JIRA_Key__c';
         if(fieldName == 'Subject')
             return 'Subject';
         if(fieldName == 'KI Status')
             return 'Status';
         if(fieldName == 'Team')
-            return 'TfsWorkItem__r.Team__c';
+            return 'JIRA_Team__c';
         if(fieldName == 'Priority')
             return 'Priority';
-        if(fieldName == 'TFS Status')
-            return 'TfsWorkItem__r.State__c';
+        if(fieldName == 'JIRA Status')
+            return 'JIRA_Status__c';
         if(fieldName == 'Iteration')
-            return 'TfsWorkItem__r.Iteration__c';
+            return 'JIRA_Sprint__c';
 
         return fieldName;
     }

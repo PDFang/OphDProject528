@@ -59,7 +59,7 @@
                 <input id="tfsClosed" type="checkbox" value="tfsClosed" data-toggle="toggle" class="custom-control-input" onClick="toggleTFSStatus(this);" checked="true"/>
                 <div class="slider round"></div>
             </label>
-            <span style="font-size:12px; font-weight:600;">Show TFS Closed Items</span>
+            <span style="font-size:12px; font-weight:600;">Show JIRA Closed Items</span>
             <div class="row">
                 <div id="kIGrid"></div>
             </div>
@@ -193,8 +193,8 @@
                 case 'KINum' :
                     return 'KI#';
                     break;
-                case 'TFSId' :
-                     return 'TFS Id';
+                case 'JIRAId' :
+                     return 'JIRA Id';
                      break;
                 case 'subject' :
                      return 'Subject';
@@ -205,8 +205,8 @@
                 case 'team' :
                      return 'Team';
                      break;
-                case 'TFSStatus' :
-                     return 'TFS Status';
+                case 'JIRAStatus' :
+                     return 'JIRA Status';
                      break;
                 case 'priority' :
                      return 'Priority';
@@ -214,7 +214,7 @@
                 case 'age' :
                      return 'Age';
                      break;
-                 case 'TFSIteration' :
+                 case 'JIRAIteration' :
                      return 'Iteration';
                      break;
                 default :
@@ -237,7 +237,7 @@
           var grid = $("#kIGrid").data("kendoGrid");
            if(!obj.checked){
                 grid.dataSource.filter({
-                 field: "TFSStatus",
+                 field: "JIRAStatus",
                  operator: "neq",
                  value:"Closed"
                 });
@@ -283,19 +283,19 @@
                             fields: {
                                 Id : {from: "KICaseId", type: "string" },
                                 KINum: { from: "KINumber", type: "string" },
-                                TFSId: { from: "KITFSId", type: "number" },
+                                JIRAId: { from: "KIJIRAId", type: "string" },
                                 subject: { from: "KISubject", type: "string"},
                                 status: { from: "KIStatus", type: "string" },
                                 score: { from: "KIScore", type: "number" },
-                                team: { from: "KITFSTeam", type: "string" },
-                                TFSStatus: { from: "KITFSStatus", type: "string" },
+                                team: { from: "KIJIRATeam", type: "string" },
+                                JIRAStatus: { from: "KIJIRAStatus", type: "string" },
                                 createdDate: { from: "KIFormattedCreatedDt", defaultValue: "", type: "string" },
                                 age: { from: "KIAge", defaultValue: "", type: "number" },
-                                TFSIteration: { from: "KITFSIteration", defaultValue: "", type: "string" },
+                                JIRAIteration: { from: "KIJIRAIteration", defaultValue: "", type: "string" },
                                 ASV: { from: "KIASVValue", defaultValue: "", type: "number" },
                                 incidentCount: { from: "KINumOfIncidents", type: "number" },
                                 priority: { from: "KIPriority", type: "string" },
-                                TFSLink :{from: "KITFSLink", type: "string" },
+                                JIRALink :{from: "KIJIRALink", type: "string" },
                                 scoreChange :{from : "KIScoreChange", type:"string", defaultValue:"NoChange"}
                         }
                     }
@@ -339,9 +339,9 @@
                                 }
                             },
                             {
-                                field: "TFSId",
-                                title:"TFS Id",
-                                template: '#{ #<a href="#: TFSLink #" target="_blank" >#= TFSId != null? TFSId : "" #</a># } #',
+                                field: "JIRAId",
+                                title:"JIRA Id",
+                                template: '#{ #<a href="#: JIRALink #" target="_blank" >#= JIRAId != null? JIRAId : "" #</a># } #',
                                 filterable :
                                 {
                                     ui: filterTfsId
@@ -389,8 +389,8 @@
                                 }
                             },
                             {
-                                field:"TFSStatus",
-                                title : "TFS Status",
+                                field:"JIRAStatus",
+                                title : "JIRA Status",
                                 filterable :
                                 {
                                     ui: filterTfsStatus,
@@ -409,7 +409,7 @@
                                 title:"Age"
                             },
                             {
-                                field:"TFSIteration",
+                                field:"JIRAIteration",
                                 title:"Iteration",
                                  filterable :
                                 {
@@ -529,7 +529,7 @@
                       read: function(e){
                            value = $(element).val();
                           console.log('value =>' + value);
-                               var result =  GetFilter(value, "TFS Id", e);
+                               var result =  GetFilter(value, "JIRA Id", e);
 
                             }
                        },
@@ -645,7 +645,7 @@
                       read: function(e){
                            value = $(element).val();
                           console.log('value =>' + value);
-                               var result =  GetFilter(value, "TFS Status", e);
+                               var result =  GetFilter(value, "JIRA Status", e);
 
                             }
                        },

@@ -1,8 +1,8 @@
 <apex:page controller="CustomCaseCommentAddController" docType="html-5.0">
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
-
     <apex:form id="form">
         <div class="container">
         <apex:pageBlock title="Case Comments" >
@@ -15,8 +15,6 @@
                             <apex:inputCheckbox value="{!isPublic}"></apex:inputCheckbox>
                             </div>
                         </div>
-
-
                 </div>
                 <div class="row">
                     <div class="col-md-12">
@@ -30,7 +28,7 @@
                 </div>
                 <div class="row">
                     <div class="col-md-12">
-                <apex:commandLink styleClass="btn" action="{!CreateComment}" value="Save" reRender="target">
+                <apex:commandLink id="btnOK" styleClass="btn" action="{!CreateComment}" value="Save" reRender="target" onclick="disableOnSubmit(this);">
                     <apex:param name="commentBody" assignTo="{!comment.CaseComment}" value="param2" />
                 </apex:commandLink>
                 <apex:commandLink styleClass="btn" action="{!CancelCreate}" value="Cancel" reRender="target">
@@ -39,6 +37,18 @@
                     </div>
                 </div>
         </apex:pageBlock>
+
         </div>
     </apex:form>
+    <style>
+       a.disabled {
+           pointer-events: none;
+           cursor: default;
+        }
+   </style>
+    <script>
+        function disableOnSubmit(input) {
+            input.setAttribute("class","disabled");
+        }
+   </script>
 </apex:page>

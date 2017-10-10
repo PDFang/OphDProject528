@@ -2,10 +2,11 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
 @TestVisible private static boolean emailSent;
     
     private static string orgWideEmailAddressId;
-    
+
     protected override void beforeInsert()
-    {
-        InsertCadebillAccountandContact();        
+    {        
+        InsertCadebillAccountandContact();   
+        
     }   
     
     protected override void afterUpdate()
@@ -48,12 +49,12 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
         for (CustomerOrder__c custOrder : orderList) {
 
             CustomerOrder__c oldOrder = (oldMap != null && oldMap.containsKey(custOrder.Id)) ? oldMap.get(custOrder.Id) : null;
-            if (oldOrder != null && custOrder.OrderStatus__c == 'Processed' && oldOrder.OrderStatus__c != 'Processed') {
+            if (oldOrder != null && custOrder.OrderStatus__c == 'Canceled' && oldOrder.OrderStatus__c != 'Canceled') {
                 orderIds.add(custOrder.Id);
             }
         }
         if(orderIds.size() > 0){
-            UpdateCaseforAbandonedItems(orderIds);
+            UpdateCaseforCanceledItems(orderIds);
         }
     }
 
@@ -171,11 +172,11 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
         }
     }
     
-    private static void UpdateCaseforAbandonedItems(Set<Id> orderIds){
-       system.debug('**** Abandoned Set ' + orderIds.Size() + ' records.');
+    private static void UpdateCaseforCanceledItems(Set<Id> orderIds){
+       system.debug('**** Canceled Set ' + orderIds.Size() + ' records.');
        List<Case> CaseList = new List<Case>(); 
        for (case uCase : [SELECT Id FROM Case WHERE CustomerOrder__c IN :orderIds]) {
-           		uCase.DateTimeOfAbandonedNotification__c = datetime.now();
+           		uCase.DateTimeOfCanceledNotification__c = datetime.now();
           		CaseList.add(uCase);
         }       
        update CaseList;

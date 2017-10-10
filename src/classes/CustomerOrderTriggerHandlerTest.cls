@@ -108,11 +108,11 @@ private class CustomerOrderTriggerHandlerTest {
         custOrder2.CadebillAccountNumber__c = newAccount.CadebillAccountNo__c;
         UpdateOrderLineItems(); // create failed case
 
-        custOrder2.OrderStatus__c ='Processed';// Update Order Status
+        custOrder2.OrderStatus__c ='Completed (Partial)';// Update Order Status
         update custorder2;
         Test.startTest();
 
-        OrderLineItemListComplete[0].Itemstatus__c = 'Abandoned';
+        OrderLineItemListComplete[0].Itemstatus__c = 'Canceled';
         User CastIron = [SELECT Id FROM USER WHERE Profile.name ='_castiron Profile' LIMIT 1];
         system.runAs(CastIron)
         {
@@ -120,7 +120,7 @@ private class CustomerOrderTriggerHandlerTest {
         }
         Test.stopTest();
         List<Case> CaseList = [SELECT Id FROM Case WHERE AccountId = :custOrder2.Customer__C];
-        System.debug('**** Case List :' + CaseList);
+        System.debug('**** Case List: ' + CaseList);
         system.assert(CaseList.size()>0);
 
     }

@@ -9,7 +9,7 @@ public with sharing class CustomCaseCommentHelper {
 
     public list<CaseComment> GetCaseComments(Case currentCase){
 
-        list<CaseComment> retlist = [SELECT CommentBody,CreatedDate,CreatorName,Id,IsDeleted,IsPublished,ParentId FROM CaseComment where parentId =:currentCase.id order by CreatedDate desc];
+        list<CaseComment> retlist = [SELECT CommentBody,CreatedDate,CreatedBy.UserName,CreatorName,Id,IsDeleted,IsPublished,ParentId FROM CaseComment where parentId =:currentCase.id order by CreatedDate desc];
         return retlist;
     }
 
@@ -43,7 +43,8 @@ public with sharing class CustomCaseCommentHelper {
     private CustomCaseCommentData GetCustomCommentData(CaseComment comment){
         CustomCaseCommentData commentData = new CustomCaseCommentData();
         commentData.caseCommentsId = comment.id;
-        commentData.CreatedBy = comment.CreatorName;
+        commentData.CreatedBy = comment.CreatorName;  // this is alway null
+        commentData.CreatedBy = comment.CreatedBy.Username;  // this is alway null
         commentData.CaseComment = comment.CommentBody;
         commentData.CreateDate = comment.CreatedDate;
         commentData.isPublic = comment.IsPublished;
