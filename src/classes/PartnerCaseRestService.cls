@@ -51,6 +51,7 @@ global with sharing class PartnerCaseRestService {
 
                 Decimal troubleReportState = request.troubleReportState.isNumeric() ? Decimal.valueOf(request.troubleReportState) : null;
                 Decimal troubleReportStatus = request.troubleReportStatus.isNumeric() ? Decimal.valueOf(request.troubleReportStatus) : null;
+                system.debug('updateIncident(): troubleReportState - ' + troubleReportState + ' , troubleReportStatus - ' + troubleReportStatus);
 
                 ETMS_Trouble_Report_State_Status__mdt[] mdtList = [
                         Select Case_Status__c, Trouble_Report_State__c, Trouble_Report_Status__c
