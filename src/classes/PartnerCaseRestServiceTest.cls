@@ -122,10 +122,12 @@ private class PartnerCaseRestServiceTest {
         testIncident.setOptions(dmo);
         insert testIncident;
 
+        String caseNumber = [Select Id, CaseNumber from Case Where Id = :testIncident.Id].CaseNumber;
+
         test.startTest();
 
         PartnerCaseRestService.UpdateRequest updateRequest = new PartnerCaseRestService.UpdateRequest();
-        updateRequest.troubleReportId = testIncident.X3rdPartyVendorTicket__c;
+        updateRequest.troubleReportId = caseNumber;
         updateRequest.comments = new String[]{'comment 1', 'comment 2'};
         updateRequest.troubleReportStatus = '18478';
         updateRequest.troubleReportState = '92457';
