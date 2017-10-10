@@ -1,0 +1,25 @@
+<!--
+ - Created by ravish.chawla on 10/10/2017.
+ -->
+
+<apex:component id="ProjectInfoComponent" controller="ProjectInfoComponentController" access="global">
+    <apex:attribute name="ProjectInfoComponentValue" description="Attribute on the component." type="String"
+                    assignTo="{!ProjectId}"/>
+
+    <apex:pageBlock>
+        <!--<apex:pageBlockButtons title="" location="bottom">-->
+        <!--<apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>-->
+        <!--<apex:commandButton title="Save" value="Save" action="{!saveProjectInfo}" immediate="true"/>-->
+        <!--</apex:pageBlockButtons>-->
+        <apex:pageBlockSection columns="2" >
+            <apex:repeat value="{!$ObjectType.Project__c.FieldSets.Project_Info_Editable}" var="f">
+                <apex:inputField value="{!project[f]}" />
+            </apex:repeat>
+        </apex:pageBlockSection>
+        <apex:pageBlockSection columns="2" >
+            <apex:repeat value="{!$ObjectType.Project__c.FieldSets.Project_Info_ReadOnly}" var="f">
+                <apex:outputfield value="{!project[f]}" />
+            </apex:repeat>
+        </apex:pageBlockSection>
+    </apex:pageBlock>
+</apex:component>
