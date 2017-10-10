@@ -33,11 +33,11 @@ public class KnownIssueScoreReportControllerTests {
         system.assertEquals(15, KiScoreFilterTest.size());
 
         result = KnownIssueScoreReportController.GetFilterString('KI', 'Test');
-        result = KnownIssueScoreReportController.GetFilterString('TFS Id', 'Test');
+        result = KnownIssueScoreReportController.GetFilterString('JIRA Id', 'Test');
         result = KnownIssueScoreReportController.GetFilterString('KI Status', 'Test');
         result = KnownIssueScoreReportController.GetFilterString('Team', 'Test');
         result = KnownIssueScoreReportController.GetFilterString('Priority', 'Test');
-        result = KnownIssueScoreReportController.GetFilterString('TFS Status', 'Test');
+        result = KnownIssueScoreReportController.GetFilterString('JIRA Status', 'Test');
         result = KnownIssueScoreReportController.GetFilterString('Iteration', 'Test');
     }
 
