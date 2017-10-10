@@ -64,14 +64,14 @@ public with sharing class KnownIssueViewHelper {
         for(Case ki : knownIssueLists){
             string value;
             if(!valueset.contains(value)){
-                if(thisFieldName == 'KITFSIDText__c')
-                    valueset.add(string.valueOf(ki.KITFSIDText__c));
-                else if (thisFieldName == 'TfsWorkItem__r.State__c')
-                    valueset.add(ki.TfsWorkItem__r.State__c);
-                else if (thisFieldName == 'TfsWorkItem__r.Team__c')
-                    valueset.add(ki.TfsWorkItem__r.Team__c);
-                else if (thisFieldName == 'TfsWorkItem__r.Iteration__c')
-                    valueset.add(ki.TfsWorkItem__r.Iteration__c);
+                if(thisFieldName == 'JIRA_Key__c')
+                    valueset.add(string.valueOf(ki.JIRA_Key__c));
+                else if (thisFieldName == 'JIRA_Status__c')
+                    valueset.add(ki.JIRA_Status__c);
+                else if (thisFieldName == 'JIRA_Team__c')
+                    valueset.add(ki.JIRA_Team__c);
+                else if (thisFieldName == 'JIRA_Sprint__c')
+                    valueset.add(ki.JIRA_Sprint__c);
                 else{
                     value = (string) ki.get(thisFieldName);
                     valueset.add(value);
@@ -138,20 +138,20 @@ public with sharing class KnownIssueViewHelper {
     private static string GetFieldMaps(string fieldName){
         if(fieldName == 'KI')
             return 'CaseNumber';
-        if(fieldName == 'TFS Id')
-            return 'KITFSIDText__c';
+        if(fieldName == 'JIRA Id')
+            return 'JIRA_Key__c';
         if(fieldName == 'Subject')
             return 'Subject';
         if(fieldName == 'KI Status')
             return 'Status';
         if(fieldName == 'Team')
-            return 'TfsWorkItem__r.Team__c';
+            return 'JIRA_Team__c';
         if(fieldName == 'Priority')
             return 'Priority';
-        if(fieldName == 'TFS Status')
-            return 'TfsWorkItem__r.State__c';
+        if(fieldName == 'JIRA Status')
+            return 'JIRA_Status__c';
         if(fieldName == 'Iteration')
-            return 'TfsWorkItem__r.Iteration__c';
+            return 'JIRA_Sprint__c';
 
         return fieldName;
     }

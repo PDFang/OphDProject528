@@ -30,14 +30,15 @@ global with sharing class PartnerCaseRestService {
 
                 Case[] incidentList = [
                         Select Id, Status, ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c, X3rdPartyVendorTicket__c
-                        from Case Where X3rdPartyVendorTicket__c = :request.troubleReportId
+                        from Case Where CaseNumber = :request.troubleReportId
                         and AccountBillingGroup__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
                         and RecordType.Name = 'Incident'
+                        and X3rdPartyVendorTicket__c != null
                 ];
                 if(incidentList.size() > 0){
                     incident = incidentList[0];
                 }
-
+                system.debug('updateIncident(): incidentList - ' + incidentList);
             }
 
             if(incident == null){
@@ -49,8 +50,15 @@ global with sharing class PartnerCaseRestService {
             // get status mapped to trouble report state and status
             if(String.isNotBlank(request.troubleReportState) && String.isNotBlank(request.troubleReportStatus)){
 
-                Decimal troubleReportState = request.troubleReportState.isNumeric() ? Decimal.valueOf(request.troubleReportState) : null;
-                Decimal troubleReportStatus = request.troubleReportStatus.isNumeric() ? Decimal.valueOf(request.troubleReportStatus) : null;
+                Decimal troubleReportState, troubleReportStatus = null;
+                try{
+                    troubleReportState = Decimal.valueOf(request.troubleReportState);
+                    troubleReportStatus = Decimal.valueOf(request.troubleReportStatus);
+                } catch(Exception ex){
+                    system.debug('updateIncident(): Exception - ' + ex);
+                }
+
+                system.debug('updateIncident(): troubleReportState - ' + troubleReportState + ' , troubleReportStatus - ' + troubleReportStatus);
 
                 ETMS_Trouble_Report_State_Status__mdt[] mdtList = [
                         Select Case_Status__c, Trouble_Report_State__c, Trouble_Report_Status__c

@@ -9,7 +9,7 @@ private class CustomerOrderResolutionTest {
     static List<OrderLineGeneralItems__c> OrderLineItemList = null;
     static final String ORDER_STATUS_FAILED = 'Failed';
     static final String LINE_ITEM_STATUS_FAILED = 'Failed';
-    static final String LINE_ITEM_STATUS_ABANDONED = 'Abandoned';
+    static final String LINE_ITEM_STATUS_ABANDONED = 'Canceled';
 
     static void SetUpTestData() {
         CreateAccount();
@@ -139,6 +139,28 @@ private class CustomerOrderResolutionTest {
         for(OrderLineGeneralItems__c item: custOrderResolution.lineItems){
             System.assert(true, item.ItemStatus__c == LINE_ITEM_STATUS_ABANDONED);
         }
+    }
+    public static testMethod void UpdateLineItems_AbandonOne() {
+        SetupTestData();
+        Test.startTest();
+        order.OrderStatus__c = 'failed';
+        update order;
+        OrderLineItemList[0].ItemStatus__c = 'Failed';
+        OrderLineItemList[1].ItemStatus__c = 'Failed';
+        update OrderLineItemList;
+
+        ApexPages.StandardController controllerStandard = new ApexPages.standardController(order);
+        CustomerOrderResolutionExtension custOrderResolution = new CustomerOrderResolutionExtension(controllerStandard);
+
+        custOrderResolution.lineItems[0].LineItemResolution__c = LINE_ITEM_STATUS_ABANDONED;
+        custOrderResolution.SaveLineItems();
+        Test.stopTest();
+
+        System.assert(true, custOrderResolution.lineItems[0].ItemStatus__c == LINE_ITEM_STATUS_ABANDONED);
+        System.assert(true, custOrderResolution.lineItems[1].ItemStatus__c == LINE_ITEM_STATUS_FAILED);
+        System.assert(true,  OrderLineItemList[0].ItemStatus__c == LINE_ITEM_STATUS_ABANDONED);
+        System.assert(true,  OrderLineItemList[1].ItemStatus__c == LINE_ITEM_STATUS_FAILED);
+
     }
 
 

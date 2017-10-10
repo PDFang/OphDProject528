@@ -109,7 +109,7 @@ private class OrderLineGeneralItemTriggerHandlerTest {
         system.assertEquals('Failed', Order.OrderStatus__c);  
    
     }
-	    static testMethod void FailedCustomerOrder_When_Failed_Abandoned()
+	    static testMethod void FailedCustomerOrder_When_Failed_Canceled()
     {
         createTestData();
         
@@ -123,7 +123,7 @@ private class OrderLineGeneralItemTriggerHandlerTest {
         	Update OrderLineItemList[0]; 
             Update OrderLineItemList[1];
         }
-        OrderLineItemList[1].Itemstatus__c = 'Abandoned';
+        OrderLineItemList[1].Itemstatus__c = 'Canceled';
         system.runAs(CastIron)
        	{       
             Update OrderLineItemList[1];            
@@ -133,7 +133,7 @@ private class OrderLineGeneralItemTriggerHandlerTest {
         system.assertEquals('Failed', Order.OrderStatus__c);
     }
     
-    static testMethod void CompletedCustomerOrder_When_CompleteAbandoned()
+    static testMethod void CompletedCustomerOrder_When_CompleteCanceled()
     {
         createTestData();        
         Test.startTest();    
@@ -146,7 +146,7 @@ private class OrderLineGeneralItemTriggerHandlerTest {
             Update OrderLineItemList[0];        
             Update OrderLineItemList[1];            
         }
-        OrderLineItemList[1].Itemstatus__c = 'Abandoned';
+        OrderLineItemList[1].Itemstatus__c = 'Canceled';
         system.runAs(CastIron)
        	{       
             Update OrderLineItemList[1];            
@@ -154,7 +154,7 @@ private class OrderLineGeneralItemTriggerHandlerTest {
         Test.stopTest();
         CustomerOrder__c Order = [select OrderStatus__c FROM CustomerOrder__c WHERE CadebillAccountNumber__c = :acct.CadebillAccountNo__c];
 
-        system.assertEquals('Processed', Order.OrderStatus__c);
+        system.assertEquals('Completed (Partial)', Order.OrderStatus__c);
     }
 	static testMethod void CompletedCustomerOrder_When_CompletedRetry()
     {
@@ -179,6 +179,7 @@ private class OrderLineGeneralItemTriggerHandlerTest {
 
         system.assertEquals('Retry', Order.OrderStatus__c);
     }
+
     static void createTestData()
     {
 
@@ -196,7 +197,7 @@ private class OrderLineGeneralItemTriggerHandlerTest {
         acct = new Account(
                 Name = 'OrderLineGeneralItemTriggerHandlerTest Account',
                 RecordTypeId = rtMap.get(ACCOUNT_TYPE_CUSTOMERS).getRecordTypeId(),
-                CadebillAccountNo__c = 100001
+                CadebillAccountNo__c = 4591810
         );        
         insert acct;
     }

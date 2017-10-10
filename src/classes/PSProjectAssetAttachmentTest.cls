@@ -1,6 +1,3 @@
-/**
- * Created by william.nelson on 6/22/2017.
- */
 @IsTest
 public with sharing class PSProjectAssetAttachmentTest {
 
@@ -113,6 +110,8 @@ public with sharing class PSProjectAssetAttachmentTest {
         objQuote.SBQQ__Type__c = 'Quote';
         objQuote.SBQQ__Status__c = 'Draft';
         objQuote.RecordTypeId = strRecordtypeId;
+        objQuote.Usage_Rate_Type__c = 'Flat Usage Rates';
+        objQuote.Flat_Usage_Rates__c ='0.0140';
         insert objQuote;
         return objQuote;
     }
@@ -148,7 +147,7 @@ public with sharing class PSProjectAssetAttachmentTest {
 
         set<Id> subsciptions = new set<Id>();
         for(SubscriptionReplica__c replica : [select Id from SubscriptionReplica__c]){
-            subscriptions.add(replica.id);
+            subsciptions.add(replica.id);
         }
 
 
