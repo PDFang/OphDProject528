@@ -2,56 +2,18 @@ public class OrderLineGeneralItemTiggerHandler extends TriggerHandler  {
 
     public override void afterUpdate()
     {
-        UpdateCustomerOrderStatus();
-        Updateafterresolution();
+        UpdateCustomerOrderStatus();        
         UpdateCustomerOrderRetryStatus();
     }  
     
-    public static void Updateafterresolution()
-    {
-        System.debug('****Enter After Resolution update');
-        List<OrderLineGeneralItems__c> newList = (List<OrderLineGeneralItems__c>)(trigger.new );
-        Map<Id, OrderLineGeneralItems__c> oldMap = (Map<Id, OrderLineGeneralItems__c>)(trigger.oldMap );
-        Map<Id,string> LineItemResolutionIds = new Map<Id,string>();
-        Set<Id> FailedOrderLineItemIds = new Set<Id>();
-        List<OrderLineGeneralItems__c> LineItemList = new List<OrderLineGeneralItems__c>();
-        Set<Id> FailedOrderIds = new Set<Id>();       
-        
-        for(OrderLineGeneralItems__c newOrderLineItem : newList)
-        {
-            OrderLineGeneralItems__c oldOrderLineItem = ( oldMap != null && oldMap.containsKey(newOrderLineItem.Id) ) ? oldMap.get(newOrderLineItem.Id) : null;
-            if ( oldOrderLineItem != null
-                    && (newOrderLineItem.LineItemResolution__c == 'Retry' || newOrderLineItem.LineItemResolution__c == 'Abandoned') && oldOrderLineItem.ItemStatus__c == 'Failed'
-                )                    
-            {      
-                System.debug('****Add Line Items');
-                LineItemResolutionIds.put(newOrderLineItem.Id,newOrderLineItem.LineItemResolution__c);                    
-            }          
-            
-        }
-		
-          if(LineItemResolutionIds.size() >0)
-          {
-              for(Id key :LineItemResolutionIds.keySet())
-              {
-                    OrderLineGeneralItems__c OrderLineItem = new OrderLineGeneralItems__c(  
-                    Id = key,    
-                    ItemStatus__c = LineItemResolutionIds.get(key)
-                );
-                  LineItemList.add(OrderLineItem);
-              }                     
-             
-            update LineItemList;
-           }
-        }     
         
      public static void UpdateCustomerOrderRetryStatus()
     {
         List<OrderLineGeneralItems__c> newList = (List<OrderLineGeneralItems__c>)(trigger.new );
         Map<Id, OrderLineGeneralItems__c> oldMap = (Map<Id, OrderLineGeneralItems__c>)(trigger.oldMap );
         Set<Id> RetryOrderIds = new Set<Id>();
-        Set<Id> AbandonedIds = new Set<Id>();
-        Set<Id> ProcessedIds = new Set<Id>();
+        Set<Id> CanceledIds = new Set<Id>();    
+         Set<Id> CompletedPartialIds = new Set<Id>();
         for(OrderLineGeneralItems__c newOrderLineItem : newList)
         {
             OrderLineGeneralItems__c oldOrderLineItem = ( oldMap != null && oldMap.containsKey(newOrderLineItem.Id) ) ? oldMap.get(newOrderLineItem.Id) : null;
@@ -65,20 +27,13 @@ public class OrderLineGeneralItemTiggerHandler extends TriggerHandler  {
             }
             
             else if ( oldOrderLineItem != null
-                    && newOrderLineItem.ItemStatus__c == 'Abandoned'
-                    && oldOrderLineItem.ItemStatus__c == 'Failed'
+                    && newOrderLineItem.ItemStatus__c == 'Canceled'
+                    && oldOrderLineItem.ItemStatus__c != 'Canceled'
                     )                    
             {           
-                AbandonedIds.add(newOrderLineItem.CustomerOrder__c);                 
-            }
+                CanceledIds.add(newOrderLineItem.CustomerOrder__c);                 
+            }           
             
-            else if ( oldOrderLineItem != null
-                    && newOrderLineItem.ItemStatus__c == 'Completed'
-                    && oldOrderLineItem.ItemStatus__c == 'Retry'
-                    )                    
-            {           
-                ProcessedIds.add(newOrderLineItem.CustomerOrder__c);                 
-            }
             
         List<CustomerOrder__c> OrderList = new List<CustomerOrder__c>();
         
@@ -95,36 +50,49 @@ public class OrderLineGeneralItemTiggerHandler extends TriggerHandler  {
               }    
         }    
         
-        if(AbandonedIds.size() > 0)
+        if(CanceledIds.size() > 0)
         {        
-            for(AggregateResult result :[SELECT COUNT(Id), CustomerOrder__c FROM OrderLineGeneralItems__c WHERE CustomerOrder__c IN :AbandonedIds 
-                                         and ItemStatus__c NOT IN ('Completed', 'Abandoned','none')
+             System.debug('***Canceled Order Ids size greater than zero'); 
+            for(AggregateResult result :[SELECT COUNT(Id), CustomerOrder__c FROM OrderLineGeneralItems__c WHERE CustomerOrder__c IN :CanceledIds 
+                                         and ItemStatus__c NOT IN ('none','In Progress','Canceled') 
                                          GROUP BY CustomerOrder__c]){
-                if(result.get('expr0') != null && (Integer)result.get('expr0') > 0){
-                    AbandonedIds.remove((Id)result.get('CustomerOrder__c'));
+                if(result.get('expr0') != null && (Integer)result.get('expr0') > 0){                   
+                    CanceledIds.remove((Id)result.get('CustomerOrder__c'));
+                    CompletedPartialIds.add((Id)result.get('CustomerOrder__c'));
             	}                                          
         	}
-        }   
+             System.debug('***CompletedPartial Order Ids size greater than zero :' + CompletedPartialIds.size()); 
+            for(AggregateResult result :[SELECT COUNT(Id), CustomerOrder__c FROM OrderLineGeneralItems__c WHERE CustomerOrder__c IN :CompletedPartialIds 
+                                         and ItemStatus__c NOT IN ('Completed','Canceled','none')
+                                         GROUP BY CustomerOrder__c]){
+                if(result.get('expr0') != null && (Integer)result.get('expr0') > 0){                   
+                    CompletedPartialIds.remove((Id)result.get('CustomerOrder__c'));
+            	}                                          
+        	}
+        } 
             
-        if(ProcessedIds.size() > 0)
-        {        
-            for(AggregateResult result :[SELECT COUNT(Id), CustomerOrder__c FROM OrderLineGeneralItems__c WHERE CustomerOrder__c IN :AbandonedIds 
-                                         and ItemStatus__c NOT IN ('Failed')
-                                         GROUP BY CustomerOrder__c]){
-                if(result.get('expr0') != null && (Integer)result.get('expr0') > 0){
-                    ProcessedIds.remove((Id)result.get('CustomerOrder__c'));
-            	}                                          
-        	}
-        }    
+         
         
         
-        if(AbandonedIds.size() > 0)
+        if(CompletedPartialIds.size() > 0)
         {
-            for(Id AbandonedId : AbandonedIds)
+            for(Id ComplPartialId : CompletedPartialIds)
             {
                 CustomerOrder__c order = new CustomerOrder__c(
-                    Id = AbandonedId,
-                    OrderStatus__c = 'Processed'
+                    Id = ComplPartialId,
+                    OrderStatus__c = 'Completed (Partial)'
+                );
+            	OrderList.add(order);            
+        	}
+        }
+            
+             if(CanceledIds.size() > 0)
+        {
+            for(Id CanceledId : CanceledIds)
+            {
+                CustomerOrder__c order = new CustomerOrder__c(
+                    Id = CanceledId,
+                    OrderStatus__c = 'Canceled'
                 );
             	OrderList.add(order);            
         	}
@@ -136,8 +104,7 @@ public class OrderLineGeneralItemTiggerHandler extends TriggerHandler  {
         }
 
         }
-    }
-        
+    }       
     
     
     public static void UpdateCustomerOrderStatus()
@@ -146,6 +113,8 @@ public class OrderLineGeneralItemTiggerHandler extends TriggerHandler  {
         Map<Id, OrderLineGeneralItems__c> oldMap = (Map<Id, OrderLineGeneralItems__c>)(trigger.oldMap );
         Set<Id> CompletedOrderIds = new Set<Id>();
         Set<Id> FailedOrderIds = new Set<Id>();
+        Set<Id> CanceledIds = new Set<Id>();
+        Set<Id> PartialCompletedIds = new Set<Id>();
         System.debug('**** UpdateCustomerOrderStatus ****');  
         
         for(OrderLineGeneralItems__c newOrderLineItem : newList)
@@ -183,26 +152,41 @@ public class OrderLineGeneralItemTiggerHandler extends TriggerHandler  {
         if(CompletedOrderIds.size() > 0)
         {   
             system.debug('**** UpdateCustomerOrderStatus - Completed loop remove ****');
-            for(AggregateResult result :[SELECT COUNT(Id), CustomerOrder__c FROM OrderLineGeneralItems__c WHERE CustomerOrder__c IN :CompletedOrderIds 
-                                         and ItemStatus__c NOT IN ('Completed','none')
-                                         GROUP BY CustomerOrder__c]){
+            for(AggregateResult result :[SELECT COUNT(Id), CustomerOrder__c,ItemStatus__c FROM OrderLineGeneralItems__c WHERE CustomerOrder__c IN :CompletedOrderIds 
+                                         and ItemStatus__c NOT IN ('Completed','none') 
+                                         GROUP BY CustomerOrder__c,ItemStatus__c]){
                 if(result.get('expr0') != null && (Integer)result.get('expr0') > 0){
                     CompletedOrderIds.remove((Id)result.get('CustomerOrder__c'));
-                    FailedOrderIds.add((Id)result.get('CustomerOrder__c'));
+                    if(result.get('ItemStatus__c') == 'Canceled')
+                    {
+                        system.debug('**** UpdateCustomerOrderStatus - canceled loop ****');
+                        CanceledIds.add((Id)result.get('CustomerOrder__c'));
+                    }
+                    if(result.get('ItemStatus__c') == 'Failed')
+                    {
+                        system.debug('**** UpdateCustomerOrderStatus - add to Failed loop ****');
+                        FailedOrderIds.add((Id)result.get('CustomerOrder__c'));
+                    }                   
                 }                                          
-            }
+            }           
+                        
         }    
         
-        if(FailedOrderIds.size() > 0)
-        {    
+        if(FailedOrderIds.size() > 0|| (CanceledIds.size()>0))
+        {
+            set<Id> FailedandCanceledIds = new Set<Id>();
+			FailedandCanceledIds.addAll(FailedOrderIds);
+            FailedandCanceledIds.addAll(CanceledIds);
             system.debug('**** UpdateCustomerOrderStatus - Failed Loop remove****');
-            for(AggregateResult result :[SELECT COUNT(Id), CustomerOrder__c FROM OrderLineGeneralItems__c WHERE CustomerOrder__c IN :FailedOrderIds 
-                                         and ItemStatus__c IN ('In Progress', 'New')
+            for(AggregateResult result :[SELECT COUNT(Id), CustomerOrder__c FROM OrderLineGeneralItems__c WHERE CustomerOrder__c IN :FailedandCanceledIds
+                                         and ItemStatus__c IN ('In Progress', 'New') and (RelatedLineItemStatus__c =NULL OR RelatedLineItemStatus__c IN ('In Progress', 'New','Completed'))
                                          GROUP BY CustomerOrder__c]){
                 if(result.get('expr0') != null && (Integer)result.get('expr0') > 0){
                     FailedOrderIds.remove((Id)result.get('CustomerOrder__c'));
+                    CanceledIds.remove((Id)result.get('CustomerOrder__c'));                    
             	}                                          
-        	}
+        	}           
+           
         }
            
         if(FailedOrderIds.size() > 0)
@@ -217,6 +201,20 @@ public class OrderLineGeneralItemTiggerHandler extends TriggerHandler  {
                 OrderList.add(order);            
               }                           
         }
+        
+         if(CanceledIds.size() > 0)
+        {      
+             system.debug('**** UpdateCustomerOrderStatus - update to Processed ****');
+              for(string OrderId :CanceledIds)
+              {
+                   CustomerOrder__c order = new CustomerOrder__c(
+                    Id = OrderId,
+                    OrderStatus__c = 'Completed (Partial)'
+                );
+                OrderList.add(order);            
+              }                           
+        }       
+        
         
         if(CompletedOrderIds.size() > 0)
         {
@@ -235,7 +233,6 @@ public class OrderLineGeneralItemTiggerHandler extends TriggerHandler  {
             update OrderList;
             System.debug('****Order List Updated from OrderLineGeneralItemTrigger');
         }
+    }
 
-    } 
-   
 }
