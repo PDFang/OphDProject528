@@ -3,23 +3,31 @@
  */
 
 public with sharing class CustomCaseCommentHelper {
-    //get the aggregated view of comment data
-    //get save/new action
-
-
+    //This class provides aggregated views of the comment data
+    //Get public comments
     public list<CaseComment> GetCaseComments(Case currentCase){
+        system.debug( 'currentCase.ClosedDate ==>' +  currentCase.ClosedDate);
 
-        list<CaseComment> retlist = [SELECT CommentBody,CreatedDate,CreatedBy.UserName,CreatorName,Id,IsDeleted,IsPublished,ParentId FROM CaseComment where parentId =:currentCase.id order by CreatedDate desc];
+        list<CaseComment> retlist = new list<CaseComment>();
+        if (DisplayComments(currentCase.ClosedDate) == true){
+            retlist = [SELECT CommentBody,CreatedDate,CreatedBy.UserName,CreatorName,Id,IsDeleted,IsPublished,ParentId FROM CaseComment where parentId =:currentCase.id order by CreatedDate desc];
+        }
         return retlist;
     }
 
+    //Get private comments
     public list<Case_Comment_Custom__c> GetCustomComments(Case currentCase){
-        list<Case_Comment_Custom__c> retlist = [SELECT Case_Comments_Id__c,CommentBody__c,IsPublished__c ,CommentCreatedDate__c,ConnectionReceivedId,ConnectionSentId,CreatedById,CreatedDate,CreatorName__c,Id,IsDeleted FROM Case_Comment_Custom__c where IsPublished__c = false and parentId__c =:currentCase.id order by commentCreatedDate__c desc];
+        system.debug( 'currentCase.ClosedDate ==>' +  currentCase.ClosedDate);
+        list<Case_Comment_Custom__c> retlist = new List<Case_Comment_Custom__c>();
+        if (DisplayComments(currentCase.ClosedDate) == true){
+            retlist = [SELECT Case_Comments_Id__c,CommentBody__c,IsPublished__c ,CommentCreatedDate__c,ConnectionReceivedId,ConnectionSentId,CreatedById,CreatedDate,CreatorName__c,Id,IsDeleted FROM Case_Comment_Custom__c where IsPublished__c = false and parentId__c =:currentCase.id order by commentCreatedDate__c desc];
+        }
         return retlist;
     }
 
     public List<CustomCaseCommentData> GetAggregateData(Case currentCase){
 
+        //get list of private and public comments and convert to shared model
         list<CustomCaseCommentData> finalList = new list<CustomCaseCommentData>();
         list<CaseComment> caseComments = GetCaseComments(currentCase);
         list<Case_Comment_Custom__c> privateComments;
@@ -40,6 +48,22 @@ public with sharing class CustomCaseCommentHelper {
         return finalList;
     }
 
+    public boolean isPrivateInList(list<CaseComment> caseComments){
+        for (CaseComment c: caseCOmments){
+            if(c.IsPublished == false){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //persist new comment
+    public void SaveComment(CustomCaseCommentData Upsertcomment){
+        Case_Comment_Custom__c comment = GetDbCustomData(Upsertcomment);
+        insert(comment);
+    }
+
+    //converters
     private CustomCaseCommentData GetCustomCommentData(CaseComment comment){
         CustomCaseCommentData commentData = new CustomCaseCommentData();
         commentData.caseCommentsId = comment.id;
@@ -52,7 +76,7 @@ public with sharing class CustomCaseCommentHelper {
         return commentData;
 
     }
-    private CustomCaseCommentData GetCustomCommentData( Case_Comment_Custom__c comment){
+    private CustomCaseCommentData GetCustomCommentData(Case_Comment_Custom__c comment){
         CustomCaseCommentData commentData = new CustomCaseCommentData();
         commentData.caseCommentsId = comment.Case_Comments_Id__c;
         commentData.CreatedBy = comment.CreatorName__c;
@@ -73,18 +97,23 @@ public with sharing class CustomCaseCommentHelper {
         return commentData;
     }
 
-    public boolean isPrivateInList(list<CaseComment> caseComments){
-        for (CaseComment c: caseCOmments){
-            if(c.IsPublished == false){
-                return true;
+    //business logic
+    private boolean DisplayComments(DateTime closedDate){
+        boolean retVal = false;
+        Profile pfile = [Select Name from Profile where Id =: userinfo.getProfileid()];
+        String pname = pfile.name;
+        system.debug('pname =>' + pname);
+        if (pname == 'Partner Community Profile') {
+            DateTime currentDate = DateTime.now().addDays(-30);
+            if (closedDate == null || currentDate < closedDate) {
+                retVal = true;
             }
         }
-        return false;
+        else {
+            retVal = true;
+        }
+        return retVal;
     }
 
-    public void SaveComment(CustomCaseCommentData Upsertcomment){
-        Case_Comment_Custom__c comment = GetDbCustomData(Upsertcomment);
-        insert(comment);
-    }
+
 }
-
