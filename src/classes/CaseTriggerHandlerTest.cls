@@ -307,6 +307,7 @@ private class CaseTriggerHandlerTest {
         // make sure the trigger makes a callout to proxy service
         system.assertEquals(true, PartnerCaseProxyServiceHelper.isCasePushed);
         system.assertEquals(PartnerCaseProxyServiceHelper.PRODUCT_GENERAL, request.newCases.SalesforceCase[0].Product);
+        system.assertEquals(PartnerCaseProxyServiceHelper.DEFAULT_COUNTRY_USA, request.newCases.SalesforceCase[0].Country);
         system.assertEquals(
                 verizonAccount.CadebillAccountNo__c.format().remove(','),
                 request.newCases.SalesforceCase[0].NEID
@@ -351,6 +352,7 @@ private class CaseTriggerHandlerTest {
         testIncident.Dial_From_ANI__c = '8008772525';
         testIncident.Dial_To_DNIS__c = '8002115252';
         testIncident.Customer_s_Toll_Free_POC__c = '8775253636';
+        testIncident.Incident_Location__c = 'United States';
         update testIncident;
 
         // Performing DML Before Mock Callouts to avoid uncommitted work pending error
@@ -359,12 +361,19 @@ private class CaseTriggerHandlerTest {
         Test.setMock(WebServiceMock.class, proxyServiceMock);
         test.stopTest();
 
+        ETMS_Incident_Location_To_Country__mdt[] mdt = [
+                Select Incident_Location__c, Country__c from ETMS_Incident_Location_To_Country__mdt
+                where Incident_Location__c = :testIncident.Incident_Location__c
+        ];
+
+        system.assertNotEquals(0, mdt.size(), 'Incident location to country mapping not found.');
+
         PartnerCaseProxyService.CreatePartnerCase_element request = (PartnerCaseProxyService.CreatePartnerCase_element)proxyServiceMock.request;
 
         // make sure the trigger makes a callout to proxy service
         system.assertEquals(true, PartnerCaseProxyServiceHelper.isCasePushed);
         system.assertEquals(PartnerCaseProxyServiceHelper.PRODUCT_DIALTF, request.newCases.SalesforceCase[0].Product);
-
+        system.assertEquals(mdt[0].Country__c, request.newCases.SalesforceCase[0].Country);
         system.assertEquals(
                 testIncident.Customer_s_Toll_Free_POC__c,
                 request.newCases.SalesforceCase[0].NEID

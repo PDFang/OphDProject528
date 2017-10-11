@@ -11,10 +11,15 @@ public class PartnerCaseProxyServiceHelper {
     public static final String PRODUCT_DIALTF = 'DIALTF';
     public static final String PRODUCT_HOSTING = 'HOSTING';
     public static final String PRODUCT_GENERAL = 'GENERAL';
+
+    @TestVisible
+    private static final String DEFAULT_COUNTRY_USA = 'USA';
     @TestVisible
     private static final String PARTNER_CUSTOMER_ID_PREFIX = 'IC-';
 
     private static Map<String, List<ETMS_Codes__c>> requestTypeEtmsMap = null;
+    private static Map<String, ETMS_Incident_Location_To_Country__mdt> locationCountryMap = null;
+
     @TestVisible
     private static boolean isCasePushed = false;
     @TestVisible
@@ -34,7 +39,7 @@ public class PartnerCaseProxyServiceHelper {
                             Account.Name, Account.Billing_Group__c, Account.CadebillAccountNo__c, Account.Partner_Customer_Account_ID__c,
                             Contact.Name, Contact.Phone, OwnerId, Owner.Name, Owner.Phone, Push_To_Partner__c,
                             ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c, Dial_From_ANI__c, Dial_To_DNIS__c,
-                            Customer_s_Toll_Free_POC__c
+                            Customer_s_Toll_Free_POC__c, Incident_Location__c
                     from Case
                     where Id IN :caseIds
                     and Account.Billing_Group__c = :BILLING_GROUP_VERIZON
@@ -178,6 +183,13 @@ public class PartnerCaseProxyServiceHelper {
             }
         }
 
+        locationCountryMap = new Map<String, ETMS_Incident_Location_To_Country__mdt>();
+        for(ETMS_Incident_Location_To_Country__mdt mdt : [
+                Select Incident_Location__c, Country__c from ETMS_Incident_Location_To_Country__mdt
+        ]){
+            locationCountryMap.put(mdt.Incident_Location__c, mdt);
+        }
+
         PartnerCaseProxyService.SalesforceCase partnerCase = new PartnerCaseProxyService.SalesforceCase();
         partnerCase.SalesforceId = sfCase.Id;
         partnerCase.Number_x = sfCase.CaseNumber;
@@ -212,6 +224,12 @@ public class PartnerCaseProxyServiceHelper {
             partnerCase.ServiceId = String.isNotBlank(serviceId) ? serviceId.removeStartIgnoreCase(PARTNER_CUSTOMER_ID_PREFIX) : null;
             partnerCase.Product = (String.isNotBlank(serviceId) && serviceId.startsWithIgnoreCase(PARTNER_CUSTOMER_ID_PREFIX))
                     ? PRODUCT_GENERAL : PRODUCT_HOSTING;
+        }
+
+        if(partnerCase.Product == PRODUCT_DIALTF && locationCountryMap.containsKey(sfCase.Incident_Location__c)){
+            partnerCase.Country = locationCountryMap.get(sfCase.Incident_Location__c).Country__c;
+        } else{
+            partnerCase.Country = DEFAULT_COUNTRY_USA;
         }
 
         partnerCase.Reason = sfCase.Database__c;
