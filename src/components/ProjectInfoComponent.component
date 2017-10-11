@@ -15,7 +15,7 @@
             </apex:facet>
             <apex:facet name="start">
                 <apex:outputPanel >
-                    <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                    <apex:image value="/img/loading32.gif" style="height: 20px;"/>
                     <apex:commandButton value="Saving Project..." status="mySaveStatus1" disabled="true"/>
                 </apex:outputPanel>
             </apex:facet>

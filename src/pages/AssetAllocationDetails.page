@@ -3,7 +3,10 @@
  -->
 
 <apex:page id="AssetAllocationDetails" standardController="Project_Asset_Allocation__c" extensions="AssetAllocationDetailsController">
-    <apex:detail relatedList="false" title="false"/>
+    <apex:pageBlock>
+        <apex:detail relatedList="false" title="false"/>
+    </apex:pageBlock>
+
     <apex:pageBlock title="Project Detail" rendered="{!Not(ISNULL(projectId))}">
         <apex:form>
             <c:ProjectInfoComponent ProjectInfoComponentValue="{!projectId}"/>
