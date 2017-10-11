@@ -5,9 +5,10 @@
 public class ProjectInfoComponentController {
 
     public String projectId;
-    public Project__c project {get; set;}
+    public Project__c project {get; private set;}
     Static Set<String> projectFields = new Set<String>();
     List<Project__c> projects = new List<Project__c>();
+	public boolean isEditEnable{get;set;}
 
     public String getProjectId(){
         return projectId;
@@ -15,16 +16,16 @@ public class ProjectInfoComponentController {
 
     public void setProjectId(String s){
         projectId = s;
-        getProjectDetails();
+	    if(project == null)
+		    getProjectDetails();
     }
 
-//    public ProjectInfoComponentController(ApexPages.StandardController sc){
-//        project = sc.getRecord();
-//    }
-
     public void getProjectDetails(){
+	    isEditEnable = false;
         List<Project__c> projectList = new List<Project__c>();
+	    system.debug('projects before projectID - ' + project);
         system.debug('projectId - ' + projectId);
+        project = new Project__c();
 
         List<Schema.FieldSetMember> fsMembersEditable = Schema.SobjectType.Project__c.fieldSets.Project_Info_Editable.getFields();
         List<Schema.FieldSetMember> fsMembersReadOnly = Schema.SobjectType.Project__c.fieldSets.Project_Info_ReadOnly.getFields();
@@ -51,34 +52,27 @@ public class ProjectInfoComponentController {
 
     }
 
-//    public pagereference cancel(){
-//
-//        return new PageReference('/'+ ApexPages.currentPage().getParameters().get('retURL')).setRedirect(true);
-//    }
+	public void enableEdit(){
+		isEditEnable = true;
+	}
 
-    public pagereference saveProjectInfo(){
-
+    public void saveProjectInfo(){
         try{
+	        isEditEnable = false;
             system.debug('projects in Save - ' + project);
-
-//            Project__c updateProject = new Project__c();
-//            updateProject.Id = projectId;
-//            updateProject.ImplementationPartner__c = project.ImplementationPartner__c;
-//            system.debug('updateProject - ' + updateProject);
-
-//            updateProject(updateProject);
-            upsert project;
+            update project;
+	        getProjectDetails();
 
         }
         catch (Exception ex){
-
+	        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
         }
-        return null;
-
     }
 
-    public void updateProject(Project__c project){
-        update project;
-    }
+	public void cancel(){
+			isEditEnable = false;
+			getProjectDetails();
+
+	}
 }
 

@@ -5,10 +5,23 @@
 <apex:component id="ProjectInfoComponent" controller="ProjectInfoComponentController" access="global" allowDML="true">
     <apex:attribute name="ProjectInfoComponentValue" description="Attribute on the component." type="String"
                     assignTo="{!ProjectId}"/>
-    <apex:pageBlock>
+    <apex:pageBlock id="main">
+        <apex:pageMessages />
         <apex:pageBlockButtons title="" location="bottom">
-        <!--<apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>-->
-        <apex:commandButton title="Save" value="Save" action="{!saveProjectInfo}" reRender="none" immediate="false"/>
+        <apex:actionStatus id="mySaveStatus1" rendered="{!isEditEnable}">
+            <apex:facet name="stop">
+                <apex:commandButton value="Save Project" action="{!saveProjectInfo}" status="mySaveStatus1" reRender="main" />
+
+            </apex:facet>
+            <apex:facet name="start">
+                <apex:outputPanel >
+                    <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                    <apex:commandButton value="Saving Project..." status="mySaveStatus1" disabled="true"/>
+                </apex:outputPanel>
+            </apex:facet>
+        </apex:actionStatus>
+            <apex:commandButton value="Cancel" action="{!cancel}" reRender="main" rendered="{!isEditEnable}"/>
+        <apex:commandButton title="Edit" value="Edit Project" action="{!enableEdit}" rendered="{!!isEditEnable}" reRender="main" />
         </apex:pageBlockButtons>
         <apex:pageBlockSection columns="2" >
             <apex:repeat value="{!$ObjectType.Project__c.FieldSets.Project_Info_ReadOnly}" var="f">
@@ -17,9 +30,11 @@
         </apex:pageBlockSection>
         <apex:pageBlockSection columns="2" >
             <apex:repeat value="{!$ObjectType.Project__c.FieldSets.Project_Info_Editable}" var="f">
-                <apex:inputField value="{!project[f.fieldPath]}" />
+                <apex:inputField value="{!project[f.fieldPath]}" rendered="{!isEditEnable}"/>
+                <apex:outputfield value="{!project[f.fieldPath]}" rendered="{!!isEditEnable}"/>
             </apex:repeat>
-            <apex:inputField value="{!project.ImplementationPartner__c}"></apex:inputField>
         </apex:pageBlockSection>
     </apex:pageBlock>
 </apex:component>
+
+        <!--<apex:inputField value="{!project.ImplementationPartner__c}"></apex:inputField>-->
