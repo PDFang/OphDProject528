@@ -12,10 +12,9 @@ public with sharing class CustomCaseCommentController {
         comment = new CustomCaseCommentData();
         string id = (string)controller.getId();
         if (id != null) {
-            Case newCase = new Case();
-            newCase.id = Id;
             caseId = Id;
             system.debug('caseId ->' + caseId);
+            case newCase = [select id, closeddate from case where id=: caseId];
             this.commentList = getCommentList(newCase);
         }
     }

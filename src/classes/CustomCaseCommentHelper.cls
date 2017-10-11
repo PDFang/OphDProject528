@@ -3,12 +3,11 @@
  */
 
 public with sharing class CustomCaseCommentHelper {
-    //this class provides aggregated views of the comment data
-
-
+    //This class provides aggregated views of the comment data
     //Get public comments
     public list<CaseComment> GetCaseComments(Case currentCase){
-        system.debug( 'user profile license name ==>' +  User.Profile.UserLicense.Name);
+        system.debug( 'currentCase.ClosedDate ==>' +  currentCase.ClosedDate);
+
         list<CaseComment> retlist = new list<CaseComment>();
         if (DisplayComments(currentCase.ClosedDate) == true){
             retlist = [SELECT CommentBody,CreatedDate,CreatedBy.UserName,CreatorName,Id,IsDeleted,IsPublished,ParentId FROM CaseComment where parentId =:currentCase.id order by CreatedDate desc];
@@ -16,10 +15,9 @@ public with sharing class CustomCaseCommentHelper {
         return retlist;
     }
 
-
-       //Get private comments
+    //Get private comments
     public list<Case_Comment_Custom__c> GetCustomComments(Case currentCase){
-        DateTime currentDate = DateTime.now().addDays(-30);
+        system.debug( 'currentCase.ClosedDate ==>' +  currentCase.ClosedDate);
         list<Case_Comment_Custom__c> retlist = new List<Case_Comment_Custom__c>();
         if (DisplayComments(currentCase.ClosedDate) == true){
             retlist = [SELECT Case_Comments_Id__c,CommentBody__c,IsPublished__c ,CommentCreatedDate__c,ConnectionReceivedId,ConnectionSentId,CreatedById,CreatedDate,CreatorName__c,Id,IsDeleted FROM Case_Comment_Custom__c where IsPublished__c = false and parentId__c =:currentCase.id order by commentCreatedDate__c desc];
@@ -102,11 +100,10 @@ public with sharing class CustomCaseCommentHelper {
     //business logic
     private boolean DisplayComments(DateTime closedDate){
         boolean retVal = false;
-
         Profile pfile = [Select Name from Profile where Id =: userinfo.getProfileid()];
         String pname = pfile.name;
-
-        if (pname == 'Customer Portal User') {
+        system.debug('pname =>' + pname);
+        if (pname == 'Partner Community Profile') {
             DateTime currentDate = DateTime.now().addDays(-30);
             if (closedDate == null || currentDate < closedDate) {
                 retVal = true;
@@ -120,4 +117,3 @@ public with sharing class CustomCaseCommentHelper {
 
 
 }
-
