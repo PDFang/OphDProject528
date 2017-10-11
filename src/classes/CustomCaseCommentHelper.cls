@@ -57,6 +57,12 @@ public with sharing class CustomCaseCommentHelper {
         return false;
     }
 
+   public void SaveComment(CaseComment caseComment) {
+       CustomCaseCommentData commentTemp = GetCustomCommentData(caseComment);
+       Case_Comment_Custom__c comment = GetDbCustomData(commentTemp);
+       insert (comment);
+   }
+
     //persist new comment
     public void SaveComment(CustomCaseCommentData Upsertcomment){
         Case_Comment_Custom__c comment = GetDbCustomData(Upsertcomment);
