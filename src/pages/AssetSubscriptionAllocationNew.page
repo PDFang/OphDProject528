@@ -12,7 +12,7 @@
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.common.min.css')}"/>
-    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.rtl.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.mobile.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
 
@@ -77,25 +77,25 @@
         </apex:outputPanel>
     </apex:form>
     <script>
-    $(document).ready(function() {
-        var objType = getSObjType();
-        if(objType === 'Asset'){
 
-        }
 
-         });
+        $(document).ready(function() {
+            getSObjType();
+        });
 
-         function getSObjType(){
-             var sObjType = AssetSubscriptionAllocationNewController.getObjectType(
-                           <!-- {!currentId},-->
+        function getSObjType(){
+             AssetSubscriptionAllocationNewController.getObjectType(
+                           '{!currentId}',
                             function(result, event){
                                     if(event.status){
+                                        console.log('object type ==>' + result);
                                         if(result.length > 1){
-                                            return result;
+                                            if(result == 'Asset'){
+                                              assetAllocationData(null, '{!currentId}');
+                                           }
                                         }
                                     }
-                            });
-             return sObjType;
+                             });
          }
         function assetAllocationData(projId, assetId){
                var assetAllocationData =new kendo.data.DataSource({
@@ -127,119 +127,101 @@
                         },
                         destroy: function(options){
                              options.success();
-                      },
+                        },
                     schema:{
                         model: {
                             id: "Id",
                             fields: {
-                                "Asset": {from:"Asset", type: "string"},
-                                "AssetAllocationId": { from: "AssetAllocationId", type: "string", },
-                                "ProjectNumber":{from:"ProjectNumber",type:"string"},
-                                "ProjectPhase" : {from:"ProjectPhase",
-                                                 type: "string",
-                                                 validation: {
-
-                                                    deviceValueValidation: function (input) {
-                                                         var deviceGrid = $("#deviceList").data("kendoGrid"),
-                                                            dataItem = deviceGrid.dataItem($(input).closest("tr"));
-                                                        if(dataItem){
-                                                            if (input.is("[name='DeviceValue']") && input.val() != "") {
-                                                                input.removeAttr("data-deviceValueValidation-msg");
-                                                                var deviceType = $("[name='DeviceType']").val();
-                                                                dataItem.DeviceValue = input.val().trim();
-                                                                if(deviceType.includes("Email")){
-                                                                     var re =  /^(?:[a-z0-9!+=_`-]+(?:\.[a-z0-9!+=_`-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)$/i;
-                                                                     if(!re.test(input.val().trim())){
-                                                                         input.attr("data-deviceValueValidation-msg", " Invalid Email address");
-                                                                         return false;
-                                                                     }
-                                                                     return true;
-                                                                }else{
-
-                                                                    var re = /^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-\s\./0-9]*$/g;
-                                                                    if(!re.test(input.val().trim()) || input.val().length != 10){
-                                                                         input.attr("data-deviceValueValidation-msg", " Phone numbers should be 10 digits with no spaces or dashes");
-                                                                         return false;
-                                                                    }else{
-                                                                          var tempstring = input.val().trim();
-                                                                         if (tempstring.substring(0,2) !== '+1' && tempstring.length == 10){
-                                                                            input.val('+1' + input.val());
-                                                                            dataItem = deviceGrid.dataItem($(input).closest("tr"));
-                                                                            dataItem.DeviceValue = input.val().trim();
-                                                                        }
-                                                                        tempstring = input.val().trim();
-                                                                        if (tempstring.substring(0,1) !== '+' && tempstring.length == 11 && tempstring.substring(1,2) == '1')
-                                                                        {
-                                                                            input.val('+' + input.val());
-                                                                            dataItem = deviceGrid.dataItem($(input).closest("tr"));
-                                                                            dataItem.DeviceValue = input.val().trim();
-                                                                        }
-                                                                    }
-                                                                return true;
-                                                            }
-                                                            }else if(input.is("[name='DeviceValue']") && input.val() == ""){
-                                                                //dataItem.DeviceValue = input.val().trim();
-                                                                input.attr("data-deviceValueValidation-msg", " Device Value is required");
-                                                                return false;
-                                                            }
-                                                        }
-                                                        return true;
-                                                    }
-                                                 }
-                                                 },
-                                "AllocatedQuantity":{from: "AllocatedQuantity", type:"string" editable: false, nullable: true}
-
+                                "AssetId": {from:"Asset", type: "string", editable:false},
+                                "Id": { from: "AssetAllocationId", type: "string",editable:false },
+                                "AssetName" : {from:"AssetName", type:"string",editable:false },
+                                "AssetAllocationName" : {from:"AssetAllocationName", type:"string",editable:false},
+                                "ProjectNumber":{from:"ProjectNumber",type:"string",editable:false},
+                                "ProjectName":{from:"ProjectName",type:"string", editable:false},
+                                "ProjectPhase" : {from:"ProjectPhase", type: "string", editable:false},
+                                "AllocatedQuantity":{from: "AllocatedQuantity", type:"number", editable: true, nullable: true},
+                                "AllocatedHours":{from: "AllocatedHours", type:"number", editable: true, nullable: true},
+                                "AllocatedPercentage":{from: "AllocatedPercentage", type:"number", editable: true, nullable: true}
+                            }
                         }
-                    }
+                       }
                   }
-              });
+               });
 
-              $("#deviceList").kendoGrid({
-                  dataSource: device,
-                  editable: {
-                    mode:"inline",
-                    confirmation: "Are you sure you want to delete a device?"
-                  },
+              $("#assetAllocationList").kendoGrid({
+                  dataSource: assetAllocationData,
+                  editable: true,
                   scrollable: true,
                   noRecords: true,
                   height: 210,
-                  edit:disablePicklist,
                   toolbar: [
                       {
                           name: "create",
-                          text: "Add Device"
+                          text: "Add New Row"
+
+                      },
+                      {
+                          name: "save",
+                          text: "Save Changes"
+
+                      },
+                      {
+                          name: "cancel",
+                          text: "Cancel Changes"
+
                       }
                       ],
                   columns: [{
                                 field:"Id",
-                                filterable: false,
-                                hidden: true
+                                hidden: true,
+                                editable:false
 
                             },
                             {
-                                field:"DeviceType",
-                                title:"Device Type",
-                                editor: DeviceTypePicklistEditor
+                                field:"AssetName",
+                                title:"Asset",
+                                editor:nonEditor,
+                                template: '#{ #<a href="/#: data.AssetId #" target="_blank" >#= data.AssetName #</a># } #',
                             },
                             {
-                                field: "DeviceValue",
-                                title: "Value"
+                                field:"AssetAllocationName",
+                                title:"Allocation",
+                                editor:nonEditor,
+                                template: '#{ #<a href="/#: data.Id #" target="_blank" >#= data.AssetAllocationName #</a># } #',
                             },
                             {
-                                field:"TimeFrame",
-                                title:"Time Frames",
-                                editable:false,
-                                width:350,
-                                //template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">Manage TimeFrames</a>'
-                                template: '#if(data.DeviceType.indexOf("Email") > -1){#<span style="text-decoration: underline;padding-left: 10px;">24X7</span>#}else{#<a href="" onClick="OpenModal(this); return false;" class="k-button k-button-icontext">Manage</a>#}#'
+                                field:"ProjectName",
+                                title:"Project",
+                                editor:nonEditor,
+                                template: '#{ #<a href="/#: data.ProjectNumber #" target="_blank" >#= data.ProjectName #</a># } #',
                             },
-                            {   title:"Action",
-                                command: ["edit","destroy"]
+                            {
+                                field:"ProjectPhase",
+                                title:"Project Phase",
+                                editor:nonEditor,
+                                filterable:true
+                            },
+                            {
+                                field:"AllocatedQuantity",
+                                title:"Allocated Quantity",
+                                editable:true
+                            },
+                            {
+                                field:"AllocatedPercentage",
+                                title:"Allocated Percentage",
+                                editable:true
+                            },
+                            {
+                                field:"AllocatedHours",
+                                title:"Allocated Hours",
+                                editable:true
                             }
-
                   ]
-
               });
        }
+
+       function nonEditor(container, options) {
+               container.text(options.model[options.field]);
+        }
     </script>
 </apex:page>
