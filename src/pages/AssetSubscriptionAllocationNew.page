@@ -1,0 +1,245 @@
+<!--
+ - Created by ravish.chawla on 10/12/2017.
+ -->
+
+<apex:page id="AssetSubscriptionAllocationNew" sideBar="false" controller="AssetSubscriptionAllocationNewController" title="Asset/Subscription Allocation" tabStyle="Project__c">
+
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+
+
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.common.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.rtl.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
+
+    <apex:sectionHeader subtitle="{!Asset.Name}" title="Asset Allocation" rendered="{!NOT(ISNULL(Asset))}"/>
+
+    <apex:sectionHeader subtitle="{!Subscription.Name}" title="Subscription Allocation" rendered="{!NOT(ISNULL(Subscription))}"/>
+
+    <apex:sectionHeader subtitle="{!Project.Name}" title="Project Allocation" rendered="{!NOT(ISNULL(Project))}"/>
+
+
+    <style>
+        .image {
+            padding-left:15px;
+        }
+    </style>
+    <apex:form id="myform">
+
+        <apex:pageBlock title="Project Detail" rendered="{!Not(ISNULL(Project))}">
+            <apex:pageBlockButtons title="" location="bottom">
+                <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="2" >
+                <apex:repeat value="{!$ObjectType.Project__c.FieldSets.PS_Project_Allocation}" var="f">
+                    <apex:outputfield value="{!Project[f]}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:pageBlock title="Asset Detail" rendered="{!Not(ISNULL(asset))}">
+            <apex:pageBlockButtons title="" location="bottom">
+                <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="2" >
+                <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation}" var="f">
+                    <apex:outputfield value="{!Asset[f]}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:pageBlock title="Subscription Detail" rendered="{!Not(ISNULL(Subscription))}">
+            <apex:pageBlockButtons title="" location="bottom">
+                <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="2" >
+                <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation}" var="f">
+                    <apex:outputfield value="{!Subscription[f]}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:outputPanel id="assetAllocationPanel">
+            <apex:pageBlock id="assetAllocationBlock">
+                <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Asset Allocation"/>
+                <div id="assetAllocationList"></div>
+            </apex:pageBlock>
+        </apex:outputPanel>
+        <apex:outputPanel id="subscriptiontAllocationPanel">
+            <apex:pageBlock id="subscriptiontAllocationBlock">
+                <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Subscription Allocation"/>
+                <div id="subscriptiontAllocationList"></div>
+            </apex:pageBlock>
+        </apex:outputPanel>
+    </apex:form>
+    <script>
+    $(document).ready(function() {
+        var objType = getSObjType();
+        if(objType === 'Asset'){
+
+        }
+
+         });
+
+         function getSObjType(){
+             var sObjType = AssetSubscriptionAllocationNewController.getObjectType(
+                           <!-- {!currentId},-->
+                            function(result, event){
+                                    if(event.status){
+                                        if(result.length > 1){
+                                            return result;
+                                        }
+                                    }
+                            });
+             return sObjType;
+         }
+        function assetAllocationData(projId, assetId){
+               var assetAllocationData =new kendo.data.DataSource({
+                    autosync:true,
+                    transport:{
+                      read: function(options){
+                               AssetSubscriptionAllocationNewController.getAssetAllocationData(projId, assetId,
+                                  function(result,event)
+                                      {
+                                          if (event.status) {
+                                              if(result.length > 1){
+                                                   options.success(JSON.parse(result));
+                                              console.log('results =>' + JSON.stringify(result));
+                                              }
+                                          } else if (event.type === 'exception') {
+
+                                          } else {
+
+                                          }
+                                      },
+                                      {escape: false}
+                               );
+                      },
+                      update: function(options){
+                          options.success();
+                        },
+                        create: function(options){
+                             options.success();
+                        },
+                        destroy: function(options){
+                             options.success();
+                      },
+                    schema:{
+                        model: {
+                            id: "Id",
+                            fields: {
+                                "Asset": {from:"Asset", type: "string"},
+                                "AssetAllocationId": { from: "AssetAllocationId", type: "string", },
+                                "ProjectNumber":{from:"ProjectNumber",type:"string"},
+                                "ProjectPhase" : {from:"ProjectPhase",
+                                                 type: "string",
+                                                 validation: {
+
+                                                    deviceValueValidation: function (input) {
+                                                         var deviceGrid = $("#deviceList").data("kendoGrid"),
+                                                            dataItem = deviceGrid.dataItem($(input).closest("tr"));
+                                                        if(dataItem){
+                                                            if (input.is("[name='DeviceValue']") && input.val() != "") {
+                                                                input.removeAttr("data-deviceValueValidation-msg");
+                                                                var deviceType = $("[name='DeviceType']").val();
+                                                                dataItem.DeviceValue = input.val().trim();
+                                                                if(deviceType.includes("Email")){
+                                                                     var re =  /^(?:[a-z0-9!+=_`-]+(?:\.[a-z0-9!+=_`-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)$/i;
+                                                                     if(!re.test(input.val().trim())){
+                                                                         input.attr("data-deviceValueValidation-msg", " Invalid Email address");
+                                                                         return false;
+                                                                     }
+                                                                     return true;
+                                                                }else{
+
+                                                                    var re = /^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-\s\./0-9]*$/g;
+                                                                    if(!re.test(input.val().trim()) || input.val().length != 10){
+                                                                         input.attr("data-deviceValueValidation-msg", " Phone numbers should be 10 digits with no spaces or dashes");
+                                                                         return false;
+                                                                    }else{
+                                                                          var tempstring = input.val().trim();
+                                                                         if (tempstring.substring(0,2) !== '+1' && tempstring.length == 10){
+                                                                            input.val('+1' + input.val());
+                                                                            dataItem = deviceGrid.dataItem($(input).closest("tr"));
+                                                                            dataItem.DeviceValue = input.val().trim();
+                                                                        }
+                                                                        tempstring = input.val().trim();
+                                                                        if (tempstring.substring(0,1) !== '+' && tempstring.length == 11 && tempstring.substring(1,2) == '1')
+                                                                        {
+                                                                            input.val('+' + input.val());
+                                                                            dataItem = deviceGrid.dataItem($(input).closest("tr"));
+                                                                            dataItem.DeviceValue = input.val().trim();
+                                                                        }
+                                                                    }
+                                                                return true;
+                                                            }
+                                                            }else if(input.is("[name='DeviceValue']") && input.val() == ""){
+                                                                //dataItem.DeviceValue = input.val().trim();
+                                                                input.attr("data-deviceValueValidation-msg", " Device Value is required");
+                                                                return false;
+                                                            }
+                                                        }
+                                                        return true;
+                                                    }
+                                                 }
+                                                 },
+                                "AllocatedQuantity":{from: "AllocatedQuantity", type:"string" editable: false, nullable: true}
+
+                        }
+                    }
+                  }
+              });
+
+              $("#deviceList").kendoGrid({
+                  dataSource: device,
+                  editable: {
+                    mode:"inline",
+                    confirmation: "Are you sure you want to delete a device?"
+                  },
+                  scrollable: true,
+                  noRecords: true,
+                  height: 210,
+                  edit:disablePicklist,
+                  toolbar: [
+                      {
+                          name: "create",
+                          text: "Add Device"
+                      }
+                      ],
+                  columns: [{
+                                field:"Id",
+                                filterable: false,
+                                hidden: true
+
+                            },
+                            {
+                                field:"DeviceType",
+                                title:"Device Type",
+                                editor: DeviceTypePicklistEditor
+                            },
+                            {
+                                field: "DeviceValue",
+                                title: "Value"
+                            },
+                            {
+                                field:"TimeFrame",
+                                title:"Time Frames",
+                                editable:false,
+                                width:350,
+                                //template: '<a href="" onClick="OpenModal(this); return false;" style="text-decoration: underline;">Manage TimeFrames</a>'
+                                template: '#if(data.DeviceType.indexOf("Email") > -1){#<span style="text-decoration: underline;padding-left: 10px;">24X7</span>#}else{#<a href="" onClick="OpenModal(this); return false;" class="k-button k-button-icontext">Manage</a>#}#'
+                            },
+                            {   title:"Action",
+                                command: ["edit","destroy"]
+                            }
+
+                  ]
+
+              });
+       }
+    </script>
+</apex:page>
