@@ -8,6 +8,10 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
         AttachParentProject();
     }
 
+    public override void afterUpdate(){
+
+    }
+
     public static void AttachParentProject(){
         Set<Id> subscriptionIds = new Set<Id>();
         Set<Id> quoteLineIds = new Set<Id>();
