@@ -171,7 +171,7 @@
 
     <apex:form >
 
-        <div class="container-fluid">
+        <div class="container-fluid" style="font-size: 14px;">
             <apex:commandLink action="{!goBack}" value="<< Return to Contact Record" style="font-size:12px;"/>
             <br/>
             <div class="page-header">
