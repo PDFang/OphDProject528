@@ -1,0 +1,227 @@
+<!--
+ - Created by ravish.chawla on 10/12/2017.
+ -->
+
+<apex:page id="AssetSubscriptionAllocationNew" sideBar="false" controller="AssetSubscriptionAllocationNewController" title="Asset/Subscription Allocation" tabStyle="Project__c">
+
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+
+
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.common.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.mobile.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
+
+    <apex:sectionHeader subtitle="{!Asset.Name}" title="Asset Allocation" rendered="{!NOT(ISNULL(Asset))}"/>
+
+    <apex:sectionHeader subtitle="{!Subscription.Name}" title="Subscription Allocation" rendered="{!NOT(ISNULL(Subscription))}"/>
+
+    <apex:sectionHeader subtitle="{!Project.Name}" title="Project Allocation" rendered="{!NOT(ISNULL(Project))}"/>
+
+
+    <style>
+        .image {
+            padding-left:15px;
+        }
+    </style>
+    <apex:form id="myform">
+
+        <apex:pageBlock title="Project Detail" rendered="{!Not(ISNULL(Project))}">
+            <apex:pageBlockButtons title="" location="bottom">
+                <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="2" >
+                <apex:repeat value="{!$ObjectType.Project__c.FieldSets.PS_Project_Allocation}" var="f">
+                    <apex:outputfield value="{!Project[f]}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:pageBlock title="Asset Detail" rendered="{!Not(ISNULL(asset))}">
+            <apex:pageBlockButtons title="" location="bottom">
+                <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="2" >
+                <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation}" var="f">
+                    <apex:outputfield value="{!Asset[f]}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:pageBlock title="Subscription Detail" rendered="{!Not(ISNULL(Subscription))}">
+            <apex:pageBlockButtons title="" location="bottom">
+                <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="2" >
+                <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation}" var="f">
+                    <apex:outputfield value="{!Subscription[f]}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:outputPanel id="assetAllocationPanel">
+            <apex:pageBlock id="assetAllocationBlock">
+                <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Asset Allocation"/>
+                <div id="assetAllocationList"></div>
+            </apex:pageBlock>
+        </apex:outputPanel>
+        <apex:outputPanel id="subscriptiontAllocationPanel">
+            <apex:pageBlock id="subscriptiontAllocationBlock">
+                <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Subscription Allocation"/>
+                <div id="subscriptiontAllocationList"></div>
+            </apex:pageBlock>
+        </apex:outputPanel>
+    </apex:form>
+    <script>
+
+
+        $(document).ready(function() {
+            getSObjType();
+        });
+
+        function getSObjType(){
+             AssetSubscriptionAllocationNewController.getObjectType(
+                           '{!currentId}',
+                            function(result, event){
+                                    if(event.status){
+                                        console.log('object type ==>' + result);
+                                        if(result.length > 1){
+                                            if(result == 'Asset'){
+                                              assetAllocationData(null, '{!currentId}');
+                                           }
+                                        }
+                                    }
+                             });
+         }
+        function assetAllocationData(projId, assetId){
+               var assetAllocationData =new kendo.data.DataSource({
+                    autosync:true,
+                    transport:{
+                      read: function(options){
+                               AssetSubscriptionAllocationNewController.getAssetAllocationData(projId, assetId,
+                                  function(result,event)
+                                      {
+                                          if (event.status) {
+                                              if(result.length > 1){
+                                                   options.success(JSON.parse(result));
+                                              console.log('results =>' + JSON.stringify(result));
+                                              }
+                                          } else if (event.type === 'exception') {
+
+                                          } else {
+
+                                          }
+                                      },
+                                      {escape: false}
+                               );
+                      },
+                      update: function(options){
+                          options.success();
+                        },
+                        create: function(options){
+                             options.success();
+                        },
+                        destroy: function(options){
+                             options.success();
+                        },
+                    schema:{
+                        model: {
+                            id: "Id",
+                            fields: {
+                                "AssetId": {from:"Asset", type: "string", editable:false},
+                                "Id": { from: "AssetAllocationId", type: "string",editable:false },
+                                "AssetName" : {from:"AssetName", type:"string",editable:false },
+                                "AssetAllocationName" : {from:"AssetAllocationName", type:"string",editable:false},
+                                "ProjectNumber":{from:"ProjectNumber",type:"string",editable:false},
+                                "ProjectName":{from:"ProjectName",type:"string", editable:false},
+                                "ProjectPhase" : {from:"ProjectPhase", type: "string", editable:false},
+                                "AllocatedQuantity":{from: "AllocatedQuantity", type:"number", editable: true, nullable: true},
+                                "AllocatedHours":{from: "AllocatedHours", type:"number", editable: true, nullable: true},
+                                "AllocatedPercentage":{from: "AllocatedPercentage", type:"number", editable: true, nullable: true}
+                            }
+                        }
+                       }
+                  }
+               });
+
+              $("#assetAllocationList").kendoGrid({
+                  dataSource: assetAllocationData,
+                  editable: true,
+                  scrollable: true,
+                  noRecords: true,
+                  height: 210,
+                  toolbar: [
+                      {
+                          name: "create",
+                          text: "Add New Row"
+
+                      },
+                      {
+                          name: "save",
+                          text: "Save Changes"
+
+                      },
+                      {
+                          name: "cancel",
+                          text: "Cancel Changes"
+
+                      }
+                      ],
+                  columns: [{
+                                field:"Id",
+                                hidden: true,
+                                editable:false
+
+                            },
+                            {
+                                field:"AssetName",
+                                title:"Asset",
+                                editor:nonEditor,
+                                template: '#{ #<a href="/#: data.AssetId #" target="_blank" >#= data.AssetName #</a># } #',
+                            },
+                            {
+                                field:"AssetAllocationName",
+                                title:"Allocation",
+                                editor:nonEditor,
+                                template: '#{ #<a href="/#: data.Id #" target="_blank" >#= data.AssetAllocationName #</a># } #',
+                            },
+                            {
+                                field:"ProjectName",
+                                title:"Project",
+                                editor:nonEditor,
+                                template: '#{ #<a href="/#: data.ProjectNumber #" target="_blank" >#= data.ProjectName #</a># } #',
+                            },
+                            {
+                                field:"ProjectPhase",
+                                title:"Project Phase",
+                                editor:nonEditor,
+                                filterable:true
+                            },
+                            {
+                                field:"AllocatedQuantity",
+                                title:"Allocated Quantity",
+                                editable:true
+                            },
+                            {
+                                field:"AllocatedPercentage",
+                                title:"Allocated Percentage",
+                                editable:true
+                            },
+                            {
+                                field:"AllocatedHours",
+                                title:"Allocated Hours",
+                                editable:true
+                            }
+                  ]
+              });
+       }
+
+       function nonEditor(container, options) {
+               container.text(options.model[options.field]);
+        }
+    </script>
+</apex:page>

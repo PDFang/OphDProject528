@@ -3,8 +3,18 @@
  */
 
 public class SubscriptionTriggerHandler extends TriggerHandler{
+    public static Boolean InSubscriptionCustomTrigger = false;
+
     public override void afterInsert(){
         InsertSubscriptionReplica((List<SBQQ__Subscription__c>)trigger.new);
+    }
+
+    public override void afterUpdate(){
+        SubscriptionReplicaTriggerHandler.InSubscriptionTrigger = true;
+        if (InSubscriptionCustomTrigger == false)
+        {
+            UpdateSubscriptionReplica((Map<Id, SBQQ__Subscription__c>) trigger.oldMap);
+        }
     }
 
 
@@ -31,6 +41,14 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
                 subscription.addError('Insert Failed. An Error Occured during creation of Subscription Replica object -' + ex.getMessage());
             }
         }
+    }
+
+    @TestVisible
+    private static void UpdateSubscriptionReplica(Map<Id, SBQQ__Subscription__c> subscriptions) {
+        //update the SubscriptionReplica table
+        //Install Date
+        //ProductImplemented
+        //Status
     }
 
     public class triggerException extends Exception{}

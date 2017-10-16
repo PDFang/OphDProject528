@@ -23,11 +23,23 @@ public class CustomerOrderResolutionExtension {
 
     public PageReference SaveLineItems()
     {
+        Set<Id>  ListofRelatedOrderLineItemIds = new Set<Id>();
         for(OrderLineGeneralItems__c lineItem : lineItems)
         {
             if(lineItem.LineItemResolution__c != null)
+            {
                 lineItem.ItemStatus__c = lineItem.LineItemResolution__c;
+                if(lineItem.ItemStatus__c == 'Canceled')
+                     ListofRelatedOrderLineItemIds.add(lineItem.Id);
+            }
         }
+        List<OrderLineGeneralItems__c> ListofRelatedOrderLineItems = new List<OrderLineGeneralItems__c>();
+        ListofRelatedOrderLineItems =[SELECT Id,Name, ItemStatus__c, OrderType__c,ProductName__c, ProductSKU__c, OrderErrorDetail__c  FROM OrderLineGeneralItems__c WHERE CustomerOrder__c = :order.id and ItemStatus__c != 'none' and RelatedLineItem__c IN:ListofRelatedOrderLineItemIds ];
+        for(OrderLineGeneralItems__c lineItem : ListofRelatedOrderLineItems)
+        {
+            lineItem.ItemStatus__c = 'Canceled';
+        }
+        lineItems.addAll(ListofRelatedOrderLineItems);
         update lineItems;
         return RedirectPage();
     }

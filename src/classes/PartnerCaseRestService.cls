@@ -29,7 +29,8 @@ global with sharing class PartnerCaseRestService {
             if(String.isNotBlank(request.troubleReportId)){
 
                 Case[] incidentList = [
-                        Select Id, Status, ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c, X3rdPartyVendorTicket__c
+                        Select Id, Status, ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c, X3rdPartyVendorTicket__c,
+                                Reason__c, Database__c, Releases__c
                         from Case Where CaseNumber = :request.troubleReportId
                         and AccountBillingGroup__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
                         and RecordType.Name = 'Incident'
@@ -76,6 +77,25 @@ global with sharing class PartnerCaseRestService {
                 // change incident status
                 if(incident.status != mdtList[0].Case_Status__c){
                     incident.status = mdtList[0].Case_Status__c;
+
+                    //if resolved, then the Reason Category, Reason, and Reason Detail need to be updated
+                    if(incident.status == 'Resolved') {
+                        //Reason Category
+                        if(incident.Reason__c == null) {
+                            incident.Reason__c = 'Verizon Resolved';
+                        }
+
+                        //Reason
+                        if(incident.Database__c == null) {
+                            incident.Database__c = 'Verizon Resolved';
+                        }
+
+                        //Reason Detail
+                        if(incident.Releases__c == null) {
+                            incident.Releases__c = 'Verizon Resolved';
+                        }
+                    }
+
                     CaseTriggerHandler.bypassProxyService = true;
                     update incident;
                 }
