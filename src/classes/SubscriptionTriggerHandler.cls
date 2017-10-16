@@ -7,6 +7,10 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
         InsertSubscriptionReplica((List<SBQQ__Subscription__c>)trigger.new);
     }
 
+    public override void afterUpdate(){
+
+    }
+
 
     private static boolean throwExceptionBollean = false;
 
