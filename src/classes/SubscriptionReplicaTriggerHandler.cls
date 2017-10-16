@@ -3,7 +3,7 @@
  */
 
 public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandler {
-    public Boolean InSubscriptionTrigger = false;
+    public static Boolean InSubscriptionTrigger = false;
 
     public override void afterInsert()
     {

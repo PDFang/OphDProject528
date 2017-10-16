@@ -11,7 +11,7 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
 
     public override void afterUpdate(){
         SubscriptionReplicaTriggerHandler.InSubscriptionTrigger = true;
-        UpdateSubscriptionReplica((List<SBQQ__Subscription__c>)trigger.oldMap);
+        //UpdateSubscriptionReplica((List<SBQQ__Subscription__c>)trigger.oldMap);
     }
 
 
