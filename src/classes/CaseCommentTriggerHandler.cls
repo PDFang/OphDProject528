@@ -8,6 +8,7 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
     private static boolean isProxyServiceTurnedOff = false;
     //private static boolean isSetCommentDuringUpdate = false;
 
+    public static boolean alreadyCopiedComments = false;
     public static boolean bypassProxyService = false;
 
     public CaseCommentTriggerHandler()
@@ -26,19 +27,23 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
         if(!isProxyServiceTurnedOff && !bypassProxyService){
             CallPartnerCaseProxyService((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
         }
-        //CopyCustomComments ((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
+        if (AllCommentTriggerHelper.hasAlreadyCreatedComments() == false){
+            AllCommentTriggerHelper.setAlreadyCreatedComments();
+            CopyCustomComments ((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
+        }
+
     }
-/*
+
     public static void UpdateCustomComments(List<CaseComment> newList, Map<Id, CaseComment> oldMap){
-       system.debug('Calling UpdateCustomComments');
-       List<Case_Comment_Custom__c> commentList = new List<Case_Comment_Custom__c>();
-       for(CaseComment newComment : newList){
-           if(newComment.IsPublished == false){
-               commentList.add(GetNewCustomComment(newComment));
+        system.debug('Calling UpdateCustomComments');
+        List<Case_Comment_Custom__c> commentList = new List<Case_Comment_Custom__c>();
+        for(CaseComment newComment : newList){
+            if(newComment.IsPublished == false){
+                commentList.add(GetNewCustomComment(newComment));
             }
         }
         //need the ID --
-       Update(commentList);
+        Update(commentList);
     }
 
 
@@ -72,7 +77,7 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
         comment.Case_Comments_Id__c = (string) newComment.id;
         //comment.Id = NewComment.Id;
         return comment;
-    }*/
+    }
     // push case comments to partner case proxy service
     // Case must be of type Incident and have a X3rdPartyVendorTicket__c
     public static void CallPartnerCaseProxyService(List<CaseComment> newList, Map<Id, CaseComment> oldMap){

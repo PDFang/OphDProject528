@@ -10,7 +10,7 @@ public with sharing class CustomCaseCommentHelper {
 
         list<CaseComment> retlist = new list<CaseComment>();
         if (DisplayComments(currentCase.ClosedDate) == true){
-            retlist = [SELECT CommentBody,CreatedDate,CreatedBy.UserName,CreatorName,Id,IsDeleted,IsPublished,ParentId FROM CaseComment where parentId =:currentCase.id order by CreatedDate desc];
+            retlist = [SELECT CommentBody,CreatedDate,CreatedBy.UserName,CreatorName,Id,IsDeleted,IsPublished,ParentId FROM CaseComment where parentId =:currentCase.id  and IsPublished = false order by CreatedDate desc];
         }
         return retlist;
     }
@@ -93,7 +93,6 @@ public with sharing class CustomCaseCommentHelper {
     }
     private Case_Comment_Custom__c GetDbCustomData( CustomCaseCommentData comment){
         Case_Comment_Custom__c commentData = new Case_Comment_Custom__c();
-        case newCase = new Case();
         commentData.Case_Comments_Id__c = comment.caseCommentsId;
         commentData.CommentBody__c = comment.CaseComment;
         commentData.IsPublished__c = comment.isPublic;
