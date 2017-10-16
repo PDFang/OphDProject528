@@ -3,12 +3,15 @@
  */
 
 public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandler {
+    public Boolean InSubscriptionTrigger = false;
+
     public override void afterInsert()
     {
         AttachParentProject();
     }
 
     public override void afterUpdate(){
+        SubscriptionTriggerHandler.InSubscriptionCustomTrigger = true;
 
     }
 
