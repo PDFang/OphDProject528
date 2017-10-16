@@ -29,7 +29,8 @@ global with sharing class PartnerCaseRestService {
             if(String.isNotBlank(request.troubleReportId)){
 
                 Case[] incidentList = [
-                        Select Id, Status, ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c, X3rdPartyVendorTicket__c
+                        Select Id, Status, ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c, X3rdPartyVendorTicket__c,
+                                Reason__c, Database__c, Releases__c
                         from Case Where CaseNumber = :request.troubleReportId
                         and AccountBillingGroup__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
                         and RecordType.Name = 'Incident'
