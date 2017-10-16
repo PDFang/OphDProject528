@@ -11,7 +11,10 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
 
     public override void afterUpdate(){
         SubscriptionReplicaTriggerHandler.InSubscriptionTrigger = true;
-        //UpdateSubscriptionReplica((List<SBQQ__Subscription__c>)trigger.oldMap);
+        if (InSubscriptionCustomTrigger == false)
+        {
+            UpdateSubscriptionReplica((Map<Id, SBQQ__Subscription__c>) trigger.oldMap);
+        }
     }
 
 
@@ -41,7 +44,7 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
     }
 
     @TestVisible
-    private static void UpdateSubscriptionReplica(List<SBQQ__Subscription__c> subscriptions) {
+    private static void UpdateSubscriptionReplica(Map<Id, SBQQ__Subscription__c> subscriptions) {
         //update the SubscriptionReplica table
         //Install Date
         //ProductImplemented
