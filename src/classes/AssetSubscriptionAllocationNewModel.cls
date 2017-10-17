@@ -14,8 +14,11 @@ public class AssetSubscriptionAllocationNewModel {
     public Decimal AllocatedPercentage {get; set;}
     public Decimal AllocatedHours {get; set;}
     public String Subscription {get; set;}
+    public String SubscriptionName {get; set;}
     public String SubscriptionAllocationId {get; set;}
+    public String SubscriptionAllocationName {get; set;}
     public String Product {get; set;}
+    public String ProductName {get;set;}
 
     public AssetSubscriptionAllocationNewModel(Project_Asset_Allocation__c allocation){
         this.Asset = allocation.Asset__c;
@@ -33,8 +36,12 @@ public class AssetSubscriptionAllocationNewModel {
     public AssetSubscriptionAllocationNewModel(Project_Subscription_Allocation__c allocation){
         this.Subscription = allocation.Subscription__c;
         this.SubscriptionAllocationId = allocation.Id;
-        this.Product = allocation.Product__c;
+        this.SubscriptionName = allocation.Subscription__r.Name;
+        this.SubscriptionAllocationName = allocation.Name;
+        this.ProductName = allocation.Subscription__r.Subscription__r.SBQQ__Product__r.Name;
+        this.Product = allocation.Subscription__r.Subscription__r.SBQQ__Product__c;
         this.ProjectNumber = allocation.Project__c;
+        this.ProjectName = allocation.Project__r.Name;
         this.ProjectPhase = allocation.ProjectPhase__c;
         this.AllocatedQuantity = allocation.Quantity_Allocation__c;
         this.AllocatedPercentage = allocation.Percent_Allocation__c;
