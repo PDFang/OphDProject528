@@ -108,9 +108,12 @@ public class StandardTextExtension
                 
                 cc.CommentBody = standText; //st.StandardText__c;
                 cc.IsPublished = isPublic;
-                
-                
-                insert cc;
+
+                //call send to new case comments object
+                CustomCaseCommentHelper customCaseCommentHelper = new CustomCaseCommentHelper();
+                customCaseCommentHelper.saveComment(cc);
+
+                //insert cc;
                 
                 //create worklog activity
                 if(timeSpentCase > 0)
