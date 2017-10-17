@@ -45,6 +45,7 @@ public with sharing class CustomCaseCommentHelper {
                 finalList.add(GetCustomCommentData(c));
             }
         }
+        finalList.sort();
         return finalList;
     }
 
