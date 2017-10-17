@@ -6,14 +6,14 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
     public static Boolean InSubscriptionCustomTrigger = false;
 
     public override void afterInsert(){
-        InsertSubscriptionReplica((List<SBQQ__Subscription__c>)trigger.new);
+        InsertSubscriptionReplica((List<SBQQ__Subscription__c>) trigger.new);
     }
 
     public override void afterUpdate(){
         SubscriptionReplicaTriggerHandler.InSubscriptionTrigger = true;
         if (InSubscriptionCustomTrigger == false)
         {
-            UpdateSubscriptionReplica((Map<Id, SBQQ__Subscription__c>) trigger.oldMap);
+            UpdateSubscriptionReplica((Map<Id, SBQQ__Subscription__c>) trigger.newMap);
         }
     }
 
@@ -44,11 +44,25 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
     }
 
     @TestVisible
-    private static void UpdateSubscriptionReplica(Map<Id, SBQQ__Subscription__c> subscriptions) {
-        //update the SubscriptionReplica table
-        //Install Date
-        //ProductImplemented
-        //Status
+    private static void UpdateSubscriptionReplica(Map<Id, SBQQ__Subscription__c> lstSubscriptions) {
+        //update certain fields in SubscriptionReplica table
+        list<SubscriptionReplica__c> lstUpdateSubscriptionReplicas = new list<SubscriptionReplica__c>();
+        for(SubscriptionReplica__c subscriptionReplica : [
+                SELECT Id, Status__c, Install_Date__c, ImplementedProduct__c, Subscription__c FROM subscriptionReplica__c
+                WHERE Subscription__c IN : lstSubscriptions.keyset()
+        ]){
+            SBQQ__Subscription__c subscription = lstSubscriptions.get(SubscriptionReplica.Subscription__c);
+            subscriptionReplica.Status__c = subscription.Status__c;
+            subscriptionReplica.Install_Date__c = subscription.Install_Date__c;
+            subscriptionReplica.ImplementedProduct__c = subscription.Implemented_Product__c;
+
+            // add changed SubscriptionReplica to update list
+            lstUpdateSubscriptionReplicas.add(subscriptionReplica);
+        }
+
+        if(lstUpdateSubscriptionReplicas.size() > 0){
+            update lstUpdateSubscriptionReplicas;
+        }
     }
 
     public class triggerException extends Exception{}
