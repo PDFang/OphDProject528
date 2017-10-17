@@ -69,8 +69,10 @@ public with sharing class AssetSubscriptionAllocationNewController {
     //Get Subscription Allocations Data
     @RemoteAction
     public static String getSubscriptionAllocationData(String projectId, String idParam){
-
+        system.debug('getSubscriptionAllocationData(): currentId - ' + currentId);
+        system.debug('getSubscriptionAllocationData(): idParam - ' + idParam);
         String subscriptionAllocationData = AssetSubscriptionAllocationHelper.getSubscriptionAllocations(projectId, idParam);
+        system.debug('getSubscriptionAllocationData(): subscriptionAllocationData - ' + subscriptionAllocationData);
         return subscriptionAllocationData;
     }
 
