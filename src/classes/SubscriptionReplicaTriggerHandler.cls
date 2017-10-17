@@ -51,7 +51,7 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
         for ( SubscriptionReplica__c subscriptionReplica : [
                 SELECT Id, Status__c, Install_Date__c, ImplementedProduct__c, Subscription__c FROM SubscriptionReplica__c
                 WHERE Id IN : subscriptionReplicaIds]){
-            system.debug('**** UpdateSubscription() : subscription__c - '+subscriptionReplica.Subscription__c);
+
             SBQQ__Subscription__c subscription = new SBQQ__Subscription__c(Id = subscriptionReplica.Subscription__c);
             subscription.Status__c = subscriptionReplica.Status__c;
             subscription.Install_Date__c = subscriptionReplica.Install_Date__c;     // ?? assume Install date is set before I come here
@@ -61,7 +61,10 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
             lstUpdateSubscriptions.add(subscription);
 
             // collect Implemented Product information
-            ImplementationProductIds.put(subscriptionReplica.ImplementedProduct__c, subscriptionReplica.Install_Date__c);
+            if ( subscriptionReplica.Status__c == '4 - Delivered')
+            {
+                ImplementationProductIds.put(subscriptionReplica.ImplementedProduct__c, subscriptionReplica.Install_Date__c);
+            }
         }
 
         //update certain fields in Implemented Product table
