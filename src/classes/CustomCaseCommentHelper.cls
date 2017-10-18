@@ -31,9 +31,9 @@ public with sharing class CustomCaseCommentHelper {
         list<CustomCaseCommentData> finalList = new list<CustomCaseCommentData>();
         list<CaseComment> caseComments = GetCaseComments(currentCase);
         list<Case_Comment_Custom__c> privateComments;
-        if (isPrivateInList(caseComments) == false){
-            privateComments =    GetCustomComments(currentCase);
-        }
+        //if (isPrivateInList(caseComments) == false){
+        privateComments =    GetCustomComments(currentCase);
+        //}
 
         for (CaseComment c: casecomments)
         {
