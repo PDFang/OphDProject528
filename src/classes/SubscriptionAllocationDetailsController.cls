@@ -12,13 +12,13 @@ public with sharing class SubscriptionAllocationDetailsController {
 
         if (selSubscriptionAllocation.Id != null) {
             List<Project_Subscription_Allocation__c> projectSubscriptionAllocations = new List<Project_Subscription_Allocation__c>([
-                    SELECT Id, Subscription__r.ParentProject__c
+                    SELECT Id, Project__c
                     from Project_Subscription_Allocation__c
                     where Id = :selSubscriptionAllocation.Id
             ]);
 
             System.debug('projectSubscriptionAllocations[0] ==>' + projectSubscriptionAllocations[0]);
-            projectId = projectSubscriptionAllocations[0].Subscription__r.ParentProject__c;
+            projectId = projectSubscriptionAllocations[0].Project__c;
             System.debug('projectId ==>' + projectId);
         }
     }
