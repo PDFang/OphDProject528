@@ -45,8 +45,10 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
 
     @TestVisible
     private static void UpdateSubscriptionReplica(Map<Id, SBQQ__Subscription__c> lstSubscriptions) {
-        //update certain fields in SubscriptionReplica table
+
         list<SubscriptionReplica__c> lstUpdateSubscriptionReplicas = new list<SubscriptionReplica__c>();
+
+        //update certain fields to SubscriptionReplica table since they are not formula fields there
         for(SubscriptionReplica__c subscriptionReplica : [
                 SELECT Id, Status__c, Install_Date__c, ImplementedProduct__c, Subscription__c FROM subscriptionReplica__c
                 WHERE Subscription__c IN : lstSubscriptions.keyset()
