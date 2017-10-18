@@ -8,7 +8,7 @@ public class ProjectInfoComponentController {
     public Project__c project {get; private set;}
     Static Set<String> projectFields = new Set<String>();
     List<Project__c> projects = new List<Project__c>();
-	public boolean isEditEnable{get;set;}
+    public boolean isEditEnable{get;set;}
 
     public String getProjectId(){
         return projectId;
@@ -16,14 +16,14 @@ public class ProjectInfoComponentController {
 
     public void setProjectId(String s){
         projectId = s;
-	    if(project == null)
-		    getProjectDetails();
+        if(project == null)
+            getProjectDetails();
     }
 
     public void getProjectDetails(){
-	    isEditEnable = false;
+        isEditEnable = false;
         List<Project__c> projectList = new List<Project__c>();
-	    system.debug('projects before projectID - ' + project);
+        system.debug('projects before projectID - ' + project);
         system.debug('projectId - ' + projectId);
         project = new Project__c();
 
@@ -52,27 +52,26 @@ public class ProjectInfoComponentController {
 
     }
 
-	public void enableEdit(){
-		isEditEnable = true;
-	}
+    public void enableEdit(){
+        isEditEnable = true;
+    }
 
     public void saveProjectInfo(){
         try{
-	        isEditEnable = false;
+            isEditEnable = false;
             system.debug('projects in Save - ' + project);
             update project;
-	        getProjectDetails();
+            getProjectDetails();
 
         }
         catch (Exception ex){
-	        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
         }
     }
 
-	public void cancel(){
-			isEditEnable = false;
-			getProjectDetails();
+    public void cancel(){
+        isEditEnable = false;
+        getProjectDetails();
 
-	}
+    }
 }
-

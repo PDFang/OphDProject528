@@ -14,11 +14,11 @@ public with sharing class AssetAllocationDetailsController {
 
         if(selAssetAllocation.Id != null){
             List<Project_Asset_Allocation__c> projectAssetAllocations = new List<Project_Asset_Allocation__c>([
-                    SELECT Id, Asset__r.Parent_Project__c from Project_Asset_Allocation__c where Id =: selAssetAllocation.Id
+                    SELECT Id, Project__c from Project_Asset_Allocation__c where Id =: selAssetAllocation.Id
             ]);
 
             System.debug('projectAssetAllocations[0] ==>' + projectAssetAllocations[0]);
-            projectId = projectAssetAllocations[0].Asset__r.Parent_Project__c;
+            projectId = projectAssetAllocations[0].Project__c;
             System.debug('projectId ==>' + projectId);
         }
     }
