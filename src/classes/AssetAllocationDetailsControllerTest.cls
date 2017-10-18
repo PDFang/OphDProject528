@@ -46,14 +46,14 @@ private class AssetAllocationDetailsControllerTest {
         ProjectInfoComponentController testComponentController = new ProjectInfoComponentController();
         testComponentController.setProjectId(projectId);
         testComponentController.getProjectId();
-//        System.debug('testComponentController.project[0].Certified_Implementation_Manager__c =>' + testComponentController.project[0].Certified_Implementation_Manager__c);
-//        testComponentController.project[0].Certified_Implementation_Manager__c = '00539000005M7TO';
+        System.debug('testComponentController.project.Certified_Implementation_Manager__c =>' + testComponentController.project.Certified_Implementation_Manager__c);
+        testComponentController.project.Certified_Implementation_Manager__c = '0033C0000055ll9';
         testComponentController.enableEdit();
         testComponentController.saveProjectInfo();
         testComponentController.cancel();
 
-//        System.debug('testComponentController.project[0].Certified_Implementation_Manager__c =>' + testComponentController.project[0].Certified_Implementation_Manager__c);
-//        System.assertEquals(testComponentController.project[0].Certified_Implementation_Manager__c, '00539000005M7TO');
+        System.debug('testComponentController.project.Certified_Implementation_Manager__c =>' + testComponentController.project.Certified_Implementation_Manager__c);
+        System.assertEquals('0033C0000055ll9', testComponentController.project.Certified_Implementation_Manager__c);
 
     }
 
@@ -73,14 +73,14 @@ private class AssetAllocationDetailsControllerTest {
         ProjectInfoComponentController testComponentController = new ProjectInfoComponentController();
         testComponentController.setProjectId(projectId);
         testComponentController.getProjectId();
-//        System.debug('testComponentController.project[0].Certified_Implementation_Manager__c =>' + testComponentController.project[0].Certified_Implementation_Manager__c);
-//        testComponentController.project[0].Certified_Implementation_Manager__c = '00539000005M7TO';
+        System.debug('testComponentController.project.Certified_Implementation_Manager__c =>' + testComponentController.project.Certified_Implementation_Manager__c);
+        testComponentController.project.Certified_Implementation_Manager__c = '0033C0000055ll9';
         testComponentController.enableEdit();
         testComponentController.saveProjectInfo();
         testComponentController.cancel();
 
-//        System.debug('testComponentController.project[0].Certified_Implementation_Manager__c =>' + testComponentController.project[0].Certified_Implementation_Manager__c);
-//        System.assertEquals(testComponentController.project[0].Certified_Implementation_Manager__c, '00539000005M7TO');
+        System.debug('testComponentController.project.Certified_Implementation_Manager__c =>' + testComponentController.project.Certified_Implementation_Manager__c);
+        System.assertEquals('0033C0000055ll9', testComponentController.project.Certified_Implementation_Manager__c);
 
     }
 
