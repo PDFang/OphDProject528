@@ -76,9 +76,17 @@ public with sharing class AssetSubscriptionAllocationNewController {
         return subscriptionAllocationData;
     }
 
+    @RemoteAction
+    public static String PhaseProjectDetails(String assetId){
+        String ProjectData = AssetSubscriptionAllocationHelper.getPhaseProjectDetails(assetId);
+        return ProjectData;
+    }
+
     public pagereference cancel(){
 
         return new PageReference('/'+currentId).setRedirect(true);
     }
+
+
 
 }

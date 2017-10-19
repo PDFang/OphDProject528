@@ -80,8 +80,13 @@
 
 
         $(document).ready(function() {
-            getSObjType();
+           getSObjType();
+
         });
+
+        var assetQuantity = 0,
+            currentObjectType;
+
 
         function getSObjType(){
              AssetSubscriptionAllocationNewController.getObjectType(
@@ -91,6 +96,7 @@
                                         console.log('object type ==>' + result);
                                         if(result.length > 1){
                                             if(result == 'Asset'){
+                                                currentObjectType = result;
                                               console.log('results =>' + JSON.stringify(result));
                                               assetAllocationData(null, '{!currentId}');
                                            }
@@ -103,76 +109,72 @@
                              });
          }
         function assetAllocationData(projId, assetId){
-               var assetAllocationData =new kendo.data.DataSource({
+               var assetAllocationData = new kendo.data.DataSource({
                     autosync:true,
                     transport:{
                       read: function(options){
-                               AssetSubscriptionAllocationNewController.getAssetAllocationData(projId, assetId,
+                               AssetSubscriptionAllocationNewController.getAssetAllocationData(
+                                   projId,
+                                   assetId,
                                   function(result,event)
                                       {
                                           if (event.status) {
                                               if(result.length > 1){
                                                    options.success(JSON.parse(result));
-                                              console.log('results =>' + JSON.stringify(result));
+                                                   console.log('results =>' + JSON.stringify(result));
                                               }
-                                          } else if (event.type === 'exception') {
-
-                                          } else {
-
                                           }
                                       },
                                       {escape: false}
                                );
                       },
                       update: function(options){
+                          console.log('options =>' + JSON.stringify(options.data));
                           options.success();
                         },
                         create: function(options){
+                             console.log('options =>' + JSON.stringify(options.data));
                              options.success();
                         },
                         destroy: function(options){
+
                              options.success();
                         },
+                    },
                     schema:{
                         model: {
-                            id: "Id",
+                            id: "AssetAllocationId",
                             fields: {
-                                "AssetId": {from:"Asset", type: "string", editable:false},
-                                "Id": { from: "AssetAllocationId", type: "string",editable:false },
-                                "AssetName" : {from:"AssetName", type:"string",editable:false },
-                                "AssetAllocationName" : {from:"AssetAllocationName", type:"string",editable:false},
-                                "ProjectNumber":{from:"ProjectNumber",type:"string",editable:false},
-                                "ProjectName":{from:"ProjectName",type:"string", editable:false},
-                                "ProjectPhase" : {from:"ProjectPhase", type: "string", editable:false},
-                                "AllocatedQuantity":{from: "AllocatedQuantity", type:"number", editable: true, nullable: true},
-                                "AllocatedHours":{from: "AllocatedHours", type:"number", editable: true, nullable: true},
-                                "AllocatedPercentage":{from: "AllocatedPercentage", type:"number", editable: true, nullable: true}
+                                AssetAllocationId: { from: "AssetAllocationId"},
+                                Asset: {from:"Asset", type: "string"},
+                                AssetName : {from:"AssetName", type:"string"},
+                                AssetAllocationName : {from:"AssetAllocationName", type:"string"},
+                                ProjectNumber:{from:"ProjectNumber",type:"string"},
+                                ProjectName:{from:"ProjectName",type:"string"},
+                                ProjectPhase : {from:"ProjectPhase", type: "string"},
+                                AllocatedQuantity:{from: "AllocatedQuantity", type:"number", nullable: true, editable:true},
+                                AllocatedHours:{from: "AllocatedHours", type:"number",  nullable: true, editable:true},
+                                AllocatedPercentage:{from: "AllocatedPercentage", type:"number", nullable: true, editable:true},
+                                Quantity :{from:"Quantity", type:"number"}
                             }
                         }
-                       }
-                  }
+                    }
                });
 
               $("#assetAllocationList").kendoGrid({
                   dataSource: assetAllocationData,
-                  editable: true,
-                  scrollable: true,
+                  editable: "inline",
+                  scrollable: false,
                   noRecords: true,
-                  height: 210,
+                  height: 350,
+                  edit: addDuplicateRowAsset,
+                  dataBound : gridDataboundAsset,
+                  detailInit: detailProjects,
+                  cancel : hideChildProjects,
                   toolbar: [
                       {
                           name: "create",
                           text: "Add New Row"
-
-                      },
-                      {
-                          name: "save",
-                          text: "Save Changes"
-
-                      },
-                      {
-                          name: "cancel",
-                          text: "Cancel Changes"
 
                       }
                       ],
@@ -185,47 +187,191 @@
                             {
                                 field:"AssetName",
                                 title:"Asset",
-                                editor:nonEditor,
-                                template: '#{ #<a href="/#: data.AssetId #" target="_blank" >#= data.AssetName #</a># } #',
+                                editor:nonEditorAsset,
+                                template: '#{ #<a href="/#: data.Asset #" target="_blank" name="AssetName">#= data.AssetName #</a># } #',
                             },
                             {
                                 field:"AssetAllocationName",
                                 title:"Allocation",
-                                editor:nonEditor,
+                                editor:nonEditorAsset,
                                 template: '#{ #<a href="/#: data.Id #" target="_blank" >#= data.AssetAllocationName #</a># } #',
                             },
                             {
                                 field:"ProjectName",
                                 title:"Project",
-                                editor:nonEditor,
+                                editor:nonEditorAsset,
                                 template: '#{ #<a href="/#: data.ProjectNumber #" target="_blank" >#= data.ProjectName #</a># } #',
                             },
                             {
                                 field:"ProjectPhase",
                                 title:"Project Phase",
-                                editor:nonEditor,
+                                editor:nonEditorAsset,
                                 filterable:true
                             },
                             {
                                 field:"AllocatedQuantity",
                                 title:"Allocated Quantity",
+                                editor:nonEditorAsset,
                                 editable:true
                             },
                             {
                                 field:"AllocatedPercentage",
                                 title:"Allocated Percentage",
+                                editor:nonEditorAsset,
                                 editable:true
                             },
                             {
                                 field:"AllocatedHours",
                                 title:"Allocated Hours",
                                 editable:true
+                            },
+                            {   title:"Action",
+                                command: ["edit","destroy"]
                             }
+
                   ]
               });
        }
 
-       function subscriptionAllocationData(projId, subscriptionId){
+
+        function addDuplicateRowAsset(e){
+
+            if(e.model.isNew() && !e.model.dirty ){
+                var assetGrid = this;
+                var dataItems = assetGrid.dataSource.view();
+                var totalQuantity = 0,
+                    totalPercentage = 0;
+
+                for(var i = 0; i < dataItems.length; i++){
+                    if(dataItems[i].get("AllocatedQuantity") > 0 && dataItems[i].get("AllocatedQuantity") != null){
+                         totalQuantity += Number(dataItems[i].get("AllocatedQuantity"));
+                    }else if(dataItems[i].get("AllocatedPercentage") > 0 && dataItems[i].get("AllocatedPercentage") != null){
+                        totalPercentage += Number(dataItems[i].get("AllocatedPercentage"));
+                    }
+                }
+
+                if(totalQuantity > 0){
+                    var remainingQuantity = 100 -  totalQuantity;
+                    var allocatedQuantityCell =  e.container.contents()[6];
+                    $(allocatedQuantityCell).find("input").val(remainingQuantity)
+                    e.model.AllocatedQuantity = remainingQuantity;
+                }else if(totalPercentage > 0 ){
+                    var remainingPercentage = 100 -  totalPercentage;
+                    var allocatedQPercentageCell =  e.container.contents()[7];
+                    $(allocatedQPercentageCell).find("input").val(remainingPercentage)
+                    e.model.AllocatedPercentage = remainingPercentage;
+                }
+
+                if(currentObjectType == 'Asset'){
+                    e.model.Asset = dataItems[1].get("Asset");
+                    e.model.AssetName = dataItems[1].get("AssetName");
+                    var firstCell = e.container.contents()[2];
+                    $('<a href="/' +  e.model.Asset + '" target="_blank">' + e.model.AssetName +'</a>').appendTo(firstCell);
+                    var projectCell = e.container.contents()[4];
+                    $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">Select Projects </a>').appendTo(projectCell);
+                }
+            }
+             $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
+        }
+
+//' +   e + '); return false;
+         function nonEditorAsset(container, options) {
+              if(options.field == "AllocatedQuantity" && assetQuantity == 1){
+                    container.text(options.model[options.field]);
+              }else if(options.field == "AllocatedPercentage" && assetQuantity > 1){
+                  container.text(options.model[options.field]);
+              }else if(options.field != "AllocatedQuantity" && options.field != "AllocatedPercentage"){
+                  container.text(options.model[options.field]);
+              }
+
+            if(options.field == "AllocatedQuantity" && assetQuantity > 1){
+
+                $('<input style="width:95%" required  id="AllocatedQuantity" name="AllocatedQuantity"  data-bind="value:' + options.field + '"/>')
+                .appendTo(container);
+
+
+
+            }else if (options.field == "AllocatedPercentage" && assetQuantity == 1){
+
+                 $('<input style="width:95%" required  id="AllocatedPercentage" name="AllocatedPercentage"  data-bind="value:' + options.field + '"/>')
+                .appendTo(container);
+            }
+       }
+
+       function gridDataboundAsset(e){
+          // var grid = this;
+          $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
+          var assetGrid = this;
+          var dataItems = assetGrid.dataSource.view();
+          if(dataItems[0].get("id") != ''){
+               assetQuantity = dataItems[0].get("Quantity");
+          }
+
+          console.log('assetQuantity ==> ' + assetQuantity);
+
+       }
+
+       function loadDetail(obj){
+           var row = $(obj).parent().parent();
+           var link = $(row).find("td.k-hierarchy-cell .k-icon");
+           link.click();
+           $(row).next().find(".k-hierarchy-cell").hide();
+       }
+
+        function detailProjects(e) {
+             $("<div/>").appendTo(e.detailCell).kendoGrid({
+                        dataSource: {
+                            autosync:true,
+                            transport: {
+                                read: function(options){
+                                     AssetSubscriptionAllocationNewController.PhaseProjectDetails(
+                                        e.data.Asset,
+                                        function(result,event){
+                                          if (event.status) {
+                                              if(result.length > 1){
+                                                   options.success(JSON.parse(result));
+                                                   console.log('PhaseProjectDetails =>' + JSON.stringify(result));
+                                              }
+                                          }
+                                        },{escape: false}
+                                     );
+                                },
+                            },
+                            schema:{
+                                model: {
+                                    id: "ProjectId",
+                                    fields: {
+                                        ProjectId: { from: "Id"},
+                                        ProjectNumber: {from:"Name", type: "string"},
+                                        Summary : {from:"Summary__c", type:"string"},
+                                        Status : {from:"ProjectStatus__c", type:"string"}
+                                    }
+                                }
+                            }
+                        },
+                        scrollable: false,
+                        sortable: true,
+                        columns: [
+                            { field: "ProjectNumber", width: "110px" },
+                            { field: "Summary", title:"Project Summary", width: "200px" },
+                            { field: "Status", title:"Project Status", width: "110px" },
+                            { command: { text: "Select", click : selectProject}, title: "Action", width: "180px" }
+                        ]
+                    });
+                }
+
+              function selectProject(e){
+                  var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+                  var detailGrid = this.wrapper;
+                  var parentRow = detailGrid.closest("tr.k-detail-row").prev("tr");
+              }
+
+              function hideChildProjects(e){
+                  $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
+              }
+
+      /** function subscriptionAllocationData(projId, subscriptionId){
+
            console.log('subscriptionId =>' + subscriptionId);
                var subscriptionAllocationData =new kendo.data.DataSource({
                     autosync:true,
@@ -279,12 +425,15 @@
                   }
                });
 
-              $("#subscriptionAllocationList").kendoGrid({
+
+
+            $("#subscriptionAllocationList").kendoGrid({
                   dataSource: subscriptionAllocationData,
-                  editable: true,
+                  editable: "inline",
                   scrollable: true,
                   noRecords: true,
                   height: 210,
+
                   toolbar: [
                       {
                           name: "create",
@@ -306,6 +455,7 @@
                           text: "Delete"
 
                       }
+
                       ],
                   columns: [{
                                 field:"Id",
@@ -360,10 +510,12 @@
                             }
                   ]
               });
-       }
+       } **/
 
-       function nonEditor(container, options) {
-               container.text(options.model[options.field]);
-        }
+
+
+
+
+
     </script>
 </apex:page>

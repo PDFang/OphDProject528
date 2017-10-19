@@ -271,4 +271,26 @@ public class AssetSubscriptionAllocationHelper {
 
     }
 
+    // fetch Project Subscription Allocation
+    public static String getPhaseProjectDetails(String assetId){
+
+        Asset thisAsset = [select Parent_Project__c from Asset WHere Id = :assetId limit 1];
+
+        String soql = 'Select Id, Name, Summary__c, ProjectStatus__c ' +
+                + ' from Project__c where ';
+        if(assetId != null){
+            soql += ' ParentProject__c = \'' + thisAsset.Parent_Project__c + '\'';
+        }
+
+        soql += ' order by createddate ';
+
+        List<Project__c> projects = Database.query(soql);
+
+        if(projects.size() > 0)
+            return JSON.serialize(projects);
+
+        return null;
+
+    }
+
 }
