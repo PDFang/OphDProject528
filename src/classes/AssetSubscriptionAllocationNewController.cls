@@ -83,37 +83,13 @@ public with sharing class AssetSubscriptionAllocationNewController {
     }
 
     @RemoteAction
-    public static String upsertAssetSubscriptionAllocation(String objType, String allocationJson){
+    public static String UpsertAssetSubscriptionAllocation(String objType, String allocationJson){
         String result;
         String message = '';
         try{
-            system.debug('upsertAssetSubscriptionAllocation(): allocationJson - '+allocationJson);
+            system.debug('UpsertAssetSubscriptionAllocation(): allocationJson - '+allocationJson);
             AssetSubscriptionAllocationNewModel assetSubscriptionAllocation = (AssetSubscriptionAllocationNewModel)JSON.deserialize(allocationJson, AssetSubscriptionAllocationNewModel.class);
-
-            if(objType == 'Asset'){
-                Project_Asset_Allocation__c projectAssetAllocation = new Project_Asset_Allocation__c(
-                        Asset__c = assetSubscriptionAllocation.Asset,
-                        Id = assetSubscriptionAllocation.AssetAllocationId,
-                        Project__c = assetSubscriptionAllocation.ProjectNumber,
-                        Quantity_Allocation__c = assetSubscriptionAllocation.AllocatedQuantity,
-                        Percent_Allocation__c = assetSubscriptionAllocation.AllocatedPercentage,
-                        Hours_Allocated__c = assetSubscriptionAllocation.AllocatedHours
-                );
-
-                upsert projectAssetAllocation;
-            }
-            else if(objType == 'Subscription'){
-                Project_Subscription_Allocation__c projectSubscriptionAllocation = new Project_Subscription_Allocation__c(
-                        Subscription__c = assetSubscriptionAllocation.Subscription,
-                        Id = assetSubscriptionAllocation.SubscriptionAllocationId,
-                        Project__c = assetSubscriptionAllocation.ProjectNumber,
-                        Quantity_Allocation__c = assetSubscriptionAllocation.AllocatedQuantity,
-                        Percent_Allocation__c = assetSubscriptionAllocation.AllocatedPercentage,
-                        Hours_Allocated__c = assetSubscriptionAllocation.AllocatedHours
-                );
-
-                upsert projectSubscriptionAllocation;
-            }
+            AssetSubscriptionAllocationHelper.SaveAssetSubscriptionAllocation(objType, assetSubscriptionAllocation);
             result = 'Success';
         }
         catch (Exception ex){
@@ -123,6 +99,13 @@ public with sharing class AssetSubscriptionAllocationNewController {
         return sendResponse(result, message);
 
     }
+
+    @RemoteAction
+    public static String AssetSubscriptionDetailsFromProjectPhase(String projId, String objType){
+        String assetSubscriptionData = AssetSubscriptionAllocationHelper.getAssetSubscriptionDetailsFromProjectPhase(projId, objType);
+        return assetSubscriptionData;
+    }
+
 
     public pagereference cancel(){
 
