@@ -22,6 +22,10 @@ public class AssetSubscriptionAllocationNewModel {
     public decimal Quantity {get;set;}
     public Decimal BudgtedHours {get; set;}
 
+    public AssetSubscriptionAllocationNewModel(){
+
+    }
+
     public AssetSubscriptionAllocationNewModel(Project_Asset_Allocation__c allocation){
         this.Asset = allocation.Asset__c;
         this.AssetName = allocation.Asset__r.Name;
