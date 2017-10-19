@@ -5,6 +5,11 @@
 public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandler {
     public static Boolean InSubscriptionTrigger = false;
 
+    public override void beforeUpdate()
+    {
+        UpdateSubscriptionReplicaFromProjectPhase();
+    }
+
     public override void afterInsert()
     {
         AttachParentProject();
@@ -14,7 +19,40 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
         SubscriptionTriggerHandler.InSubscriptionCustomTrigger = true;
         if (InSubscriptionTrigger == false)
         {
-            UpdateSubscription((List<SubscriptionReplica__c>) trigger.new);
+            UpdateSubscription((List<SubscriptionReplica__c>) trigger.new, (Map<Id, SubscriptionReplica__c>)trigger.oldMap);
+        }
+    }
+
+    // Get associated Project Phase information and update to SubscriptionReplica
+    public static void UpdateSubscriptionReplicaFromProjectPhase(){
+
+        Set<String> subscriptionReplicaIds = new Set<String>();
+        List<SubscriptionReplica__c> newList = (List<SubscriptionReplica__c>)( trigger.new );
+        Map<Id, Date> projectPhaseDates  = new Map<Id, Date>();
+
+        for(SubscriptionReplica__c subscriptionReplica : newList)
+        {
+            subscriptionReplicaIds.add(subscriptionReplica.Subscription__c);
+        }
+
+        // collect Project Phase information from Subscription table
+        for(SBQQ__Subscription__c subscription : [
+                SELECT Id, Project_Phase__r.ActualProjectGoLiveDate__c FROM SBQQ__Subscription__c
+                WHERE Id IN : subscriptionReplicaIds
+        ]){
+            if(!projectPhaseDates.containsKey(subscription.Id))
+            {
+                projectPhaseDates.put(subscription.Id, subscription.Project_Phase__r.ActualProjectGoLiveDate__c);
+            }
+        }
+
+        for(SubscriptionReplica__c newSubscriptionReplica : newList)
+        {
+            if(newSubscriptionReplica.Status__c == '4 - Delivered' && newSubscriptionReplica.Delivered__c != true){
+                Date goLiveDate = projectPhaseDates.get(newSubscriptionReplica.Subscription__c);
+                newSubscriptionReplica.Install_Date__c = goLiveDate ;
+                newSubscriptionReplica.Delivered__c = true;
+            }
         }
     }
 
@@ -34,46 +72,51 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
     }
 
     @TestVisible
-    private static void UpdateSubscription(List<SubscriptionReplica__c> lstSubscriptionReplicas) {
+    // Update Subscription and associated Implemented Product
+    private static void UpdateSubscription(List<SubscriptionReplica__c> lstSubscriptionReplicas, Map<Id, SubscriptionReplica__c> oldMap) {
 
         list<SBQQ__Subscription__c> lstUpdateSubscriptions = new list<SBQQ__Subscription__c>();
         list<ImplementedProduct__c> lstUpdateImplementedProducts = new list<ImplementedProduct__c>();
-
-        Set<String> subscriptionReplicaIds = new Set<String>();
-        Map<Id, Date> ImplementationProductIds  = new Map<Id, Date>();
-
-        for ( SubscriptionReplica__c subscriptionReplica : lstSubscriptionReplicas)
-        {
-            subscriptionReplicaIds.add(subscriptionReplica.Id);
-        }
+        Map<Id, Date> ImplementationProductDates  = new Map<Id, Date>();
 
         //update certain fields in Subscription table
-        for ( SubscriptionReplica__c subscriptionReplica : [
-                SELECT Id, Status__c, Install_Date__c, ImplementedProduct__c, Subscription__c FROM SubscriptionReplica__c
-                WHERE Id IN : subscriptionReplicaIds]){
+        for ( SubscriptionReplica__c subscriptionReplica : lstSubscriptionReplicas) {
 
             SBQQ__Subscription__c subscription = new SBQQ__Subscription__c(Id = subscriptionReplica.Subscription__c);
             subscription.Status__c = subscriptionReplica.Status__c;
-            subscription.Install_Date__c = subscriptionReplica.Install_Date__c;     // ?? assume Install date is set before I come here
+            subscription.Install_Date__c = subscriptionReplica.Install_Date__c;
             subscription.Implemented_Product__c = subscriptionReplica.ImplementedProduct__c;
 
             // add changed Subscriptions to update list
             lstUpdateSubscriptions.add(subscription);
 
-            // collect Implemented Product information
-            if ( subscriptionReplica.Status__c == '4 - Delivered')
+            // only update implemented product when first time the subscription ststus set to '4 - Delivered'
+            SubscriptionReplica__c oldSubscriptionReplica = (oldMap != null) ? oldMap.get(subscriptionReplica.Id) : null;
+            if ( subscriptionReplica.ImplementedProduct__c != null && oldSubscriptionReplica != null && subscriptionReplica.Install_Date__c != null)
             {
-                ImplementationProductIds.put(subscriptionReplica.ImplementedProduct__c, subscriptionReplica.Install_Date__c);
+                if ( subscriptionReplica.Status__c == '4 - Delivered'
+                        && subscriptionReplica.Delivered__c == true
+                        && oldSubscriptionReplica.Delivered__c != true)
+                {
+                    if(!ImplementationProductDates.containsKey(subscriptionReplica.ImplementedProduct__c))
+                    {
+                        ImplementationProductDates.put(subscriptionReplica.ImplementedProduct__c, subscriptionReplica.Install_Date__c);
+                    }
+                }
             }
         }
 
         //update certain fields in Implemented Product table
         for ( ImplementedProduct__c implementedProduct : [
                 SELECT Id, Status__c, GoLiveDate__c FROM ImplementedProduct__c
-                WHERE Id IN : ImplementationProductIds.keyset()]){
+                WHERE Id IN : ImplementationProductDates.keyset()
+        ]){
 
+            Date installDate = ImplementationProductDates.get(implementedProduct.Id);
+            implementedProduct.GoLiveDate__c = installDate;
             implementedProduct.Status__c = 'Implemented';
-            implementedProduct.GoLiveDate__c = (Date)ImplementationProductIds.get(implementedProduct.Id);
+
+            // add changed implementedProduct to update list
             lstUpdateImplementedProducts.add(implementedProduct);
         }
 
