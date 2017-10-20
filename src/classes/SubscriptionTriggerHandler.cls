@@ -30,8 +30,8 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
                 newReplica.Subscription__c = subscription.Id;
                 newReplica.AccountLookup__c = subscription.SBQQ__Account__c;
                 newReplica.QuoteLineLookup__c = subscription.SBQQ__QuoteLine__c;
-                newReplica.ImplementedProduct__c = subscription.Implemented_Product__c;
-                newReplica.Status__c = subscription.Status__c;
+                newReplica.Implemented_Product__c = subscription.Implemented_Product__c;
+                newReplica.Status1__c = subscription.Status__c;
                 lstSubscriptionReplicas.add(newReplica);
             }
 
@@ -52,13 +52,13 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
 
         //update certain fields to SubscriptionReplica table since they are not formula fields there
         for(SubscriptionReplica__c subscriptionReplica : [
-                SELECT Id, Status__c, Install_Date__c, ImplementedProduct__c, Subscription__c FROM subscriptionReplica__c
+                SELECT Id, Status1__c, Install_Date__c, Implemented_Product__c, Subscription__c FROM subscriptionReplica__c
                 WHERE Subscription__c IN : lstSubscriptions.keyset()
         ]){
             SBQQ__Subscription__c subscription = lstSubscriptions.get(SubscriptionReplica.Subscription__c);
-            subscriptionReplica.Status__c = subscription.Status__c;
+            subscriptionReplica.Status1__c = subscription.Status__c;
             subscriptionReplica.Install_Date__c = subscription.Install_Date__c;
-            subscriptionReplica.ImplementedProduct__c = subscription.Implemented_Product__c;
+            subscriptionReplica.Implemented_Product__c = subscription.Implemented_Product__c;
 
             // add changed SubscriptionReplica to update list
             lstUpdateSubscriptionReplicas.add(subscriptionReplica);
