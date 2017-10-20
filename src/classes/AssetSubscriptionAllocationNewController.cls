@@ -77,6 +77,12 @@ public with sharing class AssetSubscriptionAllocationNewController {
     }
 
     @RemoteAction
+    public static String PhaseProjectDetailsSubscription(String SubscriptionId){
+        String ProjectData = AssetSubscriptionAllocationHelper.getPhaseProjectDetailsSubscription(SubscriptionId);
+        return ProjectData;
+    }
+
+    @RemoteAction
     public static String PhaseProjectDetails(String assetId){
         String ProjectData = AssetSubscriptionAllocationHelper.getPhaseProjectDetails(assetId);
         return ProjectData;
@@ -106,6 +112,18 @@ public with sharing class AssetSubscriptionAllocationNewController {
         return assetSubscriptionData;
     }
 
+    @RemoteAction
+    public static String DeleteAllocation(String allocationId, String objType){
+        String result;
+        try{
+            AssetSubscriptionAllocationHelper.DeleteAllocation(allocationId, objType);
+            result = 'Success';
+        }catch (Exception ex){
+            result = 'Failed';
+        }
+
+        return result;
+    }
 
     public pagereference cancel(){
 

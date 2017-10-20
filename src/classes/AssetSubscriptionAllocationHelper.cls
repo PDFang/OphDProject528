@@ -223,7 +223,7 @@ public class AssetSubscriptionAllocationHelper {
         } else{
             soql += ' Asset__c = \'' + assetId + '\'';
         }
-        soql += ' order by createddate ';
+        soql += ' order by createddate DESC ';
 
         List<Project_Asset_Allocation__c> allocations = Database.query(soql);
         for(Project_Asset_Allocation__c allocation : allocations){
@@ -254,7 +254,7 @@ public class AssetSubscriptionAllocationHelper {
         } else{
             soql += ' Subscription__c = \'' + subscriptionId + '\'';
         }
-        soql += ' order by createddate ';
+        soql += ' order by createddate DESC ';
 
         List<Project_Subscription_Allocation__c> allocations = Database.query(soql);
         for(Project_Subscription_Allocation__c allocation : allocations){
@@ -362,5 +362,37 @@ public class AssetSubscriptionAllocationHelper {
 
         return null;
 
+    }
+
+    public static void DeleteAllocation(String allocationId, String objType){
+        try{
+            if(objType == 'Asset'){
+
+                String soql = 'Select Id, Name' +
+                        + ' from Project_Asset_Allocation__c where ';
+                if(allocationId != null){
+                    soql += ' Id = \'' + allocationId + '\'';
+                }
+
+                List<Project_Asset_Allocation__c> assetAllocation = Database.query(soql);
+
+                if(assetAllocation.size() > 0)
+                    delete assetAllocation;
+            }
+            else if(objType == 'Subscription'){
+                String soql = 'Select Id, Name' +
+                        + ' from Project_Subscription_Allocation__c where ';
+                if(allocationId != null){
+                    soql += ' Id = \'' + allocationId + '\'';
+                }
+
+                List<Project_Subscription_Allocation__c> subscriptionAllocation = Database.query(soql);
+
+                if(subscriptionAllocation.size() > 0)
+                    delete subscriptionAllocation;
+            }
+        }catch (Exception ex){
+
+        }
     }
 }
