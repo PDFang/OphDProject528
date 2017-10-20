@@ -217,7 +217,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
             update updateAssetList;
 
         List<SubscriptionReplica__c> updateSubscriptionCustomList = new List<SubscriptionReplica__c>(
-        [SELECT Id, Quantity__c, Status__c, Total_Implemented_Quantity__c, QuantityCancelled__c, FullyImplemented__c from SubscriptionReplica__c where Id IN : subscriptionIds]);
+        [SELECT Id, Quantity__c, Status1__c, Total_Implemented_Quantity__c, QuantityCancelled__c, FullyImplemented__c from SubscriptionReplica__c where Id IN : subscriptionIds]);
 
         for(SubscriptionReplica__c updateSubscriptionCustom: updateSubscriptionCustomList){
             System.debug('updateSubscriptionCustom' + updateSubscriptionCustom);

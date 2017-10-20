@@ -20,6 +20,26 @@ private class SubscriptionReplicaTriggerHandlerTest {
 
         insert testAccount;
 
+        Opportunity testOpportunity = new Opportunity(
+                Account = testAccount,
+                Amount = 5.0,
+                Name = 'Test Opportunity',
+                StageName = 'One',
+                CloseDate = Date.today(),
+                AccountId = testAccount.Id
+        );
+
+        insert testOpportunity;
+
+        ImplementedProduct__c testProduct = new ImplementedProduct__c(
+                Account__c = testAccount.Id,
+                Status__c = 'New',
+                Product__c = 'Dialer',
+                Opportunity__c = testOpportunity.Id
+        );
+
+        insert testProduct;
+
         Project__c testProject = new Project__c(
                 Account__c = testAccount.Id,
                 ActualProjectGoLiveDate__c = actualGoLiveDate
@@ -35,7 +55,8 @@ private class SubscriptionReplicaTriggerHandlerTest {
                 SBQQ__Bundled__c = true,
                 SBQQ__ListPrice__c = 50,
                 SBQQ__Quantity__c = 200,
-                Project_Phase__c = testProject.Id
+                Project_Phase__c = testProject.Id,
+                Implemented_Product__c = testProduct.Id
         ));
 
         insert subscriptions;
@@ -44,20 +65,23 @@ private class SubscriptionReplicaTriggerHandlerTest {
     static testMethod void testUpdatingCustomSubscriptionWillUpdateSubscriptionAndImplementedProduct() {
         //add Subscription objects
         addSubscriptions();
-        List<SubscriptionReplica__c> subscriptionReplicas = [select Id, Status__c, Subscription__c from SubscriptionReplica__c limit 1];
+        List<SubscriptionReplica__c> subscriptionReplicas = [select Id, Status1__c, Subscription__c from SubscriptionReplica__c limit 1];
 
         //When a (custom) subscription record is set to a status of '4-Delivered'
-        subscriptionReplicas[0].Status__c = '4 - Delivered';
+        subscriptionReplicas[0].Status1__c = '4 - Delivered';
 
         Test.startTest();
         update subscriptionReplicas;
         Test.stopTest();
 
-        SubscriptionReplica__c replica = [select Id, Status__c, Install_Date__c, Subscription__c from SubscriptionReplica__c where Id = :subscriptionReplicas[0].Id];
-        SBQQ__Subscription__c subscription = [select Id, Status__c, Install_Date__c, Implemented_Product__r.Status__c, Implemented_Product__r.GoLiveDate__c
+        SubscriptionReplica__c replica = [select Id, Status1__c, Install_Date__c, Subscription__c, Implemented_Product__c from SubscriptionReplica__c where Id = :subscriptionReplicas[0].Id];
+        SBQQ__Subscription__c subscription = [select Id, Status__c, Install_Date__c, Implemented_Product__r.Status__c, Implemented_Product__r.GoLiveDate__c, Implemented_Product__c
                                                 from SBQQ__Subscription__c
                                                 where Id = :replica.Subscription__c][0];
 
+        System.assertEquals(replica.Implemented_Product__c, subscription.Implemented_Product__c, 'Implemented_Product__c does not match between Subscription and SubscriptionReplica__c');
+        System.assertNotEquals(null, replica.Implemented_Product__c, 'SubscriptionReplica__c Implemented_Product__c is null');
+        System.assertNotEquals(null, subscription.Implemented_Product__c, 'Subscription__c Implemented_Product__c is null');
         //The "parent" subscription record status is updated to '4-Delivered'
         System.assertEquals('4 - Delivered', subscription.Status__c, 'SBQQ__Subscription__c status was not correctly updated');
         //The "parent" subscription install date is set to the "Actual Go-Live Date" from the project phase
@@ -76,16 +100,16 @@ private class SubscriptionReplicaTriggerHandlerTest {
         //add subscription objects
         addSubscriptions();
 
-        SubscriptionReplica__c replica = [select Id, Status__c from SubscriptionReplica__c limit 1][0];
+        SubscriptionReplica__c replica = [select Id, Status1__c from SubscriptionReplica__c limit 1][0];
 
         //update the status and save it
-        replica.Status__c = '4 - Delivered';
+        replica.Status1__c = '4 - Delivered';
 
         update replica;
 
-        replica = [select Id, Status__c from SubscriptionReplica__c where Id = :replica.Id][0];
+        replica = [select Id, Status1__c from SubscriptionReplica__c where Id = :replica.Id][0];
         //change the status to something other than '4-Delivered'
-        replica.Status__c = '1 - New';
+        replica.Status1__c = '1 - New';
         update replica;
 
         //now test that when the status is changed back to '4-Delivered' it doesn't do any of the updates
@@ -96,16 +120,16 @@ private class SubscriptionReplicaTriggerHandlerTest {
 
         update testProject;
 
-        replica = [select Id, Status__c from SubscriptionReplica__c where Id = :replica.Id][0];
+        replica = [select Id, Status1__c from SubscriptionReplica__c where Id = :replica.Id][0];
 
-        replica.Status__c = '4 - Delivered';
+        replica.Status1__c = '4 - Delivered';
 
         Test.startTest();
         update replica;
         Test.stopTest();
 
         //the updates should only happen the first time the status is set to '4-Delivered'
-        replica = [select Id, Status__c, Install_Date__c, Subscription__c from SubscriptionReplica__c where Id = :replica.Id];
+        replica = [select Id, Status1__c, Install_Date__c, Subscription__c from SubscriptionReplica__c where Id = :replica.Id];
 
         SBQQ__Subscription__c subscription = [select Id, Status__c, Install_Date__c, Implemented_Product__r.Status__c, Implemented_Product__r.GoLiveDate__c
                                                 from SBQQ__Subscription__c
