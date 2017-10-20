@@ -432,8 +432,9 @@
                   editable: "inline",
                   scrollable: true,
                   noRecords: true,
-                  height: 210,
-
+                  height: 350,
+                  detailInit: detailProjects,
+                  cancel : hideChildProjects,
                   toolbar: [
                       {
                           name: "create",
