@@ -518,7 +518,7 @@
                             scrollable: false,
                             sortable: true,
                             columns: [
-                                { command: { text: "Select", click : selectProject}, title: "Action", width: "180px" },
+                                { command: { text: "Select", click : selectProject}, title: "Action", width: "80px" },
                                 { field: "ProjectNumber", width: "110px" },
                                 { field: "Summary", title:"Project Summary", width: "200px" },
                                 { field: "Status", title:"Project Status", width: "110px" }
