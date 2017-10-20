@@ -186,11 +186,16 @@ public class XMRestEventService {
         // Get the product map for the specific product in question
         ProductEventMap__c productMap = nodeMap.get(product);
 
-        // If we didn't find the product we will need to notify someone
-        if(productMap == null){
-            system.debug('convertProductAndPlatformToGroupName() ==> product map is null, this will cause a few problems');
-            throw new ProductEventMapException('The product:' + product + ' does not exist in the product event map');
+        if(productMap == null) {
+            for(ProductEventMap__c mapping : nodeMap.values()) {
+                if(mapping.Product__c == product) {
+                    productMap = mapping;
+                    break;
+                }
+            }
         }
+
+        product = productMap.ImplementedProduct__c;
 
         for(String platform : platforms.split(';')) {
 
@@ -203,6 +208,8 @@ public class XMRestEventService {
             } else {
                 cluster = 'NONE';
             }
+
+
 
             String groupString = ('IP_{PartnerPrefix}_' + product + '_' + cluster).replace(' ', '').replace('/','-');
 
