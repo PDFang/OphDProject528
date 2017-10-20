@@ -271,4 +271,96 @@ public class AssetSubscriptionAllocationHelper {
 
     }
 
+    // fetch Project Subscription Allocation
+    public static String getPhaseProjectDetails(String assetId){
+
+        Asset thisAsset = [select Parent_Project__c from Asset WHere Id = :assetId limit 1];
+
+        String soql = 'Select Id, Name, Summary__c, ProjectStatus__c ' +
+                + ' from Project__c where ';
+        if(assetId != null){
+            soql += ' ParentProject__c = \'' + thisAsset.Parent_Project__c + '\'';
+        }
+
+        soql += ' order by createddate ';
+
+        List<Project__c> projects = Database.query(soql);
+
+        if(projects.size() > 0)
+            return JSON.serialize(projects);
+
+        return null;
+
+    }
+
+    public static void SaveAssetSubscriptionAllocation(String objType, AssetSubscriptionAllocationNewModel assetSubscriptionAllocation){
+        try{
+            if(objType == 'Asset'){
+                Project_Asset_Allocation__c projectAssetAllocation = new Project_Asset_Allocation__c(
+                        Asset__c = assetSubscriptionAllocation.Asset,
+                        Id = assetSubscriptionAllocation.AssetAllocationId,
+                        Project__c = assetSubscriptionAllocation.ProjectNumber,
+                        Quantity_Allocation__c = assetSubscriptionAllocation.AllocatedQuantity,
+                        Percent_Allocation__c = assetSubscriptionAllocation.AllocatedPercentage,
+                        Hours_Allocated__c = assetSubscriptionAllocation.AllocatedHours
+                );
+
+                upsert projectAssetAllocation;
+            }
+            else if(objType == 'Subscription'){
+                Project_Subscription_Allocation__c projectSubscriptionAllocation = new Project_Subscription_Allocation__c(
+                        Subscription__c = assetSubscriptionAllocation.Subscription,
+                        Id = assetSubscriptionAllocation.SubscriptionAllocationId,
+                        Project__c = assetSubscriptionAllocation.ProjectNumber,
+                        Quantity_Allocation__c = assetSubscriptionAllocation.AllocatedQuantity,
+                        Percent_Allocation__c = assetSubscriptionAllocation.AllocatedPercentage,
+                        Hours_Allocated__c = assetSubscriptionAllocation.AllocatedHours
+                );
+
+                upsert projectSubscriptionAllocation;
+            }
+        }catch (Exception ex){
+            throw ex;
+        }
+
+    }
+
+    // fetch Project Subscription Allocation
+    public static String getAssetSubscriptionDetailsFromProjectPhase(String projId, String objType){
+
+        Project__c thisProject = [select ParentProject__c from Project__c WHere Id = :projId limit 1];
+
+        if(objType == 'Asset'){
+            String soql = 'Select Id, Name, Remaning_Percentage__c, RemainingQuantity__c, Remaining_Hours__c ' +
+                    + ' from Asset where ';
+            if(projId != null){
+                soql += ' Parent_Project__c = \'' + thisProject.ParentProject__c + '\'';
+            }
+
+            soql += ' order by createddate ';
+
+            List<Asset> assets = Database.query(soql);
+
+            if(assets.size() > 0)
+                return JSON.serialize(assets);
+        }
+        else if(objType == 'Subscription'){
+            String soql = 'Select Id, Name, Product__c, Remaning_Percentage__c, RemainingQuantity__c, Remaining_Hours__c ' +
+                    + ' from SubscriptionReplica__c where ';
+            if(projId != null){
+                soql += ' ParentProject__c = \'' + thisProject.ParentProject__c + '\'';
+            }
+
+            soql += ' order by createddate ';
+
+            List<SubscriptionReplica__c> subscriptions = Database.query(soql);
+
+            if(subscriptions.size() > 0)
+                return JSON.serialize(subscriptions);
+        }
+
+
+        return null;
+
+    }
 }

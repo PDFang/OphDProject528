@@ -76,9 +76,50 @@ public with sharing class AssetSubscriptionAllocationNewController {
         return subscriptionAllocationData;
     }
 
+    @RemoteAction
+    public static String PhaseProjectDetails(String assetId){
+        String ProjectData = AssetSubscriptionAllocationHelper.getPhaseProjectDetails(assetId);
+        return ProjectData;
+    }
+
+    @RemoteAction
+    public static String UpsertAssetSubscriptionAllocation(String objType, String allocationJson){
+        String result;
+        String message = '';
+        try{
+            system.debug('UpsertAssetSubscriptionAllocation(): allocationJson - '+allocationJson);
+            AssetSubscriptionAllocationNewModel assetSubscriptionAllocation = (AssetSubscriptionAllocationNewModel)JSON.deserialize(allocationJson, AssetSubscriptionAllocationNewModel.class);
+            AssetSubscriptionAllocationHelper.SaveAssetSubscriptionAllocation(objType, assetSubscriptionAllocation);
+            result = 'Success';
+        }
+        catch (Exception ex){
+            result = 'Failed';
+            message = ex.getMessage();
+        }
+        return sendResponse(result, message);
+
+    }
+
+    @RemoteAction
+    public static String AssetSubscriptionDetailsFromProjectPhase(String projId, String objType){
+        String assetSubscriptionData = AssetSubscriptionAllocationHelper.getAssetSubscriptionDetailsFromProjectPhase(projId, objType);
+        return assetSubscriptionData;
+    }
+
+
     public pagereference cancel(){
 
         return new PageReference('/'+currentId).setRedirect(true);
+    }
+
+    private static string sendResponse(String result, string message){
+
+        System.JSONGenerator generator = Json.createGenerator(true);
+        generator.writeStartObject();
+        generator.writeStringField('result', result);
+        generator.writeStringField('message', message);
+        return generator.getAsString();
+
     }
 
 }

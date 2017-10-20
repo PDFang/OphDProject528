@@ -1,8 +1,8 @@
 <!--
- - Created by ravish.chawla on 10/12/2017.
+ - Created by william.nelson on 10/19/2017.
  -->
 
-<apex:page id="AssetSubscriptionAllocationNew" sideBar="false" controller="AssetSubscriptionAllocationNewController" title="Asset/Subscription Allocation" tabStyle="Project__c">
+<apex:page id="AssetSubscriptionAllocationNewWill" sideBar="false" controller="AssetSubscriptionAllocationNewController" title="Asset/Subscription Allocation" tabStyle="Project__c">
 
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
@@ -370,7 +370,7 @@
                   $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
               }
 
-      /** function subscriptionAllocationData(projId, subscriptionId){
+       function subscriptionAllocationData(projId, subscriptionId){
 
            console.log('subscriptionId =>' + subscriptionId);
                var subscriptionAllocationData =new kendo.data.DataSource({
@@ -432,8 +432,9 @@
                   editable: "inline",
                   scrollable: true,
                   noRecords: true,
-                  height: 210,
-
+                  height: 350,
+                  detailInit: detailProjects,
+                  cancel : hideChildProjects,
                   toolbar: [
                       {
                           name: "create",
@@ -466,31 +467,31 @@
                             {
                                 field:"SubscriptionName",
                                 title:"Subscription",
-                                editor:nonEditor,
+                                editor:nonEditorSubscription,
                                 template: '#{ #<a href="/#: data.Subscription #" target="_blank" >#= data.SubscriptionName #</a># } #',
                             },
                             {
                                 field:"SubscriptionAllocationName",
                                 title:"Subscription Allocation",
-                                editor:nonEditor,
+                                editor:nonEditorSubscription,
                                 template: '#{ #<a href="/#: data.SubscriptionAllocationId #" target="_blank" >#= data.SubscriptionAllocationName #</a># } #',
                             },
                             {
                                 field:"ProjectName",
                                 title:"Project",
-                                editor:nonEditor,
+                                editor:nonEditorSubscription,
                                 template: '#{ #<a href="/#: data.ProjectNumber #" target="_blank" >#= data.ProjectName #</a># } #',
                             },
                             {
                                 field:"ProductName",
                                 title:"Product",
-                                editor:nonEditor,
+                                editor:nonEditorSubscription,
                                 template: '#{ #<a href="/#: data.Product #" target="_blank" >#= data.ProductName #</a># } #',
                             },
                             {
                                 field:"ProjectPhase",
                                 title:"Project Phase",
-                                editor:nonEditor,
+                                editor:nonEditorSubscription,
                                 filterable:true
                             },
                             {
@@ -507,15 +508,36 @@
                                 field:"AllocatedHours",
                                 title:"Allocated Hours",
                                 editable:true
+                            },
+                            {   title:"Action",
+                                command: ["edit","destroy"]
                             }
                   ]
               });
-       } **/
+       }
+
+          function nonEditorSubscription(container, options) {
+              if(options.field == "AllocatedQuantity" && assetQuantity == 1){
+                    container.text(options.model[options.field]);
+              }else if(options.field == "AllocatedPercentage" && assetQuantity > 1){
+                  container.text(options.model[options.field]);
+              }else if(options.field != "AllocatedQuantity" && options.field != "AllocatedPercentage"){
+                  container.text(options.model[options.field]);
+              }
+
+            if(options.field == "AllocatedQuantity" && assetQuantity > 1){
+
+                $('<input style="width:95%" required  id="AllocatedQuantity" name="AllocatedQuantity"  data-bind="value:' + options.field + '"/>')
+                .appendTo(container);
 
 
 
+            }else if (options.field == "AllocatedPercentage" && assetQuantity == 1){
 
-
+                 $('<input style="width:95%" required  id="AllocatedPercentage" name="AllocatedPercentage"  data-bind="value:' + options.field + '"/>')
+                .appendTo(container);
+            }
+       }
 
     </script>
 </apex:page>
