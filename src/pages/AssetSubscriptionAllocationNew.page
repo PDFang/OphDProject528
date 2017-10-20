@@ -37,6 +37,15 @@
               color : white !important;
        }
 
+        .spinnerClass {
+            background:url('../../img/loading32.gif') no-repeat;
+            height:32px;
+            margin:20px;
+            padding-left:40px;
+            padding-top:9px;
+            font-size: 0.75em;
+    	}
+
     </style>
     <apex:form id="myform">
 
@@ -204,35 +213,42 @@
                             });
                             $('#loading').modal('show');
                             console.log('options =>' + JSON.stringify(options.data));
+                            if(options.data.ProjectNumber == null || options.data.ProjectNumber == ''){
+                                $('#loading').modal('hide');
+                                 if(currentObjectType == 'Project')
+                                        displayError('Please Select an Asset before save.');
+                                 else if(currentObjectType == 'Asset')
+                                         displayError('Please Select a Project before save.');
+                            }else{
+                                  AssetSubscriptionAllocationNewController.UpsertAssetSubscriptionAllocation(
+                                           'Asset',
+                                           JSON.stringify(options.data),
+                                           function(result,event){
+                                               if (event.status) {
+                                                  var returnResult = JSON.parse(result);
+                                                  if(returnResult.result != 'Failed'){
+                                                       options.success();
+                                                        $('#loading').modal('hide');
+                                                       if(currentObjectType == 'Project'){
+                                                          getSObjType();
+                                                       }else{
+                                                           getSObjType();
+                                                       }
 
-                            AssetSubscriptionAllocationNewController.UpsertAssetSubscriptionAllocation(
-                               'Asset',
-                               JSON.stringify(options.data),
-                               function(result,event){
-                                   if (event.status) {
-                                      var returnResult = JSON.parse(result);
-                                      if(returnResult.result != 'Failed'){
-                                           options.success();
-                                            $('#loading').modal('hide');
-                                           if(currentObjectType == 'Project'){
-                                              getSObjType();
-                                           }else{
-                                               getSObjType();
-                                           }
+                                                       hideError();
+                                                    }else{
+                                                         $('#loading').modal('hide');
+                                                    displayError(returnResult.message);
+                                                  }
+                                               }else{
 
-                                           hideError();
-                                        }else{
-                                             $('#loading').modal('hide');
-                                        displayError(returnResult.message);
-                                      }
-                                   }else{
-
-                                       $('#loading').modal('hide');
-                                       displayError(event.message);
-                                   }
-                                  },
-                                  {escape: false}
-                          );
+                                                   $('#loading').modal('hide');
+                                                   displayError(event.message);
+                                               }
+                                              },
+                                              {escape: false}
+                                      );
+                                  }
                         },
                         destroy: function(options){
                              options.success();
