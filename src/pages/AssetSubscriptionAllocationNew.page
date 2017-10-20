@@ -27,6 +27,16 @@
         .image {
             padding-left:15px;
         }
+       #detailTable .k-grid-header .k-header {
+            background-color: #3f51b5 !important;
+            border-color: #3343a4 !important;
+            color : white !important;
+
+        }
+       #detailTable .k-grid-header .k-header>.k-link{
+              color : white !important;
+       }
+
     </style>
     <apex:form id="myform">
 
@@ -75,6 +85,38 @@
                 <div id="subscriptionAllocationList"></div>
             </apex:pageBlock>
         </apex:outputPanel>
+        <!-- Confirmation Modal -->
+        <div class="modal fade" id="warning" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel" style="font-weight:bold">Alert</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" style="font-size:14px;">
+                        <div id="java-errors" class=" alert alert-danger message-alert" style="margin-left:15px;width:90%; display:none;"></div>
+                        <div id="success" class=" alert alert-success message-alert" style="margin-left:15px;width:90%; display:none;"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- loading Modal -->
+        <div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content" style="width:40%; top: 182px;">
+                    <div class="modal-body" style="font-size:14px;">
+                        <div class="spinnerClass">Adding Allocations</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </apex:form>
     <script>
 
@@ -103,6 +145,10 @@
                                            else if(result == 'Subscription'){
                                                console.log('results =>' + JSON.stringify(result));
                                                subscriptionAllocationData(null, '{!currentId}');
+                                           }else  if(result == 'Project'){
+                                              currentObjectType = result;
+                                              console.log('results =>' + JSON.stringify(result));
+                                              assetAllocationData('{!currentId}', null);
                                            }
                                         }
                                     }
@@ -129,15 +175,64 @@
                                );
                       },
                       update: function(options){
-                          console.log('options =>' + JSON.stringify(options.data));
-                          options.success();
+                          console.log('update options =>' + JSON.stringify(options.data));
+                          AssetSubscriptionAllocationNewController.UpsertAssetSubscriptionAllocation(
+                               'Asset',
+                               JSON.stringify(options.data),
+                                function(result,event){
+                                      if (event.status) {
+                                        var returnResult = JSON.parse(result);
+                                        if(returnResult.result != 'Failed'){
+                                           options.success();
+                                           hideError();
+                                        }else{
+                                            displayError(returnResult.message);
+                                        }
+                                      }else{
+                                        displayError(event.message);
+                                      }
+                                  },
+                                  {escape: false}
+                          );
                         },
                         create: function(options){
-                             console.log('options =>' + JSON.stringify(options.data));
-                             options.success();
+                            $('#loading').modal({
+                                 backdrop: 'static',
+                                 keyboard: false
+                            });
+                            $('#loading').modal('show');
+                            console.log('options =>' + JSON.stringify(options.data));
+
+                            AssetSubscriptionAllocationNewController.UpsertAssetSubscriptionAllocation(
+                               'Asset',
+                               JSON.stringify(options.data),
+                               function(result,event){
+                                   if (event.status) {
+                                      var returnResult = JSON.parse(result);
+                                      if(returnResult.result != 'Failed'){
+                                           options.success();
+                                            $('#loading').modal('hide');
+                                           if(currentObjectType == 'Project'){
+                                              getSObjType();
+                                           }else{
+                                               getSObjType();
+                                           }
+
+                                           hideError();
+                                        }else{
+                                             $('#loading').modal('hide');
+                                        displayError(returnResult.message);
+                                      }
+                                   }else{
+
+                                       $('#loading').modal('hide');
+                                       displayError(event.message);
+                                   }
+                                  },
+                                  {escape: false}
+                          );
                         },
                         destroy: function(options){
-
                              options.success();
                         },
                     },
@@ -154,23 +249,40 @@
                                 ProjectPhase : {from:"ProjectPhase", type: "string"},
                                 AllocatedQuantity:{from: "AllocatedQuantity", type:"number", nullable: true, editable:true},
                                 AllocatedHours:{from: "AllocatedHours", type:"number",  nullable: true, editable:true},
-                                AllocatedPercentage:{from: "AllocatedPercentage", type:"number", nullable: true, editable:true},
-                                Quantity :{from:"Quantity", type:"number"}
+                                AllocatedPercentage:{
+                                    from: "AllocatedPercentage",
+                                    type:"number",
+                                    nullable: true,
+                                    editable:true,
+                                    validation : {
+                                        percentageValidation : function(input){
+                                            if(input.val() > 100){
+                                                input.attr("data-percentageValidation-msg", " Invalid Percentage");
+                                                return false;
+                                            }
+                                        return true;
+                                        }
+                                    }
+                                },
+                                Quantity :{from:"Quantity", type:"number"},
+                                BudgtedHours :{from:"BudgtedHours", type:"number"}
                             }
                         }
-                    }
+                    },
+                    change : calculateBudgetedHours
                });
 
               $("#assetAllocationList").kendoGrid({
                   dataSource: assetAllocationData,
                   editable: "inline",
-                  scrollable: false,
+                  scrollable: true,
                   noRecords: true,
                   height: 350,
                   edit: addDuplicateRowAsset,
                   dataBound : gridDataboundAsset,
-                  detailInit: detailProjects,
+                  detailInit: loadChildGrid,
                   cancel : hideChildProjects,
+
                   toolbar: [
                       {
                           name: "create",
@@ -194,7 +306,7 @@
                                 field:"AssetAllocationName",
                                 title:"Allocation",
                                 editor:nonEditorAsset,
-                                template: '#{ #<a href="/#: data.Id #" target="_blank" >#= data.AssetAllocationName #</a># } #',
+                                template: '#{ #<a href="/#: data.AssetAllocationId #" target="_blank" >#= data.AssetAllocationName #</a># } #',
                             },
                             {
                                 field:"ProjectName",
@@ -211,19 +323,17 @@
                             {
                                 field:"AllocatedQuantity",
                                 title:"Allocated Quantity",
-                                editor:nonEditorAsset,
                                 editable:true
                             },
                             {
                                 field:"AllocatedPercentage",
                                 title:"Allocated Percentage",
-                                editor:nonEditorAsset,
                                 editable:true
                             },
                             {
                                 field:"AllocatedHours",
                                 title:"Allocated Hours",
-                                editable:true
+                                editor:nonEditorAsset
                             },
                             {   title:"Action",
                                 command: ["edit","destroy"]
@@ -235,33 +345,9 @@
 
 
         function addDuplicateRowAsset(e){
-
+            var assetGrid = $("#assetAllocationList").data("kendoGrid");;
+            var dataItems = assetGrid.dataItems();
             if(e.model.isNew() && !e.model.dirty ){
-                var assetGrid = this;
-                var dataItems = assetGrid.dataSource.view();
-                var totalQuantity = 0,
-                    totalPercentage = 0;
-
-                for(var i = 0; i < dataItems.length; i++){
-                    if(dataItems[i].get("AllocatedQuantity") > 0 && dataItems[i].get("AllocatedQuantity") != null){
-                         totalQuantity += Number(dataItems[i].get("AllocatedQuantity"));
-                    }else if(dataItems[i].get("AllocatedPercentage") > 0 && dataItems[i].get("AllocatedPercentage") != null){
-                        totalPercentage += Number(dataItems[i].get("AllocatedPercentage"));
-                    }
-                }
-
-                if(totalQuantity > 0){
-                    var remainingQuantity = 100 -  totalQuantity;
-                    var allocatedQuantityCell =  e.container.contents()[6];
-                    $(allocatedQuantityCell).find("input").val(remainingQuantity)
-                    e.model.AllocatedQuantity = remainingQuantity;
-                }else if(totalPercentage > 0 ){
-                    var remainingPercentage = 100 -  totalPercentage;
-                    var allocatedQPercentageCell =  e.container.contents()[7];
-                    $(allocatedQPercentageCell).find("input").val(remainingPercentage)
-                    e.model.AllocatedPercentage = remainingPercentage;
-                }
-
                 if(currentObjectType == 'Asset'){
                     e.model.Asset = dataItems[1].get("Asset");
                     e.model.AssetName = dataItems[1].get("AssetName");
@@ -269,34 +355,88 @@
                     $('<a href="/' +  e.model.Asset + '" target="_blank">' + e.model.AssetName +'</a>').appendTo(firstCell);
                     var projectCell = e.container.contents()[4];
                     $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">Select Projects </a>').appendTo(projectCell);
+                    calculateRemainingAllocation(e.model, e.container);
+                }else if(currentObjectType == 'Project'){
+                    e.model.ProjectNumber = dataItems[1].get("ProjectNumber");
+                    e.model.ProjectName = dataItems[1].get("ProjectName");
+                    e.model.ProjectPhase = dataItems[1].get("ProjectPhase");
+                    var projectCell = e.container.contents()[4];
+                    $('<a href="/' +  e.model.ProjectNumber + '" target="_blank">' + e.model.ProjectName +'</a>').appendTo(projectCell);
+                    var phaseCell = e.container.contents()[5];
+                    $('<span>' +  e.model.ProjectPhase + '</span>').appendTo(phaseCell);
+
+                    var firstCell = e.container.contents()[2];
+                    $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">Select Assets </a>').appendTo(firstCell);
                 }
+                 var buttonCell = e.container.contents()[9];
+                 $(buttonCell).find("a.k-primary").html('<span class="k-icon k-i-update"></span> Add');
+            }else{
+                enableAllocation(e.model, e.container);
             }
+
+
+
              $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
         }
 
-//' +   e + '); return false;
-         function nonEditorAsset(container, options) {
-              if(options.field == "AllocatedQuantity" && assetQuantity == 1){
-                    container.text(options.model[options.field]);
-              }else if(options.field == "AllocatedPercentage" && assetQuantity > 1){
-                  container.text(options.model[options.field]);
-              }else if(options.field != "AllocatedQuantity" && options.field != "AllocatedPercentage"){
-                  container.text(options.model[options.field]);
-              }
-
-            if(options.field == "AllocatedQuantity" && assetQuantity > 1){
-
-                $('<input style="width:95%" required  id="AllocatedQuantity" name="AllocatedQuantity"  data-bind="value:' + options.field + '"/>')
-                .appendTo(container);
-
-
-
-            }else if (options.field == "AllocatedPercentage" && assetQuantity == 1){
-
-                 $('<input style="width:95%" required  id="AllocatedPercentage" name="AllocatedPercentage"  data-bind="value:' + options.field + '"/>')
-                .appendTo(container);
+        function enableAllocation(rowData, row){
+            if(rowData.Quantity > 1){
+                var allocatedQPercentageCell =  $(row).children().eq(7);
+                $(allocatedQPercentageCell).find("span.k-numerictextbox").hide();
+            }else if(rowData.Quantity == 1){
+                var allocatedQuantityCell =  $(row).children().eq(6);
+                $(allocatedQuantityCell).find("span.k-numerictextbox").hide();
             }
-       }
+
+        }
+
+        function calculateRemainingAllocation(rowData, row){
+            var assetGrid = $("#assetAllocationList").data("kendoGrid");;
+            var dataItems = assetGrid.dataItems();
+                var totalQuantity = 0,
+                    totalPercentage = 0;
+
+                for(var i = 0; i < dataItems.length; i++){
+                    if(dataItems[i].get("Asset") ==  rowData.Asset){
+                        rowData.Quantity = dataItems[i].get("Quantity");
+                        rowData.BudgtedHours = dataItems[i].get("BudgtedHours");
+                    }
+                    if(rowData.Quantity > 1 && dataItems[i].get("AllocatedQuantity") != null && dataItems[i].get("Asset") ==  rowData.Asset){
+                         totalQuantity += Number(dataItems[i].get("AllocatedQuantity"));
+
+                    }else if(rowData.Quantity == 1 && dataItems[i].get("AllocatedPercentage") != null && dataItems[i].get("Asset") ==  rowData.Asset){
+                        totalPercentage += Number(dataItems[i].get("AllocatedPercentage"));
+                    }
+                }
+                  var allocatedQuantityCell =  $(row).children().eq(6);
+                  var allocatedQPercentageCell =  $(row).children().eq(7);
+                  var allocatedHoursCell =  $(row).children().eq(8);
+                  var hours;
+
+                if(totalQuantity > 0){
+                    var remainingQuantity = rowData.Quantity -  totalQuantity;
+                    $(allocatedQPercentageCell).find("span.k-numerictextbox").hide();
+                    rowData.AllocatedQuantity = remainingQuantity;
+                    $(allocatedQuantityCell).find("span.k-numerictextbox").show();
+                    $(allocatedQuantityCell).find("input").val(remainingQuantity);
+                    hours = rowData.BudgtedHours * (remainingQuantity / rowData.Quantity);
+
+                }else if(totalPercentage > 0 ){
+                    var remainingPercentage = 100 -  totalPercentage;
+                    rowData.AllocatedPercentage = remainingPercentage;
+                    $(allocatedQuantityCell).find("span.k-numerictextbox").hide();
+                    $(allocatedQPercentageCell).find("span.k-numerictextbox").show();
+                    $(allocatedQPercentageCell).find("input").val(remainingPercentage);
+                    var hours = rowData.BudgtedHours * (remainingPercentage / 100);
+                }
+                rowData.AllocatedHours = hours.toFixed(2);
+                $(allocatedHoursCell).text(rowData.AllocatedHours);
+        }
+
+
+         function nonEditorAsset(container, options) {
+             container.text(options.model[options.field]);
+         }
 
        function gridDataboundAsset(e){
           // var grid = this;
@@ -311,6 +451,22 @@
 
        }
 
+       function calculateBudgetedHours(e){
+            if (e.action === "itemchange" && (e.field == "AllocatedPercentage" || e.field == "AllocatedQuantity")){
+                	var model = e.items[0],
+                        budgtedHours = model.BudgtedHours,
+                        currentValue;
+                  if(model.AllocatedPercentage > 0 ){
+                      currentValue = (budgtedHours * (model.AllocatedPercentage / 100)).toFixed(2);
+                      $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(8)").text(currentValue);
+                  }else if(model.AllocatedQuantity > 0 ){
+                      currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
+                      $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(8)").text(currentValue);
+                  }
+                  model.AllocatedHours = currentValue;
+            }
+       }
+
        function loadDetail(obj){
            var row = $(obj).parent().parent();
            var link = $(row).find("td.k-hierarchy-cell .k-icon");
@@ -318,57 +474,164 @@
            $(row).next().find(".k-hierarchy-cell").hide();
        }
 
+       function loadChildGrid(e){
+           if(currentObjectType === 'Asset'){
+               detailProjects(e);
+           } else if(currentObjectType === 'Project'){
+                detailAssets(e);
+           }
+       }
+
         function detailProjects(e) {
-             $("<div/>").appendTo(e.detailCell).kendoGrid({
-                        dataSource: {
-                            autosync:true,
-                            transport: {
-                                read: function(options){
-                                     AssetSubscriptionAllocationNewController.PhaseProjectDetails(
-                                        e.data.Asset,
-                                        function(result,event){
-                                          if (event.status) {
-                                              if(result.length > 1){
-                                                   options.success(JSON.parse(result));
-                                                   console.log('PhaseProjectDetails =>' + JSON.stringify(result));
+                 $("<div id='detailTable'/>").appendTo(e.detailCell).kendoGrid({
+                            dataSource: {
+                                autosync:true,
+                                transport: {
+                                    read: function(options){
+                                         AssetSubscriptionAllocationNewController.PhaseProjectDetails(
+                                            e.data.Asset,
+                                            function(result,event){
+                                              if (event.status) {
+                                                  if(result.length > 1){
+                                                       options.success(JSON.parse(result));
+                                                       console.log('PhaseProjectDetails =>' + JSON.stringify(result));
+                                                  }
                                               }
-                                          }
-                                        },{escape: false}
-                                     );
+                                            },{escape: false}
+                                         );
+                                    },
                                 },
-                            },
-                            schema:{
-                                model: {
-                                    id: "ProjectId",
-                                    fields: {
-                                        ProjectId: { from: "Id"},
-                                        ProjectNumber: {from:"Name", type: "string"},
-                                        Summary : {from:"Summary__c", type:"string"},
-                                        Status : {from:"ProjectStatus__c", type:"string"}
+                                schema:{
+                                    model: {
+                                        id: "ProjectId",
+                                        fields: {
+                                            ProjectId: { from: "Id"},
+                                            ProjectNumber: {from:"Name", type: "string"},
+                                            Summary : {from:"Summary__c", type:"string"},
+                                            Status : {from:"ProjectStatus__c", type:"string"}
+                                        }
                                     }
                                 }
-                            }
-                        },
-                        scrollable: false,
-                        sortable: true,
-                        columns: [
-                            { field: "ProjectNumber", width: "110px" },
-                            { field: "Summary", title:"Project Summary", width: "200px" },
-                            { field: "Status", title:"Project Status", width: "110px" },
-                            { command: { text: "Select", click : selectProject}, title: "Action", width: "180px" }
-                        ]
-                    });
-                }
+                            },
+                            scrollable: false,
+                            sortable: true,
+                            columns: [
+                                { command: { text: "Select", click : selectProject}, title: "Action", width: "180px" },
+                                { field: "ProjectNumber", width: "110px" },
+                                { field: "Summary", title:"Project Summary", width: "200px" },
+                                { field: "Status", title:"Project Status", width: "110px" }
+                            ]
+                        });
+                    }
 
-              function selectProject(e){
-                  var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
-                  var detailGrid = this.wrapper;
-                  var parentRow = detailGrid.closest("tr.k-detail-row").prev("tr");
-              }
+          function selectProject(e){
+              var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+              var detailGrid = this.wrapper;
+              var parentRow = detailGrid.closest("tr.k-detail-row").prev("tr");
+              var grid = $("#assetAllocationList").data("kendoGrid");
+              var rowData = grid.dataItem(parentRow);
+              if(rowData){
+                  rowData.ProjectNumber = dataItem.ProjectId;
+                  rowData.ProjectName = dataItem.ProjectNumber;
+                  rowData.ProjectPhase = dataItem.ProjectNumber + ' - ' + dataItem.Summary;
+                  //grid.dataSource.sync();
 
-              function hideChildProjects(e){
-                  $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
+                  var projectCell = $(parentRow).children().eq(4);
+                  var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">' + dataItem.ProjectNumber +'</a>');
+                  $(projectCell).html(htmlContentProject);
+                  var projectPhaseCell = $(parentRow).children().eq(5);
+                  var htmlProjectPhase = $('<span> ' + rowData.ProjectPhase +'</span>');
+                  $(projectPhaseCell).html(htmlProjectPhase);
+
               }
+          }
+
+          function hideChildProjects(e){
+              setTimeout(function(){
+                   $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
+              });
+          }
+
+
+         function detailAssets(e) {
+                 $("<div id='detailTable'/>").appendTo(e.detailCell).kendoGrid({
+                            dataSource: {
+                                autosync:true,
+                                transport: {
+                                    read: function(options){
+                                         AssetSubscriptionAllocationNewController.AssetSubscriptionDetailsFromProjectPhase(
+                                            e.data.ProjectNumber,
+                                            'Asset',
+                                            function(result,event){
+                                              if (event.status) {
+                                                  if(result.length > 1){
+                                                       options.success(JSON.parse(result));
+                                                       console.log('Asset Details =>' + JSON.stringify(result));
+                                                  }
+                                              }
+                                            },{escape: false}
+                                         );
+                                    },
+                                },
+                                schema:{
+                                    model: {
+                                        id: "AssetId",
+                                        fields: {
+                                            AssetId: { from: "Id"},
+                                            AssetName: {from:"Name", type: "string"},
+                                            RemainingPercentage : {from:"Remaning_Percentage__c", type:"string"},
+                                            RemainingQuantity : {from:"RemainingQuantity__c", type:"string"},
+                                            RemainingHours : {from:"Remaining_Hours__c", type:"string"}
+                                        }
+                                    }
+                                }
+                            },
+                            scrollable: false,
+                            sortable: true,
+                            columns: [
+                                { field: "AssetName", title:"Asset", width: "110px" },
+                                { field: "RemainingPercentage", title:"Remaining Percentage", width: "200px" },
+                                { field: "RemainingQuantity", title:"Remaining Quantity", width: "110px" },
+                                { field: "RemainingHours", title:"Remaining Hours", width: "110px" },
+                                { command: { text: "Select", click : selectAsset}, title: "Action", width: "180px" }
+                            ]
+                        });
+                    }
+
+          function selectAsset(e){
+              var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+              var detailGrid = this.wrapper;
+              var parentRow = detailGrid.closest("tr.k-detail-row").prev("tr");
+              var grid = $("#assetAllocationList").data("kendoGrid");
+              var rowData = grid.dataItem(parentRow);
+              if(rowData){
+                  rowData.Asset = dataItem.AssetId;
+                  rowData.AssetName = dataItem.AssetName;
+                  rowData.AllocatedPercentage = null;
+                  rowData.AllocatedQuantity = null;
+                  rowData.AllocatedHours = 0;
+                  var assetCell = $(parentRow).children().eq(2);
+                  var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">' + dataItem.AssetName +'</a>');
+                  $(assetCell).html(htmlContentProject);
+                  calculateRemainingAllocation(rowData, parentRow);
+              }
+          }
+
+
+        function displayError(message){
+             $("div#success").empty();
+             $("div#success").hide();
+             $("div#java-errors").css("display", "block");
+             document.getElementById("java-errors").innerHTML =  message;
+              $('#warning').modal('show');
+             console.log('error =>' + message);
+        }
+
+         function hideError(){
+             $("div#java-errors").css("display", "none");
+             document.getElementById("java-errors").innerHTML = ' ';
+            }
+
 
       /** function subscriptionAllocationData(projId, subscriptionId){
 
