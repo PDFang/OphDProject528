@@ -304,7 +304,7 @@
                   toolbar: [
                       {
                           name: "create",
-                          text: "Add New Row"
+                          text: "Add New Asset Allocation"
 
                       }
                       ],
