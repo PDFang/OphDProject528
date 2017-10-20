@@ -20,6 +20,26 @@ private class SubscriptionReplicaTriggerHandlerTest {
 
         insert testAccount;
 
+        Opportunity testOpportunity = new Opportunity(
+                Account = testAccount,
+                Amount = 5.0,
+                Name = 'Test Opportunity',
+                StageName = 'One',
+                CloseDate = Date.today(),
+                AccountId = testAccount.Id
+        );
+
+        insert testOpportunity;
+
+        ImplementedProduct__c testProduct = new ImplementedProduct__c(
+                Account__c = testAccount.Id,
+                Status__c = 'New',
+                Product__c = 'Dialer',
+                Opportunity__c = testOpportunity.Id
+        );
+
+        insert testProduct;
+
         Project__c testProject = new Project__c(
                 Account__c = testAccount.Id,
                 ActualProjectGoLiveDate__c = actualGoLiveDate
@@ -35,7 +55,8 @@ private class SubscriptionReplicaTriggerHandlerTest {
                 SBQQ__Bundled__c = true,
                 SBQQ__ListPrice__c = 50,
                 SBQQ__Quantity__c = 200,
-                Project_Phase__c = testProject.Id
+                Project_Phase__c = testProject.Id,
+                Implemented_Product__c = testProduct.Id
         ));
 
         insert subscriptions;
@@ -53,11 +74,14 @@ private class SubscriptionReplicaTriggerHandlerTest {
         update subscriptionReplicas;
         Test.stopTest();
 
-        SubscriptionReplica__c replica = [select Id, Status__c, Install_Date__c, Subscription__c from SubscriptionReplica__c where Id = :subscriptionReplicas[0].Id];
-        SBQQ__Subscription__c subscription = [select Id, Status__c, Install_Date__c, Implemented_Product__r.Status__c, Implemented_Product__r.GoLiveDate__c
+        SubscriptionReplica__c replica = [select Id, Status__c, Install_Date__c, Subscription__c, ImplementedProduct__c from SubscriptionReplica__c where Id = :subscriptionReplicas[0].Id];
+        SBQQ__Subscription__c subscription = [select Id, Status__c, Install_Date__c, Implemented_Product__r.Status__c, Implemented_Product__r.GoLiveDate__c, Implemented_Product__c
                                                 from SBQQ__Subscription__c
                                                 where Id = :replica.Subscription__c][0];
 
+        System.assertEquals(replica.ImplementedProduct__c, subscription.Implemented_Product__c, 'Implemented_Product__c does not match between Subscription and SubscriptionReplica__c');
+        System.assertNotEquals(null, replica.ImplementedProduct__c, 'SubscriptionReplica__c ImplementedProduct__c is null');
+        System.assertNotEquals(null, subscription.Implemented_Product__c, 'Subscription__c Implemented_Product__c is null');
         //The "parent" subscription record status is updated to '4-Delivered'
         System.assertEquals('4 - Delivered', subscription.Status__c, 'SBQQ__Subscription__c status was not correctly updated');
         //The "parent" subscription install date is set to the "Actual Go-Live Date" from the project phase

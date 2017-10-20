@@ -27,10 +27,11 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
     public static void UpdateSubscriptionReplicaFromProjectPhase(){
 
         Set<String> subscriptionReplicaIds = new Set<String>();
-        List<SubscriptionReplica__c> newList = (List<SubscriptionReplica__c>)( trigger.new );
+        List<SubscriptionReplica__c> newSubscriptionReplicas = (List<SubscriptionReplica__c>)( trigger.new );
+        Map<Id, SubscriptionReplica__c> oldMap  = (Map<Id, SubscriptionReplica__c>) ( trigger.oldMap );
         Map<Id, Date> projectPhaseDates  = new Map<Id, Date>();
 
-        for(SubscriptionReplica__c subscriptionReplica : newList)
+        for(SubscriptionReplica__c subscriptionReplica : newSubscriptionReplicas)
         {
             subscriptionReplicaIds.add(subscriptionReplica.Subscription__c);
         }
@@ -46,12 +47,18 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
             }
         }
 
-        for(SubscriptionReplica__c newSubscriptionReplica : newList)
+        for(SubscriptionReplica__c newSubscriptionReplica : newSubscriptionReplicas)
         {
-            if(newSubscriptionReplica.Status__c == '4 - Delivered' && newSubscriptionReplica.Delivered__c != true){
-                Date goLiveDate = projectPhaseDates.get(newSubscriptionReplica.Subscription__c);
-                newSubscriptionReplica.Install_Date__c = goLiveDate ;
-                newSubscriptionReplica.Delivered__c = true;
+            SubscriptionReplica__c oldSubscriptionReplica = (oldMap != null) ? oldMap.get(newSubscriptionReplica.Id) : null;
+            if (oldSubscriptionReplica != null)
+            {
+                // only update if status has set to '4 - Delivered' once already
+                if(newSubscriptionReplica.Status__c == '4 - Delivered' && oldSubscriptionReplica.Delivered__c != true){
+
+                    Date goLiveDate = projectPhaseDates.get(newSubscriptionReplica.Subscription__c);
+                    newSubscriptionReplica.Install_Date__c = goLiveDate ;
+                    newSubscriptionReplica.Delivered__c = true;
+                }
             }
         }
     }
@@ -82,25 +89,26 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
         //update certain fields in Subscription table
         for ( SubscriptionReplica__c subscriptionReplica : lstSubscriptionReplicas) {
 
-            SBQQ__Subscription__c subscription = new SBQQ__Subscription__c(Id = subscriptionReplica.Subscription__c);
-            subscription.Status__c = subscriptionReplica.Status__c;
-            subscription.Install_Date__c = subscriptionReplica.Install_Date__c;
-            subscription.Implemented_Product__c = subscriptionReplica.ImplementedProduct__c;
-
-            // add changed Subscriptions to update list
-            lstUpdateSubscriptions.add(subscription);
-
-            // only update implemented product when first time the subscription ststus set to '4 - Delivered'
             SubscriptionReplica__c oldSubscriptionReplica = (oldMap != null) ? oldMap.get(subscriptionReplica.Id) : null;
-            if ( subscriptionReplica.ImplementedProduct__c != null && oldSubscriptionReplica != null && subscriptionReplica.Install_Date__c != null)
+            if (oldSubscriptionReplica != null)
             {
-                if ( subscriptionReplica.Status__c == '4 - Delivered'
-                        && subscriptionReplica.Delivered__c == true
-                        && oldSubscriptionReplica.Delivered__c != true)
-                {
-                    if(!ImplementationProductDates.containsKey(subscriptionReplica.ImplementedProduct__c))
-                    {
-                        ImplementationProductDates.put(subscriptionReplica.ImplementedProduct__c, subscriptionReplica.Install_Date__c);
+                // do not update back to subscription table if it ever set to '4 - Delivered'
+                if (oldSubscriptionReplica.Delivered__c != true) {
+                    SBQQ__Subscription__c subscription = new SBQQ__Subscription__c(Id = subscriptionReplica.Subscription__c);
+                    subscription.Status__c = subscriptionReplica.Status__c;
+                    subscription.Install_Date__c = subscriptionReplica.Install_Date__c;
+                    subscription.Implemented_Product__c = subscriptionReplica.ImplementedProduct__c;
+
+                    // add changed Subscriptions to update list
+                    lstUpdateSubscriptions.add(subscription);
+
+                    // only update implemented product when first time the subscription status set to '4 - Delivered'
+                    if (subscriptionReplica.ImplementedProduct__c != null && subscriptionReplica.Install_Date__c != null) {
+                        if (subscriptionReplica.Status__c == '4 - Delivered' && oldSubscriptionReplica.Delivered__c != true) {
+                            if (!ImplementationProductDates.containsKey(subscriptionReplica.ImplementedProduct__c)) {
+                                ImplementationProductDates.put(subscriptionReplica.ImplementedProduct__c, subscriptionReplica.Install_Date__c);
+                            }
+                        }
                     }
                 }
             }
@@ -111,6 +119,7 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
                 SELECT Id, Status__c, GoLiveDate__c FROM ImplementedProduct__c
                 WHERE Id IN : ImplementationProductDates.keyset()
         ]){
+
 
             Date installDate = ImplementationProductDates.get(implementedProduct.Id);
             implementedProduct.GoLiveDate__c = installDate;

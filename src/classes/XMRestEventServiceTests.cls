@@ -86,7 +86,7 @@ public class XMRestEventServiceTests {
         system.assertEquals(eventCase.Id, actualEventData.eventGroupInfo.salesforceCaseId);
 
         // Check the platformGroup to ensure it has the right Implemented Product group
-        system.assertEquals('IP_{PartnerPrefix}_DIA_NONE', actualEventData.platformGroups[0]);
+        system.assertEquals('IP_{PartnerPrefix}_inContact_NONE', actualEventData.platformGroups[0]);
 
         // Check the template properties
         system.assertEquals(eventCase.ProductImpacted__c, actualEventData.templateProperties.get('productImpacted'));
