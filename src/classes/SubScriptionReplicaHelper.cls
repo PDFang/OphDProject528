@@ -5,8 +5,8 @@
 public with sharing class SubScriptionReplicaHelper {
 
     public List<SubscriptionData> GetSubscriptionReplicas(Account acc){
-        List<SubscriptionReplica__c> replicas = [SELECT AccountLookup__c, Bundled__c, Account__c,Active__c,Existing__c,Id,ImplementedProduct__c,IsDeleted,ListUnitPrice__c,Name,ParentProject__c,ProductCode__c,ProductFamily__c,Product__c,Quantity__c,SalesTotal__c,SalesUnitPrice__c,
-        Status__c,Subscription__c FROM SubscriptionReplica__c where AccountLookup__c =: acc.id and Active__c = 'Active'];
+        List<SubscriptionReplica__c> replicas = [SELECT AccountLookup__c, Bundled__c, Account__c,Active__c,Existing__c,Id,Implemented_Product__c,IsDeleted,ListUnitPrice__c,Name,ParentProject__c,ProductCode__c,ProductFamily__c,Product__c,Quantity__c,SalesTotal__c,SalesUnitPrice__c,
+        Status1__c,Subscription__c FROM SubscriptionReplica__c where AccountLookup__c =: acc.id and Active__c = 'Active'];
 
         List<SubscriptionData> replicaResults = new List<SubscriptionData>();
         for (SubscriptionReplica__c replica : replicas ) {

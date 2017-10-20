@@ -272,6 +272,32 @@ public class AssetSubscriptionAllocationHelper {
     }
 
     // fetch Project Subscription Allocation
+    public static String getPhaseProjectDetailsSubscription(String subscriptionId){
+
+        SubscriptionReplica__c thisSubscription = [select ParentProject__c from SubscriptionReplica__c WHere Id = :subscriptionId limit 1];
+
+        String soql = 'Select Id, Name, Summary__c, ProjectStatus__c ' +
+                + ' from Project__c where ';
+        if(subscriptionId != null){
+            soql += ' id = \'' + thisSubscription.ParentProject__c + '\'';
+        }
+
+        soql += ' order by createddate ';
+
+        List<Project__c> projects = Database.query(soql);
+
+        if(projects.size() > 0)
+            return JSON.serialize(projects);
+
+        return null;
+
+    }
+
+
+
+
+
+    // fetch Project Subscription Allocation
     public static String getPhaseProjectDetails(String assetId){
 
         Asset thisAsset = [select Parent_Project__c from Asset WHere Id = :assetId limit 1];
