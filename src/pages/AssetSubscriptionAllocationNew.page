@@ -73,18 +73,18 @@
             </apex:pageBlockSection>
         </apex:pageBlock>
 
-        <apex:outputPanel id="assetAllocationPanel">
+        <div id="assetAllocationPanel">
             <apex:pageBlock id="assetAllocationBlock">
                 <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Asset Allocation"/>
                 <div id="assetAllocationList"></div>
             </apex:pageBlock>
-        </apex:outputPanel>
-        <apex:outputPanel id="subscriptiontAllocationPanel">
+        </div>
+        <div id="subscriptiontAllocationPanel">
             <apex:pageBlock id="subscriptiontAllocationBlock">
                 <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Subscription Allocation"/>
                 <div id="subscriptionAllocationList"></div>
             </apex:pageBlock>
-        </apex:outputPanel>
+        </div>
         <!-- Confirmation Modal -->
         <div class="modal fade" id="warning" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true">
             <div class="modal-dialog" role="document">
@@ -140,10 +140,12 @@
                                             if(result == 'Asset'){
                                                 currentObjectType = result;
                                               console.log('results =>' + JSON.stringify(result));
+                                              $("#subscriptiontAllocationPanel").hide();
                                               assetAllocationData(null, '{!currentId}');
                                            }
                                            else if(result == 'Subscription'){
                                                console.log('results =>' + JSON.stringify(result));
+                                               $("#assetAllocationPanel").hide();
                                                subscriptionAllocationData(null, '{!currentId}');
                                            }else  if(result == 'Project'){
                                               currentObjectType = result;
