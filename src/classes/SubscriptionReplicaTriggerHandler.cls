@@ -53,7 +53,7 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
             if (oldSubscriptionReplica != null)
             {
                 // only update if status has set to '4 - Delivered' once already
-                if(newSubscriptionReplica.Status__c == '4 - Delivered' && oldSubscriptionReplica.Delivered__c != true){
+                if(newSubscriptionReplica.Status1__c == '4 - Delivered' && oldSubscriptionReplica.Delivered__c != true){
 
                     Date goLiveDate = projectPhaseDates.get(newSubscriptionReplica.Subscription__c);
                     newSubscriptionReplica.Install_Date__c = goLiveDate ;
@@ -95,18 +95,18 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
                 // do not update back to subscription table if it ever set to '4 - Delivered'
                 if (oldSubscriptionReplica.Delivered__c != true) {
                     SBQQ__Subscription__c subscription = new SBQQ__Subscription__c(Id = subscriptionReplica.Subscription__c);
-                    subscription.Status__c = subscriptionReplica.Status__c;
+                    subscription.Status__c = subscriptionReplica.Status1__c;
                     subscription.Install_Date__c = subscriptionReplica.Install_Date__c;
-                    subscription.Implemented_Product__c = subscriptionReplica.ImplementedProduct__c;
+                    subscription.Implemented_Product__c = subscriptionReplica.Implemented_Product__c;
 
                     // add changed Subscriptions to update list
                     lstUpdateSubscriptions.add(subscription);
 
                     // only update implemented product when first time the subscription status set to '4 - Delivered'
-                    if (subscriptionReplica.ImplementedProduct__c != null && subscriptionReplica.Install_Date__c != null) {
-                        if (subscriptionReplica.Status__c == '4 - Delivered' && oldSubscriptionReplica.Delivered__c != true) {
-                            if (!ImplementationProductDates.containsKey(subscriptionReplica.ImplementedProduct__c)) {
-                                ImplementationProductDates.put(subscriptionReplica.ImplementedProduct__c, subscriptionReplica.Install_Date__c);
+                    if (subscriptionReplica.Implemented_Product__c != null && subscriptionReplica.Install_Date__c != null) {
+                        if (subscriptionReplica.Status1__c == '4 - Delivered' && oldSubscriptionReplica.Delivered__c != true) {
+                            if (!ImplementationProductDates.containsKey(subscriptionReplica.Implemented_Product__c)) {
+                                ImplementationProductDates.put(subscriptionReplica.Implemented_Product__c, subscriptionReplica.Install_Date__c);
                             }
                         }
                     }

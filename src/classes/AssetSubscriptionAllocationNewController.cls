@@ -77,6 +77,12 @@ public with sharing class AssetSubscriptionAllocationNewController {
     }
 
     @RemoteAction
+    public static String PhaseProjectDetailsSubscription(String SubscriptionId){
+        String ProjectData = AssetSubscriptionAllocationHelper.getPhaseProjectDetailsSubscription(SubscriptionId);
+        return ProjectData;
+    }
+
+    @RemoteAction
     public static String PhaseProjectDetails(String assetId){
         String ProjectData = AssetSubscriptionAllocationHelper.getPhaseProjectDetails(assetId);
         return ProjectData;

@@ -324,17 +324,22 @@
                             autosync:true,
                             transport: {
                                 read: function(options){
-                                     AssetSubscriptionAllocationNewController.PhaseProjectDetails(
-                                        e.data.Asset,
-                                        function(result,event){
-                                          if (event.status) {
-                                              if(result.length > 1){
-                                                   options.success(JSON.parse(result));
-                                                   console.log('PhaseProjectDetails =>' + JSON.stringify(result));
-                                              }
+                                   var project;
+                                   project =  e.data.Asset;
+                                   if (project == null){
+                                       project =  e.data.Subscription;
+                                   }
+                                   AssetSubscriptionAllocationNewController.PhaseProjectDetailsSubscription(
+                                   project,
+                                   function(result,event){
+                                      if (event.status) {
+                                          if(result.length > 1){
+                                               options.success(JSON.parse(result));
+                                               console.log('PhaseProjectDetails =>' + JSON.stringify(result));
                                           }
-                                        },{escape: false}
-                                     );
+                                      }
+                                    },{escape: false}
+                                 );
                                 },
                             },
                             schema:{
@@ -364,10 +369,26 @@
                   var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
                   var detailGrid = this.wrapper;
                   var parentRow = detailGrid.closest("tr.k-detail-row").prev("tr");
+                  var grid = $("#assetAllocationList").data("kendoGrid");
+                  var rowData = grid.dataItem(parentRow);
+                  if(rowData){
+                      rowData.ProjectNumber = dataItem.ProjectId;
+                      rowData.ProjectName = dataItem.ProjectNumber;
+                      rowData.ProjectPhase = dataItem.ProjectNumber + ' - ' + dataItem.Summary;
+                      //grid.dataSource.sync();
+                      var projectCell = $(parentRow).children().eq(4);
+                      var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">' + dataItem.ProjectNumber +'</a>');
+                      $(projectCell).html(htmlContentProject);
+                      var projectPhaseCell = $(parentRow).children().eq(5);
+                      var htmlProjectPhase = $('<span> ' + rowData.ProjectPhase +'</span>');
+                      $(projectPhaseCell).html(htmlProjectPhase);
+                  }
               }
 
               function hideChildProjects(e){
-                  $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
+                  setTimeout(function(){
+                   $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
+                });
               }
 
        function subscriptionAllocationData(projId, subscriptionId){
