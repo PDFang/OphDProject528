@@ -298,7 +298,7 @@ public class AssetSubscriptionAllocationHelper {
             if(objType == 'Asset'){
                 Project_Asset_Allocation__c projectAssetAllocation = new Project_Asset_Allocation__c(
                         Asset__c = assetSubscriptionAllocation.Asset,
-                        Id = assetSubscriptionAllocation.AssetAllocationId,
+                        Id = assetSubscriptionAllocation.AssetAllocationId == '' ? null : assetSubscriptionAllocation.AssetAllocationId,
                         Project__c = assetSubscriptionAllocation.ProjectNumber,
                         Quantity_Allocation__c = assetSubscriptionAllocation.AllocatedQuantity,
                         Percent_Allocation__c = assetSubscriptionAllocation.AllocatedPercentage,
@@ -310,7 +310,7 @@ public class AssetSubscriptionAllocationHelper {
             else if(objType == 'Subscription'){
                 Project_Subscription_Allocation__c projectSubscriptionAllocation = new Project_Subscription_Allocation__c(
                         Subscription__c = assetSubscriptionAllocation.Subscription,
-                        Id = assetSubscriptionAllocation.SubscriptionAllocationId,
+                        Id = assetSubscriptionAllocation.SubscriptionAllocationId == '' ? null : assetSubscriptionAllocation.SubscriptionAllocationId,
                         Project__c = assetSubscriptionAllocation.ProjectNumber,
                         Quantity_Allocation__c = assetSubscriptionAllocation.AllocatedQuantity,
                         Percent_Allocation__c = assetSubscriptionAllocation.AllocatedPercentage,
