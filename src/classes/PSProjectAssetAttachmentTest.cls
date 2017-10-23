@@ -114,6 +114,26 @@ private class PSProjectAssetAttachmentTest {
 
         // create test data
         createSimpleTestData();
+
+        Profile orderManagementProfile = [SELECT Id from Profile where Name = 'Order Management'];
+        User orderManagementUser = new User(
+                FirstName = 'Order Management',
+                LastName = 'User',
+                Email = 'OrderManagement@incontact.com',
+                Username = 'OrderManagementuser@incontact.com',
+                Alias = 'test',
+                profileId = orderManagementProfile.Id,
+                EmailEncodingKey = 'UTF-8',
+                TimeZoneSidKey = 'America/Los_Angeles',
+                LocaleSidKey = 'en_US',
+                LanguageLocaleKey = 'en_US',
+                UserRoleId = userinfo.getUserRoleId()
+        );
+        system.runAs(new User(Id = userInfo.getUserId())){
+            insert orderManagementUser;
+        }
+
+
         test.startTest();
 
         List<Asset> assets = new List<Asset>();
@@ -127,7 +147,9 @@ private class PSProjectAssetAttachmentTest {
                 SBQQ__QuoteLine__c = QuoteLine.id
         );
         assets.add(testAsset);
-        insert assets;
+        system.runAs(orderManagementUser){
+            insert assets;
+        }
 
         test.stopTest();
 

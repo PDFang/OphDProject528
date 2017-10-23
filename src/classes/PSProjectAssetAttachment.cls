@@ -1,4 +1,4 @@
-public with sharing class PSProjectAssetAttachment {
+public without sharing class PSProjectAssetAttachment {
 
     public static void AttachAssetsByIdToParentProject (set<id> QouteLineids, set<id>AssetsIds, set<id> SubscriptionsIds ){
         //should pass in ids of duplicate assets
@@ -12,9 +12,9 @@ public with sharing class PSProjectAssetAttachment {
         try{
             //get all Subscriptions/Assets from the QuoteLines
             for ( SBQQ__QuoteLine__c quoteLine : [select SBQQ__Quote__r.SBQQ__Opportunity2__c,
-            (select id from SBQQ__Assets__r where id in : AssetsIds),
-            (select id from Subscriptions_Custom__r where id in : SubscriptionsIds)
-            from SBQQ__QuoteLine__c where id in : QouteLineids]){
+                                                    (select id from SBQQ__Assets__r where id in : AssetsIds),
+                                                    (select id from Subscriptions_Custom__r where id in : SubscriptionsIds)
+                                                    from SBQQ__QuoteLine__c where id in : QouteLineids]){
 
                 opportunityIds.add(quoteLine.SBQQ__Quote__r.SBQQ__Opportunity2__c);
                 if(AssetsIds.size() > 0){
@@ -33,10 +33,10 @@ public with sharing class PSProjectAssetAttachment {
             if(opportunityIds.size() > 0){
 
                 for(AggregateResult agr: [select Opportunity__c,Max(Id) maxId
-                from Project__c
-                where Opportunity__c in : opportunityIds
-                And RecordType.Name like  '%Parent%'
-                Group By Opportunity__c]){
+                                            from Project__c
+                                            where Opportunity__c in : opportunityIds
+                                            And RecordType.Name like  '%Parent%'
+                                            Group By Opportunity__c]){
                     string projectId = (string)agr.get('maxId');
                     string oppyId = (string)agr.get('Opportunity__c');
                     projectIds.add(projectId);
