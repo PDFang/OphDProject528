@@ -217,7 +217,7 @@
                             });
                             $('#loading').modal('show');
                             console.log('options =>' + JSON.stringify(options.data));
-                            if(options.data.ProjectNumber == null || options.data.ProjectNumber == ''){
+                            if(options.data.ProjectNumber == null || options.data.ProjectNumber == '' || options.data.Asset == null || options.data.Asset == ''){
                                 $('#loading').modal('hide');
                                  if(currentObjectType == 'Project')
                                         displayError('Please Select an Asset before save.');
@@ -401,14 +401,17 @@
         }
 
         function enableAllocation(rowData, row){
+             var allocatedHoursCell =  $(row).children().eq(8);
             if(rowData.Quantity > 1){
                 var allocatedQPercentageCell =  $(row).children().eq(7);
                 $(allocatedQPercentageCell).find("span.k-numerictextbox").hide();
+                $(allocatedHoursCell).find("input").prop('disabled', false).removeClass("k-state-disabled");
+                $(allocatedHoursCell).find("span.k-select").show();
             }else if(rowData.Quantity == 1){
                 var allocatedQuantityCell =  $(row).children().eq(6);
                 $(allocatedQuantityCell).find("span.k-numerictextbox").hide();
-                var allocatedHoursCell =  $(row).children().eq(8);
-                $(allocatedHoursCell).text(rowData.AllocatedHours);
+                 $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
+                 $(allocatedHoursCell).find("span.k-select").hide();
             }
 
         }
@@ -443,7 +446,8 @@
                     $(allocatedQuantityCell).find("span.k-numerictextbox").show();
                     $(allocatedQuantityCell).find("input").val(remainingQuantity);
                     hours = rowData.BudgtedHours * (remainingQuantity / rowData.Quantity);
-                     $(allocatedHoursCell).find("input").val(rowData.AllocatedHours);
+                    $(allocatedHoursCell).find("input").prop('disabled', false).removeClass("k-state-disabled");
+                    $(allocatedHoursCell).find("span.k-select").show();
 
                 }else if(totalPercentage > 0 ){
                     var remainingPercentage = 100 -  totalPercentage;
@@ -452,9 +456,12 @@
                     $(allocatedQPercentageCell).find("span.k-numerictextbox").show();
                     $(allocatedQPercentageCell).find("input").val(remainingPercentage);
                     var hours = rowData.BudgtedHours * (remainingPercentage / 100);
-                     $(allocatedHoursCell).text(rowData.AllocatedHours);
+                    $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
+                    $(allocatedHoursCell).find("span.k-select").hide();
+
                 }
                 rowData.AllocatedHours = hours.toFixed(2);
+                $(allocatedHoursCell).find("input").val(rowData.AllocatedHours)
 
         }
 
@@ -481,12 +488,15 @@
                 	var model = e.items[0],
                         budgtedHours = model.BudgtedHours,
                         currentValue;
+                        allocatedHoursInput = $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(8)");
                   if(model.AllocatedPercentage > 0 ){
                       currentValue = (budgtedHours * (model.AllocatedPercentage / 100)).toFixed(2);
-                      $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(8)").text(currentValue);
+                      $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', true).addClass("k-state-disabled");
+                       $(allocatedHoursInput).find("span.k-select").hide();
                   }else if(model.AllocatedQuantity > 0 ){
                       currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
-                      $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(8)").find("input").val(currentValue);
+                      $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', true).removeClass("k-state-disabled");
+                      $(allocatedHoursInput).find("span.k-select").show();
                   }
                   model.AllocatedHours = currentValue;
             }
@@ -541,7 +551,7 @@
                             scrollable: false,
                             sortable: true,
                             columns: [
-                                { command: { text: "Select", click : selectProject}, title: "Action", width: "80px" },
+                                { command: { text: "Select", click : selectProject}, title: "Action", width: "60px" },
                                 { field: "ProjectNumber", width: "110px" },
                                 { field: "Summary", title:"Project Summary", width: "200px" },
                                 { field: "Status", title:"Project Status", width: "110px" }
@@ -614,11 +624,12 @@
                             scrollable: false,
                             sortable: true,
                             columns: [
+                                 {command: { text: "Select", click : selectAsset}, title: "Action", width: "60px" },
                                 { field: "AssetName", title:"Asset", width: "110px" },
                                 { field: "RemainingPercentage", title:"Remaining Percentage", width: "200px" },
                                 { field: "RemainingQuantity", title:"Remaining Quantity", width: "110px" },
-                                { field: "RemainingHours", title:"Remaining Hours", width: "110px" },
-                                { command: { text: "Select", click : selectAsset}, title: "Action", width: "180px" }
+                                { field: "RemainingHours", title:"Remaining Hours", width: "110px" }
+
                             ]
                         });
                     }
