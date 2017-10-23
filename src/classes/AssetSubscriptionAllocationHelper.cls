@@ -371,7 +371,7 @@ public class AssetSubscriptionAllocationHelper {
                 return JSON.serialize(assets);
         }
         else if(objType == 'Subscription'){
-            String soql = 'Select Id, Name, Product__c, Remaning_Percentage__c, RemainingQuantity__c, Remaining_Hours__c ' +
+            String soql = 'Select Id, Name, Product_Name__c, Remaning_Percentage__c, RemainingQuantity__c, Remaining_Hours__c ' +
                     + ' from SubscriptionReplica__c where ';
             if(projId != null){
                 soql += ' ParentProject__c = \'' + thisProject.ParentProject__c + '\'';
