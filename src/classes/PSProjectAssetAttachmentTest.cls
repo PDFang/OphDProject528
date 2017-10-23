@@ -69,7 +69,6 @@ private class PSProjectAssetAttachmentTest {
         implementedProducts.add(ip1);
         insert implementedProducts;
 
-
         Product2 p = new Product2();
         p.Name     = 'TEST';
         p.ProductCode ='1234520-000-000-XX';
@@ -107,13 +106,7 @@ private class PSProjectAssetAttachmentTest {
         return objQuote;
     }
 
-    //begin unit tests
-
-    // verify asset is attached to the parent project related to opportunity
-    static testmethod void TestAssetAttachment(){
-
-        // create test data
-        createSimpleTestData();
+    static User createUser(){
 
         Profile orderManagementProfile = [SELECT Id from Profile where Name = 'Order Management'];
         User orderManagementUser = new User(
@@ -132,7 +125,19 @@ private class PSProjectAssetAttachmentTest {
         system.runAs(new User(Id = userInfo.getUserId())){
             insert orderManagementUser;
         }
+        return orderManagementUser;
 
+    }
+
+    //begin unit tests
+
+    // verify asset is attached to the parent project related to opportunity
+    static testmethod void TestAssetAttachment(){
+
+        // create test data
+        createSimpleTestData();
+
+        User orderManagementUser = createUser();
 
         test.startTest();
 
@@ -163,6 +168,9 @@ private class PSProjectAssetAttachmentTest {
 
         // create test data
         createSimpleTestData();
+
+        User orderManagementUser = createUser();
+
         test.startTest();
 
         // inserting SBQQ subscription will create custom subscription and execute the trigger
@@ -171,7 +179,10 @@ private class PSProjectAssetAttachmentTest {
         subscription.SBQQ__Account__c =  accountRecord.id;
         subscription.SBQQ__QuoteLine__c = QuoteLine.id;
         subscription.SBQQ__Quantity__c = 1;
-        insert subscription;
+
+        system.runAs(orderManagementUser){
+            insert subscription;
+        }
 
         test.stopTest();
 

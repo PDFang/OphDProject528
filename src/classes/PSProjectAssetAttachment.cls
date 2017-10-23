@@ -90,6 +90,4 @@ public without sharing class PSProjectAssetAttachment {
 
     }
 
-
-
 }
