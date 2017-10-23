@@ -85,24 +85,11 @@ public without sharing class PSProjectAssetAttachment {
             }
 
         }catch (Exception ex){
-            string emailString = 'Error occured - ' + ex.getMessage() + ' at line number ' + ex.getLineNumber();
-            doSendEmail(emailString);
+            inContactBaseClass.SendErrorEmail( ex, null);
         }
 
-
-
     }
 
-    private static void doSendEmail(string emailBody)
-    {
-        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-        String[] toAddresses = new String[] {'arnab.karsarkar@incontact.com', 'william.nelson@incontact.com', 'ravish.chawla@incontact.com'};
-        mail.setToAddresses(toAddresses);
-        mail.setSubject('There is an unexpected error occured');
-        mail.setHtmlBody(emailBody);
-
-        Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
-    }
 
 
 }
