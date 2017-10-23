@@ -174,6 +174,7 @@
                                            }else  if(result == 'Project'){
                                               currentObjectType = result;
                                               console.log('results =>' + JSON.stringify(result));
+                                              subscriptionAllocationData('{!currentId}', null);
                                               assetAllocationData('{!currentId}', null);
                                            }
                                         }
@@ -191,9 +192,11 @@
                                   function(result,event)
                                       {
                                           if (event.status) {
-                                              if(result.length > 1){
+                                              if(result != null && result.length > 1){
                                                    options.success(JSON.parse(result));
                                                    console.log('results =>' + JSON.stringify(result));
+                                              }else{
+                                                  options.success('');
                                               }
                                           }
                                       },
@@ -417,7 +420,7 @@
             var dataItems = assetGrid.dataItems();
             if(e.model.isNew() && !e.model.dirty ){
                 if(currentObjectType == 'Asset'){
-                    e.model.Asset = dataItems[1].get("Asset");
+                    e.model.Asset = dataItems[0].get("Asset");
                     e.model.AssetName = dataItems[1].get("AssetName");
                     var firstCell = e.container.contents()[2];
                     $('<a href="/' +  e.model.Asset + '" target="_blank">' + e.model.AssetName +'</a>').appendTo(firstCell);
@@ -520,13 +523,7 @@
        function gridDataboundAsset(e){
           // var grid = this;
           $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
-          var assetGrid = this;
-          var dataItems = assetGrid.dataSource.view();
-          if(dataItems[0].get("id") != ''){
-               assetQuantity = dataItems[0].get("Quantity");
-          }
 
-          console.log('assetQuantity ==> ' + assetQuantity);
 
        }
 
@@ -636,6 +633,7 @@
           function hideChildProjects(e){
               setTimeout(function(){
                    $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
+                   $("#subscriptionAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
               });
           }
 
