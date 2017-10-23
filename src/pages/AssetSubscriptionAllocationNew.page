@@ -46,6 +46,10 @@
             font-size: 0.75em;
     	}
 
+    	.k-grid-Select{
+
+     }
+
     </style>
     <apex:form id="myform">
 
@@ -266,7 +270,6 @@
                                 ProjectName:{from:"ProjectName",type:"string"},
                                 ProjectPhase : {from:"ProjectPhase", type: "string"},
                                 AllocatedQuantity:{from: "AllocatedQuantity", type:"number", nullable: true, editable:true},
-                                AllocatedHours:{from: "AllocatedHours", type:"number",  nullable: true, editable:true},
                                 AllocatedPercentage:{
                                     from: "AllocatedPercentage",
                                     type:"number",
@@ -274,7 +277,7 @@
                                     editable:true,
                                     validation : {
                                         percentageValidation : function(input){
-                                            if(input.val() > 100){
+                                            if(input.val() > 100 && input.is("[name='AllocatedPercentage']")){
                                                 input.attr("data-percentageValidation-msg", " Invalid Percentage");
                                                 return false;
                                             }
@@ -282,6 +285,7 @@
                                         }
                                     }
                                 },
+                                AllocatedHours:{from: "AllocatedHours", type:"number",  nullable: true, editable:true},
                                 Quantity :{from:"Quantity", type:"number"},
                                 BudgtedHours :{from:"BudgtedHours", type:"number"}
                             }
@@ -350,8 +354,7 @@
                             },
                             {
                                 field:"AllocatedHours",
-                                title:"Allocated Hours",
-                                editor:nonEditorAsset
+                                title:"Allocated Hours"
                             },
                             {   title:"Action",
                                 command: ["edit","destroy"]
@@ -404,6 +407,8 @@
             }else if(rowData.Quantity == 1){
                 var allocatedQuantityCell =  $(row).children().eq(6);
                 $(allocatedQuantityCell).find("span.k-numerictextbox").hide();
+                var allocatedHoursCell =  $(row).children().eq(8);
+                $(allocatedHoursCell).text(rowData.AllocatedHours);
             }
 
         }
@@ -438,6 +443,7 @@
                     $(allocatedQuantityCell).find("span.k-numerictextbox").show();
                     $(allocatedQuantityCell).find("input").val(remainingQuantity);
                     hours = rowData.BudgtedHours * (remainingQuantity / rowData.Quantity);
+                     $(allocatedHoursCell).find("input").val(rowData.AllocatedHours);
 
                 }else if(totalPercentage > 0 ){
                     var remainingPercentage = 100 -  totalPercentage;
@@ -446,9 +452,10 @@
                     $(allocatedQPercentageCell).find("span.k-numerictextbox").show();
                     $(allocatedQPercentageCell).find("input").val(remainingPercentage);
                     var hours = rowData.BudgtedHours * (remainingPercentage / 100);
+                     $(allocatedHoursCell).text(rowData.AllocatedHours);
                 }
                 rowData.AllocatedHours = hours.toFixed(2);
-                $(allocatedHoursCell).text(rowData.AllocatedHours);
+
         }
 
 
@@ -479,7 +486,7 @@
                       $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(8)").text(currentValue);
                   }else if(model.AllocatedQuantity > 0 ){
                       currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
-                      $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(8)").text(currentValue);
+                      $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(8)").find("input").val(currentValue);
                   }
                   model.AllocatedHours = currentValue;
             }
