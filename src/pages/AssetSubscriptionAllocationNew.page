@@ -233,12 +233,9 @@
                                                   if(returnResult.result != 'Failed'){
                                                        options.success();
                                                         $('#loading').modal('hide');
-                                                       if(currentObjectType == 'Project'){
-                                                          getSObjType();
-                                                       }else{
-                                                           getSObjType();
-                                                       }
-
+                                                        var grid = $("#assetAllocationList").data("kendoGrid");
+                                                       grid.destroy();
+                                                        getSObjType();
                                                        hideError();
                                                     }else{
                                                          $('#loading').modal('hide');
@@ -495,7 +492,7 @@
                        $(allocatedHoursInput).find("span.k-select").hide();
                   }else if(model.AllocatedQuantity > 0 ){
                       currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
-                      $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', true).removeClass("k-state-disabled");
+                      $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', false).removeClass("k-state-disabled");
                       $(allocatedHoursInput).find("span.k-select").show();
                   }
                   model.AllocatedHours = currentValue;
@@ -505,7 +502,9 @@
        function loadDetail(obj){
            var row = $(obj).parent().parent();
            var link = $(row).find("td.k-hierarchy-cell .k-icon");
+
            link.click();
+           $(row).find("tr.k-detail-row").show();
            $(row).next().find(".k-hierarchy-cell").hide();
        }
 
@@ -561,6 +560,7 @@
 
           function selectProject(e){
               var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+
               var detailGrid = this.wrapper;
               var parentRow = detailGrid.closest("tr.k-detail-row").prev("tr");
               var grid = $("#assetAllocationList").data("kendoGrid");
@@ -577,8 +577,9 @@
                   var projectPhaseCell = $(parentRow).children().eq(5);
                   var htmlProjectPhase = $('<span> ' + rowData.ProjectPhase +'</span>');
                   $(projectPhaseCell).html(htmlProjectPhase);
-
               }
+              grid.collapseRow(parentRow);
+
           }
 
           function hideChildProjects(e){
@@ -651,6 +652,7 @@
                   $(assetCell).html(htmlContentProject);
                   calculateRemainingAllocation(rowData, parentRow);
               }
+              grid.collapseRow(parentRow);
           }
 
 
