@@ -29,7 +29,7 @@ public with sharing class AssetSubscriptionAllocationNewController {
     }
 
     // query string parameter
-    public static String currentId{get;set;}
+    public String currentId{get;set;}
     //Helper Object
     private AssetSubscriptionAllocationHelper helper;
 
@@ -46,7 +46,6 @@ public with sharing class AssetSubscriptionAllocationNewController {
         }
 
         helper = new AssetSubscriptionAllocationHelper(currentId);
-
     }
 
     //Get object type from ID
@@ -54,14 +53,12 @@ public with sharing class AssetSubscriptionAllocationNewController {
     public static String getObjectType(String idParam){
         String objType;
         objType = AssetSubscriptionAllocationHelper.getSObjectType(idParam);
-
         return objType;
     }
 
     //Get Asset Allocations Data
     @RemoteAction
     public static String getAssetAllocationData(String projectId, String idParam){
-
         String assetAllocationData = AssetSubscriptionAllocationHelper.getAssetAllocations(projectId, idParam);
         return assetAllocationData;
     }
@@ -69,10 +66,7 @@ public with sharing class AssetSubscriptionAllocationNewController {
     //Get Subscription Allocations Data
     @RemoteAction
     public static String getSubscriptionAllocationData(String projectId, String idParam){
-        system.debug('getSubscriptionAllocationData(): currentId - ' + currentId);
-        system.debug('getSubscriptionAllocationData(): idParam - ' + idParam);
         String subscriptionAllocationData = AssetSubscriptionAllocationHelper.getSubscriptionAllocations(projectId, idParam);
-        system.debug('getSubscriptionAllocationData(): subscriptionAllocationData - ' + subscriptionAllocationData);
         return subscriptionAllocationData;
     }
 
