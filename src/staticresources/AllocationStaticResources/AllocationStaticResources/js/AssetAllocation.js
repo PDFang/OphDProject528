@@ -471,7 +471,7 @@
                                     RemainingQuantity : {from:"RemainingQuantity__c", type:"string"},
                                     RemainingHours : {from:"Remaining_Hours__c", type:"string"},
                                     Quantity:{from:'Quantity', type:"number"},
-                                    BudgtedHours:{from:'Budgeted_Hours__c', type:"number"},
+                                    BudgtedHours:{from:'Budgeted_Hours__c', type:"number"}
                                 }
                             }
                         }
@@ -512,24 +512,4 @@
           grid.collapseRow(parentRow);
     }
 
-    function displayError(message){
-         $("div#success").empty();
-         $("div#success").hide();
-         $("div#java-errors").css("display", "block");
-         document.getElementById("java-errors").innerHTML =  message;
-          $('#warning').modal('show');
-         console.log('error =>' + message);
-    }
-
-    function hideError(){
-         $("div#java-errors").css("display", "none");
-         document.getElementById("java-errors").innerHTML = ' ';
-    }
-
-    function hideChildProjects(e){
-                  setTimeout(function(){
-                       $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
-                       $("#subscriptionAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
-                  });
-    }
 

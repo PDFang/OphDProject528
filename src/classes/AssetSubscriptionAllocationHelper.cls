@@ -356,6 +356,7 @@ public class AssetSubscriptionAllocationHelper {
     public static String getAssetSubscriptionDetailsFromProjectPhase(String projId, String objType){
 
         Project__c thisProject = [select ParentProject__c from Project__c WHere Id = :projId limit 1];
+        system.debug('thisProject - ' + thisProject);
 
         if(objType == 'Asset'){
             String soql = 'Select Id, Name, Remaning_Percentage__c, Quantity, Budgeted_Hours__c, RemainingQuantity__c, Remaining_Hours__c ' +
@@ -372,7 +373,8 @@ public class AssetSubscriptionAllocationHelper {
                 return JSON.serialize(assets);
         }
         else if(objType == 'Subscription'){
-            String soql = 'Select Id, Name,Budgeted_Hours__c, Quantity__c Product_Name__c, Remaning_Percentage__c, RemainingQuantity__c, Remaining_Hours__c ' +
+            system.debug('objType - ' + objType);
+            String soql = 'Select Id, Name,Budgeted_Hours__c, Quantity__c, Product_Name__c, Remaning_Percentage__c, RemainingQuantity__c, Remaining_Hours__c ' +
                     + ' from SubscriptionReplica__c where ';
             if(projId != null){
                 soql += ' ParentProject__c = \'' + thisProject.ParentProject__c + '\'';
@@ -384,6 +386,8 @@ public class AssetSubscriptionAllocationHelper {
 
             if(subscriptions.size() > 0)
                 return JSON.serialize(subscriptions);
+
+            system.debug('subscriptions - ' + subscriptions);
         }
 
 
