@@ -78,7 +78,7 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
         }
     }
 
-    @TestVisible
+
     // Update Subscription and associated Implemented Product
     private static void UpdateSubscription(List<SubscriptionReplica__c> lstSubscriptionReplicas, Map<Id, SubscriptionReplica__c> oldMap) {
 
