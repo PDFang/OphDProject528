@@ -420,17 +420,20 @@
             var dataItems = assetGrid.dataItems();
             if(e.model.isNew() && !e.model.dirty ){
                 if(currentObjectType == 'Asset'){
-                    e.model.Asset = dataItems[0].get("Asset");
-                    e.model.AssetName = dataItems[1].get("AssetName");
+                    e.model.Asset = '{!Asset.Id}';
+                    e.model.AssetName ='{!Asset.Name}';
                     var firstCell = e.container.contents()[2];
                     $('<a href="/' +  e.model.Asset + '" target="_blank">' + e.model.AssetName +'</a>').appendTo(firstCell);
                     var projectCell = e.container.contents()[4];
                     $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">Select Projects </a>').appendTo(projectCell);
+                    e.model.Quantity = '{!Asset.Quantity}';
+                    e.model.BudgtedHours = '{!Asset.Budgeted_Hours__c}';
                     calculateRemainingAllocation(e.model, e.container);
+
                 }else if(currentObjectType == 'Project'){
-                    e.model.ProjectNumber = dataItems[1].get("ProjectNumber");
-                    e.model.ProjectName = dataItems[1].get("ProjectName");
-                    e.model.ProjectPhase = dataItems[1].get("ProjectPhase");
+                    e.model.ProjectNumber = '{!Project.Id}';
+                    e.model.ProjectName = '{!Project.Name}';
+                    e.model.ProjectPhase = '{!Project.Project_Phase_Allocation__c}';
                     var projectCell = e.container.contents()[4];
                     $('<a href="/' +  e.model.ProjectNumber + '" target="_blank">' + e.model.ProjectName +'</a>').appendTo(projectCell);
                     var phaseCell = e.container.contents()[5];
@@ -473,10 +476,6 @@
                     totalPercentage = 0;
 
                 for(var i = 0; i < dataItems.length; i++){
-                    if(dataItems[i].get("Asset") ==  rowData.Asset){
-                        rowData.Quantity = dataItems[i].get("Quantity");
-                        rowData.BudgtedHours = dataItems[i].get("BudgtedHours");
-                    }
                     if(rowData.Quantity > 1 && dataItems[i].get("AllocatedQuantity") != null && dataItems[i].get("Asset") ==  rowData.Asset){
                          totalQuantity += Number(dataItems[i].get("AllocatedQuantity"));
 
@@ -489,7 +488,7 @@
                   var allocatedHoursCell =  $(row).children().eq(8);
                   var hours;
 
-                if(totalQuantity > 0){
+                if( rowData.Quantity > 1){
                     var remainingQuantity = rowData.Quantity -  totalQuantity;
                     $(allocatedQPercentageCell).find("span.k-numerictextbox").hide();
                     rowData.AllocatedQuantity = remainingQuantity;
@@ -499,7 +498,7 @@
                     $(allocatedHoursCell).find("input").prop('disabled', false).removeClass("k-state-disabled");
                     $(allocatedHoursCell).find("span.k-select").show();
 
-                }else if(totalPercentage > 0 ){
+                }else if( rowData.Quantity == 1 ){
                     var remainingPercentage = 100 -  totalPercentage;
                     rowData.AllocatedPercentage = remainingPercentage;
                     $(allocatedQuantityCell).find("span.k-numerictextbox").hide();
@@ -574,9 +573,11 @@
                                             e.data.Asset,
                                             function(result,event){
                                               if (event.status) {
-                                                  if(result.length > 1){
+                                                  if(result){
                                                        options.success(JSON.parse(result));
                                                        console.log('PhaseProjectDetails =>' + JSON.stringify(result));
+                                                  }else{
+                                                      options.success('');
                                                   }
                                               }
                                             },{escape: false}
@@ -597,6 +598,7 @@
                             },
                             scrollable: false,
                             sortable: true,
+                            noRecords: true,
                             columns: [
                                 { command: { text: "Select", click : selectProject}, title: "Action", width: "60px" },
                                 { field: "ProjectNumber", width: "110px" },
@@ -649,9 +651,11 @@
                                             'Asset',
                                             function(result,event){
                                               if (event.status) {
-                                                  if(result.length > 1){
+                                                  if(result){
                                                        options.success(JSON.parse(result));
                                                        console.log('Asset Details =>' + JSON.stringify(result));
+                                                  }else{
+                                                      options.success('');
                                                   }
                                               }
                                             },{escape: false}
@@ -666,13 +670,16 @@
                                             AssetName: {from:"Name", type: "string"},
                                             RemainingPercentage : {from:"Remaning_Percentage__c", type:"string"},
                                             RemainingQuantity : {from:"RemainingQuantity__c", type:"string"},
-                                            RemainingHours : {from:"Remaining_Hours__c", type:"string"}
+                                            RemainingHours : {from:"Remaining_Hours__c", type:"string"},
+                                            Quantity:{from:'Quantity', type:"number"},
+                                            BudgtedHours:{from:'Budgeted_Hours__c', type:"number"},
                                         }
                                     }
                                 }
                             },
                             scrollable: false,
                             sortable: true,
+                            noRecords: true,
                             columns: [
                                  {command: { text: "Select", click : selectAsset}, title: "Action", width: "60px" },
                                 { field: "AssetName", title:"Asset", width: "110px" },
@@ -696,6 +703,8 @@
                   rowData.AllocatedPercentage = null;
                   rowData.AllocatedQuantity = null;
                   rowData.AllocatedHours = 0;
+                  rowData.Quantity = dataItem.Quantity;
+                  rowData.BudgtedHours = dataItem.BudgtedHours;
                   var assetCell = $(parentRow).children().eq(2);
                   var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">' + dataItem.AssetName +'</a>');
                   $(assetCell).html(htmlContentProject);
@@ -780,7 +789,7 @@ function calculateRemainingSubscriptionAllocation(rowData, row){
             var allocatedHoursCell =  $(row).children().eq(9);
             var hours;
 
-            if(totalQuantity > 0){
+            if(rowData.Quantity > 1 ){
                 var remainingQuantity = rowData.Quantity -  totalQuantity;
                 $(allocatedQPercentageCell).find("span.k-numerictextbox").hide();
                 rowData.AllocatedQuantity = remainingQuantity;
@@ -790,7 +799,7 @@ function calculateRemainingSubscriptionAllocation(rowData, row){
                 $(allocatedHoursCell).find("input").prop('disabled', false).removeClass("k-state-disabled");
                 $(allocatedHoursCell).find("span.k-select").show();
 
-            }else if(totalPercentage > 0 ){
+            }else if(rowData.Quantity == 1 ){
                 var remainingPercentage = 100 -  totalPercentage;
                 rowData.AllocatedPercentage = remainingPercentage;
                 $(allocatedQuantityCell).find("span.k-numerictextbox").hide();
@@ -960,9 +969,11 @@ function subscriptionAllocationData(projId, subscriptionId){
                           function(result,event)
                               {
                                   if (event.status) {
-                                      if(result.length > 1){
+                                      if(result != null && result.length > 1){
                                            options.success(JSON.parse(result));
                                       console.log('results =>' + JSON.stringify(result));
+                                      }else{
+                                           options.success('');
                                       }
                                   } else if (event.type === 'exception') {
 
@@ -1094,19 +1105,19 @@ function subscriptionAllocationData(projId, subscriptionId){
             var dataItems = subscriptionGrid.dataItems();
             if(e.model.isNew() && !e.model.dirty ){
                 if(currentObjectType == 'Subscription'){
-                    e.model.Subscription = dataItems[1].get("Subscription");
-                    e.model.SubscriptionName = dataItems[1].get("SubscriptionName");
+                    e.model.Subscription = '{!Subscription.Id}';
+                    e.model.SubscriptionName = '{!Subscription.Name}';
                     var firstCell = e.container.contents()[2];
                     $('<a href="/' +  e.model.Subscription + '" target="_blank">' + e.model.SubscriptionName +'</a>').appendTo(firstCell);
                     var projectCell = e.container.contents()[4];
                     $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">Select Projects </a>').appendTo(projectCell);
+                      e.model.Quantity = '{!Subscription.Quantity__c}';
+                    e.model.BudgtedHours = '{!Subscription.Budgeted_Hours__c}';
                     calculateRemainingSubscriptionAllocation(e.model, e.container);
                 }else if(currentObjectType == 'Project'){
-                    e.model.ProjectNumber = dataItems[1].get("ProjectNumber");
-                    e.model.ProjectName = dataItems[1].get("ProjectName");
-                    e.model.ProjectPhase = dataItems[1].get("ProjectPhase");
-
-
+                    e.model.ProjectNumber = '{!Project.Id}';
+                    e.model.ProjectName = '{!Project.Name}';
+                    e.model.ProjectPhase = '{!Project.Project_Phase_Allocation__c}';
                     var projectCell = e.container.contents()[4];
                     $('<a href="/' +  e.model.ProjectNumber + '" target="_blank">' + e.model.ProjectName +'</a>').appendTo(projectCell);
                     var phaseCell = e.container.contents()[6];

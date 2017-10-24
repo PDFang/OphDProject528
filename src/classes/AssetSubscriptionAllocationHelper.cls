@@ -50,7 +50,8 @@ public class AssetSubscriptionAllocationHelper {
             'Name',
             'RecordType.Name',
             'ParentProject__c',
-            'ParentProject__r.Name'
+            'ParentProject__r.Name',
+            'Project_Phase__c'
     };
 
     // constructor
@@ -357,7 +358,7 @@ public class AssetSubscriptionAllocationHelper {
         Project__c thisProject = [select ParentProject__c from Project__c WHere Id = :projId limit 1];
 
         if(objType == 'Asset'){
-            String soql = 'Select Id, Name, Remaning_Percentage__c, RemainingQuantity__c, Remaining_Hours__c ' +
+            String soql = 'Select Id, Name, Remaning_Percentage__c, Quantity, Budgeted_Hours__c, RemainingQuantity__c, Remaining_Hours__c ' +
                     + ' from Asset where ';
             if(projId != null){
                 soql += ' Parent_Project__c = \'' + thisProject.ParentProject__c + '\'';
@@ -371,7 +372,7 @@ public class AssetSubscriptionAllocationHelper {
                 return JSON.serialize(assets);
         }
         else if(objType == 'Subscription'){
-            String soql = 'Select Id, Name, Product_Name__c, Remaning_Percentage__c, RemainingQuantity__c, Remaining_Hours__c ' +
+            String soql = 'Select Id, Name,Budgeted_Hours__c, Quantity__c Product_Name__c, Remaning_Percentage__c, RemainingQuantity__c, Remaining_Hours__c ' +
                     + ' from SubscriptionReplica__c where ';
             if(projId != null){
                 soql += ' ParentProject__c = \'' + thisProject.ParentProject__c + '\'';
