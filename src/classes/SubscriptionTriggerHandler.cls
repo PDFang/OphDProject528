@@ -45,7 +45,7 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
         }
     }
 
-    @TestVisible
+
     private static void UpdateSubscriptionReplica(Map<Id, SBQQ__Subscription__c> lstSubscriptions) {
 
         list<SubscriptionReplica__c> lstUpdateSubscriptionReplicas = new list<SubscriptionReplica__c>();
