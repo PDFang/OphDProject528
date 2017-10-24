@@ -64,8 +64,6 @@
                                                   if(returnResult.result != 'Failed'){
                                                        options.success();
                                                         $('#loading').modal('hide');
-                                                        var grid = $("#assetAllocationList").data("kendoGrid");
-                                                       grid.destroy();
                                                         getSObjType();
                                                        hideError();
                                                     }else{
@@ -130,9 +128,9 @@
       $("#assetAllocationList").kendoGrid({
           dataSource: assetAllocationData,
           editable: "inline",
-          scrollable: true,
+          scrollable:  true,
           noRecords: true,
-          height: 350,
+          height:300,
           edit: addDuplicateRowAsset,
           dataBound : gridDataboundAsset,
           detailInit: loadChildGrid,

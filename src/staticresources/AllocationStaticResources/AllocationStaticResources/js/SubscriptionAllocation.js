@@ -68,8 +68,6 @@ function subscriptionAllocationData(projId, subscriptionId){
                                           if(returnResult.result != 'Failed'){
                                                options.success();
                                                 $('#loading').modal('hide');
-                                                var grid = $("#subscriptionAllocationList").data("kendoGrid");
-                                               grid.destroy();
                                                 getSObjType();
                                                hideError();
                                             }else{
@@ -144,7 +142,6 @@ function subscriptionAllocationData(projId, subscriptionId){
           scrollable: true,
           noRecords: true,
           edit:addDuplicateRowSubscription,
-          height: 350,
           detailInit: loadSubscriptionChildGrid,
           dataBound: gridDataboundSubscription,
           cancel : hideChildProjects,
@@ -272,10 +269,8 @@ function addDuplicateRowSubscription(e){
                     var firstCell = e.container.contents()[2];
                     $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">Select Subscriptions </a>').appendTo(firstCell);
                 }
-                 e.model.ProductName = dataItems[1].get("ProductName");
-                 e.model.Product = dataItems[1].get("Product");
-                 var ProductCell = e.container.contents()[5];
-                 $('<a href="/' +  e.model.Product + '" target="_blank">' + e.model.ProductName +'</a>').appendTo(ProductCell);
+
+
 
                  var buttonCell = e.container.contents()[10];
                  $(buttonCell).find("a.k-primary").html('<span class="k-icon k-i-update"></span> Add');
@@ -499,7 +494,7 @@ function detailSubscription(e) {
             columns: [
                  {command: { text: "Select", click : selectSubscription}, title: "Action", width: "60px" },
                 { field: "SubscriptionName", title:"Subscription", width: "110px" },
-                { field: "Product_Name__c", title:"Product", width: "110px" },
+                { field: "Product", title:"Product", width: "110px" },
                 { field: "RemainingPercentage", title:"Remaining Percentage", width: "200px" },
                 { field: "RemainingQuantity", title:"Remaining Quantity", width: "110px" },
                 { field: "RemainingHours", title:"Remaining Hours", width: "110px" }
@@ -521,9 +516,12 @@ function selectSubscription(e){
             rowData.AllocatedHours = 0;
             rowData.Quantity = dataItem.Quantity;
             rowData.BudgtedHours = dataItem.BudgtedHours;
+            rowData.ProductName = dataItem.Product;
             var subscriptionCell = $(parentRow).children().eq(2);
             var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">' + dataItem.SubscriptionName +'</a>');
             $(subscriptionCell).html(htmlContentProject);
+            var ProductCell = $(parentRow).children().eq(5);
+            $('<a href="#" target="_blank">' + rowData.ProductName +'</a>').appendTo(ProductCell);
             calculateRemainingSubscriptionAllocation(rowData, parentRow);
         }
         grid.collapseRow(parentRow);

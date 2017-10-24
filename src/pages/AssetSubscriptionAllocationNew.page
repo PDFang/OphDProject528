@@ -163,11 +163,18 @@
         var  currentObjectType,
              Asset = new Object(),
              Project = new Object(),
-             Subscription = new Object();
+             Subscription = new Object(),
+             Product = new Object();
 
         var windowTemplate = kendo.template($("#windowTemplate").html());
 
         function getSObjType(){
+             var Subscriptiongrid = $("#subscriptionAllocationList").data("kendoGrid");
+             if(Subscriptiongrid)
+                Subscriptiongrid.destroy();
+             var Assetgrid = $("#assetAllocationList").data("kendoGrid");
+             if(Assetgrid)
+              Assetgrid.destroy();
              AssetSubscriptionAllocationNewController.getObjectType(
                '{!currentId}',
                 function(result, event){

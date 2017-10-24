@@ -383,11 +383,11 @@ public class AssetSubscriptionAllocationHelper {
             soql += ' order by createddate ';
 
             List<SubscriptionReplica__c> subscriptions = Database.query(soql);
-
+            system.debug('subscriptions - ' + subscriptions);
             if(subscriptions.size() > 0)
                 return JSON.serialize(subscriptions);
 
-            system.debug('subscriptions - ' + subscriptions);
+
         }
 
 
