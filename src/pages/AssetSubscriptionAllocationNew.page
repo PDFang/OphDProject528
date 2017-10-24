@@ -136,7 +136,7 @@
             <div class="modal-dialog" role="document">
                 <div class="modal-content" style="width:40%; top: 182px;">
                     <div class="modal-body" style="font-size:14px;">
-                        <div class="spinnerClass">Adding Allocations</div>
+                        <div class="spinnerClass">Please wait</div>
                     </div>
                 </div>
             </div>

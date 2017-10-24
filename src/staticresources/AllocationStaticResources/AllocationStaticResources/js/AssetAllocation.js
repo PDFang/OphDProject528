@@ -165,13 +165,13 @@
                         field:"ProjectName",
                         title:"Project",
                         editor:nonEditorAsset,
-                        template: '#{ #<a href="/#: data.ProjectNumber #" target="_blank" >#= data.ProjectName #</a># } #',
+                        hidden:true
                     },
                     {
                         field:"ProjectPhase",
                         title:"Project Phase",
-                        editor:nonEditorAsset,
-                        filterable:true
+                        template: '#{ #<a href="/#: data.ProjectNumber #" target="_blank" >#= data.ProjectPhase #</a># } #',
+                        editor:nonEditorAsset
                     },
                     {
                         field:"AllocatedQuantity",
@@ -199,6 +199,11 @@
                                  $("#yesButton").click(function(){
                                        var grid = $("#assetAllocationList").data("kendoGrid");
                                        window.close();
+                                       $('#loading').modal({
+                                           backdrop: 'static',
+                                           keyboard: false
+                                      });
+                                      $('#loading').modal('show');
                                        AssetSubscriptionAllocationNewController.DeleteAllocation(
                                            data.AssetAllocationId,
                                            'Asset',
@@ -207,8 +212,10 @@
                                                   var returnResult = result;
                                                   if(result != 'Failed'){
                                                        grid.dataSource.remove(data);
+                                                       $('#loading').modal('hide');
                                                     }else{
                                                     displayError('Delete Unsuccessful.');
+                                                     $('#loading').modal('hide');
                                                   }
                                                }else{
                                                    displayError(event.message);
@@ -238,7 +245,7 @@
                    e.model.AssetName =Asset.Name;
                    var firstCell = e.container.contents()[2];
                    $('<a href="/' +  e.model.Asset + '" target="_blank">' + e.model.AssetName +'</a>').appendTo(firstCell);
-                   var projectCell = e.container.contents()[4];
+                   var projectCell = e.container.contents()[5];
                    $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">Select Projects </a>').appendTo(projectCell);
                    e.model.Quantity = Asset.Quantity;
                    e.model.BudgtedHours = Asset.Budgeted_Hours__c;
@@ -248,10 +255,8 @@
                    e.model.ProjectNumber = Project.Id;
                    e.model.ProjectName = Project.Name;
                    e.model.ProjectPhase = Project.Project_Phase_Allocation__c;
-                   var projectCell = e.container.contents()[4];
-                   $('<a href="/' +  e.model.ProjectNumber + '" target="_blank">' + e.model.ProjectName +'</a>').appendTo(projectCell);
-                   var phaseCell = e.container.contents()[5];
-                   $('<span>' +  e.model.ProjectPhase + '</span>').appendTo(phaseCell);
+                   var projectCell = e.container.contents()[5];
+                   $('<a href="/' +  e.model.ProjectNumber + '" target="_blank">' + e.model.ProjectPhase +'</a>').appendTo(projectCell);
 
                    var firstCell = e.container.contents()[2];
                    $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">Select Assets </a>').appendTo(firstCell);
@@ -407,7 +412,7 @@
                     noRecords: true,
                     columns: [
                         { command: { text: "Select", click : selectProject}, title: "Action", width: "60px" },
-                        { field: "ProjectNumber", width: "110px" },
+                        { field: "ProjectNumber", title:"Phase Project Number", width: "110px" },
                         { field: "Summary", title:"Project Summary", width: "200px" },
                         { field: "Status", title:"Project Status", width: "110px" }
                     ]
@@ -426,12 +431,9 @@
               rowData.ProjectPhase = dataItem.ProjectNumber + ' - ' + dataItem.Summary;
               //grid.dataSource.sync();
 
-              var projectCell = $(parentRow).children().eq(4);
-              var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">' + dataItem.ProjectNumber +'</a>');
+              var projectCell = $(parentRow).children().eq(5);
+              var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">' + rowData.ProjectPhase +'</a>');
               $(projectCell).html(htmlContentProject);
-              var projectPhaseCell = $(parentRow).children().eq(5);
-              var htmlProjectPhase = $('<span> ' + rowData.ProjectPhase +'</span>');
-              $(projectPhaseCell).html(htmlProjectPhase);
           }
           grid.collapseRow(parentRow);
 

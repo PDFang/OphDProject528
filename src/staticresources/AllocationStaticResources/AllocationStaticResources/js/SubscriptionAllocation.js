@@ -173,7 +173,8 @@ function subscriptionAllocationData(projId, subscriptionId){
                         field:"ProjectName",
                         title:"Project",
                         editor:nonEditorSubscription,
-                        template: '#{ #<a href="/#: data.ProjectNumber #" target="_blank" >#= data.ProjectName #</a># } #',
+                        hidden: true,
+
                     },
                     {
                         field:"ProductName",
@@ -184,6 +185,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                     {
                         field:"ProjectPhase",
                         title:"Project Phase",
+                         template: '#{ #<a href="/#: data.ProjectNumber #" target="_blank" >#= data.ProjectPhase #</a># } #',
                         editor:nonEditorSubscription,
                         filterable:true
                     },
@@ -214,6 +216,11 @@ function subscriptionAllocationData(projId, subscriptionId){
                                  $("#yesButton").click(function(){
                                        var grid = $("#subscriptionAllocationList").data("kendoGrid");
                                        window.close();
+                                       $('#loading').modal({
+                                            backdrop: 'static',
+                                            keyboard: false
+                                       });
+                                       $('#loading').modal('show');
                                        AssetSubscriptionAllocationNewController.DeleteAllocation(
                                            data.SubscriptionAllocationId,
                                            'Subscription',
@@ -222,8 +229,11 @@ function subscriptionAllocationData(projId, subscriptionId){
                                                   var returnResult = result;
                                                   if(result != 'Failed'){
                                                        grid.dataSource.remove(data);
+                                                       $('#loading').modal('hide');
                                                     }else{
+                                                    $('#loading').modal('hide');
                                                     displayError('Delete Unsuccessful.');
+
                                                   }
                                                }else{
                                                    displayError(event.message);
