@@ -49,19 +49,29 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
     private static void UpdateSubscriptionReplica(Map<Id, SBQQ__Subscription__c> lstSubscriptions) {
 
         list<SubscriptionReplica__c> lstUpdateSubscriptionReplicas = new list<SubscriptionReplica__c>();
+        boolean isUpdate;
 
         //update certain fields to SubscriptionReplica table since they are not formula fields there
         for(SubscriptionReplica__c subscriptionReplica : [
                 SELECT Id, Status1__c, Install_Date__c, Implemented_Product__c, Subscription__c FROM subscriptionReplica__c
                 WHERE Subscription__c IN : lstSubscriptions.keyset()
         ]){
+            isUpdate = false;
             SBQQ__Subscription__c subscription = lstSubscriptions.get(SubscriptionReplica.Subscription__c);
+            if (subscriptionReplica.Status1__c != subscription.Status__c
+                    || subscriptionReplica.Install_Date__c != subscription.Install_Date__c
+                    || subscriptionReplica.Implemented_Product__c != subscription.Implemented_Product__c) {
+                isUpdate = true;
+            }
+
             subscriptionReplica.Status1__c = subscription.Status__c;
             subscriptionReplica.Install_Date__c = subscription.Install_Date__c;
             subscriptionReplica.Implemented_Product__c = subscription.Implemented_Product__c;
 
             // add changed SubscriptionReplica to update list
-            lstUpdateSubscriptionReplicas.add(subscriptionReplica);
+            if (isUpdate) {
+                lstUpdateSubscriptionReplicas.add(subscriptionReplica);
+            }
         }
 
         if(lstUpdateSubscriptionReplicas.size() > 0){
