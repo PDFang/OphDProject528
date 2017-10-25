@@ -51,9 +51,9 @@
                             if(options.data.ProjectNumber == null || options.data.ProjectNumber == '' || options.data.Asset == null || options.data.Asset == ''){
                                 $('#loading').modal('hide');
                                  if(currentObjectType == 'Project')
-                                        displayError('Please select an Asset before save.');
+                                        displayError('Please select an asset before saving.');
                                  else if(currentObjectType == 'Asset')
-                                         displayError('Please select a Project before save.');
+                                         displayError('Please select a Project before saving.');
                             }else{
                                   AssetSubscriptionAllocationNewController.UpsertAssetSubscriptionAllocation(
                                            'Asset',

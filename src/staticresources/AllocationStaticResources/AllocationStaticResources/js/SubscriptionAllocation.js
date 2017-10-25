@@ -55,9 +55,9 @@ function subscriptionAllocationData(projId, subscriptionId){
                     if(options.data.ProjectNumber == null || options.data.ProjectNumber == '' || options.data.Subscription == null || options.data.Subscription == ''){
                         $('#loading').modal('hide');
                          if(currentObjectType == 'Project')
-                                displayError('Please select an Subscription before save.');
+                                displayError('Please select an subscription before saving.');
                          else if(currentObjectType == 'Subscription')
-                                 displayError('Please select a Project before save.');
+                                 displayError('Please select a project before saving.');
                     }else{
                           AssetSubscriptionAllocationNewController.UpsertAssetSubscriptionAllocation(
                                    'Subscription',
