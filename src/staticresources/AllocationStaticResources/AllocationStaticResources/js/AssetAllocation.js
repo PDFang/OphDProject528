@@ -53,7 +53,7 @@
                                  if(currentObjectType == 'Project')
                                         displayError('Please select an asset before saving.');
                                  else if(currentObjectType == 'Asset')
-                                         displayError('Please select a Project before saving.');
+                                         displayError('Please select a project before saving.');
                             }else{
                                   AssetSubscriptionAllocationNewController.UpsertAssetSubscriptionAllocation(
                                            'Asset',
