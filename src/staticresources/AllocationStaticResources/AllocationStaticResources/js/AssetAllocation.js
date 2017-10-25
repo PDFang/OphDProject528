@@ -51,9 +51,9 @@
                             if(options.data.ProjectNumber == null || options.data.ProjectNumber == '' || options.data.Asset == null || options.data.Asset == ''){
                                 $('#loading').modal('hide');
                                  if(currentObjectType == 'Project')
-                                        displayError('Please Select an Asset before save.');
+                                        displayError('Please select an Asset before save.');
                                  else if(currentObjectType == 'Asset')
-                                         displayError('Please Select a Project before save.');
+                                         displayError('Please select a Project before save.');
                             }else{
                                   AssetSubscriptionAllocationNewController.UpsertAssetSubscriptionAllocation(
                                            'Asset',
@@ -382,6 +382,7 @@
                             read: function(options){
                                  AssetSubscriptionAllocationNewController.PhaseProjectDetails(
                                     e.data.Asset,
+                                    'Asset',
                                     function(result,event){
                                       if (event.status) {
                                           if(result){
@@ -402,7 +403,8 @@
                                     ProjectId: { from: "Id"},
                                     ProjectNumber: {from:"Name", type: "string"},
                                     Summary : {from:"Summary__c", type:"string"},
-                                    Status : {from:"ProjectStatus__c", type:"string"}
+                                    Status : {from:"ProjectStatus__c", type:"string"},
+                                    PhaseNumber : {from:"Phase__c", type:"string"},
                                 }
                             }
                         }
@@ -413,8 +415,10 @@
                     columns: [
                         { command: { text: "Select", click : selectProject}, title: "Action", width: "60px" },
                         { field: "ProjectNumber", title:"Phase Project Number", width: "110px" },
-                        { field: "Summary", title:"Project Summary", width: "200px" },
+                        { field: "PhaseNumber", title:"Phase #", width: "110px" },
+                        { field: "Summary", title:"Phase Project Summary", width: "200px" },
                         { field: "Status", title:"Project Status", width: "110px" }
+
                     ]
                 });
     }
@@ -428,7 +432,7 @@
           if(rowData){
               rowData.ProjectNumber = dataItem.ProjectId;
               rowData.ProjectName = dataItem.ProjectNumber;
-              rowData.ProjectPhase = dataItem.ProjectNumber + ' - ' + dataItem.Summary;
+              rowData.ProjectPhase = dataItem.ProjectNumber + ' - ' + dataItem.Summary +  ' - ' + dataItem.PhaseNumber;
               //grid.dataSource.sync();
 
               var projectCell = $(parentRow).children().eq(5);

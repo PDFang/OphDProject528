@@ -272,41 +272,30 @@ public class AssetSubscriptionAllocationHelper {
 
     }
 
+
+
     // fetch Project Subscription Allocation
-    public static String getPhaseProjectDetailsSubscription(String subscriptionId){
+    public static String getPhaseProjectDetails(String objId, string objType){
+        Asset thisAsset;
+        SubscriptionReplica__c thisSubscription;
+        string ProjectId;
 
-        SubscriptionReplica__c thisSubscription = [select ParentProject__c from SubscriptionReplica__c WHere Id = :subscriptionId limit 1];
-
-        String soql = 'Select Id, Name, Summary__c, ProjectStatus__c ' +
-                + ' from Project__c where ';
-        if(subscriptionId != null){
-            soql += ' id = \'' + thisSubscription.ParentProject__c + '\'';
+        if(objType == 'Asset'){
+            thisAsset = [select Parent_Project__c from Asset WHere Id = :objId limit 1];
+            ProjectId  = thisAsset.Parent_Project__c;
+        }else if(objType == 'Subscription'){
+            thisSubscription = [select ParentProject__c from SubscriptionReplica__c WHere Id = :objId limit 1];
+            ProjectId = thisSubscription.ParentProject__c;
         }
 
-        soql += ' order by createddate ';
-
-        List<Project__c> projects = Database.query(soql);
-
-        if(projects.size() > 0)
-            return JSON.serialize(projects);
-
-        return null;
-
-    }
 
 
 
 
-
-    // fetch Project Subscription Allocation
-    public static String getPhaseProjectDetails(String assetId){
-
-        Asset thisAsset = [select Parent_Project__c from Asset WHere Id = :assetId limit 1];
-
-        String soql = 'Select Id, Name, Summary__c, ProjectStatus__c ' +
+        String soql = 'Select Id, Name, Summary__c, ProjectStatus__c, Phase__c ' +
                 + ' from Project__c where ';
-        if(assetId != null){
-            soql += ' ParentProject__c = \'' + thisAsset.Parent_Project__c + '\'';
+        if(ProjectId != null){
+            soql += ' ParentProject__c = \'' + ProjectId + '\'';
         }
 
         soql += ' order by createddate ';

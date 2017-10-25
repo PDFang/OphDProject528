@@ -70,15 +70,10 @@ public with sharing class AssetSubscriptionAllocationNewController {
         return subscriptionAllocationData;
     }
 
-    @RemoteAction
-    public static String PhaseProjectDetailsSubscription(String SubscriptionId){
-        String ProjectData = AssetSubscriptionAllocationHelper.getPhaseProjectDetailsSubscription(SubscriptionId);
-        return ProjectData;
-    }
 
     @RemoteAction
-    public static String PhaseProjectDetails(String assetId){
-        String ProjectData = AssetSubscriptionAllocationHelper.getPhaseProjectDetails(assetId);
+    public static String PhaseProjectDetails(String objId, string objType){
+        String ProjectData = AssetSubscriptionAllocationHelper.getPhaseProjectDetails(objId, objType);
         return ProjectData;
     }
 

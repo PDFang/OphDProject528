@@ -55,9 +55,9 @@ function subscriptionAllocationData(projId, subscriptionId){
                     if(options.data.ProjectNumber == null || options.data.ProjectNumber == '' || options.data.Subscription == null || options.data.Subscription == ''){
                         $('#loading').modal('hide');
                          if(currentObjectType == 'Project')
-                                displayError('Please Select an Subscription before save.');
+                                displayError('Please select an Subscription before save.');
                          else if(currentObjectType == 'Subscription')
-                                 displayError('Please Select a Project before save.');
+                                 displayError('Please select a Project before save.');
                     }else{
                           AssetSubscriptionAllocationNewController.UpsertAssetSubscriptionAllocation(
                                    'Subscription',
@@ -172,8 +172,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                     {
                         field:"ProjectName",
                         title:"Project",
-                        editor:nonEditorSubscription,
-                        hidden: true,
+                        hidden: true
 
                     },
                     {
@@ -262,19 +261,19 @@ function addDuplicateRowSubscription(e){
                     e.model.SubscriptionName = Subscription.Name;
                     var firstCell = e.container.contents()[2];
                     $('<a href="/' +  e.model.Subscription + '" target="_blank">' + e.model.SubscriptionName +'</a>').appendTo(firstCell);
-                    var projectCell = e.container.contents()[4];
+                    var projectCell = e.container.contents()[6];
                     $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">Select Projects </a>').appendTo(projectCell);
-                      e.model.Quantity = Subscription.Quantity__c;
+                      e.model.Quantity = Subscription.Quantity;
                     e.model.BudgtedHours = Subscription.Budgeted_Hours__c;
                     calculateRemainingSubscriptionAllocation(e.model, e.container);
                 }else if(currentObjectType == 'Project'){
                     e.model.ProjectNumber = Project.Id;
                     e.model.ProjectName = Project.Name;
                     e.model.ProjectPhase = Project.Project_Phase_Allocation__c;
-                    var projectCell = e.container.contents()[4];
-                    $('<a href="/' +  e.model.ProjectNumber + '" target="_blank">' + e.model.ProjectName +'</a>').appendTo(projectCell);
                     var phaseCell = e.container.contents()[6];
-                    $('<span>' +  e.model.ProjectPhase + '</span>').appendTo(phaseCell);
+                    $('<a href="/' +  e.model.ProjectNumber + '" target="_blank">' + e.model.ProjectPhase +'</a>').appendTo(phaseCell);
+
+                    //$('<span>' +  e.model.ProjectPhase + '</span>').appendTo(phaseCell);
 
                     var firstCell = e.container.contents()[2];
                     $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">Select Subscriptions </a>').appendTo(firstCell);
@@ -400,8 +399,9 @@ function detailSubscriptionProjects(e) {
             autosync:true,
             transport: {
                 read: function(options){
-                     AssetSubscriptionAllocationNewController.PhaseProjectDetailsSubscription(
+                     AssetSubscriptionAllocationNewController.PhaseProjectDetails(
                         e.data.Subscription,
+                        'Subscription',
                         function(result,event){
                           if (event.status) {
                               if(result.length > 1){
@@ -420,7 +420,8 @@ function detailSubscriptionProjects(e) {
                         ProjectId: { from: "Id"},
                         ProjectNumber: {from:"Name", type: "string"},
                         Summary : {from:"Summary__c", type:"string"},
-                        Status : {from:"ProjectStatus__c", type:"string"}
+                        Status : {from:"ProjectStatus__c", type:"string"},
+                        PhaseNumber : {from:"Phase__c", type:"string"}
                     }
                 }
             }
@@ -429,8 +430,9 @@ function detailSubscriptionProjects(e) {
         sortable: true,
         columns: [
             { command: { text: "Select", click : selectSubscriptionProject}, title: "Action", width: "60px" },
-            { field: "ProjectNumber", width: "110px" },
-            { field: "Summary", title:"Project Summary", width: "200px" },
+            { field: "ProjectNumber", title:"Phase Project Number", width: "110px" },
+            { field: "PhaseNumber", title:"Phase #", width: "110px" },
+            { field: "Summary", title:"Phase Project Summary", width: "200px" },
             { field: "Status", title:"Project Status", width: "110px" }
         ]
     });
@@ -446,15 +448,12 @@ function selectSubscriptionProject(e){
     if(rowData){
       rowData.ProjectNumber = dataItem.ProjectId;
       rowData.ProjectName = dataItem.ProjectNumber;
-      rowData.ProjectPhase = dataItem.ProjectNumber + ' - ' + dataItem.Summary;
+      rowData.ProjectPhase = dataItem.ProjectNumber + ' - ' + dataItem.Summary +  ' - ' + dataItem.PhaseNumber;
       //grid.dataSource.sync();
 
-      var projectCell = $(parentRow).children().eq(4);
-      var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">' + dataItem.ProjectNumber +'</a>');
-      $(projectCell).html(htmlContentProject);
-      var projectPhaseCell = $(parentRow).children().eq(6);
-      var htmlProjectPhase = $('<span> ' + rowData.ProjectPhase +'</span>');
-      $(projectPhaseCell).html(htmlProjectPhase);
+       var projectPhaseCell = $(parentRow).children().eq(6);
+      var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">' +  rowData.ProjectPhase +'</a>');
+      $(projectPhaseCell).html(htmlContentProject);
     }
     grid.collapseRow(parentRow);
 
