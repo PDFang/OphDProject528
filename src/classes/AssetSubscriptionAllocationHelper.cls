@@ -8,19 +8,6 @@ public class AssetSubscriptionAllocationHelper {
     public SubscriptionReplica__c currentSubscription;
     public Project__c currentProject;
 
-    public Asset selAsset;
-
-    public Decimal remainingQuantity;
-    public Decimal remainingPercentage;
-    public Decimal remainingBudgetedHours;
-
-    public Decimal remainingSubscriptionQuantity;
-    public Decimal remainingSubscriptionPercentage;
-    public Decimal remainingSubscriptionBudgetedHours;
-
-    public String assetName;
-    public String subscriptionName;
-
     public List<AssetSubscriptionAllocationNewModel> assetAllocations{get; set;}
     public List<AssetSubscriptionAllocationNewModel> subscriptionAllocations{get; set;}
 
@@ -279,6 +266,7 @@ public class AssetSubscriptionAllocationHelper {
         Asset thisAsset;
         SubscriptionReplica__c thisSubscription;
         string ProjectId;
+        List<Project__c> projects;
 
         if(objType == 'Asset'){
             thisAsset = [select Parent_Project__c from Asset WHere Id = :objId limit 1];
@@ -291,16 +279,18 @@ public class AssetSubscriptionAllocationHelper {
 
 
 
-
-        String soql = 'Select Id, Name, Summary__c, ProjectStatus__c, Phase__c ' +
-                + ' from Project__c where ';
         if(ProjectId != null){
+
+            String soql = 'Select Id, Name, Summary__c, ProjectStatus__c, Phase__c ' +
+                    + ' from Project__c where ';
+
             soql += ' ParentProject__c = \'' + ProjectId + '\'';
+
+            soql += ' order by createddate ';
+
+            projects = Database.query(soql);
         }
 
-        soql += ' order by createddate ';
-
-        List<Project__c> projects = Database.query(soql);
 
         if(projects.size() > 0)
             return JSON.serialize(projects);
@@ -345,7 +335,6 @@ public class AssetSubscriptionAllocationHelper {
     public static String getAssetSubscriptionDetailsFromProjectPhase(String projId, String objType){
 
         Project__c thisProject = [select ParentProject__c from Project__c WHere Id = :projId limit 1];
-        system.debug('thisProject - ' + thisProject);
 
         if(objType == 'Asset'){
             String soql = 'Select Id, Name, Remaning_Percentage__c, Quantity, Budgeted_Hours__c, RemainingQuantity__c, Remaining_Hours__c ' +
