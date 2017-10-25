@@ -1,11 +1,7 @@
-/**
- * Created by ravish.chawla on 4/18/2017.
- */
-
 @IsTest
 private class SubscriptionTriggerHandlerTest {
 
-        static testMethod void testSubscriptionAcceptance() {
+    static testMethod void testSubscriptionAcceptance() {
 
         Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
         Account testAccount = new Account(
@@ -33,13 +29,13 @@ private class SubscriptionTriggerHandlerTest {
                 SBQQ__Quantity__c = 200
         );
 
-            Test.startTest();
+        Test.startTest();
 
-            insert subscription;
+        insert subscription;
 
-            Test.stopTest();
-            SubscriptionReplica__c newReplica = [select AdditionalDisc__c from SubscriptionReplica__c limit 1];
-            system.assertEquals(2.05, newReplica.AdditionalDisc__c);
+        Test.stopTest();
+        SubscriptionReplica__c[] newReplicas = [select Id from SubscriptionReplica__c where Subscription__c = :subscription.Id];
+        system.assertEquals(1, newReplicas.size());
 
     }
 
