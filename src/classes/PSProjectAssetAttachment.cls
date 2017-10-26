@@ -21,10 +21,16 @@ public without sharing class PSProjectAssetAttachment {
                     if(!opportunityAssetsByIds.containsKey(quoteLine.SBQQ__Quote__r.SBQQ__Opportunity2__c)){
                         opportunityAssetsByIds.put(quoteLine.SBQQ__Quote__r.SBQQ__Opportunity2__c, quoteLine.SBQQ__Assets__r);
                     }
+                    else{
+                        opportunityAssetsByIds.get(quoteLine.SBQQ__Quote__r.SBQQ__Opportunity2__c).add(quoteLine.SBQQ__Assets__r);
+                    }
                 }
                 else if(SubscriptionsIds.size() > 0){
                     if(!opportunitySubscriptionsByIds.containsKey(quoteLine.SBQQ__Quote__r.SBQQ__Opportunity2__c)){
                         opportunitySubscriptionsByIds.put(quoteLine.SBQQ__Quote__r.SBQQ__Opportunity2__c, quoteLine.Subscriptions_Custom__r);
+                    }
+                    else{
+                        opportunitySubscriptionsByIds.get(quoteLine.SBQQ__Quote__r.SBQQ__Opportunity2__c).add(quoteLine.Subscriptions_Custom__r);
                     }
                 }
 
