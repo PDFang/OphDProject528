@@ -34,6 +34,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                                   var returnResult = JSON.parse(result);
                                   if(returnResult.result != 'Failed'){
                                      options.success();
+                                      reloadDetails();
                                      hideError();
                                   }else{
                                       displayError(returnResult.message);
@@ -69,6 +70,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                                                options.success();
                                                 $('#loading').modal('hide');
                                                 getSObjType();
+                                                 reloadDetails();
                                                hideError();
                                             }else{
                                                  $('#loading').modal('hide');
@@ -91,10 +93,10 @@ function subscriptionAllocationData(projId, subscriptionId){
             },
             schema:{
                 model: {
-                    id: "SubscriptionAllocationId",
+                    id: "Id",
                     fields: {
                         "Subscription": {from:"Subscription", type: "string", editable:false},
-                        "SubscriptionAllocationId": { from: "SubscriptionAllocationId", type: "string",editable:false },
+                        "Id": { from: "SubscriptionAllocationId", type: "string",editable:false },
                         "SubscriptionName" : {from:"SubscriptionName", type:"string",editable:false },
                         "SubscriptionAllocationName" : {from:"SubscriptionAllocationName", type:"string",editable:false},
                         "Product": { from: "Product", type: "string",editable:false },
@@ -167,7 +169,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                         field:"SubscriptionAllocationName",
                         title:"Subscription Allocation",
                         editor:nonEditorSubscription,
-                        template: '#{ #<a href="/#: data.SubscriptionAllocationId #" target="_blank" >#= data.SubscriptionAllocationName #</a># } #',
+                        template: '#{ #<a href="/#: data.Id #" target="_blank" >#= data.SubscriptionAllocationName #</a># } #',
                     },
                     {
                         field:"ProjectName",
@@ -221,13 +223,15 @@ function subscriptionAllocationData(projId, subscriptionId){
                                        });
                                        $('#loading').modal('show');
                                        AssetSubscriptionAllocationNewController.DeleteAllocation(
-                                           data.SubscriptionAllocationId,
+                                           data.Id,
                                            'Subscription',
                                            function(result,event){
                                                if (event.status) {
                                                   var returnResult = result;
                                                   if(result != 'Failed'){
                                                        grid.dataSource.remove(data);
+                                                        reloadDetails();
+                                                           getSObjType();
                                                        $('#loading').modal('hide');
                                                     }else{
                                                     $('#loading').modal('hide');

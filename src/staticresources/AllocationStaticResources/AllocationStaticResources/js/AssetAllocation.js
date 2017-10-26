@@ -30,6 +30,7 @@
                                         var returnResult = JSON.parse(result);
                                         if(returnResult.result != 'Failed'){
                                            options.success();
+                                            reloadDetails();
                                            hideError();
                                         }else{
                                             displayError(returnResult.message);
@@ -65,6 +66,7 @@
                                                        options.success();
                                                         $('#loading').modal('hide');
                                                         getSObjType();
+                                                         reloadDetails();
                                                        hideError();
                                                     }else{
                                                          $('#loading').modal('hide');
@@ -83,9 +85,9 @@
                     },
                     schema:{
                         model: {
-                            id: "AssetAllocationId",
+                            id: "Id",
                             fields: {
-                                AssetAllocationId: { from: "AssetAllocationId"},
+                                Id: { from: "AssetAllocationId"},
                                 Asset: {from:"Asset", type: "string"},
                                 AssetName : {from:"AssetName", type:"string"},
                                 AssetAllocationName : {from:"AssetAllocationName", type:"string"},
@@ -144,7 +146,7 @@
               }
               ],
           columns: [{
-                        field:"AssetAllocationId",
+                        field:"Id",
                         hidden: true,
                         editable:false
 
@@ -159,7 +161,7 @@
                         field:"AssetAllocationName",
                         title:"Allocation",
                         editor:nonEditorAsset,
-                        template: '#{ #<a href="/#: data.AssetAllocationId #" target="_blank" >#= data.AssetAllocationName #</a># } #',
+                        template: '#{ #<a href="/#: data.Id #" target="_blank" >#= data.AssetAllocationName #</a># } #',
                     },
                     {
                         field:"ProjectName",
@@ -205,13 +207,15 @@
                                       });
                                       $('#loading').modal('show');
                                        AssetSubscriptionAllocationNewController.DeleteAllocation(
-                                           data.AssetAllocationId,
+                                           data.Id,
                                            'Asset',
                                            function(result,event){
                                                if (event.status) {
                                                   var returnResult = result;
                                                   if(result != 'Failed'){
                                                        grid.dataSource.remove(data);
+                                                       reloadDetails();
+                                                         getSObjType();
                                                        $('#loading').modal('hide');
                                                     }else{
                                                     displayError('Delete Unsuccessful.');
