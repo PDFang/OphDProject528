@@ -109,7 +109,7 @@ public with sharing class AssetSubscriptionAllocationNewController {
             else {
                 message = ex.getMessage();
             }
-            message = 'Operation Failed - ' + message;
+
         }
         return sendResponse(result, message);
 
