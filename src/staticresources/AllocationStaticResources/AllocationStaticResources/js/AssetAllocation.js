@@ -94,7 +94,7 @@
                                 ProjectNumber:{from:"ProjectNumber",type:"string"},
                                 ProjectName:{from:"ProjectName",type:"string"},
                                 ProjectPhase : {from:"ProjectPhase", type: "string"},
-                                AllocatedQuantity:{from: "AllocatedQuantity", type:"number", nullable: true, editable:true},
+                                AllocatedQuantity:{from: "AllocatedQuantity", type:"number", nullable: true, editable:true, defaultValue:0},
                                 AllocatedPercentage:{
                                     from: "AllocatedPercentage",
                                     type:"number",
@@ -110,9 +110,9 @@
                                         }
                                     }
                                 },
-                                AllocatedHours:{from: "AllocatedHours", type:"number",  nullable: true, editable:true},
-                                Quantity :{from:"Quantity", type:"number"},
-                                BudgtedHours :{from:"BudgtedHours", type:"number"}
+                                AllocatedHours:{from: "AllocatedHours", type:"number",  nullable: true, editable:true, defaultValue:0},
+                                Quantity :{from:"Quantity", type:"number",defaultValue:0},
+                                BudgtedHours :{from:"BudgtedHours", type:"number", defaultValue:0}
                             }
                         }
                     },
@@ -252,7 +252,7 @@
                    var projectCell = e.container.contents()[5];
                    $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">Select Projects </a>').appendTo(projectCell);
                    e.model.Quantity = Asset.Quantity;
-                   e.model.BudgtedHours = Asset.Budgeted_Hours__c;
+                   e.model.BudgtedHours = Asset.Budgeted_Hours__c == '' ? 0 : Asset.Budgeted_Hours__c;
                    calculateRemainingAllocation(e.model, e.container);
 
                }else if(currentObjectType == 'Project'){
@@ -511,7 +511,7 @@
               rowData.AllocatedQuantity = null;
               rowData.AllocatedHours = 0;
               rowData.Quantity = dataItem.Quantity;
-              rowData.BudgtedHours = dataItem.BudgtedHours;
+              rowData.BudgtedHours = dataItem.BudgtedHours  == '' ? 0 : dataItem.BudgtedHours;
               var assetCell = $(parentRow).children().eq(2);
               var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">' + dataItem.AssetName +'</a>');
               $(assetCell).html(htmlContentProject);
