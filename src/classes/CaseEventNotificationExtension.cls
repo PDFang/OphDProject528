@@ -19,11 +19,14 @@ public class CaseEventNotificationExtension
     public boolean renderConfirm{public get;private set;}
     public boolean canEdit{public get;private set;}
     public boolean allowNotifications{public get;private set;}
+    public boolean xmSelectedForm{get;set;}
 
     // For product eligible for select Customers enable legacy notification otherwise enable xMatters notification
     public boolean enableXmatters{public get;private set;}
     // Fields mapped in Case_to_xMatters_Field_Mapping__mdt
     public List<String> xMattersFieldMapping{get; private set;}
+    // list of forms setup in xMatters_Forms__mdt
+    public List<SelectOption> xMattersForms{get; private set;}
 
     private final List<RecordType> recordTypes;
     private ID selRecordTypeId;
@@ -47,6 +50,8 @@ public class CaseEventNotificationExtension
     {
         this.c = (Case)controller.getRecord();
         string caseType;
+
+        initXmattersForms();
 
         if(clusters == null)
         {
@@ -515,6 +520,19 @@ public class CaseEventNotificationExtension
         system.debug('getxMattersFieldMapping(): xMattersFieldMapping - ' + xMattersFieldMapping);
 
         return xMattersFieldMapping;
+
+    }
+
+    private void initXmattersForms(){
+
+        xMattersForms = new List<SelectOption>();
+        xMattersForms.add(new SelectOption('', '- Select -'));
+
+        List<Schema.PicklistEntry> entries = xMatters_Forms__mdt.Form__c.getDescribe().getPicklistValues();
+
+        for(Schema.PicklistEntry entry : entries){
+            xMattersForms.add(new SelectOption(entry.value, entry.label));
+        }
 
     }
 
