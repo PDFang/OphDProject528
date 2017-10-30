@@ -30,6 +30,7 @@
                                         var returnResult = JSON.parse(result);
                                         if(returnResult.result != 'Failed'){
                                            options.success();
+                                            reloadDetails();
                                            hideError();
                                         }else{
                                             displayError(returnResult.message);
@@ -51,9 +52,9 @@
                             if(options.data.ProjectNumber == null || options.data.ProjectNumber == '' || options.data.Asset == null || options.data.Asset == ''){
                                 $('#loading').modal('hide');
                                  if(currentObjectType == 'Project')
-                                        displayError('Please Select an Asset before save.');
+                                        displayError('Please select an asset before saving.');
                                  else if(currentObjectType == 'Asset')
-                                         displayError('Please Select a Project before save.');
+                                         displayError('Please select a project before saving.');
                             }else{
                                   AssetSubscriptionAllocationNewController.UpsertAssetSubscriptionAllocation(
                                            'Asset',
@@ -65,6 +66,7 @@
                                                        options.success();
                                                         $('#loading').modal('hide');
                                                         getSObjType();
+                                                         reloadDetails();
                                                        hideError();
                                                     }else{
                                                          $('#loading').modal('hide');
@@ -83,16 +85,16 @@
                     },
                     schema:{
                         model: {
-                            id: "AssetAllocationId",
+                            id: "Id",
                             fields: {
-                                AssetAllocationId: { from: "AssetAllocationId"},
+                                Id: { from: "AssetAllocationId"},
                                 Asset: {from:"Asset", type: "string"},
                                 AssetName : {from:"AssetName", type:"string"},
                                 AssetAllocationName : {from:"AssetAllocationName", type:"string"},
                                 ProjectNumber:{from:"ProjectNumber",type:"string"},
                                 ProjectName:{from:"ProjectName",type:"string"},
                                 ProjectPhase : {from:"ProjectPhase", type: "string"},
-                                AllocatedQuantity:{from: "AllocatedQuantity", type:"number", nullable: true, editable:true},
+                                AllocatedQuantity:{from: "AllocatedQuantity", type:"number", nullable: true, editable:true, defaultValue:0},
                                 AllocatedPercentage:{
                                     from: "AllocatedPercentage",
                                     type:"number",
@@ -108,9 +110,9 @@
                                         }
                                     }
                                 },
-                                AllocatedHours:{from: "AllocatedHours", type:"number",  nullable: true, editable:true},
-                                Quantity :{from:"Quantity", type:"number"},
-                                BudgtedHours :{from:"BudgtedHours", type:"number"}
+                                AllocatedHours:{from: "AllocatedHours", type:"number",  nullable: true, editable:true, defaultValue:0},
+                                Quantity :{from:"Quantity", type:"number",defaultValue:0},
+                                BudgtedHours :{from:"BudgtedHours", type:"number", defaultValue:0}
                             }
                         }
                     },
@@ -144,7 +146,7 @@
               }
               ],
           columns: [{
-                        field:"AssetAllocationId",
+                        field:"Id",
                         hidden: true,
                         editable:false
 
@@ -159,7 +161,7 @@
                         field:"AssetAllocationName",
                         title:"Allocation",
                         editor:nonEditorAsset,
-                        template: '#{ #<a href="/#: data.AssetAllocationId #" target="_blank" >#= data.AssetAllocationName #</a># } #',
+                        template: '#{ #<a href="/#: data.Id #" target="_blank" >#= data.AssetAllocationName #</a># } #',
                     },
                     {
                         field:"ProjectName",
@@ -205,13 +207,15 @@
                                       });
                                       $('#loading').modal('show');
                                        AssetSubscriptionAllocationNewController.DeleteAllocation(
-                                           data.AssetAllocationId,
+                                           data.Id,
                                            'Asset',
                                            function(result,event){
                                                if (event.status) {
                                                   var returnResult = result;
                                                   if(result != 'Failed'){
                                                        grid.dataSource.remove(data);
+                                                       reloadDetails();
+                                                         getSObjType();
                                                        $('#loading').modal('hide');
                                                     }else{
                                                     displayError('Delete Unsuccessful.');
@@ -248,7 +252,7 @@
                    var projectCell = e.container.contents()[5];
                    $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">Select Projects </a>').appendTo(projectCell);
                    e.model.Quantity = Asset.Quantity;
-                   e.model.BudgtedHours = Asset.Budgeted_Hours__c;
+                   e.model.BudgtedHours = Asset.Budgeted_Hours__c == '' ? 0 : Asset.Budgeted_Hours__c;
                    calculateRemainingAllocation(e.model, e.container);
 
                }else if(currentObjectType == 'Project'){
@@ -382,6 +386,7 @@
                             read: function(options){
                                  AssetSubscriptionAllocationNewController.PhaseProjectDetails(
                                     e.data.Asset,
+                                    'Asset',
                                     function(result,event){
                                       if (event.status) {
                                           if(result){
@@ -402,7 +407,8 @@
                                     ProjectId: { from: "Id"},
                                     ProjectNumber: {from:"Name", type: "string"},
                                     Summary : {from:"Summary__c", type:"string"},
-                                    Status : {from:"ProjectStatus__c", type:"string"}
+                                    Status : {from:"ProjectStatus__c", type:"string"},
+                                    PhaseNumber : {from:"Phase__c", type:"string"},
                                 }
                             }
                         }
@@ -413,8 +419,10 @@
                     columns: [
                         { command: { text: "Select", click : selectProject}, title: "Action", width: "60px" },
                         { field: "ProjectNumber", title:"Phase Project Number", width: "110px" },
-                        { field: "Summary", title:"Project Summary", width: "200px" },
+                        { field: "PhaseNumber", title:"Phase #", width: "110px" },
+                        { field: "Summary", title:"Phase Project Summary", width: "200px" },
                         { field: "Status", title:"Project Status", width: "110px" }
+
                     ]
                 });
     }
@@ -428,7 +436,7 @@
           if(rowData){
               rowData.ProjectNumber = dataItem.ProjectId;
               rowData.ProjectName = dataItem.ProjectNumber;
-              rowData.ProjectPhase = dataItem.ProjectNumber + ' - ' + dataItem.Summary;
+              rowData.ProjectPhase = dataItem.ProjectNumber + ' - ' + dataItem.Summary +  ' - ' + dataItem.PhaseNumber;
               //grid.dataSource.sync();
 
               var projectCell = $(parentRow).children().eq(5);
@@ -503,7 +511,7 @@
               rowData.AllocatedQuantity = null;
               rowData.AllocatedHours = 0;
               rowData.Quantity = dataItem.Quantity;
-              rowData.BudgtedHours = dataItem.BudgtedHours;
+              rowData.BudgtedHours = dataItem.BudgtedHours  == '' ? 0 : dataItem.BudgtedHours;
               var assetCell = $(parentRow).children().eq(2);
               var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">' + dataItem.AssetName +'</a>');
               $(assetCell).html(htmlContentProject);

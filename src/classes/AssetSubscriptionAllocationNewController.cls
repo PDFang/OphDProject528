@@ -9,7 +9,7 @@ public with sharing class AssetSubscriptionAllocationNewController {
         get {
             return helper != null
                     ? helper.currentAsset : null;
-        }
+        }set{}
     }
 
     // current subscription record
@@ -17,7 +17,7 @@ public with sharing class AssetSubscriptionAllocationNewController {
         get {
             return helper != null
                     ? helper.currentSubscription : null;
-        }
+        }set{}
     }
 
     // current project record
@@ -25,7 +25,7 @@ public with sharing class AssetSubscriptionAllocationNewController {
         get {
             return helper != null
                     ? helper.currentProject : null;
-        }
+        }set{}
     }
 
     // query string parameter
@@ -47,6 +47,15 @@ public with sharing class AssetSubscriptionAllocationNewController {
 
         helper = new AssetSubscriptionAllocationHelper(currentId);
     }
+
+    public void reloadDetails(){
+        helper = new AssetSubscriptionAllocationHelper(currentId);
+        this.Asset = helper.currentAsset != null ? helper.currentAsset : null;
+        this.Subscription = helper.currentSubscription != null ? helper.currentSubscription : null;
+        this.Project = helper.currentProject != null ? helper.currentProject : null;
+
+    }
+
 
     //Get object type from ID
     @RemoteAction
@@ -70,15 +79,10 @@ public with sharing class AssetSubscriptionAllocationNewController {
         return subscriptionAllocationData;
     }
 
-    @RemoteAction
-    public static String PhaseProjectDetailsSubscription(String SubscriptionId){
-        String ProjectData = AssetSubscriptionAllocationHelper.getPhaseProjectDetailsSubscription(SubscriptionId);
-        return ProjectData;
-    }
 
     @RemoteAction
-    public static String PhaseProjectDetails(String assetId){
-        String ProjectData = AssetSubscriptionAllocationHelper.getPhaseProjectDetails(assetId);
+    public static String PhaseProjectDetails(String objId, string objType){
+        String ProjectData = AssetSubscriptionAllocationHelper.getPhaseProjectDetails(objId, objType);
         return ProjectData;
     }
 
@@ -92,9 +96,20 @@ public with sharing class AssetSubscriptionAllocationNewController {
             AssetSubscriptionAllocationHelper.SaveAssetSubscriptionAllocation(objType, assetSubscriptionAllocation);
             result = 'Success';
         }
-        catch (Exception ex){
+        catch (DmlException ex){
             result = 'Failed';
             message = ex.getMessage();
+            Integer occurence;
+            if (ex.getMessage().contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
+                occurence = message.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
+                message = message.mid(occurence, message.length());
+                occurence = message.lastIndexOf(':');
+                message = message.mid(0, occurence);
+            }
+            else {
+                message = ex.getMessage();
+            }
+
         }
         return sendResponse(result, message);
 

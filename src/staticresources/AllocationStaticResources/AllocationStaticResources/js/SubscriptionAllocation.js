@@ -34,6 +34,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                                   var returnResult = JSON.parse(result);
                                   if(returnResult.result != 'Failed'){
                                      options.success();
+                                      reloadDetails();
                                      hideError();
                                   }else{
                                       displayError(returnResult.message);
@@ -55,9 +56,9 @@ function subscriptionAllocationData(projId, subscriptionId){
                     if(options.data.ProjectNumber == null || options.data.ProjectNumber == '' || options.data.Subscription == null || options.data.Subscription == ''){
                         $('#loading').modal('hide');
                          if(currentObjectType == 'Project')
-                                displayError('Please Select an Subscription before save.');
+                                displayError('Please select an subscription before saving.');
                          else if(currentObjectType == 'Subscription')
-                                 displayError('Please Select a Project before save.');
+                                 displayError('Please select a project before saving.');
                     }else{
                           AssetSubscriptionAllocationNewController.UpsertAssetSubscriptionAllocation(
                                    'Subscription',
@@ -69,6 +70,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                                                options.success();
                                                 $('#loading').modal('hide');
                                                 getSObjType();
+                                                 reloadDetails();
                                                hideError();
                                             }else{
                                                  $('#loading').modal('hide');
@@ -91,10 +93,10 @@ function subscriptionAllocationData(projId, subscriptionId){
             },
             schema:{
                 model: {
-                    id: "SubscriptionAllocationId",
+                    id: "Id",
                     fields: {
                         "Subscription": {from:"Subscription", type: "string", editable:false},
-                        "SubscriptionAllocationId": { from: "SubscriptionAllocationId", type: "string",editable:false },
+                        "Id": { from: "SubscriptionAllocationId", type: "string",editable:false },
                         "SubscriptionName" : {from:"SubscriptionName", type:"string",editable:false },
                         "SubscriptionAllocationName" : {from:"SubscriptionAllocationName", type:"string",editable:false},
                         "Product": { from: "Product", type: "string",editable:false },
@@ -103,9 +105,9 @@ function subscriptionAllocationData(projId, subscriptionId){
                         "ProjectName":{from:"ProjectName",type:"string", editable:false},
                         "ProjectPhase" : {from:"ProjectPhase", type: "string", editable:false},
                         "AllocatedQuantity":{from: "AllocatedQuantity", type:"number", editable: true, nullable: true},
-                        "BudgtedHours":{from: "BudgtedHours", type:"number"},
-                        "Quantity":{from: "Quantity", type:"number"},
-                        "AllocatedHours":{from: "AllocatedHours", type:"number", editable: true, nullable: true},
+                        "BudgtedHours":{from: "BudgtedHours", type:"number", defaultValue:0},
+                        "Quantity":{from: "Quantity", type:"number", defaultValue:0},
+                        "AllocatedHours":{from: "AllocatedHours", type:"number", editable: true, nullable: true, defaultValue:0},
                         AllocatedPercentage:{
                             from: "AllocatedPercentage",
                             type:"number",
@@ -167,13 +169,12 @@ function subscriptionAllocationData(projId, subscriptionId){
                         field:"SubscriptionAllocationName",
                         title:"Subscription Allocation",
                         editor:nonEditorSubscription,
-                        template: '#{ #<a href="/#: data.SubscriptionAllocationId #" target="_blank" >#= data.SubscriptionAllocationName #</a># } #',
+                        template: '#{ #<a href="/#: data.Id #" target="_blank" >#= data.SubscriptionAllocationName #</a># } #',
                     },
                     {
                         field:"ProjectName",
                         title:"Project",
-                        editor:nonEditorSubscription,
-                        hidden: true,
+                        hidden: true
 
                     },
                     {
@@ -222,13 +223,15 @@ function subscriptionAllocationData(projId, subscriptionId){
                                        });
                                        $('#loading').modal('show');
                                        AssetSubscriptionAllocationNewController.DeleteAllocation(
-                                           data.SubscriptionAllocationId,
+                                           data.Id,
                                            'Subscription',
                                            function(result,event){
                                                if (event.status) {
                                                   var returnResult = result;
                                                   if(result != 'Failed'){
                                                        grid.dataSource.remove(data);
+                                                        reloadDetails();
+                                                           getSObjType();
                                                        $('#loading').modal('hide');
                                                     }else{
                                                     $('#loading').modal('hide');
@@ -262,19 +265,19 @@ function addDuplicateRowSubscription(e){
                     e.model.SubscriptionName = Subscription.Name;
                     var firstCell = e.container.contents()[2];
                     $('<a href="/' +  e.model.Subscription + '" target="_blank">' + e.model.SubscriptionName +'</a>').appendTo(firstCell);
-                    var projectCell = e.container.contents()[4];
+                    var projectCell = e.container.contents()[6];
                     $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">Select Projects </a>').appendTo(projectCell);
-                      e.model.Quantity = Subscription.Quantity__c;
-                    e.model.BudgtedHours = Subscription.Budgeted_Hours__c;
+                      e.model.Quantity = Subscription.Quantity;
+                    e.model.BudgtedHours = Subscription.Budgeted_Hours__c == '' ? 0 : Subscription.Budgeted_Hours__c;
                     calculateRemainingSubscriptionAllocation(e.model, e.container);
                 }else if(currentObjectType == 'Project'){
                     e.model.ProjectNumber = Project.Id;
                     e.model.ProjectName = Project.Name;
                     e.model.ProjectPhase = Project.Project_Phase_Allocation__c;
-                    var projectCell = e.container.contents()[4];
-                    $('<a href="/' +  e.model.ProjectNumber + '" target="_blank">' + e.model.ProjectName +'</a>').appendTo(projectCell);
                     var phaseCell = e.container.contents()[6];
-                    $('<span>' +  e.model.ProjectPhase + '</span>').appendTo(phaseCell);
+                    $('<a href="/' +  e.model.ProjectNumber + '" target="_blank">' + e.model.ProjectPhase +'</a>').appendTo(phaseCell);
+
+                    //$('<span>' +  e.model.ProjectPhase + '</span>').appendTo(phaseCell);
 
                     var firstCell = e.container.contents()[2];
                     $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">Select Subscriptions </a>').appendTo(firstCell);
@@ -400,8 +403,9 @@ function detailSubscriptionProjects(e) {
             autosync:true,
             transport: {
                 read: function(options){
-                     AssetSubscriptionAllocationNewController.PhaseProjectDetailsSubscription(
+                     AssetSubscriptionAllocationNewController.PhaseProjectDetails(
                         e.data.Subscription,
+                        'Subscription',
                         function(result,event){
                           if (event.status) {
                               if(result.length > 1){
@@ -420,7 +424,8 @@ function detailSubscriptionProjects(e) {
                         ProjectId: { from: "Id"},
                         ProjectNumber: {from:"Name", type: "string"},
                         Summary : {from:"Summary__c", type:"string"},
-                        Status : {from:"ProjectStatus__c", type:"string"}
+                        Status : {from:"ProjectStatus__c", type:"string"},
+                        PhaseNumber : {from:"Phase__c", type:"string"}
                     }
                 }
             }
@@ -429,8 +434,9 @@ function detailSubscriptionProjects(e) {
         sortable: true,
         columns: [
             { command: { text: "Select", click : selectSubscriptionProject}, title: "Action", width: "60px" },
-            { field: "ProjectNumber", width: "110px" },
-            { field: "Summary", title:"Project Summary", width: "200px" },
+            { field: "ProjectNumber", title:"Phase Project Number", width: "110px" },
+            { field: "PhaseNumber", title:"Phase #", width: "110px" },
+            { field: "Summary", title:"Phase Project Summary", width: "200px" },
             { field: "Status", title:"Project Status", width: "110px" }
         ]
     });
@@ -446,15 +452,12 @@ function selectSubscriptionProject(e){
     if(rowData){
       rowData.ProjectNumber = dataItem.ProjectId;
       rowData.ProjectName = dataItem.ProjectNumber;
-      rowData.ProjectPhase = dataItem.ProjectNumber + ' - ' + dataItem.Summary;
+      rowData.ProjectPhase = dataItem.ProjectNumber + ' - ' + dataItem.Summary +  ' - ' + dataItem.PhaseNumber;
       //grid.dataSource.sync();
 
-      var projectCell = $(parentRow).children().eq(4);
-      var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">' + dataItem.ProjectNumber +'</a>');
-      $(projectCell).html(htmlContentProject);
-      var projectPhaseCell = $(parentRow).children().eq(6);
-      var htmlProjectPhase = $('<span> ' + rowData.ProjectPhase +'</span>');
-      $(projectPhaseCell).html(htmlProjectPhase);
+       var projectPhaseCell = $(parentRow).children().eq(6);
+      var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">' +  rowData.ProjectPhase +'</a>');
+      $(projectPhaseCell).html(htmlContentProject);
     }
     grid.collapseRow(parentRow);
 
@@ -525,7 +528,7 @@ function selectSubscription(e){
             rowData.AllocatedQuantity = null;
             rowData.AllocatedHours = 0;
             rowData.Quantity = dataItem.Quantity;
-            rowData.BudgtedHours = dataItem.BudgtedHours;
+            rowData.BudgtedHours = dataItem.BudgtedHours  == '' ? 0 : dataItem.BudgtedHours;
             rowData.ProductName = dataItem.Product;
             var subscriptionCell = $(parentRow).children().eq(2);
             var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">' + dataItem.SubscriptionName +'</a>');

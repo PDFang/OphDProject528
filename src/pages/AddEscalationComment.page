@@ -22,8 +22,20 @@
 
             <!-- Button Section -->
             <apex:pageBlockButtons location="bottom">
-                <apex:commandButton value="Add Comment" action="{!SaveComment}" reRender="message"/>
+                <apex:actionStatus id="addComment" >
+                    <apex:facet name="stop">
+                        <apex:commandButton value="Add Comment" action="{!SaveComment}" reRender="message" status="addComment"/>
+
+                    </apex:facet>
+                    <apex:facet name="start">
+                        <apex:outputPanel >
+                            <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                            <apex:commandButton  value="Adding..." status="addComment" disabled="true"/>
+                        </apex:outputPanel>
+                    </apex:facet>
+                </apex:actionStatus>
                 <apex:commandButton value="Cancel" action="{!cancel}" />
+
             </apex:pageBlockButtons>
         </apex:pageBlock>
     </apex:form>

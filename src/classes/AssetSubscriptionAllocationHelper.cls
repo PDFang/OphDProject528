@@ -8,19 +8,6 @@ public class AssetSubscriptionAllocationHelper {
     public SubscriptionReplica__c currentSubscription;
     public Project__c currentProject;
 
-    public Asset selAsset;
-
-    public Decimal remainingQuantity;
-    public Decimal remainingPercentage;
-    public Decimal remainingBudgetedHours;
-
-    public Decimal remainingSubscriptionQuantity;
-    public Decimal remainingSubscriptionPercentage;
-    public Decimal remainingSubscriptionBudgetedHours;
-
-    public String assetName;
-    public String subscriptionName;
-
     public List<AssetSubscriptionAllocationNewModel> assetAllocations{get; set;}
     public List<AssetSubscriptionAllocationNewModel> subscriptionAllocations{get; set;}
 
@@ -272,46 +259,38 @@ public class AssetSubscriptionAllocationHelper {
 
     }
 
-    // fetch Project Subscription Allocation
-    public static String getPhaseProjectDetailsSubscription(String subscriptionId){
-
-        SubscriptionReplica__c thisSubscription = [select ParentProject__c from SubscriptionReplica__c WHere Id = :subscriptionId limit 1];
-
-        String soql = 'Select Id, Name, Summary__c, ProjectStatus__c ' +
-                + ' from Project__c where ';
-        if(subscriptionId != null){
-            soql += ' id = \'' + thisSubscription.ParentProject__c + '\'';
-        }
-
-        soql += ' order by createddate ';
-
-        List<Project__c> projects = Database.query(soql);
-
-        if(projects.size() > 0)
-            return JSON.serialize(projects);
-
-        return null;
-
-    }
-
-
-
 
 
     // fetch Project Subscription Allocation
-    public static String getPhaseProjectDetails(String assetId){
+    public static String getPhaseProjectDetails(String objId, string objType){
+        Asset thisAsset;
+        SubscriptionReplica__c thisSubscription;
+        string ProjectId;
+        List<Project__c> projects;
 
-        Asset thisAsset = [select Parent_Project__c from Asset WHere Id = :assetId limit 1];
-
-        String soql = 'Select Id, Name, Summary__c, ProjectStatus__c ' +
-                + ' from Project__c where ';
-        if(assetId != null){
-            soql += ' ParentProject__c = \'' + thisAsset.Parent_Project__c + '\'';
+        if(objType == 'Asset'){
+            thisAsset = [select Parent_Project__c from Asset WHere Id = :objId limit 1];
+            ProjectId  = thisAsset.Parent_Project__c;
+        }else if(objType == 'Subscription'){
+            thisSubscription = [select ParentProject__c from SubscriptionReplica__c WHere Id = :objId limit 1];
+            ProjectId = thisSubscription.ParentProject__c;
         }
 
-        soql += ' order by createddate ';
 
-        List<Project__c> projects = Database.query(soql);
+
+
+        if(ProjectId != null){
+
+            String soql = 'Select Id, Name, Summary__c, ProjectStatus__c, Phase__c ' +
+                    + ' from Project__c where ';
+
+            soql += ' ParentProject__c = \'' + ProjectId + '\'';
+
+            soql += ' order by createddate ';
+
+            projects = Database.query(soql);
+        }
+
 
         if(projects.size() > 0)
             return JSON.serialize(projects);
@@ -356,7 +335,6 @@ public class AssetSubscriptionAllocationHelper {
     public static String getAssetSubscriptionDetailsFromProjectPhase(String projId, String objType){
 
         Project__c thisProject = [select ParentProject__c from Project__c WHere Id = :projId limit 1];
-        system.debug('thisProject - ' + thisProject);
 
         if(objType == 'Asset'){
             String soql = 'Select Id, Name, Remaning_Percentage__c, Quantity, Budgeted_Hours__c, RemainingQuantity__c, Remaining_Hours__c ' +
