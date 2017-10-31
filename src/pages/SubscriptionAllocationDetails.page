@@ -3,13 +3,13 @@
  -->
 
 <apex:page id="SubscriptionAllocationDetails" standardController="Project_Subscription_Allocation__c" extensions="SubscriptionAllocationDetailsController">
-    <apex:detail relatedList="false" title="false"/>
-    <apex:pageBlock title="Project Detail" rendered="{!Not(ISNULL(projectId))}">
+    <!--<apex:detail relatedList="false" title="false"/>-->
+    <apex:pageBlock rendered="{!Not(ISNULL(projectId))}">
         <apex:form>
             <c:ProjectInfoComponent ProjectInfoComponentValue="{!projectId}"/>
         </apex:form>
     </apex:pageBlock>
-    <apex:pageBlock title="Project Detail" rendered="{!(ISNULL(projectId))}">
+    <apex:pageBlock rendered="{!(ISNULL(projectId))}">
         <p>
             Projects are not available!
         </p>
