@@ -530,7 +530,7 @@ public class CaseEventNotificationExtension
 
         List<Schema.PicklistEntry> entries = xMatters_Forms__mdt.Form__c.getDescribe().getPicklistValues();
 
-        for(xMatters_Forms__mdt mdt : [Select Form__c from xMatters_Forms__mdt]){
+        for(xMatters_Forms__mdt mdt : [Select Form__c from xMatters_Forms__mdt order by Form__c]){
             xMattersForms.add(new SelectOption(mdt.Form__c, mdt.Form__c));
         }
 
