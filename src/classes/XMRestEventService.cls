@@ -57,6 +57,13 @@ public class XMRestEventService {
 
         xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c, isMaintenance);
 
+        List<xMatters_Forms__mdt> mdtList = [
+                Select Form_ID__c from xMatters_Forms__mdt where Form__c = :xmNotificationRecord.xMatters_Form__c
+        ];
+        if(mdtList.isEmpty()){
+            throw new CalloutException('Form \'' + xmNotificationRecord.xMatters_Form__c + '\' not found.');
+        }
+
         // Build the specific event details needed to process the event.
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();
 
@@ -66,6 +73,7 @@ public class XMRestEventService {
         eventGroupInfo.partnerList = getSupportedPartners();
         eventGroupInfo.xmNotificationId = xmNotificationRecord.Id;
         eventGroupInfo.emergencyMaintenance = (isMaintenance && eventCase.EmergencyMaintenance__c);
+        eventGroupInfo.xmFormId = mdtList[0].Form_ID__c;
         xmEventData.eventGroupInfo = eventGroupInfo;
 
         //get the picklist API Name to pass as the eventType
