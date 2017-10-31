@@ -164,6 +164,13 @@
                 </apex:repeat>
 
                 <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Maintenance Template" title="Select Maintenance template for this notification" for="xmForm"></apex:outputLabel>
+                    <apex:selectList id="xmForm" size="1" value="{!xmSelectedForm}">
+                        <apex:selectOptions value="{!xMattersForms}"></apex:selectOptions>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem >
                     <apex:actionStatus id="xmNotificationStatus">
                         <apex:facet name="stop">
                             <apex:outputPanel >

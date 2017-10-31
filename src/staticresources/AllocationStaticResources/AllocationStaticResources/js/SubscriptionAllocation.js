@@ -105,9 +105,9 @@ function subscriptionAllocationData(projId, subscriptionId){
                         "ProjectName":{from:"ProjectName",type:"string", editable:false},
                         "ProjectPhase" : {from:"ProjectPhase", type: "string", editable:false},
                         "AllocatedQuantity":{from: "AllocatedQuantity", type:"number", editable: true, nullable: true},
-                        "BudgtedHours":{from: "BudgtedHours", type:"number"},
-                        "Quantity":{from: "Quantity", type:"number"},
-                        "AllocatedHours":{from: "AllocatedHours", type:"number", editable: true, nullable: true},
+                        "BudgtedHours":{from: "BudgtedHours", type:"number", defaultValue:0},
+                        "Quantity":{from: "Quantity", type:"number", defaultValue:0},
+                        "AllocatedHours":{from: "AllocatedHours", type:"number", editable: true, nullable: true, defaultValue:0},
                         AllocatedPercentage:{
                             from: "AllocatedPercentage",
                             type:"number",
@@ -268,7 +268,7 @@ function addDuplicateRowSubscription(e){
                     var projectCell = e.container.contents()[6];
                     $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">Select Projects </a>').appendTo(projectCell);
                       e.model.Quantity = Subscription.Quantity;
-                    e.model.BudgtedHours = Subscription.Budgeted_Hours__c;
+                    e.model.BudgtedHours = Subscription.Budgeted_Hours__c == '' ? 0 : Subscription.Budgeted_Hours__c;
                     calculateRemainingSubscriptionAllocation(e.model, e.container);
                 }else if(currentObjectType == 'Project'){
                     e.model.ProjectNumber = Project.Id;
@@ -528,7 +528,7 @@ function selectSubscription(e){
             rowData.AllocatedQuantity = null;
             rowData.AllocatedHours = 0;
             rowData.Quantity = dataItem.Quantity;
-            rowData.BudgtedHours = dataItem.BudgtedHours;
+            rowData.BudgtedHours = dataItem.BudgtedHours  == '' ? 0 : dataItem.BudgtedHours;
             rowData.ProductName = dataItem.Product;
             var subscriptionCell = $(parentRow).children().eq(2);
             var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">' + dataItem.SubscriptionName +'</a>');

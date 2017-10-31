@@ -17,6 +17,7 @@
                         <input type="radio" name="notificationId" value="{!entry.Id}"/>
                     </apex:column>
                     <apex:column value="{!entry.Request_Type__c}" title="Request Type"/>
+                    <apex:column value="{!entry.xMatters_Form__c}" title="Form"/>
                     <apex:column value="{!entry.AddedPlatforms__c}" title="Added Platforms"/>
                     <apex:column value="{!entry.Request_Date__c}" title="Request Date"/>
                     <apex:column value="{!entry.CreatedBy.Name} {!entry.CreatedDate}">
