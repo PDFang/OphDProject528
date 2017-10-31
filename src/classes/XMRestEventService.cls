@@ -72,7 +72,6 @@ public class XMRestEventService {
         eventGroupInfo.salesforceCaseId = eventCase.Id;
         eventGroupInfo.partnerList = getSupportedPartners();
         eventGroupInfo.xmNotificationId = xmNotificationRecord.Id;
-        eventGroupInfo.emergencyMaintenance = (isMaintenance && eventCase.EmergencyMaintenance__c);
         eventGroupInfo.xmFormId = mdtList[0].Form_ID__c;
         xmEventData.eventGroupInfo = eventGroupInfo;
 
