@@ -19,7 +19,7 @@ public class CaseEventNotificationExtension
     public boolean renderConfirm{public get;private set;}
     public boolean canEdit{public get;private set;}
     public boolean allowNotifications{public get;private set;}
-    public boolean xmSelectedForm{get;set;}
+    public string xmSelectedForm{get;set;}
 
     // For product eligible for select Customers enable legacy notification otherwise enable xMatters notification
     public boolean enableXmatters{public get;private set;}
@@ -530,8 +530,8 @@ public class CaseEventNotificationExtension
 
         List<Schema.PicklistEntry> entries = xMatters_Forms__mdt.Form__c.getDescribe().getPicklistValues();
 
-        for(Schema.PicklistEntry entry : entries){
-            xMattersForms.add(new SelectOption(entry.value, entry.label));
+        for(xMatters_Forms__mdt mdt : [Select Form__c from xMatters_Forms__mdt]){
+            xMattersForms.add(new SelectOption(mdt.Form__c, mdt.Form__c));
         }
 
     }
@@ -543,11 +543,15 @@ public class CaseEventNotificationExtension
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.INFO, 'xMatters Maintenance Notification is disabled. Please contact your administrator.'));
                 return null;
             }
+            if(String.isBlank(xmSelectedForm)){ // safety check
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Please select a form to send this Maintenance Notification.'));
+                return null;
+            }
             xmNotification__c xmNotification = new xmNotification__c(
                     Case__c = c.Id,
                     Request_Date__c = system.now(),
-                    Request_Type__c = 'Maintenance Notification'
-
+                    Request_Type__c = 'Maintenance Notification',
+                    xMatters_Form__c = xmSelectedForm
             );
 
             insert xmNotification;

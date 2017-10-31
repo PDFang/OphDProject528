@@ -165,7 +165,7 @@
 
                 <apex:pageBlockSectionItem >
                     <apex:outputLabel value="xMatters Form" title="Select xMatters form for this notification" for="xmForm"></apex:outputLabel>
-                    <apex:selectList id="xmForm" size="1" value="{!xmFormSelected}" required="true">
+                    <apex:selectList id="xmForm" size="1" value="{!xmSelectedForm}">
                         <apex:selectOptions value="{!xMattersForms}"></apex:selectOptions>
                     </apex:selectList>
                 </apex:pageBlockSectionItem>
