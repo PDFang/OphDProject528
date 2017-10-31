@@ -526,7 +526,7 @@ public class CaseEventNotificationExtension
     private void initXmattersForms(){
 
         xMattersForms = new List<SelectOption>();
-        xMattersForms.add(new SelectOption('', '- Select -'));
+        xMattersForms.add(new SelectOption('', '- Choose a template -'));
 
         List<Schema.PicklistEntry> entries = xMatters_Forms__mdt.Form__c.getDescribe().getPicklistValues();
 
@@ -544,7 +544,7 @@ public class CaseEventNotificationExtension
                 return null;
             }
             if(String.isBlank(xmSelectedForm)){ // safety check
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Please select a form to send this Maintenance Notification.'));
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'You must choose a maintenance template before sending the notification.'));
                 return null;
             }
             xmNotification__c xmNotification = new xmNotification__c(
