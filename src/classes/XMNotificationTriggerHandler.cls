@@ -87,7 +87,7 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
     private static void callXMRestEventServiceFuture(Set<Id> notificationIdSet){
 
         List<xmNotification__c> notificationList = [
-                Select Id, Case__c, Request_Date__c, Request_Type__c, Status__c,AddedPlatforms__c
+                Select Id, Case__c, Request_Date__c, Request_Type__c, xMatters_Form__c, Status__c,AddedPlatforms__c
                 From xmNotification__c
                 Where Id IN :notificationIdSet
         ];

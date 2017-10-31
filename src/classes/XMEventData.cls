@@ -19,6 +19,6 @@ public class XMEventData {
         public String[] partnerList {get;set;}
         public string eventType {get;set;}
         public string xmNotificationId {get;set;}
-        public Boolean emergencyMaintenance {get;set;}
+        public string xmFormId {get;set;}
     }
 }
