@@ -2,6 +2,7 @@ public class XMRestEventService {
     private XMRestWrapper restWrapper;
     private Map<String, ProductEventMap__c> nodeMap;
     private List<Case_to_xMatters_Field_Mapping__mdt> caseToXMattersFieldMappings;
+    private Map<String, String> partnerPrefixFormFieldMappings;
 
     static string xmDatetimeDefaultPattern = 'EEEE, MMMM dd, yyyy HH:mm:ss';
 
@@ -9,6 +10,12 @@ public class XMRestEventService {
         restWrapper = new XMRestWrapper(); //TODO: Allow injection? Not sure yet
         this.nodeMap = ProductEventMap__c.getAll();
         this.caseToXMattersFieldMappings = [select Salesforce_Case_Field__c, xMatters_Form_Field__c, Maintenance__c, Event__c  from Case_to_xMatters_Field_Mapping__mdt];
+
+        List<xMattersPartnerPrefixFormMapping__mdt> mappings = [select PartnerPrefix__c, xMattersFormsFieldAPIName__c from xMattersPartnerPrefixFormMapping__mdt];
+        partnerPrefixFormFieldMappings = new Map<String, String>();
+        for(xMattersPartnerPrefixFormMapping__mdt mapping : mappings) {
+            partnerPrefixFormFieldMappings.put(mapping.PartnerPrefix__c, mapping.xMattersFormsFieldAPIName__c);
+        }
     }
 
     /*
@@ -63,19 +70,27 @@ public class XMRestEventService {
         // PartnerPrefix is a place holder to be replaced by the inbound integration
         eventGroupInfo.eventName = ('Event_' + eventCase.CaseNumber + '_{PartnerPrefix}').replace(' ', '');
         eventGroupInfo.salesforceCaseId = eventCase.Id;
-        eventGroupInfo.partnerList = getSupportedPartners();
+        eventGroupInfo.partnerDetails = getSupportedPartners();
         eventGroupInfo.xmNotificationId = xmNotificationRecord.Id;
         xmEventData.eventGroupInfo = eventGroupInfo;
 
         // xMatters form ID
         if(isMaintenance){
             List<xMatters_Forms__mdt> mdtList = [
-                    Select Form_ID__c from xMatters_Forms__mdt where Form__c = :xmNotificationRecord.xMatters_Form__c
+                    Select Partner1FormID__c, Partner2FormID__c, Partner3FormID__c, Partner4FormID__c from xMatters_Forms__mdt where Form__c = :xmNotificationRecord.xMatters_Form__c
             ];
             if(mdtList.isEmpty()){
                 throw new CalloutException('Form \'' + xmNotificationRecord.xMatters_Form__c + '\' not found.');
             }
-            eventGroupInfo.xmFormId = mdtList[0].Form_ID__c;
+
+            xMatters_Forms__mdt formsDetail = mdtList[0];
+            //set the form ids for each partner
+            for(XMEventData.PartnerInfo info : eventGroupInfo.partnerDetails) {
+                if(!partnerPrefixFormFieldMappings.containsKey(info.partnerPrefix)) {
+                    throw new CalloutException('Partner Prefix \'' + info.partnerPrefix + '\' not found in \'xMatters Partner Prefix to Form Mapping\' Custom Metadata Type.');
+                }
+                info.xmFormId = (String)formsDetail.get(partnerPrefixFormFieldMappings.get(info.partnerPrefix));
+            }
         }
 
         //get the picklist API Name to pass as the eventType
@@ -237,14 +252,22 @@ public class XMRestEventService {
     /*
      * This will look up the XMPartnerPrefix field to determine the full list of partners we support
      */
-    private static String[] getSupportedPartners(){
-        String [] partnerArray = new List<String>();
+    private static List<XMEventData.PartnerInfo> getSupportedPartners(){
+        List<XMEventData.PartnerInfo> partnerArray = new List<XMEventData.PartnerInfo>();
 
         Schema.DescribeFieldResult fieldResult = Account.XMPartnerPrefix__c.getDescribe();
         List<Schema.PicklistEntry> picklistEntries = fieldResult.getPicklistValues();
 
         for(Schema.PicklistEntry picklistEntry : picklistEntries){
-            partnerArray.add(picklistEntry.getLabel());
+            XMEventData.PartnerInfo info = new XMEventData.PartnerInfo();
+
+            info.partnerPrefix = picklistEntry.getLabel();
+
+            //this is set to null because it will be used at some future time for Events
+            //it is currently used only for Maintenance notifications
+            info.xmFormId = null;
+
+            partnerArray.add(info);
         }
 
         return partnerArray;
