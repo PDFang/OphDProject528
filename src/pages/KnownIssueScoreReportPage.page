@@ -59,7 +59,7 @@
                 <input id="tfsClosed" type="checkbox" value="tfsClosed" data-toggle="toggle" class="custom-control-input" onClick="toggleTFSStatus(this);" checked="true"/>
                 <div class="slider round"></div>
             </label>
-            <span style="font-size:12px; font-weight:600;">Show JIRA Closed Items</span>
+            <span style="font-size:12px; font-weight:600;">Show JIRA Done Items</span>
             <div class="row">
                 <div id="kIGrid"></div>
             </div>
@@ -239,7 +239,7 @@
                 grid.dataSource.filter({
                  field: "JIRAStatus",
                  operator: "neq",
-                 value:"Closed"
+                 value:"Done"
                 });
 
            }
