@@ -11,8 +11,11 @@ global class WebHookLeadManagement {
 	global static void CreateLead(){
 	 	 try{
 			RestRequest req = RestContext.request;
+             System.debug('req' + req);
 			 Blob body = req.requestBody;
+             System.debug('body' + body);
 			 String bodyString = body.toString();
+             System.debug('bodyString' + bodyString);
 			 Map<String,string> paramMap = req.params;
 			 Lead newLead = new Lead();
 
@@ -97,8 +100,8 @@ global class WebHookLeadManagement {
 		//send email message
 		try{
 			Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
-		}catch(system.EmailException ex){
-			system.debug(ex);
+		}catch(system.EmailException exc){
+			system.debug(exc);
 		}
 
 	}
