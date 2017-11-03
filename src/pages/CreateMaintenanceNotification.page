@@ -178,6 +178,16 @@
                                             <div class="slds-form-element__control">
                                                 <apex:input type="datetime-local" id="text-input-04" styleClass="slds-input" style="width: 45%;border-width: 0 0 1px 0;box-shadow: none;" value="{!endTime}" />
                                             </div>
+                                            <label class="slds-form-element__label" for="text-input-04" >Emergency Maintenance</label>
+                                            <div class="slds-form-element__control">
+                                                <span class="slds-checkbox">
+                                                    <apex:inputCheckbox id="emergencyCheckbox" value="{!emergency}" />
+                                                    <!--<apex:inputHidden value="{!emergency}" id="hiddenemergency"/>   -->
+                                                    <label class="slds-checkbox__label" for="{!$Component.emergencyCheckbox}">
+                                                        <span class="slds-checkbox_faux"></span>
+                                                    </label>
+                                                </span>
+                                            </div>
                                             <label class="slds-form-element__label" >Customer Impact Analysis </label>
                                             <div class="slds-form-element__control">
                                                 <apex:inputField styleClass="slds-textarea"   value="{!newCase.CustomerAnalysis__c}"/>

@@ -5,16 +5,16 @@
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
     <apex:form id="form">
         <div class="container">
-        <apex:pageBlock title="Case Comments" >
+            <apex:pageBlock title="Case Comments" >
                 <div class="row">
-                        <div class="col-md-12">
-                            <div class="col-md-1">
+                    <div class="col-md-12">
+                        <div class="col-md-1">
                             <apex:outputLabel value="Public"></apex:outputLabel>
-                            </div>
-                            <div class="col-md-3">
-                            <apex:inputCheckbox value="{!isPublic}"></apex:inputCheckbox>
-                            </div>
                         </div>
+                        <div class="col-md-3">
+                            <apex:inputCheckbox value="{!isPublic}"></apex:inputCheckbox>
+                        </div>
+                    </div>
                 </div>
                 <div class="row">
                     <div class="col-md-12">
@@ -28,15 +28,15 @@
                 </div>
                 <div class="row">
                     <div class="col-md-12">
-                <apex:commandLink id="btnOK" styleClass="btn" action="{!CreateComment}" value="Save" reRender="target" onclick="disableOnSubmit(this);">
-                    <apex:param name="commentBody" assignTo="{!comment.CaseComment}" value="param2" />
-                </apex:commandLink>
-                <apex:commandLink styleClass="btn" action="{!CancelCreate}" value="Cancel" reRender="target">
-                    <apex:param name="commentBody" assignTo="{!comment.CaseComment}" value="param2" />
-                </apex:commandLink>
+                        <apex:commandLink id="btnOK" styleClass="btn" action="{!CreateComment}" value="Save" reRender="target" onclick="disableOnSubmit(this);">
+                            <apex:param name="commentBody" assignTo="{!comment.CaseComment}" value="param2" />
+                        </apex:commandLink>
+                        <apex:commandLink styleClass="btn" action="{!CancelCreate}" value="Cancel" reRender="target">
+                            <apex:param name="commentBody" assignTo="{!comment.CaseComment}" value="param2" />
+                        </apex:commandLink>
                     </div>
                 </div>
-        </apex:pageBlock>
+            </apex:pageBlock>
 
         </div>
     </apex:form>

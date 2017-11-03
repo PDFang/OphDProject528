@@ -7,9 +7,11 @@ public class AssetSubscriptionAllocationHelper {
     public Asset currentAsset;
     public SubscriptionReplica__c currentSubscription;
     public Project__c currentProject;
+//    public Boolean isSuccesfullySaved;
 
     public List<AssetSubscriptionAllocationNewModel> assetAllocations{get; set;}
     public List<AssetSubscriptionAllocationNewModel> subscriptionAllocations{get; set;}
+    Static Set<String> assetEditableFields = new Set<String>();
 
     static Set<String> assetFields = new Set<String>{
             'Id',
@@ -17,9 +19,7 @@ public class AssetSubscriptionAllocationHelper {
             'RecordType.Name',
             'Quantity',
             'Budgeted_Hours__c',
-            'Parent_Project__c',
-            'QuantityCancelled__c',
-            'QuantityonHold__c'
+            'Parent_Project__c'
     };
 
     static Set<String> subscriptionFields = new Set<String>{
@@ -126,7 +126,12 @@ public class AssetSubscriptionAllocationHelper {
             assetFields.add(member.getFieldPath());
         }
 
+        List<Schema.FieldSetMember> fsMembersAssetEditable = Schema.SobjectType.Asset.fieldSets.PS_Asset_Allocation_Editable_Fields.getFields();
+        for(Schema.FieldSetMember member : fsMembersAssetEditable){
+            assetEditableFields.add(member.getFieldPath());
+        }
         List<String> fieldList = new List<String>(assetFields);
+        fieldList.addAll(assetEditableFields);
 
         String columns = String.join(fieldList, ',');
         system.debug('getAsset(): columns - ' + columns);
@@ -403,5 +408,53 @@ public class AssetSubscriptionAllocationHelper {
         }catch (Exception ex){
 
         }
+    }
+
+    public String SaveCancSuspQuantity(Asset asset){
+        String result;
+        Boolean manager = isManager();
+        try{
+            System.debug('asset.QuantityCancelled__c' + asset.QuantityCancelled__c);
+            if(asset.QuantityCancelled__c > 0 && (asset.Department_Responsible__c == null
+                    || asset.Root_Cause__c == null)){
+                return 'Department Responsible or ' +
+                        'Root Cause can not be empty if Quantity Cancelled is greater than 0.';
+
+
+            }
+            else if(asset.QuantityonHold__c > 0 && (asset.Department_Responsible__c == null
+                    || asset.Root_Cause__c == null)){
+                return 'Department Responsible or ' +
+                        'Root Cause can not be empty if Quantity On Hold is greater than 0.';
+
+            }
+            else if((asset.QuantityCancelled__c >= asset.Quantity
+                    || asset.QuantityonHold__c >= asset.Quantity) && !manager){
+                return 'Only managers can suspend or cancel the entire quantity of an asset or subscription.';
+            }
+            else{
+                update asset;
+//                isSuccesfullySaved = true;
+                return 'Saved Successfully.';
+
+            }
+
+
+        }catch (Exception ex){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
+        }
+        return null;
+    }
+
+    public Boolean isManager(){
+//        Professional_Services_Dashboard_Fields
+        List<PermissionSetAssignment> permissionSetAssignments = new List<PermissionSetAssignment>([select PermissionSet.Name
+        from PermissionSetAssignment where Assignee.Id = :UserInfo.getUserId() and PermissionSet.Name =: 'Professional_Services_Dashboard_Fields']);
+
+        if(permissionSetAssignments.size() > 0)
+            return true;
+
+        return false;
+
     }
 }

@@ -623,6 +623,8 @@ private class CaseEventTestClass {
         Test.startTest();
 
         CaseEventNotificationExtension testExtension = new CaseEventNotificationExtension(new ApexPages.StandardController(testMaintenance));
+        xMatters_Forms__mdt xmattersForm = [SELECT Form_Name__c FROM xMatters_Forms__mdt LIMIT 1];
+        testExtension.xmSelectedForm = xmattersForm.Form_Name__c;
 
         system.assertEquals(true, testExtension.enableXmatters, 'xMatters maintenance notification should be enabled.');
         system.assert(testExtension.xMattersFieldMapping.size() > 0, 'Case Field to xMatters form property mapping is empty.');
