@@ -39,6 +39,7 @@ private class XMNotificationTriggerHandlerTest {
     static testMethod void testMaintenanceNotification() {
 
         Case testMaintenance =[Select Id from Case where RecordType.Name = 'Maintenance Notification' Limit 1];
+        xMatters_Forms__mdt xmattersForm = [SELECT Form_Name__c FROM xMatters_Forms__mdt LIMIT 1];
 
         test.startTest();
         Test.setMock(HttpCalloutMock.class, new XMRestEventServiceHttpMock(200,'Complete','[{"Name": "sForceTest1"}]',null));
@@ -46,6 +47,7 @@ private class XMNotificationTriggerHandlerTest {
         xmNotification__c xmNotification = new xmNotification__c(
                 Case__c = testMaintenance.Id,
                 Request_Date__c = system.now(),
+                xMatters_Form__c = xmattersForm.Form_Name__c,
                 Request_Type__c = 'Maintenance Notification',
                 Status__c = 'New'
         );
@@ -61,6 +63,30 @@ private class XMNotificationTriggerHandlerTest {
         update xmNotification;
 
         system.assertEquals('Notification Sent', [Select Status from Case Where Id = :testMaintenance.Id].Status, 'Maintenance Notification status update failed.' );
+    }
+
+    // test callout to xMatters event service for sending Maintenance Notification with invalid form name
+    static testMethod void testMaintenanceNotificationWithInvalidFormName() {
+
+        Case testMaintenance =[Select Id from Case where RecordType.Name = 'Maintenance Notification' Limit 1];
+
+        test.startTest();
+        Test.setMock(HttpCalloutMock.class, new XMRestEventServiceHttpMock(200,'Complete','[{"Name": "sForceTest1"}]',null));
+
+        xmNotification__c xmNotification = new xmNotification__c(
+                Case__c = testMaintenance.Id,
+                Request_Date__c = system.now(),
+                xMatters_Form__c = 'Invalid Form Name',
+                Request_Type__c = 'Maintenance Notification',
+                Status__c = 'New'
+        );
+        insert xmNotification;
+
+        test.stopTest();
+
+        xmNotification = [Select Id, Status__c, xMatters_Form__c from xmNotification__c where Id = :xmNotification.Id];
+
+        system.assertEquals('Failed', xmNotification.Status__c, 'xmNotification status update failed.');
     }
 
     // test callout to xMatters event service

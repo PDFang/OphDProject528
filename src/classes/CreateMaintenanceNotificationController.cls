@@ -11,6 +11,7 @@ public class CreateMaintenanceNotificationController {
     public datetime startTime{get;set;}
     public datetime endTime{get;set;}
     public string contactUsString{get;set;}
+    public boolean emergency{get;set;}
     public CreateMaintenanceNotificationController(ApexPages.StandardController controller){
         this.ccr = (BMCServiceDesk__Change_Request__c)controller.getRecord();
         maintenanceCases = new list<Case>();
@@ -69,6 +70,7 @@ public class CreateMaintenanceNotificationController {
 
         endTime = ccr.RF_Maint_Window_End_Time__c;
         startTime = ccr.RF_Maint_Window_Start_Time__c;
+        emergency = ccr.BMCServiceDesk__Change_Type__c == 'Emergency' ? true : false;
         //system.debug('newCase =>' + newCase);
     }
 
@@ -85,6 +87,7 @@ public class CreateMaintenanceNotificationController {
             newCase.ContactInfoText__c = contactUsString.replace('<br/>', '');
             newCase.ContactInfoText__c = newCase.ContactInfoText__c.replace('</medium>', '');
             newCase.ContactInfoText__c = newCase.ContactInfoText__c.replace('<medium style="padding-left: 18px;" >', '');
+            newCase.EmergencyMaintenance__c = emergency;
             newCase.OwnerId = queueIds[0].Id;
             system.debug('new case =>' + newCase);
             try{
