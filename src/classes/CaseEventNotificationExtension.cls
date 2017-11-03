@@ -528,10 +528,8 @@ public class CaseEventNotificationExtension
         xMattersForms = new List<SelectOption>();
         xMattersForms.add(new SelectOption('', '- Choose a template -'));
 
-        List<Schema.PicklistEntry> entries = xMatters_Forms__mdt.Form__c.getDescribe().getPicklistValues();
-
-        for(xMatters_Forms__mdt mdt : [Select Form__c from xMatters_Forms__mdt order by Form__c]){
-            xMattersForms.add(new SelectOption(mdt.Form__c, mdt.Form__c));
+        for(xMatters_Forms__mdt mdt : [Select Form_Name__c from xMatters_Forms__mdt order by Form_Name__c]){
+            xMattersForms.add(new SelectOption(mdt.Form_Name__c, mdt.Form_Name__c));
         }
 
     }

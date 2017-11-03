@@ -2,7 +2,6 @@ public class XMRestEventService {
     private XMRestWrapper restWrapper;
     private Map<String, ProductEventMap__c> nodeMap;
     private List<Case_to_xMatters_Field_Mapping__mdt> caseToXMattersFieldMappings;
-    private Map<String, String> partnerPrefixFormFieldMappings;
 
     static string xmDatetimeDefaultPattern = 'EEEE, MMMM dd, yyyy HH:mm:ss';
 
@@ -10,12 +9,6 @@ public class XMRestEventService {
         restWrapper = new XMRestWrapper(); //TODO: Allow injection? Not sure yet
         this.nodeMap = ProductEventMap__c.getAll();
         this.caseToXMattersFieldMappings = [select Salesforce_Case_Field__c, xMatters_Form_Field__c, Maintenance__c, Event__c  from Case_to_xMatters_Field_Mapping__mdt];
-
-        List<xMattersPartnerPrefixFormMapping__mdt> mappings = [select PartnerPrefix__c, xMattersFormsFieldAPIName__c from xMattersPartnerPrefixFormMapping__mdt];
-        partnerPrefixFormFieldMappings = new Map<String, String>();
-        for(xMattersPartnerPrefixFormMapping__mdt mapping : mappings) {
-            partnerPrefixFormFieldMappings.put(mapping.PartnerPrefix__c, mapping.xMattersFormsFieldAPIName__c);
-        }
     }
 
     /*
@@ -77,19 +70,25 @@ public class XMRestEventService {
         // xMatters form ID
         if(isMaintenance){
             List<xMatters_Forms__mdt> mdtList = [
-                    Select Partner1FormID__c, Partner2FormID__c, Partner3FormID__c, Partner4FormID__c from xMatters_Forms__mdt where Form__c = :xmNotificationRecord.xMatters_Form__c
+                    Select Form_Name__c, Form_ID__c, (Select Partner_Prefix__c, Form_ID__c from xMatters_Form_Partner_Versions__r) from xMatters_Forms__mdt where Form_Name__c = :xmNotificationRecord.xMatters_Form__c
             ];
             if(mdtList.isEmpty()){
                 throw new CalloutException('Form \'' + xmNotificationRecord.xMatters_Form__c + '\' not found.');
             }
 
+            List<xMatters_Form_Partner_Versions__mdt> partnerVersions = mdtList[0].getSObjects('xMatters_Form_Partner_Versions__r');
+            if(partnerVersions == null){
+                partnerVersions = new List<xMatters_Form_Partner_Versions__mdt>();
+            }
             xMatters_Forms__mdt formsDetail = mdtList[0];
             //set the form ids for each partner
             for(XMEventData.PartnerInfo info : eventGroupInfo.partnerDetails) {
-                if(!partnerPrefixFormFieldMappings.containsKey(info.partnerPrefix)) {
-                    throw new CalloutException('Partner Prefix \'' + info.partnerPrefix + '\' not found in \'xMatters Partner Prefix to Form Mapping\' Custom Metadata Type.');
+                for(xMatters_Form_Partner_Versions__mdt partnerVersion : partnerVersions){
+                    if(info.partnerPrefix == partnerVersion.Partner_Prefix__c){
+                        info.xmFormId = partnerVersion.Form_ID__c;
+                    }
                 }
-                info.xmFormId = (String)formsDetail.get(partnerPrefixFormFieldMappings.get(info.partnerPrefix));
+                info.xmFormId = String.isBlank(info.xmFormId) ? mdtList[0].Form_ID__c : info.xmFormId;
             }
         }
 
