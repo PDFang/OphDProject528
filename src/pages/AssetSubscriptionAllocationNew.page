@@ -28,25 +28,25 @@
         .image {
             padding-left:15px;
         }
-       #detailTable .k-grid-header .k-header {
+        #detailTable .k-grid-header .k-header {
             background-color: #3f51b5 !important;
             border-color: #3343a4 !important;
             color : white !important;
 
         }
-       #detailTable .k-grid-header .k-header>.k-link{
+        #detailTable .k-grid-header .k-header>.k-link{
               color : white !important;
-       }
+        }
 
-       #detailSubscriptionTable .k-grid-header .k-header {
+        #detailSubscriptionTable .k-grid-header .k-header {
             background-color: #3f51b5 !important;
             border-color: #3343a4 !important;
             color : white !important;
 
         }
-       #detailSubscriptionTable .k-grid-header .k-header>.k-link{
+        #detailSubscriptionTable .k-grid-header .k-header>.k-link{
               color : white !important;
-       }
+        }
 
         .spinnerClass {
             background:url('../../img/loading32.gif') no-repeat;
@@ -55,11 +55,28 @@
             padding-left:40px;
             padding-top:9px;
             font-size: 0.75em;
-    	}
+        }
+        .msgIcon {
+             display: none!important
+        }
+        .customMessage * {
+            color: #fff!important
+        }
+        .customMessage {
+            margin: 5px 0!important;
+            max-width: 1280px;
 
-    	.k-grid-Select{
-
-     }
+            width: 100%;
+            font-size: 12px;
+            border: 0px;
+            padding-left: 10px;
+        }
+        .message {
+            opacity: 1.1
+        }
+        .message .messageText h4 {
+           display: none;
+        }
 
     </style>
     <apex:form id="myform">
@@ -102,9 +119,19 @@
         <apex:pageBlock title="Subscription Detail" rendered="{!Not(ISNULL(Subscription))}" id="detailSubscription">
             <apex:pageBlockButtons title="" location="bottom">
                 <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
+                <apex:outputPanel rendered="{!Subscription.Quantity__c > 1}">
+                    <button title="Edit Cancelled/Suspended Quantity" onClick="openSubsEditCancSuspQuantityModal(); return false;">
+                        Edit Cancelled/Suspended Quantity
+                    </button>
+                </apex:outputPanel>
             </apex:pageBlockButtons>
             <apex:pageBlockSection columns="2" >
                 <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation}" var="f">
+                    <apex:outputfield value="{!Subscription[f]}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c > 1}" id="subsCancSuspQuanPBS">
+                <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Alloc_Editable_Fields}" var="f">
                     <apex:outputfield value="{!Subscription[f]}" />
                 </apex:repeat>
             </apex:pageBlockSection>
@@ -146,32 +173,68 @@
 
         <!--Asset Cancelled and Suspended Quantity-->
         <div class="modal fade" id="assetCanSuspQuanMod" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="cancSuspModalLabel" style="font-weight:bold">Edit Cancelled/Suspended Quantity</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body" style="font-size:14px;">
-                        <apex:pageBlock id="cancSuspPageBlck" >
-                            <apex:pageMessages id="messages" />
-                            <apex:pageBlockSection columns="2" >
-                                <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Editable_Fields}" var="f">
-                                    <apex:inputField value="{!Asset[f.fieldPath]}"/>
-                                </apex:repeat>
-                            </apex:pageBlockSection>
-                        </apex:pageBlock>
-                    </div>
-                    <div class="modal-footer">
-                        <!--<apex:commandButton reRender="cancSuspPageBlck, cancSuspQuanPBS" title="Cancel" value="Cancel" action="{!cancel}" immediate="true"/>-->
-                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>
-                        <apex:commandButton value ="Save" action="{!SaveCancSuspQuantity}" reRender="cancSuspPageBlck, cancSuspQuanPBS"  style="color:black !important;"></apex:commandButton>
+            <apex:outputPanel rendered="{!Not(ISNULL(asset))}">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="cancSuspModalLabel" style="font-weight:bold">Edit Cancelled/Suspended Quantity</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body" style="font-size:14px;">
+                            <apex:pageBlock id="cancSuspPageBlck" >
+                                <apex:pageMessages id="messages" />
+                                <apex:pageBlockSection columns="2" >
+                                    <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Editable_Fields}" var="f">
+                                        <apex:inputField value="{!Asset[f.fieldPath]}"/>
+                                    </apex:repeat>
+                                </apex:pageBlockSection>
+                            </apex:pageBlock>
+                        </div>
+                        <div class="modal-footer">
+                            <!--<apex:commandButton reRender="cancSuspPageBlck, cancSuspQuanPBS" title="Cancel" value="Cancel" action="{!cancel}" immediate="true"/>-->
+                            <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>
+                            <apex:commandButton value="Save" action="{!SaveCancSuspQuantity}" reRender="cancSuspPageBlck, cancSuspQuanPBS"  style="color:black !important;" onComplete="overridePageMessages();"></apex:commandButton>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </apex:outputPanel>
+
         </div>
+
+        <!--Subscription Cancelled and Suspended Quantity-->
+        <div class="modal fade" id="subsCanSuspQuanMod" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true">
+            <apex:outputPanel rendered="{!Not(ISNULL(Subscription))}">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="subsCancSuspModalLabel" style="font-weight:bold">Edit Cancelled/Suspended Quantity</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body" style="font-size:14px;">
+                            <apex:pageBlock id="subsCancSuspPageBlck" >
+                                <apex:pageMessages id="messagesSubs" />
+                                <apex:pageBlockSection columns="2" >
+                                    <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Alloc_Editable_Fields}" var="f">
+                                        <apex:inputField value="{!Subscription[f.fieldPath]}"/>
+                                    </apex:repeat>
+                                </apex:pageBlockSection>
+                            </apex:pageBlock>
+                        </div>
+                        <div class="modal-footer">
+                            <!--<apex:commandButton reRender="cancSuspPageBlck, cancSuspQuanPBS" title="Cancel" value="Cancel" action="{!cancel}" immediate="true"/>-->
+                            <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>
+                            <apex:commandButton value ="Save" action="{!SaveCancSuspQuantitySubs}" reRender="subsCancSuspPageBlck, subsCancSuspQuanPBS"  style="color:black !important;" onComplete="overridePageMessages();"></apex:commandButton>
+                        </div>
+                    </div>
+                </div>
+            </apex:outputPanel>
+
+        </div>
+
 
         <!-- loading Modal -->
         <div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
@@ -284,7 +347,37 @@
 
      function openEditCancSuspQuantityModal(){
 //            $("div#assetCanSuspQuanMod").modal('show');
+            hideMessage();
             $('div#assetCanSuspQuanMod').modal({
+                backdrop: 'static',
+                keyboard: false
+           });
+     }
+     function hideMessage(){
+            $("div.cusotmMessage").hide();
+        }
+
+     function overridePageMessages(){
+             $("div.cusotmMessage").show();
+            var textureEffect = '';
+            //Uncomment below line for texture effect on page messages
+            //textureEffect = 'slds-theme--alert-texture';
+
+            $('.warningM3').addClass('alert alert-warning');
+            $('.confirmM3').addClass('alert alert-success');
+            $('.errorM3').addClass('alert alert-danger');
+            $('.infoM3').addClass('alert alert-info');
+
+            $('.errorM3').removeClass('errorM3');
+            $('.confirmM3').removeClass('confirmM3');
+            $('.infoM3').removeClass('infoM3');
+            $('.warningM3').removeClass('warningM3');
+      }
+
+     function openSubsEditCancSuspQuantityModal(){
+//            $("div#assetCanSuspQuanMod").modal('show');
+            hideMessage();
+            $('div#subsCanSuspQuanMod').modal({
                 backdrop: 'static',
                 keyboard: false
            });
