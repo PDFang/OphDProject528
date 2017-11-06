@@ -178,6 +178,10 @@
                                             <div class="slds-form-element__control">
                                                 <apex:input type="datetime-local" id="text-input-04" styleClass="slds-input" style="width: 45%;border-width: 0 0 1px 0;box-shadow: none;" value="{!endTime}" />
                                             </div>
+                                            <label class="slds-form-element__label">Release Date</label>
+                                            <div class="slds-form-element__control">
+                                                <apex:outputText styleClass="slds-input" style="width: 45%;border-width: 0 0 1px 0;box-shadow: none;" value="{0,date,MM/dd/yy}"> <apex:param value="{!releaseDate}" /> </apex:outputText>
+                                            </div>
                                             <label class="slds-form-element__label" for="text-input-04" >Emergency Maintenance</label>
                                             <div class="slds-form-element__control">
                                                 <span class="slds-checkbox">
