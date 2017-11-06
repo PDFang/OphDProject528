@@ -26,7 +26,7 @@ public class XMRestEventService {
         Map<ID,Schema.RecordTypeInfo> recordTypeMapById = Schema.SObjectType.Case.getRecordTypeInfosByID();
 
         String caseRecordType = recordTypeMapById.get(eventCase.RecordTypeId).getName();
-        Boolean isMaintenance = (caseRecordType == 'Maintenance Notification');
+        Boolean isMaintenance = (caseRecordType == 'Maintenance Notification' || caseRecordType == 'Maintenance Preview');
 
         XMEventData xmEventData = new XMEventData();
 
@@ -43,7 +43,8 @@ public class XMRestEventService {
             inboundIntegrationGuid = (config != null) ? config.XM_Add_Platform_Inbound_GUID__c : null;
         } else if (xmNotificationRecord.Request_Type__c == 'Maintenance Notification'
                 || xmNotificationRecord.Request_Type__c == 'Event Initial Confirmation'
-                || xmNotificationRecord.Request_Type__c == 'Event Resolved' ){
+                || xmNotificationRecord.Request_Type__c == 'Event Resolved'
+                || xmNotificationRecord.Request_Type__c == 'Maintenance Preview'){
             platformsAffected = eventCase.PlatformsImpacted__c;
             inboundIntegrationGuid = (config != null) ? config.XM_Event_Notification_Inbound_GUID__c : null;
         }
