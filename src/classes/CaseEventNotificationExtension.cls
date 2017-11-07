@@ -528,10 +528,8 @@ public class CaseEventNotificationExtension
         xMattersForms = new List<SelectOption>();
         xMattersForms.add(new SelectOption('', '- Choose a template -'));
 
-        List<Schema.PicklistEntry> entries = xMatters_Forms__mdt.Form__c.getDescribe().getPicklistValues();
-
-        for(xMatters_Forms__mdt mdt : [Select Form__c from xMatters_Forms__mdt order by Form__c]){
-            xMattersForms.add(new SelectOption(mdt.Form__c, mdt.Form__c));
+        for(xMatters_Forms__mdt mdt : [Select Form_Name__c from xMatters_Forms__mdt order by Form_Name__c]){
+            xMattersForms.add(new SelectOption(mdt.Form_Name__c, mdt.Form_Name__c));
         }
 
     }
@@ -566,4 +564,33 @@ public class CaseEventNotificationExtension
 
     }
 
+    public pagereference sendPreviewNotificationViaXmatters(){
+
+        try{
+            if(isxMattersMaintenanceNotificationsTurnedOff){ // safety check
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.INFO, 'xMatters Maintenance Notification is disabled. Please contact your administrator.'));
+                return null;
+            }
+            if(String.isBlank(xmSelectedForm)){ // safety check
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'You must choose a maintenance template before sending the preview notification.'));
+                return null;
+            }
+            xmNotification__c xmNotification = new xmNotification__c(
+                    Case__c = c.Id,
+                    Request_Date__c = system.now(),
+                    Request_Type__c = 'Maintenance Preview',
+                    xMatters_Form__c = xmSelectedForm
+            );
+
+            insert xmNotification;
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Maintenance Notification Preview request submitted successfully.'));
+
+        }catch(Exception ex){
+            system.debug('sendNotificationViaXmatters(): Exception - ' + ex);
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Failed to Send Maintenance Notification Preview. ' + ex.getDmlMessage(0)));
+        }
+
+        return null;
+
+    }
 }

@@ -26,7 +26,7 @@ public class XMRestEventService {
         Map<ID,Schema.RecordTypeInfo> recordTypeMapById = Schema.SObjectType.Case.getRecordTypeInfosByID();
 
         String caseRecordType = recordTypeMapById.get(eventCase.RecordTypeId).getName();
-        Boolean isMaintenance = (caseRecordType == 'Maintenance Notification');
+        Boolean isMaintenance = (caseRecordType == 'Maintenance Notification' || caseRecordType == 'Maintenance Preview');
 
         XMEventData xmEventData = new XMEventData();
 
@@ -43,7 +43,8 @@ public class XMRestEventService {
             inboundIntegrationGuid = (config != null) ? config.XM_Add_Platform_Inbound_GUID__c : null;
         } else if (xmNotificationRecord.Request_Type__c == 'Maintenance Notification'
                 || xmNotificationRecord.Request_Type__c == 'Event Initial Confirmation'
-                || xmNotificationRecord.Request_Type__c == 'Event Resolved' ){
+                || xmNotificationRecord.Request_Type__c == 'Event Resolved'
+                || xmNotificationRecord.Request_Type__c == 'Maintenance Preview'){
             platformsAffected = eventCase.PlatformsImpacted__c;
             inboundIntegrationGuid = (config != null) ? config.XM_Event_Notification_Inbound_GUID__c : null;
         }
@@ -63,19 +64,33 @@ public class XMRestEventService {
         // PartnerPrefix is a place holder to be replaced by the inbound integration
         eventGroupInfo.eventName = ('Event_' + eventCase.CaseNumber + '_{PartnerPrefix}').replace(' ', '');
         eventGroupInfo.salesforceCaseId = eventCase.Id;
-        eventGroupInfo.partnerList = getSupportedPartners();
+        eventGroupInfo.partnerDetails = getSupportedPartners();
         eventGroupInfo.xmNotificationId = xmNotificationRecord.Id;
         xmEventData.eventGroupInfo = eventGroupInfo;
 
         // xMatters form ID
         if(isMaintenance){
             List<xMatters_Forms__mdt> mdtList = [
-                    Select Form_ID__c from xMatters_Forms__mdt where Form__c = :xmNotificationRecord.xMatters_Form__c
+                    Select Form_Name__c, Form_ID__c, (Select Partner_Prefix__c, Form_ID__c from xMatters_Form_Partner_Versions__r) from xMatters_Forms__mdt where Form_Name__c = :xmNotificationRecord.xMatters_Form__c
             ];
             if(mdtList.isEmpty()){
                 throw new CalloutException('Form \'' + xmNotificationRecord.xMatters_Form__c + '\' not found.');
             }
-            eventGroupInfo.xmFormId = mdtList[0].Form_ID__c;
+
+            List<xMatters_Form_Partner_Versions__mdt> partnerVersions = mdtList[0].getSObjects('xMatters_Form_Partner_Versions__r');
+            if(partnerVersions == null){
+                partnerVersions = new List<xMatters_Form_Partner_Versions__mdt>();
+            }
+            xMatters_Forms__mdt formsDetail = mdtList[0];
+            //set the form ids for each partner
+            for(XMEventData.PartnerInfo info : eventGroupInfo.partnerDetails) {
+                for(xMatters_Form_Partner_Versions__mdt partnerVersion : partnerVersions){
+                    if(info.partnerPrefix == partnerVersion.Partner_Prefix__c){
+                        info.xmFormId = partnerVersion.Form_ID__c;
+                    }
+                }
+                info.xmFormId = String.isBlank(info.xmFormId) ? mdtList[0].Form_ID__c : info.xmFormId;
+            }
         }
 
         //get the picklist API Name to pass as the eventType
@@ -237,14 +252,22 @@ public class XMRestEventService {
     /*
      * This will look up the XMPartnerPrefix field to determine the full list of partners we support
      */
-    private static String[] getSupportedPartners(){
-        String [] partnerArray = new List<String>();
+    private static List<XMEventData.PartnerInfo> getSupportedPartners(){
+        List<XMEventData.PartnerInfo> partnerArray = new List<XMEventData.PartnerInfo>();
 
         Schema.DescribeFieldResult fieldResult = Account.XMPartnerPrefix__c.getDescribe();
         List<Schema.PicklistEntry> picklistEntries = fieldResult.getPicklistValues();
 
         for(Schema.PicklistEntry picklistEntry : picklistEntries){
-            partnerArray.add(picklistEntry.getLabel());
+            XMEventData.PartnerInfo info = new XMEventData.PartnerInfo();
+
+            info.partnerPrefix = picklistEntry.getLabel();
+
+            //this is set to null because it will be used at some future time for Events
+            //it is currently used only for Maintenance notifications
+            info.xmFormId = null;
+
+            partnerArray.add(info);
         }
 
         return partnerArray;

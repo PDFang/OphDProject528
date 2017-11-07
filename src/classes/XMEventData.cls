@@ -16,9 +16,13 @@ public class XMEventData {
     public class EventGroupInfo{
         public String eventName {get;set;}
         public String salesforceCaseId {get;set;}
-        public String[] partnerList {get;set;}
+        public List<XMEventData.PartnerInfo> partnerDetails {get;set;}
         public string eventType {get;set;}
         public string xmNotificationId {get;set;}
-        public string xmFormId {get;set;}
+    }
+
+    public class PartnerInfo {
+        public String partnerPrefix {get; set;}
+        public String xmFormId {get;set;}
     }
 }

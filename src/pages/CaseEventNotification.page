@@ -174,6 +174,7 @@
                     <apex:actionStatus id="xmNotificationStatus">
                         <apex:facet name="stop">
                             <apex:outputPanel >
+                                <apex:commandButton styleClass="k-button" value="Send Preview" action="{!sendPreviewNotificationViaXmatters}" reRender="all" onComplete="StyleButtons();" status="xmNotificationStatus"/>
                                 <apex:commandButton styleClass="k-button" value="Send Notification" action="{!sendNotificationViaXmatters}" reRender="all" onComplete="StyleButtons();"  status="xmNotificationStatus"/>
                                 <a id="cancel-button" href="#" onclick="CancelRequest()" class="k-button">Cancel</a>
                             </apex:outputPanel>

@@ -17,13 +17,14 @@
             <apex:inputHidden value="{!Case.Priority}"/>
             <apex:inputHidden value="{!Case.InternalEvent__c}"/>
             <apex:inputHidden value="{!Case.EventResolvedEmailRequested__c}"/>
+            <apex:inputHidden value="{!Case.SendNotificationEmail__c }"/>
             <apex:pageBlockSection columns="1" >
                 <apex:outputField value="{!Case.CaseNumber}"/>
                 <apex:outputField value="{!Case.Subject}"/>
                 <apex:selectList onchange="return refresh()" value="{!Case.Status}" size="1" multiselect="false" required="true">
                     <apex:actionsupport event="onchange" rerender="mainPage" />
                     <apex:selectOptions value="{!EventStatus}" />
-                </apex:selectList> 
+                </apex:selectList>
             </apex:pageBlockSection>
 
             <!-- Resolved picklists-->
@@ -40,11 +41,16 @@
                 <apex:inputfield value="{!Case.Releases__c}" rendered="{!Case.Status='Resolved'}" required="{!Case.Status='Resolved'}">
                     <apex:actionsupport event="onchange" rerender="mainPage"/>
                 </apex:inputfield>
+
+                <apex:inputfield value="{!Case.EventEndDateTime__c}" rendered="{!Case.Status='Resolved'}" required="{!Case.Status='Resolved'}">
+                    <apex:actionsupport event="onchange" rerender="mainPage"/>
+                </apex:inputfield>
+
                 <apex:pageBlockSectionItem rendered="{!ShowSendEventResolvedEmail}" >
                     <apex:outputLabel title="This will notify all associated Event Notification contacts"  >Send Notification Email</apex:outputLabel>
-                    <apex:inputCheckbox title="This will notify all associated Event Notification contacts"  value="{!SetSendEventResovledEmail}" > 
+                    <apex:inputCheckbox title="This will notify all associated Event Notification contacts"  value="{!SetSendEventResovledEmail}" >
                         <apex:actionsupport event="onchange" rerender="mainPage"/>
-                    </apex:inputCheckbox> 
+                    </apex:inputCheckbox>
                 </apex:pageBlockSectionItem>
                 <apex:pageBlockSectionItem id="sendAlert" rendered="{!AND(ShowSendEventResolvedEmail,SetSendEventResovledEmail)}" >
                     <apex:outputLabel title="This will notify all associated Event Notification contacts"  ></apex:outputLabel>
@@ -59,7 +65,7 @@
                 <apex:pageBlockSectionItem >
                     <apex:outputLabel value="Make Comment Public" for="public" title="If checked the comment will show up on Trust if the Event is public."  />
                     <apex:inputCheckbox id="public" value="{!publish}" title="If checked the comment will show up on Trust if the Event is public." />
-                </apex:pageBlockSectionItem> 
+                </apex:pageBlockSectionItem>
                 <apex:pageBlockSectionItem >
                     <apex:outputLabel value="Add Standard Text" for="noText" />
                     <apex:inputCheckbox id="noText" value="{!NoText}">
@@ -82,16 +88,16 @@
                     <apex:selectList id="sText" size="1" value="{!selectedStandardTextId}">
                         <apex:selectOptions value="{!StandardTextOptions}"></apex:selectOptions>
                         <!-- rerender "sTextDetail" to update the displayed text based on the "sText" changes -->
-                        <apex:actionSupport event="onchange" rerender="mainPage"  oncomplete="Restyle();"/> 
+                        <apex:actionSupport event="onchange" rerender="mainPage"  oncomplete="Restyle();"/>
                     </apex:selectList>
-                </apex:pageBlockSectionItem> 
+                </apex:pageBlockSectionItem>
 
                 <apex:pageBlockSectionItem >
-                   <apex:outputLabel value="Comment (Required)" for="sTextDetail" />
-                   <apex:outputPanel id="sTextDetail" layout="block">
-                     <apex:inputTextarea style="width:400px" rows="8" id="detailValue" value="{!SelectedStandardText}"/> 
-                   </apex:outputPanel>
-               </apex:pageBlockSectionItem> 
+                    <apex:outputLabel value="Comment (Required)" for="sTextDetail" />
+                    <apex:outputPanel id="sTextDetail" layout="block">
+                        <apex:inputTextarea style="width:400px" rows="8" id="detailValue" value="{!SelectedStandardText}"/>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
             </apex:pageBlockSection>
             <apex:pageBlockButtons >
                 <apex:commandButton id="save-button" styleClass="k-button submit" onclick="disableButton(this);" value="Save" action="{!Save}"  oncomplete="onCompleteHandler()" reRender="mainPage"/>
@@ -181,5 +187,5 @@
         }
     
     </script>
-    
+
 </apex:page>

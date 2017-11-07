@@ -30,8 +30,12 @@ public with sharing class AssetSubscriptionAllocationNewController {
 
     // query string parameter
     public String currentId{get;set;}
+
+    // query string parameter
+//    public Boolen isSuccesfullySaved{get;set;}
     //Helper Object
     private AssetSubscriptionAllocationHelper helper;
+
 
     // constructor
     public AssetSubscriptionAllocationNewController(){
@@ -132,6 +136,87 @@ public with sharing class AssetSubscriptionAllocationNewController {
         }
 
         return result;
+    }
+
+    public void SaveCancSuspQuantity(){
+        try{
+            String message =  helper.SaveCancSuspQuantity(Asset);
+            if(message.contains('Quantity Cancelled')){
+                getUpdatedCancSuspValues();
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Department Responsible or ' +
+                        'Root Cause can not be empty if Quantity Cancelled is greater than 0.'));
+
+            }
+
+            else if(message.contains('Quantity On Hold')){
+                getUpdatedCancSuspValues();
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Department Responsible or ' +
+                        'Root Cause can not be empty if Quantity On Hold is greater than 0.'));
+            }
+
+            else if(message.contains('Only managers')){
+                getUpdatedCancSuspValues();
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Only managers can suspend ' +
+                        'or cancel the entire quantity of an asset or subscription.'));
+            }
+            else if(message.contains('Saved')){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Saved Successfully.'));
+            }
+        }catch (Exception ex){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
+        }
+
+
+
+
+//        isSuccesfullySaved = helper.isSuccesfullySaved;
+    }
+
+
+
+    public void SaveCancSuspQuantitySubs(){
+        System.debug('Subscription.QuantityCancelled__c' + Subscription.QuantityCancelled__c);
+        try{
+            String message =  helper.SaveCancSuspQuantitySubs(Subscription);
+            if(message.contains('Quantity Cancelled')){
+                getUpdatedCancSuspValuesSubs();
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Department Responsible or ' +
+                        'Root Cause can not be empty if Quantity Cancelled is greater than 0.'));
+
+            }
+
+            else if(message.contains('Quantity On Hold')){
+                getUpdatedCancSuspValuesSubs();
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Department Responsible or ' +
+                        'Root Cause can not be empty if Quantity On Hold is greater than 0.'));
+            }
+
+            else if(message.contains('Only managers')){
+                getUpdatedCancSuspValuesSubs();
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Only managers can suspend ' +
+                        'or cancel the entire quantity of an asset or subscription.'));
+            }
+            else if(message.contains('Saved')){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Saved Successfully.'));
+            }
+        }catch (Exception ex){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
+        }
+
+
+
+
+//        isSuccesfullySaved = helper.isSuccesfullySaved;
+    }
+
+    public void getUpdatedCancSuspValues(){
+        helper = new AssetSubscriptionAllocationHelper(currentId);
+        Asset = helper.currentAsset;
+    }
+
+    public void getUpdatedCancSuspValuesSubs(){
+        helper = new AssetSubscriptionAllocationHelper(currentId);
+        Subscription = helper.currentSubscription;
     }
 
     public pagereference cancel(){
