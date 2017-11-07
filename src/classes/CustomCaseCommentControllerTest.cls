@@ -2,6 +2,7 @@
 public with sharing class CustomCaseCommentControllerTest {
 
     private static case newCase = new case();
+    private static id MyCase;
     private static void initTest(){
 
         Case newCase = new Case();
@@ -18,7 +19,7 @@ public with sharing class CustomCaseCommentControllerTest {
         newCase.setOptions(dmo);
 
         insert newCase;
-
+        MyCase = newCase.Id;
 
         CaseComment comment = new CaseComment();
         comment.CommentBody = 'test';
@@ -44,6 +45,24 @@ public with sharing class CustomCaseCommentControllerTest {
         controller.getCommentList(newCase);
         test.stopTest();
     }
+
+    @isTest
+    public static void saveAction(){
+        initTest();
+        test.startTest();
+        ApexPages.StandardController stdCtrl = new ApexPages.StandardController(newCase);
+        CustomCaseCommentController controller  = new CustomCaseCommentController(stdCtrl);
+
+        CustomCaseCommentData commentData = new CustomCaseCommentData();
+        commentData.isPublic = true;
+        commentData.ParentId = MyCase;
+        commentdata.isDeleted = false;
+        commentData.CreateDate = DateTime.now();
+        commentdata.CreatedBy = 'Test';
+        commentData.CaseComment = 'test';
+        controller.SaveAction(commentData);
+        test.stopTest();
+    }
     @isTest
     public static void NewPublicComment()
     {
@@ -64,16 +83,7 @@ public with sharing class CustomCaseCommentControllerTest {
         controller.NewPrivateComment();
         test.stopTest();
     }
-    @isTest
-    public static void SaveAction(){
 
-        initTest();
-        test.startTest();
-        ApexPages.StandardController stdCtrl = new ApexPages.StandardController(newCase);
-        CustomCaseCommentController controller = new CustomCaseCommentController(stdCtrl);
-        test.stopTest();
-
-    }
     @isTest
     public static void CancelAction(){
         initTest();
