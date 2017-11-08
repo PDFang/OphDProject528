@@ -10,6 +10,7 @@ public class CreateMaintenanceNotificationController {
     public Case newCase {get; set;}
     public datetime startTime{get;set;}
     public datetime endTime{get;set;}
+    public date releaseDate {get;set;}
     public string contactUsString{get;set;}
     public boolean emergency{get;set;}
     public CreateMaintenanceNotificationController(ApexPages.StandardController controller){
@@ -50,7 +51,7 @@ public class CreateMaintenanceNotificationController {
         Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
         string maintenanceRecordType = rtMapByName.get('Maintenance Notification').getRecordTypeId();
 
-        ccr = [select RF_Summary__c,Name, RF_Cluster_s__c, BMCServiceDesk__Change_Description__c, RF_Maint_Window_Start_Time__c, RF_Maint_Window_End_Time__c,
+        ccr = [select RF_Summary__c,Name, RF_Cluster_s__c, BMCServiceDesk__Change_Description__c, RF_Maint_Window_Start_Time__c, RF_Maint_Window_End_Time__c, RF_Release_Date__c,
                 BMCServiceDesk__Change_Type__c, RF_Customer_Impact_Analysis__c
         from  BMCServiceDesk__Change_Request__c where Id =:ccr.id ];
 
@@ -71,6 +72,7 @@ public class CreateMaintenanceNotificationController {
         endTime = ccr.RF_Maint_Window_End_Time__c;
         startTime = ccr.RF_Maint_Window_Start_Time__c;
         emergency = ccr.BMCServiceDesk__Change_Type__c == 'Emergency' ? true : false;
+        releaseDate = ccr.RF_Release_Date__c;
         //system.debug('newCase =>' + newCase);
     }
 
