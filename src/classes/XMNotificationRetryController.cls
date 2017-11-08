@@ -7,9 +7,13 @@ public without sharing class XMNotificationRetryController {
     // cache failed notifications
     private Map<Id, xmNotification__c> notificationMap;
 
-    public XMNotificationRetryController(){
+    public XMNotificationRetryController(ApexPages.StandardController controller){
 
         String caseId = ApexPages.currentPage().getParameters().get('caseId');
+
+        if(caseId == null) {
+            caseId = ((Case)controller.getRecord()).Id;
+        }
 
         if(String.isBlank(caseId)){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Invalid URL: No Case ID found.'));

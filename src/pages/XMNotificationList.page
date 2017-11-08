@@ -1,27 +1,20 @@
 <apex:page id="XMNotificationList" standardController="Case" extensions="XMNotificationListControllerExtension">
     <apex:pageBlock >
-        <apex:pageBlockSection columns="1" > <!-- added columns by Arnab -->
+        <apex:pageBlockSection columns="1" >
             <apex:pageBlockTable value="{!notifications}" var="notification">
-                <apex:column headerValue="Action">
-
-                </apex:column>
                 <apex:column headerValue="Notification ID">
                     <apex:outputLink value="/{!notification.Id}">{!notification.Name}</apex:outputLink>
                 </apex:column>
                 <apex:column headerValue="Request Type">{!notification.Request_Type__c}</apex:column>
                 <apex:column headerValue="xMatters Form">{!notification.xMatters_Form__c}</apex:column>
                 <apex:column headerValue="Request Date">
-                    <!-- 11/8/2017 10:53 AM-->
-                    <!--<apex:outputText value="{0,date,MM'/'dd'/'yyyy hh:mm}">
-                        <apex:param value="{!notification.Request_Date__c}" />
-                    </apex:outputText> -->
-                    <apex:outputField value="{!notification.Request_Date__c}"/> <!-- Changes made by Arnab -->
+                    <apex:outputField value="{!notification.Request_Date__c}"/>
                 </apex:column>
                 <apex:column headerValue="Status">{!notification.Status__c}</apex:column>
                 <apex:column headerValue="Related Notification">{!notification.Related_Notification__c}</apex:column>
                 <apex:column headerValue="Created By">
-                <!--{!notification.CreatedBy.Name} {!notification.CreatedDate}--> <!-- Changes made by Arnab -->
-                    <apex:outputField value="{!notification.CreatedBy.Name}"/>
+                    <apex:outputField value="{!notification.CreatedBy.Name}"/>&nbsp;
+                    <apex:outputField value="{!notification.CreatedDate}" />
                 </apex:column>
             </apex:pageBlockTable>
         </apex:pageBlockSection>
