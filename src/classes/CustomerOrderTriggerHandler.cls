@@ -30,9 +30,11 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
 
         for(OrderLineGeneralItems__c OrderLineItem : [SELECT CustomerOrder__c,OrderErrorDetail__c,Name FROM OrderLineGeneralItems__c
         WHERE OrderLineGeneralItems__c.CustomerOrder__c IN :newList AND OrderLineGeneralItems__c.InstrumentType__c =: 12554]){
-            CustomerOrder__c order = [Select Id, Name, Customer__c, Contact__c from CustomerOrder__c where Id = :OrderLineItem.CustomerOrder__c];
-            DIDOrders.Add(order);
-            system.debug('**Added value to the list ** ');
+            CustomerOrder__c order = [Select Id, Name, OrderStatus__c, Customer__c, Contact__c from CustomerOrder__c where Id = :OrderLineItem.CustomerOrder__c];
+            if(order.OrderStatus__c == 'New') {
+                DIDOrders.Add(order);
+                system.debug('**Added value to the list ** ');
+            }
         }
 
         Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
