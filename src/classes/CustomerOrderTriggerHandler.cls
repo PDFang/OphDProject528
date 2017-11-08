@@ -7,8 +7,66 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
     {        
         InsertCadebillAccountandContact();   
         
-    }   
-    
+    }
+
+    protected override void afterInsert()
+    {
+        system.debug('**Entering After Insert ** ');
+        GenerateCaseForDID();
+
+    }
+    public static void GenerateCaseForDID()
+    {
+        List<CustomerOrder__c> newList = (List<CustomerOrder__c>)(trigger.new);
+        Map<Id, CustomerOrder__c> oldMap = (Map<Id, CustomerOrder__c>)(trigger.oldMap );
+        Set<CustomerOrder__c> DIDOrders = new Set<CustomerOrder__c>();
+
+        for(OrderLineGeneralItems__c OrderLineItem : [SELECT CustomerOrder__c,OrderErrorDetail__c,Name FROM OrderLineGeneralItems__c
+        WHERE OrderLineGeneralItems__c.CustomerOrder__c IN :newList AND OrderLineGeneralItems__c.InstrumentType__c =: 12554]){
+            CustomerOrder__c order = [Select Id, Customer__c, Contact__c from CustomerOrder__c where Id = :OrderLineItem.CustomerOrder__c];
+            DIDOrders.Add(order);
+            system.debug('**Added value to the list ** ');
+        }
+
+        Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
+        Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
+        Id serviceRequestRecordType = rtMapByName.get('Work Orders').getRecordTypeId();
+        List<Case> CaseList = new List<Case>();
+        Map<Id, List<OrderLineGeneralItems__c>> OrderLineItemMap = new Map<Id, List<OrderLineGeneralItems__c>>();
+        if(DIDOrders.size() > 0)
+        {
+            system.debug('**Janani** -' + DIDOrders.size());
+            for(CustomerOrder__c CustOrder :DIDOrders) {
+                List<OrderLineGeneralItems__c> OrderLineItems = OrderLineItemMap.get(CustOrder.Id);
+                if (OrderLineItems != NULL && !OrderLineItems.isEmpty()) {
+                    Case nCase = new Case();
+                    database.DMLOptions dmo = new database.DMLOptions();
+                    dmo.assignmentRuleHeader.useDefaultRule = true;
+                    dmo.EmailHeader.triggerUserEmail = true;
+                    String link = url.getSalesforceBaseUrl().toExternalForm() + '/' + CustOrder.Id;
+                    nCase.AccountID = CustOrder.Customer__c;
+                    nCase.ContactId = CustOrder.Contact__c;
+                    nCase.Subject = 'DID Test: ' + 'DID' ;
+                    nCase.Origin = 'TEST';
+
+                    string Description = 'Testing DID ' + CustOrder.Name + ' - ' + link;
+
+                    nCase.Description = Description;
+                    nCase.Request_Type__c = 'CSO Real Time Error Handling';
+                    nCase.Product_or_Service__c = 'CSO';
+                    nCase.SubProductorService__c = 'DID';
+                    nCase.Priority = 'P2';
+                    nCase.RecordTypeId = serviceRequestRecordType;
+                    nCase.IsVisibleInSelfService = true;
+                    nCase.Status = 'New';
+                    nCase.CustomerOrder__c = CustOrder.Id;
+                    nCase.setOptions(dmo);
+                    CaseList.add(nCase);
+                }
+            }
+        }
+        insert CaseList;
+    }
     protected override void afterUpdate()
     {
        system.debug('**Venkata** - AfterUpdate');
@@ -243,7 +301,7 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
         Map<Id, CustomerOrder__c> oldMap = (Map<Id, CustomerOrder__c>)(trigger.oldMap );
 
         Set<CustomerOrder__c> FailedOrders = new Set<CustomerOrder__c>();
-        Set<CustomerOrder__c> DIDOrders = new Set<CustomerOrder__c>();
+
         for(CustomerOrder__c newOrder : newList)
         {
             Account[] accts =[SELECT CG_Disconnect_Date__c FROM Account WHERE CadebillAccountNo__c =: newOrder.CadebillAccountNumber__c];
@@ -258,13 +316,6 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
             	}
             }            
         }
-
-        for(OrderLineGeneralItems__c OrderLineItem : [SELECT CustomerOrder__c,OrderErrorDetail__c,Name FROM OrderLineGeneralItems__c
-        WHERE OrderLineGeneralItems__c.CustomerOrder__c IN :newList AND OrderLineGeneralItems__c.InstrumentType__c =: 12554]){
-            CustomerOrder__c order = [Select Id, Customer__c, Contact__c from CustomerOrder__c where Id = :OrderLineItem.CustomerOrder__c];
-            DIDOrders.Add(order);
-        }
-
         
         Map<Id, List<OrderLineGeneralItems__c>> OrderLineItemMap = new Map<Id, List<OrderLineGeneralItems__c>>(); 
          if(FailedOrders.size() > 0)
@@ -321,38 +372,7 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
                CaseList.add(nCase);
             }
        }
-        if(DIDOrders.size() > 0)
-        {
-            system.debug('**Janani** -' + DIDOrders.size());
-            for(CustomerOrder__c CustOrder :DIDOrders) {
-                List<OrderLineGeneralItems__c> OrderLineItems = OrderLineItemMap.get(CustOrder.Id);
-                if (OrderLineItems != NULL && !OrderLineItems.isEmpty()) {
-                    Case nCase = new Case();
-                    database.DMLOptions dmo = new database.DMLOptions();
-                    dmo.assignmentRuleHeader.useDefaultRule = true;
-                    dmo.EmailHeader.triggerUserEmail = true;
-                    String link = url.getSalesforceBaseUrl().toExternalForm() + '/' + CustOrder.Id;
-                    nCase.AccountID = CustOrder.Customer__c;
-                    nCase.ContactId = CustOrder.Contact__c;
-                    nCase.Subject = 'DID Test: ' + 'DID' ;
-                    nCase.Origin = 'TEST';
 
-                    string Description = 'Testing DID ' + CustOrder.Name + ' - ' + link;
-
-                    nCase.Description = Description;
-                    nCase.Request_Type__c = 'CSO Real Time Error Handling';
-                    nCase.Product_or_Service__c = 'CSO';
-                    nCase.SubProductorService__c = 'DID';
-                    nCase.Priority = 'P2';
-                    nCase.RecordTypeId = serviceRequestRecordType;
-                    nCase.IsVisibleInSelfService = true;
-                    nCase.Status = 'New';
-                    nCase.CustomerOrder__c = CustOrder.Id;
-                    nCase.setOptions(dmo);
-                    CaseList.add(nCase);
-                }
-            }
-        }
         insert CaseList;
     }  
      
