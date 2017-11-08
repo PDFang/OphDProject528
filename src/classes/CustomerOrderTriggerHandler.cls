@@ -9,11 +9,18 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
         
     }
 
-    protected override void afterInsert()
-    {
-        system.debug('**Entering After Insert ** ');
-        GenerateCaseForDID();
 
+    protected override void afterUpdate()
+    {
+       system.debug('**Venkata** - AfterUpdate');
+       GenerateCase();
+        GenerateCaseForDID();
+        try{            
+       		OrderCompleted();
+            OrderProcessed();
+        }catch(Exception e){
+            inContactbaseclass.SendErrorEmail(e, trigger.new[0].Id);
+        }
     }
     public static void GenerateCaseForDID()
     {
@@ -23,7 +30,7 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
 
         for(OrderLineGeneralItems__c OrderLineItem : [SELECT CustomerOrder__c,OrderErrorDetail__c,Name FROM OrderLineGeneralItems__c
         WHERE OrderLineGeneralItems__c.CustomerOrder__c IN :newList AND OrderLineGeneralItems__c.InstrumentType__c =: 12554]){
-            CustomerOrder__c order = [Select Id, Customer__c, Contact__c from CustomerOrder__c where Id = :OrderLineItem.CustomerOrder__c];
+            CustomerOrder__c order = [Select Id, Name, Customer__c, Contact__c from CustomerOrder__c where Id = :OrderLineItem.CustomerOrder__c];
             DIDOrders.Add(order);
             system.debug('**Added value to the list ** ');
         }
@@ -35,50 +42,38 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
         Map<Id, List<OrderLineGeneralItems__c>> OrderLineItemMap = new Map<Id, List<OrderLineGeneralItems__c>>();
         if(DIDOrders.size() > 0)
         {
-            system.debug('**Janani** -' + DIDOrders.size());
             for(CustomerOrder__c CustOrder :DIDOrders) {
-                List<OrderLineGeneralItems__c> OrderLineItems = OrderLineItemMap.get(CustOrder.Id);
-                if (OrderLineItems != NULL && !OrderLineItems.isEmpty()) {
-                    Case nCase = new Case();
-                    database.DMLOptions dmo = new database.DMLOptions();
-                    dmo.assignmentRuleHeader.useDefaultRule = true;
-                    dmo.EmailHeader.triggerUserEmail = true;
-                    String link = url.getSalesforceBaseUrl().toExternalForm() + '/' + CustOrder.Id;
-                    nCase.AccountID = CustOrder.Customer__c;
-                    nCase.ContactId = CustOrder.Contact__c;
-                    nCase.Subject = 'DID Test: ' + 'DID' ;
-                    nCase.Origin = 'TEST';
 
-                    string Description = 'Testing DID ' + CustOrder.Name + ' - ' + link;
+                Case nCase = new Case();
+                database.DMLOptions dmo = new database.DMLOptions();
+                dmo.assignmentRuleHeader.useDefaultRule = true;
+                dmo.EmailHeader.triggerUserEmail = true;
+                String link = url.getSalesforceBaseUrl().toExternalForm() + '/' + CustOrder.Id;
+                nCase.AccountID = CustOrder.Customer__c;
+                nCase.ContactId = CustOrder.Contact__c;
+                nCase.Subject = 'DID Test: ' + 'DID' ;
+                nCase.Origin = 'TEST';
 
-                    nCase.Description = Description;
-                    nCase.Request_Type__c = 'CSO Real Time Error Handling';
-                    nCase.Product_or_Service__c = 'CSO';
-                    nCase.SubProductorService__c = 'DID';
-                    nCase.Priority = 'P2';
-                    nCase.RecordTypeId = serviceRequestRecordType;
-                    nCase.IsVisibleInSelfService = true;
-                    nCase.Status = 'New';
-                    nCase.CustomerOrder__c = CustOrder.Id;
-                    nCase.setOptions(dmo);
-                    CaseList.add(nCase);
-                }
+                string Description = 'Testing DID ' + CustOrder.Name + ' - ' + link;
+
+                nCase.Description = Description;
+                nCase.Request_Type__c = 'CSO Real Time Error Handling';
+                nCase.Product_or_Service__c = 'CSO';
+                nCase.SubProductorService__c = 'DID';
+                nCase.Priority = 'P2';
+                nCase.RecordTypeId = serviceRequestRecordType;
+                nCase.IsVisibleInSelfService = true;
+                nCase.Status = 'New';
+                nCase.CustomerOrder__c = CustOrder.Id;
+                nCase.setOptions(dmo);
+                CaseList.add(nCase);
+
             }
         }
         insert CaseList;
     }
-    protected override void afterUpdate()
-    {
-       system.debug('**Venkata** - AfterUpdate');
-       GenerateCase();
-        try{            
-       		OrderCompleted();
-            OrderProcessed();
-        }catch(Exception e){
-            inContactbaseclass.SendErrorEmail(e, trigger.new[0].Id);
-        }
-    }
-    
+
+
     private static void OrderCompleted() {
         system.debug('****Calling OrderCompleted()');
         List<CustomerOrder__c> orderList = (List<CustomerOrder__c>) (trigger.new);
