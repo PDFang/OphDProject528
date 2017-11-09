@@ -28,6 +28,7 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
         Map<Id, CustomerOrder__c> oldMap = (Map<Id, CustomerOrder__c>)(trigger.oldMap );
         Set<CustomerOrder__c> DIDOrders = new Set<CustomerOrder__c>();
 
+
         for(OrderLineGeneralItems__c OrderLineItem : [SELECT CustomerOrder__c,OrderErrorDetail__c,Name FROM OrderLineGeneralItems__c
         WHERE OrderLineGeneralItems__c.CustomerOrder__c IN :newList AND OrderLineGeneralItems__c.InstrumentType__c =: 12554]){
             CustomerOrder__c order = [Select Id, Name, OrderStatus__c, Customer__c, Contact__c from CustomerOrder__c where Id = :OrderLineItem.CustomerOrder__c];
