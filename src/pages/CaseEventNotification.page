@@ -1,5 +1,17 @@
 <apex:page standardController="Case" extensions="CaseEventNotificationExtension">
+    <style>
+        ul[role="alert"]
+                {
+                    margin-top:1em;
+                    margin-bottom:1em;
+                    padding:15px;
+                    background-color:#fcf8e3;
+                    color:#c09853;
+                    border:1px solid #faebcc;
+                    border-radius: 10px 10px 10px 10px;
+                }
 
+    </style>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.common.min.css')}" />
     <apex:stylesheet value="{!URLFOR($Resource.KendoUI, '/styles/kendo.custom.css')}" />
     <apex:stylesheet value="{!$Resource.SupportConsoleCss}" />
@@ -17,7 +29,7 @@
 
         <!-- messages -->
         <apex:outputPanel id="editPanel">
-            <apex:messages id="msg" styleClass="warning-message" />
+            <apex:pageMessages />
         </apex:outputPanel>
 
         <apex:pageBlock id="emailBlock" rendered="{!AND(NOT(renderConfirm), NOT(enableXmatters))}">
