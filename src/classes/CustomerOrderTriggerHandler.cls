@@ -27,20 +27,25 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
         List<CustomerOrder__c> newList = (List<CustomerOrder__c>)(trigger.new);
         Map<Id, CustomerOrder__c> oldMap = (Map<Id, CustomerOrder__c>)(trigger.oldMap );
         Set<CustomerOrder__c> DIDOrders = new Set<CustomerOrder__c>();
+        Set<Id> CustomerOrderIds = new Set <Id>();
 
+        for(OrderLineGeneralItems__c OrderLineItem : [SELECT CustomerOrder__c,Name FROM OrderLineGeneralItems__c
+                                                      WHERE OrderLineGeneralItems__c.CustomerOrder__c IN :newList AND OrderLineGeneralItems__c.InstrumentType__c =: 12554]){
+            // Get all Customer Ids
+            CustomerOrderIds.add(OrderLineItem.CustomerOrder__c);
 
-        for(OrderLineGeneralItems__c OrderLineItem : [SELECT CustomerOrder__c,OrderErrorDetail__c,Name FROM OrderLineGeneralItems__c
-        WHERE OrderLineGeneralItems__c.CustomerOrder__c IN :newList AND OrderLineGeneralItems__c.InstrumentType__c =: 12554]){
-            CustomerOrder__c order = [Select Id, Name, OrderStatus__c, Customer__c, Contact__c from CustomerOrder__c where Id = :OrderLineItem.CustomerOrder__c];
-            if(order.OrderStatus__c == 'New') {
-                DIDOrders.Add(order);
-                system.debug('**Added value to the list ** ');
+        }
+
+        if(CustomerOrderIds.size() > 0){
+            for(CustomerOrder__c order : [Select Id, Name, OrderStatus__c, Customer__c, Contact__c, Customer__r.CadebillAccountNoText__c
+                                          from CustomerOrder__c where Id in  :CustomerOrderIds And OrderStatus__c = :'New']){
+                    DIDOrders.Add(order);
             }
         }
 
         Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
         Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
-        Id serviceRequestRecordType = rtMapByName.get('Work Orders').getRecordTypeId();
+        Id workOrderRecordType = rtMapByName.get('Work Orders').getRecordTypeId();
         List<Case> CaseList = new List<Case>();
         Map<Id, List<OrderLineGeneralItems__c>> OrderLineItemMap = new Map<Id, List<OrderLineGeneralItems__c>>();
         if(DIDOrders.size() > 0)
@@ -54,17 +59,15 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
                 String link = url.getSalesforceBaseUrl().toExternalForm() + '/' + CustOrder.Id;
                 nCase.AccountID = CustOrder.Customer__c;
                 nCase.ContactId = CustOrder.Contact__c;
-                nCase.Subject = 'DID Test: ' + 'DID' ;
-                nCase.Origin = 'TEST';
-
-                string Description = 'Testing DID ' + CustOrder.Name + ' - ' + link;
-
+                nCase.Subject  = 'Local DID Number Request for Account ' + CustOrder.Customer__r.CadebillAccountNoText__c;
+                nCase.Origin = 'CSO';
+                string Description = 'Please review Order ' + CustOrder.Name + ' for local DID Number Requests.' + '\n' + link;
                 nCase.Description = Description;
-                nCase.Request_Type__c = 'CSO Real Time Error Handling';
+                nCase.Request_Type__c= 'Add New';
                 nCase.Product_or_Service__c = 'CSO';
-                nCase.SubProductorService__c = 'DID';
+                nCase.SubProductorService__c = 'Domestic DID';
                 nCase.Priority = 'P2';
-                nCase.RecordTypeId = serviceRequestRecordType;
+                nCase.RecordTypeId = workOrderRecordType;
                 nCase.IsVisibleInSelfService = true;
                 nCase.Status = 'New';
                 nCase.CustomerOrder__c = CustOrder.Id;
