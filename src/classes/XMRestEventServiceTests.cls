@@ -5,7 +5,7 @@ public class XMRestEventServiceTests {
         XMRestEventServiceHttpMock httpMockCallout = new XMRestEventServiceHttpMock(200,'Complete','[{"Name": "sForceTest1"}]',null);
 
         insertProductEventMap();
-        Case createdCase = insertCase('inContact', 'C9 - inContact');
+        Case createdCase = insertCase('inContact', 'C9 - inContact', 'Event');
 
         Case eventCase = [SELECT Id, CaseNumber, PlatformsImpacted__c, ProductImpacted__c FROM Case WHERE Id = :createdCase.Id];
 
@@ -51,7 +51,7 @@ public class XMRestEventServiceTests {
         XMRestEventServiceHttpMock httpMockCallout = new XMRestEventServiceHttpMock(200,'Complete','[{"Name": "sForceTest1"}]',null);
 
         insertProductEventMap();
-        Case createdCase = insertCase('DIA', 'Transport Services');
+        Case createdCase = insertCase('DIA', 'Transport Services', 'Event');
 
         Case eventCase = [SELECT Id, CaseNumber, PlatformsImpacted__c, ProductImpacted__c FROM Case WHERE Id = :createdCase.Id];
 
@@ -99,15 +99,17 @@ public class XMRestEventServiceTests {
         CalloutException testException = null;
 
         insertProductEventMap();
-        Case createdCase = insertCase('DIA', 'Transport Services');
+        Case createdCase = insertCase('DIA', 'Transport Services', 'Maintenance Notification');
 
         Case eventCase = [SELECT Id, CaseNumber, PlatformsImpacted__c, ProductImpacted__c FROM Case WHERE Id = :createdCase.Id];
+        xMatters_Forms__mdt xmattersForm = [SELECT Form_Name__c FROM xMatters_Forms__mdt LIMIT 1];
 
         // Create XMNotificationObject
         XMNotification__c xMattersNotification = new XMNotification__c();
         xMattersNotification.Case__c = eventCase.Id;
         xMattersNotification.Request_Type__c = 'Maintenance Notification';
         xMattersNotification.Status__c = 'New';
+        xMattersNotification.xMatters_Form__c = xmattersForm.Form_Name__c;
         xMattersNotification.Request_Date__c = system.today();
         xMattersNotification.AddedPlatforms__c = 'DIA Circuit';
 
@@ -130,6 +132,104 @@ public class XMRestEventServiceTests {
         // check the error message
         system.assert('Inbound Integration GUID not found for Request Type \'Maintenance Notification\'' == testException.getMessage());
     }
+
+    public testMethod static void startExternalEventProcessing_WillProcessMaintenanceRecords(){
+
+        XMRestEventServiceHttpMock httpMockCallout = new XMRestEventServiceHttpMock(200,'Complete','[{"Name": "sForceTest1"}]',null);
+        CalloutException testException = null;
+
+        insertProductEventMap();
+        Case createdCase = insertCase('inContact', 'C9 - inContact', 'Maintenance Notification');
+
+        Case eventCase = [SELECT Id, CaseNumber, PlatformsImpacted__c, ProductImpacted__c FROM Case WHERE Id = :createdCase.Id];
+        xMatters_Forms__mdt xmattersForm = [SELECT Form_Name__c FROM xMatters_Forms__mdt LIMIT 1];
+
+        // Create Application Configuration
+        AppConfiguration__c appConfig = new AppConfiguration__c();
+        appConfig.XM_Add_Platform_Inbound_GUID__c =  'testGuid';
+        insert appconfig;
+
+        // Create XMNotificationObject
+        XMNotification__c xMattersNotification = new XMNotification__c();
+        xMattersNotification.Case__c = eventCase.Id;
+        xMattersNotification.Request_Type__c = 'Maintenance Notification';
+        xMattersNotification.Status__c = 'New';
+        xMattersNotification.xMatters_Form__c = xmattersForm.Form_Name__c;
+        xMattersNotification.Request_Date__c = system.today();
+        xMattersNotification.AddedPlatforms__c = 'DIA Circuit';
+
+        insert xMattersNotification;
+
+        // Start test and perform fake callout
+        Test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, httpMockCallout);
+
+        XMRestEventService service = new XMRestEventService();
+        service.startExternalEventProcessing(xMattersNotification);
+
+        test.stopTest();
+
+        XMEventData actualEventData = (XMEventData) JSON.deserialize(httpMockCallout.requestBodyPassed, XMEventData.class);
+
+        // Check eventGroupInfo in the returned json
+        system.assertEquals(eventCase.Id, actualEventData.eventGroupInfo.salesforceCaseId);
+
+        // Check the platformGroup to ensure it has the right Implemented Product group
+        system.assertEquals('IP_{PartnerPrefix}_inContact_C9-inContact_MAINT', actualEventData.platformGroups[0]);
+
+        // Check the template properties
+        system.assertEquals(eventCase.ProductImpacted__c, actualEventData.templateProperties.get('productImpacted'));
+        system.assertEquals(eventCase.CaseNumber, actualEventData.templateProperties.get('caseNumber'));
+
+    }
+
+
+    public testMethod static void startExternalEventProcessing_InvalidFormNameWillThrowException(){
+
+        XMRestEventServiceHttpMock httpMockCallout = new XMRestEventServiceHttpMock(200,'Complete','[{"Name": "sForceTest1"}]',null);
+        CalloutException testException = null;
+
+        insertProductEventMap();
+        Case createdCase = insertCase('DIA', 'Transport Services', 'Maintenance Notification');
+
+        Case eventCase = [SELECT Id, CaseNumber, PlatformsImpacted__c, ProductImpacted__c FROM Case WHERE Id = :createdCase.Id];
+
+        // Create Application Configuration
+        AppConfiguration__c appConfig = new AppConfiguration__c();
+        appConfig.XM_Add_Platform_Inbound_GUID__c =  'testGuid';
+        insert appconfig;
+
+        // Create XMNotificationObject
+        XMNotification__c xMattersNotification = new XMNotification__c();
+        xMattersNotification.Case__c = eventCase.Id;
+        xMattersNotification.Request_Type__c = 'Maintenance Notification';
+        xMattersNotification.Status__c = 'New';
+        xMattersNotification.xMatters_Form__c = 'Invalid Form Name';
+        xMattersNotification.Request_Date__c = system.today();
+        xMattersNotification.AddedPlatforms__c = 'DIA Circuit';
+
+        insert xMattersNotification;
+
+        // Start test and perform fake callout
+        Test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, httpMockCallout);
+
+        XMRestEventService service = new XMRestEventService();
+        try{
+            service.startExternalEventProcessing(xMattersNotification);
+        } catch(CalloutException testCalloutException){
+            testException = testCalloutException;
+        }
+
+        test.stopTest();
+
+        // check the error message
+        system.assert('Form \'Invalid Form Name\' not found.' == testException.getMessage());
+    }
+
+
 
     private static void insertProductEventMap(){
 
@@ -156,7 +256,7 @@ public class XMRestEventServiceTests {
         insert productEventMaps;
     }
 
-    private static Case insertCase(String productImpacted, String platformImpacted){
+    private static Case insertCase(String productImpacted, String platformImpacted, String recordType){
 
         createSiteConfig();
 
@@ -169,7 +269,7 @@ public class XMRestEventServiceTests {
         Map<String, Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
 
         //Get Event record type id
-        Id eventRecordType = rtMapByName.get('Event').getRecordTypeId();
+        Id eventRecordType = rtMapByName.get(recordType).getRecordTypeId();
 
         // Create case used for test
         Case eventCase = new Case();

@@ -7,9 +7,12 @@ public class AssetSubscriptionAllocationHelper {
     public Asset currentAsset;
     public SubscriptionReplica__c currentSubscription;
     public Project__c currentProject;
+//    public Boolean isSuccesfullySaved;
 
     public List<AssetSubscriptionAllocationNewModel> assetAllocations{get; set;}
     public List<AssetSubscriptionAllocationNewModel> subscriptionAllocations{get; set;}
+    Static Set<String> assetEditableFields = new Set<String>();
+    Static Set<String> subscriptionEditableFields = new Set<String>();
 
     static Set<String> assetFields = new Set<String>{
             'Id',
@@ -17,9 +20,7 @@ public class AssetSubscriptionAllocationHelper {
             'RecordType.Name',
             'Quantity',
             'Budgeted_Hours__c',
-            'Parent_Project__c',
-            'QuantityCancelled__c',
-            'QuantityonHold__c'
+            'Parent_Project__c'
     };
 
     static Set<String> subscriptionFields = new Set<String>{
@@ -27,9 +28,7 @@ public class AssetSubscriptionAllocationHelper {
             'Name',
             'Quantity__c',
             'Budgeted_Hours__c',
-            'ParentProject__c',
-            'QuantityCancelled__c',
-            'QuantityonHold__c'
+            'ParentProject__c'
     };
 
     static Set<String> projectFields = new Set<String>{
@@ -126,7 +125,12 @@ public class AssetSubscriptionAllocationHelper {
             assetFields.add(member.getFieldPath());
         }
 
+        List<Schema.FieldSetMember> fsMembersAssetEditable = Schema.SobjectType.Asset.fieldSets.PS_Asset_Allocation_Editable_Fields.getFields();
+        for(Schema.FieldSetMember member : fsMembersAssetEditable){
+            assetEditableFields.add(member.getFieldPath());
+        }
         List<String> fieldList = new List<String>(assetFields);
+        fieldList.addAll(assetEditableFields);
 
         String columns = String.join(fieldList, ',');
         system.debug('getAsset(): columns - ' + columns);
@@ -153,7 +157,13 @@ public class AssetSubscriptionAllocationHelper {
             subscriptionFields.add(member.getFieldPath());
         }
 
+        List<Schema.FieldSetMember> fsMembersSubsEditable = Schema.SobjectType.Asset.fieldSets.PS_Asset_Allocation_Editable_Fields.getFields();
+        for(Schema.FieldSetMember member : fsMembersSubsEditable){
+            subscriptionEditableFields.add(member.getFieldPath());
+        }
+
         List<String> fieldList = new List<String>(subscriptionFields);
+        fieldList.addAll(subscriptionEditableFields);
 
         String columns = String.join(fieldList, ',');
         system.debug('getSubscription(): columns - ' + columns);
@@ -403,5 +413,89 @@ public class AssetSubscriptionAllocationHelper {
         }catch (Exception ex){
 
         }
+    }
+
+    public String SaveCancSuspQuantity(Asset asset){
+        String result;
+        Boolean manager = isManager();
+        try{
+            System.debug('asset.QuantityCancelled__c' + asset.QuantityCancelled__c);
+            if(asset.QuantityCancelled__c > 0 && (asset.Department_Responsible__c == null
+                    || asset.Root_Cause__c == null)){
+                return 'Department Responsible or ' +
+                        'Root Cause can not be empty if Quantity Cancelled is greater than 0.';
+
+
+            }
+            else if(asset.QuantityonHold__c > 0 && (asset.Department_Responsible__c == null
+                    || asset.Root_Cause__c == null)){
+                return 'Department Responsible or ' +
+                        'Root Cause can not be empty if Quantity On Hold is greater than 0.';
+
+            }
+            else if((asset.QuantityCancelled__c >= asset.Quantity
+                    || asset.QuantityonHold__c >= asset.Quantity) && !manager){
+                return 'Only managers can suspend or cancel the entire quantity of an asset or subscription.';
+            }
+            else{
+                update asset;
+//                isSuccesfullySaved = true;
+                return 'Saved Successfully.';
+
+            }
+
+
+        }catch (Exception ex){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
+        }
+        return null;
+    }
+
+
+    public String SaveCancSuspQuantitySubs(SubscriptionReplica__c subscription){
+        String result;
+        Boolean manager = isManager();
+        try{
+            System.debug('subscription.QuantityCancelled__c' + subscription.QuantityCancelled__c);
+            if(subscription.QuantityCancelled__c > 0 && (subscription.Department_Responsible__c == null
+                    || subscription.Root_Cause__c == null)){
+                return 'Department Responsible or ' +
+                        'Root Cause can not be empty if Quantity Cancelled is greater than 0.';
+
+
+            }
+            else if(subscription.QuantityonHold__c > 0 && (subscription.Department_Responsible__c == null
+                    || subscription.Root_Cause__c == null)){
+                return 'Department Responsible or ' +
+                        'Root Cause can not be empty if Quantity On Hold is greater than 0.';
+
+            }
+            else if((subscription.QuantityCancelled__c >= subscription.Quantity__c
+                    || subscription.QuantityonHold__c >= subscription.Quantity__c) && !manager){
+                return 'Only managers can suspend or cancel the entire quantity of an asset or subscription.';
+            }
+            else{
+                update subscription;
+//                isSuccesfullySaved = true;
+                return 'Saved Successfully.';
+
+            }
+
+
+        }catch (Exception ex){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
+        }
+        return null;
+    }
+
+    public Boolean isManager(){
+        List<GroupMember> allGroupIDs = [SELECT Id, group.id, group.name FROM GroupMember
+        where UserOrGroupId = :UserInfo.getUserId() AND group.DeveloperName ='Managers_Suspend_Cancel'];
+        System.debug('allGroupIDs' + allGroupIDs);
+        if(allGroupIDs.size() > 0)
+            return true;
+
+        return false;
+
     }
 }

@@ -1,4 +1,4 @@
-<apex:page id="XMNotificationRetry"  title="Notification Retry" tabStyle="Case" controller="XMNotificationRetryController">
+<apex:page id="XMNotificationRetry"  title="Notification Retry" tabStyle="Case" standardController="Case" extensions="XMNotificationRetryController">
 
     <apex:sectionHeader title="Case" subTitle="{!caseRecord.CaseNumber}"/>
     <apex:form>
