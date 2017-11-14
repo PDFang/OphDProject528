@@ -7,12 +7,14 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
     {        
         InsertCadebillAccountandContact();   
         
-    }   
-    
+    }
+
+
     protected override void afterUpdate()
     {
        system.debug('**Venkata** - AfterUpdate');
        GenerateCase();
+        GenerateCaseForDID();
         try{            
        		OrderCompleted();
             OrderProcessed();
@@ -20,7 +22,64 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
             inContactbaseclass.SendErrorEmail(e, trigger.new[0].Id);
         }
     }
-    
+    public static void GenerateCaseForDID()
+    {
+        List<CustomerOrder__c> newList = (List<CustomerOrder__c>)(trigger.new);
+        Map<Id, CustomerOrder__c> oldMap = (Map<Id, CustomerOrder__c>)(trigger.oldMap );
+        Set<CustomerOrder__c> DIDOrders = new Set<CustomerOrder__c>();
+        Set<Id> CustomerOrderIds = new Set <Id>();
+
+        for(OrderLineGeneralItems__c OrderLineItem : [SELECT CustomerOrder__c,Name FROM OrderLineGeneralItems__c
+                                                      WHERE OrderLineGeneralItems__c.CustomerOrder__c IN :newList AND OrderLineGeneralItems__c.InstrumentType__c =: 12554]){
+            // Get all Customer Ids
+            CustomerOrderIds.add(OrderLineItem.CustomerOrder__c);
+
+        }
+
+        if(CustomerOrderIds.size() > 0){
+            for(CustomerOrder__c order : [Select Id, Name, OrderStatus__c, Customer__c, Contact__c, Customer__r.CadebillAccountNoText__c
+                                          from CustomerOrder__c where Id in  :CustomerOrderIds And OrderStatus__c = :'New']){
+                    DIDOrders.Add(order);
+            }
+        }
+
+        Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
+        Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
+        Id workOrderRecordType = rtMapByName.get('Work Orders').getRecordTypeId();
+        List<Case> CaseList = new List<Case>();
+        Map<Id, List<OrderLineGeneralItems__c>> OrderLineItemMap = new Map<Id, List<OrderLineGeneralItems__c>>();
+        if(DIDOrders.size() > 0)
+        {
+            for(CustomerOrder__c CustOrder :DIDOrders) {
+
+                Case nCase = new Case();
+                database.DMLOptions dmo = new database.DMLOptions();
+                dmo.assignmentRuleHeader.useDefaultRule = true;
+                dmo.EmailHeader.triggerUserEmail = true;
+                String link = url.getSalesforceBaseUrl().toExternalForm() + '/' + CustOrder.Id;
+                nCase.AccountID = CustOrder.Customer__c;
+                nCase.ContactId = CustOrder.Contact__c;
+                nCase.Subject  = 'Local DID Number Request for Account ' + CustOrder.Customer__r.CadebillAccountNoText__c;
+                nCase.Origin = 'CSO';
+                string Description = 'Please review Order ' + CustOrder.Name + ' for local DID Number Requests.' + '\n' + link;
+                nCase.Description = Description;
+                nCase.Request_Type__c= 'Add New';
+                nCase.Product_or_Service__c = 'CSO';
+                nCase.SubProductorService__c = 'Domestic DID';
+                nCase.Priority = 'P2';
+                nCase.RecordTypeId = workOrderRecordType;
+                nCase.IsVisibleInSelfService = true;
+                nCase.Status = 'New';
+                nCase.CustomerOrder__c = CustOrder.Id;
+                nCase.setOptions(dmo);
+                CaseList.add(nCase);
+
+            }
+        }
+        insert CaseList;
+    }
+
+
     private static void OrderCompleted() {
         system.debug('****Calling OrderCompleted()');
         List<CustomerOrder__c> orderList = (List<CustomerOrder__c>) (trigger.new);
@@ -241,21 +300,23 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
     {
         List<CustomerOrder__c> newList = (List<CustomerOrder__c>)(trigger.new);       
         Map<Id, CustomerOrder__c> oldMap = (Map<Id, CustomerOrder__c>)(trigger.oldMap );
+
         Set<CustomerOrder__c> FailedOrders = new Set<CustomerOrder__c>();
+
         for(CustomerOrder__c newOrder : newList)
         {
             Account[] accts =[SELECT CG_Disconnect_Date__c FROM Account WHERE CadebillAccountNo__c =: newOrder.CadebillAccountNumber__c];
             if(!(accts.size() > 0 && accts[0].CG_Disconnect_Date__c !=null))
             {
-            CustomerOrder__c oldOrder = ( oldMap != null && oldMap.containsKey(newOrder.Id) ) ? oldMap.get(newOrder.Id) : null;                      
+            CustomerOrder__c oldOrder = ( oldMap != null && oldMap.containsKey(newOrder.Id) ) ? oldMap.get(newOrder.Id) : null;
             	if ( oldOrder != null
                     && newOrder.OrderStatus__c == 'Failed'
                     && oldOrder.OrderStatus__c != 'Failed')                    
             	{         
                 	FailedOrders.add(newOrder);                
-            	}   
+            	}
             }            
-        }     
+        }
         
         Map<Id, List<OrderLineGeneralItems__c>> OrderLineItemMap = new Map<Id, List<OrderLineGeneralItems__c>>(); 
          if(FailedOrders.size() > 0)
@@ -312,6 +373,7 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
                CaseList.add(nCase);
             }
        }
+
         insert CaseList;
     }  
      
