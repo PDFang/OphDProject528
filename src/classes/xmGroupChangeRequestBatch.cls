@@ -19,6 +19,8 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
 
     global void execute(Database.BatchableContext BC, List<xmGroupChangeRequest__C> scope)
     {
+
+        Boolean isException = false;
         try{
             system.debug('*** xmGroupChangeRequestBatch Execute **** ');
             XMBusinessLayer businessLayer =  new XMBusinessLayer();
@@ -84,7 +86,7 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
             for(ChangeRequestxmPersonProduct request: lstCRxmPersonProducts){
                 string productxmPerson =  request.xmPersonId + '~' + request.groupData.Product + '~' + request.groupData.Cluster;
                 system.debug('productxmPerson =>' + productxmPerson);
-                if (!activeProductxmPerson.containsKey(productxmPerson)){
+                if(request.Action == 'Add' || (request.Action == 'Remove' && !activeProductxmPerson.containsKey(productxmPerson)) ){
                     XMGroupChangeRequestItem item = new XMGroupChangeRequestItem();
                     item.groupName = request.groupData.XmattersGroupName;
                     item.personId = request.xmPersonId;
@@ -105,14 +107,17 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                 wrapper.callChangeRequestInboundIntegration(requestbody);
             }
 
+        }catch (Exception  ex){
+            isException = true;
+            inContactBaseClass.SendErrorEmail(ex, 'Error in Batch class to process change requests in Xmatters');
+        } finally {
+
             for(xmGroupChangeRequest__C changeRequest : scope){
-                changeRequest.Status__c = 'Processed';
+                changeRequest.Status__c = isException ? 'Failed' : 'Processed';
             }
 
             update scope;
 
-        }catch (Exception  ex){
-            inContactBaseClass.SendErrorEmail(ex, 'Error in Batch class to process change requests in Xmatters');
         }
     }
 
