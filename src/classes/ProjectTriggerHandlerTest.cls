@@ -10,8 +10,6 @@ private class ProjectTriggerHandlerTest {
     static final String PROJECT_TYPE_PHASE_PREMISE = 'PS Project Phase Premise WFO';
     static final String PROJECT_TYPE_PARENT_PREMISE = 'PS Parent Project - Premise';
     static final String OPPORTUNITY_TYPE_NEW = 'New Opportunity';
-    static final String CASE_TYPE_INCIDENT = 'Incident';
-    static final String CASE_TYPE_EVENT = 'Event';
     static final String PROJECT_TYPE_CONNECTIVITY_DESIGN = 'Connectivity Design';
     static final String PROJECT_TYPE_DEDICATED_PROVISIONING = 'Dedicated Provisioning';
 
@@ -27,7 +25,6 @@ private class ProjectTriggerHandlerTest {
             PROJECT_TYPE_PARENT_SAAS,
             PROJECT_TYPE_PARENT_PREMISE,
             PROJECT_TYPE_PHASE_PREMISE,
-            CASE_TYPE_EVENT,
             PROJECT_TYPE_CONNECTIVITY_DESIGN,
             PROJECT_TYPE_DEDICATED_PROVISIONING
     };
@@ -317,7 +314,6 @@ private class ProjectTriggerHandlerTest {
 
         createAccounts();
         createContacts();
-        createCases();
         createOpportunities();
         CreatePortalUsers();
         CreatePublicGroup();
@@ -441,42 +437,6 @@ private class ProjectTriggerHandlerTest {
 
         insert contactList;
     } // end of createContacts()
-
-    static void createCases() {
-
-        SiteConfiguration__c siteConfig = new SiteConfiguration__c(
-                Name = UserInfo.getOrganizationId().left(15),
-                AutoEventEmails__c = false,
-                DaysToDisplayKnownIssues__c = 30
-        );
-        insert siteConfig;
-
-        List<Case> caseList = new List<Case>();
-        Case case1 = new Case(
-                RecordTypeId = recordTypeMap.get(CASE_TYPE_EVENT),
-                Subject = 'ProjectTriggerHandlerTest',
-                Status = 'New',
-                AccountId = accountList[0].Id,
-                EventType__c = 'Service Disruption'
-        );
-        database.DMLOptions dmo = new database.DMLOptions();
-        dmo.assignmentRuleHeader.useDefaultRule = true;
-        case1.setOptions(dmo);
-        caseList.add(case1);
-
-        Case case2 = new Case(
-                RecordTypeId = recordTypeMap.get(CASE_TYPE_EVENT),
-                Subject = 'ProjectTriggerHandlerTest',
-                Status = 'New',
-                AccountId = accountList[1].Id,
-                EventType__c = 'Service Disruption'
-        );
-        case2.setOptions(dmo);
-        caseList.add(case2);
-
-        insert caseList;
-
-    } // end of createCases()
 
     static void createOpportunities(){
 
