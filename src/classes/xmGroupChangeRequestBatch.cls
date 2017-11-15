@@ -21,6 +21,8 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
     {
 
         Boolean isException = false;
+        Map<Id, XMGroupChangeRequestItem> changeRequestItemMap = new Map<Id, XMGroupChangeRequestItem>();
+
         try{
             system.debug('*** xmGroupChangeRequestBatch Execute **** ');
             XMBusinessLayer businessLayer =  new XMBusinessLayer();
@@ -74,6 +76,8 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                         item.Action= changeRequest.Action__c;
                         item.deviceId = changeRequest.xMDeviceId__c;
                         requestItems.add(item);
+
+                        changeRequestItemMap.put(item.ChangeRequestId, item);
                     }else{
                         lstCRxmPersonProducts.add(new ChangeRequestxmPersonProduct(groupData,changeRequest.NotificationProfile__r.xmPersonUID__c, changeRequest.Id, changeRequest.Action__c));
                     }
@@ -94,6 +98,8 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                     item.ChangeRequestId = request.ChangeRequestId;
                     item.Action= request.Action;
                     requestItems.add(item);
+
+                    changeRequestItemMap.put(item.ChangeRequestId, item);
                 }
             }
 
@@ -114,6 +120,7 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
 
             for(xmGroupChangeRequest__C changeRequest : scope){
                 changeRequest.Status__c = isException ? 'Failed' : 'Processed';
+                changeRequest.Group_Name__c = changeRequestItemMap.containsKey(changeRequest.Id) ? changeRequestItemMap.get(changeRequest.Id).groupName : null;
             }
 
             update scope;
