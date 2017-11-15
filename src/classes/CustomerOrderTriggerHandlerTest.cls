@@ -9,6 +9,7 @@ private class CustomerOrderTriggerHandlerTest {
     static CustomerOrder__c custOrder = null;  
     static CustomerOrder__c custOrder2 = null;
     static CustomerOrder__c custOrderCompleted = null;
+    static CustomerOrder__c CustmerOrderTwoProducts = null;
     static Contact newContact = null;
     static Contact mainContact = null;
     static List<OrderLineGeneralItems__c> OrderLineItemList = null;
@@ -124,6 +125,27 @@ private class CustomerOrderTriggerHandlerTest {
         system.assert(CaseList.size()>0);
 
     }
+    static testMethod void OrderStatusNew_CreateLocalDIDsCase(){
+        //No Exception should be thrown
+        SetupTestData();
+        CustmerOrderTwoProducts.CadebillAccountNumber__c = newAccount.CadebillAccountNo__c;
+
+        CustmerOrderTwoProducts.OrderStatus__c ='New';// Update Order Status
+
+        Test.startTest();
+
+        User CastIron = [SELECT Id FROM USER WHERE Profile.name ='_castiron Profile' LIMIT 1];
+        system.runAs(CastIron)
+        {
+            update CustmerOrderTwoProducts;
+        }
+        Test.stopTest();
+        List<Case> CaseList = [SELECT Id FROM Case WHERE AccountId = :CustmerOrderTwoProducts.Customer__C];
+        System.debug('**** Case List: ' + CaseList);
+        system.assert(CaseList.size()>0);
+
+    }
+
     static void SetupTestData(){
         //Create Account
         System.debug('**** creating default account');
@@ -134,6 +156,7 @@ private class CustomerOrderTriggerHandlerTest {
         InitOrder();
         insert custOrder2;
         insert custOrderCompleted;
+        insert CustmerOrderTwoProducts;
         System.debug('INSERTING OBJECTS');
         
         createOrderLineItems(); 
@@ -168,6 +191,13 @@ private class CustomerOrderTriggerHandlerTest {
         custOrderCompleted.Username__c = 'unittest';
         custOrderCompleted.Customer__C = newAccount.Id;
         custOrderCompleted.Contact__c = newContact.Id;
+
+        CustmerOrderTwoProducts = new CustomerOrder__c();
+        CustmerOrderTwoProducts.OrderDateTime__c = system.now();
+        CustmerOrderTwoProducts.OrderStatus__c = 'Pre-New';
+        CustmerOrderTwoProducts.Username__c = 'LocalDIDUnitTest';
+        CustmerOrderTwoProducts.Customer__C = newAccount.Id;
+        CustmerOrderTwoProducts.Contact__c = newContact.Id;
         
     }
     
@@ -200,6 +230,23 @@ private class CustomerOrderTriggerHandlerTest {
        OL3.ItemStatus__c='New';  
        OL3.StartDate__c = system.now();
        OrderLineItemListComplete.add(OL3);
+
+        OrderLineGeneralItems__c DID1 = new  OrderLineGeneralItems__c();
+        DID1.CustomerOrder__c = CustmerOrderTwoProducts.Id;
+        DID1.InstrumentType__c= 90 ;
+        DID1.InstrumentTypeName__c='TEST';
+        DID1.ItemStatus__c='New';
+        DID1.InstrumentType__c = 12554;
+        DID1.StartDate__c = system.now();
+        OrderLineItemList.add(DID1);
+
+        OrderLineGeneralItems__c OL4 = new  OrderLineGeneralItems__c();
+        OL4.CustomerOrder__c = CustmerOrderTwoProducts.Id;
+        OL4.InstrumentType__c= 90 ;
+        OL4.InstrumentTypeName__c='TEST';
+        OL4.ItemStatus__c='New';
+        OL4.StartDate__c = system.now();
+        OrderLineItemList.add(OL4);
        
        insert OrderLineItemListComplete;
        insert OrderLineItemList;

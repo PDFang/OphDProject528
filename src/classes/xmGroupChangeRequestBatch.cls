@@ -3,7 +3,9 @@
  */
 
 global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, Database.Stateful, Database.AllowsCallouts {
-    private string queryString;
+
+    public string queryString;
+
     global xmGroupChangeRequestBatch(){
         queryString = 'Select Id, Action__c, Account__c, Maintenance__c, Contact__r.xmPerson__c, Contact__c, ImplementedProduct__c, xMDeviceId__c, NotificationProfile__c, NotificationProfile__r.xmPersonUID__c,' +
                 ' Account__r.inContact_Cluster__c, Account__r.inView_Cluster__c, Account__r.Parentid, Account__r.Verint_Cluster__c,Account__r.NICE_WFM_Cluster__c,Account__r.XMPartnerPrefix__c, ' +
@@ -19,6 +21,10 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
 
     global void execute(Database.BatchableContext BC, List<xmGroupChangeRequest__C> scope)
     {
+
+        Boolean isException = false;
+        Map<Id, XMGroupChangeRequestItem> changeRequestItemMap = new Map<Id, XMGroupChangeRequestItem>();
+
         try{
             system.debug('*** xmGroupChangeRequestBatch Execute **** ');
             XMBusinessLayer businessLayer =  new XMBusinessLayer();
@@ -72,6 +78,8 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                         item.Action= changeRequest.Action__c;
                         item.deviceId = changeRequest.xMDeviceId__c;
                         requestItems.add(item);
+
+                        changeRequestItemMap.put(item.ChangeRequestId, item);
                     }else{
                         lstCRxmPersonProducts.add(new ChangeRequestxmPersonProduct(groupData,changeRequest.NotificationProfile__r.xmPersonUID__c, changeRequest.Id, changeRequest.Action__c));
                     }
@@ -84,7 +92,7 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
             for(ChangeRequestxmPersonProduct request: lstCRxmPersonProducts){
                 string productxmPerson =  request.xmPersonId + '~' + request.groupData.Product + '~' + request.groupData.Cluster;
                 system.debug('productxmPerson =>' + productxmPerson);
-                if (!activeProductxmPerson.containsKey(productxmPerson)){
+                if(request.Action == 'Add' || (request.Action == 'Remove' && !activeProductxmPerson.containsKey(productxmPerson)) ){
                     XMGroupChangeRequestItem item = new XMGroupChangeRequestItem();
                     item.groupName = request.groupData.XmattersGroupName;
                     item.personId = request.xmPersonId;
@@ -92,6 +100,8 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                     item.ChangeRequestId = request.ChangeRequestId;
                     item.Action= request.Action;
                     requestItems.add(item);
+
+                    changeRequestItemMap.put(item.ChangeRequestId, item);
                 }
             }
 
@@ -105,14 +115,18 @@ global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, D
                 wrapper.callChangeRequestInboundIntegration(requestbody);
             }
 
+        }catch (Exception  ex){
+            isException = true;
+            inContactBaseClass.SendErrorEmail(ex, 'Error in Batch class to process change requests in Xmatters');
+        } finally {
+
             for(xmGroupChangeRequest__C changeRequest : scope){
-                changeRequest.Status__c = 'Processed';
+                changeRequest.Status__c = isException ? 'Failed' : 'Processed';
+                changeRequest.Group_Name__c = changeRequestItemMap.containsKey(changeRequest.Id) ? changeRequestItemMap.get(changeRequest.Id).groupName : null;
             }
 
             update scope;
 
-        }catch (Exception  ex){
-            inContactBaseClass.SendErrorEmail(ex, 'Error in Batch class to process change requests in Xmatters');
         }
     }
 

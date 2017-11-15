@@ -1,29 +1,76 @@
 <apex:page id="XMNotificationList" standardController="Case" extensions="XMNotificationListControllerExtension">
-    <apex:pageBlock >
-        <apex:pageBlockSection columns="1" > <!-- added columns by Arnab -->
-            <apex:pageBlockTable value="{!notifications}" var="notification">
-                <apex:column headerValue="Action">
+    <apex:includeScript value="/support/console/30.0/integration.js"/>
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
 
-                </apex:column>
-                <apex:column headerValue="Notification ID">
-                    <apex:outputLink value="/{!notification.Id}">{!notification.Name}</apex:outputLink>
+    <apex:pageBlock >
+        <apex:pageBlockSection columns="1" >
+            <a href="#" id="retryButton" class="btn" style="text-decoration: none;" >Retry</a>
+            <apex:pageBlockTable value="{!notifications}" var="notification" styleClass="bRelatedList">
+                <apex:column headerValue="Notification ID" headerClass="pbHeader">
+                    <a href="javascript:sforce.console.isInConsole() ? sforce.console.openPrimaryTab(null,'/{!notification.Id}',true,'{!notification.Name}') : window.open('/{!notification.Id}', '_blank');" >{!notification.Name}</a>
                 </apex:column>
                 <apex:column headerValue="Request Type">{!notification.Request_Type__c}</apex:column>
                 <apex:column headerValue="xMatters Form">{!notification.xMatters_Form__c}</apex:column>
                 <apex:column headerValue="Request Date">
-                    <!-- 11/8/2017 10:53 AM-->
-                    <!--<apex:outputText value="{0,date,MM'/'dd'/'yyyy hh:mm}">
-                        <apex:param value="{!notification.Request_Date__c}" />
-                    </apex:outputText> -->
-                    <apex:outputField value="{!notification.Request_Date__c}"/> <!-- Changes made by Arnab -->
+                    <apex:outputField value="{!notification.Request_Date__c}"/>
                 </apex:column>
                 <apex:column headerValue="Status">{!notification.Status__c}</apex:column>
                 <apex:column headerValue="Related Notification">{!notification.Related_Notification__c}</apex:column>
                 <apex:column headerValue="Created By">
-                <!--{!notification.CreatedBy.Name} {!notification.CreatedDate}--> <!-- Changes made by Arnab -->
-                    <apex:outputField value="{!notification.CreatedBy.Name}"/>
+                    <apex:outputField value="{!notification.CreatedBy.Name}"/>&nbsp;
+                    <apex:outputField value="{!notification.CreatedDate}" />
                 </apex:column>
             </apex:pageBlockTable>
         </apex:pageBlockSection>
     </apex:pageBlock>
+
+    <script type="text/javascript">
+    	var tabName;
+        var tabLabel
+        var pageUrl;
+    	 $(document).ready(function() {
+
+         	 $("#retryButton").click(function(){
+                 if(sforce.console.isInConsole()){
+                 	 pageUrl = '{!URLFOR($Page.XMNotificationRetry,null,[caseId = caseId])}';
+                     tabLabel = 'Retry';
+                     tabName = 'Retry';
+                     openSubTab();
+                 }
+                 else{
+                 	$("#retryButton").prop("href", "/apex/XMNotificationRetry?caseId={!caseId}");
+                    $("#retryButton").prop("target", "_blank");
+                 }
+
+            });
+
+         });
+
+
+
+
+
+    function openSubTab() {
+            //First find the ID of the primary tab to put the new subtab in
+            return sforce.console.getEnclosingPrimaryTabId(processSubTab );
+        }
+
+        var processSubTab = function processSubTab (result) {
+            //Now that we have the primary tab ID, we can open a new subtab in it
+            var primaryTabId = result.id;
+            sforce.console.openSubtab(primaryTabId , pageUrl, true,
+                tabLabel, null,openSuccess,tabName);
+        };
+
+    var openSuccess = function openSuccess(result) {
+            //Report whether we succeeded in opening the subtab
+            if (result.success == true) {
+               console.log('subtab successfully opened');
+            } else {
+                alert('subtab cannot be opened');
+            }
+        };
+
+    </script>
+
 </apex:page>
