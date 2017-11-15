@@ -419,22 +419,25 @@ public class AssetSubscriptionAllocationHelper {
         String result;
         Boolean manager = isManager();
         try{
-            System.debug('asset.QuantityCancelled__c' + asset.QuantityCancelled__c);
-            if(asset.QuantityCancelled__c > 0 && (asset.Department_Responsible__c == null
-                    || asset.Root_Cause__c == null)){
+            System.debug('asset.QuantityCancelled__c' + asset.get('QuantityCancelled__c'));
+            decimal quantityCancelled = Decimal.valueOf(string.valueOf(asset.get('QuantityCancelled__c'))) ;
+            decimal quantityonHold =  Decimal.valueOf(string.valueOf(asset.get('QuantityonHold__c')));
+            if(quantityCancelled > 0 && (asset.get('Department_Responsible__c') == null
+                    || asset.get('Root_Cause__c') == null)){
                 return 'Department Responsible or ' +
                         'Root Cause can not be empty if Quantity Cancelled is greater than 0.';
 
 
             }
-            else if(asset.QuantityonHold__c > 0 && (asset.Department_Responsible__c == null
-                    || asset.Root_Cause__c == null)){
+            else if(quantityonHold > 0 && (asset.get('Department_Responsible__c') == null
+                    || asset.get('Root_Cause__c') == null)){
                 return 'Department Responsible or ' +
                         'Root Cause can not be empty if Quantity On Hold is greater than 0.';
 
             }
-            else if((asset.QuantityCancelled__c >= asset.Quantity
-                    || asset.QuantityonHold__c >= asset.Quantity) && !manager){
+            else
+            if((quantityCancelled >= asset.Quantity
+                    || quantityonHold >= asset.Quantity) && !manager){
                 return 'Only managers can suspend or cancel the entire quantity of an asset or subscription.';
             }
             else{
@@ -457,21 +460,23 @@ public class AssetSubscriptionAllocationHelper {
         Boolean manager = isManager();
         try{
             System.debug('subscription.QuantityCancelled__c' + subscription.QuantityCancelled__c);
-            if(subscription.QuantityCancelled__c > 0 && (subscription.Department_Responsible__c == null
-                    || subscription.Root_Cause__c == null)){
+            decimal quantityCancelled = Decimal.valueOf(string.valueOf(subscription.get('QuantityCancelled__c'))) ;
+            decimal quantityonHold =  Decimal.valueOf(string.valueOf(subscription.get('QuantityonHold__c')));
+            if(quantityCancelled > 0 && (subscription.get('Department_Responsible__c') == null
+                    || subscription.get('Root_Cause__c') == null)){
                 return 'Department Responsible or ' +
                         'Root Cause can not be empty if Quantity Cancelled is greater than 0.';
 
 
             }
-            else if(subscription.QuantityonHold__c > 0 && (subscription.Department_Responsible__c == null
-                    || subscription.Root_Cause__c == null)){
+            else if(quantityonHold > 0 && (subscription.get('Department_Responsible__c') == null
+                    || subscription.get('Root_Cause__c') == null)){
                 return 'Department Responsible or ' +
                         'Root Cause can not be empty if Quantity On Hold is greater than 0.';
 
             }
-            else if((subscription.QuantityCancelled__c >= subscription.Quantity__c
-                    || subscription.QuantityonHold__c >= subscription.Quantity__c) && !manager){
+            else if((quantityCancelled >= subscription.Quantity__c
+                    || quantityonHold >= subscription.Quantity__c) && !manager){
                 return 'Only managers can suspend or cancel the entire quantity of an asset or subscription.';
             }
             else{
@@ -490,7 +495,7 @@ public class AssetSubscriptionAllocationHelper {
 
     public Boolean isManager(){
         List<GroupMember> allGroupIDs = [SELECT Id, group.id, group.name FROM GroupMember
-        where UserOrGroupId = :UserInfo.getUserId() AND group.DeveloperName ='Managers_Suspend_Cancel'];
+        where UserOrGroupId = :UserInfo.getUserId() AND group.DeveloperName ='PS_Projects_Assets_Management'];
         System.debug('allGroupIDs' + allGroupIDs);
         if(allGroupIDs.size() > 0)
             return true;
