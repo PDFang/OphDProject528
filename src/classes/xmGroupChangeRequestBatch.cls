@@ -3,7 +3,9 @@
  */
 
 global class xmGroupChangeRequestBatch implements Database.Batchable<Sobject>, Database.Stateful, Database.AllowsCallouts {
-    private string queryString;
+
+    public string queryString;
+
     global xmGroupChangeRequestBatch(){
         queryString = 'Select Id, Action__c, Account__c, Maintenance__c, Contact__r.xmPerson__c, Contact__c, ImplementedProduct__c, xMDeviceId__c, NotificationProfile__c, NotificationProfile__r.xmPersonUID__c,' +
                 ' Account__r.inContact_Cluster__c, Account__r.inView_Cluster__c, Account__r.Parentid, Account__r.Verint_Cluster__c,Account__r.NICE_WFM_Cluster__c,Account__r.XMPartnerPrefix__c, ' +
