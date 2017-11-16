@@ -151,6 +151,11 @@ public class ProjectTriggerHandler extends TriggerHandler{
             }
         }
 
+        // skip processing if none of the records meet the criteria
+        if(projectIds.isEmpty()){
+            return;
+        }
+
         List<Project_Asset_Allocation__c> listProjectAssetAllocations = new List<Project_Asset_Allocation__c>(
         [Select Id, Asset__c, Percent_Allocation__c, Phase_Allocated__c,Phase_Implemented__c, PhaseImplemented__c, Phase_Implemented_Quantity__c,
                 Quantity_Allocation__c from  Project_Asset_Allocation__c where Project__c IN : projectIds]);
