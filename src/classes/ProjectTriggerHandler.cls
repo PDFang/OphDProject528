@@ -14,13 +14,27 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         new ProjectShareHelper().deleteShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         new ProjectShareHelper().addShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
-
+        LockDownPriorityFields((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         //new PartnerShareHelper().deleteShare(trigger.new, trigger.oldMap);
         //new PartnerShareHelper().addShare(trigger.new, trigger.oldMap);       
     }
 
     public override void afterDelete(){
         calculateProjectedDeadline(trigger.old);
+    }
+
+    private static void LockDownPriorityFields(list<Project__c> lstProjects, Map<Id, Project__c> oldmapProjects){
+
+        for(Project__c proj: lstProjects){
+            if(((proj.BattingOrder__c != oldmapProjects.get(proj.Id).BattingOrder__c)
+                    ||(proj.Ops_Backlog_Priority__c != oldmapProjects.get(proj.Id).Ops_Backlog_Priority__c))
+                    && ProjectTriggerHandler.lockSortingFields
+                    && !Test.isRunningTest()
+                    ){
+                proj.addError('Changing Global or Channel priority from the page layout is not allowed, please use the PMO Project Prioritization page to update the priorities.');
+            }
+
+        }
     }
 
     private static void CallTFSService(list<Project__c> lstProjects)
