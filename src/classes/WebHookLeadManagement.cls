@@ -64,7 +64,7 @@ global class WebHookLeadManagement {
 			}
 
 		     Map<String, Schema.RecordTypeInfo> recordTypeNameMap = Schema.SObjectType.Lead.getRecordTypeInfosByName();
-		     newLead.RecordTypeId = recordTypeNameMap.get('InCloud Partner Engagement').recordTypeId;
+		     newLead.RecordTypeId = recordTypeNameMap.get('DEVone Partner Engagement').recordTypeId;
 
 
 		     System.debug('new Lead' + newLead);

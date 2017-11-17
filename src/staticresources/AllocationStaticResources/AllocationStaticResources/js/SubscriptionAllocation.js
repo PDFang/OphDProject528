@@ -104,10 +104,33 @@ function subscriptionAllocationData(projId, subscriptionId){
                         "ProjectNumber":{from:"ProjectNumber",type:"string",editable:false},
                         "ProjectName":{from:"ProjectName",type:"string", editable:false},
                         "ProjectPhase" : {from:"ProjectPhase", type: "string", editable:false},
-                        "AllocatedQuantity":{from: "AllocatedQuantity", type:"number", editable: true, nullable: true},
+                        "AllocatedHours":{from: "AllocatedHours", type:"number", editable: true, nullable: true},
                         "BudgtedHours":{from: "BudgtedHours", type:"number", defaultValue:0},
                         "Quantity":{from: "Quantity", type:"number", defaultValue:0},
-                        "AllocatedHours":{from: "AllocatedHours", type:"number", editable: true, nullable: true, defaultValue:0},
+                        "AllocatedQuantity":{
+                            from: "AllocatedQuantity",
+                            type:"number",
+                            nullable: true,
+                            editable:true,
+                            defaultValue:1,
+                            validation : {
+                                quantityValidation : function(input){
+
+                                    var parentRow = $(input).parents("tr:first");
+                                    var grid = $("#subscriptionAllocationList").data("kendoGrid");
+                                    var rowData = grid.dataItem(parentRow);
+                                    if(!rowData){
+                                      input.attr("data-quantityValidation-msg", "Please select an asset");
+                                      return false;
+                                    }
+                                    if(input.val() == 0 && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1){
+                                        input.attr("data-quantityValidation-msg", "Allocated Quantity cannot be zero");
+                                        return false;
+                                    }
+                                    return true;
+                                }
+                            }
+                        },
                         AllocatedPercentage:{
                             from: "AllocatedPercentage",
                             type:"number",
@@ -115,14 +138,26 @@ function subscriptionAllocationData(projId, subscriptionId){
                             editable:true,
                             validation : {
                                 percentageValidation : function(input){
-                                    if(input.val() > 100 && input.is("[name='AllocatedPercentage']")){
-                                        input.attr("data-percentageValidation-msg", " Invalid Percentage");
+                                      var parentRow = $(input).parents("tr:first");
+                                      var grid = $("#subscriptionAllocationList").data("kendoGrid");
+                                      var rowData = grid.dataItem(parentRow);
+                                      if(!rowData){
+                                        input.attr("data-quantityValidation-msg", "Please select an asset");
                                         return false;
-                                    }
-                                return true;
+                                      }
+                                      if(input.val() > 100 && input.is("[name='AllocatedPercentage']")){
+                                          input.attr("data-percentageValidation-msg", " Invalid Percentage");
+                                          return false;
+                                      }
+                                       if(input.val() == 0 && input.is("[name='AllocatedPercentage']") && rowData.Quantity == 1){
+                                          input.attr("data-percentageValidation-msg", " Allocated Percentage cannot be zero");
+                                          return false;
+                                      }
+                                  return true;
                                 }
                             }
-                        },
+                        }
+
                     }
                 }
             },
@@ -373,6 +408,8 @@ function calculateSubscriptionBudgetedHours(e){
                $(allocatedHoursInput).find("span.k-select").hide();
           }else if(model.AllocatedQuantity > 0 ){
               currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
+               if( model.Quantity == 0)
+                  currentValue = 0;
               $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', false).removeClass("k-state-disabled");
               $(allocatedHoursInput).find("span.k-select").show();
           }

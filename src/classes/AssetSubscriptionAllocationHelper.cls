@@ -420,19 +420,20 @@ public class AssetSubscriptionAllocationHelper {
         Boolean manager = isManager();
         try{
             System.debug('asset.QuantityCancelled__c' + asset.get('QuantityCancelled__c'));
+            if(asset.get('QuantityCancelled__c') == null  ||  asset.get('QuantityonHold__c') == null ){
+                return 'Required fields are missing. Quantity Cancelled and/or Quantity on Hold cannot be blank';
+            }
             decimal quantityCancelled = Decimal.valueOf(string.valueOf(asset.get('QuantityCancelled__c'))) ;
             decimal quantityonHold =  Decimal.valueOf(string.valueOf(asset.get('QuantityonHold__c')));
             if(quantityCancelled > 0 && (asset.get('Department_Responsible__c') == null
                     || asset.get('Root_Cause__c') == null)){
-                return 'Department Responsible or ' +
-                        'Root Cause can not be empty if Quantity Cancelled is greater than 0.';
+                return 'Department Responsible and Root Cause must be populated if the Quantity on Hold is greater than 0';
 
 
             }
             else if(quantityonHold > 0 && (asset.get('Department_Responsible__c') == null
                     || asset.get('Root_Cause__c') == null)){
-                return 'Department Responsible or ' +
-                        'Root Cause can not be empty if Quantity On Hold is greater than 0.';
+                return 'Department Responsible and Root Cause must be populated if the Quantity on Hold is greater than 0';
 
             }
             else
@@ -443,7 +444,7 @@ public class AssetSubscriptionAllocationHelper {
             else{
                 update asset;
 //                isSuccesfullySaved = true;
-                return 'Saved Successfully.';
+                return 'Saved successfully.';
 
             }
 
@@ -460,19 +461,21 @@ public class AssetSubscriptionAllocationHelper {
         Boolean manager = isManager();
         try{
             System.debug('subscription.QuantityCancelled__c' + subscription.QuantityCancelled__c);
+            if(subscription.get('QuantityCancelled__c') == null  ||  subscription.get('QuantityonHold__c') == null ){
+                return 'Required fields are missing. Quantity Cancelled and/or Quantity on Hold cannot be blank';
+            }
+
             decimal quantityCancelled = Decimal.valueOf(string.valueOf(subscription.get('QuantityCancelled__c'))) ;
             decimal quantityonHold =  Decimal.valueOf(string.valueOf(subscription.get('QuantityonHold__c')));
             if(quantityCancelled > 0 && (subscription.get('Department_Responsible__c') == null
                     || subscription.get('Root_Cause__c') == null)){
-                return 'Department Responsible or ' +
-                        'Root Cause can not be empty if Quantity Cancelled is greater than 0.';
+                return 'Department Responsible and Root Cause must be populated if the Quantity on Hold is greater than 0';
 
 
             }
             else if(quantityonHold > 0 && (subscription.get('Department_Responsible__c') == null
                     || subscription.get('Root_Cause__c') == null)){
-                return 'Department Responsible or ' +
-                        'Root Cause can not be empty if Quantity On Hold is greater than 0.';
+                return 'Department Responsible and Root Cause must be populated if the Quantity on Hold is greater than 0';
 
             }
             else if((quantityCancelled >= subscription.Quantity__c
@@ -482,7 +485,7 @@ public class AssetSubscriptionAllocationHelper {
             else{
                 update subscription;
 //                isSuccesfullySaved = true;
-                return 'Saved Successfully.';
+                return 'Saved successfully.';
 
             }
 

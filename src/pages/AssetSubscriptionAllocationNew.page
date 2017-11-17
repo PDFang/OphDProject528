@@ -96,7 +96,7 @@
                 <apex:pageBlockButtons title="" location="bottom">
                     <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
                     <apex:outputPanel rendered="{!Asset.Quantity > 1}">
-                        <button title="Edit Cancelled/Suspended Quantity" onClick="openEditCancSuspQuantityModal(); return false;">
+                        <button title="Edit Cancelled/on Hold Quantity" onClick="openEditCancSuspQuantityModal(); return false;">
                             Edit Cancelled/on Hold Quantity
                         </button>
                     </apex:outputPanel>
@@ -120,7 +120,7 @@
                 <apex:pageBlockButtons title="" location="bottom">
                     <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
                     <apex:outputPanel rendered="{!Subscription.Quantity__c > 1}">
-                        <button title="Edit Cancelled/Suspended Quantity" onClick="openSubsEditCancSuspQuantityModal(); return false;">
+                        <button title="Edit Cancelled/on Hold Quantity" onClick="openSubsEditCancSuspQuantityModal(); return false;">
                             Edit Cancelled/on Hold Quantity
                         </button>
                     </apex:outputPanel>

@@ -94,7 +94,30 @@
                                 ProjectNumber:{from:"ProjectNumber",type:"string"},
                                 ProjectName:{from:"ProjectName",type:"string"},
                                 ProjectPhase : {from:"ProjectPhase", type: "string"},
-                                AllocatedQuantity:{from: "AllocatedQuantity", type:"number", nullable: true, editable:true, defaultValue:0},
+                                AllocatedQuantity:{
+                                    from: "AllocatedQuantity",
+                                    type:"number",
+                                    nullable: true,
+                                    editable:true,
+                                    defaultValue:1,
+                                     validation : {
+                                        quantityValidation : function(input){
+                                            var parentRow = $(input).parents("tr:first");
+                                            var grid = $("#assetAllocationList").data("kendoGrid");
+                                            var rowData = grid.dataItem(parentRow);
+                                             if(!rowData){
+                                                 input.attr("data-quantityValidation-msg", "Please select an asset");
+                                                 return false;
+                                             }
+                                             if(input.val() == 0 && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1){
+                                                input.attr("data-quantityValidation-msg", "Allocated Quantity cannot be zero");
+                                                return false;
+                                            }
+                                        return true;
+                                        }
+                                     }
+
+                                },
                                 AllocatedPercentage:{
                                     from: "AllocatedPercentage",
                                     type:"number",
@@ -102,8 +125,19 @@
                                     editable:true,
                                     validation : {
                                         percentageValidation : function(input){
+                                            var parentRow = $(input).parents("tr:first");
+                                            var grid = $("#assetAllocationList").data("kendoGrid");
+                                            var rowData = grid.dataItem(parentRow);
+                                            if(!rowData){
+                                                input.attr("data-quantityValidation-msg", "Please select an asset");
+                                                return false;
+                                            }
                                             if(input.val() > 100 && input.is("[name='AllocatedPercentage']")){
                                                 input.attr("data-percentageValidation-msg", " Invalid Percentage");
+                                                return false;
+                                            }
+                                             if(input.val() == 0 && input.is("[name='AllocatedPercentage']") && rowData.Quantity == 1){
+                                                input.attr("data-percentageValidation-msg", " Allocated Percentage cannot be zero");
                                                 return false;
                                             }
                                         return true;
@@ -355,6 +389,8 @@
                        $(allocatedHoursInput).find("span.k-select").hide();
                   }else if(model.AllocatedQuantity > 0 ){
                       currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
+                      if( model.Quantity == 0)
+                        currentValue = 0;
                       $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', false).removeClass("k-state-disabled");
                       $(allocatedHoursInput).find("span.k-select").show();
                   }
