@@ -1,7 +1,7 @@
 public class ProjectTriggerHandler extends TriggerHandler{
 
     public static boolean lockSortingFields = true;
-    
+
     public override void afterInsert(){
         new ProjectShareHelper().addShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         //new PartnerShareHelper().addShare(trigger.new, trigger.oldMap);
