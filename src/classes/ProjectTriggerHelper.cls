@@ -357,7 +357,7 @@ public class ProjectTriggerHelper
 	}
 
 	// Assign Phase# to PS Phase projects
-	// Method refactored to avoid a DML update
+	// Method refactored on 11/21/17 - Eliminated SOQL inside a for loop and DML update
     public static void setNextPhaseNumber(List<Project__c> listNewProjects ){
       
         Schema.DescribeSObjectResult d = Schema.SObjectType.Project__c;
