@@ -52,31 +52,31 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         new ProjectShareHelper().addShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         //new PartnerShareHelper().addShare(trigger.new, trigger.oldMap);
-        calculateProjectedDeadline(trigger.new);
 
+        // roll-up
+        calculateProjectedDeadline(trigger.new);
         ProjectParentPhaseSummary();
+        ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
 
         SalesEngineeringLogic.CreateNewProjectTasks(trigger.new, salesEngineeringRecordTypeId);
-        ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
         ProjectTriggerHelper.createProjectTasks(Trigger.new);
 
     }
 
     public override void afterUpdate(){
 
-        calculateProjectedDeadline(trigger.new);
         CallTFSService(trigger.new);
-        calculatePhaseImpQuantityNPercentage(trigger.new, (Map<Id, Project__c>)trigger.oldMap);
-
-        ProjectParentPhaseSummary();
 
         new ProjectShareHelper().deleteShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         new ProjectShareHelper().addShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         LockDownPriorityFields((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
-        //new PartnerShareHelper().deleteShare(trigger.new, trigger.oldMap);
-        //new PartnerShareHelper().addShare(trigger.new, trigger.oldMap);
 
+        // roll-up
+        calculateProjectedDeadline(trigger.new);
+        ProjectParentPhaseSummary();
         ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
+
+        calculatePhaseImpQuantityNPercentage(trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         ProjectTriggerHelper.updateAssetStatusForPhasedProject((List<Project__c>)trigger.new, (Map<Id, Project__c>)Trigger.oldMap);
         SalesEngineeringLogic.UpdateProjectRelatedOwners(trigger.old, trigger.new, salesEngineeringRecordTypeId);
 
