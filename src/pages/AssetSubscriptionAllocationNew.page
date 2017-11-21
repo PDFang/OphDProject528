@@ -261,6 +261,7 @@
 
     <script>
 
+    var isManager = {!Manager};
 
         $(document).ready(function() {
            getSObjType();
@@ -358,20 +359,20 @@
         }
 
      function overridePageMessages(){
-             $("div.cusotmMessage").show();
-            var textureEffect = '';
-            //Uncomment below line for texture effect on page messages
-            //textureEffect = 'slds-theme--alert-texture';
+            $("div.cusotmMessage").show();
 
+            var textureEffect = '';
             $('.warningM3').addClass('alert alert-warning');
             $('.confirmM3').addClass('alert alert-success');
             $('.errorM3').addClass('alert alert-danger');
             $('.infoM3').addClass('alert alert-info');
-
             $('.errorM3').removeClass('errorM3');
             $('.confirmM3').removeClass('confirmM3');
             $('.infoM3').removeClass('infoM3');
             $('.warningM3').removeClass('warningM3');
+
+
+
       }
 
      function openSubsEditCancSuspQuantityModal(){

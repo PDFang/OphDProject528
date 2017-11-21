@@ -28,6 +28,13 @@ public with sharing class AssetSubscriptionAllocationNewController {
         }set{}
     }
 
+    Public boolean Manager{
+        get{
+            return helper != null
+                    ? helper.isManager() : null;
+        }set{}
+    }
+
     // query string parameter
     public String currentId{get;set;}
 

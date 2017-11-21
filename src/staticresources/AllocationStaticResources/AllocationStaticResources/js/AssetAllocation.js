@@ -146,7 +146,8 @@
                                 },
                                 AllocatedHours:{from: "AllocatedHours", type:"number",  nullable: true, editable:true, defaultValue:0},
                                 Quantity :{from:"Quantity", type:"number",defaultValue:0},
-                                BudgtedHours :{from:"BudgtedHours", type:"number", defaultValue:0}
+                                BudgtedHours :{from:"BudgtedHours", type:"number", defaultValue:0},
+                                Implemented : {from:"Implemented", type:"boolean"}
                             }
                         }
                     },
@@ -207,6 +208,7 @@
                         field:"ProjectPhase",
                         title:"Project Phase",
                         template: '#{ #<a href="/#: data.ProjectNumber #" target="_blank" >#= data.ProjectPhase #</a># } #',
+                         width:300,
                         editor:nonEditorAsset
                     },
                     {
@@ -222,6 +224,13 @@
                     {
                         field:"AllocatedHours",
                         title:"Allocated Hours"
+                    },
+                    {
+                        field:"Implemented",
+                        title:"Implemented",
+                        template: '<input type="checkbox"  "# if (data.Implemented) { # checked="checked" # } #"  disabled "/>',
+                        width:150
+
                     },
                     {   title:"Action",
                         command: ["edit",
@@ -320,6 +329,8 @@
              $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
              $(allocatedHoursCell).find("span.k-select").hide();
         }
+         var implementedCell =  $(row).children().eq(9);
+          $(implementedCell).find("input").prop('disabled', true);
 
     }
 
@@ -365,6 +376,8 @@
                 }
                 rowData.AllocatedHours = hours.toFixed(2);
                 $(allocatedHoursCell).find("input").val(rowData.AllocatedHours);
+                var implementedCell =  $(row).children().eq(9);
+                $(implementedCell).find("input").prop('disabled', true);
      }
 
 
@@ -374,6 +387,22 @@
 
      function gridDataboundAsset(e){
         $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
+        $("#assetAllocationList tbody tr .k-grid-edit").each(function () {
+            var currentDataItem = $("#assetAllocationList").data("kendoGrid").dataItem($(this).closest("tr"));
+            //Check in the current dataItem if the row is editable
+            if (currentDataItem.Implemented == true && isManager == false) {
+                $(this).remove();
+            }
+        });
+         //Selects all delete buttons
+         $("#assetAllocationList tbody tr a.k-grid-Delete").each(function () {
+                var currentDataItem = $("#assetAllocationList").data("kendoGrid").dataItem($(this).closest("tr"));
+                //Check in the current dataItem if the row is deletable
+                if (currentDataItem.Implemented == true && isManager == false) {
+                    $(this).remove();
+                }
+            })
+
      }
 
 

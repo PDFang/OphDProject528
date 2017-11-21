@@ -290,7 +290,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
         }
 
         List<Project_Asset_Allocation__c> listProjectAssetAllocations = new List<Project_Asset_Allocation__c>(
-        [Select Id, Asset__c, Percent_Allocation__c, Phase_Allocated__c,Phase_Implemented__c, PhaseImplemented__c, Phase_Implemented_Quantity__c,
+        [Select Id, Asset__c, Percent_Allocation__c, Implemented__c, Phase_Allocated__c,Phase_Implemented__c, PhaseImplemented__c, Phase_Implemented_Quantity__c,
                 Quantity_Allocation__c from  Project_Asset_Allocation__c where Project__c IN : projectIds]);
 
         List<Project_Asset_Allocation__c> updateProjectAssetAllocationsList = new List<Project_Asset_Allocation__c>();
@@ -300,7 +300,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
         for(Project_Asset_Allocation__c projectAssetAllocation: listProjectAssetAllocations){
             updateProjectAssetAllocationsList.add(new Project_Asset_Allocation__c(Id = projectAssetAllocation.Id,
                     Phase_Implemented_Quantity__c = projectAssetAllocation.Quantity_Allocation__c,
-                    PhaseImplemented__c = projectAssetAllocation.Percent_Allocation__c));
+                    PhaseImplemented__c = projectAssetAllocation.Percent_Allocation__c,
+                    Implemented__c = true));
             assetIds.add(projectAssetAllocation.Asset__c);
         }
 
@@ -321,7 +322,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
         for(Project_Subscription_Allocation__c projectSubscriptionAllocation: listProjectSubscriptionAllocations) {
             upProjectSubscriptionAllocationsList.add(new Project_Subscription_Allocation__c(Id = projectSubscriptionAllocation.Id,
                     Phase_Implemented_Quantity__c = projectSubscriptionAllocation.Quantity_Allocation__c,
-                    PhaseImplemented__c = projectSubscriptionAllocation.Percent_Allocation__c));
+                    PhaseImplemented__c = projectSubscriptionAllocation.Percent_Allocation__c,
+                    Implemented__c = true));
 
             if (!subscriptionIds.contains(projectSubscriptionAllocation.Subscription__c)) {
                 subscriptionIds.add(projectSubscriptionAllocation.Subscription__c);
