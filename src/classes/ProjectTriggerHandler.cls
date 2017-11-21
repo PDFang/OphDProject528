@@ -2,10 +2,64 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
     public static boolean lockSortingFields = true;
 
+    static boolean initialized = false;
+    static Id salesEngineeringRecordTypeId;
+    static Id psProjectPhaseSaasRecordTypeId;
+    static set<Id> allowedRecordTypes;
+
+    public ProjectTriggerHandler(){
+
+        if(!initialized){
+            Schema.DescribeSObjectResult d = Schema.SObjectType.Project__c;
+            Map<String, Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
+
+            salesEngineeringRecordTypeId = rtMapByName.get('Sales Engineering Project').getRecordTypeId();
+            psProjectPhaseSaasRecordTypeId = rtMapByName.get('PS Project Phase SaaS').getRecordTypeId();
+
+            allowedRecordTypes = new set<Id> ();
+            for (Schema.RecordTypeInfo recordType : rtMapByName.values())
+            {
+                String recordTypeName = recordType.getName();
+
+                if(recordTypeName.contains('Phase') && recordTypeName.startsWith('PS'))
+                {
+                    allowedRecordTypes.add(recordType.getRecordTypeId());
+                }
+            }
+
+            initialized = true;
+        }
+
+    }
+
+    protected override void beforeInsert(){
+
+        // Assign Project owners and set status to New
+        ProjectTriggerHelper.assignProjectOwners(Trigger.new);
+
+    }
+
+    protected override void beforeUpdate(){
+
+        // Assign Project owners and set status to New
+        ProjectTriggerHelper.setStatusForITAndDbaProjects((List<Project__c>)trigger.new, (Map<Id, Project__c>)Trigger.oldMap);
+
+    }
+
     public override void afterInsert(){
+
         new ProjectShareHelper().addShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         //new PartnerShareHelper().addShare(trigger.new, trigger.oldMap);
         calculateProjectedDeadline(trigger.new);
+
+        ProjectParentPhaseSummary();
+
+        SalesEngineeringLogic.CreateNewProjectTasks(trigger.new, salesEngineeringRecordTypeId);
+        ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
+        ProjectTriggerHelper.createProjectTasks(Trigger.new);
+        //if it is a phase project validate the phase number
+        ProjectTriggerHelper.setNextPhaseNumber(Trigger.new);
+
     }
 
     public override void afterUpdate(){
@@ -14,15 +68,26 @@ public class ProjectTriggerHandler extends TriggerHandler{
         CallTFSService(trigger.new);
         calculatePhaseImpQuantityNPercentage(trigger.new, (Map<Id, Project__c>)trigger.oldMap);
 
+        ProjectParentPhaseSummary();
+
         new ProjectShareHelper().deleteShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         new ProjectShareHelper().addShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         LockDownPriorityFields((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         //new PartnerShareHelper().deleteShare(trigger.new, trigger.oldMap);
-        //new PartnerShareHelper().addShare(trigger.new, trigger.oldMap);       
+        //new PartnerShareHelper().addShare(trigger.new, trigger.oldMap);
+
+        ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
+        ProjectTriggerHelper.updateAssetStatusForPhasedProject((List<Project__c>)trigger.new, (Map<Id, Project__c>)Trigger.oldMap);
+        SalesEngineeringLogic.UpdateProjectRelatedOwners(trigger.old, trigger.new, salesEngineeringRecordTypeId);
+
     }
 
     public override void afterDelete(){
+
         calculateProjectedDeadline(trigger.old);
+
+        ProjectParentPhaseSummary();
+
     }
 
     private static void LockDownPriorityFields(list<Project__c> lstProjects, Map<Id, Project__c> oldmapProjects){
@@ -134,6 +199,58 @@ public class ProjectTriggerHandler extends TriggerHandler{
         }
 
     } // end of calculateProjectedDeadline()
+
+
+    private static void ProjectParentPhaseSummary(){
+
+        Set<Id> psParentProjectIds = new Set<Id>();
+        List<Project__c> newList = trigger.new != null ? (List<Project__c>)trigger.new : null;
+        List<Project__c> oldList = trigger.old != null ? (List<Project__c>)trigger.old : null;
+
+        if (!trigger.isDelete)
+        {
+            for (integer i = 0; i < newList.size(); i++)
+            {
+                Project__c newProject = newList[i];
+
+                // Only perform the update if the record type for parent is a Phased Project
+                if (allowedRecordTypes.contains(newProject.RecordTypeId))
+                {
+                    if (newProject.ParentProject__c != null)
+                    {
+                        psParentProjectIds.add(newProject.ParentProject__c);
+                    }
+
+                    if (!trigger.isInsert)
+                    {
+                        Project__c oldProject = oldList[i];
+
+                        if (newProject.ParentProject__c != oldProject.ParentProject__c && oldProject.ParentProject__c != Null)
+                        {
+                            psParentProjectIds.add(oldProject.ParentProject__c);
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (Project__c p : oldList)
+            {
+                if (p.ParentProject__c != null && allowedRecordTypes.Contains(p.RecordTypeId))
+                {
+                    psParentProjectIds.add(p.ParentProject__c);
+                }
+            }
+        }
+
+        if (!psParentProjectIds.isEmpty())
+        {
+            Map<Id, Project__c> psParentProjects = ProjectClass.ProjectParentPhaseSummary(psParentProjectIds);
+            update psParentProjects.values();
+        }
+
+    }
 
     //Assign Phase Implemented Quantity, Percentage and Status
     private static void calculatePhaseImpQuantityNPercentage(List<Project__c> newList, Map<Id, Project__c> oldMap){
