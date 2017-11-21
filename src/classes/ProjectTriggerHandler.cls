@@ -34,6 +34,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
     protected override void beforeInsert(){
 
+        //if it is a phase project validate the phase number
+        ProjectTriggerHelper.setNextPhaseNumber(Trigger.new);
         // Assign Project owners and set status to New
         ProjectTriggerHelper.assignProjectOwners(Trigger.new);
 
@@ -57,8 +59,6 @@ public class ProjectTriggerHandler extends TriggerHandler{
         SalesEngineeringLogic.CreateNewProjectTasks(trigger.new, salesEngineeringRecordTypeId);
         ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
         ProjectTriggerHelper.createProjectTasks(Trigger.new);
-        //if it is a phase project validate the phase number
-        ProjectTriggerHelper.setNextPhaseNumber(Trigger.new);
 
     }
 
