@@ -7,11 +7,22 @@ public class ProjectTriggerHandler extends TriggerHandler{
     static Id psProjectPhaseSaasRecordTypeId;
     static set<Id> allowedRecordTypes;
 
+    static Map<Id, List<Project__c>> projectByRecordTypeMap;
+    Map<String, Schema.RecordTypeInfo> rtMapByName;
+
     public ProjectTriggerHandler(){
 
+        Schema.DescribeSObjectResult d = Schema.SObjectType.Project__c;
+        rtMapByName = d.getRecordTypeInfosByName();
+
+        projectByRecordTypeMap = new Map<Id, List<Project__c>>();
+        for (Schema.RecordTypeInfo recordType : rtMapByName.values()){
+            projectByRecordTypeMap.put(recordType.getRecordTypeId(), new List<Project__c>());
+        }
+
+        groupProjectsByRecordType(Trigger.new != null ? trigger.new : trigger.old);
+
         if(!initialized){
-            Schema.DescribeSObjectResult d = Schema.SObjectType.Project__c;
-            Map<String, Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
 
             salesEngineeringRecordTypeId = rtMapByName.get('Sales Engineering Project').getRecordTypeId();
             psProjectPhaseSaasRecordTypeId = rtMapByName.get('PS Project Phase SaaS').getRecordTypeId();
@@ -32,10 +43,34 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
     }
 
+    private void groupProjectsByRecordType(List<Project__c> projectList){
+
+        for(Project__c proj : projectList){
+            List<Project__c> values = projectByRecordTypeMap.get(proj.RecordTypeId);
+            if(values != null){
+                values.add(proj);
+            }
+        }
+
+    }
+
     protected override void beforeInsert(){
 
+        Id phaseSaasProject = rtMapByName.get('PS Project Phase SaaS').getRecordTypeId();
+        Id phasePremiseProject = rtMapByName.get('PS Project Phase Premise WFO').getRecordTypeId();
+        List<Project__c> phaseProjects = new List<Project__c>();
+        if(projectByRecordTypeMap.containsKey(phaseSaasProject))
+            phaseProjects.addAll(projectByRecordTypeMap.get(phaseSaasProject));
+        if(projectByRecordTypeMap.containsKey(phasePremiseProject))
+            phaseProjects.addAll(projectByRecordTypeMap.get(phasePremiseProject));
+
         //if it is a phase project validate the phase number
-        ProjectTriggerHelper.setNextPhaseNumber(Trigger.new);
+        if(phaseProjects.size() > 0){
+            ProjectTriggerHelper.setNextPhaseNumber(phaseProjects);
+        }
+
+        setPhaseProjectGoLiveDates();
+
         // Assign Project owners and set status to New
         ProjectTriggerHelper.assignProjectOwners(Trigger.new);
 
@@ -44,7 +79,16 @@ public class ProjectTriggerHandler extends TriggerHandler{
     protected override void beforeUpdate(){
 
         // Assign Project owners and set status to New
-        ProjectTriggerHelper.setStatusForITAndDbaProjects((List<Project__c>)trigger.new, (Map<Id, Project__c>)Trigger.oldMap);
+        Id dbaRT = rtMapByName.get('Database Administration Request').getRecordTypeId();
+        List<Project__c> itDbaProjects = new List<Project__c>();
+        if(projectByRecordTypeMap.containsKey(dbaRT))
+            itDbaProjects.addAll(projectByRecordTypeMap.get(dbaRT));
+
+        if(itDbaProjects.size() > 0){
+            ProjectTriggerHelper.setStatusForITAndDbaProjects(itDbaProjects, (Map<Id, Project__c>)Trigger.oldMap);
+        }
+
+        setPhaseProjectGoLiveDates();
 
     }
 
@@ -138,6 +182,36 @@ public class ProjectTriggerHandler extends TriggerHandler{
         }
 
 
+    }
+
+    private static void setPhaseProjectGoLiveDates(){
+
+        List<Project__c> phaseSaaSProjects = new List<Project__c>();
+        if(projectByRecordTypeMap.containsKey(psProjectPhaseSaasRecordTypeId))
+            phaseSaaSProjects.addAll(projectByRecordTypeMap.get(psProjectPhaseSaasRecordTypeId));
+
+        if(phaseSaaSProjects.size() == 0){
+            return;
+        }
+
+        Map<Id, Project__c> oldMap = (Map<Id, Project__c>)trigger.oldMap;
+
+        for(Project__c newProject : phaseSaaSProjects){
+            Project__c oldProject = oldMap != null ? oldMap.get(newProject.Id) : null;
+            if(trigger.isInsert && newProject.EstimatedProjectGoLiveDate__c != null){
+                newProject.Original_Phase_Forecasted_Go_Live_Date__c = newProject.EstimatedProjectGoLiveDate__c;
+                newProject.Times_Go_Live_Date_Changed__c = 0;
+            }
+            if(trigger.isUpdate && newProject.EstimatedProjectGoLiveDate__c != oldProject.EstimatedProjectGoLiveDate__c){
+                if(newProject.Original_Phase_Forecasted_Go_Live_Date__c == null){
+                    newProject.Original_Phase_Forecasted_Go_Live_Date__c = newProject.EstimatedProjectGoLiveDate__c;
+                    newProject.Times_Go_Live_Date_Changed__c = 0;
+                }else{
+                    newProject.Times_Go_Live_Date_Changed__c = oldProject.Times_Go_Live_Date_Changed__c + 1;
+                }
+
+            }
+        }
     }
 
     private static void calculateProjectedDeadline(list<Project__c> newList){
