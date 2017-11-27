@@ -52,7 +52,9 @@ public class ProjectRollupQueueable implements Queueable{
             // aggregate PS Phase SaaS projects
             for (AggregateResult ar : [
                     Select min(Original_Phase_Forecasted_Go_Live_Date__c) minForecastedPhaseGoLiveDate, sum(Times_Go_Live_Date_Changed__c) noOfTimesPhaseGoLiveDateChanged,
-                            min(EstimatedProjectGoLiveDate__c) minEstimatedPhaseGoLiveDate, max(EstimatedProjectGoLiveDate__c) maxEstimatedPhaseGoLiveDate, ParentProject__c
+                            min(EstimatedProjectGoLiveDate__c) minEstimatedPhaseGoLiveDate, max(EstimatedProjectGoLiveDate__c) maxEstimatedPhaseGoLiveDate,
+                            min(ActualProjectGoLiveDate__c) minActualPhaseGoLiveDate, max(ActualProjectGoLiveDate__c) maxActualPhaseGoLiveDate,
+                            ParentProject__c
                     from Project__c
                     where ParentProject__c IN :parentProjectIds and RecordTypeId = :psProjectPhaseSaasRecordTypeId
                     group by ParentProject__c
@@ -65,7 +67,9 @@ public class ProjectRollupQueueable implements Queueable{
                         Original_Forecasted_Initial_Go_Live_Date__c = ar.get('minForecastedPhaseGoLiveDate') != null ? (Date) ar.get('minForecastedPhaseGoLiveDate') : null,
                         Estimated_Project_Initial_Go_Live_Date__c = ar.get('minEstimatedPhaseGoLiveDate') != null ? (Date) ar.get('minEstimatedPhaseGoLiveDate') : null,
                         Estimated_Project_End__c = ar.get('maxEstimatedPhaseGoLiveDate') != null ? (Date) ar.get('maxEstimatedPhaseGoLiveDate') : null,
-                        Times_All_Phases_Go_Live_Date_Changed__c = (Decimal) ar.get('noOfTimesPhaseGoLiveDateChanged')
+                        Times_All_Phases_Go_Live_Date_Changed__c = ar.get('noOfTimesPhaseGoLiveDateChanged') != null ? (Decimal) ar.get('noOfTimesPhaseGoLiveDateChanged') : null,
+                        Actual_Initial_Phase_Go_Live__c = ar.get('minActualPhaseGoLiveDate') != null ? (Date) ar.get('minActualPhaseGoLiveDate') : null,
+                        Actual_Latest_Go_Live_Date__c = ar.get('maxActualPhaseGoLiveDate') != null ? (Date) ar.get('maxActualPhaseGoLiveDate') : null
                 );
 
                 system.debug('**** execute(): parentProject - ' + parentProject);
