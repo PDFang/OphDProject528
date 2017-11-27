@@ -9,6 +9,7 @@ public class XMNotificationListControllerExtension {
 
         notifications = [select Name, Request_Type__c, xMatters_Form__c, Request_Date__c, Status__c, Related_Notification__c, CreatedBy.Name, CreatedBy.Id, CreatedDate
                         from xmNotification__c
-                        where Request_Type__c != 'Maintenance Preview' and Case__c = :caseId];
+                        where Request_Type__c != 'Maintenance Preview' and Case__c = :caseId
+                        order by Request_Date__c desc];
     }
 }
