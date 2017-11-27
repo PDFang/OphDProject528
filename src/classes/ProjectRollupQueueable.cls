@@ -53,7 +53,7 @@ public class ProjectRollupQueueable implements Queueable{
             for (AggregateResult ar : [
                     Select min(Original_Phase_Forecasted_Go_Live_Date__c) minForecastedPhaseGoLiveDate, sum(Times_Go_Live_Date_Changed__c) noOfTimesPhaseGoLiveDateChanged,
                             min(EstimatedProjectGoLiveDate__c) minEstimatedPhaseGoLiveDate, max(EstimatedProjectGoLiveDate__c) maxEstimatedPhaseGoLiveDate,
-                            min(ActualProjectGoLiveDate__c) minActualPhaseGoLiveDate, max(ActualProjectGoLiveDate__c) maxActualPhaseGoLiveDate,
+                            min(ActualProjectGoLiveDate__c) minActualPhaseGoLiveDate, max(ActualProjectGoLiveDate__c) maxActualPhaseGoLiveDate, sum(Is_Phase_Open__c) noOfOpenPhases,
                             ParentProject__c
                     from Project__c
                     where ParentProject__c IN :parentProjectIds and RecordTypeId = :psProjectPhaseSaasRecordTypeId
@@ -69,7 +69,8 @@ public class ProjectRollupQueueable implements Queueable{
                         Estimated_Project_End__c = ar.get('maxEstimatedPhaseGoLiveDate') != null ? (Date) ar.get('maxEstimatedPhaseGoLiveDate') : null,
                         Times_All_Phases_Go_Live_Date_Changed__c = ar.get('noOfTimesPhaseGoLiveDateChanged') != null ? (Decimal) ar.get('noOfTimesPhaseGoLiveDateChanged') : null,
                         Actual_Initial_Phase_Go_Live__c = ar.get('minActualPhaseGoLiveDate') != null ? (Date) ar.get('minActualPhaseGoLiveDate') : null,
-                        Actual_Latest_Go_Live_Date__c = ar.get('maxActualPhaseGoLiveDate') != null ? (Date) ar.get('maxActualPhaseGoLiveDate') : null
+                        Actual_Latest_Go_Live_Date__c = ar.get('maxActualPhaseGoLiveDate') != null ? (Date) ar.get('maxActualPhaseGoLiveDate') : null,
+                        Number_of_Open_Phases__c = (Decimal)ar.get('noOfOpenPhases')
                 );
 
                 system.debug('**** execute(): parentProject - ' + parentProject);

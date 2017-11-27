@@ -96,6 +96,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         ProjectParentPhaseSummary();
 
+        setParentProjectGoLiveDates();
+
     }
 
     private static void LockDownPriorityFields(list<Project__c> lstProjects, Map<Id, Project__c> oldmapProjects){
@@ -165,6 +167,10 @@ public class ProjectTriggerHandler extends TriggerHandler{
             system.debug('**** setPhaseProjectGoLiveDates(): Times_Go_Live_Date_Changed__c - '+ newProject.Times_Go_Live_Date_Changed__c);
 
             Project__c oldProject = oldMap != null ? oldMap.get(newProject.Id) : null;
+            if(newProject.isClone()){
+                newProject.Times_Go_Live_Date_Changed__c = null;
+                newProject.Original_Phase_Forecasted_Go_Live_Date__c = null;
+            }
             if(trigger.isInsert && newProject.EstimatedProjectGoLiveDate__c != null){
                 newProject.Original_Phase_Forecasted_Go_Live_Date__c = newProject.EstimatedProjectGoLiveDate__c;
                 newProject.Times_Go_Live_Date_Changed__c = 0;
@@ -191,21 +197,30 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         system.debug('**** started setParentProjectGoLiveDates() ');
 
-        List<Project__c> newList = (List<Project__c>) trigger.new;
+        List<Project__c> newList = (List<Project__c>) (trigger.isDelete ? trigger.old : trigger.new);
 
         Map<Id, Project__c> oldMap = (Map<Id, Project__c>)trigger.oldMap;
         Set<Id> parentProjectIdSet = new Set<Id>();
 
         for(Project__c newProject : newList){
 
+
             if(newProject.RecordTypeId != psProjectPhaseSaasRecordTypeId || newProject.ParentProject__c == null){
                 continue;
             }
             Project__c oldProject = oldMap != null ? oldMap.get(newProject.Id) : null;
-            if(trigger.isInsert && newProject.EstimatedProjectGoLiveDate__c != null){
+            if(trigger.isInsert && newProject.EstimatedProjectGoLiveDate__c != null || newProject.ActualProjectGoLiveDate__c != null
+                    || (newProject.Phase_Status__c != 'Closed' && newProject.Phase_Status__c != 'Cancelled'))
+            {
                 parentProjectIdSet.add(newProject.ParentProject__c);
             }
-            if(trigger.isUpdate && newProject.EstimatedProjectGoLiveDate__c != oldProject.EstimatedProjectGoLiveDate__c){
+            else if(trigger.isUpdate && newProject.EstimatedProjectGoLiveDate__c != oldProject.EstimatedProjectGoLiveDate__c
+                    || newProject.ActualProjectGoLiveDate__c != oldProject.ActualProjectGoLiveDate__c
+                    || newProject.Phase_Status__c != oldProject.Phase_Status__c)
+            {
+                parentProjectIdSet.add(newProject.ParentProject__c);
+            }
+            else if(trigger.isDelete){
                 parentProjectIdSet.add(newProject.ParentProject__c);
             }
         }
