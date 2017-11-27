@@ -1,7 +1,7 @@
+// this job is enqueued from ProjectRollupQueueable class
 public class OpportunityRollupQueueable implements Queueable{
 
     final Set<Id> opportunityIds;
-    final Set<Id> validOpportunityRecordTypeIds;
     final Id psProjectParentSaaSRecordTypeId;
 
     // constructor
@@ -10,48 +10,32 @@ public class OpportunityRollupQueueable implements Queueable{
         this.opportunityIds = opportunityIds;
         system.debug('**** OpportunityRollupQueueable(): opportunityIds - ' + opportunityIds);
 
-        Schema.DescribeSObjectResult d = Schema.SObjectType.Opportunity;
+        Schema.DescribeSObjectResult d = Schema.SObjectType.Project__c;
         Map<String, Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
-
-        validOpportunityRecordTypeIds.add(rtMapByName.get('PM-Standard').getRecordTypeId());
-        validOpportunityRecordTypeIds.add(rtMapByName.get('Qualified Opportunity').getRecordTypeId());
-
-        d = Schema.SObjectType.Project__c;
-        rtMapByName = d.getRecordTypeInfosByName();
 
         psProjectParentSaaSRecordTypeId = rtMapByName.get('PS Parent Project - SaaS').getRecordTypeId();
 
     }
 
     // Queueable interface method
+    // roll-up PS Parent SaaS project Go Live Date Changes to related Opportunity
     public void execute(QueueableContext context){
 
         try {
 
-            Set<Id> qualifiedOpportunityIds = new Set<Id>();
-
-            for (Opportunity opp : [Select Id from Opportunity where Id IN :opportunityIds and RecordTypeId IN :validOpportunityRecordTypeIds]) {
-                qualifiedOpportunityIds.add(opp.Id);
-            }
-
-            system.debug('**** execute(): qualifiedOpportunityIds - ' + qualifiedOpportunityIds);
-
-            if (qualifiedOpportunityIds.isEmpty()) {
-                return;
-            }
-
             List<Opportunity> opportunities = new List<Opportunity>();
 
+            // aggregate PS Parent SaaS projects
             for (AggregateResult ar : [
                     Select min(Original_Forecasted_Initial_Go_Live_Date__c) minForecastedInitialGoLiveDate, sum(Times_All_Phases_Go_Live_Date_Changed__c) noOfTimesPhaseGoLiveDateChanged,
                             min(Estimated_Project_End__c) minEstimatedProjectEndDate, Opportunity__c
                     from Project__c
-                    where Opportunity__c IN :qualifiedOpportunityIds and RecordTypeId = :psProjectParentSaaSRecordTypeId
+                    where Opportunity__c IN :opportunityIds and RecordTypeId = :psProjectParentSaaSRecordTypeId
                     group by Opportunity__c
             ]) {
 
                 system.debug('**** execute(): ar - ' + ar);
-                
+
                 Opportunity opp = new Opportunity(
                         Id = (Id) ar.get('Opportunity__c'),
                         Original_Forecasted_Initial_Go_Live_Date__c = ar.get('minForecastedInitialGoLiveDate') != null ? (Date) ar.get('minForecastedInitialGoLiveDate') : null,
@@ -65,6 +49,7 @@ public class OpportunityRollupQueueable implements Queueable{
 
             }
 
+            // update related opportunities
             if (opportunities.size() > 0) {
                 update opportunities;
             }
