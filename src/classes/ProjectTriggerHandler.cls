@@ -3,6 +3,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
     public static boolean lockSortingFields = true;
 
     static boolean initialized = false;
+    static ID projectRollupQueueableJobID;
     static Id salesEngineeringRecordTypeId;
     static Id psProjectPhaseSaasRecordTypeId;
     static set<Id> allowedRecordTypes;
@@ -36,6 +37,9 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         //if it is a phase project validate the phase number
         ProjectTriggerHelper.setNextPhaseNumber(Trigger.new);
+
+        setPhaseProjectGoLiveDates();
+
         // Assign Project owners and set status to New
         ProjectTriggerHelper.assignProjectOwners(Trigger.new);
 
@@ -45,6 +49,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         // Assign Project owners and set status to New
         ProjectTriggerHelper.setStatusForITAndDbaProjects((List<Project__c>)trigger.new, (Map<Id, Project__c>)Trigger.oldMap);
+
+        setPhaseProjectGoLiveDates();
 
     }
 
@@ -56,6 +62,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         ProjectParentPhaseSummary();
 
+        setParentProjectGoLiveDates();
+
         SalesEngineeringLogic.CreateNewProjectTasks(trigger.new, salesEngineeringRecordTypeId);
         ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
         ProjectTriggerHelper.createProjectTasks(Trigger.new);
@@ -64,19 +72,19 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
     public override void afterUpdate(){
 
-        calculateProjectedDeadline(trigger.new);
         CallTFSService(trigger.new);
-        calculatePhaseImpQuantityNPercentage(trigger.new, (Map<Id, Project__c>)trigger.oldMap);
-
-        ProjectParentPhaseSummary();
 
         new ProjectShareHelper().deleteShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         new ProjectShareHelper().addShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         LockDownPriorityFields((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
-        //new PartnerShareHelper().deleteShare(trigger.new, trigger.oldMap);
-        //new PartnerShareHelper().addShare(trigger.new, trigger.oldMap);
 
+        // roll-up
+        calculateProjectedDeadline(trigger.new);
+        ProjectParentPhaseSummary();
         ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
+        setParentProjectGoLiveDates();
+
+        calculatePhaseImpQuantityNPercentage(trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         ProjectTriggerHelper.updateAssetStatusForPhasedProject((List<Project__c>)trigger.new, (Map<Id, Project__c>)Trigger.oldMap);
         SalesEngineeringLogic.UpdateProjectRelatedOwners(trigger.old, trigger.new, salesEngineeringRecordTypeId);
 
@@ -87,6 +95,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
         calculateProjectedDeadline(trigger.old);
 
         ProjectParentPhaseSummary();
+
+        setParentProjectGoLiveDates();
 
     }
 
@@ -137,6 +147,90 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         }
 
+
+    }
+
+    private static void setPhaseProjectGoLiveDates(){
+
+        system.debug('**** started setPhaseProjectGoLiveDates() ');
+
+        List<Project__c> newList = (List<Project__c>) trigger.new;
+        Map<Id, Project__c> oldMap = (Map<Id, Project__c>)trigger.oldMap;
+
+        for(Project__c newProject : newList){
+
+            if(newProject.RecordTypeId != psProjectPhaseSaasRecordTypeId){
+                continue;
+            }
+            system.debug('**** setPhaseProjectGoLiveDates(): EstimatedProjectGoLiveDate__c - '+ newProject.EstimatedProjectGoLiveDate__c);
+            system.debug('**** setPhaseProjectGoLiveDates(): Original_Phase_Forecasted_Go_Live_Date__c - '+ newProject.Original_Phase_Forecasted_Go_Live_Date__c);
+            system.debug('**** setPhaseProjectGoLiveDates(): Times_Go_Live_Date_Changed__c - '+ newProject.Times_Go_Live_Date_Changed__c);
+
+            Project__c oldProject = oldMap != null ? oldMap.get(newProject.Id) : null;
+            if(newProject.isClone()){
+                newProject.Times_Go_Live_Date_Changed__c = null;
+                newProject.Original_Phase_Forecasted_Go_Live_Date__c = null;
+            }
+            if(trigger.isInsert && newProject.EstimatedProjectGoLiveDate__c != null){
+                newProject.Original_Phase_Forecasted_Go_Live_Date__c = newProject.EstimatedProjectGoLiveDate__c;
+                newProject.Times_Go_Live_Date_Changed__c = 0;
+            }
+            if(trigger.isUpdate && newProject.EstimatedProjectGoLiveDate__c != oldProject.EstimatedProjectGoLiveDate__c){
+                if(newProject.Original_Phase_Forecasted_Go_Live_Date__c == null){
+                    newProject.Original_Phase_Forecasted_Go_Live_Date__c = newProject.EstimatedProjectGoLiveDate__c;
+                    newProject.Times_Go_Live_Date_Changed__c = 0;
+                }else{
+                    newProject.Times_Go_Live_Date_Changed__c = oldProject.Times_Go_Live_Date_Changed__c + 1;
+                }
+
+            }
+
+            system.debug('**** setPhaseProjectGoLiveDates(): EstimatedProjectGoLiveDate__c - '+ newProject.EstimatedProjectGoLiveDate__c);
+            system.debug('**** setPhaseProjectGoLiveDates(): Original_Phase_Forecasted_Go_Live_Date__c - '+ newProject.Original_Phase_Forecasted_Go_Live_Date__c);
+            system.debug('**** setPhaseProjectGoLiveDates(): Times_Go_Live_Date_Changed__c - '+ newProject.Times_Go_Live_Date_Changed__c);
+
+        }
+
+    }
+
+    private static void setParentProjectGoLiveDates(){
+
+        system.debug('**** started setParentProjectGoLiveDates() ');
+
+        List<Project__c> newList = (List<Project__c>) (trigger.isDelete ? trigger.old : trigger.new);
+
+        Map<Id, Project__c> oldMap = (Map<Id, Project__c>)trigger.oldMap;
+        Set<Id> parentProjectIdSet = new Set<Id>();
+
+        for(Project__c newProject : newList){
+
+
+            if(newProject.RecordTypeId != psProjectPhaseSaasRecordTypeId || newProject.ParentProject__c == null){
+                continue;
+            }
+            Project__c oldProject = oldMap != null ? oldMap.get(newProject.Id) : null;
+            if(trigger.isInsert && newProject.EstimatedProjectGoLiveDate__c != null || newProject.ActualProjectGoLiveDate__c != null
+                    || (newProject.Phase_Status__c != 'Closed' && newProject.Phase_Status__c != 'Cancelled'))
+            {
+                parentProjectIdSet.add(newProject.ParentProject__c);
+            }
+            else if(trigger.isUpdate && newProject.EstimatedProjectGoLiveDate__c != oldProject.EstimatedProjectGoLiveDate__c
+                    || newProject.ActualProjectGoLiveDate__c != oldProject.ActualProjectGoLiveDate__c
+                    || newProject.Phase_Status__c != oldProject.Phase_Status__c)
+            {
+                parentProjectIdSet.add(newProject.ParentProject__c);
+            }
+            else if(trigger.isDelete){
+                parentProjectIdSet.add(newProject.ParentProject__c);
+            }
+        }
+
+        system.debug('**** setParentProjectGoLiveDates(): parentProjectIdSet - ' + parentProjectIdSet);
+
+        if(parentProjectIdSet.size() > 0 && projectRollupQueueableJobID == null){
+            projectRollupQueueableJobID = System.enqueueJob(new ProjectRollupQueueable(parentProjectIdSet));
+            system.debug('**** setParentProjectGoLiveDates(): projectRollupQueueableJobID - ' + projectRollupQueueableJobID);
+        }
 
     }
 
