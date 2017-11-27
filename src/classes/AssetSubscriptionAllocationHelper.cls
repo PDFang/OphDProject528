@@ -7,6 +7,7 @@ public class AssetSubscriptionAllocationHelper {
     public Asset currentAsset;
     public SubscriptionReplica__c currentSubscription;
     public Project__c currentProject;
+    public list<ImplementedProduct__c> currentImplementedProducts;
 //    public Boolean isSuccesfullySaved;
 
     public List<AssetSubscriptionAllocationNewModel> assetAllocations{get; set;}
@@ -17,10 +18,12 @@ public class AssetSubscriptionAllocationHelper {
     static Set<String> assetFields = new Set<String>{
             'Id',
             'Name',
+            'AccountId',
             'RecordType.Name',
             'Quantity',
             'Budgeted_Hours__c',
-            'Parent_Project__c'
+            'Parent_Project__c',
+            'ImplementedProduct__c'
     };
 
     static Set<String> subscriptionFields = new Set<String>{
@@ -40,10 +43,21 @@ public class AssetSubscriptionAllocationHelper {
             'Project_Phase__c'
     };
 
+    static Set<String> IPFields = new Set<String>{
+            'Id',
+            'Name',
+            'Account__c',
+            'Product__c',
+            'GoLiveDate__c',
+            'EstimatedGoLiveDate__c',
+            'Status__c'
+    };
+
     // constructor
     public AssetSubscriptionAllocationHelper(String idParam){
 
         // entry from an asset
+        currentImplementedProducts = new list<ImplementedProduct__c>();
         String sObjType = AssetSubscriptionAllocationHelper.getSObjectType(idParam);
         if(sObjType == 'Asset'){
             currentAsset = getAsset(idParam);
@@ -53,8 +67,7 @@ public class AssetSubscriptionAllocationHelper {
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'No asset record found.'));
                 return;
             }
-
-            //getAssetAllocations();
+            getImplementedProductList(currentAsset.AccountId);
 
         }
         // entry from a subscription
@@ -67,8 +80,7 @@ public class AssetSubscriptionAllocationHelper {
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'No subscription record found.'));
                 return;
             }
-
-            //getSubscriptionAllocations();
+            getImplementedProductList(currentSubscription.Account__c);
 
         }
         // entry from project
@@ -85,6 +97,14 @@ public class AssetSubscriptionAllocationHelper {
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'URL: Invalid ID Parameter.'));
         }
 
+    }
+
+    private void getImplementedProductList(string acctId){
+        List<String> fieldList = new List<String>(IPFields);
+        String columns = String.join(fieldList, ',');
+        String queryString = 'Select ' + columns + ' From ImplementedProduct__c where Account__c = \'' + acctId + '\'';
+        system.debug('getImplementedProductList(): soql - ' + queryString);
+        currentImplementedProducts = Database.query(queryString);
     }
 
 
@@ -224,6 +244,7 @@ public class AssetSubscriptionAllocationHelper {
         soql += ' order by createddate DESC ';
 
         List<Project_Asset_Allocation__c> allocations = Database.query(soql);
+
         for(Project_Asset_Allocation__c allocation : allocations){
             AssetSubscriptionAllocationNewModel newModel = new AssetSubscriptionAllocationNewModel(allocation);
             assetAllocations.add(newModel);
@@ -506,4 +527,11 @@ public class AssetSubscriptionAllocationHelper {
         return false;
 
     }
+
+    public void SaveImmplementedProductAsset(Id assetId, string IPProduct){
+        Asset saveAsset = new Asset(Id = assetId,
+                                    ImplementedProduct__c = IPProduct);
+        update saveAsset;
+    }
+
 }

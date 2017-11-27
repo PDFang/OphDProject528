@@ -105,10 +105,13 @@
                     <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation}" var="f">
                         <apex:outputfield value="{!Asset[f]}" />
                     </apex:repeat>
-                    <!--<apex:repeat rendered="{!Asset.Quantity > 1}" value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Editable_Fields}" var="f">-->
-                    <!--<apex:outputfield value="{!Asset[f]}" />-->
-                    <!--</apex:repeat>-->
                 </apex:pageBlockSection>
+               <apex:pageBlockSection columns="2" >
+                   <apex:outputfield value="{!Asset.ImplementedProduct__c}" />
+               </apex:pageBlockSection>
+               <div style="float:left; position:relative; top:-24px; left :25%; font-size: 12.12px;">
+                   [<a style="color:blue;" data-toggle="modal" data-target="#ImplementedProducts">Select Implemented Product</a>]
+               </div>
                 <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity > 1}" id="cancSuspQuanPBS">
                     <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Editable_Fields}" var="f">
                         <apex:outputfield value="{!Asset[f]}" />
@@ -194,14 +197,20 @@
                         </div>
                         <div class="modal-footer">
                             <!--<apex:commandButton reRender="cancSuspPageBlck, cancSuspQuanPBS" title="Cancel" value="Cancel" action="{!cancel}" immediate="true"/>-->
-                            <apex:commandButton value="Save" action="{!SaveCancSuspQuantity}" reRender="cancSuspPageBlck, cancSuspQuanPBS"  style="color:black !important;" onComplete="overridePageMessages();"></apex:commandButton>
+                            <apex:commandButton value="Save" action="{!SaveCancSuspQuantity}" reRender="cancSuspPageBlck, cancSuspQuanPBS"  style="color:black !important;" onComplete="overridePageMessages('save');"></apex:commandButton>
+                            <apex:commandButton value="Save and Close" action="{!SaveCancSuspQuantity}" reRender="cancSuspPageBlck, cancSuspQuanPBS, refreshAfterSave"  style="color:black !important;" onComplete="overridePageMessages('saveClose');"></apex:commandButton>
                             <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>
                         </div>
                     </div>
                 </div>
             </apex:outputPanel>
-
         </div>
+
+        <apex:outputPanel id="refreshAfterSave">
+            <script>
+                 var saveSuccess = {!saveSuccess};
+            </script>
+        </apex:outputPanel>
 
         <!--Subscription Cancelled and Suspended Quantity-->
         <div class="modal fade" id="subsCanSuspQuanMod" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true" >
@@ -247,6 +256,41 @@
             </div>
         </div>
         <apex:actionFunction name="reloadDetails" action="{!reloadDetails}" reRender="detailSection,detailSubscription,detailAsset,detailProject" immediate="true"/>
+
+        <!--Implemented Product lists-->
+        <div class="modal fade" id="ImplementedProducts" tabindex="-1" role="dialog" aria-labelledby="ImplementedProductslabel" aria-hidden="true" >
+                <div class="modal-dialog" role="document" style="width:56%;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="ImplementedProductsHeader" style="font-weight:bold">Implemented Products</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body" style="font-size:14px;">
+                            <apex:pageBlock>
+                           <apex:pageBlockTable value="{!ImplementedProducts}" var="ip">
+                               <apex:column headerValue="Name">
+                                   <apex:commandLink  value="{!ip.Name}" action="{!saveImplementedProduct}" rerender="detailAsset" onComplete="closeModal();">
+                                       <apex:param name="rowid" value="{!ip.Id}" assignTo="{!SelectedRowId}"/>
+                                   </apex:commandLink>
+                               </apex:column>
+                               <apex:column value="{!ip.Account__c}" headerValue="Account"/>
+                               <apex:column value="{!ip.Product__c}" headerValue="Product"/>
+                               <apex:column value="{!ip.Status__c}" headerValue="Status"/>
+                               <apex:column value="{!ip.GoLiveDate__c}" headerValue="Go Live Date"/>
+                               <apex:column value="{!ip.EstimatedGoLiveDate__c}" headerValue="Estimated Go Live Date"/>
+                           </apex:pageBlockTable>
+                            </apex:pageBlock>
+                        </div>
+                        <div class="modal-footer">
+                           <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Close</button>
+                        </div>
+                    </div>
+                </div>
+
+        </div>
+
     </apex:form>
     <script type="text/x-kendo-template" id="windowTemplate">
         <p>Delete this Allocation for <strong>#= AssetName == null ? SubscriptionName : AssetName #</strong> ? </p>
@@ -261,7 +305,6 @@
 
     <script>
 
-    var isManager = {!Manager};
 
         $(document).ready(function() {
            getSObjType();
@@ -272,7 +315,8 @@
              Asset = new Object(),
              Project = new Object(),
              Subscription = new Object(),
-             Product = new Object();
+             Product = new Object(),
+             isManager = {!Manager};
 
         var windowTemplate = kendo.template($("#windowTemplate").html());
 
@@ -358,9 +402,8 @@
             $("div.cusotmMessage").hide();
         }
 
-     function overridePageMessages(){
+     function overridePageMessages(obj){
             $("div.cusotmMessage").show();
-
             var textureEffect = '';
             $('.warningM3').addClass('alert alert-warning');
             $('.confirmM3').addClass('alert alert-success');
@@ -371,12 +414,12 @@
             $('.infoM3').removeClass('infoM3');
             $('.warningM3').removeClass('warningM3');
 
-
-
+            if(obj=='saveClose' && saveSuccess == true){
+                  $('div#assetCanSuspQuanMod').modal("hide");
+            }
       }
 
      function openSubsEditCancSuspQuantityModal(){
-//            $("div#assetCanSuspQuanMod").modal('show');
             hideMessage();
             $('div#subsCanSuspQuanMod').modal({
                 backdrop: 'static',
@@ -384,11 +427,9 @@
            });
      }
 
-//     function refreshParent() {
-//        $('#assetCanSuspQuanMod').on('hidden.bs.modal', function () {
-//            location.reload();
-//        });
-//    }
+    function closeModal(){
+        $('div#ImplementedProducts').modal("hide");
+    }
 
     </script>
 

@@ -269,7 +269,7 @@ global class inContactTrustWebService
                       
                 }
                 
-              if(node != null)
+              if(node != null && node != '')
                 {
                     platforms.add(node);
                 }

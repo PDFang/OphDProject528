@@ -38,6 +38,9 @@ public with sharing class AssetSubscriptionAllocationNewController {
     // query string parameter
     public String currentId{get;set;}
 
+    public boolean saveSuccess{get; set;}
+
+    public list<ImplementedProduct__c> ImplementedProducts{get;private set;}
     // query string parameter
 //    public Boolen isSuccesfullySaved{get;set;}
     //Helper Object
@@ -47,8 +50,9 @@ public with sharing class AssetSubscriptionAllocationNewController {
     // constructor
     public AssetSubscriptionAllocationNewController(){
 
+        ImplementedProducts = new list<ImplementedProduct__c>();
         currentId = ApexPages.currentPage().getParameters().get('id');
-
+        saveSuccess = true;
         system.debug('getAsset(): currentId - ' + currentId);
 
         if(String.isBlank(currentId)){
@@ -57,6 +61,7 @@ public with sharing class AssetSubscriptionAllocationNewController {
         }
 
         helper = new AssetSubscriptionAllocationHelper(currentId);
+        ImplementedProducts = helper.currentImplementedProducts;
     }
 
     public void reloadDetails(){
@@ -148,13 +153,15 @@ public with sharing class AssetSubscriptionAllocationNewController {
     public void SaveCancSuspQuantity(){
         try{
             String message =  helper.SaveCancSuspQuantity(Asset);
-
+            saveSuccess = true;
             if(message.contains('Saved')){
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, message));
+                saveSuccess = true;
             }
             else {
                 getUpdatedCancSuspValues();
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, message));
+                saveSuccess = false;
             }
 
 
@@ -200,6 +207,15 @@ public with sharing class AssetSubscriptionAllocationNewController {
         helper = new AssetSubscriptionAllocationHelper(currentId);
         Subscription = helper.currentSubscription;
     }
+
+    public void saveImplementedProduct(){
+        if(Asset != null){
+            String SelectedRowId = ApexPages.CurrentPage().getParameters().get('rowid');
+            helper.SaveImmplementedProductAsset(Asset.Id, SelectedRowId);
+            getUpdatedCancSuspValues();
+        }
+    }
+
 
     public pagereference cancel(){
 
