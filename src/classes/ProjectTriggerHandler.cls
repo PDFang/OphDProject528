@@ -3,26 +3,16 @@ public class ProjectTriggerHandler extends TriggerHandler{
     public static boolean lockSortingFields = true;
 
     static boolean initialized = false;
+    static ID projectRollupQueueableJobID;
     static Id salesEngineeringRecordTypeId;
     static Id psProjectPhaseSaasRecordTypeId;
     static set<Id> allowedRecordTypes;
 
-    static Map<Id, List<Project__c>> projectByRecordTypeMap;
-    Map<String, Schema.RecordTypeInfo> rtMapByName;
-
     public ProjectTriggerHandler(){
 
-        Schema.DescribeSObjectResult d = Schema.SObjectType.Project__c;
-        rtMapByName = d.getRecordTypeInfosByName();
-
-        projectByRecordTypeMap = new Map<Id, List<Project__c>>();
-        for (Schema.RecordTypeInfo recordType : rtMapByName.values()){
-            projectByRecordTypeMap.put(recordType.getRecordTypeId(), new List<Project__c>());
-        }
-
-        groupProjectsByRecordType(Trigger.new != null ? trigger.new : trigger.old);
-
         if(!initialized){
+            Schema.DescribeSObjectResult d = Schema.SObjectType.Project__c;
+            Map<String, Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
 
             salesEngineeringRecordTypeId = rtMapByName.get('Sales Engineering Project').getRecordTypeId();
             psProjectPhaseSaasRecordTypeId = rtMapByName.get('PS Project Phase SaaS').getRecordTypeId();
@@ -43,31 +33,10 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
     }
 
-    private void groupProjectsByRecordType(List<Project__c> projectList){
-
-        for(Project__c proj : projectList){
-            List<Project__c> values = projectByRecordTypeMap.get(proj.RecordTypeId);
-            if(values != null){
-                values.add(proj);
-            }
-        }
-
-    }
-
     protected override void beforeInsert(){
 
-        Id phaseSaasProject = rtMapByName.get('PS Project Phase SaaS').getRecordTypeId();
-        Id phasePremiseProject = rtMapByName.get('PS Project Phase Premise WFO').getRecordTypeId();
-        List<Project__c> phaseProjects = new List<Project__c>();
-        if(projectByRecordTypeMap.containsKey(phaseSaasProject))
-            phaseProjects.addAll(projectByRecordTypeMap.get(phaseSaasProject));
-        if(projectByRecordTypeMap.containsKey(phasePremiseProject))
-            phaseProjects.addAll(projectByRecordTypeMap.get(phasePremiseProject));
-
         //if it is a phase project validate the phase number
-        if(phaseProjects.size() > 0){
-            ProjectTriggerHelper.setNextPhaseNumber(phaseProjects);
-        }
+        ProjectTriggerHelper.setNextPhaseNumber(Trigger.new);
 
         setPhaseProjectGoLiveDates();
 
@@ -79,14 +48,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
     protected override void beforeUpdate(){
 
         // Assign Project owners and set status to New
-        Id dbaRT = rtMapByName.get('Database Administration Request').getRecordTypeId();
-        List<Project__c> itDbaProjects = new List<Project__c>();
-        if(projectByRecordTypeMap.containsKey(dbaRT))
-            itDbaProjects.addAll(projectByRecordTypeMap.get(dbaRT));
-
-        if(itDbaProjects.size() > 0){
-            ProjectTriggerHelper.setStatusForITAndDbaProjects(itDbaProjects, (Map<Id, Project__c>)Trigger.oldMap);
-        }
+        ProjectTriggerHelper.setStatusForITAndDbaProjects((List<Project__c>)trigger.new, (Map<Id, Project__c>)Trigger.oldMap);
 
         setPhaseProjectGoLiveDates();
 
@@ -96,13 +58,14 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         new ProjectShareHelper().addShare((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         //new PartnerShareHelper().addShare(trigger.new, trigger.oldMap);
-
-        // roll-up
         calculateProjectedDeadline(trigger.new);
+
         ProjectParentPhaseSummary();
-        ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
+
+        setParentProjectGoLiveDates();
 
         SalesEngineeringLogic.CreateNewProjectTasks(trigger.new, salesEngineeringRecordTypeId);
+        ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
         ProjectTriggerHelper.createProjectTasks(Trigger.new);
 
     }
@@ -119,6 +82,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
         calculateProjectedDeadline(trigger.new);
         ProjectParentPhaseSummary();
         ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
+        setParentProjectGoLiveDates();
 
         calculatePhaseImpQuantityNPercentage(trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         ProjectTriggerHelper.updateAssetStatusForPhasedProject((List<Project__c>)trigger.new, (Map<Id, Project__c>)Trigger.oldMap);
@@ -186,17 +150,20 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
     private static void setPhaseProjectGoLiveDates(){
 
-        List<Project__c> phaseSaaSProjects = new List<Project__c>();
-        if(projectByRecordTypeMap.containsKey(psProjectPhaseSaasRecordTypeId))
-            phaseSaaSProjects.addAll(projectByRecordTypeMap.get(psProjectPhaseSaasRecordTypeId));
+        system.debug('**** started setPhaseProjectGoLiveDates() ');
 
-        if(phaseSaaSProjects.size() == 0){
-            return;
-        }
-
+        List<Project__c> newList = (List<Project__c>) trigger.new;
         Map<Id, Project__c> oldMap = (Map<Id, Project__c>)trigger.oldMap;
 
-        for(Project__c newProject : phaseSaaSProjects){
+        for(Project__c newProject : newList){
+
+            if(newProject.RecordTypeId != psProjectPhaseSaasRecordTypeId){
+                continue;
+            }
+            system.debug('**** setPhaseProjectGoLiveDates(): EstimatedProjectGoLiveDate__c - '+ newProject.EstimatedProjectGoLiveDate__c);
+            system.debug('**** setPhaseProjectGoLiveDates(): Original_Phase_Forecasted_Go_Live_Date__c - '+ newProject.Original_Phase_Forecasted_Go_Live_Date__c);
+            system.debug('**** setPhaseProjectGoLiveDates(): Times_Go_Live_Date_Changed__c - '+ newProject.Times_Go_Live_Date_Changed__c);
+
             Project__c oldProject = oldMap != null ? oldMap.get(newProject.Id) : null;
             if(trigger.isInsert && newProject.EstimatedProjectGoLiveDate__c != null){
                 newProject.Original_Phase_Forecasted_Go_Live_Date__c = newProject.EstimatedProjectGoLiveDate__c;
@@ -211,7 +178,45 @@ public class ProjectTriggerHandler extends TriggerHandler{
                 }
 
             }
+
+            system.debug('**** setPhaseProjectGoLiveDates(): EstimatedProjectGoLiveDate__c - '+ newProject.EstimatedProjectGoLiveDate__c);
+            system.debug('**** setPhaseProjectGoLiveDates(): Original_Phase_Forecasted_Go_Live_Date__c - '+ newProject.Original_Phase_Forecasted_Go_Live_Date__c);
+            system.debug('**** setPhaseProjectGoLiveDates(): Times_Go_Live_Date_Changed__c - '+ newProject.Times_Go_Live_Date_Changed__c);
+
         }
+
+    }
+
+    private static void setParentProjectGoLiveDates(){
+
+        system.debug('**** started setParentProjectGoLiveDates() ');
+
+        List<Project__c> newList = (List<Project__c>) trigger.new;
+
+        Map<Id, Project__c> oldMap = (Map<Id, Project__c>)trigger.oldMap;
+        Set<Id> parentProjectIdSet = new Set<Id>();
+
+        for(Project__c newProject : newList){
+
+            if(newProject.RecordTypeId != psProjectPhaseSaasRecordTypeId || newProject.ParentProject__c == null){
+                continue;
+            }
+            Project__c oldProject = oldMap != null ? oldMap.get(newProject.Id) : null;
+            if(trigger.isInsert && newProject.EstimatedProjectGoLiveDate__c != null){
+                parentProjectIdSet.add(newProject.ParentProject__c);
+            }
+            if(trigger.isUpdate && newProject.EstimatedProjectGoLiveDate__c != oldProject.EstimatedProjectGoLiveDate__c){
+                parentProjectIdSet.add(newProject.ParentProject__c);
+            }
+        }
+
+        system.debug('**** setParentProjectGoLiveDates(): parentProjectIdSet - ' + parentProjectIdSet);
+
+        if(parentProjectIdSet.size() > 0 && projectRollupQueueableJobID == null){
+            projectRollupQueueableJobID = System.enqueueJob(new ProjectRollupQueueable(parentProjectIdSet));
+            system.debug('**** setParentProjectGoLiveDates(): projectRollupQueueableJobID - ' + projectRollupQueueableJobID);
+        }
+
     }
 
     private static void calculateProjectedDeadline(list<Project__c> newList){
