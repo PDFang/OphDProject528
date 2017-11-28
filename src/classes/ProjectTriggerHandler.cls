@@ -3,9 +3,11 @@ public class ProjectTriggerHandler extends TriggerHandler{
     public static boolean lockSortingFields = true;
 
     static boolean initialized = false;
-    static ID projectRollupQueueableJobID;
+    static Id projectRollupQueueableJobID;
+    static Id opportunityRollupQueueableJobID;
     static Id salesEngineeringRecordTypeId;
     static Id psProjectPhaseSaasRecordTypeId;
+    static Id psProjectParentSaasRecordTypeId;
     static set<Id> allowedRecordTypes;
 
     public ProjectTriggerHandler(){
@@ -16,6 +18,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
             salesEngineeringRecordTypeId = rtMapByName.get('Sales Engineering Project').getRecordTypeId();
             psProjectPhaseSaasRecordTypeId = rtMapByName.get('PS Project Phase SaaS').getRecordTypeId();
+            psProjectParentSaasRecordTypeId = rtMapByName.get('PS Parent Project - SaaS').getRecordTypeId();
 
             allowedRecordTypes = new set<Id> ();
             for (Schema.RecordTypeInfo recordType : rtMapByName.values())
@@ -201,13 +204,21 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         Map<Id, Project__c> oldMap = (Map<Id, Project__c>)trigger.oldMap;
         Set<Id> parentProjectIdSet = new Set<Id>();
+        Set<Id> delProjectOppIdSet = new Set<Id>();
 
         for(Project__c newProject : newList){
 
+            // parent SaaS project is deleted
+            if(trigger.isDelete && newProject.RecordTypeId == psProjectParentSaasRecordTypeId && newProject.Opportunity__c != null){
+                delProjectOppIdSet.add(newProject.Opportunity__c);
+                continue;
+            }
 
             if(newProject.RecordTypeId != psProjectPhaseSaasRecordTypeId || newProject.ParentProject__c == null){
                 continue;
             }
+
+            // Phase SaaS project created or updated or deleted
             Project__c oldProject = oldMap != null ? oldMap.get(newProject.Id) : null;
             if(trigger.isInsert && newProject.EstimatedProjectGoLiveDate__c != null || newProject.ActualProjectGoLiveDate__c != null
                     || (newProject.Phase_Status__c != 'Closed' && newProject.Phase_Status__c != 'Cancelled'))
@@ -230,10 +241,16 @@ public class ProjectTriggerHandler extends TriggerHandler{
         }
 
         system.debug('**** setParentProjectGoLiveDates(): parentProjectIdSet - ' + parentProjectIdSet);
+        system.debug('**** setParentProjectGoLiveDates(): delProjectOppIdSet - ' + delProjectOppIdSet);
 
         if(parentProjectIdSet.size() > 0 && projectRollupQueueableJobID == null){
             projectRollupQueueableJobID = System.enqueueJob(new ProjectRollupQueueable(parentProjectIdSet));
             system.debug('**** setParentProjectGoLiveDates(): projectRollupQueueableJobID - ' + projectRollupQueueableJobID);
+        }
+
+        if(delProjectOppIdSet.size() > 0 && opportunityRollupQueueableJobID == null){
+            opportunityRollupQueueableJobID = System.enqueueJob(new OpportunityRollupQueueable(delProjectOppIdSet));
+            system.debug('**** setParentProjectGoLiveDates(): opportunityRollupQueueableJobID - ' + opportunityRollupQueueableJobID);
         }
 
     }
