@@ -94,10 +94,10 @@ public class ProjectTriggerHandler extends TriggerHandler{
         LockDownPriorityFields((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
 
         // roll-up
-        setParentProjectGoLiveDates();
         calculateProjectedDeadline(trigger.new);
         ProjectParentPhaseSummary();
         ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
+        setParentProjectGoLiveDates();
 
         calculatePhaseImpQuantityNPercentage(trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         ProjectTriggerHelper.updateAssetStatusForPhasedProject((List<Project__c>)trigger.new, (Map<Id, Project__c>)Trigger.oldMap);
