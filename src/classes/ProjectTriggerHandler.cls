@@ -10,6 +10,18 @@ public class ProjectTriggerHandler extends TriggerHandler{
     static Id psProjectParentSaasRecordTypeId;
     static set<Id> allowedRecordTypes;
 
+    static final Set<String> debugProjectFields = new Set<String>{
+            'Id',
+            'RecordTypeId',
+            'ParentProject__c',
+            'Opportunity__c',
+            'Phase_Status__c',
+            'EstimatedProjectGoLiveDate__c',
+            'ActualProjectGoLiveDate__c',
+            'Original_Phase_Forecasted_Go_Live_Date__c',
+            'Times_Go_Live_Date_Changed__c'
+    };
+
     public ProjectTriggerHandler(){
 
         if(!initialized){
@@ -82,10 +94,10 @@ public class ProjectTriggerHandler extends TriggerHandler{
         LockDownPriorityFields((List<Project__c>)trigger.new, (Map<Id, Project__c>)trigger.oldMap);
 
         // roll-up
+        setParentProjectGoLiveDates();
         calculateProjectedDeadline(trigger.new);
         ProjectParentPhaseSummary();
         ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
-        setParentProjectGoLiveDates();
 
         calculatePhaseImpQuantityNPercentage(trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         ProjectTriggerHelper.updateAssetStatusForPhasedProject((List<Project__c>)trigger.new, (Map<Id, Project__c>)Trigger.oldMap);
@@ -204,54 +216,85 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         Map<Id, Project__c> oldMap = (Map<Id, Project__c>)trigger.oldMap;
         Set<Id> parentProjectIdSet = new Set<Id>();
-        Set<Id> delProjectOppIdSet = new Set<Id>();
+        Set<Id> projectOppIdSet = new Set<Id>();
 
         for(Project__c newProject : newList){
 
-            // parent SaaS project is deleted
-            if(trigger.isDelete && newProject.RecordTypeId == psProjectParentSaasRecordTypeId && newProject.Opportunity__c != null){
-                delProjectOppIdSet.add(newProject.Opportunity__c);
-                continue;
-            }
 
-            if(newProject.RecordTypeId != psProjectPhaseSaasRecordTypeId || newProject.ParentProject__c == null){
+            Project__c oldProject = oldMap != null ? oldMap.get(newProject.Id) : null;
+
+            system.debug(' setParentProjectGoLiveDates(): newProject - ' + printInDebugLog(newProject));
+            system.debug(' setParentProjectGoLiveDates(): oldProject - ' + printInDebugLog(oldProject));
+
+            // parent SaaS project is updated or deleted
+            if(newProject.RecordTypeId == psProjectParentSaasRecordTypeId){
+
+                if(trigger.isDelete){
+                    projectOppIdSet.add(newProject.Opportunity__c);
+                } else if(trigger.isUpdate && newProject.Opportunity__c != oldProject.Opportunity__c){
+                    projectOppIdSet.add(newProject.Opportunity__c);
+                    projectOppIdSet.add(oldProject.Opportunity__c);
+                }
+
                 continue;
             }
 
             // Phase SaaS project created or updated or deleted
-            Project__c oldProject = oldMap != null ? oldMap.get(newProject.Id) : null;
-            if(trigger.isInsert && newProject.EstimatedProjectGoLiveDate__c != null || newProject.ActualProjectGoLiveDate__c != null
-                    || (newProject.Phase_Status__c != 'Closed' && newProject.Phase_Status__c != 'Cancelled'))
-            {
-                parentProjectIdSet.add(newProject.ParentProject__c);
-            }
-            else if(trigger.isUpdate && newProject.EstimatedProjectGoLiveDate__c != oldProject.EstimatedProjectGoLiveDate__c
-                    || newProject.ActualProjectGoLiveDate__c != oldProject.ActualProjectGoLiveDate__c
-                    || newProject.Phase_Status__c != oldProject.Phase_Status__c
-                    || newProject.ParentProject__c != oldProject.ParentProject__c)
-            {
-                parentProjectIdSet.add(newProject.ParentProject__c);
-                if(newProject.ParentProject__c != oldProject.ParentProject__c && oldProject.ParentProject__c != null){
-                    parentProjectIdSet.add(oldProject.ParentProject__c);
+            if(newProject.RecordTypeId == psProjectPhaseSaasRecordTypeId) {
+
+                if (trigger.isInsert && (newProject.EstimatedProjectGoLiveDate__c != null || newProject.ActualProjectGoLiveDate__c != null
+                        || (newProject.Phase_Status__c != 'Closed' && newProject.Phase_Status__c != 'Cancelled')) ){
+                    system.debug('**** setParentProjectGoLiveDates(): created Phase Project ');
+                    parentProjectIdSet.add(newProject.ParentProject__c);
+                } else if (trigger.isUpdate && (newProject.EstimatedProjectGoLiveDate__c != oldProject.EstimatedProjectGoLiveDate__c
+                        || newProject.ActualProjectGoLiveDate__c != oldProject.ActualProjectGoLiveDate__c
+                        || newProject.Phase_Status__c != oldProject.Phase_Status__c
+                        || newProject.ParentProject__c != oldProject.ParentProject__c) )
+                {
+                    system.debug('**** setParentProjectGoLiveDates(): updated Phase Project ');
+                    parentProjectIdSet.add(newProject.ParentProject__c);
+                    if (newProject.ParentProject__c != oldProject.ParentProject__c) {
+                        parentProjectIdSet.add(oldProject.ParentProject__c);
+                    }
+                } else if (trigger.isDelete) {
+                    system.debug('**** setParentProjectGoLiveDates(): deleted Phase Project ');
+                    parentProjectIdSet.add(newProject.ParentProject__c);
                 }
             }
-            else if(trigger.isDelete){
-                parentProjectIdSet.add(newProject.ParentProject__c);
-            }
+
         }
 
+        // remove null values
+        parentProjectIdSet.remove(null);
+        projectOppIdSet.remove(null);
+
         system.debug('**** setParentProjectGoLiveDates(): parentProjectIdSet - ' + parentProjectIdSet);
-        system.debug('**** setParentProjectGoLiveDates(): delProjectOppIdSet - ' + delProjectOppIdSet);
+        system.debug('**** setParentProjectGoLiveDates(): projectOppIdSet - ' + projectOppIdSet);
 
         if(parentProjectIdSet.size() > 0 && projectRollupQueueableJobID == null){
             projectRollupQueueableJobID = System.enqueueJob(new ProjectRollupQueueable(parentProjectIdSet));
             system.debug('**** setParentProjectGoLiveDates(): projectRollupQueueableJobID - ' + projectRollupQueueableJobID);
         }
 
-        if(delProjectOppIdSet.size() > 0 && opportunityRollupQueueableJobID == null){
-            opportunityRollupQueueableJobID = System.enqueueJob(new OpportunityRollupQueueable(delProjectOppIdSet));
+        if(projectOppIdSet.size() > 0 && opportunityRollupQueueableJobID == null){
+            opportunityRollupQueueableJobID = System.enqueueJob(new OpportunityRollupQueueable(projectOppIdSet));
             system.debug('**** setParentProjectGoLiveDates(): opportunityRollupQueueableJobID - ' + opportunityRollupQueueableJobID);
         }
+
+    }
+
+    private static String printInDebugLog(Project__c project){
+
+        if(project == null){
+            return '';
+        }
+
+        Map<String, object> projectFields = new Map<String, Object>();
+        for(String field : debugProjectFields){
+            projectFields.put(field, project.get(field));
+        }
+
+        return JSON.serialize(projectFields);
 
     }
 
