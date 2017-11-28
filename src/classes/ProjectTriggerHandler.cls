@@ -216,9 +216,13 @@ public class ProjectTriggerHandler extends TriggerHandler{
             }
             else if(trigger.isUpdate && newProject.EstimatedProjectGoLiveDate__c != oldProject.EstimatedProjectGoLiveDate__c
                     || newProject.ActualProjectGoLiveDate__c != oldProject.ActualProjectGoLiveDate__c
-                    || newProject.Phase_Status__c != oldProject.Phase_Status__c)
+                    || newProject.Phase_Status__c != oldProject.Phase_Status__c
+                    || newProject.ParentProject__c != oldProject.ParentProject__c)
             {
                 parentProjectIdSet.add(newProject.ParentProject__c);
+                if(newProject.ParentProject__c != oldProject.ParentProject__c && oldProject.ParentProject__c != null){
+                    parentProjectIdSet.add(oldProject.ParentProject__c);
+                }
             }
             else if(trigger.isDelete){
                 parentProjectIdSet.add(newProject.ParentProject__c);
