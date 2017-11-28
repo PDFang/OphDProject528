@@ -28,7 +28,7 @@ public class OpportunityRollupQueueable implements Queueable{
             // aggregate PS Parent SaaS projects
             for (AggregateResult ar : [
                     Select min(Original_Forecasted_Initial_Go_Live_Date__c) minForecastedInitialGoLiveDate, sum(Times_All_Phases_Go_Live_Date_Changed__c) noOfTimesPhaseGoLiveDateChanged,
-                            min(Estimated_Project_End__c) minEstimatedProjectEndDate, min(ActualProjectGoLiveDate__c) minActualGoLiveDate,
+                            min(Estimated_Project_End__c) minEstimatedProjectEndDate, min(ActualProjectGoLiveDate__c) minActualGoLiveDate, min(Actual_Initial_Phase_Go_Live__c) minInitialGoLiveDate,
                             Opportunity__c
                     from Project__c
                     where Opportunity__c IN :opportunityIds and RecordTypeId = :psProjectParentSaaSRecordTypeId
@@ -42,7 +42,8 @@ public class OpportunityRollupQueueable implements Queueable{
                         Original_Forecasted_Initial_Go_Live_Date__c = ar.get('minForecastedInitialGoLiveDate') != null ? (Date) ar.get('minForecastedInitialGoLiveDate') : null,
                         PM_Estimated_Go_Live__c = ar.get('minEstimatedProjectEndDate') != null ? (Date) ar.get('minEstimatedProjectEndDate') : null,
                         Times_Go_Live_Date_Changed__c = ar.get('noOfTimesPhaseGoLiveDateChanged') != null ? (Decimal) ar.get('noOfTimesPhaseGoLiveDateChanged') : null,
-                        PM_Go_Live_Date__c = ar.get('minActualGoLiveDate') != null ? (Date) ar.get('minActualGoLiveDate') : null
+                        //PM_Go_Live_Date__c = ar.get('minActualGoLiveDate') != null ? (Date) ar.get('minActualGoLiveDate') : null
+                        PM_Go_Live_Date__c = ar.get('minInitialGoLiveDate') != null ? (Date) ar.get('minInitialGoLiveDate') : null
                 );
 
                 system.debug('**** execute(): opp - ' + opp);
