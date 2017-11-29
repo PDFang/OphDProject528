@@ -4,7 +4,6 @@ public class ProjectRollupQueueable implements Queueable{
     final Set<Id> parentProjectIds;
     final Id psProjectParentSaaSRecordTypeId;
     final Id psProjectPhaseSaasRecordTypeId;
-    final Set<Id> validOpportunityRecordTypeIds;
 
     // constructor
     public ProjectRollupQueueable(Set<Id> parentProjectIds){
@@ -18,13 +17,6 @@ public class ProjectRollupQueueable implements Queueable{
         psProjectParentSaaSRecordTypeId = projRecordTypeInfosByName.get('PS Parent Project - SaaS').getRecordTypeId();
         psProjectPhaseSaasRecordTypeId = projRecordTypeInfosByName.get('PS Project Phase SaaS').getRecordTypeId();
 
-        Schema.DescribeSObjectResult oppObjectResult = Schema.SObjectType.Opportunity;
-        Map<String, Schema.RecordTypeInfo> oppRecordTypeInfosByName = oppObjectResult.getRecordTypeInfosByName();
-
-        validOpportunityRecordTypeIds = new Set<Id>();
-        validOpportunityRecordTypeIds.add(oppRecordTypeInfosByName.get('PM-Standard').getRecordTypeId());
-        validOpportunityRecordTypeIds.add(oppRecordTypeInfosByName.get('Qualified Opportunity').getRecordTypeId());
-
     }
 
     // Queueable interface method
@@ -34,16 +26,18 @@ public class ProjectRollupQueueable implements Queueable{
 
         try {
 
-            // validate parent project record type is 'PS Parent Project - SaaS'
-            Set<Id> qualifiedProjectIds = new Set<Id>();
+            // parent project record type must be 'PS Parent Project - SaaS'
+            Map<Id, Project__c> projectMap = new Map<Id, Project__c>([
+                    Select Id, Original_Forecasted_Initial_Go_Live_Date__c, Estimated_Project_Initial_Go_Live_Date__c,
+                            Estimated_Project_End__c, Times_All_Phases_Go_Live_Date_Changed__c, Opportunity__c,
+                            Actual_Initial_Phase_Go_Live__c, Actual_Latest_Go_Live_Date__c, Number_of_Open_Phases__c
+                    from Project__c
+                    where Id IN :parentProjectIds and RecordTypeId = :psProjectParentSaaSRecordTypeId
+            ]);
 
-            for (Project__c project : [Select Id from Project__c where Id IN :parentProjectIds and RecordTypeId = :psProjectParentSaaSRecordTypeId]) {
-                qualifiedProjectIds.add(project.Id);
-            }
+            system.debug('**** execute(): projectMap - ' + projectMap);
 
-            system.debug('**** execute(): qualifiedProjectIds - ' + qualifiedProjectIds);
-
-            if (qualifiedProjectIds.isEmpty()) {
+            if (projectMap.isEmpty()) {
                 return;
             }
 
@@ -54,9 +48,9 @@ public class ProjectRollupQueueable implements Queueable{
                     Select min(Original_Phase_Forecasted_Go_Live_Date__c) minForecastedPhaseGoLiveDate, sum(Times_Go_Live_Date_Changed__c) noOfTimesPhaseGoLiveDateChanged,
                             min(EstimatedProjectGoLiveDate__c) minEstimatedPhaseGoLiveDate, max(EstimatedProjectGoLiveDate__c) maxEstimatedPhaseGoLiveDate,
                             min(ActualProjectGoLiveDate__c) minActualPhaseGoLiveDate, max(ActualProjectGoLiveDate__c) maxActualPhaseGoLiveDate, sum(Is_Phase_Open__c) noOfOpenPhases,
-                            ParentProject__c
+                            max(Opportunity__c) opportunityId, ParentProject__c
                     from Project__c
-                    where ParentProject__c IN :parentProjectIds and RecordTypeId = :psProjectPhaseSaasRecordTypeId
+                    where ParentProject__c IN :projectMap.keySet() and RecordTypeId = :psProjectPhaseSaasRecordTypeId
                     group by ParentProject__c
             ]) {
 
@@ -70,11 +64,17 @@ public class ProjectRollupQueueable implements Queueable{
                         Times_All_Phases_Go_Live_Date_Changed__c = ar.get('noOfTimesPhaseGoLiveDateChanged') != null ? (Decimal) ar.get('noOfTimesPhaseGoLiveDateChanged') : null,
                         Actual_Initial_Phase_Go_Live__c = ar.get('minActualPhaseGoLiveDate') != null ? (Date) ar.get('minActualPhaseGoLiveDate') : null,
                         Actual_Latest_Go_Live_Date__c = ar.get('maxActualPhaseGoLiveDate') != null ? (Date) ar.get('maxActualPhaseGoLiveDate') : null,
-                        Number_of_Open_Phases__c = (Decimal)ar.get('noOfOpenPhases')
+                        Number_of_Open_Phases__c = (Decimal)ar.get('noOfOpenPhases'),
+                        Opportunity__c = (Id) ar.get('opportunityId')
                 );
 
                 system.debug('**** execute(): parentProject - ' + parentProject);
-                parentProjects.add(parentProject);
+
+                Project__c parentProjectOld = projectMap.get(parentProject.Id);
+
+                if(parentProject != parentProjectOld){
+                    parentProjects.add(parentProject);
+                }
 
             }
 
@@ -82,12 +82,29 @@ public class ProjectRollupQueueable implements Queueable{
 
             // update PS Parent SaaS projects
             if (parentProjects.size() > 0) {
-                update parentProjects;
+
+                Set<Id> updatedIds = new Set<Id>();
+
+                Database.SaveResult[] srList = Database.update(parentProjects, false);
+                for(Integer i=0; i < srList.size(); i++){
+                    if(srList[i].isSuccess()){
+                        updatedIds.add(srList[i].getId());
+                    } else{
+                        Database.Error[] errors = srList[i].getErrors();
+                        if(errors.size() > 0){
+                            system.debug('**** execute(): save error - ' + errors.get(0));
+                            system.debug('**** execute(): record id - ' + parentProjects[i].Id);
+                        }
+                    }
+                }
+
+                system.debug('**** execute(): updatedIds - ' + updatedIds);
 
                 // retrieve related 'PM-Standard' or 'Qualified Opportunity' record type opportunities
-                for(Project__c project : [Select Opportunity__c from Project__c where Id IN :parentProjects and Opportunity__r.RecordTypeId IN :validOpportunityRecordTypeIds]){
-                    if (project.Opportunity__c != null) {
-                        opportunityIds.add(project.Opportunity__c);
+                for(Id projectId : updatedIds){
+                    Id opportunityId = projectMap.get('projectId').Opportunity__c;
+                    if (opportunityId != null) {
+                        opportunityIds.add(opportunityId);
                     }
                 }
 

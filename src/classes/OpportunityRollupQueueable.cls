@@ -3,6 +3,7 @@ public class OpportunityRollupQueueable implements Queueable{
 
     final Set<Id> opportunityIds;
     final Id psProjectParentSaaSRecordTypeId;
+    final Set<Id> validOpportunityRecordTypeIds;
 
     // constructor
     public OpportunityRollupQueueable(Set<Id> opportunityIds){
@@ -10,10 +11,17 @@ public class OpportunityRollupQueueable implements Queueable{
         this.opportunityIds = opportunityIds;
         system.debug('**** OpportunityRollupQueueable(): opportunityIds - ' + opportunityIds);
 
-        Schema.DescribeSObjectResult d = Schema.SObjectType.Project__c;
-        Map<String, Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
+        Schema.DescribeSObjectResult projObjectResult = Schema.SObjectType.Project__c;
+        Map<String, Schema.RecordTypeInfo> projRecordTypeInfosByName = projObjectResult.getRecordTypeInfosByName();
 
-        psProjectParentSaaSRecordTypeId = rtMapByName.get('PS Parent Project - SaaS').getRecordTypeId();
+        psProjectParentSaaSRecordTypeId = projRecordTypeInfosByName.get('PS Parent Project - SaaS').getRecordTypeId();
+
+        Schema.DescribeSObjectResult oppObjectResult = Schema.SObjectType.Opportunity;
+        Map<String, Schema.RecordTypeInfo> oppRecordTypeInfosByName = oppObjectResult.getRecordTypeInfosByName();
+
+        validOpportunityRecordTypeIds = new Set<Id>();
+        validOpportunityRecordTypeIds.add(oppRecordTypeInfosByName.get('PM-Standard').getRecordTypeId());
+        validOpportunityRecordTypeIds.add(oppRecordTypeInfosByName.get('Qualified Opportunity').getRecordTypeId());
 
     }
 
@@ -23,6 +31,20 @@ public class OpportunityRollupQueueable implements Queueable{
 
         try {
 
+            // pOpportunity record type must be 'PM-Standard' or 'Qualified Opportunity'
+            Map<Id, Opportunity> opportunityMap = new Map<Id, Opportunity>([
+                    Select Id, Original_Forecasted_Initial_Go_Live_Date__c, PM_Estimated_Go_Live__c,
+                            Times_Go_Live_Date_Changed__c, PM_Go_Live_Date__c
+                    from Opportunity
+                    where Id IN :opportunityIds and RecordTypeId IN :validOpportunityRecordTypeIds
+            ]);
+
+            system.debug('**** execute(): opportunityMap - ' + opportunityMap);
+
+            if(opportunityMap.isEmpty()){
+                return;
+            }
+
             List<Opportunity> opportunities = new List<Opportunity>();
 
             // aggregate PS Parent SaaS projects
@@ -31,7 +53,7 @@ public class OpportunityRollupQueueable implements Queueable{
                             min(Estimated_Project_End__c) minEstimatedProjectEndDate, min(ActualProjectGoLiveDate__c) minActualGoLiveDate, min(Actual_Initial_Phase_Go_Live__c) minInitialGoLiveDate,
                             Opportunity__c
                     from Project__c
-                    where Opportunity__c IN :opportunityIds and RecordTypeId = :psProjectParentSaaSRecordTypeId
+                    where Opportunity__c IN :opportunityMap.keySet() and RecordTypeId = :psProjectParentSaaSRecordTypeId
                     group by Opportunity__c
             ]) {
 
@@ -48,13 +70,27 @@ public class OpportunityRollupQueueable implements Queueable{
 
                 system.debug('**** execute(): opp - ' + opp);
 
-                opportunities.add(opp);
+                Opportunity oppOld = opportunityMap.get(opp.Id);
+
+                if(opp != oppOld){
+                    opportunities.add(opp);
+                }
 
             }
 
             // update related opportunities
             if (opportunities.size() > 0) {
-                update opportunities;
+
+                Database.SaveResult[] srList = Database.update(opportunities, false);
+                for(Integer i=0; i < srList.size(); i++){
+                    if(srList[i].isSuccess()){
+                        Database.Error[] errors = srList[i].getErrors();
+                        if(errors.size() > 0){
+                            system.debug('**** execute(): save error - ' + errors.get(0));
+                            system.debug('**** execute(): record id - ' + opportunities[i].Id);
+                        }
+                    }
+                }
             }
 
         } catch (Exception ex){
