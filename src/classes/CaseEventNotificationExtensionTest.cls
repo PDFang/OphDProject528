@@ -78,6 +78,9 @@ private class CaseEventNotificationExtensionTest {
 
         Case insertedCase = [SELECT Id, StartDateTimeUTC__c, CustomersMayExperienceTheFollowing__c, Description, InternalEvent__c, CustomerAction__c, Status, CaseNumber, OwnerId, Owner.Name, RecordTypeId, Subject, EventType__c, PlatformsImpacted__c, ProductImpacted__c FROM Case WHERE Id = :c.Id];
 
+        Test.setMock(WebServiceMock.class, new INotificationProxy());
+        NotificationHelperClass.futureCallout(new String[] { 'test@test.com' }, 'test', 'test', 'test', 3, '123');
+
         Test.startTest();
 
         ApexPages.StandardController eventCont = new ApexPages.StandardController(insertedCase);
