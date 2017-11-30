@@ -71,8 +71,13 @@ public class OpportunityRollupQueueable implements Queueable{
                 system.debug('**** execute(): opp - ' + opp);
 
                 Opportunity oppOld = opportunityMap.get(opp.Id);
+                system.debug('**** execute(): opp - ' + oppOld);
 
-                if(opp != oppOld){
+                if(opp.Original_Forecasted_Initial_Go_Live_Date__c != oppOld.Original_Forecasted_Initial_Go_Live_Date__c
+                        || opp.PM_Estimated_Go_Live__c != oppOld.PM_Estimated_Go_Live__c
+                        || opp.Times_Go_Live_Date_Changed__c != oppOld.Times_Go_Live_Date_Changed__c
+                        || opp.PM_Go_Live_Date__c != oppOld.PM_Go_Live_Date__c)
+                {
                     opportunities.add(opp);
                 }
 

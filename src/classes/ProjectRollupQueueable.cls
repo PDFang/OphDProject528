@@ -48,7 +48,7 @@ public class ProjectRollupQueueable implements Queueable{
                     Select min(Original_Phase_Forecasted_Go_Live_Date__c) minForecastedPhaseGoLiveDate, sum(Times_Go_Live_Date_Changed__c) noOfTimesPhaseGoLiveDateChanged,
                             min(EstimatedProjectGoLiveDate__c) minEstimatedPhaseGoLiveDate, max(EstimatedProjectGoLiveDate__c) maxEstimatedPhaseGoLiveDate,
                             min(ActualProjectGoLiveDate__c) minActualPhaseGoLiveDate, max(ActualProjectGoLiveDate__c) maxActualPhaseGoLiveDate, sum(Is_Phase_Open__c) noOfOpenPhases,
-                            max(Opportunity__c) opportunityId, ParentProject__c
+                            ParentProject__c
                     from Project__c
                     where ParentProject__c IN :projectMap.keySet() and RecordTypeId = :psProjectPhaseSaasRecordTypeId
                     group by ParentProject__c
@@ -64,15 +64,22 @@ public class ProjectRollupQueueable implements Queueable{
                         Times_All_Phases_Go_Live_Date_Changed__c = ar.get('noOfTimesPhaseGoLiveDateChanged') != null ? (Decimal) ar.get('noOfTimesPhaseGoLiveDateChanged') : null,
                         Actual_Initial_Phase_Go_Live__c = ar.get('minActualPhaseGoLiveDate') != null ? (Date) ar.get('minActualPhaseGoLiveDate') : null,
                         Actual_Latest_Go_Live_Date__c = ar.get('maxActualPhaseGoLiveDate') != null ? (Date) ar.get('maxActualPhaseGoLiveDate') : null,
-                        Number_of_Open_Phases__c = (Decimal)ar.get('noOfOpenPhases'),
-                        Opportunity__c = (Id) ar.get('opportunityId')
+                        Number_of_Open_Phases__c = (Decimal)ar.get('noOfOpenPhases')
                 );
 
                 system.debug('**** execute(): parentProject - ' + parentProject);
 
                 Project__c parentProjectOld = projectMap.get(parentProject.Id);
+                system.debug('**** execute(): parentProjectOld - ' + parentProjectOld);
 
-                if(parentProject != parentProjectOld){
+                if(parentProject.Original_Forecasted_Initial_Go_Live_Date__c != parentProjectOld.Original_Forecasted_Initial_Go_Live_Date__c
+                        || parentProject.Estimated_Project_Initial_Go_Live_Date__c != parentProjectOld.Estimated_Project_Initial_Go_Live_Date__c
+                        || parentProject.Estimated_Project_End__c != parentProjectOld.Estimated_Project_End__c
+                        || parentProject.Times_All_Phases_Go_Live_Date_Changed__c != parentProjectOld.Times_All_Phases_Go_Live_Date_Changed__c
+                        || parentProject.Actual_Initial_Phase_Go_Live__c != parentProjectOld.Actual_Initial_Phase_Go_Live__c
+                        || parentProject.Actual_Latest_Go_Live_Date__c != parentProjectOld.Actual_Latest_Go_Live_Date__c
+                        || parentProject.Number_of_Open_Phases__c != parentProjectOld.Number_of_Open_Phases__c)
+                {
                     parentProjects.add(parentProject);
                 }
 
