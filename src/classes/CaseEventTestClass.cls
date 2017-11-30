@@ -83,7 +83,7 @@ private class CaseEventTestClass {
 
         insert c;
 
-
+        Test.startTest();
         ApexPages.StandardController eventCont = new ApexPages.StandardController(c);
 
         //test CaseConfirmEventExtension
@@ -91,7 +91,7 @@ private class CaseEventTestClass {
 
         confirmExt.ConfirmEvent();
 
-        Test.startTest();
+
         boolean actual = inContactIVRWebServices.HasCustomerPriorityOneEvent(string.valueOf(acct.CadebillAccountNo__c));
         //system.assert(actual);
         Test.stopTest();
@@ -133,7 +133,7 @@ private class CaseEventTestClass {
         c.setOptions(dmo);
 
         insert c;
-
+        Test.startTest();
         ApexPages.StandardController eventCont = new ApexPages.StandardController(c);
 
         //test CaseConfirmEventExtension
@@ -142,7 +142,7 @@ private class CaseEventTestClass {
         confirmExt.ConfirmEvent();
         confirmExt.RejectEvent();
         //confirmExt.ConfirmEvent();
-
+        Test.stopTest();
 
     }
 
@@ -207,6 +207,7 @@ private class CaseEventTestClass {
 
         insert pem;
 
+        Test.startTest();
         ApexPages.StandardController eventCont = new ApexPages.StandardController(c);
 
         //test CaseEventAccountsExtension
@@ -236,6 +237,8 @@ private class CaseEventTestClass {
         integer getTotPages = acctsExt.getTotalPages();
         integer getPageNum = acctsExt.getPageNumber();
         integer getTotalSize = acctsExt.getTotal_size();
+        Test.stopTest();
+
     }
 
     static testMethod void TestCaseEventBannerExtension()
@@ -280,6 +283,7 @@ private class CaseEventTestClass {
 
         insert pem;
 
+        Test.startTest();
         ApexPages.StandardController eventCont = new ApexPages.StandardController(c);
 
         //test CaseEventAccountsExtension
@@ -292,6 +296,7 @@ private class CaseEventTestClass {
         banner.Confirm();
         //banner.renderForm = true;
         ApexPages.currentPage().getHeaders().put('Host', 'http://test.com');
+        Test.stopTest();
     }
 
     static testMethod void TestCaseEventCloseExtension()
@@ -441,12 +446,15 @@ private class CaseEventTestClass {
 
         insert pem;
 
+        Test.startTest();
         ApexPages.StandardController eventCont = new ApexPages.StandardController(c);
 
         //test CaseEventAccountsExtension
         CaseEventLogExtension log = new CaseEventLogExtension(eventCont);
 
         EventSidebarController esc = new EventSidebarController();
+        Test.stopTest();
+
     }
 
     static testMethod void TestCaseEventNotificationExtension()
@@ -834,12 +842,12 @@ private class CaseEventTestClass {
 
         insert pem;
 
+        Test.startTest();
+
         RCA__c rca = new RCA__c();
         rca.Event__c = c.Id;
 
         insert rca;
-
-        Test.startTest();
 
         ApexPages.StandardController eventCont = new ApexPages.StandardController(rca);
 
@@ -928,6 +936,7 @@ private class CaseEventTestClass {
 
         insert pem;
 
+        Test.startTest();
         RCA__c rca = new RCA__c();
         rca.Event__c = c.Id;
         rca.CustomerAdvocate__c = UserInfo.getUserId();
@@ -941,6 +950,7 @@ private class CaseEventTestClass {
 
         summary.Save();
 
+        Test.stopTest();
 
     }
 
@@ -1017,6 +1027,7 @@ private class CaseEventTestClass {
 
         insert pem;
 
+        Test.startTest();
         RCA__c rca = new RCA__c();
         rca.Event__c = c.Id;
         rca.CustomerAdvocate__c = UserInfo.getUserId();
@@ -1030,7 +1041,7 @@ private class CaseEventTestClass {
 
         rfe.Save();
 
-
+        Test.stopTest();
     }
     //@isTest(SeeAllData=true)
     static testMethod void TestTrustWebService()
@@ -1336,6 +1347,7 @@ private class CaseEventTestClass {
         Setup();
         List<Account> lstAcct = new List<Account>();
 
+        Test.startTest();
         for (Case caseRecord: [SELECT Id, PlatformsImpacted__c, RecordTypeId, ProductImpacted__c  FROM Case])
         {
             lstAcct = new List<Account>();
@@ -1344,5 +1356,7 @@ private class CaseEventTestClass {
             System.assertEquals(1, lstAcct.size());
 
         }
+        Test.stopTest();
+
     }
 }
