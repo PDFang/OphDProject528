@@ -3,10 +3,24 @@ public class ProjectTriggerHandler extends TriggerHandler{
     public static boolean lockSortingFields = true;
 
     static boolean initialized = false;
-    static ID projectRollupQueueableJobID;
+    static Id projectRollupQueueableJobID;
+    static Id opportunityRollupQueueableJobID;
     static Id salesEngineeringRecordTypeId;
     static Id psProjectPhaseSaasRecordTypeId;
+    static Id psProjectParentSaasRecordTypeId;
     static set<Id> allowedRecordTypes;
+
+    static final Set<String> debugProjectFields = new Set<String>{
+            'Id',
+            'RecordTypeId',
+            'ParentProject__c',
+            'Opportunity__c',
+            'Phase_Status__c',
+            'EstimatedProjectGoLiveDate__c',
+            'ActualProjectGoLiveDate__c',
+            'Original_Phase_Forecasted_Go_Live_Date__c',
+            'Times_Go_Live_Date_Changed__c'
+    };
 
     public ProjectTriggerHandler(){
 
@@ -16,6 +30,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
             salesEngineeringRecordTypeId = rtMapByName.get('Sales Engineering Project').getRecordTypeId();
             psProjectPhaseSaasRecordTypeId = rtMapByName.get('PS Project Phase SaaS').getRecordTypeId();
+            psProjectParentSaasRecordTypeId = rtMapByName.get('PS Parent Project - SaaS').getRecordTypeId();
 
             allowedRecordTypes = new set<Id> ();
             for (Schema.RecordTypeInfo recordType : rtMapByName.values())
@@ -201,36 +216,85 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         Map<Id, Project__c> oldMap = (Map<Id, Project__c>)trigger.oldMap;
         Set<Id> parentProjectIdSet = new Set<Id>();
+        Set<Id> projectOppIdSet = new Set<Id>();
 
         for(Project__c newProject : newList){
 
 
-            if(newProject.RecordTypeId != psProjectPhaseSaasRecordTypeId || newProject.ParentProject__c == null){
+            Project__c oldProject = oldMap != null ? oldMap.get(newProject.Id) : null;
+
+            system.debug(' setParentProjectGoLiveDates(): newProject - ' + printInDebugLog(newProject));
+            system.debug(' setParentProjectGoLiveDates(): oldProject - ' + printInDebugLog(oldProject));
+
+            // parent SaaS project is updated or deleted
+            if(newProject.RecordTypeId == psProjectParentSaasRecordTypeId){
+
+                if(trigger.isDelete){
+                    projectOppIdSet.add(newProject.Opportunity__c);
+                } else if(trigger.isUpdate && newProject.Opportunity__c != oldProject.Opportunity__c){
+                    projectOppIdSet.add(newProject.Opportunity__c);
+                    projectOppIdSet.add(oldProject.Opportunity__c);
+                }
+
                 continue;
             }
-            Project__c oldProject = oldMap != null ? oldMap.get(newProject.Id) : null;
-            if(trigger.isInsert && newProject.EstimatedProjectGoLiveDate__c != null || newProject.ActualProjectGoLiveDate__c != null
-                    || (newProject.Phase_Status__c != 'Closed' && newProject.Phase_Status__c != 'Cancelled'))
-            {
-                parentProjectIdSet.add(newProject.ParentProject__c);
+
+            // Phase SaaS project created or updated or deleted
+            if(newProject.RecordTypeId == psProjectPhaseSaasRecordTypeId) {
+
+                if (trigger.isInsert && (newProject.EstimatedProjectGoLiveDate__c != null || newProject.ActualProjectGoLiveDate__c != null
+                        || (newProject.Phase_Status__c != 'Closed' && newProject.Phase_Status__c != 'Cancelled')) ){
+                    system.debug('**** setParentProjectGoLiveDates(): created Phase Project ');
+                    parentProjectIdSet.add(newProject.ParentProject__c);
+                } else if (trigger.isUpdate && (newProject.EstimatedProjectGoLiveDate__c != oldProject.EstimatedProjectGoLiveDate__c
+                        || newProject.ActualProjectGoLiveDate__c != oldProject.ActualProjectGoLiveDate__c
+                        || newProject.Phase_Status__c != oldProject.Phase_Status__c
+                        || newProject.ParentProject__c != oldProject.ParentProject__c) )
+                {
+                    system.debug('**** setParentProjectGoLiveDates(): updated Phase Project ');
+                    parentProjectIdSet.add(newProject.ParentProject__c);
+                    if (newProject.ParentProject__c != oldProject.ParentProject__c) {
+                        parentProjectIdSet.add(oldProject.ParentProject__c);
+                    }
+                } else if (trigger.isDelete) {
+                    system.debug('**** setParentProjectGoLiveDates(): deleted Phase Project ');
+                    parentProjectIdSet.add(newProject.ParentProject__c);
+                }
             }
-            else if(trigger.isUpdate && newProject.EstimatedProjectGoLiveDate__c != oldProject.EstimatedProjectGoLiveDate__c
-                    || newProject.ActualProjectGoLiveDate__c != oldProject.ActualProjectGoLiveDate__c
-                    || newProject.Phase_Status__c != oldProject.Phase_Status__c)
-            {
-                parentProjectIdSet.add(newProject.ParentProject__c);
-            }
-            else if(trigger.isDelete){
-                parentProjectIdSet.add(newProject.ParentProject__c);
-            }
+
         }
 
+        // remove null values
+        parentProjectIdSet.remove(null);
+        projectOppIdSet.remove(null);
+
         system.debug('**** setParentProjectGoLiveDates(): parentProjectIdSet - ' + parentProjectIdSet);
+        system.debug('**** setParentProjectGoLiveDates(): projectOppIdSet - ' + projectOppIdSet);
 
         if(parentProjectIdSet.size() > 0 && projectRollupQueueableJobID == null){
             projectRollupQueueableJobID = System.enqueueJob(new ProjectRollupQueueable(parentProjectIdSet));
             system.debug('**** setParentProjectGoLiveDates(): projectRollupQueueableJobID - ' + projectRollupQueueableJobID);
         }
+
+        if(projectOppIdSet.size() > 0 && opportunityRollupQueueableJobID == null){
+            opportunityRollupQueueableJobID = System.enqueueJob(new OpportunityRollupQueueable(projectOppIdSet));
+            system.debug('**** setParentProjectGoLiveDates(): opportunityRollupQueueableJobID - ' + opportunityRollupQueueableJobID);
+        }
+
+    }
+
+    private static String printInDebugLog(Project__c project){
+
+        if(project == null){
+            return '';
+        }
+
+        Map<String, object> projectFields = new Map<String, Object>();
+        for(String field : debugProjectFields){
+            projectFields.put(field, project.get(field));
+        }
+
+        return JSON.serialize(projectFields);
 
     }
 
