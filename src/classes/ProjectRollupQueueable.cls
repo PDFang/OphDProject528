@@ -109,7 +109,7 @@ public class ProjectRollupQueueable implements Queueable{
 
                 // retrieve related 'PM-Standard' or 'Qualified Opportunity' record type opportunities
                 for(Id projectId : updatedIds){
-                    Id opportunityId = projectMap.get('projectId').Opportunity__c;
+                    Id opportunityId = projectMap.get(projectId).Opportunity__c;
                     if (opportunityId != null) {
                         opportunityIds.add(opportunityId);
                     }
