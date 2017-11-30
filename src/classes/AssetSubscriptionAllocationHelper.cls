@@ -23,15 +23,23 @@ public class AssetSubscriptionAllocationHelper {
             'Quantity',
             'Budgeted_Hours__c',
             'Parent_Project__c',
-            'ImplementedProduct__c'
+            'ImplementedProduct__c',
+            'Total_Implemented_Quantity__c',
+            'RemainingQuantity__c',
+            'Remaning_Percentage__c'
     };
 
     static Set<String> subscriptionFields = new Set<String>{
             'Id',
             'Name',
+            'Subscription__r.SBQQ__Account__c',
             'Quantity__c',
             'Budgeted_Hours__c',
-            'ParentProject__c'
+            'ParentProject__c',
+            'Implemented_Product__c',
+            'Total_Implemented_Quantity__c',
+            'RemainingQuantity__c',
+            'Remaning_Percentage__c'
     };
 
     static Set<String> projectFields = new Set<String>{
@@ -80,7 +88,7 @@ public class AssetSubscriptionAllocationHelper {
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'No subscription record found.'));
                 return;
             }
-            getImplementedProductList(currentSubscription.Account__c);
+            getImplementedProductList(currentSubscription.Subscription__r.SBQQ__Account__c);
 
         }
         // entry from project
@@ -233,8 +241,9 @@ public class AssetSubscriptionAllocationHelper {
         List<AssetSubscriptionAllocationNewModel> assetAllocations = new List<AssetSubscriptionAllocationNewModel>();
 
         String soql = 'Select Project__c, Project__r.Name, Name, ProjectPhase__c, Percent_Allocation__c, Asset__r.Name, Asset__c, Asset__r.Quantity, Asset__r.Budgeted_Hours__c, '
-                + 'Quantity_Allocation__c, Hours_Allocated__c, Asset__r.Total_Allocated_Quantity__c, Asset__r.Total_Allocated_Hours__c, Implemented__c  '
-                + 'from Project_Asset_Allocation__c where ';
+                + 'Quantity_Allocation__c, Hours_Allocated__c, Asset__r.Total_Allocated_Quantity__c, Asset__r.Total_Allocated_Hours__c, Implemented__c,  '
+                + 'Asset__r.QuantityonHold__c, Asset__r.QuantityCancelled__c '
+                + ' from Project_Asset_Allocation__c where ';
 
         if(projectId != null){
             soql += ' Project__c = \'' + projectId + '\'';
@@ -266,8 +275,10 @@ public class AssetSubscriptionAllocationHelper {
         List<AssetSubscriptionAllocationNewModel> subscriptionAllocations = new List<AssetSubscriptionAllocationNewModel>();
 
         String soql = 'Select Project__c, Project__r.Name, Subscription__r.Subscription__r.SBQQ__Product__r.Name, Subscription__r.Subscription__r.SBQQ__Product__c,' +
-                ' Subscription__c, Subscription__r.Name, Name, ProjectPhase__c, Subscription__r.Quantity__c, Subscription__r.Budgeted_Hours__c, Percent_Allocation__c, Quantity_Allocation__c, Hours_Allocated__c, Subscription__r.Total_Allocated_Quantity__c, Subscription__r.Total_Allocated_Hours__c '
-                + 'from Project_Subscription_Allocation__c where ';
+                ' Subscription__c, Subscription__r.Name, Name, ProjectPhase__c, Subscription__r.Quantity__c, Subscription__r.Budgeted_Hours__c, Percent_Allocation__c,'+
+                ' Quantity_Allocation__c, Hours_Allocated__c, Subscription__r.Total_Allocated_Quantity__c, Subscription__r.Total_Allocated_Hours__c,Implemented__c, ' +
+                ' Subscription__r.QuantityonHold__c, Subscription__r.QuantityCancelled__c ' +
+                ' from Project_Subscription_Allocation__c where ';
         if(projectId != null){
             soql += ' Project__c = \'' + projectId + '\'';
         } else{
@@ -311,12 +322,9 @@ public class AssetSubscriptionAllocationHelper {
 
 
         if(ProjectId != null){
-
             String soql = 'Select Id, Name, Summary__c, ProjectStatus__c, Phase__c ' +
                     + ' from Project__c where ';
-
             soql += ' ParentProject__c = \'' + ProjectId + '\'';
-
             soql += ' order by createddate ';
 
             projects = Database.query(soql);
@@ -446,10 +454,10 @@ public class AssetSubscriptionAllocationHelper {
             }
             decimal quantityCancelled = Decimal.valueOf(string.valueOf(asset.get('QuantityCancelled__c'))) ;
             decimal quantityonHold =  Decimal.valueOf(string.valueOf(asset.get('QuantityonHold__c')));
+            decimal totalCanceledOrHold = quantityCancelled + quantityonHold;
             if(quantityCancelled > 0 && (asset.get('Department_Responsible__c') == null
                     || asset.get('Root_Cause__c') == null)){
                 return 'Department Responsible and Root Cause must be populated if the Quantity on Hold is greater than 0';
-
 
             }
             else if(quantityonHold > 0 && (asset.get('Department_Responsible__c') == null
@@ -457,8 +465,33 @@ public class AssetSubscriptionAllocationHelper {
                 return 'Department Responsible and Root Cause must be populated if the Quantity on Hold is greater than 0';
 
             }
-            else
-            if((quantityCancelled >= asset.Quantity
+            else if(quantityCancelled > 0 && asset.get('Additional_Detail__c') == null){
+                return 'Additional Detail must be populated if the Quantity Cancelled is greater than 0';
+
+            }
+            else if(quantityonHold > 0 && asset.get('Additional_Detail__c') == null){
+                return 'Additional Detail must be populated if the Quantity on Hold is greater than 0';
+
+            }
+            else if(quantityonHold > asset.Quantity){
+                return '"On Hold Quantity" cannot exceed the contract quantity';
+            }
+            else if(quantityonHold > (asset.Quantity - asset.Total_Implemented_Quantity__c)){
+               return '"On Hold Quantity" cannot exceed the remaining quantity';
+            }
+            else if(quantityCancelled > asset.Quantity){
+                return '"Cancelled Quantity" cannot exceed the contract quantity';
+            }
+            else if(quantityCancelled > (asset.Quantity - asset.Total_Implemented_Quantity__c)){
+                return '"Cancelled Quantity" cannot exceed the remaining quantity';
+            }
+            else if(totalCanceledOrHold > asset.Quantity){
+                return '"Cancelled Quantity" and “On Hold Quantity” cannot exceed the contract quantity';
+            }
+            else if(totalCanceledOrHold > (asset.Quantity - asset.Total_Implemented_Quantity__c)){
+                return '"Cancelled Quantity" and “On Hold Quantity” cannot exceed the remaining quantity';
+            }
+            else if((quantityCancelled >= asset.Quantity
                     || quantityonHold >= asset.Quantity) && !manager){
                 return 'Only managers can suspend or cancel the entire quantity of an asset or subscription.';
             }
@@ -488,9 +521,10 @@ public class AssetSubscriptionAllocationHelper {
 
             decimal quantityCancelled = Decimal.valueOf(string.valueOf(subscription.get('QuantityCancelled__c'))) ;
             decimal quantityonHold =  Decimal.valueOf(string.valueOf(subscription.get('QuantityonHold__c')));
+            decimal totalCanceledOrHold = quantityCancelled + quantityonHold;
             if(quantityCancelled > 0 && (subscription.get('Department_Responsible__c') == null
                     || subscription.get('Root_Cause__c') == null)){
-                return 'Department Responsible and Root Cause must be populated if the Quantity on Hold is greater than 0';
+                return 'Department Responsible and Root Cause must be populated if the Quantity Cancelled is greater than 0';
 
 
             }
@@ -498,6 +532,32 @@ public class AssetSubscriptionAllocationHelper {
                     || subscription.get('Root_Cause__c') == null)){
                 return 'Department Responsible and Root Cause must be populated if the Quantity on Hold is greater than 0';
 
+            }
+            else if(quantityCancelled > 0 && subscription.get('Additional_Detail__c') == null){
+                return 'Additional Detail must be populated if the Quantity Cancelled is greater than 0';
+
+            }
+            else if(quantityonHold > 0 && subscription.get('Additional_Detail__c') == null){
+                return 'Additional Detail must be populated if the Quantity on Hold is greater than 0';
+
+            }
+            else if(quantityonHold > subscription.Quantity__c){
+                return '"On Hold Quantity" cannot exceed the contract quantity';
+            }
+            else if(quantityonHold > (subscription.Quantity__c - subscription.Total_Implemented_Quantity__c)){
+                return '"On Hold Quantity" cannot exceed the remaining quantity';
+            }
+            else if(quantityCancelled > subscription.Quantity__c){
+                return '"Cancelled Quantity" cannot exceed the contract quantity';
+            }
+            else if(quantityCancelled > (subscription.Quantity__c - subscription.Total_Implemented_Quantity__c)){
+                return '"Cancelled Quantity" cannot exceed the remaining quantity';
+            }
+            else if(totalCanceledOrHold > subscription.Quantity__c){
+                return '"Cancelled Quantity" and “On Hold Quantity” cannot exceed the contract quantity';
+            }
+            else if(totalCanceledOrHold > (subscription.Quantity__c - subscription.Total_Implemented_Quantity__c)){
+                return '"Cancelled Quantity" and “On Hold Quantity” cannot exceed the remaining quantity';
             }
             else if((quantityCancelled >= subscription.Quantity__c
                     || quantityonHold >= subscription.Quantity__c) && !manager){
@@ -533,5 +593,13 @@ public class AssetSubscriptionAllocationHelper {
                                     ImplementedProduct__c = IPProduct);
         update saveAsset;
     }
+
+    public void SaveImmplementedProductSubscription(Id subscriptionId, string IPProduct){
+        SubscriptionReplica__c saveReplica = new SubscriptionReplica__c(Id = subscriptionId,
+                Implemented_Product__c = IPProduct);
+        update saveReplica;
+    }
+    
+
 
 }

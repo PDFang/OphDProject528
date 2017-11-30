@@ -159,71 +159,56 @@ public with sharing class AssetSubscriptionAllocationNewController {
                 saveSuccess = true;
             }
             else {
-                getUpdatedCancSuspValues();
+               // getUpdatedCancSuspValues();
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, message));
                 saveSuccess = false;
             }
 
-
         }catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
         }
 
-
-
-
-//        isSuccesfullySaved = helper.isSuccesfullySaved;
     }
-
-
 
     public void SaveCancSuspQuantitySubs(){
         System.debug('Subscription.QuantityCancelled__c' + Subscription.QuantityCancelled__c);
         try{
+            saveSuccess = true;
             String message =  helper.SaveCancSuspQuantitySubs(Subscription);
             if(message.contains('Saved')){
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, message));
+                saveSuccess = true;
             }
             else {
-                getUpdatedCancSuspValues();
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, message));
+                saveSuccess = false;
             }
         }catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
+            saveSuccess = false;
         }
 
-
-
-
-//        isSuccesfullySaved = helper.isSuccesfullySaved;
     }
 
-    public void getUpdatedCancSuspValues(){
-        helper = new AssetSubscriptionAllocationHelper(currentId);
-        Asset = helper.currentAsset;
-    }
-
-    public void getUpdatedCancSuspValuesSubs(){
-        helper = new AssetSubscriptionAllocationHelper(currentId);
-        Subscription = helper.currentSubscription;
-    }
 
     public void saveImplementedProduct(){
         if(Asset != null){
             String SelectedRowId = ApexPages.CurrentPage().getParameters().get('rowid');
             helper.SaveImmplementedProductAsset(Asset.Id, SelectedRowId);
-            getUpdatedCancSuspValues();
         }
+        if(Subscription != null){
+            String SelectedRowId = ApexPages.CurrentPage().getParameters().get('rowid');
+            helper.SaveImmplementedProductSubscription(Subscription.Id, SelectedRowId);
+        }
+        reloadDetails();
     }
 
 
     public pagereference cancel(){
-
         return new PageReference('/'+currentId).setRedirect(true);
     }
 
     private static string sendResponse(String result, string message){
-
         System.JSONGenerator generator = Json.createGenerator(true);
         generator.writeStartObject();
         generator.writeStringField('result', result);

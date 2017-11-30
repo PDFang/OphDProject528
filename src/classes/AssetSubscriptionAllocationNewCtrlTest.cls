@@ -85,16 +85,16 @@ private class AssetSubscriptionAllocationNewCtrlTest {
 
         asstSubsAlloCont.Asset.QuantityCancelled__c = 5;
         asstSubsAlloCont.Asset.QuantityonHold__c = 2;
-        asstSubsAlloCont.Asset.Root_Cause__c = 'Test2';
-        asstSubsAlloCont.Asset.Department_Responsible__c = 'Test1';
+       // asstSubsAlloCont.Asset.Root_Cause__c = 'Test2';
+       // asstSubsAlloCont.Asset.Department_Responsible__c = 'Test1';
         asstSubsAlloCont.SaveCancSuspQuantity();
         System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
         system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Only managers can suspend or cancel the entire quantity of an asset or subscription.');
 
         asstSubsAlloCont.Asset.QuantityCancelled__c = 2;
         asstSubsAlloCont.Asset.QuantityonHold__c = 2;
-        asstSubsAlloCont.Asset.Root_Cause__c = 'Test2';
-        asstSubsAlloCont.Asset.Department_Responsible__c = 'Test1';
+        //asstSubsAlloCont.Asset.Root_Cause__c = 'Test2';
+        //asstSubsAlloCont.Asset.Department_Responsible__c = 'Test1';
         asstSubsAlloCont.SaveCancSuspQuantity();
         System.debug('ApexPages.hasMessages(ApexPages.Severity.CONFIRM) ==>' + ApexPages.hasMessages(ApexPages.Severity.CONFIRM));
         system.assert(ApexPages.hasMessages(ApexPages.Severity.CONFIRM), 'Saved Successfully.');
@@ -157,16 +157,16 @@ private class AssetSubscriptionAllocationNewCtrlTest {
 
         asstSubsAlloCont.Subscription.QuantityCancelled__c = 10;
         asstSubsAlloCont.Subscription.QuantityonHold__c = 2;
-        asstSubsAlloCont.Subscription.Root_Cause__c = 'Test2';
-        asstSubsAlloCont.Subscription.Department_Responsible__c = 'Test1';
+        //asstSubsAlloCont.Subscription.Root_Cause__c = 'Test2';
+       // asstSubsAlloCont.Subscription.Department_Responsible__c = 'Test1';
         asstSubsAlloCont.SaveCancSuspQuantitySubs();
         System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
         system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Only managers can suspend or cancel the entire quantity of an asset or subscription.');
 
         asstSubsAlloCont.Subscription.QuantityCancelled__c = 2;
         asstSubsAlloCont.Subscription.QuantityonHold__c = 2;
-        asstSubsAlloCont.Subscription.Root_Cause__c = 'Test2';
-        asstSubsAlloCont.Subscription.Department_Responsible__c = 'Test1';
+       // asstSubsAlloCont.Subscription.Root_Cause__c = 'Test2';
+        //asstSubsAlloCont.Subscription.Department_Responsible__c = 'Test1';
         asstSubsAlloCont.SaveCancSuspQuantitySubs();
         System.debug('ApexPages.hasMessages(ApexPages.Severity.CONFIRM) ==>' + ApexPages.hasMessages(ApexPages.Severity.CONFIRM));
         system.assert(ApexPages.hasMessages(ApexPages.Severity.CONFIRM), 'Saved Successfully.');
