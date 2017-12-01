@@ -28,9 +28,19 @@ public with sharing class AssetSubscriptionAllocationNewController {
         }set{}
     }
 
+    Public boolean Manager{
+        get{
+            return helper != null
+                    ? helper.isManager() : null;
+        }set{}
+    }
+
     // query string parameter
     public String currentId{get;set;}
 
+    public boolean saveSuccess{get; set;}
+
+    public list<ImplementedProduct__c> ImplementedProducts{get;private set;}
     // query string parameter
 //    public Boolen isSuccesfullySaved{get;set;}
     //Helper Object
@@ -40,8 +50,9 @@ public with sharing class AssetSubscriptionAllocationNewController {
     // constructor
     public AssetSubscriptionAllocationNewController(){
 
+        ImplementedProducts = new list<ImplementedProduct__c>();
         currentId = ApexPages.currentPage().getParameters().get('id');
-
+        saveSuccess = true;
         system.debug('getAsset(): currentId - ' + currentId);
 
         if(String.isBlank(currentId)){
@@ -50,6 +61,7 @@ public with sharing class AssetSubscriptionAllocationNewController {
         }
 
         helper = new AssetSubscriptionAllocationHelper(currentId);
+        ImplementedProducts = helper.currentImplementedProducts;
     }
 
     public void reloadDetails(){
@@ -141,91 +153,62 @@ public with sharing class AssetSubscriptionAllocationNewController {
     public void SaveCancSuspQuantity(){
         try{
             String message =  helper.SaveCancSuspQuantity(Asset);
-            if(message.contains('Quantity Cancelled')){
-                getUpdatedCancSuspValues();
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Department Responsible or ' +
-                        'Root Cause can not be empty if Quantity Cancelled is greater than 0.'));
-
+            saveSuccess = true;
+            if(message.contains('Saved')){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, message));
+                saveSuccess = true;
+            }
+            else {
+               // getUpdatedCancSuspValues();
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, message));
+                saveSuccess = false;
             }
 
-            else if(message.contains('Quantity On Hold')){
-                getUpdatedCancSuspValues();
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Department Responsible or ' +
-                        'Root Cause can not be empty if Quantity On Hold is greater than 0.'));
-            }
-
-            else if(message.contains('Only managers')){
-                getUpdatedCancSuspValues();
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Only managers can suspend ' +
-                        'or cancel the entire quantity of an asset or subscription.'));
-            }
-            else if(message.contains('Saved')){
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Saved Successfully.'));
-            }
         }catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
         }
 
-
-
-
-//        isSuccesfullySaved = helper.isSuccesfullySaved;
     }
-
-
 
     public void SaveCancSuspQuantitySubs(){
         System.debug('Subscription.QuantityCancelled__c' + Subscription.QuantityCancelled__c);
         try{
+            saveSuccess = true;
             String message =  helper.SaveCancSuspQuantitySubs(Subscription);
-            if(message.contains('Quantity Cancelled')){
-                getUpdatedCancSuspValuesSubs();
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Department Responsible or ' +
-                        'Root Cause can not be empty if Quantity Cancelled is greater than 0.'));
-
+            if(message.contains('Saved')){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, message));
+                saveSuccess = true;
             }
-
-            else if(message.contains('Quantity On Hold')){
-                getUpdatedCancSuspValuesSubs();
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Department Responsible or ' +
-                        'Root Cause can not be empty if Quantity On Hold is greater than 0.'));
-            }
-
-            else if(message.contains('Only managers')){
-                getUpdatedCancSuspValuesSubs();
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Only managers can suspend ' +
-                        'or cancel the entire quantity of an asset or subscription.'));
-            }
-            else if(message.contains('Saved')){
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Saved Successfully.'));
+            else {
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, message));
+                saveSuccess = false;
             }
         }catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
+            saveSuccess = false;
         }
 
-
-
-
-//        isSuccesfullySaved = helper.isSuccesfullySaved;
     }
 
-    public void getUpdatedCancSuspValues(){
-        helper = new AssetSubscriptionAllocationHelper(currentId);
-        Asset = helper.currentAsset;
+
+    public void saveImplementedProduct(){
+        if(Asset != null){
+            String SelectedRowId = ApexPages.CurrentPage().getParameters().get('rowid');
+            helper.SaveImmplementedProductAsset(Asset.Id, SelectedRowId);
+        }
+        if(Subscription != null){
+            String SelectedRowId = ApexPages.CurrentPage().getParameters().get('rowid');
+            helper.SaveImmplementedProductSubscription(Subscription.Id, SelectedRowId);
+        }
+        reloadDetails();
     }
 
-    public void getUpdatedCancSuspValuesSubs(){
-        helper = new AssetSubscriptionAllocationHelper(currentId);
-        Subscription = helper.currentSubscription;
-    }
 
     public pagereference cancel(){
-
         return new PageReference('/'+currentId).setRedirect(true);
     }
 
     private static string sendResponse(String result, string message){
-
         System.JSONGenerator generator = Json.createGenerator(true);
         generator.writeStartObject();
         generator.writeStringField('result', result);

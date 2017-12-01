@@ -154,7 +154,7 @@ public class ProjectTriggerHelper
 		//get custom settings
 		List<OrderManagementTask__c> omt = [SELECT o.Type__c, o.DaysUntilDue__c, o.PartnerOrder__c, o.NewOrder__c, o.MoveOrder__c, o.DisconnectOrder__c, o.Description__c, o.CustomerOrder__c, o.AddOrder__c FROM OrderManagementTask__c o ORDER BY o.Order__c];
 		List<ProductReadinessTask__c> prd = ProductReadinessTask__c.getAll().values();
-		List<DedicatedProvisioningTask__c> dedProvTasks = DedicatedProvisioningTask__c.getAll().Values();
+		List<DedicatedProvisioningTask__c> dedProvTasks = [SELECT d.Task__c, d.TaskType__c, d.Sip__c, d.Order__c, d.NetworkOrders__c, d.Name, d.Mpls__c, d.IpSec__c, d.IntelT__c, d.IntelDS3__c, d.Disconnects__c, d.Dia__c, d.IntelligentTDS3Migration__c, d.COLO__c From DedicatedProvisioningTask__c d ORDER BY Order__c];
 		List<Task> tasks = new List<Task> ();
 
 		// Loop through all the projects and create the necessary tasks
@@ -355,64 +355,52 @@ public class ProjectTriggerHelper
 			//}
 		}
 	}
+
+	// Assign Phase# to PS Phase projects
+	// Method refactored on 11/21/17 - Eliminated SOQL inside a for loop and DML update
     public static void setNextPhaseNumber(List<Project__c> listNewProjects ){
       
-        System.Debug('Starting '); 
         Schema.DescribeSObjectResult d = Schema.SObjectType.Project__c;
         Map<String, Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
         //get record type ids 
         Id phaseSaasProject = rtMapByName.get('PS Project Phase SaaS').getRecordTypeId();
         Id phasePremiseProject = rtMapByName.get('PS Project Phase Premise WFO').getRecordTypeId();
-        System.Debug('Premise Phase Project ' + phasePremiseProject);
-        
+
+		Set<Id> parentProjectIds = new Set<Id>();
         List<Project__c> projectsToUpdate = new List<Project__c>();
         
-        for (Project__c newProjectRecord : listNewProjects)
-        {
-            
-            Integer PhaseNumber = 1;
-            if ((newProjectRecord.RecordTypeId == phaseSaasProject || newProjectRecord.RecordTypeId == phasePremiseProject ) && newProjectRecord.Project_Phase__c == null)
-            {
-                //get the current max number for the parent project phases 
-                //
-                Id parentProjectId = newProjectRecord.ParentProject__c;
-                AggregateResult[] groupedProjectResults =  [Select max (Phase__c) maxPhase, ParentProject__c From Project__c where ParentProject__c = :parentProjectId group by ParentProject__c];
-                //Project__c parentProject = [Select Id,  Phase__c From Project__c where Id = :parentProjectId];
-                System.Debug('Result Count ' + groupedProjectResults.size());
-                Project__c tempProject = new Project__c();
-                tempProject.Id = newProjectRecord.Id;
-                
-                
-                //if (groupedProjectResults.size() != 0)
-                //{
-                System.Debug('Result Count ' + newProjectRecord.Phase__c);
-                if (newProjectRecord.Phase__c == '0' || newProjectRecord.Phase__c == null)
-                {    
-                    AggregateResult maxRecord  = groupedProjectResults.get(0);
-                    System.debug('Max Count' + maxRecord.get('MaxPhase'));
-                    object temp = maxRecord.get('MaxPhase');
-                    phaseNumber =  integer.valueOf(temp); 
-                    if (phaseNumber == null)
-                    {
-                        phaseNumber = 0;
-                    }
-                    phaseNumber ++; 
-                    tempProject.Phase__c = string.valueOf(phaseNumber); 
-                    //}
-                    //else{
-                    //    System.Debug('No records found');
-                    //    tempProject.Phase__c = '1';
-                    //}
-                    projectsToUpdate.add(tempProject);
-				}                   
-            }
-        }
- 
-        if (!projectsToUpdate.isEmpty()){
-            System.Debug('Result Count ' + projectsToUpdate.size());
-            update projectsToUpdate;
-        }
-        
-        
+        for (Project__c newProjectRecord : listNewProjects) {
+
+			if ((newProjectRecord.RecordTypeId == phaseSaasProject || newProjectRecord.RecordTypeId == phasePremiseProject) && newProjectRecord.ParentProject__c != null
+					&& (newProjectRecord.Phase__c == '0' || newProjectRecord.Phase__c == null)){
+				parentProjectIds.add(newProjectRecord.ParentProject__c);
+				projectsToUpdate.add(newProjectRecord);
+			}
+		}
+
+		system.Debug('setNextPhaseNumber(): projectsToUpdate - ' + projectsToUpdate);
+
+		if(projectsToUpdate.isEmpty()) {
+			return;
+		}
+
+		Map<Id, Integer> parentMaxPhaseMap = new Map<Id, Integer>();
+		// Get max Phase# grouped by parent project
+		for(AggregateResult groupedProjectResult : [Select max (Phase__c) maxPhase, ParentProject__c From Project__c where ParentProject__c = :parentProjectIds group by ParentProject__c]) {
+
+			Integer maxPhase = groupedProjectResult.get('maxPhase') != null ? Integer.valueOf(groupedProjectResult.get('maxPhase')) : 0;
+			Id parentProjectId = (Id) groupedProjectResult.get('ParentProject__c');
+			parentMaxPhaseMap.put(parentProjectId, maxPhase);
+		}
+
+
+		for (Project__c newProjectRecord : projectsToUpdate){
+			Integer maxPhaseNumber =  parentMaxPhaseMap.containsKey(newProjectRecord.ParentProject__c) ? parentMaxPhaseMap.get(newProjectRecord.ParentProject__c) : 0;
+			maxPhaseNumber++;
+			newProjectRecord.Phase__c = String.valueOf(maxPhaseNumber);
+			parentMaxPhaseMap.put(newProjectRecord.ParentProject__c, maxPhaseNumber);
+		}
+
     }
+
 }

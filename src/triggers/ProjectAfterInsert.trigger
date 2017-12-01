@@ -11,6 +11,9 @@ trigger ProjectAfterInsert on Project__c(after insert, after update)
 		SalesEngineeringLogic.CreateNewProjectTasks(trigger.new, salesEngineeringRecordTypeId);
 		ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
 		ProjectTriggerHelper.createProjectTasks(Trigger.new);
+		//if it is a phase project validate the phase number
+		ProjectTriggerHelper.setNextPhaseNumber(Trigger.new);
+
 	}
 	else if (trigger.isUpdate)
 	{
@@ -18,4 +21,6 @@ trigger ProjectAfterInsert on Project__c(after insert, after update)
 		ProjectTriggerHelper.updateAssetStatusForPhasedProject(trigger.new, Trigger.oldMap);
 		SalesEngineeringLogic.UpdateProjectRelatedOwners(trigger.old, trigger.new, salesEngineeringRecordTypeId);
 	}
+
+
 }

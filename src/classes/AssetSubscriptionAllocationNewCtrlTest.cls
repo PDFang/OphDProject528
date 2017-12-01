@@ -73,6 +73,32 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         System.debug('assetAllocationDel =>' + assetAllocationDel);
         System.assertNotEquals(null, assetAllocationDel);
 
+        asstSubsAlloCont.Asset.QuantityCancelled__c = 2;
+        asstSubsAlloCont.SaveCancSuspQuantity();
+        System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
+        system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Department Responsible or Root Cause can not be empty if Quantity Cancelled is greater than 0.');
+
+        asstSubsAlloCont.Asset.QuantityonHold__c = 2;
+        asstSubsAlloCont.SaveCancSuspQuantity();
+        System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
+        system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Department Responsible or Root Cause can not be empty if Quantity On Hold is greater than 0.');
+
+        asstSubsAlloCont.Asset.QuantityCancelled__c = 5;
+        asstSubsAlloCont.Asset.QuantityonHold__c = 2;
+       // asstSubsAlloCont.Asset.Root_Cause__c = 'Test2';
+       // asstSubsAlloCont.Asset.Department_Responsible__c = 'Test1';
+        asstSubsAlloCont.SaveCancSuspQuantity();
+        System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
+        system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Only managers can suspend or cancel the entire quantity of an asset or subscription.');
+
+        asstSubsAlloCont.Asset.QuantityCancelled__c = 2;
+        asstSubsAlloCont.Asset.QuantityonHold__c = 2;
+        //asstSubsAlloCont.Asset.Root_Cause__c = 'Test2';
+        //asstSubsAlloCont.Asset.Department_Responsible__c = 'Test1';
+        asstSubsAlloCont.SaveCancSuspQuantity();
+        System.debug('ApexPages.hasMessages(ApexPages.Severity.CONFIRM) ==>' + ApexPages.hasMessages(ApexPages.Severity.CONFIRM));
+        system.assert(ApexPages.hasMessages(ApexPages.Severity.CONFIRM), 'Saved Successfully.');
+
         Test.stopTest();
 
     }
@@ -116,6 +142,34 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         System.assertNotEquals(null, subscriptionAllocationDel);
 
         asstSubsAlloCont.cancel();
+        asstSubsAlloCont.reloadDetails();
+
+
+        asstSubsAlloCont.Subscription.QuantityCancelled__c = 2;
+        asstSubsAlloCont.SaveCancSuspQuantitySubs();
+        System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
+        system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Department Responsible or Root Cause can not be empty if Quantity Cancelled is greater than 0.');
+
+        asstSubsAlloCont.Subscription.QuantityonHold__c = 2;
+        asstSubsAlloCont.SaveCancSuspQuantitySubs();
+        System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
+        system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Department Responsible or Root Cause can not be empty if Quantity On Hold is greater than 0.');
+
+        asstSubsAlloCont.Subscription.QuantityCancelled__c = 10;
+        asstSubsAlloCont.Subscription.QuantityonHold__c = 2;
+        //asstSubsAlloCont.Subscription.Root_Cause__c = 'Test2';
+       // asstSubsAlloCont.Subscription.Department_Responsible__c = 'Test1';
+        asstSubsAlloCont.SaveCancSuspQuantitySubs();
+        System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
+        system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Only managers can suspend or cancel the entire quantity of an asset or subscription.');
+
+        asstSubsAlloCont.Subscription.QuantityCancelled__c = 2;
+        asstSubsAlloCont.Subscription.QuantityonHold__c = 2;
+       // asstSubsAlloCont.Subscription.Root_Cause__c = 'Test2';
+        //asstSubsAlloCont.Subscription.Department_Responsible__c = 'Test1';
+        asstSubsAlloCont.SaveCancSuspQuantitySubs();
+        System.debug('ApexPages.hasMessages(ApexPages.Severity.CONFIRM) ==>' + ApexPages.hasMessages(ApexPages.Severity.CONFIRM));
+        system.assert(ApexPages.hasMessages(ApexPages.Severity.CONFIRM), 'Saved Successfully.');
 
         Test.stopTest();
 
@@ -250,7 +304,7 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         asset3.Parent_Project__c = projectList[0].Id;
         asset3.Project_Phase__c = projectList[2].Id;
         asset3.Sales_Price__c = 500.00;
-        asset3.Quantity = 1.00;
+        asset3.Quantity = 5.00;
         asset3.Type__c = 'MRC';
         assetList.add(asset3);
 

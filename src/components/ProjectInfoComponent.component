@@ -3,38 +3,61 @@
  -->
 
 <apex:component id="ProjectInfoComponent" controller="ProjectInfoComponentController" access="global" allowDML="true">
+    <apex:includeScript value="{!URLFOR($Resource.KendoUI, '/js/jquery.min.js')}" />
+
     <apex:attribute name="ProjectInfoComponentValue" description="Attribute on the component." type="String"
                     assignTo="{!ProjectId}"/>
     <apex:pageBlock id="main">
         <apex:pageMessages />
         <apex:pageBlockButtons title="" location="bottom">
-        <apex:actionStatus id="mySaveStatus1" rendered="{!isEditEnable}">
-            <apex:facet name="stop">
-                <apex:commandButton value="Save Project" action="{!saveProjectInfo}" status="mySaveStatus1" reRender="main" />
+            <apex:actionStatus id="mySaveStatus1" rendered="{!isEditEnable}">
+                <apex:facet name="stop">
+                    <apex:commandButton value="Save Project" action="{!saveProjectInfo}" status="mySaveStatus1" reRender="main" onComplete="openpopup();"/>
 
-            </apex:facet>
-            <apex:facet name="start">
-                <apex:outputPanel >
-                    <apex:image value="/img/loading32.gif" style="height: 20px;"/>
-                    <apex:commandButton value="Saving Project..." status="mySaveStatus1" disabled="true"/>
-                </apex:outputPanel>
-            </apex:facet>
-        </apex:actionStatus>
-            <apex:commandButton value="Cancel" action="{!cancel}" reRender="main" rendered="{!isEditEnable}"/>
-        <apex:commandButton title="Edit" value="Edit Project" action="{!enableEdit}" rendered="{!!isEditEnable}" reRender="main" />
+                </apex:facet>
+                <apex:facet name="start">
+                    <apex:outputPanel >
+                        <apex:image value="/img/loading32.gif" style="height: 20px;"/>
+                        <apex:commandButton value="Saving Project..." status="mySaveStatus1" disabled="true"/>
+                    </apex:outputPanel>
+                </apex:facet>
+            </apex:actionStatus>
+            <apex:commandButton value="Cancel" action="{!cancel}" reRender="main" rendered="{!isEditEnable}" onComplete="openpopup();"/>
+            <apex:commandButton title="Edit" value="Edit Project" action="{!enableEdit}" rendered="{!!isEditEnable}" reRender="main" />
         </apex:pageBlockButtons>
-        <apex:pageBlockSection columns="2" >
-            <apex:repeat value="{!$ObjectType.Project__c.FieldSets.Project_Info_ReadOnly}" var="f">
-                <apex:outputfield value="{!project[f]}" />
-            </apex:repeat>
-        </apex:pageBlockSection>
-        <apex:pageBlockSection columns="2" >
-            <apex:repeat value="{!$ObjectType.Project__c.FieldSets.Project_Info_Editable}" var="f">
-                <apex:inputField value="{!project[f.fieldPath]}" rendered="{!isEditEnable}"/>
-                <apex:outputfield value="{!project[f.fieldPath]}" rendered="{!!isEditEnable}"/>
-            </apex:repeat>
-        </apex:pageBlockSection>
+        <apex:outputPanel styleClass="openInPopup">
+            <apex:pageBlockSection columns="2" >
+                <apex:repeat value="{!$ObjectType.Project__c.FieldSets.Project_Info_ReadOnly}" var="f">
+                    <apex:outputfield value="{!project[f]}" />
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2" >
+                <apex:repeat value="{!$ObjectType.Project__c.FieldSets.Project_Info_Editable}" var="f">
+                    <apex:inputField value="{!project[f.fieldPath]}" rendered="{!isEditEnable}"/>
+                    <apex:outputfield value="{!project[f.fieldPath]}" rendered="{!!isEditEnable}"/>
+                </apex:repeat>
+            </apex:pageBlockSection>
+        </apex:outputPanel>
     </apex:pageBlock>
+    <script>
+        $(document).ready(function() {
+           openpopup();
+        });
+
+        function openpopup(){
+                 console.log('came after save' + {!isEditEnable});
+            	 $('.openInPopup a').each(function(event) {
+                     //event.preventDefault();
+                     if(!($(this).parent().hasClass('lookupInput'))){
+                          $(this).prop('target', '_blank');
+                     }
+
+                     // window.open($(this).attr('href'));
+            	 });
+
+        }
+
+    </script>
 </apex:component>
 
-        <!--<apex:inputField value="{!project.ImplementationPartner__c}"></apex:inputField>-->
+<!--<apex:inputField value="{!project.ImplementationPartner__c}"></apex:inputField>-->

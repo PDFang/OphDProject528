@@ -91,6 +91,10 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
                 From xmNotification__c
                 Where Id IN :notificationIdSet
         ];
+
+        if(notificationList.isEmpty()){
+            return;
+        }
         system.debug('callXMRestEventServiceFuture(): calling XMRestEventService for xmNotification - '+ notificationList[0]);
 
         try{

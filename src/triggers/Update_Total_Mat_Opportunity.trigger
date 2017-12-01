@@ -8,7 +8,7 @@ trigger Update_Total_Mat_Opportunity on SBQQ__QuoteLine__c (after insert, after 
         for(SBQQ__QuoteLine__c ql : trigger.New){
             if( stProdFam.contains(ql.SBQQ__ProductFamily__c)
                 && (ql.SBQQ__ProductFamily__c != trigger.oldMap.get(ql.Id).SBQQ__ProductFamily__c
-                    || ql.SBQQ__NetTotal__c != trigger.oldMap.get(ql.Id).SBQQ__NetTotal__c)
+                    || ql.Customer_Price__c != trigger.oldMap.get(ql.Id).Customer_Price__c)
               )           	
                     stQuote.add(ql.SBQQ__Quote__c);
 			
@@ -20,7 +20,7 @@ trigger Update_Total_Mat_Opportunity on SBQQ__QuoteLine__c (after insert, after 
     if(trigger.isInsert){
         for(SBQQ__QuoteLine__c ql : trigger.New){
             if( stProdFam.contains(ql.SBQQ__ProductFamily__c)
-                 && ql.SBQQ__NetTotal__c > 0)           	
+                 && ql.Customer_Price__c > 0)
                     stQuote.add(ql.SBQQ__Quote__c);
             
    	       }

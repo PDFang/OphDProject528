@@ -69,7 +69,6 @@ function subscriptionAllocationData(projId, subscriptionId){
                                           if(returnResult.result != 'Failed'){
                                                options.success();
                                                 $('#loading').modal('hide');
-                                                getSObjType();
                                                  reloadDetails();
                                                hideError();
                                             }else{
@@ -104,10 +103,34 @@ function subscriptionAllocationData(projId, subscriptionId){
                         "ProjectNumber":{from:"ProjectNumber",type:"string",editable:false},
                         "ProjectName":{from:"ProjectName",type:"string", editable:false},
                         "ProjectPhase" : {from:"ProjectPhase", type: "string", editable:false},
-                        "AllocatedQuantity":{from: "AllocatedQuantity", type:"number", editable: true, nullable: true},
+                        "AllocatedHours":{from: "AllocatedHours", type:"number", editable: true, nullable: true},
                         "BudgtedHours":{from: "BudgtedHours", type:"number", defaultValue:0},
                         "Quantity":{from: "Quantity", type:"number", defaultValue:0},
-                        "AllocatedHours":{from: "AllocatedHours", type:"number", editable: true, nullable: true, defaultValue:0},
+                        "Implemented" : {from:"Implemented", type:"boolean"},
+                        "AllocatedQuantity":{
+                            from: "AllocatedQuantity",
+                            type:"number",
+                            nullable: true,
+                            editable:true,
+                            defaultValue:1,
+                            validation : {
+                                quantityValidation : function(input){
+
+                                    var parentRow = $(input).parents("tr:first");
+                                    var grid = $("#subscriptionAllocationList").data("kendoGrid");
+                                    var rowData = grid.dataItem(parentRow);
+                                    if(!rowData){
+                                      input.attr("data-quantityValidation-msg", "Please select an asset");
+                                      return false;
+                                    }
+                                    if(input.val() == 0 && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1){
+                                        input.attr("data-quantityValidation-msg", "Allocated Quantity cannot be zero");
+                                        return false;
+                                    }
+                                    return true;
+                                }
+                            }
+                        },
                         AllocatedPercentage:{
                             from: "AllocatedPercentage",
                             type:"number",
@@ -115,14 +138,26 @@ function subscriptionAllocationData(projId, subscriptionId){
                             editable:true,
                             validation : {
                                 percentageValidation : function(input){
-                                    if(input.val() > 100 && input.is("[name='AllocatedPercentage']")){
-                                        input.attr("data-percentageValidation-msg", " Invalid Percentage");
+                                      var parentRow = $(input).parents("tr:first");
+                                      var grid = $("#subscriptionAllocationList").data("kendoGrid");
+                                      var rowData = grid.dataItem(parentRow);
+                                      if(!rowData){
+                                        input.attr("data-quantityValidation-msg", "Please select an asset");
                                         return false;
-                                    }
-                                return true;
+                                      }
+                                      if(input.val() > 100 && input.is("[name='AllocatedPercentage']")){
+                                          input.attr("data-percentageValidation-msg", " Invalid Percentage");
+                                          return false;
+                                      }
+                                       if(input.val() == 0 && input.is("[name='AllocatedPercentage']") && rowData.Quantity == 1){
+                                          input.attr("data-percentageValidation-msg", " Allocated Percentage cannot be zero");
+                                          return false;
+                                      }
+                                  return true;
                                 }
                             }
-                        },
+                        }
+
                     }
                 }
             },
@@ -205,6 +240,13 @@ function subscriptionAllocationData(projId, subscriptionId){
                         title:"Allocated Hours",
                         editable:true
                     },
+                    {
+                        field:"Implemented",
+                        title:"Implemented",
+                        template: '<input type="checkbox"  "# if (data.Implemented) { # checked="checked" # } #"  disabled "/>',
+                        width:150
+
+                    },
                     {   title:"Action",
                         command: ["edit",
                         {name: "Delete",
@@ -231,7 +273,6 @@ function subscriptionAllocationData(projId, subscriptionId){
                                                   if(result != 'Failed'){
                                                        grid.dataSource.remove(data);
                                                         reloadDetails();
-                                                           getSObjType();
                                                        $('#loading').modal('hide');
                                                     }else{
                                                     $('#loading').modal('hide');
@@ -285,7 +326,7 @@ function addDuplicateRowSubscription(e){
 
 
 
-                 var buttonCell = e.container.contents()[10];
+                 var buttonCell = e.container.contents()[11];
                  $(buttonCell).find("a.k-primary").html('<span class="k-icon k-i-update"></span> Add');
             }else{
                 enableSubscriptionAllocation(e.model, e.container);
@@ -306,6 +347,8 @@ function enableSubscriptionAllocation(rowData, row){
                  $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
                  $(allocatedHoursCell).find("span.k-select").hide();
             }
+           var implementedCell =  $(row).children().eq(10);
+           $(implementedCell).find("input").prop('disabled', true);
         }
 
 function calculateRemainingSubscriptionAllocation(rowData, row){
@@ -313,43 +356,36 @@ function calculateRemainingSubscriptionAllocation(rowData, row){
             var dataItems = subscriptionGrid.dataItems();
             var totalQuantity = 0,
             totalPercentage = 0;
-
-            for(var i = 0; i < dataItems.length; i++){
-                if(rowData.Quantity > 1 && dataItems[i].get("AllocatedQuantity") != null && dataItems[i].get("Subscription") ==  rowData.Subscription){
-                 totalQuantity += Number(dataItems[i].get("AllocatedQuantity"));
-
-                }else if(rowData.Quantity == 1 && dataItems[i].get("AllocatedPercentage") != null && dataItems[i].get("Subscription") ==  rowData.Subscription){
-                totalPercentage += Number(dataItems[i].get("AllocatedPercentage"));
-                }
-            }
             var allocatedQuantityCell =  $(row).children().eq(7);
             var allocatedQPercentageCell =  $(row).children().eq(8);
             var allocatedHoursCell =  $(row).children().eq(9);
             var hours;
 
             if(rowData.Quantity > 1 ){
-                var remainingQuantity = rowData.Quantity -  totalQuantity;
+
                 $(allocatedQPercentageCell).find("span.k-numerictextbox").hide();
-                rowData.AllocatedQuantity = remainingQuantity;
+                rowData.AllocatedQuantity = rowData.AllocatedQuantity == null ? Subscription.RemainingQuantity__c : rowData.AllocatedQuantity;
                 $(allocatedQuantityCell).find("span.k-numerictextbox").show();
-                $(allocatedQuantityCell).find("input").val(remainingQuantity);
-                hours = rowData.BudgtedHours * (remainingQuantity / rowData.Quantity);
+                $(allocatedQuantityCell).find("input").val(rowData.AllocatedQuantity);
+                hours = rowData.BudgtedHours * (rowData.AllocatedQuantity / rowData.Quantity);
                 $(allocatedHoursCell).find("input").prop('disabled', false).removeClass("k-state-disabled");
                 $(allocatedHoursCell).find("span.k-select").show();
 
             }else if(rowData.Quantity == 1 ){
-                var remainingPercentage = 100 -  totalPercentage;
-                rowData.AllocatedPercentage = remainingPercentage;
+
+                rowData.AllocatedPercentage = rowData.AllocatedPercentage == null ? Subscription.Remaning_Percentage__c : rowData.AllocatedPercentage;;
                 $(allocatedQuantityCell).find("span.k-numerictextbox").hide();
                 $(allocatedQPercentageCell).find("span.k-numerictextbox").show();
-                $(allocatedQPercentageCell).find("input").val(remainingPercentage);
-                var hours = rowData.BudgtedHours * (remainingPercentage / 100);
+                $(allocatedQPercentageCell).find("input").val(rowData.AllocatedPercentage);
+                var hours = rowData.BudgtedHours * (rowData.AllocatedPercentage / 100);
                 $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
                 $(allocatedHoursCell).find("span.k-select").hide();
 
             }
             rowData.AllocatedHours = hours.toFixed(2);
-            $(allocatedHoursCell).find("input").val(rowData.AllocatedHours)
+            $(allocatedHoursCell).find("input").val(rowData.AllocatedHours);
+             var implementedCell =  $(row).children().eq(10);
+             $(implementedCell).find("input").prop('disabled', true);
         }
 
 function nonEditorSubscription(container, options) {
@@ -359,6 +395,21 @@ function nonEditorSubscription(container, options) {
 function gridDataboundSubscription(e){
           // var grid = this;
           $("#subscriptionAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
+           $("#subscriptionAllocationList tbody tr .k-grid-edit").each(function () {
+              var currentDataItem = $("#subscriptionAllocationList").data("kendoGrid").dataItem($(this).closest("tr"));
+              //Check in the current dataItem if the row is editable
+              if (currentDataItem.Implemented == true && isManager == false) {
+                  $(this).remove();
+              }
+          });
+           //Selects all delete buttons
+           $("#subscriptionAllocationList tbody tr a.k-grid-Delete").each(function () {
+                  var currentDataItem = $("#subscriptionAllocationList").data("kendoGrid").dataItem($(this).closest("tr"));
+                  //Check in the current dataItem if the row is deletable
+                  if (currentDataItem.Implemented == true && isManager == false) {
+                      $(this).remove();
+                  }
+              })
       }
 
 function calculateSubscriptionBudgetedHours(e){
@@ -373,6 +424,8 @@ function calculateSubscriptionBudgetedHours(e){
                $(allocatedHoursInput).find("span.k-select").hide();
           }else if(model.AllocatedQuantity > 0 ){
               currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
+               if( model.Quantity == 0)
+                  currentValue = 0;
               $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', false).removeClass("k-state-disabled");
               $(allocatedHoursInput).find("span.k-select").show();
           }
@@ -524,8 +577,8 @@ function selectSubscription(e){
         if(rowData){
             rowData.Subscription = dataItem.SubscriptionId;
             rowData.SubscriptionName = dataItem.SubscriptionName;
-            rowData.AllocatedPercentage = null;
-            rowData.AllocatedQuantity = null;
+            rowData.AllocatedPercentage = rowData.RemainingPercentage;
+            rowData.AllocatedQuantity = rowData.RemainingQuantity;
             rowData.AllocatedHours = 0;
             rowData.Quantity = dataItem.Quantity;
             rowData.BudgtedHours = dataItem.BudgtedHours  == '' ? 0 : dataItem.BudgtedHours;

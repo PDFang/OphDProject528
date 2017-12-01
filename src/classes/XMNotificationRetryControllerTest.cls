@@ -12,7 +12,8 @@ private class XMNotificationRetryControllerTest {
         Test.setCurrentPage(Page.XMNotificationRetry);
         ApexPages.currentPage().getParameters().put('caseId', null);
 
-        XMNotificationRetryController controller = new XMNotificationRetryController();
+        Case c = new Case();
+        XMNotificationRetryController controller = new XMNotificationRetryController(new ApexPages.StandardController(c));
 
         system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Should error if Case ID is missing in the URL.');
 
@@ -27,7 +28,8 @@ private class XMNotificationRetryControllerTest {
         Test.setCurrentPage(Page.XMNotificationRetry);
         ApexPages.currentPage().getParameters().put('caseId', '005');
 
-        XMNotificationRetryController controller = new XMNotificationRetryController();
+        Case c = new Case();
+        XMNotificationRetryController controller = new XMNotificationRetryController(new ApexPages.StandardController(c));
 
         system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Should error if Case details could not be retrieved.');
 
@@ -46,7 +48,7 @@ private class XMNotificationRetryControllerTest {
         Test.setCurrentPage(Page.XMNotificationRetry);
         ApexPages.currentPage().getParameters().put('caseId', testEvent.Id);
 
-        XMNotificationRetryController controller = new XMNotificationRetryController();
+        XMNotificationRetryController controller = new XMNotificationRetryController(new ApexPages.StandardController(testEvent));
 
         system.assert(ApexPages.hasMessages(ApexPages.Severity.INFO), 'Should alert if there are no failed notifications.');
 
@@ -67,7 +69,7 @@ private class XMNotificationRetryControllerTest {
         Test.setCurrentPage(Page.XMNotificationRetry);
         ApexPages.currentPage().getParameters().put('caseId', testEvent.Id);
 
-        XMNotificationRetryController controller = new XMNotificationRetryController();
+        XMNotificationRetryController controller = new XMNotificationRetryController(new ApexPages.StandardController(testEvent));
 
         system.assertEquals(1, controller.notificationList.size(), 'Failed notification record was not retrieved.');
 

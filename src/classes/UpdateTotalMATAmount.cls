@@ -13,8 +13,8 @@ public class UpdateTotalMATAmount {
          list<Opportunity> lstOpp = new list<Opportunity>();
           
          AggregateResult[] sumOfQuotelines 
-                 = [select SBQQ__Quote__r.SBQQ__Opportunity2__c Opp, SUM(SBQQ__NetTotal__c) Total
-                   FROM SBQQ__QuoteLine__c 
+                 = [select SBQQ__Quote__r.SBQQ__Opportunity2__c Opp, SUM(Customer_Price__c) Total
+                   FROM SBQQ__QuoteLine__c
                    where SBQQ__Quote__c in : stQuotes 
                    and SBQQ__Quote__r.SBQQ__Opportunity2__r.RecordTypeId NOT IN :wfoRecordTypeIds
                    and SBQQ__Product__r.Family in : stProdFam

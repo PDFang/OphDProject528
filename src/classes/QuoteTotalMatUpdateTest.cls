@@ -10,13 +10,6 @@ public class QuoteTotalMatUpdateTest {
         Account a = new Account();
         a.name    = 'TEST';
         Database.insert(a);
-
-        
-   /**     Pricebook2 pb = new PriceBook2();
-        pb.Name = 'TEST PB';
-        pb.IsActive = true;
-
-        insert pb; **/
         
         /* Get a valid stage name */
        
@@ -63,7 +56,8 @@ public class QuoteTotalMatUpdateTest {
         SBQQ__QuoteLine__c ql = new SBQQ__QuoteLine__c();
         ql.SBQQ__Product__c = p.Id;
         ql.SBQQ__Existing__c = false;
-        ql.SBQQ__NetPrice__c  = 20.00;
+        ql.SBQQ__RegularPrice__c  = 20.00;
+        ql.SBQQ__ListPrice__c = 20;
         ql.SBQQ__Quantity__c = 5;
         ql.SBQQ__Quote__c = quote.Id;
         quoteLines.add(ql);
@@ -72,11 +66,11 @@ public class QuoteTotalMatUpdateTest {
         SBQQ__QuoteLine__c ql2= new SBQQ__QuoteLine__c();
         ql2.SBQQ__Product__c = p1.Id;
         ql2.SBQQ__Existing__c = false;
-        ql2.SBQQ__NetPrice__c  = 30.00;
+        ql2.SBQQ__RegularPrice__c  = 30.00;
+        ql2.SBQQ__ListPrice__c  = 30.00;
         ql2.SBQQ__Quantity__c = 5;        
         ql2.SBQQ__Quote__c = quote.Id;
         quoteLines.add(ql2);
-        
         // insert lines
         insert quoteLines;
     }
@@ -85,17 +79,20 @@ public class QuoteTotalMatUpdateTest {
         QuoteTotalMatUpdateTest.setupData();
         test.startTest();        
         Opportunity opp = [select Id, Total_MAT_New__c from Opportunity limit 1];
-        system.assertEquals(250.0, opp.Total_MAT_New__c);              
+        system.assertEquals(250.0, opp.Total_MAT_New__c);
         test.stopTest();       
     }
     
     // Scenario 2
     public static testmethod void testTotalMatAfterUpdate(){
-        QuoteTotalMatUpdateTest.setupData();        
+        QuoteTotalMatUpdateTest.setupData();
+
         test.startTest();                                         
-        SBQQ__QuoteLine__c ql = [select Id, SBQQ__NetPrice__c from SBQQ__QuoteLine__c where SBQQ__NetPrice__c = 20.00 limit 1];
-        ql.SBQQ__NetPrice__c = 100.00;
+        SBQQ__QuoteLine__c ql = [select Id, SBQQ__RegularPrice__c,SBQQ__ListPrice__c  from SBQQ__QuoteLine__c where SBQQ__RegularPrice__c = 20.00 limit 1];
+        ql.SBQQ__RegularPrice__c = 100.00;
+        ql.SBQQ__ListPrice__c = 100.0;
         update ql;
+
         Opportunity opp = [select Id, Total_MAT_New__c from Opportunity limit 1];
         system.assertEquals(650.0, opp.Total_MAT_New__c);     
         test.stopTest();               

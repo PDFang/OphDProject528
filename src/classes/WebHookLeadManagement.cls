@@ -40,6 +40,9 @@ global class WebHookLeadManagement {
 					if(fieldName == 'application') {
 						tempString = 'application';
 					}
+					if(fieldName == 'vendor') {
+						tempString = 'vendor';
+					}
 					parser.nextToken();
 					string fieldValue  = parser.getText();
 					keyValue = tempString + fieldName;
@@ -52,6 +55,7 @@ global class WebHookLeadManagement {
 					}
 					keyValue = keyValue.trim();
 					//System.debug('keyValue ==>' + keyValue);
+					fieldValue = string.valueOf(fieldValue);
 					if(leadMap.containsKey(keyValue))
 						newLead.put(leadMap.get(keyValue), fieldValue);
 					if(keyValue == 'companystreet2')
@@ -60,7 +64,7 @@ global class WebHookLeadManagement {
 			}
 
 		     Map<String, Schema.RecordTypeInfo> recordTypeNameMap = Schema.SObjectType.Lead.getRecordTypeInfosByName();
-		     newLead.RecordTypeId = recordTypeNameMap.get('InCloud Partner Engagement').recordTypeId;
+		     newLead.RecordTypeId = recordTypeNameMap.get('DEVone Partner Engagement').recordTypeId;
 
 
 		     System.debug('new Lead' + newLead);
