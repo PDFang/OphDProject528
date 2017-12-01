@@ -258,7 +258,9 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         || newProject.Phase_Status__c != oldProject.Phase_Status__c
                         || newProject.ParentProject__c != oldProject.ParentProject__c
                         || newProject.Actual_NRR__c != oldProject.Actual_NRR__c
-                        || newProject.Contracted_NRR__c != oldProject.Contracted_NRR__c) )
+                        || newProject.Contracted_NRR__c != oldProject.Contracted_NRR__c
+                        || newProject.Actual_MRR__c != oldProject.Actual_MRR__c
+                        || newProject.Contracted_MRR__c != oldProject.Contracted_MRR__c) )
                 {
                     system.debug('**** setParentProjectGoLiveDates(): updated Phase Project ');
                     parentProjectIdSet.add(newProject.ParentProject__c);
