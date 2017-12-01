@@ -6,8 +6,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
     static Id projectRollupQueueableJobID;
     static Id opportunityRollupQueueableJobID;
     static Id salesEngineeringRecordTypeId;
-    static Id psProjectPhaseSaasRecordTypeId;
-    static Id psProjectParentSaasRecordTypeId;
+    static Id psProjectPhaseSaasRecordTypeId, psProjectParentPremiseRecordTypeId;
+    static Id psProjectParentSaasRecordTypeId, psProjectPhasePremiseRecordTypeId;
     static set<Id> allowedRecordTypes;
 
     static final Set<String> debugProjectFields = new Set<String>{
@@ -29,7 +29,9 @@ public class ProjectTriggerHandler extends TriggerHandler{
             Map<String, Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
 
             salesEngineeringRecordTypeId = rtMapByName.get('Sales Engineering Project').getRecordTypeId();
+            psProjectPhasePremiseRecordTypeId = rtMapByName.get('PS Project Phase Premise WFO').getRecordTypeId();
             psProjectPhaseSaasRecordTypeId = rtMapByName.get('PS Project Phase SaaS').getRecordTypeId();
+            psProjectParentPremiseRecordTypeId = rtMapByName.get('PS Parent Project - Premise').getRecordTypeId();
             psProjectParentSaasRecordTypeId = rtMapByName.get('PS Parent Project - SaaS').getRecordTypeId();
 
             allowedRecordTypes = new set<Id> ();
@@ -185,6 +187,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
             if(newProject.isClone()){
                 newProject.Times_Go_Live_Date_Changed__c = null;
                 newProject.Original_Phase_Forecasted_Go_Live_Date__c = null;
+                newProject.Actual_NRR__c = 0;
+                newProject.Contracted_NRR__c = 0;
             }
             if(trigger.isInsert && newProject.EstimatedProjectGoLiveDate__c != null){
                 newProject.Original_Phase_Forecasted_Go_Live_Date__c = newProject.EstimatedProjectGoLiveDate__c;
@@ -226,8 +230,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
             system.debug(' setParentProjectGoLiveDates(): newProject - ' + printInDebugLog(newProject));
             system.debug(' setParentProjectGoLiveDates(): oldProject - ' + printInDebugLog(oldProject));
 
-            // parent SaaS project is updated or deleted
-            if(newProject.RecordTypeId == psProjectParentSaasRecordTypeId){
+            // parent SaaS or Premise project is updated or deleted
+            if(newProject.RecordTypeId == psProjectParentSaasRecordTypeId || newProject.RecordTypeId == psProjectParentPremiseRecordTypeId){
 
                 if(trigger.isDelete){
                     projectOppIdSet.add(newProject.Opportunity__c);
@@ -239,17 +243,22 @@ public class ProjectTriggerHandler extends TriggerHandler{
                 continue;
             }
 
-            // Phase SaaS project created or updated or deleted
-            if(newProject.RecordTypeId == psProjectPhaseSaasRecordTypeId) {
+            // Phase SaaS or Premise project is created or updated or deleted
+            if(newProject.RecordTypeId == psProjectPhaseSaasRecordTypeId || newProject.RecordTypeId == psProjectPhasePremiseRecordTypeId) {
 
                 if (trigger.isInsert && (newProject.EstimatedProjectGoLiveDate__c != null || newProject.ActualProjectGoLiveDate__c != null
-                        || (newProject.Phase_Status__c != 'Closed' && newProject.Phase_Status__c != 'Cancelled')) ){
+                        || (newProject.Phase_Status__c != 'Closed' && newProject.Phase_Status__c != 'Cancelled'))
+                        || newProject.Actual_NRR__c > 0
+                        || newProject.Contracted_NRR__c > 0)
+                {
                     system.debug('**** setParentProjectGoLiveDates(): created Phase Project ');
                     parentProjectIdSet.add(newProject.ParentProject__c);
                 } else if (trigger.isUpdate && (newProject.EstimatedProjectGoLiveDate__c != oldProject.EstimatedProjectGoLiveDate__c
                         || newProject.ActualProjectGoLiveDate__c != oldProject.ActualProjectGoLiveDate__c
                         || newProject.Phase_Status__c != oldProject.Phase_Status__c
-                        || newProject.ParentProject__c != oldProject.ParentProject__c) )
+                        || newProject.ParentProject__c != oldProject.ParentProject__c
+                        || newProject.Actual_NRR__c != oldProject.Actual_NRR__c
+                        || newProject.Contracted_NRR__c != oldProject.Contracted_NRR__c) )
                 {
                     system.debug('**** setParentProjectGoLiveDates(): updated Phase Project ');
                     parentProjectIdSet.add(newProject.ParentProject__c);
