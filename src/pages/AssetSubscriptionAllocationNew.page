@@ -357,6 +357,8 @@
                               Asset.Budgeted_Hours__c = '{!Asset.Budgeted_Hours__c}';
                               Asset.RemainingQuantity__c = '{!Asset.RemainingQuantity__c}';
                               Asset.Remaning_Percentage__c = '{!Asset.Remaning_Percentage__c}';
+                              Asset.QuantityonHold__c = '{!Asset.QuantityonHold__c}';
+                              Asset.QuantityCancelled__c = '{!Asset.QuantityCancelled__c}';
                               assetAllocationData(null, '{!currentId}');
 
                               if(disableEdit){
@@ -375,6 +377,8 @@
                               Subscription.Budgeted_Hours__c = '{!Subscription.Budgeted_Hours__c}';
                               Subscription.RemainingQuantity__c = '{!Subscription.RemainingQuantity__c}';
                               Subscription.Remaning_Percentage__c = '{!Subscription.Remaning_Percentage__c}';
+                              Subscription.QuantityonHold__c = '{!Subscription.QuantityonHold__c}';
+                              Subscription.QuantityCancelled__c = '{!Subscription.QuantityCancelled__c}';
                               subscriptionAllocationData(null, '{!currentId}');
                               if(disableEdit){
                                    $("a.k-grid-add").hide();

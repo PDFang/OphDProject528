@@ -127,6 +127,10 @@ function subscriptionAllocationData(projId, subscriptionId){
                                         input.attr("data-quantityValidation-msg", "Allocated Quantity cannot be zero");
                                         return false;
                                     }
+                                     if(input.val() > Subscription.RemainingQuantity__c && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && (Subscription.QuantityonHold__c > 0 || Subscription.QuantityCancelled__c > 0)){
+                                        input.attr("data-quantityValidation-msg", 'Cannot allocate more than “Contract Quantity” if there is any quantity on hold or cancelled');
+                                        return false;
+                                    }
                                     return true;
                                 }
                             }
@@ -178,6 +182,7 @@ function subscriptionAllocationData(projId, subscriptionId){
           editable: "inline",
           scrollable: true,
           noRecords: true,
+          height:300,
           edit:addDuplicateRowSubscription,
           detailInit: loadSubscriptionChildGrid,
           dataBound: gridDataboundSubscription,
@@ -461,9 +466,11 @@ function detailSubscriptionProjects(e) {
                         'Subscription',
                         function(result,event){
                           if (event.status) {
-                              if(result.length > 1){
+                              if(result != null && result.length > 1){
                                    options.success(JSON.parse(result));
                                    console.log('PhaseProjectDetails =>' + JSON.stringify(result));
+                              }else{
+                              options.success('');
                               }
                           }
                         },{escape: false}
@@ -485,6 +492,7 @@ function detailSubscriptionProjects(e) {
         },
         scrollable: false,
         sortable: true,
+        noRecords: true,
         columns: [
             { command: { text: "Select", click : selectSubscriptionProject}, title: "Action", width: "60px" },
             { field: "ProjectNumber", title:"Phase Project Number", width: "110px" },
