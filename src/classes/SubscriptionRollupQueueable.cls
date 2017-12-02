@@ -8,6 +8,15 @@ public class SubscriptionRollupQueueable implements Queueable{
     final Set<Id> projectIds;
 
     // constructor
+    public SubscriptionRollupQueueable(Set<Id> projectIds) {
+
+        system.debug('**** SubscriptionRollupQueueable(): projectIds - ' + projectIds);
+
+        this.projectIds = projectIds;
+        
+    }
+
+    // constructor
     public SubscriptionRollupQueueable(List<SBQQ__Subscription__c> subscriptions){
 
         system.debug('**** SubscriptionRollupQueueable(): subscriptions - ' + subscriptions);

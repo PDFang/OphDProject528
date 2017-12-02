@@ -8,6 +8,15 @@ public class AssetRollupQueueable implements Queueable{
     final Set<Id> projectIds;
 
     // constructor
+    public AssetRollupQueueable(Set<Id> projectIds) {
+
+        system.debug('**** AssetRollupQueueable(): projectIds - ' + projectIds);
+
+        this.projectIds = projectIds;
+        
+    }
+
+    // constructor
     public AssetRollupQueueable(List<Asset> assets){
 
         system.debug('**** AssetRollupQueueable(): assets - ' + assets);

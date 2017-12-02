@@ -3,7 +3,9 @@
  */
 
 public class SubscriptionTriggerHandler extends TriggerHandler{
+
     public static Boolean InSubscriptionCustomTrigger = false;
+    private static Id subscriptionRollupQueueableJobID;
 
     public override void beforeUpdate()
     {
@@ -12,6 +14,7 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
 
     public override void afterInsert(){
         InsertSubscriptionReplica((List<SBQQ__Subscription__c>) trigger.new);
+        rollupMRRToPhaseProject();
     }
 
     public override void afterUpdate(){
@@ -20,6 +23,53 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
         {
             UpdateSubscriptionReplica((Map<Id, SBQQ__Subscription__c>) trigger.newMap, (Map<Id, SBQQ__Subscription__c>)trigger.oldMap);
         }
+        rollupMRRToPhaseProject();
+    }
+
+    protected override void afterDelete(){
+        rollupMRRToPhaseProject();
+    }
+
+    // roll-up subscription MRR's to related phase project
+    private static void rollupMRRToPhaseProject() {
+
+        system.debug('**** started rollupMRRToPhaseProject() ');
+
+        List<SBQQ__Subscription__c> newList = (List<SBQQ__Subscription__c>) (trigger.isDelete ? trigger.old : trigger.new);
+
+        Map<Id, SBQQ__Subscription__c> oldMap = (Map<Id, SBQQ__Subscription__c>) trigger.oldMap;
+
+        Set<Id> phaseProjectIdSet = new Set<Id>();
+
+        for (SBQQ__Subscription__c newSubscription : newList) {
+
+            SBQQ__Subscription__c oldSubscription = oldMap != null ? oldMap.get(newSubscription.Id) : null;
+
+            if (trigger.isInsert && newSubscription.Project_Phase__c != null){
+                system.debug('**** rollupMRRToPhaseProject(): created subscription ');
+                phaseProjectIdSet.add(newSubscription.Project_Phase__c);
+            } else if (trigger.isUpdate){
+                system.debug('**** rollupMRRToPhaseProject(): updated subscription ');
+                phaseProjectIdSet.add(newSubscription.Project_Phase__c);
+                if (newSubscription.Project_Phase__c != oldSubscription.Project_Phase__c) {
+                    phaseProjectIdSet.add(oldSubscription.Project_Phase__c);
+                }
+            } else if (trigger.isDelete) {
+                system.debug('**** rollupMRRToPhaseProject(): deleted subscription ');
+                phaseProjectIdSet.add(newSubscription.Project_Phase__c);
+            }
+
+        }
+
+        phaseProjectIdSet.remove(null);
+
+        system.debug('**** rollupMRRToPhaseProject(): phaseProjectIdSet - ' + phaseProjectIdSet);
+
+        if(phaseProjectIdSet.size() > 0 && subscriptionRollupQueueableJobID == null){
+            subscriptionRollupQueueableJobID = System.enqueueJob(new SubscriptionRollupQueueable(phaseProjectIdSet));
+            system.debug('**** rollupMRRToPhaseProject(): subscriptionRollupQueueableJobID - ' + subscriptionRollupQueueableJobID);
+        }
+
     }
 
     // Get associated Project Phase information and update to Subscription
