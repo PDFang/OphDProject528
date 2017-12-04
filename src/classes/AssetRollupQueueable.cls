@@ -13,7 +13,7 @@ public class AssetRollupQueueable implements Queueable{
         system.debug('**** AssetRollupQueueable(): projectIds - ' + projectIds);
 
         this.projectIds = projectIds;
-        
+
     }
 
     // constructor
@@ -30,14 +30,14 @@ public class AssetRollupQueueable implements Queueable{
 
         system.debug('**** AssetRollupQueueable(): projectIds - ' + projectIds);
 
-        if(projectIds.isEmpty()){
-            return;
-        }
-
     }
 
     // interface method
     public void execute(QueueableContext context){
+
+        if(projectIds == null || projectIds.isEmpty()){
+            return;
+        }
 
         AssetSubscriptionRollupHelper helper = new AssetSubscriptionRollupHelper(projectIds);
 

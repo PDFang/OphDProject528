@@ -30,14 +30,14 @@ public class SubscriptionRollupQueueable implements Queueable{
 
         system.debug('**** SubscriptionRollupQueueable(): projectIds - ' + projectIds);
 
-        if(projectIds.isEmpty()){
-            return;
-        }
-
     }
 
     // interface method
     public void execute(QueueableContext context){
+
+        if(projectIds == null || projectIds.isEmpty()){
+            return;
+        }
 
         AssetSubscriptionRollupHelper helper = new AssetSubscriptionRollupHelper(projectIds);
 
