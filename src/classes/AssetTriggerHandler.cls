@@ -4,12 +4,14 @@ public class AssetTriggerHandler extends TriggerHandler {
 
     public override void afterUpdate()
     {
+        rollupNRRToPhaseProject();
         ProjectPhaseAssetSummary();
         ProjectParentAssetSummary();
     }
 
     public override void afterInsert()
     {
+        rollupNRRToPhaseProject();
         ProjectPhaseAssetSummary();
         ProjectParentAssetSummary();
         AttachParentProject();
@@ -17,6 +19,7 @@ public class AssetTriggerHandler extends TriggerHandler {
 
     public override void afterDelete()
     {
+        rollupNRRToPhaseProject();
         ProjectPhaseAssetSummary();
         ProjectParentAssetSummary();
     }
