@@ -185,7 +185,7 @@ public class AssetSubscriptionAllocationHelper {
             subscriptionFields.add(member.getFieldPath());
         }
 
-        List<Schema.FieldSetMember> fsMembersSubsEditable = Schema.SobjectType.Asset.fieldSets.PS_Asset_Allocation_Editable_Fields.getFields();
+        List<Schema.FieldSetMember> fsMembersSubsEditable = Schema.SobjectType.SubscriptionReplica__c.fieldSets.PS_Subscription_Alloc_Editable_Fields.getFields();
         for(Schema.FieldSetMember member : fsMembersSubsEditable){
             subscriptionEditableFields.add(member.getFieldPath());
         }
