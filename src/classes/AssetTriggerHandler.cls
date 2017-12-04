@@ -31,36 +31,24 @@ public class AssetTriggerHandler extends TriggerHandler {
 
         List<Asset> newList = (List<Asset>) (trigger.isDelete ? trigger.old : trigger.new);
 
-        Map<Id, Asset> oldMap = (Map<Id, Asset>) trigger.oldMap;
-
-        Set<Id> phaseProjectIdSet = new Set<Id>();
+        Set<Id> assetIdSet = new Set<Id>();
 
         for (Asset newAsset : newList) {
 
-            Asset oldAsset = oldMap != null ? oldMap.get(newAsset.Id) : null;
-
-            if (trigger.isInsert && newAsset.Project_Phase__c != null){
-                system.debug('**** rollupNRRToPhaseProject(): created subscription ');
-                phaseProjectIdSet.add(newAsset.Project_Phase__c);
-            } else if (trigger.isUpdate){
-                system.debug('**** rollupNRRToPhaseProject(): updated subscription ');
-                phaseProjectIdSet.add(newAsset.Project_Phase__c);
-                if (newAsset.Project_Phase__c != oldAsset.Project_Phase__c) {
-                    phaseProjectIdSet.add(oldAsset.Project_Phase__c);
-                }
+            if (trigger.isInsert || trigger.isUpdate){
+                system.debug('**** rollupNRRToPhaseProject(): created or updated asset ');
+                assetIdSet.add(newAsset.Id);
             } else if (trigger.isDelete) {
-                system.debug('**** rollupNRRToPhaseProject(): deleted subscription ');
-                phaseProjectIdSet.add(newAsset.Project_Phase__c);
+                system.debug('**** rollupNRRToPhaseProject(): deleted asset ');
+                assetIdSet.add(newAsset.Id);
             }
 
         }
 
-        phaseProjectIdSet.remove(null);
+        system.debug('**** rollupNRRToPhaseProject(): assetIdSet - ' + assetIdSet);
 
-        system.debug('**** rollupNRRToPhaseProject(): phaseProjectIdSet - ' + phaseProjectIdSet);
-
-        if(phaseProjectIdSet.size() > 0 && assetRollupQueueableJobID == null){
-            assetRollupQueueableJobID = System.enqueueJob(new AssetRollupQueueable(phaseProjectIdSet));
+        if(assetIdSet.size() > 0 && assetRollupQueueableJobID == null){
+            assetRollupQueueableJobID = System.enqueueJob(new AssetRollupQueueable(assetIdSet));
             system.debug('**** rollupNRRToPhaseProject(): assetRollupQueueableJobID - ' + assetRollupQueueableJobID);
         }
 

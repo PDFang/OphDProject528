@@ -37,36 +37,24 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
 
         List<SBQQ__Subscription__c> newList = (List<SBQQ__Subscription__c>) (trigger.isDelete ? trigger.old : trigger.new);
 
-        Map<Id, SBQQ__Subscription__c> oldMap = (Map<Id, SBQQ__Subscription__c>) trigger.oldMap;
-
-        Set<Id> phaseProjectIdSet = new Set<Id>();
+        Set<Id> subscriptionIds = new Set<Id>();
 
         for (SBQQ__Subscription__c newSubscription : newList) {
 
-            SBQQ__Subscription__c oldSubscription = oldMap != null ? oldMap.get(newSubscription.Id) : null;
-
-            if (trigger.isInsert && newSubscription.Project_Phase__c != null){
-                system.debug('**** rollupMRRToPhaseProject(): created subscription ');
-                phaseProjectIdSet.add(newSubscription.Project_Phase__c);
-            } else if (trigger.isUpdate){
-                system.debug('**** rollupMRRToPhaseProject(): updated subscription ');
-                phaseProjectIdSet.add(newSubscription.Project_Phase__c);
-                if (newSubscription.Project_Phase__c != oldSubscription.Project_Phase__c) {
-                    phaseProjectIdSet.add(oldSubscription.Project_Phase__c);
-                }
+            if (trigger.isInsert || trigger.isUpdate){
+                system.debug('**** rollupMRRToPhaseProject(): created or updated subscription ');
+                subscriptionIds.add(newSubscription.Id);
             } else if (trigger.isDelete) {
                 system.debug('**** rollupMRRToPhaseProject(): deleted subscription ');
-                phaseProjectIdSet.add(newSubscription.Project_Phase__c);
+                subscriptionIds.add(newSubscription.Id);
             }
 
         }
 
-        phaseProjectIdSet.remove(null);
+        system.debug('**** rollupMRRToPhaseProject(): subscriptionIds - ' + subscriptionIds);
 
-        system.debug('**** rollupMRRToPhaseProject(): phaseProjectIdSet - ' + phaseProjectIdSet);
-
-        if(phaseProjectIdSet.size() > 0 && subscriptionRollupQueueableJobID == null){
-            subscriptionRollupQueueableJobID = System.enqueueJob(new SubscriptionRollupQueueable(phaseProjectIdSet));
+        if(subscriptionIds.size() > 0 && subscriptionRollupQueueableJobID == null){
+            subscriptionRollupQueueableJobID = System.enqueueJob(new SubscriptionRollupQueueable(subscriptionIds));
             system.debug('**** rollupMRRToPhaseProject(): subscriptionRollupQueueableJobID - ' + subscriptionRollupQueueableJobID);
         }
 

@@ -8,34 +8,36 @@ public class SubscriptionRollupQueueable implements Queueable{
     final Set<Id> projectIds;
 
     // constructor
-    public SubscriptionRollupQueueable(Set<Id> projectIds) {
+    public SubscriptionRollupQueueable(Set<Id> subscriptionIds) {
 
-        system.debug('**** SubscriptionRollupQueueable(): projectIds - ' + projectIds);
-
-        this.projectIds = projectIds;
-        
-    }
-
-    // constructor
-    public SubscriptionRollupQueueable(List<SBQQ__Subscription__c> subscriptions){
-
-        system.debug('**** SubscriptionRollupQueueable(): subscriptions - ' + subscriptions);
+        system.debug('**** SubscriptionRollupQueueable(): subscriptionIds - ' + subscriptionIds);
 
         projectIds = new Set<Id>();
-        for(SBQQ__Subscription__c sub : subscriptions){
-            if(sub.Project_Phase__c != null){
-                projectIds.add(sub.Project_Phase__c);
-            }
-        }
 
-        system.debug('**** SubscriptionRollupQueueable(): projectIds - ' + projectIds);
+        Schema.DescribeSObjectResult projObjectResult = Schema.SObjectType.Project__c;
+        Map<String, Schema.RecordTypeInfo> projRecordTypeInfosByName = projObjectResult.getRecordTypeInfosByName();
+
+        Id psProjectPhaseSaasRecordTypeId = projRecordTypeInfosByName.get('PS Project Phase SaaS').getRecordTypeId();
+        Id psProjectPhasePremiseRecordTypeId = projRecordTypeInfosByName.get('PS Project Phase Premise WFO').getRecordTypeId();
+
+        Set<Id> psProjectPhaseRecordTypeIds = new Set<Id>{
+                psProjectPhaseSaasRecordTypeId,
+                psProjectPhasePremiseRecordTypeId
+        };
+
+        for(Project_Subscription_Allocation__c allocation : [
+                Select Project__c from Project_Subscription_Allocation__c
+                where Subscription__r.Subscription__c IN :subscriptionIds and Project__r.RecordTypeId IN :psProjectPhaseRecordTypeIds
+        ]){
+            projectIds.add(allocation.Project__c);
+        }
 
     }
 
     // interface method
     public void execute(QueueableContext context){
 
-        if(projectIds == null || projectIds.isEmpty()){
+        if(projectIds.isEmpty()){
             return;
         }
 

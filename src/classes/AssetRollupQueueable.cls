@@ -3,29 +3,33 @@
  */
 
 // summarize and rollup asset NRR's to related phase project
-public class AssetRollupQueueable implements Queueable{
+public class AssetRollupQueueable implements Queueable {
 
     final Set<Id> projectIds;
 
     // constructor
-    public AssetRollupQueueable(Set<Id> projectIds) {
+    public AssetRollupQueueable(Set<Id> assetIds) {
 
-        system.debug('**** AssetRollupQueueable(): projectIds - ' + projectIds);
-
-        this.projectIds = projectIds;
-
-    }
-
-    // constructor
-    public AssetRollupQueueable(List<Asset> assets){
-
-        system.debug('**** AssetRollupQueueable(): assets - ' + assets);
+        system.debug('**** AssetRollupQueueable(): assetIds - ' + assetIds);
 
         projectIds = new Set<Id>();
-        for(Asset a : assets){
-            if(a.Project_Phase__c != null){
-                projectIds.add(a.Project_Phase__c);
-            }
+
+        Schema.DescribeSObjectResult projObjectResult = Schema.SObjectType.Project__c;
+        Map<String, Schema.RecordTypeInfo> projRecordTypeInfosByName = projObjectResult.getRecordTypeInfosByName();
+
+        Id psProjectPhaseSaasRecordTypeId = projRecordTypeInfosByName.get('PS Project Phase SaaS').getRecordTypeId();
+        Id psProjectPhasePremiseRecordTypeId = projRecordTypeInfosByName.get('PS Project Phase Premise WFO').getRecordTypeId();
+
+        Set<Id> psProjectPhaseRecordTypeIds = new Set<Id>{
+                psProjectPhaseSaasRecordTypeId,
+                psProjectPhasePremiseRecordTypeId
+        };
+
+        for(Project_Asset_Allocation__c allocation : [
+                Select Project__c from Project_Asset_Allocation__c
+                where Asset__c IN :assetIds and Project__r.RecordTypeId IN :psProjectPhaseRecordTypeIds
+        ]){
+            projectIds.add(allocation.Project__c);
         }
 
         system.debug('**** AssetRollupQueueable(): projectIds - ' + projectIds);
@@ -35,7 +39,7 @@ public class AssetRollupQueueable implements Queueable{
     // interface method
     public void execute(QueueableContext context){
 
-        if(projectIds == null || projectIds.isEmpty()){
+        if(projectIds.isEmpty()){
             return;
         }
 

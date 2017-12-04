@@ -8,23 +8,12 @@ public class AssetSubscriptionRollupHelper {
 
     public AssetSubscriptionRollupHelper(Set<Id> projectIds){
 
-        Schema.DescribeSObjectResult projObjectResult = Schema.SObjectType.Project__c;
-        Map<String, Schema.RecordTypeInfo> projRecordTypeInfosByName = projObjectResult.getRecordTypeInfosByName();
-
-        Id psProjectPhaseSaasRecordTypeId = projRecordTypeInfosByName.get('PS Project Phase SaaS').getRecordTypeId();
-        Id psProjectPhasePremiseRecordTypeId = projRecordTypeInfosByName.get('PS Project Phase Premise WFO').getRecordTypeId();
-
-        Set<Id> psProjectPhaseRecordTypeIds = new Set<Id>{
-                psProjectPhaseSaasRecordTypeId,
-                psProjectPhasePremiseRecordTypeId
-        };
-
         // project record type must be 'PS Project Phase SaaS' or 'PS Project Phase Premise WFO'
         projectCache = new Map<Id, Project__c>([
                 Select Id, Contracted_NRR__c, Actual_NRR__c,
                         Contracted_MRR__c, Actual_MRR__c
                 from Project__c
-                where Id IN :projectIds and RecordTypeId in :psProjectPhaseRecordTypeIds
+                where Id IN :projectIds
         ]);
 
         system.debug('**** execute(): ProjectRollupHelper - ' + projectCache);
@@ -41,17 +30,17 @@ public class AssetSubscriptionRollupHelper {
         }
 
         for (AggregateResult ar : [
-                Select sum(Contracted_MRR__c) totalContractedMRR, sum(Actual_MRR__c) totalActualMRR,
-                        Project_Phase__c
-                from SBQQ__Subscription__c
-                where Project_Phase__c IN :projectCache.keySet()
-                group by Project_Phase__c
+                Select sum(Subscription__r.Contracted_MRR__c) totalContractedMRR, sum(Subscription__r.Actual_MRR__c) totalActualMRR,
+                        Project__c
+                from Project_Subscription_Allocation__c
+                where Project__c IN :projectCache.keySet()
+                group by Project__c
         ]){
 
             system.debug('**** rollupSubscriptionFinancials(): ar - ' + ar);
 
             Project__c project = new Project__c(
-                    Id = (Id) ar.get('Project_Phase__c'),
+                    Id = (Id) ar.get('Project__c'),
                     Contracted_MRR__c = ar.get('totalContractedMRR') != null ? (Decimal) ar.get('totalContractedMRR') : 0,
                     Actual_MRR__c = ar.get('totalActualMRR') != null ? (Decimal) ar.get('totalActualMRR') : 0
             );
@@ -81,17 +70,17 @@ public class AssetSubscriptionRollupHelper {
         }
 
         for (AggregateResult ar : [
-                Select sum(Contracted_NRR__c) totalContractedNRR, sum(Actual_NRR__c) totalActualNRR,
-                        Project_Phase__c
-                from Asset
-                where Project_Phase__c IN :projectCache.keySet()
-                group by Project_Phase__c
+                Select sum(Asset__r.Contracted_NRR__c) totalContractedNRR, sum(Asset__r.Actual_NRR__c) totalActualNRR,
+                        Project__c
+                from Project_Asset_Allocation__c
+                where Project__c IN :projectCache.keySet()
+                group by Project__c
         ]){
 
             system.debug('**** rollupAssetFinancials(): ar - ' + ar);
 
             Project__c project = new Project__c(
-                    Id = (Id) ar.get('Project_Phase__c'),
+                    Id = (Id) ar.get('Project__c'),
                     Contracted_NRR__c = ar.get('totalContractedNRR') != null ? (Decimal) ar.get('totalContractedNRR') : 0,
                     Actual_NRR__c = ar.get('totalActualNRR') != null ? (Decimal) ar.get('totalActualNRR') : 0
             );
