@@ -114,7 +114,7 @@
                                                 input.attr("data-quantityValidation-msg", "Allocated Quantity cannot be zero");
                                                 return false;
                                             }
-                                             if(input.val() > Asset.RemainingQuantity__c && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && (Asset.QuantityonHold__c > 0 || Asset.QuantityCancelled__c > 0)){
+                                             if(Number(input.val()) > Number(Asset.RemainingQuantity__c) && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && (Asset.QuantityonHold__c > 0 || Asset.QuantityCancelled__c > 0)){
                                                 input.attr("data-quantityValidation-msg", 'Cannot allocate more than “Contract Quantity” if there is any quantity on hold or cancelled');
                                                 return false;
                                             }

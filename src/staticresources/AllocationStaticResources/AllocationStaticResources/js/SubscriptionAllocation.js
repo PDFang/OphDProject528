@@ -127,7 +127,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                                         input.attr("data-quantityValidation-msg", "Allocated Quantity cannot be zero");
                                         return false;
                                     }
-                                     if(input.val() > Subscription.RemainingQuantity__c && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && (Subscription.QuantityonHold__c > 0 || Subscription.QuantityCancelled__c > 0)){
+                                     if(Number(input.val()) > Number(Subscription.RemainingQuantity__c) && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && (Subscription.QuantityonHold__c > 0 || Subscription.QuantityCancelled__c > 0)){
                                         input.attr("data-quantityValidation-msg", 'Cannot allocate more than “Contract Quantity” if there is any quantity on hold or cancelled');
                                         return false;
                                     }
