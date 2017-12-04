@@ -1,34 +1,34 @@
 /**
- * Created by mohandaas.rangaswamy on 11/30/2017.
+ * Created by mohandaas.rangaswamy on 12/1/2017.
  */
 
-// summarize and rollup asset NRR's to related phase project
-public class AssetRollupQueueable implements Queueable{
+// summarize and rollup subscription MRR's to related phase project
+public class SubscriptionRollupQueueable implements Queueable{
 
     final Set<Id> projectIds;
 
     // constructor
-    public AssetRollupQueueable(Set<Id> projectIds) {
+    public SubscriptionRollupQueueable(Set<Id> projectIds) {
 
-        system.debug('**** AssetRollupQueueable(): projectIds - ' + projectIds);
+        system.debug('**** SubscriptionRollupQueueable(): projectIds - ' + projectIds);
 
         this.projectIds = projectIds;
-
+        
     }
 
     // constructor
-    public AssetRollupQueueable(List<Asset> assets){
+    public SubscriptionRollupQueueable(List<SBQQ__Subscription__c> subscriptions){
 
-        system.debug('**** AssetRollupQueueable(): assets - ' + assets);
+        system.debug('**** SubscriptionRollupQueueable(): subscriptions - ' + subscriptions);
 
         projectIds = new Set<Id>();
-        for(Asset a : assets){
-            if(a.Project_Phase__c != null){
-                projectIds.add(a.Project_Phase__c);
+        for(SBQQ__Subscription__c sub : subscriptions){
+            if(sub.Project_Phase__c != null){
+                projectIds.add(sub.Project_Phase__c);
             }
         }
 
-        system.debug('**** AssetRollupQueueable(): projectIds - ' + projectIds);
+        system.debug('**** SubscriptionRollupQueueable(): projectIds - ' + projectIds);
 
     }
 
@@ -41,7 +41,7 @@ public class AssetRollupQueueable implements Queueable{
 
         AssetSubscriptionRollupHelper helper = new AssetSubscriptionRollupHelper(projectIds);
 
-        List<Project__c> phaseProjects = helper.rollupAssetFinancials();
+        List<Project__c> phaseProjects = helper.rollupSubscriptionFinancials();
 
         if(phaseProjects.size() > 0){
 

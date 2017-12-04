@@ -1,13 +1,17 @@
 public class AssetTriggerHandler extends TriggerHandler {
 
+    private static Id assetRollupQueueableJobID;
+
     public override void afterUpdate()
     {
+        rollupNRRToPhaseProject();
         ProjectPhaseAssetSummary();
         ProjectParentAssetSummary();
     }
 
     public override void afterInsert()
     {
+        rollupNRRToPhaseProject();
         ProjectPhaseAssetSummary();
         ProjectParentAssetSummary();
         AttachParentProject();
@@ -15,8 +19,51 @@ public class AssetTriggerHandler extends TriggerHandler {
 
     public override void afterDelete()
     {
+        rollupNRRToPhaseProject();
         ProjectPhaseAssetSummary();
         ProjectParentAssetSummary();
+    }
+
+    // roll-up Asset NRR's to related phase project
+    private static void rollupNRRToPhaseProject() {
+
+        system.debug('**** started rollupNRRToPhaseProject() ');
+
+        List<Asset> newList = (List<Asset>) (trigger.isDelete ? trigger.old : trigger.new);
+
+        Map<Id, Asset> oldMap = (Map<Id, Asset>) trigger.oldMap;
+
+        Set<Id> phaseProjectIdSet = new Set<Id>();
+
+        for (Asset newAsset : newList) {
+
+            Asset oldAsset = oldMap != null ? oldMap.get(newAsset.Id) : null;
+
+            if (trigger.isInsert && newAsset.Project_Phase__c != null){
+                system.debug('**** rollupNRRToPhaseProject(): created subscription ');
+                phaseProjectIdSet.add(newAsset.Project_Phase__c);
+            } else if (trigger.isUpdate){
+                system.debug('**** rollupNRRToPhaseProject(): updated subscription ');
+                phaseProjectIdSet.add(newAsset.Project_Phase__c);
+                if (newAsset.Project_Phase__c != oldAsset.Project_Phase__c) {
+                    phaseProjectIdSet.add(oldAsset.Project_Phase__c);
+                }
+            } else if (trigger.isDelete) {
+                system.debug('**** rollupNRRToPhaseProject(): deleted subscription ');
+                phaseProjectIdSet.add(newAsset.Project_Phase__c);
+            }
+
+        }
+
+        phaseProjectIdSet.remove(null);
+
+        system.debug('**** rollupNRRToPhaseProject(): phaseProjectIdSet - ' + phaseProjectIdSet);
+
+        if(phaseProjectIdSet.size() > 0 && assetRollupQueueableJobID == null){
+            assetRollupQueueableJobID = System.enqueueJob(new AssetRollupQueueable(phaseProjectIdSet));
+            system.debug('**** rollupNRRToPhaseProject(): assetRollupQueueableJobID - ' + assetRollupQueueableJobID);
+        }
+
     }
 
     //the ProjectPhaseAssetSummary method rolls-up related phase asset financial fields as totals on the phase record.
