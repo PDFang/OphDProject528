@@ -192,11 +192,13 @@ public class ProjectTriggerHandler extends TriggerHandler{
             }
             if(trigger.isInsert && newProject.EstimatedProjectGoLiveDate__c != null){
                 newProject.Original_Phase_Forecasted_Go_Live_Date__c = newProject.EstimatedProjectGoLiveDate__c;
+                newProject.Unlock_Original_Phase_Go_Live_Date__c = true;
                 newProject.Times_Go_Live_Date_Changed__c = 0;
             }
-            if(trigger.isUpdate && newProject.EstimatedProjectGoLiveDate__c != oldProject.EstimatedProjectGoLiveDate__c){
-                if(newProject.Original_Phase_Forecasted_Go_Live_Date__c == null){
+            if(trigger.isUpdate && newProject.EstimatedProjectGoLiveDate__c != oldProject.EstimatedProjectGoLiveDate__c && newProject.EstimatedProjectGoLiveDate__c != null){
+                if(newProject.Original_Phase_Forecasted_Go_Live_Date__c == null ){
                     newProject.Original_Phase_Forecasted_Go_Live_Date__c = newProject.EstimatedProjectGoLiveDate__c;
+                    newProject.Unlock_Original_Phase_Go_Live_Date__c = true;
                     newProject.Times_Go_Live_Date_Changed__c = 0;
                 }else{
                     newProject.Times_Go_Live_Date_Changed__c = (oldProject.Times_Go_Live_Date_Changed__c == null ? 0 : oldProject.Times_Go_Live_Date_Changed__c) + 1;
