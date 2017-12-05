@@ -6,13 +6,14 @@ private class ProjectTriggerHandlerTest {
     static final String CONTACT_TYPE_PARTNER = 'Partner Contact';
     static final String ACCOUNT_PARTNER_TYPE_ACCOUNT = 'Partner Account';
     static final String ACCOUNT_PARTNER_TYPE_GROUP = 'Public Group';
+    static final String PROJECT_TYPE_PHASE_SAAS = 'PS Project Phase SaaS';
     static final String PROJECT_TYPE_PARENT_SAAS = 'PS Parent Project - SaaS';
     static final String PROJECT_TYPE_PHASE_PREMISE = 'PS Project Phase Premise WFO';
     static final String PROJECT_TYPE_PARENT_PREMISE = 'PS Parent Project - Premise';
     static final String OPPORTUNITY_TYPE_NEW = 'New Opportunity';
+    static final String OPPORTUNITY_TYPE_PM_STANDARD = 'PM-Standard';
     static final String PROJECT_TYPE_CONNECTIVITY_DESIGN = 'Connectivity Design';
     static final String PROJECT_TYPE_DEDICATED_PROVISIONING = 'Dedicated Provisioning';
-
 
     static final Set<String> recordTypeSet = new Set<String>
     {
@@ -22,6 +23,8 @@ private class ProjectTriggerHandlerTest {
             ACCOUNT_PARTNER_TYPE_ACCOUNT,
             ACCOUNT_PARTNER_TYPE_GROUP,
             OPPORTUNITY_TYPE_NEW,
+            OPPORTUNITY_TYPE_PM_STANDARD,
+            PROJECT_TYPE_PHASE_SAAS,
             PROJECT_TYPE_PARENT_SAAS,
             PROJECT_TYPE_PARENT_PREMISE,
             PROJECT_TYPE_PHASE_PREMISE,
@@ -35,13 +38,108 @@ private class ProjectTriggerHandlerTest {
     static List<Opportunity> oppList = null;
     static List<User> userList = null;
 
-    /* Add a phase project and verify the "projected deadline" on the parent project record is equal to most recent "projected deadline" on any project phase records */
+    /* Add a phase project and verify the "Go Live Date" for insertion */
+    static testMethod void ProjectedGoLiveDateInsertTest() {
+
+        createTestData();
+        string phaseProjectSummary = 'GoLiveDateInsertTest Project';
+        Date phaseProjectGoLiveDate = Date.today();
+
+        Project__c parentProject = new Project__c();
+        parentProject.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
+        parentProject.Opportunity__c = oppList[0].Id;
+        parentProject.Account__c = accountList[0].Id;
+        parentProject.Projected_Deadline__c = system.today().addDays(7);
+        insert parentProject;
+
+        test.startTest();
+        List<Project__c> projectList = new List<Project__c>();
+        Project__c phase1 = new Project__c();
+        phase1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_SAAS);
+        phase1.EstimatedProjectGoLiveDate__c = phaseProjectGoLiveDate;
+        phase1.ActualProjectGoLiveDate__c = phaseProjectGoLiveDate;
+        phase1.Summary__c = phaseProjectSummary;
+        phase1.Opportunity__c = oppList[1].Id;
+        phase1.Account__c = accountList[1].Id;
+        phase1.Projected_Deadline__c = system.today().addMonths(1);
+        phase1.ParentProject__c = parentProject.Id;
+        projectList.add(phase1);
+        insert projectList;
+        test.stopTest();
+
+        parentProject = [SELECT Id, Original_Forecasted_Initial_Go_Live_Date__c, Estimated_Project_Initial_Go_Live_Date__c, Estimated_Project_End__c, Times_All_Phases_Go_Live_Date_Changed__c, Actual_Initial_Phase_Go_Live__c, Actual_Latest_Go_Live_Date__c FROM Project__c WHERE Id = :parentProject.Id];
+        Project__c[] phaseProjects = [SELECT Id, EstimatedProjectGoLiveDate__c, Original_Phase_Forecasted_Go_Live_Date__c, Times_Go_Live_Date_Changed__c, ActualProjectGoLiveDate__c FROM Project__c WHERE Summary__c = :phaseProjectSummary];
+
+        system.assertEquals((Date)phaseProjects[0].get('Original_Phase_Forecasted_Go_Live_Date__c'), phaseProjectGoLiveDate);
+        system.assertEquals(phaseProjects[0].get('Times_Go_Live_Date_Changed__c'), 0);
+
+        system.assertEquals((Date)parentProject.get('Original_Forecasted_Initial_Go_Live_Date__c'), (Date)phaseProjects[0].get('Original_Phase_Forecasted_Go_Live_Date__c'));
+        system.assertEquals((Date)parentProject.get('Estimated_Project_Initial_Go_Live_Date__c'), (Date)phaseProjects[0].get('EstimatedProjectGoLiveDate__c'));
+        system.assertEquals((Date)parentProject.get('Estimated_Project_End__c'), (Date)phaseProjects[0].get('EstimatedProjectGoLiveDate__c'));
+        system.assertEquals(parentProject.get('Times_All_Phases_Go_Live_Date_Changed__c'), phaseProjects[0].get('Times_Go_Live_Date_Changed__c'));
+
+        system.assertEquals(parentProject.get('Actual_Initial_Phase_Go_Live__c'), phaseProjects[0].get('ActualProjectGoLiveDate__c'));
+        system.assertEquals(parentProject.get('Actual_Latest_Go_Live_Date__c'), phaseProjects[0].get('ActualProjectGoLiveDate__c'));
+
+    } // end of ProjectedGoLiveDateInsertTest()
+
+    /* Add a phase project and verify the "Go Live Date" for updating */
+    static testMethod void ProjectedGoLiveDateUpdateTest() {
+
+        createTestData();
+        string phaseProjectSummary = 'GoLiveDateInsertTest Project';
+        Date phaseProjectGoLiveDate = Date.today();
+
+        Project__c parentProject = new Project__c();
+        parentProject.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
+        parentProject.Opportunity__c = oppList[0].Id;
+        parentProject.Account__c = accountList[0].Id;
+        parentProject.Projected_Deadline__c = system.today().addDays(7);
+        insert parentProject;
+
+        List<Project__c> projectList = new List<Project__c>();
+        Project__c phase1 = new Project__c();
+        phase1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_SAAS);
+        phase1.EstimatedProjectGoLiveDate__c = phaseProjectGoLiveDate = Date.today();
+        phase1.Summary__c = phaseProjectSummary;
+        phase1.Opportunity__c = oppList[1].Id;
+        phase1.Account__c = accountList[1].Id;
+        phase1.Projected_Deadline__c = system.today().addMonths(1);
+        phase1.ParentProject__c = parentProject.Id;
+        projectList.add(phase1);
+
+        Project__c phase2 = new Project__c();
+        phase2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_SAAS);
+        phase2.Summary__c = phaseProjectSummary;
+        phase2.Opportunity__c = oppList[1].Id;
+        phase2.Account__c = accountList[1].Id;
+        phase2.Projected_Deadline__c = system.today().addMonths(1);
+        phase2.ParentProject__c = parentProject.Id;
+        projectList.add(phase2);
+        insert projectList;
+
+        test.startTest();
+        phase1.EstimatedProjectGoLiveDate__c = phaseProjectGoLiveDate.addDays(1);
+        phase2.EstimatedProjectGoLiveDate__c = phaseProjectGoLiveDate;
+        update projectList;
+        test.stopTest();
+
+        Project__c[] phaseProjects = [SELECT Id, Original_Phase_Forecasted_Go_Live_Date__c, Times_Go_Live_Date_Changed__c FROM Project__c WHERE Summary__c = :phaseProjectSummary];
+        system.assertEquals((Date)phaseProjects[0].get('Original_Phase_Forecasted_Go_Live_Date__c'), phaseProjectGoLiveDate);
+        system.assertEquals(phaseProjects[0].get('Times_Go_Live_Date_Changed__c'), 1);
+
+        system.assertEquals((Date)phaseProjects[1].get('Original_Phase_Forecasted_Go_Live_Date__c'), phaseProjectGoLiveDate);
+        system.assertEquals(phaseProjects[1].get('Times_Go_Live_Date_Changed__c'), 0);
+
+    } // end of ProjectedGoLiveDateUpdateTest()
+
+     /* Add a phase project and verify the "projected deadline" on the parent project record is equal to most recent "projected deadline" on any project phase records */
     static testMethod void ProjectedDeadlineInsertTest() {
 
         createTestData();
 
         Project__c parentProject = new Project__c();
-        parentProject.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_PREMISE);
+        parentProject.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_PREMISE);
         parentProject.Opportunity__c = oppList[0].Id;
         parentProject.Account__c = accountList[0].Id;
         parentProject.Projected_Deadline__c = system.today().addDays(7);
@@ -133,6 +231,70 @@ private class ProjectTriggerHandlerTest {
 
     } // end of ProjectedDeadlineUpdateTest()
 
+    static testMethod void ProjectRollupSchedulableTest() {
+
+        Datetime nextRun = system.now().addSeconds(5);
+        String dateTimeFormat = '{0} {1} {2} {3} {4} ? {5}';
+        String scheduledTime = string.format(
+                dateTimeFormat,
+                new String[]{
+                        nextRun.second().format(),
+                        nextRun.minute().format(),
+                        nextRun.hour().format(),
+                        nextRun.day().format(),
+                        nextRun.month().format(),
+                        nextRun.year().format().remove(',')
+                }
+        );
+        system.debug('scheduleJob(): scheduledTime - ' + scheduledTime);
+
+        Set<String> projectRecordTypes = new Set<String>{
+                'PS Parent Project - SaaS'
+        };
+
+        test.startTest();
+        String scheduledJobId = system.schedule('testProjectRollupSchedulable', scheduledTime, new ProjectRollupSchedulable(5));
+        String scheduledJobId2 = system.schedule('test2ProjectRollupSchedulable', scheduledTime, new ProjectRollupSchedulable(projectRecordTypes, 5));
+        test.stopTest();
+
+        CronTrigger job = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
+        CronTrigger job2 = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
+        system.assertEquals(scheduledTime, job.CronExpression);
+        system.assertEquals(scheduledTime, job2.CronExpression);
+
+    } // end of ProjectRollupSchedulableTest()
+
+    static testMethod void OpportunityRollupSchedulableTest() {
+
+        Datetime nextRun = system.now().addSeconds(5);
+        String dateTimeFormat = '{0} {1} {2} {3} {4} ? {5}';
+        String scheduledTime = string.format(
+                dateTimeFormat,
+                new String[]{
+                        nextRun.second().format(),
+                        nextRun.minute().format(),
+                        nextRun.hour().format(),
+                        nextRun.day().format(),
+                        nextRun.month().format(),
+                        nextRun.year().format().remove(',')
+                }
+        );
+        system.debug('scheduleJob(): scheduledTime - ' + scheduledTime);
+
+        Set<String> projectRecordTypes = new Set<String>{
+                'PM-Standard'
+        };
+
+        test.startTest();
+        String scheduledJobId = system.schedule('testOpportunityRollupSchedulable', scheduledTime, new OpportunityRollupSchedulable(5));
+        String scheduledJobId2 = system.schedule('test2OpportunityRollupSchedulable', scheduledTime, new OpportunityRollupSchedulable(projectRecordTypes, 5));
+        test.stopTest();
+
+        CronTrigger job = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
+        CronTrigger job2 = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
+        system.assertEquals(scheduledTime, job.CronExpression);
+        system.assertEquals(scheduledTime, job2.CronExpression);
+    } // end of OpportunityRollupSchedulableTest()
 
     // Add a new project and verify portal users and public group members are granted access
     static testMethod void insertProjectTest() {
@@ -445,7 +607,7 @@ private class ProjectTriggerHandlerTest {
                 new Opportunity(
                         Name = 'ProjectTriggerHandlerTest Opp 1',
                         AccountId = accountList[0].Id,
-                        RecordTypeId = recordTypeMap.get(OPPORTUNITY_TYPE_NEW),
+                        RecordTypeId = recordTypeMap.get(OPPORTUNITY_TYPE_PM_STANDARD),
                         StageName = 'Prospecting',
                         CloseDate = Date.today(),
                         Probability = 25,
@@ -468,7 +630,7 @@ private class ProjectTriggerHandlerTest {
                 new Opportunity(
                         Name = 'ProjectTriggerHandlerTest Opp 2',
                         AccountId = accountList[1].Id,
-                        RecordTypeId = recordTypeMap.get(OPPORTUNITY_TYPE_NEW),
+                        RecordTypeId = recordTypeMap.get(OPPORTUNITY_TYPE_PM_STANDARD),
                         StageName = 'Prospecting',
                         CloseDate = Date.today(),
                         Probability = 25,
