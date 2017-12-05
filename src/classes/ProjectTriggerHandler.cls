@@ -55,6 +55,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
         //if it is a phase project validate the phase number
         ProjectTriggerHelper.setNextPhaseNumber(Trigger.new);
 
+        resetCalculatedFieldsBeforeClone();
         setPhaseProjectGoLiveDates();
 
         // Assign Project owners and set status to New
@@ -164,6 +165,22 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         }
 
+
+    }
+
+    private static void resetCalculatedFieldsBeforeClone(){
+
+        List<Project__c> newList = (List<Project__c>) trigger.new;
+
+        for(Project__c newProject : newList){
+            if(newProject.isClone()){
+                newProject.Actual_NRR__c = 0;
+                newProject.Actual_MRR__c = 0;
+                newProject.Contracted_NRR__c = 0;
+                newProject.Contracted_MRR__c = 0;
+                newProject.Number_of_Open_Phases__c = 0;
+            }
+        }
 
     }
 
