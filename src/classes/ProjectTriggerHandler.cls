@@ -199,7 +199,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
                     newProject.Original_Phase_Forecasted_Go_Live_Date__c = newProject.EstimatedProjectGoLiveDate__c;
                     newProject.Times_Go_Live_Date_Changed__c = 0;
                 }else{
-                    newProject.Times_Go_Live_Date_Changed__c = oldProject.Times_Go_Live_Date_Changed__c + 1;
+                    newProject.Times_Go_Live_Date_Changed__c = (oldProject.Times_Go_Live_Date_Changed__c == null ? 0 : oldProject.Times_Go_Live_Date_Changed__c) + 1;
                 }
 
             }
