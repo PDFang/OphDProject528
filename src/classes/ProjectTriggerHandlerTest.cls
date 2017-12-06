@@ -296,6 +296,75 @@ private class ProjectTriggerHandlerTest {
         system.assertEquals(scheduledTime, job2.CronExpression);
     } // end of OpportunityRollupSchedulableTest()
 
+    // validate IT Project is linked to parent PMO project
+    static testMethod void relateITAndPMOProjectTest(){
+
+        Map<String, RecordTypeInfo> recordTypeInfoMap = Schema.SObjectType.Project__c.getRecordTypeInfosByName();
+
+        List<Project__c> pmoProjects = new List<Project__c>();
+        pmoProjects.add(
+                new Project__c(
+                        Summary__c = 'PMO Project 1',
+                        Description__c = 'PMO Project 1',
+                        RecordTypeId = recordTypeInfoMap.get('PMO Project').getRecordTypeId(),
+                        RequestedDeliveryDate__c = system.today().addDays(7),
+                        Request_Channel__c = 'Standard Business',
+                        StrategicAlignment__c = '1 - No Alignment',
+                        Tellusstorybehindrequest__c = 'N/A',
+                        Whathappensifprojectnotcompleted__c = 'N/A'
+                )
+        );
+
+        pmoProjects.add(
+                new Project__c(
+                        Summary__c = 'PMO Project 2',
+                        Description__c = 'PMO Project 2',
+                        RecordTypeId = recordTypeInfoMap.get('PMO Project').getRecordTypeId(),
+                        RequestedDeliveryDate__c = system.today().addDays(7),
+                        Request_Channel__c = 'Standard Business',
+                        StrategicAlignment__c = '1 - No Alignment',
+                        Tellusstorybehindrequest__c = 'N/A',
+                        Whathappensifprojectnotcompleted__c = 'N/A'
+                )
+        );
+
+        insert pmoProjects;
+
+        test.startTest();
+
+        Project__c itProject = new Project__c(
+                Summary__c = 'IT Project',
+                Description__c = 'IT Project',
+                RecordTypeId = recordTypeInfoMap.get('IT Project Request').getRecordTypeId(),
+                ProjectType__c = 'Salesforce',
+                ProjectSubType__c = 'Development',
+                ProblemStatement__c = 'A test project1',
+                Development_Team__c = 'Avengers',
+                BattingOrder__c = 1,
+                T_Shirt__c = 'Small',
+                Primary_Product__c = 'Customer Community',
+                ProjectStatus__c = 'New',
+                ParentProject__c = pmoProjects[0].Id
+
+        );
+
+        insert itProject;
+
+        itProject.ParentProject__c = pmoProjects[1].Id;
+        update itProject;
+
+        test.stopTest();
+
+        List<RelatedProject__c> relatedProjects = [
+                Select ParentProject__c from RelatedProject__c where ChildProject__c = :itProject.Id
+        ];
+
+        system.assertEquals(2, relatedProjects.size());
+        system.assertEquals(pmoProjects[0].Id, relatedProjects[0].ParentProject__c);
+        system.assertEquals(pmoProjects[1].Id, relatedProjects[1].ParentProject__c);
+
+    }
+
     // Add a new project and verify portal users and public group members are granted access
     static testMethod void insertProjectTest() {
 

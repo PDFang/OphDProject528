@@ -8,6 +8,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
     static Id salesEngineeringRecordTypeId;
     static Id psProjectPhaseSaasRecordTypeId, psProjectParentPremiseRecordTypeId;
     static Id psProjectParentSaasRecordTypeId, psProjectPhasePremiseRecordTypeId;
+    static Id itProjectRecordTypeId;
     static set<Id> allowedRecordTypes;
 
     static final Set<String> debugProjectFields = new Set<String>{
@@ -33,6 +34,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
             psProjectPhaseSaasRecordTypeId = rtMapByName.get('PS Project Phase SaaS').getRecordTypeId();
             psProjectParentPremiseRecordTypeId = rtMapByName.get('PS Parent Project - Premise').getRecordTypeId();
             psProjectParentSaasRecordTypeId = rtMapByName.get('PS Parent Project - SaaS').getRecordTypeId();
+            itProjectRecordTypeId = rtMapByName.get('IT Project Request').getRecordTypeId();
 
             allowedRecordTypes = new set<Id> ();
             for (Schema.RecordTypeInfo recordType : rtMapByName.values())
@@ -82,6 +84,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         setParentProjectGoLiveDates();
 
+        relateITAndPMOProject();
+
         SalesEngineeringLogic.CreateNewProjectTasks(trigger.new, salesEngineeringRecordTypeId);
         ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
         ProjectTriggerHelper.createProjectTasks(Trigger.new);
@@ -101,6 +105,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
         ProjectParentPhaseSummary();
         ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
         setParentProjectGoLiveDates();
+
+        relateITAndPMOProject();
 
         calculatePhaseImpQuantityNPercentage(trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         ProjectTriggerHelper.updateAssetStatusForPhasedProject((List<Project__c>)trigger.new, (Map<Id, Project__c>)Trigger.oldMap);
@@ -560,6 +566,42 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         if(updateSubscriptionCustomList.size() > 0)
             update updateSubscriptionCustomList;
+
+    }
+
+    // establish automatic link between IT Project and PMO project
+    private static void relateITAndPMOProject() {
+
+        system.debug('**** executing relateITAndPMOProject() ');
+
+        List<Project__c> newList = (List<Project__c>) trigger.new;
+
+        Map<Id, Project__c> oldMap = (Map<Id, Project__c>) trigger.oldMap;
+
+        List<RelatedProject__c> relatedProjects = new List<RelatedProject__c>();
+
+        for (Project__c newProject : newList) {
+
+            Project__c oldProject = oldMap != null ? oldMap.get(newProject.Id) : null;
+
+            system.debug(' relateITAndPMOProject(): newProject - ' + newProject);
+
+            if (newProject.RecordTypeId == itProjectRecordTypeId && newProject.ParentProject__c != null
+                    && (oldProject == null || oldProject.ParentProject__c != newProject.ParentProject__c)) {
+                RelatedProject__c newRelation = new RelatedProject__c(
+                        ParentProject__c = newProject.ParentProject__c,
+                        ChildProject__c = newProject.Id
+                );
+                relatedProjects.add(newRelation);
+            }
+
+        }
+
+        system.debug(' relateITAndPMOProject(): relatedProjects - ' + relatedProjects);
+
+        if(relatedProjects.size() > 0){
+            insert relatedProjects;
+        }
 
     }
 }
