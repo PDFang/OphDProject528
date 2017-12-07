@@ -3,21 +3,24 @@
  */
 global class ProjectRollupSchedulable implements Schedulable, Database.Batchable<sObject>{
 
-    public Set<String> projectRecordTypes;
+    final Set<String> projectRecordTypes = new Set<String>{
+            'PS Parent Project - SaaS',
+            'PS Parent Project - Premise'
+    };
+
     public Integer batchSize;
+    public String query;
 
     public ProjectRollupSchedulable(Integer recordsPerBatch){
 
-        projectRecordTypes = new Set<String>{
-                'PS Parent Project - SaaS'
-        };
         batchSize = recordsPerBatch;
+        query = 'Select Id from Project__c';
 
     }
 
-    public ProjectRollupSchedulable(Set<String> recordTypes, Integer recordsPerBatch){
+    public ProjectRollupSchedulable(String optionalQuery, Integer recordsPerBatch){
 
-        projectRecordTypes = recordTypes;
+        query = optionalQuery;
         batchSize = recordsPerBatch;
 
     }
@@ -39,7 +42,12 @@ global class ProjectRollupSchedulable implements Schedulable, Database.Batchable
             recordTypeIds.add(projRecordTypeInfosByName.get(recordType).getRecordTypeId());
         }
 
-        String query = 'Select Id from Project__c where RecordTypeId IN :recordTypeIds';
+        if(query.indexOfIgnoreCase('where') > 0){
+            query += ' and';
+        } else{
+            query += ' where';
+        }
+        query += ' RecordTypeId IN :recordTypeIds';
 
         return Database.getQueryLocator(query);
 
