@@ -59,6 +59,8 @@ private class ProjectAndOpportunityRollupTest {
                 group by ParentProject__c
         ];
 
+        // assert parent project
+
         Project__c parent = [
                 Select Original_Forecasted_Initial_Go_Live_Date__c, Estimated_Project_Initial_Go_Live_Date__c, Number_of_Open_Phases__c,
                         Estimated_Project_End__c, Actual_Initial_Phase_Go_Live__c, Actual_Latest_Go_Live_Date__c
@@ -71,6 +73,8 @@ private class ProjectAndOpportunityRollupTest {
         system.assertEquals((Date) ar.get('minActualPhaseGoLiveDate'), parent.Actual_Initial_Phase_Go_Live__c);
         system.assertEquals((Date) ar.get('maxActualPhaseGoLiveDate'), parent.Actual_Latest_Go_Live_Date__c);
         system.assertEquals((Decimal) ar.get('noOfOpenPhases'), parent.Number_of_Open_Phases__c);
+
+        // assert opportunity
 
         Opportunity testOpportunity = [Select Original_Forecasted_Initial_Go_Live_Date__c, PM_Estimated_Go_Live__c, PM_Go_Live_Date__c from Opportunity where Id = :parentProject.Opportunity__c];
 
