@@ -10,7 +10,7 @@ public with sharing class CustomCaseCommentHelper {
 
         list<CaseComment> retlist = new list<CaseComment>();
         if (DisplayComments(currentCase.ClosedDate) == true){
-            retlist = [SELECT CommentBody,CreatedDate,CreatedBy.UserName,CreatorName,Id,IsDeleted,IsPublished,ParentId FROM CaseComment where parentId =:currentCase.id and IsPublished = true order by CreatedDate desc];
+            retlist = [SELECT CommentBody,CreatedDate,CreatedBy.UserName,CreatedBy.Name,CreatorName,Id,IsDeleted,IsPublished,ParentId FROM CaseComment where parentId =:currentCase.id and IsPublished = true order by CreatedDate desc];
         }
         return retlist;
     }
@@ -32,7 +32,7 @@ public with sharing class CustomCaseCommentHelper {
         list<CaseComment> caseComments = GetCaseComments(currentCase);
         list<Case_Comment_Custom__c> privateComments;
         //if (isPrivateInList(caseComments) == false){
-        privateComments =    GetCustomComments(currentCase);
+        privateComments = GetCustomComments(currentCase);
         //}
 
         for (CaseComment c: casecomments)
@@ -42,11 +42,25 @@ public with sharing class CustomCaseCommentHelper {
         if (privateComments != null){
             for (Case_Comment_Custom__c c: privateComments)
             {
+                if(isPublicDuplicate (c, caseComments) == false){
                 finalList.add(GetCustomCommentData(c));
+                }
             }
         }
         finalList.Sort();
         return finalList;
+    }
+
+    public boolean isPublicDuplicate (Case_Comment_Custom__c custom, List<CaseComment> caseComments){
+        for (CaseComment c : caseComments )
+        {
+            if (c.CommentBody == custom.CommentBody__c){
+                return true;
+            }
+
+
+        }
+        return false;
     }
 
     public boolean isPrivateInList(list<CaseComment> caseComments){
@@ -68,8 +82,8 @@ public with sharing class CustomCaseCommentHelper {
     private CustomCaseCommentData GetCustomCommentData(CaseComment comment){
         CustomCaseCommentData commentData = new CustomCaseCommentData();
         commentData.caseCommentsId = comment.id;
-        commentData.CreatedBy = comment.CreatorName;  // this is alway null
-        commentData.CreatedBy = comment.CreatedBy.Username;  // this is alway null
+        commentData.CreatedBy = comment.CreatedBy.Name;
+        //commentData.CreatedBy = comment.Username;
         commentData.CaseComment = comment.CommentBody;
         commentData.CreateDate = comment.CreatedDate;
         commentData.isPublic = comment.IsPublished;
@@ -94,7 +108,7 @@ public with sharing class CustomCaseCommentHelper {
         commentData.IsPublished__c = comment.isPublic;
         commentData.ParentId__c = comment.ParentId;
         commentData.CommentCreatedDate__c = DateTime.Now();
-        CommentData.CreatorName__c =  UserInfo.getUserName();
+        CommentData.CreatorName__c =  UserInfo.getName();
         return commentData;
     }
 
