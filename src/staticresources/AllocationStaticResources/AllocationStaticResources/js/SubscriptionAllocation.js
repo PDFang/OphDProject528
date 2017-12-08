@@ -484,7 +484,7 @@ function detailSubscriptionProjects(e) {
                         ProjectId: { from: "Id"},
                         ProjectNumber: {from:"Name", type: "string"},
                         Summary : {from:"Summary__c", type:"string"},
-                        Status : {from:"ProjectStatus__c", type:"string"},
+                        Status : {from:"Phase_Status__c", type:"string"},
                         PhaseNumber : {from:"Phase__c", type:"string"}
                     }
                 }
