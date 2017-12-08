@@ -4,22 +4,24 @@
 
 global class OpportunityRollupSchedulable implements Schedulable, Database.Batchable<sObject>{
 
-    public Set<String> opportunityRecordTypes;
+    final Set<String> opportunityRecordTypes = new Set<String>{
+            'PM-Standard',
+            'Qualified Opportunity'
+    };
+
     public Integer batchSize;
+    public String query;
 
     public OpportunityRollupSchedulable(Integer recordsPerBatch){
 
-        opportunityRecordTypes = new Set<String>{
-                'PM-Standard',
-                'Qualified Opportunity'
-        };
         batchSize = recordsPerBatch;
+        query = 'Select Id from Opportunity';
 
     }
 
-    public OpportunityRollupSchedulable(Set<String> recordTypes, Integer recordsPerBatch){
+    public OpportunityRollupSchedulable(String optionalQuery, Integer recordsPerBatch){
 
-        opportunityRecordTypes = recordTypes;
+        query = optionalQuery;
         batchSize = recordsPerBatch;
 
     }
@@ -41,7 +43,13 @@ global class OpportunityRollupSchedulable implements Schedulable, Database.Batch
             recordTypeIds.add(oppRecordTypeInfosByName.get(recordType).getRecordTypeId());
         }
 
-        String query = 'Select Id from Opportunity where RecordTypeId IN :recordTypeIds';
+        if(query.indexOfIgnoreCase('where') > 0){
+            query += ' and';
+        } else{
+            query += ' where';
+        }
+        query += ' RecordTypeId IN :recordTypeIds';
+
 
         return Database.getQueryLocator(query);
 
@@ -56,7 +64,7 @@ global class OpportunityRollupSchedulable implements Schedulable, Database.Batch
         }
 
         if(opportunityIdSet.size() > 0){
-            Id opportunityRollupQueueableJobID = System.enqueueJob(new ProjectRollupQueueable(opportunityIdSet));
+            Id opportunityRollupQueueableJobID = System.enqueueJob(new OpportunityRollupQueueable(opportunityIdSet));
             system.debug('**** execute(): opportunityRollupQueueableJobID - ' + opportunityRollupQueueableJobID);
 
         }

@@ -42,7 +42,7 @@ private class ProjectTriggerHandlerTest {
     static testMethod void ProjectedGoLiveDateInsertTest() {
 
         createTestData();
-        string phaseProjectSummary = 'GoLiveDateInsertTest Project';
+
         Date phaseProjectGoLiveDate = Date.today();
 
         Project__c parentProject = new Project__c();
@@ -53,33 +53,45 @@ private class ProjectTriggerHandlerTest {
         insert parentProject;
 
         test.startTest();
-        List<Project__c> projectList = new List<Project__c>();
-        Project__c phase1 = new Project__c();
-        phase1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_SAAS);
-        phase1.EstimatedProjectGoLiveDate__c = phaseProjectGoLiveDate;
-        phase1.ActualProjectGoLiveDate__c = phaseProjectGoLiveDate;
-        phase1.Summary__c = phaseProjectSummary;
-        phase1.Opportunity__c = oppList[1].Id;
-        phase1.Account__c = accountList[1].Id;
-        phase1.Projected_Deadline__c = system.today().addMonths(1);
-        phase1.ParentProject__c = parentProject.Id;
-        projectList.add(phase1);
-        insert projectList;
+
+        Project__c phaseProject = new Project__c();
+        phaseProject.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_SAAS);
+        phaseProject.EstimatedProjectGoLiveDate__c = phaseProjectGoLiveDate;
+        phaseProject.ActualProjectGoLiveDate__c = phaseProjectGoLiveDate;
+        phaseProject.Summary__c = 'GoLiveDateInsertTest Project';
+        phaseProject.Opportunity__c = oppList[1].Id;
+        phaseProject.Account__c = accountList[1].Id;
+        phaseProject.ParentProject__c = parentProject.Id;
+
+        insert phaseProject;
+
+        Project__c cloneProject = phaseProject.clone();
+        cloneProject.Summary__c = 'Clone Project';
+        insert cloneProject;
+
         test.stopTest();
 
-        parentProject = [SELECT Id, Original_Forecasted_Initial_Go_Live_Date__c, Estimated_Project_Initial_Go_Live_Date__c, Estimated_Project_End__c, Times_All_Phases_Go_Live_Date_Changed__c, Actual_Initial_Phase_Go_Live__c, Actual_Latest_Go_Live_Date__c FROM Project__c WHERE Id = :parentProject.Id];
-        Project__c[] phaseProjects = [SELECT Id, EstimatedProjectGoLiveDate__c, Original_Phase_Forecasted_Go_Live_Date__c, Times_Go_Live_Date_Changed__c, ActualProjectGoLiveDate__c FROM Project__c WHERE Summary__c = :phaseProjectSummary];
+        parentProject = [
+                SELECT Id, Original_Forecasted_Initial_Go_Live_Date__c, Estimated_Project_Initial_Go_Live_Date__c, Estimated_Project_End__c, Times_All_Phases_Go_Live_Date_Changed__c,
+                        Actual_Initial_Phase_Go_Live__c, Actual_Latest_Go_Live_Date__c
+                FROM Project__c WHERE Id = :parentProject.Id
+        ];
 
-        system.assertEquals((Date)phaseProjects[0].get('Original_Phase_Forecasted_Go_Live_Date__c'), phaseProjectGoLiveDate);
-        system.assertEquals(phaseProjects[0].get('Times_Go_Live_Date_Changed__c'), 0);
+        phaseProject = [
+                SELECT Id, EstimatedProjectGoLiveDate__c, Original_Phase_Forecasted_Go_Live_Date__c, Times_Go_Live_Date_Changed__c, ActualProjectGoLiveDate__c
+                FROM Project__c WHERE Id = :phaseProject.Id
+        ];
 
-        system.assertEquals((Date)parentProject.get('Original_Forecasted_Initial_Go_Live_Date__c'), (Date)phaseProjects[0].get('Original_Phase_Forecasted_Go_Live_Date__c'));
-        system.assertEquals((Date)parentProject.get('Estimated_Project_Initial_Go_Live_Date__c'), (Date)phaseProjects[0].get('EstimatedProjectGoLiveDate__c'));
-        system.assertEquals((Date)parentProject.get('Estimated_Project_End__c'), (Date)phaseProjects[0].get('EstimatedProjectGoLiveDate__c'));
-        system.assertEquals(parentProject.get('Times_All_Phases_Go_Live_Date_Changed__c'), phaseProjects[0].get('Times_Go_Live_Date_Changed__c'));
+        system.assertEquals(phaseProjectGoLiveDate, phaseProject.Original_Phase_Forecasted_Go_Live_Date__c);
+        system.assertEquals(0, phaseProject.Times_Go_Live_Date_Changed__c);
 
-        system.assertEquals(parentProject.get('Actual_Initial_Phase_Go_Live__c'), phaseProjects[0].get('ActualProjectGoLiveDate__c'));
-        system.assertEquals(parentProject.get('Actual_Latest_Go_Live_Date__c'), phaseProjects[0].get('ActualProjectGoLiveDate__c'));
+        system.assertEquals(phaseProject.Original_Phase_Forecasted_Go_Live_Date__c, parentProject.Original_Forecasted_Initial_Go_Live_Date__c);
+        system.assertEquals(phaseProject.EstimatedProjectGoLiveDate__c, parentProject.Estimated_Project_Initial_Go_Live_Date__c);
+        system.assertEquals(phaseProject.EstimatedProjectGoLiveDate__c, parentProject.Estimated_Project_End__c);
+        system.assertEquals(phaseProject.Times_Go_Live_Date_Changed__c, parentProject.Times_All_Phases_Go_Live_Date_Changed__c);
+
+        system.assertEquals(phaseProject.ActualProjectGoLiveDate__c, parentProject.Actual_Initial_Phase_Go_Live__c);
+        system.assertEquals(phaseProject.ActualProjectGoLiveDate__c, parentProject.Actual_Latest_Go_Live_Date__c);
 
     } // end of ProjectedGoLiveDateInsertTest()
 
@@ -87,7 +99,7 @@ private class ProjectTriggerHandlerTest {
     static testMethod void ProjectedGoLiveDateUpdateTest() {
 
         createTestData();
-        string phaseProjectSummary = 'GoLiveDateInsertTest Project';
+
         Date phaseProjectGoLiveDate = Date.today();
 
         Project__c parentProject = new Project__c();
@@ -97,39 +109,47 @@ private class ProjectTriggerHandlerTest {
         parentProject.Projected_Deadline__c = system.today().addDays(7);
         insert parentProject;
 
-        List<Project__c> projectList = new List<Project__c>();
-        Project__c phase1 = new Project__c();
-        phase1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_SAAS);
-        phase1.EstimatedProjectGoLiveDate__c = phaseProjectGoLiveDate = Date.today();
-        phase1.Summary__c = phaseProjectSummary;
-        phase1.Opportunity__c = oppList[1].Id;
-        phase1.Account__c = accountList[1].Id;
-        phase1.Projected_Deadline__c = system.today().addMonths(1);
-        phase1.ParentProject__c = parentProject.Id;
-        projectList.add(phase1);
-
-        Project__c phase2 = new Project__c();
-        phase2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_SAAS);
-        phase2.Summary__c = phaseProjectSummary;
-        phase2.Opportunity__c = oppList[1].Id;
-        phase2.Account__c = accountList[1].Id;
-        phase2.Projected_Deadline__c = system.today().addMonths(1);
-        phase2.ParentProject__c = parentProject.Id;
-        projectList.add(phase2);
-        insert projectList;
-
         test.startTest();
-        phase1.EstimatedProjectGoLiveDate__c = phaseProjectGoLiveDate.addDays(1);
-        phase2.EstimatedProjectGoLiveDate__c = phaseProjectGoLiveDate;
-        update projectList;
+
+        Project__c phaseProject = new Project__c();
+        phaseProject.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_SAAS);
+        phaseProject.EstimatedProjectGoLiveDate__c = phaseProjectGoLiveDate = Date.today();
+        phaseProject.Summary__c = 'GoLiveDateUpdateTest Project';
+        phaseProject.Opportunity__c = oppList[1].Id;
+        phaseProject.Account__c = accountList[1].Id;
+        phaseProject.Projected_Deadline__c = system.today().addMonths(1);
+        phaseProject.ParentProject__c = parentProject.Id;
+
+        insert phaseProject;
+
+        phaseProject.EstimatedProjectGoLiveDate__c = phaseProjectGoLiveDate.addDays(1);
+        phaseProject.ActualProjectGoLiveDate__c = phaseProjectGoLiveDate.addDays(1);
+        update phaseProject;
+
         test.stopTest();
 
-        Project__c[] phaseProjects = [SELECT Id, Original_Phase_Forecasted_Go_Live_Date__c, Times_Go_Live_Date_Changed__c FROM Project__c WHERE Summary__c = :phaseProjectSummary];
-        system.assertEquals((Date)phaseProjects[0].get('Original_Phase_Forecasted_Go_Live_Date__c'), phaseProjectGoLiveDate);
-        system.assertEquals(phaseProjects[0].get('Times_Go_Live_Date_Changed__c'), 1);
+        phaseProject = [
+                SELECT Id, Original_Phase_Forecasted_Go_Live_Date__c, EstimatedProjectGoLiveDate__c, ActualProjectGoLiveDate__c, Times_Go_Live_Date_Changed__c
+                FROM Project__c WHERE Id = :phaseProject.Id
+        ];
 
-        system.assertEquals((Date)phaseProjects[1].get('Original_Phase_Forecasted_Go_Live_Date__c'), phaseProjectGoLiveDate);
-        system.assertEquals(phaseProjects[1].get('Times_Go_Live_Date_Changed__c'), 0);
+        // should be unchanged
+        system.assertEquals(phaseProjectGoLiveDate, phaseProject.Original_Phase_Forecasted_Go_Live_Date__c);
+        system.assertEquals(1, phaseProject.Times_Go_Live_Date_Changed__c);
+
+        parentProject = [
+                SELECT Id, Original_Forecasted_Initial_Go_Live_Date__c, Estimated_Project_Initial_Go_Live_Date__c, Estimated_Project_End__c, Times_All_Phases_Go_Live_Date_Changed__c,
+                        Actual_Initial_Phase_Go_Live__c, Actual_Latest_Go_Live_Date__c
+                FROM Project__c WHERE Id = :parentProject.Id
+        ];
+
+        system.assertEquals(phaseProject.Original_Phase_Forecasted_Go_Live_Date__c, parentProject.Original_Forecasted_Initial_Go_Live_Date__c);
+        system.assertEquals(phaseProject.EstimatedProjectGoLiveDate__c, parentProject.Estimated_Project_Initial_Go_Live_Date__c);
+        system.assertEquals(phaseProject.EstimatedProjectGoLiveDate__c, parentProject.Estimated_Project_End__c);
+        system.assertEquals(phaseProject.Times_Go_Live_Date_Changed__c, parentProject.Times_All_Phases_Go_Live_Date_Changed__c);
+        system.assertEquals(phaseProject.ActualProjectGoLiveDate__c, parentProject.Actual_Initial_Phase_Go_Live__c);
+        system.assertEquals(phaseProject.ActualProjectGoLiveDate__c, parentProject.Actual_Latest_Go_Live_Date__c);
+
 
     } // end of ProjectedGoLiveDateUpdateTest()
 
@@ -138,6 +158,8 @@ private class ProjectTriggerHandlerTest {
 
         createTestData();
 
+        test.startTest();
+
         Project__c parentProject = new Project__c();
         parentProject.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_PREMISE);
         parentProject.Opportunity__c = oppList[0].Id;
@@ -145,7 +167,6 @@ private class ProjectTriggerHandlerTest {
         parentProject.Projected_Deadline__c = system.today().addDays(7);
         insert parentProject;
 
-        test.startTest();
         List<Project__c> projectList = new List<Project__c>();
         Project__c phase1 = new Project__c();
         phase1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_PREMISE);
@@ -155,12 +176,8 @@ private class ProjectTriggerHandlerTest {
         phase1.ParentProject__c = parentProject.Id;
         projectList.add(phase1);
 
-        Project__c phase2 = new Project__c();
-        phase2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_PREMISE);
-        phase2.Opportunity__c = oppList[1].Id;
-        phase2.Account__c = accountList[1].Id;
+        Project__c phase2 = phase1.clone();
         phase2.Projected_Deadline__c = system.today().addYears(1);
-        phase2.ParentProject__c = parentProject.Id;
         projectList.add(phase2);
 
         insert projectList;
@@ -199,13 +216,17 @@ private class ProjectTriggerHandlerTest {
         parentProject.Projected_Deadline__c = system.today().addDays(7);
         insert parentProject;
 
+        test.startTest();
+
+        List<Project__c> projectList = new List<Project__c>();
+
         Project__c phase1 = new Project__c();
         phase1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_PREMISE);
         phase1.Opportunity__c = oppList[1].Id;
         phase1.Account__c = accountList[1].Id;
         phase1.Projected_Deadline__c = system.today().addMonths(1);
         phase1.ParentProject__c = parentProject.Id;
-        insert phase1;
+        projectList.add(phase1);
 
         Project__c phase2 = new Project__c();
         phase2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_CONNECTIVITY_DESIGN);
@@ -213,11 +234,14 @@ private class ProjectTriggerHandlerTest {
         phase2.Account__c = accountList[1].Id;
         phase2.Projected_Deadline__c = system.today().addMonths(1);
         phase2.ParentProject__c = parentProject.Id;
-        insert phase2;
 
-        test.startTest();
+        projectList.add(phase2);
+
+        insert projectList;
+
         phase1.Projected_Deadline__c = system.today().addYears(1);
         update phase1;
+
         test.stopTest();
 
         parentProject = [SELECT Id, Projected_Deadline__c FROM Project__c WHERE Id = :parentProject.Id];
@@ -231,70 +255,74 @@ private class ProjectTriggerHandlerTest {
 
     } // end of ProjectedDeadlineUpdateTest()
 
-    static testMethod void ProjectRollupSchedulableTest() {
+    // validate IT Project is linked to parent PMO project
+    static testMethod void relateITAndPMOProjectTest(){
 
-        Datetime nextRun = system.now().addSeconds(5);
-        String dateTimeFormat = '{0} {1} {2} {3} {4} ? {5}';
-        String scheduledTime = string.format(
-                dateTimeFormat,
-                new String[]{
-                        nextRun.second().format(),
-                        nextRun.minute().format(),
-                        nextRun.hour().format(),
-                        nextRun.day().format(),
-                        nextRun.month().format(),
-                        nextRun.year().format().remove(',')
-                }
+        Map<String, RecordTypeInfo> recordTypeInfoMap = Schema.SObjectType.Project__c.getRecordTypeInfosByName();
+
+        List<Project__c> pmoProjects = new List<Project__c>();
+        pmoProjects.add(
+                new Project__c(
+                        Summary__c = 'PMO Project 1',
+                        Description__c = 'PMO Project 1',
+                        RecordTypeId = recordTypeInfoMap.get('PMO Project').getRecordTypeId(),
+                        RequestedDeliveryDate__c = system.today().addDays(7),
+                        Request_Channel__c = 'Standard Business',
+                        StrategicAlignment__c = '1 - No Alignment',
+                        Tellusstorybehindrequest__c = 'N/A',
+                        Whathappensifprojectnotcompleted__c = 'N/A'
+                )
         );
-        system.debug('scheduleJob(): scheduledTime - ' + scheduledTime);
 
-        Set<String> projectRecordTypes = new Set<String>{
-                'PS Parent Project - SaaS'
-        };
+        pmoProjects.add(
+                new Project__c(
+                        Summary__c = 'PMO Project 2',
+                        Description__c = 'PMO Project 2',
+                        RecordTypeId = recordTypeInfoMap.get('PMO Project').getRecordTypeId(),
+                        RequestedDeliveryDate__c = system.today().addDays(7),
+                        Request_Channel__c = 'Standard Business',
+                        StrategicAlignment__c = '1 - No Alignment',
+                        Tellusstorybehindrequest__c = 'N/A',
+                        Whathappensifprojectnotcompleted__c = 'N/A'
+                )
+        );
+
+        insert pmoProjects;
 
         test.startTest();
-        String scheduledJobId = system.schedule('testProjectRollupSchedulable', scheduledTime, new ProjectRollupSchedulable(5));
-        String scheduledJobId2 = system.schedule('test2ProjectRollupSchedulable', scheduledTime, new ProjectRollupSchedulable(projectRecordTypes, 5));
-        test.stopTest();
 
-        CronTrigger job = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
-        CronTrigger job2 = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
-        system.assertEquals(scheduledTime, job.CronExpression);
-        system.assertEquals(scheduledTime, job2.CronExpression);
+        Project__c itProject = new Project__c(
+                Summary__c = 'IT Project',
+                Description__c = 'IT Project',
+                RecordTypeId = recordTypeInfoMap.get('IT Project Request').getRecordTypeId(),
+                ProjectType__c = 'Salesforce',
+                ProjectSubType__c = 'Development',
+                ProblemStatement__c = 'A test project1',
+                Development_Team__c = 'Avengers',
+                BattingOrder__c = 1,
+                T_Shirt__c = 'Small',
+                Primary_Product__c = 'Customer Community',
+                ProjectStatus__c = 'New',
+                ParentProject__c = pmoProjects[0].Id
 
-    } // end of ProjectRollupSchedulableTest()
-
-    static testMethod void OpportunityRollupSchedulableTest() {
-
-        Datetime nextRun = system.now().addSeconds(5);
-        String dateTimeFormat = '{0} {1} {2} {3} {4} ? {5}';
-        String scheduledTime = string.format(
-                dateTimeFormat,
-                new String[]{
-                        nextRun.second().format(),
-                        nextRun.minute().format(),
-                        nextRun.hour().format(),
-                        nextRun.day().format(),
-                        nextRun.month().format(),
-                        nextRun.year().format().remove(',')
-                }
         );
-        system.debug('scheduleJob(): scheduledTime - ' + scheduledTime);
 
-        Set<String> projectRecordTypes = new Set<String>{
-                'PM-Standard'
-        };
+        insert itProject;
 
-        test.startTest();
-        String scheduledJobId = system.schedule('testOpportunityRollupSchedulable', scheduledTime, new OpportunityRollupSchedulable(5));
-        String scheduledJobId2 = system.schedule('test2OpportunityRollupSchedulable', scheduledTime, new OpportunityRollupSchedulable(projectRecordTypes, 5));
+        itProject.ParentProject__c = pmoProjects[1].Id;
+        update itProject;
+
         test.stopTest();
 
-        CronTrigger job = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
-        CronTrigger job2 = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
-        system.assertEquals(scheduledTime, job.CronExpression);
-        system.assertEquals(scheduledTime, job2.CronExpression);
-    } // end of OpportunityRollupSchedulableTest()
+        List<RelatedProject__c> relatedProjects = [
+                Select ParentProject__c from RelatedProject__c where ChildProject__c = :itProject.Id
+        ];
+
+        system.assertEquals(2, relatedProjects.size());
+        system.assertEquals(pmoProjects[0].Id, relatedProjects[0].ParentProject__c);
+        system.assertEquals(pmoProjects[1].Id, relatedProjects[1].ParentProject__c);
+
+    }
 
     // Add a new project and verify portal users and public group members are granted access
     static testMethod void insertProjectTest() {
