@@ -5,7 +5,7 @@
 @IsTest
 private class ProjectAndOpportunityRollupTest {
 
-    static testMethod void testBehavior() {
+    static testMethod void testGoLiveDateRollup() {
 
         Project__c parentProject = [
                 Select Id, Account__c, Opportunity__c
@@ -67,19 +67,28 @@ private class ProjectAndOpportunityRollupTest {
                 From Project__c where Id = :parentProject.Id
         ];
 
+        // Original_Forecasted_Initial_Go_Live_Date displays earliest value saved for Field: Original_Phase_Forecasted_Go_Live_Date__c from all child PS Phase Project Saas records
         system.assertEquals((Date) ar.get('minForecastedPhaseGoLiveDate'), parent.Original_Forecasted_Initial_Go_Live_Date__c);
+        // Estimated_Project_Initial_Go_Live_Date__c displays earliest value of Field EstimatedProjectGoLiveDate__c on all child PS Project Phase SaaS records
         system.assertEquals((Date) ar.get('minEstimatedPhaseGoLiveDate'), parent.Estimated_Project_Initial_Go_Live_Date__c);
+        // Estimated_Project_End__c displays latest value of Field EstimatedProjectGoLiveDate__c on all child PS Project Phase SaaS records
         system.assertEquals((Date) ar.get('maxEstimatedPhaseGoLiveDate'), parent.Estimated_Project_End__c);
+        // Actual_Initial_Phase_Go_Live__c displays the earliest value of Field ActualProjectGoLiveDate__c on all child PS Project Phase SaaS records
         system.assertEquals((Date) ar.get('minActualPhaseGoLiveDate'), parent.Actual_Initial_Phase_Go_Live__c);
+        // Actual_Latest_Go_Live_Date__c displays the latest value of Field ActualProjectGoLiveDate__c] on all child PS Project Phase SaaS records
         system.assertEquals((Date) ar.get('maxActualPhaseGoLiveDate'), parent.Actual_Latest_Go_Live_Date__c);
+        // no of child PS Project Phase records that are not in 'Closed' or 'Canceled' status
         system.assertEquals((Decimal) ar.get('noOfOpenPhases'), parent.Number_of_Open_Phases__c);
 
         // assert opportunity
 
         Opportunity testOpportunity = [Select Original_Forecasted_Initial_Go_Live_Date__c, PM_Estimated_Go_Live__c, PM_Go_Live_Date__c from Opportunity where Id = :parentProject.Opportunity__c];
 
+        // Original_Forecasted_Initial_Go_Live_Date__c displays the earliest value of Field Original_Forecasted_Initial_Go_Live_Date from all related Projects with "PS Parent Project - Saas" record type
         system.assertEquals(parent.Original_Forecasted_Initial_Go_Live_Date__c, testOpportunity.Original_Forecasted_Initial_Go_Live_Date__c);
+        // PM_Estimated_Go_Live__c displays the earliest value of Field Estimated_Project_End__c from all related Projects with "PS Parent Project - Saas" record type
         system.assertEquals(parent.Estimated_Project_End__c, testOpportunity.PM_Estimated_Go_Live__c);
+        // PM_Go_Live_Date__c displays the earliest value of Field Actual_Initial_Phase_Go_Live__c from all related Projects with "PS Parent Project - Saas" record type
         system.assertEquals(parent.Actual_Initial_Phase_Go_Live__c, testOpportunity.PM_Go_Live_Date__c);
 
     }
