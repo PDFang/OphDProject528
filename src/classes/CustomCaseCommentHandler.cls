@@ -22,18 +22,6 @@ public class CustomCaseCommentHandler extends TriggerHandler {
                 newcomment.ParentId = t.ParentId__c;
                 childcomment.add(newcomment);
                 system.debug('newcomment.new => ' + newcomment);
-                //}
-                //else{
-                //    SendMailData mailData = new SendMailData();
-                //    //MailData.AccountId = t.Account()
-                //    MailData.CaseId = t.ParentId__c;
-                //    //MailData.AccountId = t.;
-                //    MailData.Message = getMessageText(t);
-                //    MailData.Header = Label.Custom_Case_Comment_Email_Subject;
-                //    MailData.AccountId = t.ParentID__c;
-                //    MailData.CreatorName = t.CreatorName__c;
-                //    SendEmailList.put(t.ParentId__c, MailData);
-                //}
             }
             system.debug('childCommand.new => ' + childcomment);
             if (!childcomment.isEmpty()) {
@@ -48,9 +36,6 @@ public class CustomCaseCommentHandler extends TriggerHandler {
     private string getMessageText(Case_Comment_Custom__c comment) {
         string Header;
         string Body;
-
-
-
         Body =  Label.Custom_Case_Comment_Email_Body;
         //'A new private case comment has been added to {case #} by {CreatorName}. Click {here} to access the case.  ' +
         // 'Do not reply to this email. Access the {case} record to make any updates.';
@@ -164,8 +149,6 @@ public class CustomCaseCommentHandler extends TriggerHandler {
 
         system.debug('FinalContactList ==>' + FinalContactList);
         system.debug('EmailAddresses ==>' + EmailAddresses);
-        //EmailAddresses = new List<string>();
-        //EmailAddresses.add('William.Nelson@niceIncontact.com');
         //workflow rule to send and avoid governer limit ?
         if (!EmailAddresses.isEmpty())
         {
