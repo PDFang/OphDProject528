@@ -7,6 +7,77 @@ private class ProjectAndOpportunityRollupTest {
 
     static testMethod void testBehavior() {
 
+        Project__c parentProject = [
+                Select Id, Account__c, Opportunity__c
+                from Project__c where RecordType.Name = 'PS Parent Project - SaaS'
+        ];
+
+        test.startTest();
+
+        ProjectRollupQueueable.doChainJob = false;
+
+        List<Project__c> projectList = new List<Project__c>();
+
+        Map<String, RecordTypeInfo> projectRecordTypes = Schema.sObjectType.Project__c.getRecordTypeInfosByName();
+
+        Project__c phase1 = new Project__c();
+        phase1.RecordTypeId = projectRecordTypes.get('PS Project Phase SaaS').getRecordTypeId();
+        phase1.EstimatedProjectGoLiveDate__c = Date.today().addDays(7);
+        phase1.ActualProjectGoLiveDate__c = Date.today().addDays(7);
+        phase1.Summary__c = 'Phase 1';
+        phase1.Opportunity__c = parentProject.Opportunity__c;
+        phase1.Account__c = parentProject.Account__c;
+        phase1.ParentProject__c = parentProject.Id;
+        phase1.Phase_Status__c = 'Open';
+        projectList.add(phase1);
+
+
+        Project__c phase2 = new Project__c();
+        phase2.RecordTypeId = projectRecordTypes.get('PS Project Phase SaaS').getRecordTypeId();
+        phase2.EstimatedProjectGoLiveDate__c = Date.today().addDays(10);
+        phase2.ActualProjectGoLiveDate__c = Date.today().addDays(10);
+        phase2.Summary__c = 'Phase 2';
+        phase2.Opportunity__c = parentProject.Opportunity__c;
+        phase2.Account__c = parentProject.Account__c;
+        phase2.ParentProject__c = parentProject.Id;
+        phase2.Phase_Status__c = 'Open';
+        projectList.add(phase2);
+
+        insert projectList;
+
+        // can’t chain queueable jobs in an Apex test so calling explicitly
+        System.enqueueJob(new OpportunityRollupQueueable(new Set<Id>{parentProject.Opportunity__c}));
+
+        test.stopTest();
+
+        AggregateResult ar = [
+                Select min(Original_Phase_Forecasted_Go_Live_Date__c) minForecastedPhaseGoLiveDate, sum(Times_Go_Live_Date_Changed__c) noOfTimesPhaseGoLiveDateChanged,
+                        min(EstimatedProjectGoLiveDate__c) minEstimatedPhaseGoLiveDate, max(EstimatedProjectGoLiveDate__c) maxEstimatedPhaseGoLiveDate,
+                        min(ActualProjectGoLiveDate__c) minActualPhaseGoLiveDate, max(ActualProjectGoLiveDate__c) maxActualPhaseGoLiveDate, sum(Is_Phase_Open__c) noOfOpenPhases
+                from Project__c
+                where ParentProject__c = :parentProject.Id
+                group by ParentProject__c
+        ];
+
+        Project__c parent = [
+                Select Original_Forecasted_Initial_Go_Live_Date__c, Estimated_Project_Initial_Go_Live_Date__c, Number_of_Open_Phases__c,
+                        Estimated_Project_End__c, Actual_Initial_Phase_Go_Live__c, Actual_Latest_Go_Live_Date__c
+                From Project__c where Id = :parentProject.Id
+        ];
+
+        system.assertEquals((Date) ar.get('minForecastedPhaseGoLiveDate'), parent.Original_Forecasted_Initial_Go_Live_Date__c);
+        system.assertEquals((Date) ar.get('minEstimatedPhaseGoLiveDate'), parent.Estimated_Project_Initial_Go_Live_Date__c);
+        system.assertEquals((Date) ar.get('maxEstimatedPhaseGoLiveDate'), parent.Estimated_Project_End__c);
+        system.assertEquals((Date) ar.get('minActualPhaseGoLiveDate'), parent.Actual_Initial_Phase_Go_Live__c);
+        system.assertEquals((Date) ar.get('maxActualPhaseGoLiveDate'), parent.Actual_Latest_Go_Live_Date__c);
+        system.assertEquals((Decimal) ar.get('noOfOpenPhases'), parent.Number_of_Open_Phases__c);
+
+        Opportunity testOpportunity = [Select Original_Forecasted_Initial_Go_Live_Date__c, PM_Estimated_Go_Live__c, PM_Go_Live_Date__c from Opportunity where Id = :parentProject.Opportunity__c];
+
+        system.assertEquals(parent.Original_Forecasted_Initial_Go_Live_Date__c, testOpportunity.Original_Forecasted_Initial_Go_Live_Date__c);
+        system.assertEquals(parent.Estimated_Project_End__c, testOpportunity.PM_Estimated_Go_Live__c);
+        system.assertEquals(parent.Actual_Initial_Phase_Go_Live__c, testOpportunity.PM_Go_Live_Date__c);
+
     }
 
     @TestSetup
@@ -42,17 +113,6 @@ private class ProjectAndOpportunityRollupTest {
         parentProject.Account__c = testAccount.Id;
         insert parentProject;
 
-        List<Project__c> projectList = new List<Project__c>();
-        Project__c phase1 = new Project__c();
-        phase1.RecordTypeId = projectRecordTypes.get('PS Project Phase SaaS').getRecordTypeId();
-        phase1.EstimatedProjectGoLiveDate__c = Date.today();
-        phase1.Summary__c = 'Phase 1';
-        phase1.Opportunity__c = testOpp.Id;
-        phase1.Account__c = testAccount.Id;
-        phase1.ParentProject__c = parentProject.Id;
-        projectList.add(phase1);
-
-        insert projectList;
 
     }
 }

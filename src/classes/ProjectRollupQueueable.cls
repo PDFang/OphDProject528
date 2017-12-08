@@ -8,6 +8,9 @@ public class ProjectRollupQueueable implements Queueable{
     final Set<Id> psProjectPhaseRecordTypeIds;
     final Set<Id> psProjectParentRecordTypeIds;
 
+    @testVisible
+    private static Boolean doChainJob = true;
+
     // constructor
     public ProjectRollupQueueable(Set<Id> parentProjectIds){
 
@@ -101,7 +104,7 @@ public class ProjectRollupQueueable implements Queueable{
             system.debug('**** execute(): opportunityIds - ' + opportunityIds);
 
             // enqueue OpportunityRollupQueueable job to roll-up PS Parent SaaS and Premise project values to related opportunity
-            if (opportunityIds.size() > 0) {
+            if (opportunityIds.size() > 0 && doChainJob) {
                 Id opportunityRollupQueueableJobID = System.enqueueJob(new OpportunityRollupQueueable(opportunityIds));
                 system.debug('**** execute(): opportunityRollupQueueableJobID - ' + opportunityRollupQueueableJobID);
             }
