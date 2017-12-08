@@ -25,7 +25,7 @@ global class ProjectRollupSchedulable implements Schedulable, Database.Batchable
 
     }
 
-    global void execute(SchedulableContext param1){
+    global void execute(SchedulableContext sc){
 
         Id batchJobId = Database.executeBatch(this, this.batchSize);
         system.debug('**** execute(): ProjectRollupSchedulable - ' + batchJobId);

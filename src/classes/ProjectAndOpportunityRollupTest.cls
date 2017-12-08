@@ -93,6 +93,69 @@ private class ProjectAndOpportunityRollupTest {
 
     }
 
+    static testMethod void ProjectRollupSchedulableTest() {
+
+        Datetime nextRun = system.now().addSeconds(5);
+        String dateTimeFormat = '{0} {1} {2} {3} {4} ? {5}';
+        String scheduledTime = string.format(
+                dateTimeFormat,
+                new String[]{
+                        nextRun.second().format(),
+                        nextRun.minute().format(),
+                        nextRun.hour().format(),
+                        nextRun.day().format(),
+                        nextRun.month().format(),
+                        nextRun.year().format().remove(',')
+                }
+        );
+        system.debug('scheduleJob(): scheduledTime - ' + scheduledTime);
+
+        test.startTest();
+        String scheduledJobId = system.schedule('testProjectRollupSchedulable', scheduledTime, new ProjectRollupSchedulable(5));
+        String scheduledJobId2 = system.schedule('test2ProjectRollupSchedulable', scheduledTime, new ProjectRollupSchedulable('Select Id from Project__c where createddate = today', 5));
+        test.stopTest();
+
+        CronTrigger job = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
+        CronTrigger job2 = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
+        system.assertEquals(scheduledTime, job.CronExpression);
+        system.assertEquals(scheduledTime, job2.CronExpression);
+
+    } // end of ProjectRollupSchedulableTest()
+
+    static testMethod void OpportunityRollupSchedulableTest() {
+
+        Datetime nextRun = system.now().addSeconds(5);
+        String dateTimeFormat = '{0} {1} {2} {3} {4} ? {5}';
+        String scheduledTime = string.format(
+                dateTimeFormat,
+                new String[]{
+                        nextRun.second().format(),
+                        nextRun.minute().format(),
+                        nextRun.hour().format(),
+                        nextRun.day().format(),
+                        nextRun.month().format(),
+                        nextRun.year().format().remove(',')
+                }
+        );
+        system.debug('scheduleJob(): scheduledTime - ' + scheduledTime);
+
+        Set<String> projectRecordTypes = new Set<String>{
+                'PM-Standard'
+        };
+
+        test.startTest();
+        String scheduledJobId = system.schedule('testOpportunityRollupSchedulable', scheduledTime, new OpportunityRollupSchedulable(5));
+        String scheduledJobId2 = system.schedule('test2OpportunityRollupSchedulable', scheduledTime, new OpportunityRollupSchedulable('Select Id from Opportunity where Createddate = today', 5));
+        test.stopTest();
+
+        CronTrigger job = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
+        CronTrigger job2 = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
+        system.assertEquals(scheduledTime, job.CronExpression);
+        system.assertEquals(scheduledTime, job2.CronExpression);
+
+    } // end of OpportunityRollupSchedulableTest()
+
+
     @TestSetup
     static void setupData(){
 
