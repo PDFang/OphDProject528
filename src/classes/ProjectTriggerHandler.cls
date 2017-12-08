@@ -269,9 +269,9 @@ public class ProjectTriggerHandler extends TriggerHandler{
             if(newProject.RecordTypeId == psProjectPhaseSaasRecordTypeId || newProject.RecordTypeId == psProjectPhasePremiseRecordTypeId) {
 
                 if (trigger.isInsert && (newProject.EstimatedProjectGoLiveDate__c != null || newProject.ActualProjectGoLiveDate__c != null
-                        || (newProject.Phase_Status__c != 'Closed' && newProject.Phase_Status__c != 'Cancelled'))
-                        || newProject.Actual_NRR__c > 0
-                        || newProject.Contracted_NRR__c > 0)
+                        || (newProject.Phase_Status__c != 'Closed' && newProject.Phase_Status__c != 'Cancelled')
+                        || newProject.Actual_NRR__c > 0 || newProject.Contracted_NRR__c > 0
+                        || newProject.Actual_MRR__c > 0 || newProject.Contracted_MRR__c > 0))
                 {
                     system.debug('**** setParentProjectGoLiveDates(): created Phase Project ');
                     parentProjectIdSet.add(newProject.ParentProject__c);
