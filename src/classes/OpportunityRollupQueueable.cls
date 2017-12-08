@@ -43,7 +43,7 @@ public class OpportunityRollupQueueable implements Queueable{
             Map<Id, Opportunity> opportunityCache = new Map<Id, Opportunity>([
                     Select Id, Original_Forecasted_Initial_Go_Live_Date__c, PM_Estimated_Go_Live__c,
                             Times_Go_Live_Date_Changed__c, PM_Go_Live_Date__c,
-                            Contracted_NRR__c, Actual_NRR__c
+                            Contracted_NRR__c, Actual_NRR__c, Contracted_MRR__c, Actual_MRR__c
                     from Opportunity
                     where Id IN :opportunityIds and RecordTypeId IN :validOpportunityRecordTypeIds
             ]);
@@ -139,6 +139,7 @@ public class OpportunityRollupQueueable implements Queueable{
         // aggregate PS Parent SaaS and Premise projects
         for (AggregateResult ar : [
                 Select sum(Contracted_NRR__c) totalContractedNRR, sum(Actual_NRR__c) totalActualNRR,
+                        sum(Contracted_MRR__c) totalContractedMRR, sum(Actual_MRR__c) totalActualMRR,
                         Opportunity__c
                 from Project__c
                 where Opportunity__c IN :opportunityCache.keySet() and RecordTypeId IN :psProjectParentRecordTypeIds
@@ -159,13 +160,16 @@ public class OpportunityRollupQueueable implements Queueable{
 
             opp.Actual_NRR__c = ar.get('totalActualNRR') != null ? (Decimal)ar.get('totalActualNRR') : 0;
             opp.Contracted_NRR__c = ar.get('totalContractedNRR') != null ? (Decimal)ar.get('totalContractedNRR') : 0;
+            opp.Actual_MRR__c = ar.get('totalActualMRR') != null ? (Decimal)ar.get('totalActualMRR') : 0;
+            opp.Contracted_MRR__c = ar.get('totalContractedMRR') != null ? (Decimal)ar.get('totalContractedMRR') : 0;
 
             system.debug('**** rollupFinancials(): opp - ' + opp);
 
             Opportunity oppOld = opportunityCache.get(opp.Id);
             system.debug('**** rollupFinancials(): opp - ' + oppOld);
 
-            if(opp.Contracted_NRR__c != oppOld.Contracted_NRR__c || opp.Actual_NRR__c != oppOld.Actual_NRR__c)
+            if(opp.Contracted_NRR__c != oppOld.Contracted_NRR__c || opp.Actual_NRR__c != oppOld.Actual_NRR__c
+                    || opp.Contracted_MRR__c != oppOld.Contracted_MRR__c || opp.Actual_MRR__c != oppOld.Actual_MRR__c)
             {
                 system.debug('**** rollupFinancials(): one or more fields value have changed');
                 opportunities.put(opp.Id, opp);

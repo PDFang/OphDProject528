@@ -762,10 +762,6 @@ private class InContactTestClass
         hc.acctId = a.Id;
         hc.getAcctWrapper();
         hc.blank();
-        hc.MakeHappy();
-        hc.MakeIndifferent();
-        hc.MakeMad();
-
 
         Contact c = new Contact();
         c.LastName = 'Test';
@@ -795,51 +791,7 @@ private class InContactTestClass
         Test.stopTest();
     }
 
-    public static testMethod void TestReleatedProjectExtensions()
-    {
-        Project__c parent = new Project__c();
-        parent.Summary__c = 'parent';
-
-        insert parent;
-
-        Project__c child = new Project__c();
-        child.Summary__c = 'child';
-        child.TFSId__c = '1234';
-        insert child;
-        Test.startTest();
-        RelatedProject__c relatedProject = new RelatedProject__c();
-
-        //test RelatedProjectsNewExtension
-        ApexPages.StandardController relatedProjectController = new ApexPages.StandardController(relatedProject);
-        ApexPages.currentPage().getParameters().put('proj', parent.Id);
-        RelatedProjectsNewExtension relatedProjectNewExtension = new RelatedProjectsNewExtension(relatedProjectController);
-
-        relatedProjectNewExtension.Cancel();
-        relatedProjectNewExtension.Save();
-
-        //test RelatedProjectsViewExtension
-        ApexPages.StandardController projectController = new ApexPages.StandardController(child);
-        RelatedProjectsViewExtension relatedProjectViewExtension = new RelatedProjectsViewExtension(projectController);
-
-
-        List<RelatedProject__c> childList = relatedProjectViewExtension.ChildList;
-        List<RelatedProject__c> parentList = relatedProjectViewExtension.ParentList;
-
-        ApexPages.currentPage().getParameters().put('lProj', relatedProject.Id);
-        ApexPages.currentPage().getParameters().put('lName', 'parent');
-
-        relatedProjectViewExtension.RemoveLink();
-
-        //test ProjectReassignExtension
-        ProjectReassignExtension projectReassign = new ProjectReassignExtension(projectController);
-
-        projectReassign.AssignCurrentUser();
-        projectReassign.commentText = 'test';
-
-        projectReassign.Save();
-        projectReassign.Cancel();
-        Test.stopTest();
-    }
+    
 
     public static testMethod void TestLeadStatusClass()
     {

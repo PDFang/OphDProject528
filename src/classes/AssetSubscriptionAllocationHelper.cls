@@ -185,7 +185,7 @@ public class AssetSubscriptionAllocationHelper {
             subscriptionFields.add(member.getFieldPath());
         }
 
-        List<Schema.FieldSetMember> fsMembersSubsEditable = Schema.SobjectType.Asset.fieldSets.PS_Asset_Allocation_Editable_Fields.getFields();
+        List<Schema.FieldSetMember> fsMembersSubsEditable = Schema.SobjectType.SubscriptionReplica__c.fieldSets.PS_Subscription_Alloc_Editable_Fields.getFields();
         for(Schema.FieldSetMember member : fsMembersSubsEditable){
             subscriptionEditableFields.add(member.getFieldPath());
         }
@@ -325,7 +325,7 @@ public class AssetSubscriptionAllocationHelper {
             String soql = 'Select Id, Name, Summary__c, ProjectStatus__c, Phase__c ' +
                     + ' from Project__c where ';
             soql += ' ParentProject__c = \'' + ProjectId + '\'';
-            soql += ' order by createddate ';
+            soql += ' and ActualProjectGoLiveDate__c = null order by createddate ';
 
             projects = Database.query(soql);
         }
@@ -382,7 +382,7 @@ public class AssetSubscriptionAllocationHelper {
                 soql += ' Parent_Project__c = \'' + thisProject.ParentProject__c + '\'';
             }
 
-            soql += ' order by createddate ';
+            soql += '  order by createddate ';
 
             List<Asset> assets = Database.query(soql);
 

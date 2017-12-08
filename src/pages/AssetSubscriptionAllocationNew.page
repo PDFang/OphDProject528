@@ -96,13 +96,23 @@
                 <apex:pageBlockButtons title="" location="bottom">
                     <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
                     <apex:outputPanel rendered="{!Asset.Quantity > 1 && !Asset.FullyImplemented__c}">
-                        <button title="Edit Quantity Cancelled/on Hold " onClick="openEditCancSuspQuantityModal(); return false;">
-                            Edit Quantity Cancelled/on Hold
+                        <button title="Edit On hold/Cancelled Quantity " onClick="openEditCancSuspQuantityModal(); return false;">
+                            Edit On hold/Cancelled Quantity
                         </button>
                     </apex:outputPanel>
                 </apex:pageBlockButtons>
-                <apex:pageBlockSection columns="2" >
-                    <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation}" var="f">
+                <!--<apex:pageBlockSection columns="2">-->
+                    <!--<apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation}" var="f">-->
+                        <!--<apex:outputfield value="{!Asset[f]}" />-->
+                    <!--</apex:repeat>-->
+                <!--</apex:pageBlockSection>-->
+                <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity > 1}">
+                    <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_GrTh1_Fields}" var="f">
+                        <apex:outputfield value="{!Asset[f]}" />
+                    </apex:repeat>
+                </apex:pageBlockSection>
+                <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity <= 1}">
+                    <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Eq1_Fields}" var="f">
                         <apex:outputfield value="{!Asset[f]}" />
                     </apex:repeat>
                 </apex:pageBlockSection>
@@ -123,13 +133,23 @@
                 <apex:pageBlockButtons title="" location="bottom">
                     <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
                     <apex:outputPanel rendered="{!Subscription.Quantity__c > 1 && !Subscription.FullyImplemented__c}">
-                        <button title="Edit Quantity Cancelled/on Hold " onClick="openSubsEditCancSuspQuantityModal(); return false;">
-                            Edit Quantity Cancelled/on Hold
+                        <button title="Edit On hold/Cancelled Quantity " onClick="openSubsEditCancSuspQuantityModal(); return false;">
+                            Edit On hold/Cancelled Quantity
                         </button>
                     </apex:outputPanel>
                 </apex:pageBlockButtons>
-                <apex:pageBlockSection columns="2" >
-                    <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation}" var="f">
+                <!--<apex:pageBlockSection columns="2" >-->
+                    <!--<apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation}" var="f">-->
+                        <!--<apex:outputfield value="{!Subscription[f]}" />-->
+                    <!--</apex:repeat>-->
+                <!--</apex:pageBlockSection>-->
+                <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c > 1}">
+                    <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation_GrTh1_Fields}" var="f">
+                        <apex:outputfield value="{!Subscription[f]}" />
+                    </apex:repeat>
+                </apex:pageBlockSection>
+                <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c <= 1}">
+                    <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation_Eq1_Fields}" var="f">
                         <apex:outputfield value="{!Subscription[f]}" />
                     </apex:repeat>
                 </apex:pageBlockSection>
@@ -186,7 +206,7 @@
                 <div class="modal-dialog" role="document" style="width:60%;">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="cancSuspModalLabel" style="font-weight:bold">Edit Quantity Cancelled/on hold </h5>
+                            <h5 class="modal-title" id="cancSuspModalLabel" style="font-weight:bold">Edit On hold/Cancelled Quantity </h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -224,7 +244,7 @@
                 <div class="modal-dialog" role="document" style="width:56%;">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="subsCancSuspModalLabel" style="font-weight:bold">Edit Quantity cancelled/on hold</h5>
+                            <h5 class="modal-title" id="subsCancSuspModalLabel" style="font-weight:bold">Edit On hold/Cancelled Quantity</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close"  onclick="reloadDetails();">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -357,6 +377,8 @@
                               Asset.Budgeted_Hours__c = '{!Asset.Budgeted_Hours__c}';
                               Asset.RemainingQuantity__c = '{!Asset.RemainingQuantity__c}';
                               Asset.Remaning_Percentage__c = '{!Asset.Remaning_Percentage__c}';
+                              Asset.QuantityonHold__c = '{!Asset.QuantityonHold__c}';
+                              Asset.QuantityCancelled__c = '{!Asset.QuantityCancelled__c}';
                               assetAllocationData(null, '{!currentId}');
 
                               if(disableEdit){
@@ -375,6 +397,8 @@
                               Subscription.Budgeted_Hours__c = '{!Subscription.Budgeted_Hours__c}';
                               Subscription.RemainingQuantity__c = '{!Subscription.RemainingQuantity__c}';
                               Subscription.Remaning_Percentage__c = '{!Subscription.Remaning_Percentage__c}';
+                              Subscription.QuantityonHold__c = '{!Subscription.QuantityonHold__c}';
+                              Subscription.QuantityCancelled__c = '{!Subscription.QuantityCancelled__c}';
                               subscriptionAllocationData(null, '{!currentId}');
                               if(disableEdit){
                                    $("a.k-grid-add").hide();

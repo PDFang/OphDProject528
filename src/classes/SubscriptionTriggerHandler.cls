@@ -3,7 +3,9 @@
  */
 
 public class SubscriptionTriggerHandler extends TriggerHandler{
+
     public static Boolean InSubscriptionCustomTrigger = false;
+    private static Id subscriptionRollupQueueableJobID;
 
     public override void beforeUpdate()
     {
@@ -12,6 +14,7 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
 
     public override void afterInsert(){
         InsertSubscriptionReplica((List<SBQQ__Subscription__c>) trigger.new);
+        rollupMRRToPhaseProject();
     }
 
     public override void afterUpdate(){
@@ -20,6 +23,41 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
         {
             UpdateSubscriptionReplica((Map<Id, SBQQ__Subscription__c>) trigger.newMap, (Map<Id, SBQQ__Subscription__c>)trigger.oldMap);
         }
+        rollupMRRToPhaseProject();
+    }
+
+    protected override void afterDelete(){
+        rollupMRRToPhaseProject();
+    }
+
+    // roll-up subscription MRR's to related phase project
+    private static void rollupMRRToPhaseProject() {
+
+        system.debug('**** started rollupMRRToPhaseProject() ');
+
+        List<SBQQ__Subscription__c> newList = (List<SBQQ__Subscription__c>) (trigger.isDelete ? trigger.old : trigger.new);
+
+        Set<Id> subscriptionIds = new Set<Id>();
+
+        for (SBQQ__Subscription__c newSubscription : newList) {
+
+            if (trigger.isInsert || trigger.isUpdate){
+                system.debug('**** rollupMRRToPhaseProject(): created or updated subscription ');
+                subscriptionIds.add(newSubscription.Id);
+            } else if (trigger.isDelete) {
+                system.debug('**** rollupMRRToPhaseProject(): deleted subscription ');
+                subscriptionIds.add(newSubscription.Id);
+            }
+
+        }
+
+        system.debug('**** rollupMRRToPhaseProject(): subscriptionIds - ' + subscriptionIds);
+
+        if(subscriptionIds.size() > 0 && subscriptionRollupQueueableJobID == null){
+            subscriptionRollupQueueableJobID = System.enqueueJob(new SubscriptionRollupQueueable(subscriptionIds));
+            system.debug('**** rollupMRRToPhaseProject(): subscriptionRollupQueueableJobID - ' + subscriptionRollupQueueableJobID);
+        }
+
     }
 
     // Get associated Project Phase information and update to Subscription

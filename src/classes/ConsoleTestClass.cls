@@ -201,13 +201,6 @@ private class ConsoleTestClass
         ApexPages.StandardController controller = new ApexPages.StandardController(acct);
         ConsoleAccountHighlightPanelExtension ext = new ConsoleAccountHighlightPanelExtension(controller);
         
-        string gyrStatus = ext.GyrStatus;
-        system.assertEquals('Green',gyrStatus);
-        
-        GYR__c gyr = TestUtilities.CreateGyr(acct.Id, 'Yellow', true);
-        gyrStatus = ext.GyrStatus;
-        system.assertEquals('Yellow',gyrStatus);
-        
         string packageHours = ext.PsPackageHours;
         system.assertEquals('0.0', packageHours);
         system.assertEquals('1', ext.NumberOfOpenIncidents);

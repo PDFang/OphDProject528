@@ -114,6 +114,10 @@
                                                 input.attr("data-quantityValidation-msg", "Allocated Quantity cannot be zero");
                                                 return false;
                                             }
+                                             if(Number(input.val()) > Number(Asset.RemainingQuantity__c) && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && (Asset.QuantityonHold__c > 0 || Asset.QuantityCancelled__c > 0)){
+                                                input.attr("data-quantityValidation-msg", 'Cannot allocate more than “Contract Quantity” if there is any quantity on hold or cancelled');
+                                                return false;
+                                            }
                                         return true;
                                         }
                                      }
@@ -141,6 +145,7 @@
                                                 input.attr("data-percentageValidation-msg", " Allocated Percentage cannot be zero");
                                                 return false;
                                             }
+
                                         return true;
                                         }
                                     }
@@ -446,7 +451,8 @@
                                     'Asset',
                                     function(result,event){
                                       if (event.status) {
-                                          if(result){
+
+                                          if(result != null && result.length > 1){
                                                options.success(JSON.parse(result));
                                                console.log('PhaseProjectDetails =>' + JSON.stringify(result));
                                           }else{

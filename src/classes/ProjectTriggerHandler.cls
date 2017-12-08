@@ -8,6 +8,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
     static Id salesEngineeringRecordTypeId;
     static Id psProjectPhaseSaasRecordTypeId, psProjectParentPremiseRecordTypeId;
     static Id psProjectParentSaasRecordTypeId, psProjectPhasePremiseRecordTypeId;
+    static Id itProjectRecordTypeId;
     static set<Id> allowedRecordTypes;
 
     static final Set<String> debugProjectFields = new Set<String>{
@@ -33,6 +34,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
             psProjectPhaseSaasRecordTypeId = rtMapByName.get('PS Project Phase SaaS').getRecordTypeId();
             psProjectParentPremiseRecordTypeId = rtMapByName.get('PS Parent Project - Premise').getRecordTypeId();
             psProjectParentSaasRecordTypeId = rtMapByName.get('PS Parent Project - SaaS').getRecordTypeId();
+            itProjectRecordTypeId = rtMapByName.get('IT Project Request').getRecordTypeId();
 
             allowedRecordTypes = new set<Id> ();
             for (Schema.RecordTypeInfo recordType : rtMapByName.values())
@@ -55,6 +57,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
         //if it is a phase project validate the phase number
         ProjectTriggerHelper.setNextPhaseNumber(Trigger.new);
 
+        resetCalculatedFieldsBeforeClone();
         setPhaseProjectGoLiveDates();
 
         // Assign Project owners and set status to New
@@ -81,6 +84,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         setParentProjectGoLiveDates();
 
+        relateITAndPMOProject();
+
         SalesEngineeringLogic.CreateNewProjectTasks(trigger.new, salesEngineeringRecordTypeId);
         ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
         ProjectTriggerHelper.createProjectTasks(Trigger.new);
@@ -100,6 +105,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
         ProjectParentPhaseSummary();
         ProjectTriggerHelper.updateParentPlannedHours(trigger.new, psProjectPhaseSaasRecordTypeId);
         setParentProjectGoLiveDates();
+
+        relateITAndPMOProject();
 
         calculatePhaseImpQuantityNPercentage(trigger.new, (Map<Id, Project__c>)trigger.oldMap);
         ProjectTriggerHelper.updateAssetStatusForPhasedProject((List<Project__c>)trigger.new, (Map<Id, Project__c>)Trigger.oldMap);
@@ -167,6 +174,24 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
     }
 
+    private static void resetCalculatedFieldsBeforeClone(){
+
+        List<Project__c> newList = (List<Project__c>) trigger.new;
+
+        for(Project__c newProject : newList){
+            if(newProject.isClone()){
+                newProject.Actual_NRR__c = 0;
+                newProject.Actual_MRR__c = 0;
+                newProject.Contracted_NRR__c = 0;
+                newProject.Contracted_MRR__c = 0;
+                newProject.Number_of_Open_Phases__c = 0;
+                newProject.Times_Go_Live_Date_Changed__c = null;
+                newProject.Original_Phase_Forecasted_Go_Live_Date__c = null;
+            }
+        }
+
+    }
+
     private static void setPhaseProjectGoLiveDates(){
 
         system.debug('**** started setPhaseProjectGoLiveDates() ');
@@ -184,22 +209,19 @@ public class ProjectTriggerHandler extends TriggerHandler{
             system.debug('**** setPhaseProjectGoLiveDates(): Times_Go_Live_Date_Changed__c - '+ newProject.Times_Go_Live_Date_Changed__c);
 
             Project__c oldProject = oldMap != null ? oldMap.get(newProject.Id) : null;
-            if(newProject.isClone()){
-                newProject.Times_Go_Live_Date_Changed__c = null;
-                newProject.Original_Phase_Forecasted_Go_Live_Date__c = null;
-                newProject.Actual_NRR__c = 0;
-                newProject.Contracted_NRR__c = 0;
-            }
+
             if(trigger.isInsert && newProject.EstimatedProjectGoLiveDate__c != null){
                 newProject.Original_Phase_Forecasted_Go_Live_Date__c = newProject.EstimatedProjectGoLiveDate__c;
+                newProject.Unlock_Original_Phase_Go_Live_Date__c = true;
                 newProject.Times_Go_Live_Date_Changed__c = 0;
             }
-            if(trigger.isUpdate && newProject.EstimatedProjectGoLiveDate__c != oldProject.EstimatedProjectGoLiveDate__c){
-                if(newProject.Original_Phase_Forecasted_Go_Live_Date__c == null){
+            if(trigger.isUpdate && newProject.EstimatedProjectGoLiveDate__c != oldProject.EstimatedProjectGoLiveDate__c && newProject.EstimatedProjectGoLiveDate__c != null){
+                if(newProject.Original_Phase_Forecasted_Go_Live_Date__c == null ){
                     newProject.Original_Phase_Forecasted_Go_Live_Date__c = newProject.EstimatedProjectGoLiveDate__c;
+                    newProject.Unlock_Original_Phase_Go_Live_Date__c = true;
                     newProject.Times_Go_Live_Date_Changed__c = 0;
                 }else{
-                    newProject.Times_Go_Live_Date_Changed__c = oldProject.Times_Go_Live_Date_Changed__c + 1;
+                    newProject.Times_Go_Live_Date_Changed__c = (oldProject.Times_Go_Live_Date_Changed__c == null ? 0 : oldProject.Times_Go_Live_Date_Changed__c) + 1;
                 }
 
             }
@@ -247,9 +269,9 @@ public class ProjectTriggerHandler extends TriggerHandler{
             if(newProject.RecordTypeId == psProjectPhaseSaasRecordTypeId || newProject.RecordTypeId == psProjectPhasePremiseRecordTypeId) {
 
                 if (trigger.isInsert && (newProject.EstimatedProjectGoLiveDate__c != null || newProject.ActualProjectGoLiveDate__c != null
-                        || (newProject.Phase_Status__c != 'Closed' && newProject.Phase_Status__c != 'Cancelled'))
-                        || newProject.Actual_NRR__c > 0
-                        || newProject.Contracted_NRR__c > 0)
+                        || (newProject.Phase_Status__c != 'Closed' && newProject.Phase_Status__c != 'Cancelled')
+                        || newProject.Actual_NRR__c > 0 || newProject.Contracted_NRR__c > 0
+                        || newProject.Actual_MRR__c > 0 || newProject.Contracted_MRR__c > 0))
                 {
                     system.debug('**** setParentProjectGoLiveDates(): created Phase Project ');
                     parentProjectIdSet.add(newProject.ParentProject__c);
@@ -258,7 +280,9 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         || newProject.Phase_Status__c != oldProject.Phase_Status__c
                         || newProject.ParentProject__c != oldProject.ParentProject__c
                         || newProject.Actual_NRR__c != oldProject.Actual_NRR__c
-                        || newProject.Contracted_NRR__c != oldProject.Contracted_NRR__c) )
+                        || newProject.Contracted_NRR__c != oldProject.Contracted_NRR__c
+                        || newProject.Actual_MRR__c != oldProject.Actual_MRR__c
+                        || newProject.Contracted_MRR__c != oldProject.Contracted_MRR__c) )
                 {
                     system.debug('**** setParentProjectGoLiveDates(): updated Phase Project ');
                     parentProjectIdSet.add(newProject.ParentProject__c);
@@ -539,6 +563,42 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         if(updateSubscriptionCustomList.size() > 0)
             update updateSubscriptionCustomList;
+
+    }
+
+    // establish automatic link between IT Project and PMO project
+    private static void relateITAndPMOProject() {
+
+        system.debug('**** executing relateITAndPMOProject() ');
+
+        List<Project__c> newList = (List<Project__c>) trigger.new;
+
+        Map<Id, Project__c> oldMap = (Map<Id, Project__c>) trigger.oldMap;
+
+        List<RelatedProject__c> relatedProjects = new List<RelatedProject__c>();
+
+        for (Project__c newProject : newList) {
+
+            Project__c oldProject = oldMap != null ? oldMap.get(newProject.Id) : null;
+
+            system.debug(' relateITAndPMOProject(): newProject - ' + newProject);
+
+            if (newProject.RecordTypeId == itProjectRecordTypeId && newProject.ParentProject__c != null
+                    && (oldProject == null || oldProject.ParentProject__c != newProject.ParentProject__c)) {
+                RelatedProject__c newRelation = new RelatedProject__c(
+                        ParentProject__c = newProject.ParentProject__c,
+                        ChildProject__c = newProject.Id
+                );
+                relatedProjects.add(newRelation);
+            }
+
+        }
+
+        system.debug(' relateITAndPMOProject(): relatedProjects - ' + relatedProjects);
+
+        if(relatedProjects.size() > 0){
+            insert relatedProjects;
+        }
 
     }
 }

@@ -98,6 +98,8 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
                     subscription.Status__c = subscriptionReplica.Status1__c;
                     subscription.Install_Date__c = subscriptionReplica.Install_Date__c;
                     subscription.Implemented_Product__c = subscriptionReplica.Implemented_Product__c;
+                    subscription.Total_Allocated_Quantity__c = subscriptionReplica.Total_Allocated_Quantity__c;
+                    subscription.Total_Implemented_Quantity__c = subscriptionReplica.Total_Implemented_Quantity__c;
 
                     // add changed Subscriptions to update list
                     lstUpdateSubscriptions.add(subscription);

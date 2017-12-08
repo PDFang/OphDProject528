@@ -1,7 +1,6 @@
 public with sharing class ConsoleAccountHighlightPanelExtension  extends ConsoleRemoteActions
 {
     private Account acct;
-    private GYR__c gyr;
     private AccountClass accountInfo;
 
     public ConsoleAccountHighlightPanelExtension(ApexPages.StandardController controller) 
@@ -9,32 +8,7 @@ public with sharing class ConsoleAccountHighlightPanelExtension  extends Console
         acct = (Account)controller.getRecord();
         accountInfo = new AccountClass(acct.Id);
     }
-    
-    public string GyrStatus
-    {
         
-        get
-        {
-            if([SELECT COUNT() FROM GYR__c WHERE Account__c = :acct.Id AND GYREndDate__c = NULL] == 0)
-            {
-                gyr = new GYR__c();
-            }
-            else
-            {
-                gyr = [SELECT GYRStatus__c FROM GYR__c WHERE Account__c = :acct.Id AND GYREndDate__c = NULL LIMIT 1];
-            }
-                
-            if(gyr.GYRStatus__c == null)
-            {
-                return 'Green';
-            }
-            else
-            {
-                return gyr.GYRStatus__c;
-            }
-        }
-    }
-    
     public string PsPackageHours
     {
         get

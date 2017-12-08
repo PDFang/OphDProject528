@@ -12,6 +12,7 @@ public class PartnerCaseProxyServiceHelper {
     public static final String PRODUCT_HOSTING = 'HOSTING';
     public static final String PRODUCT_GENERAL = 'GENERAL';
 
+    private static Integer noOfRetries = 2;
     @TestVisible
     private static final String DEFAULT_COUNTRY_USA = 'USA';
     @TestVisible
@@ -24,6 +25,15 @@ public class PartnerCaseProxyServiceHelper {
     private static boolean isCasePushed = false;
     @TestVisible
     private static boolean isCaseCommentPushed = false;
+
+    public PartnerCaseProxyServiceHelper(){
+
+        AppConfiguration__c config = AppConfiguration__c.getInstance();
+        if(config != null && config.Verizon_Partner_Service_Retries_Allowed__c != null) {
+            noOfRetries = (Integer)config.Verizon_Partner_Service_Retries_Allowed__c;
+        }
+
+    }
 
     // when a new case is created
     public static void PushCaseToProxyService(Set<Id> caseIds){
@@ -60,7 +70,7 @@ public class PartnerCaseProxyServiceHelper {
             PartnerCaseProxyService.ArrayOfSalesforceCase caseRequest = new PartnerCaseProxyService.ArrayOfSalesforceCase();
             caseRequest.SalesforceCase = caseArray;
             system.debug('PushCaseToProxyService(): caseRequest - ' + caseRequest);
-            proxy.CreatePartnerCase(caseRequest, BILLING_GROUP_VERIZON);
+            proxy.CreatePartnerCase(caseRequest, BILLING_GROUP_VERIZON, noOfRetries);
             if(test.isRunningTest()) isCasePushed = true;
         }catch (system.CalloutException ex) {
             system.debug('PushCaseToProxyService(): CalloutException - ' + ex);
@@ -161,7 +171,7 @@ public class PartnerCaseProxyServiceHelper {
         // callout
         PartnerCaseProxyService.ArrayOfPartnerCaseUpdate caseUpdateRequest = new PartnerCaseProxyService.ArrayOfPartnerCaseUpdate();
         caseUpdateRequest.PartnerCaseUpdate = caseUpdateArray;
-        proxy.UpdatePartnerCase(caseUpdateRequest, BILLING_GROUP_VERIZON);
+        proxy.UpdatePartnerCase(caseUpdateRequest, BILLING_GROUP_VERIZON, noOfRetries);
 
     }
 

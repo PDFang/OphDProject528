@@ -1,13 +1,17 @@
 public class AssetTriggerHandler extends TriggerHandler {
 
+    private static Id assetRollupQueueableJobID;
+
     public override void afterUpdate()
     {
+        rollupNRRToPhaseProject();
         ProjectPhaseAssetSummary();
         ProjectParentAssetSummary();
     }
 
     public override void afterInsert()
     {
+        rollupNRRToPhaseProject();
         ProjectPhaseAssetSummary();
         ProjectParentAssetSummary();
         AttachParentProject();
@@ -15,8 +19,39 @@ public class AssetTriggerHandler extends TriggerHandler {
 
     public override void afterDelete()
     {
+        rollupNRRToPhaseProject();
         ProjectPhaseAssetSummary();
         ProjectParentAssetSummary();
+    }
+
+    // roll-up Asset NRR's to related phase project
+    private static void rollupNRRToPhaseProject() {
+
+        system.debug('**** started rollupNRRToPhaseProject() ');
+
+        List<Asset> newList = (List<Asset>) (trigger.isDelete ? trigger.old : trigger.new);
+
+        Set<Id> assetIdSet = new Set<Id>();
+
+        for (Asset newAsset : newList) {
+
+            if (trigger.isInsert || trigger.isUpdate){
+                system.debug('**** rollupNRRToPhaseProject(): created or updated asset ');
+                assetIdSet.add(newAsset.Id);
+            } else if (trigger.isDelete) {
+                system.debug('**** rollupNRRToPhaseProject(): deleted asset ');
+                assetIdSet.add(newAsset.Id);
+            }
+
+        }
+
+        system.debug('**** rollupNRRToPhaseProject(): assetIdSet - ' + assetIdSet);
+
+        if(assetIdSet.size() > 0 && assetRollupQueueableJobID == null){
+            assetRollupQueueableJobID = System.enqueueJob(new AssetRollupQueueable(assetIdSet));
+            system.debug('**** rollupNRRToPhaseProject(): assetRollupQueueableJobID - ' + assetRollupQueueableJobID);
+        }
+
     }
 
     //the ProjectPhaseAssetSummary method rolls-up related phase asset financial fields as totals on the phase record.
