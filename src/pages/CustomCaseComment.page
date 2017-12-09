@@ -20,7 +20,9 @@
                     </apex:column>
                     <apex:column >
                         <apex:facet name="header">Comment Date</apex:facet>
-                        <apex:outputText >{!comment.CreateDate}</apex:outputText>
+                        <apex:outputText value="{0,date,MM/dd/yy HH:mm:ss a}">
+                            <apex:param value="{!comment.CreateDate}"> </apex:param>
+                        </apex:outputText>
                     </apex:column>
                     <apex:column >
                         <apex:facet name="header">Created By</apex:facet>
@@ -31,7 +33,7 @@
                         <apex:outputText >{!comment.CaseComment}</apex:outputText>
                     </apex:column>
                     <apex:column rendered="false" >
-                        <apex:facet  name="header">Case Comment Id</apex:facet>
+                        <apex:facet name="header">Case Comment Id</apex:facet>
                         <apex:outputText >{!comment.caseCommentsId}</apex:outputText>
                     </apex:column>
                 </apex:dataTable>

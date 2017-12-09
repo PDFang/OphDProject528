@@ -41,10 +41,12 @@ public with sharing class AssetSubscriptionAllocationNewController {
     public boolean saveSuccess{get; set;}
 
     public list<ImplementedProduct__c> ImplementedProducts{get;private set;}
+    public boolean showdeleteButton{get; set;}
     // query string parameter
 //    public Boolen isSuccesfullySaved{get;set;}
     //Helper Object
     private AssetSubscriptionAllocationHelper helper;
+
 
 
     // constructor
@@ -53,6 +55,7 @@ public with sharing class AssetSubscriptionAllocationNewController {
         ImplementedProducts = new list<ImplementedProduct__c>();
         currentId = ApexPages.currentPage().getParameters().get('id');
         saveSuccess = true;
+        showdeleteButton = false;
         system.debug('getAsset(): currentId - ' + currentId);
 
         if(String.isBlank(currentId)){
@@ -154,14 +157,20 @@ public with sharing class AssetSubscriptionAllocationNewController {
         try{
             String message =  helper.SaveCancSuspQuantity(Asset);
             saveSuccess = true;
+            showdeleteButton = false;
             if(message.contains('Saved')){
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, message));
                 saveSuccess = true;
             }
             else {
                // getUpdatedCancSuspValues();
+                System.debug('came back from helper method');
+                if(message.contains('modify or delete'))
+                    showdeleteButton = true;
+
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, message));
                 saveSuccess = false;
+
             }
 
         }catch (Exception ex){
@@ -174,15 +183,43 @@ public with sharing class AssetSubscriptionAllocationNewController {
         System.debug('Subscription.QuantityCancelled__c' + Subscription.QuantityCancelled__c);
         try{
             saveSuccess = true;
+            showdeleteButton = false;
             String message =  helper.SaveCancSuspQuantitySubs(Subscription);
             if(message.contains('Saved')){
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, message));
                 saveSuccess = true;
             }
             else {
+                if(message.contains('modify or delete'))
+                        showdeleteButton = true;
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, message));
                 saveSuccess = false;
             }
+        }catch (Exception ex){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
+            saveSuccess = false;
+        }
+
+    }
+
+    public void deleteAssetAllocation(){
+        try{
+            helper.deleteNonImplementedAssetAllocations(Asset.Id);
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Allocations were deleted successfully.'));
+            showdeleteButton = false;
+            reloadDetails();
+        }catch (Exception ex){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
+            saveSuccess = false;
+        }
+    }
+
+    public void deleteSubsAllocation(){
+        try{
+            helper.deleteNonImplementedSubsAllocations(Subscription.Id);
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Allocations were deleted successfully.'));
+            showdeleteButton = false;
+            reloadDetails();
         }catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
             saveSuccess = false;

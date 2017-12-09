@@ -48,7 +48,8 @@ public class AssetSubscriptionAllocationHelper {
             'RecordType.Name',
             'ParentProject__c',
             'ParentProject__r.Name',
-            'Project_Phase__c'
+            'Project_Phase__c',
+            'ActualProjectGoLiveDate__c'
     };
 
     static Set<String> IPFields = new Set<String>{
@@ -308,21 +309,21 @@ public class AssetSubscriptionAllocationHelper {
         Asset thisAsset;
         SubscriptionReplica__c thisSubscription;
         string ProjectId;
-        List<Project__c> projects;
+        List<Project__c> projects = new list<Project__c>();
 
         if(objType == 'Asset'){
             thisAsset = [select Parent_Project__c from Asset WHere Id = :objId limit 1];
-            ProjectId  = thisAsset.Parent_Project__c;
+            ProjectId  = thisAsset.Parent_Project__c == null ? '' : thisAsset.Parent_Project__c;
         }else if(objType == 'Subscription'){
             thisSubscription = [select ParentProject__c from SubscriptionReplica__c WHere Id = :objId limit 1];
-            ProjectId = thisSubscription.ParentProject__c;
+            ProjectId = thisSubscription.ParentProject__c == null ? '' : thisSubscription.ParentProject__c;
         }
 
 
 
 
-        if(ProjectId != null){
-            String soql = 'Select Id, Name, Summary__c, ProjectStatus__c, Phase__c ' +
+        if(ProjectId != null && ProjectId != ''){
+            String soql = 'Select Id, Name, Summary__c, ProjectStatus__c, Phase__c , Phase_Status__c ' +
                     + ' from Project__c where ';
             soql += ' ParentProject__c = \'' + ProjectId + '\'';
             soql += ' and ActualProjectGoLiveDate__c = null order by createddate ';
@@ -382,7 +383,7 @@ public class AssetSubscriptionAllocationHelper {
                 soql += ' Parent_Project__c = \'' + thisProject.ParentProject__c + '\'';
             }
 
-            soql += '  order by createddate ';
+            soql += ' and FullyImplemented__c = false  order by createddate ';
 
             List<Asset> assets = Database.query(soql);
 
@@ -397,7 +398,7 @@ public class AssetSubscriptionAllocationHelper {
                 soql += ' ParentProject__c = \'' + thisProject.ParentProject__c + '\'';
             }
 
-            soql += ' order by createddate ';
+            soql += ' and FullyImplemented__c = false order by createddate ';
 
             List<SubscriptionReplica__c> subscriptions = Database.query(soql);
             system.debug('subscriptions - ' + subscriptions);
@@ -448,7 +449,7 @@ public class AssetSubscriptionAllocationHelper {
         String result;
         Boolean manager = isManager();
         try{
-            System.debug('asset.QuantityCancelled__c' + asset.get('QuantityCancelled__c'));
+            System.debug('asset.QuantityonHold__c' + asset.get('QuantityonHold__c'));
             if(asset.get('QuantityCancelled__c') == null  ||  asset.get('QuantityonHold__c') == null ){
                 return 'Required fields are missing. Quantity Cancelled and/or Quantity on Hold cannot be blank';
             }
@@ -476,14 +477,30 @@ public class AssetSubscriptionAllocationHelper {
             else if(quantityonHold > asset.Quantity){
                 return '"On Hold Quantity" cannot exceed the contract quantity';
             }
-            else if(quantityonHold > (asset.Quantity - asset.Total_Implemented_Quantity__c)){
-               return '"On Hold Quantity" cannot exceed the remaining quantity';
+            else if(quantityonHold > asset.RemainingQuantity__c){
+                system.debug('asset.Total_Implemented_Quantity__c  ==>' + asset.Total_Implemented_Quantity__c);
+                system.debug('asset.Total_Allocated_Quantity__c  ==>' + asset.Total_Allocated_Quantity__c);
+
+                if((asset.Total_Implemented_Quantity__c  > 0 && (asset.Total_Allocated_Quantity__c - asset.Total_Implemented_Quantity__c) > 0)
+                || asset.Total_Implemented_Quantity__c == 0){
+                    return '“On Hold Quantity” cannot exceed remaining quantity. Please modify or delete existing allocations if the remaining quantity needs to be increased.';
+                }
+                if(quantityonHold > (asset.Quantity - asset.Total_Implemented_Quantity__c) && asset.Total_Implemented_Quantity__c  > 0){
+                    return '"On Hold Quantity" cannot exceed the remaining quantity';
+                }
             }
             else if(quantityCancelled > asset.Quantity){
                 return '"Cancelled Quantity" cannot exceed the contract quantity';
             }
-            else if(quantityCancelled > (asset.Quantity - asset.Total_Implemented_Quantity__c)){
-                return '"Cancelled Quantity" cannot exceed the remaining quantity';
+           else if(quantityCancelled > asset.RemainingQuantity__c){
+               if((asset.Total_Implemented_Quantity__c  > 0 && (asset.Total_Allocated_Quantity__c - asset.Total_Implemented_Quantity__c) > 0)
+                       || asset.Total_Implemented_Quantity__c == 0){
+                   return '“Cancelled Quantity” cannot exceed remaining quantity. Please modify or delete existing allocations if the remaining quantity needs to be increased.';
+               }
+               if(quantityonHold > (asset.Quantity - asset.Total_Implemented_Quantity__c) && asset.Total_Implemented_Quantity__c  > 0){
+                    return '"Cancelled Quantity" cannot exceed the remaining quantity';
+                }
+
             }
             else if(totalCanceledOrHold > asset.Quantity){
                 return '"Cancelled Quantity" and “On Hold Quantity” cannot exceed the contract quantity';
@@ -492,8 +509,18 @@ public class AssetSubscriptionAllocationHelper {
                 return '"Cancelled Quantity" and “On Hold Quantity” cannot exceed the remaining quantity';
             }
             else if((quantityCancelled >= asset.Quantity
-                    || quantityonHold >= asset.Quantity) && !manager){
+                    || quantityonHold >= asset.Quantity || totalCanceledOrHold >= asset.Quantity) && !manager){
                 return 'Only managers can suspend or cancel the entire quantity of an asset or subscription.';
+            }
+            else if(totalCanceledOrHold > asset.RemainingQuantity__c){
+                if((asset.Total_Implemented_Quantity__c  > 0 && (asset.Total_Allocated_Quantity__c - asset.Total_Implemented_Quantity__c) > 0)
+                        || asset.Total_Implemented_Quantity__c == 0){
+                    return '"Cancelled Quantity" and “On Hold Quantity” cannot exceed remaining quantity. Please modify or delete existing allocations if the remaining quantity needs to be increased.';
+                }
+                if(totalCanceledOrHold > (asset.Quantity - asset.Total_Implemented_Quantity__c) && asset.Total_Implemented_Quantity__c  > 0){
+                    return '"Cancelled Quantity" and “On Hold Quantity” cannot exceed the remaining quantity';
+                }
+
             }
             else{
                 update asset;
@@ -544,20 +571,41 @@ public class AssetSubscriptionAllocationHelper {
             else if(quantityonHold > subscription.Quantity__c){
                 return '"On Hold Quantity" cannot exceed the contract quantity';
             }
-            else if(quantityonHold > (subscription.Quantity__c - subscription.Total_Implemented_Quantity__c)){
-                return '"On Hold Quantity" cannot exceed the remaining quantity';
+            else if(quantityonHold > subscription.RemainingQuantity__c){
+
+                if((subscription.Total_Implemented_Quantity__c  > 0 && (subscription.Total_Allocated_Quantity__c - subscription.Total_Implemented_Quantity__c) > 0)
+                        || subscription.Total_Implemented_Quantity__c == 0){
+                    return '“On Hold Quantity” cannot exceed remaining quantity. Please modify or delete existing allocations if the remaining quantity needs to be increased.';
+                }
+                if(quantityonHold > (subscription.Quantity__c - subscription.Total_Implemented_Quantity__c) && subscription.Total_Implemented_Quantity__c  > 0){
+                    return '"On Hold Quantity" cannot exceed the remaining quantity';
+                }
             }
             else if(quantityCancelled > subscription.Quantity__c){
                 return '"Cancelled Quantity" cannot exceed the contract quantity';
             }
-            else if(quantityCancelled > (subscription.Quantity__c - subscription.Total_Implemented_Quantity__c)){
-                return '"Cancelled Quantity" cannot exceed the remaining quantity';
+            else if(quantityCancelled > subscription.RemainingQuantity__c){
+
+                if((subscription.Total_Implemented_Quantity__c  > 0 && (subscription.Total_Allocated_Quantity__c - subscription.Total_Implemented_Quantity__c) > 0)
+                        || subscription.Total_Implemented_Quantity__c == 0){
+                    return '“Cancelled Quantity” cannot exceed remaining quantity. Please modify or delete existing allocations if the remaining quantity needs to be increased.';
+                }
+                if(quantityCancelled > (subscription.Quantity__c - subscription.Total_Implemented_Quantity__c) && subscription.Total_Implemented_Quantity__c  > 0){
+                    return '"Cancelled Quantity" cannot exceed the remaining quantity';
+                }
             }
             else if(totalCanceledOrHold > subscription.Quantity__c){
                 return '"Cancelled Quantity" and “On Hold Quantity” cannot exceed the contract quantity';
             }
-            else if(totalCanceledOrHold > (subscription.Quantity__c - subscription.Total_Implemented_Quantity__c)){
-                return '"Cancelled Quantity" and “On Hold Quantity” cannot exceed the remaining quantity';
+            else if(totalCanceledOrHold > subscription.RemainingQuantity__c){
+
+                if((subscription.Total_Implemented_Quantity__c  > 0 && (subscription.Total_Allocated_Quantity__c - subscription.Total_Implemented_Quantity__c) > 0)
+                        || subscription.Total_Implemented_Quantity__c == 0){
+                    return '“Cancelled Quantity” and “On Hold Quantity” cannot exceed remaining quantity. Please modify or delete existing allocations if the remaining quantity needs to be increased.';
+                }
+                if(totalCanceledOrHold > (subscription.Quantity__c - subscription.Total_Implemented_Quantity__c) && subscription.Total_Implemented_Quantity__c  > 0){
+                    return '"Cancelled Quantity" and “On Hold Quantity” cannot exceed the remaining quantity';
+                }
             }
             else if((quantityCancelled >= subscription.Quantity__c
                     || quantityonHold >= subscription.Quantity__c) && !manager){
@@ -575,6 +623,16 @@ public class AssetSubscriptionAllocationHelper {
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
         }
         return null;
+    }
+
+    public void deleteNonImplementedAssetAllocations(id assetId){
+        delete [select Id from Project_Asset_Allocation__c where Implemented__c = false and Asset__c =: assetId];
+
+    }
+
+    public void deleteNonImplementedSubsAllocations(id subscId){
+        delete [select Id from Project_Subscription_Allocation__c where Implemented__c = false and Subscription__c =: subscId];
+
     }
 
     public Boolean isManager(){
