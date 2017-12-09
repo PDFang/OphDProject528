@@ -110,10 +110,10 @@ public class StandardTextExtension
                 cc.IsPublished = isPublic;
 
                 //call send to new case comments object
-                CustomCaseCommentHelper customCaseCommentHelper = new CustomCaseCommentHelper();
-                customCaseCommentHelper.saveComment(cc);
+                //CustomCaseCommentHelper customCaseCommentHelper = new CustomCaseCommentHelper();
+                //customCaseCommentHelper.saveComment(cc);
 
-                //insert cc;
+                insert cc;
                 
                 //create worklog activity
                 if(timeSpentCase > 0)
