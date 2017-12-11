@@ -107,6 +107,9 @@ function subscriptionAllocationData(projId, subscriptionId){
                         "BudgtedHours":{from: "BudgtedHours", type:"number", defaultValue:0},
                         "Quantity":{from: "Quantity", type:"number", defaultValue:0},
                         "Implemented" : {from:"Implemented", type:"boolean"},
+                        QuantityOnHold : {from:"QuantityOnHold", type:"number", defaultValue:0},
+                        QuantityCancelled : {from:"QuantityCancelled", type:"number", defaultValue:0},
+                        RemainingQuantity : {from:"RemainingQuantity", type:"number", defaultValue:0},
                         "AllocatedQuantity":{
                             from: "AllocatedQuantity",
                             type:"number",
@@ -119,6 +122,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                                     var parentRow = $(input).parents("tr:first");
                                     var grid = $("#subscriptionAllocationList").data("kendoGrid");
                                     var rowData = grid.dataItem(parentRow);
+
                                     if(!rowData){
                                       input.attr("data-quantityValidation-msg", "Please select an asset");
                                       return false;
@@ -127,7 +131,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                                         input.attr("data-quantityValidation-msg", "Allocated Quantity cannot be zero");
                                         return false;
                                     }
-                                     if(Number(input.val()) > Number(Subscription.RemainingQuantity__c) && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && (Subscription.QuantityonHold__c > 0 || Subscription.QuantityCancelled__c > 0)){
+                                     if(Number(input.val()) > Number(rowData.RemainingQuantity) && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && (rowData.QuantityOnHold > 0 || rowData.QuantityCancelled > 0)){
                                         input.attr("data-quantityValidation-msg", 'Cannot allocate more than “Contract Quantity” if there is any quantity on hold or cancelled');
                                         return false;
                                     }
@@ -313,8 +317,11 @@ function addDuplicateRowSubscription(e){
                     $('<a href="/' +  e.model.Subscription + '" target="_blank">' + e.model.SubscriptionName +'</a>').appendTo(firstCell);
                     var projectCell = e.container.contents()[6];
                     $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">Select Projects </a>').appendTo(projectCell);
-                      e.model.Quantity = Subscription.Quantity;
+                    e.model.Quantity = Subscription.Quantity;
                     e.model.BudgtedHours = Subscription.Budgeted_Hours__c == '' ? 0 : Subscription.Budgeted_Hours__c;
+                    e.model.RemainingQuantity = Subscription.RemainingQuantity__c;
+                    e.model.QuantityOnHold  = Subscription.QuantityonHold__c == '' ? 0 : Subscription.QuantityonHold__c;
+                    e.model.QuantityCancelled  = Subscription.QuantityCancelled__c == '' ? 0 : Subscription.QuantityCancelled__c;
                     calculateRemainingSubscriptionAllocation(e.model, e.container);
                 }else if(currentObjectType == 'Project'){
                     e.model.ProjectNumber = Project.Id;
@@ -369,7 +376,7 @@ function calculateRemainingSubscriptionAllocation(rowData, row){
             if(rowData.Quantity > 1 ){
 
                 $(allocatedQPercentageCell).find("span.k-numerictextbox").hide();
-                rowData.AllocatedQuantity = rowData.AllocatedQuantity == null ? Subscription.RemainingQuantity__c : rowData.AllocatedQuantity;
+                rowData.AllocatedQuantity = rowData.AllocatedQuantity == null ? rowData.RemainingQuantity : rowData.AllocatedQuantity;
                 $(allocatedQuantityCell).find("span.k-numerictextbox").show();
                 $(allocatedQuantityCell).find("input").val(rowData.AllocatedQuantity);
                 hours = rowData.BudgtedHours * (rowData.AllocatedQuantity / rowData.Quantity);
@@ -557,7 +564,9 @@ function detailSubscription(e) {
                             RemainingQuantity : {from:"RemainingQuantity__c", type:"string"},
                             RemainingHours : {from:"Remaining_Hours__c", type:"string"},
                             Quantity:{from:'Quantity__c', type:"number"},
-                            BudgtedHours:{from:'Budgeted_Hours__c', type:"number"}
+                            BudgtedHours:{from:'Budgeted_Hours__c', type:"number"},
+                            QuantityOnHold:{from:'QuantityonHold__c', type:"number"},
+                            QuantityCancelled :{from:'QuantityCancelled__c', type:"number"}
                         }
                     }
                 }
@@ -585,11 +594,14 @@ function selectSubscription(e){
         if(rowData){
             rowData.Subscription = dataItem.SubscriptionId;
             rowData.SubscriptionName = dataItem.SubscriptionName;
-            rowData.AllocatedPercentage = rowData.RemainingPercentage;
-            rowData.AllocatedQuantity = rowData.RemainingQuantity;
+            rowData.AllocatedPercentage = dataItem.RemainingPercentage;
             rowData.AllocatedHours = 0;
             rowData.Quantity = dataItem.Quantity;
             rowData.BudgtedHours = dataItem.BudgtedHours  == '' ? 0 : dataItem.BudgtedHours;
+            rowData.QuantityOnHold = dataItem.QuantityOnHold  == '' ? 0 : dataItem.QuantityOnHold;
+            rowData.QuantityCancelled = dataItem.QuantityCancelled  == '' ? 0 : dataItem.QuantityCancelled;
+            rowData.RemainingQuantity = dataItem.RemainingQuantity  == '' ? 0 : dataItem.RemainingQuantity;
+            rowData.AllocatedQuantity = rowData.RemainingQuantity;
             rowData.ProductName = dataItem.Product;
             var subscriptionCell = $(parentRow).children().eq(2);
             var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">' + dataItem.SubscriptionName +'</a>');
