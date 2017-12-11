@@ -22,7 +22,9 @@ public class AssetSubscriptionAllocationNewModel {
     public decimal Quantity {get;set;}
     public Decimal BudgtedHours {get; set;}
     public Boolean Implemented {get; set;}
-
+    public Decimal QuantityOnHold{get;set;}
+    public Decimal QuantityCancelled{get;set;}
+    public Decimal RemainingQuantity{get;set;}
 
     public AssetSubscriptionAllocationNewModel(){
 
@@ -42,7 +44,9 @@ public class AssetSubscriptionAllocationNewModel {
         this.Quantity = allocation.Asset__r.Quantity;
         this.BudgtedHours = allocation.Asset__r.Budgeted_Hours__c;
         this.Implemented = allocation.Implemented__c;
-
+        this.QuantityOnHold = allocation.Asset__r.QuantityonHold__c;
+        this.QuantityCancelled = allocation.Asset__r.QuantityCancelled__c;
+        this.RemainingQuantity = allocation.Asset__r.RemainingQuantity__c;
     }
 
     public AssetSubscriptionAllocationNewModel(Project_Subscription_Allocation__c allocation){
@@ -61,6 +65,9 @@ public class AssetSubscriptionAllocationNewModel {
         this.Quantity = allocation.Subscription__r.Quantity__c;
         this.BudgtedHours = allocation.Subscription__r.Budgeted_Hours__c;
         this.Implemented = allocation.Implemented__c;
+        this.QuantityOnHold = allocation.Subscription__r.QuantityonHold__c;
+        this.QuantityCancelled = allocation.Subscription__r.QuantityCancelled__c;
+        this.RemainingQuantity = allocation.Subscription__r.RemainingQuantity__c;
 
     }
 }

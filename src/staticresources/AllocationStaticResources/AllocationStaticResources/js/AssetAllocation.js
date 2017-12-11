@@ -106,6 +106,7 @@
                                             var parentRow = $(input).parents("tr:first");
                                             var grid = $("#assetAllocationList").data("kendoGrid");
                                             var rowData = grid.dataItem(parentRow);
+
                                              if(!rowData){
                                                  input.attr("data-quantityValidation-msg", "Please select an asset");
                                                  return false;
@@ -114,7 +115,7 @@
                                                 input.attr("data-quantityValidation-msg", "Allocated Quantity cannot be zero");
                                                 return false;
                                             }
-                                             if(Number(input.val()) > Number(Asset.RemainingQuantity__c) && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && (Asset.QuantityonHold__c > 0 || Asset.QuantityCancelled__c > 0)){
+                                             if(Number(input.val()) > Number(rowData.RemainingQuantity) && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && (rowData.QuantityOnHold > 0 || rowData.QuantityCancelled > 0)){
                                                 input.attr("data-quantityValidation-msg", 'Cannot allocate more than “Contract Quantity” if there is any quantity on hold or cancelled');
                                                 return false;
                                             }
@@ -153,7 +154,10 @@
                                 AllocatedHours:{from: "AllocatedHours", type:"number",  nullable: true, editable:true, defaultValue:0},
                                 Quantity :{from:"Quantity", type:"number",defaultValue:0},
                                 BudgtedHours :{from:"BudgtedHours", type:"number", defaultValue:0},
-                                Implemented : {from:"Implemented", type:"boolean"}
+                                Implemented : {from:"Implemented", type:"boolean"},
+                                QuantityOnHold : {from:"QuantityOnHold", type:"number", defaultValue:0},
+                                QuantityCancelled : {from:"QuantityCancelled", type:"number", defaultValue:0},
+                                RemainingQuantity : {from:"RemainingQuantity", type:"number", defaultValue:0}
 
                             }
                         }
@@ -304,6 +308,9 @@
                    var projectCell = e.container.contents()[5];
                    $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">Select Projects </a>').appendTo(projectCell);
                    e.model.Quantity = Asset.Quantity;
+                   e.model.RemainingQuantity = Asset.RemainingQuantity__c;
+                   e.model.QuantityOnHold  = Asset.QuantityonHold__c == '' ? 0 : Asset.QuantityonHold__c;
+                   e.model.QuantityCancelled  = Asset.QuantityCancelled__c == '' ? 0 : Asset.QuantityCancelled__c;
                    e.model.BudgtedHours = Asset.Budgeted_Hours__c == '' ? 0 : Asset.Budgeted_Hours__c;
                    calculateRemainingAllocation(e.model, e.container);
 
@@ -356,7 +363,7 @@
                     //var remainingQuantity = rowData.AllocatedQuantity;
                     //remainingQuantity = remainingQuantity < 0 ? 0 : remainingQuantity;
                     $(allocatedQPercentageCell).find("span.k-numerictextbox").hide();
-                    rowData.AllocatedQuantity = rowData.AllocatedQuantity == null ? Asset.RemainingQuantity__c : rowData.AllocatedQuantity;
+                    rowData.AllocatedQuantity = rowData.AllocatedQuantity == null ? rowData.RemainingQuantity : rowData.AllocatedQuantity;
                     $(allocatedQuantityCell).find("span.k-numerictextbox").show();
                     $(allocatedQuantityCell).find("input").val(rowData.AllocatedQuantity);
                     hours = rowData.BudgtedHours * (rowData.AllocatedQuantity / rowData.Quantity);
@@ -544,7 +551,9 @@
                                     RemainingQuantity : {from:"RemainingQuantity__c", type:"string"},
                                     RemainingHours : {from:"Remaining_Hours__c", type:"string"},
                                     Quantity:{from:'Quantity', type:"number"},
-                                    BudgtedHours:{from:'Budgeted_Hours__c', type:"number"}
+                                    BudgtedHours:{from:'Budgeted_Hours__c', type:"number"},
+                                    QuantityOnHold:{from:'QuantityonHold__c', type:"number"},
+                                    QuantityCancelled :{from:'QuantityCancelled__c', type:"number"}
                                 }
                             }
                         }
@@ -577,6 +586,9 @@
               rowData.AllocatedHours = 0;
               rowData.Quantity = dataItem.Quantity;
               rowData.BudgtedHours = dataItem.BudgtedHours  == '' ? 0 : dataItem.BudgtedHours;
+              rowData.QuantityOnHold = dataItem.QuantityOnHold  == '' ? 0 : dataItem.QuantityOnHold;
+              rowData.QuantityCancelled = dataItem.QuantityCancelled  == '' ? 0 : dataItem.QuantityCancelled;
+              rowData.RemainingQuantity = dataItem.RemainingQuantity  == '' ? 0 : dataItem.RemainingQuantity;
               var assetCell = $(parentRow).children().eq(2);
               var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">' + dataItem.AssetName +'</a>');
               $(assetCell).html(htmlContentProject);
