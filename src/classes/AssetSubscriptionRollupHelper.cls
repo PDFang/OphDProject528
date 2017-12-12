@@ -11,7 +11,7 @@ public class AssetSubscriptionRollupHelper {
         // project record type must be 'PS Project Phase SaaS' or 'PS Project Phase Premise WFO'
         projectCache = new Map<Id, Project__c>([
                 Select Id, Contracted_NRR__c, Actual_NRR__c,
-                        Contracted_MRR__c, Actual_MRR__c
+                        Contracted_MRR__c, Actual_MRR__c, Logged_Hours__c
                 from Project__c
                 where Id IN :projectIds
         ]);
@@ -71,7 +71,7 @@ public class AssetSubscriptionRollupHelper {
 
         for (AggregateResult ar : [
                 Select sum(Asset__r.Contracted_NRR__c) totalContractedNRR, sum(Asset__r.Actual_NRR__c) totalActualNRR,
-                        Project__c
+                        sum(Logged_Hours__c) totalHours, Project__c
                 from Project_Asset_Allocation__c
                 where Project__c IN :projectCache.keySet()
                 group by Project__c
@@ -82,14 +82,16 @@ public class AssetSubscriptionRollupHelper {
             Project__c project = new Project__c(
                     Id = (Id) ar.get('Project__c'),
                     Contracted_NRR__c = ar.get('totalContractedNRR') != null ? (Decimal) ar.get('totalContractedNRR') : 0,
-                    Actual_NRR__c = ar.get('totalActualNRR') != null ? (Decimal) ar.get('totalActualNRR') : 0
+                    Actual_NRR__c = ar.get('totalActualNRR') != null ? (Decimal) ar.get('totalActualNRR') : 0,
+                    Logged_Hours__c = ar.get('totalHours') != null ? (Decimal) ar.get('totalHours') : 0
             );
 
             Project__c projectOld = projectCache.get(project.Id);
             system.debug('**** rollupAssetFinancials(): projectOld - ' + projectOld);
 
             if(project.Contracted_NRR__c != projectOld.Contracted_NRR__c
-                    || project.Actual_NRR__c != projectOld.Actual_NRR__c)
+                    || project.Actual_NRR__c != projectOld.Actual_NRR__c
+                    || project.Logged_Hours__c != projectOld.Logged_Hours__c)
             {
                 system.debug('**** rollupAssetFinancials(): one or more fields value have changed');
                 phaseProjects.add(project);
