@@ -1,0 +1,340 @@
+<!--
+ - Created by arnab.karsarkar on 12/11/2017.
+ -->
+
+<apex:page id="CCRApplicationManage" sideBar="false" controller="CCRApplicationController" title="Manage CCR Applications" tabStyle="ChangeControlRequest__c">
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.common.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.mobile.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
+    <style>
+        .image {
+            padding-left:15px;
+        }
+        #detailTable .k-grid-header .k-header {
+            background-color: #3f51b5 !important;
+            border-color: #3343a4 !important;
+            color : white !important;
+
+        }
+        #detailTable .k-grid-header .k-header>.k-link{
+              color : white !important;
+        }
+
+       .spinnerClass {
+            background:url('../../img/loading32.gif') no-repeat;
+            height:32px;
+            margin:20px;
+            padding-left:40px;
+            padding-top:9px;
+            font-size: 0.75em;
+        }
+
+    </style>
+    <apex:form>
+        <apex:sectionHeader title="CCR Tasks" subtitle="{!ccrApplication.Name}" />
+        <apex:commandLink action="{!Cancel}" value="« Return to {!ccrApplication.Name}"/>
+        <div id="ccrApplications"></div>
+        <div id="window"></div>
+        <!-- loading Modal -->
+        <div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content" style="width:40%; top: 182px;">
+                    <div class="modal-body" style="font-size:14px;">
+                        <div class="spinnerClass">Please wait</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Confirmation Modal -->
+        <div class="modal fade" id="warning" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel" style="font-weight:bold">Alert</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" style="font-size:14px;">
+                        <div id="java-errors" class=" alert alert-danger message-alert" style="margin-left:15px;width:90%; display:none;"></div>
+                        <div id="success" class=" alert alert-success message-alert" style="margin-left:15px;width:90%; display:none;"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </apex:form>
+    <script type="text/x-kendo-template" id="windowTemplate">
+        <p>Delete this Application  <strong>#= Application__c #</strong> ? </p>
+        <div class="modal-footer">
+            <button class="k-button" id="yesButton">Yes</button>
+            <button class="k-button" id="noButton"> Cancel</button>
+        </div>
+    </script>
+    <script>
+        $(document).ready(function() {
+           loadApplications();
+           var CCRStatus = '{!ccrApplication.Status__c}';
+            if(CCRStatus == 'Closed'){
+                   $("a.k-grid-add").hide();
+            }
+        });
+        var windowTemplate = kendo.template($("#windowTemplate").html());
+        function loadApplications(){
+            var applications = new kendo.data.DataSource({
+                    autosync:true,
+                    transport:{
+                      read: function(options){
+                               CCRApplicationController.GetAllApplications(
+                                   '{!currentCCRId}',
+                                  function(result,event)
+                                      {
+                                          if (event.status) {
+                                              if(result != null && result.length > 1){
+                                                   options.success(JSON.parse(result));
+                                                   console.log('results =>' + JSON.stringify(result));
+                                              }else{
+                                                  options.success('');
+                                              }
+                                          }
+                                      },
+                                      {escape: false}
+                               );
+                      },
+                      update: function(options){
+                         console.log('update options =>' + JSON.stringify(options.data));
+                         options.data.ChangeControlRequest__c = '{!currentCCRId}';
+                         CCRApplicationController.UpSertApplication(
+                              JSON.stringify(options.data),
+                              function(result,event){
+                                     if (event.status) {
+                                        var returnResult = JSON.parse(result);
+                                        if(returnResult.result != 'Failed'){
+                                           options.success();
+                                           hideError();
+                                           loadApplications();
+                                        }else{
+                                            displayError(returnResult.message);
+                                        }
+                                      }else{
+                                        displayError(event.message);
+                                      }
+                                  },
+                                  {escape: false}
+                          );
+                      },
+                      create: function(options){
+                            $('#loading').modal({
+                                 backdrop: 'static',
+                                 keyboard: false
+                            });
+                            $('#loading').modal('show');
+                            options.data.ChangeControlRequest__c = '{!currentCCRId}';
+                            console.log('insert options =>' + JSON.stringify(options.data));
+
+                            CCRApplicationController.UpSertApplication(
+                                           JSON.stringify(options.data),
+                                           function(result,event){
+                                               if (event.status) {
+                                                  var returnResult = JSON.parse(result);
+                                                  if(returnResult.result != 'Failed'){
+                                                       options.success();
+                                                        $('#loading').modal('hide');
+                                                       hideError();
+                                                       loadApplications();
+                                                    }else{
+                                                         $('#loading').modal('hide');
+                                                    displayError(returnResult.message);
+                                                  }
+                                               }else{
+
+                                                   $('#loading').modal('hide');
+                                                   displayError(event.message);
+                                               }
+                                              },
+                                              {escape: false}
+                                      );
+                      }
+                    },
+                    schema:{
+                        model: {
+                            id: "Id",
+                            fields: {
+                                Id: { from: "Id", defaultValue: null},
+                                Application__c: {from:"Application__c", type: "string"},
+                                ChangeControlRequest__c : {from:"ChangeControlRequest__c", type:"string"},
+                                Description__c:{
+                                    from: "Description__c",
+                                    type:"string",
+                                    nullable: true,
+                                    editable:true,
+                                     validation : {
+                                        descriptionValidation : function(input){
+                                         if(input.val() == '' && input.is("[name='Description__c']")){
+                                            input.attr("data-descriptionValidation-msg", "Description cannot be blank");
+                                            return false;
+                                         }
+                                         return true;
+                                        }
+                                     }
+                                }
+                            }
+                        }
+                    },
+            });
+            var window = $("#window").kendoWindow({
+                title: "Are you sure you want to delete this record?",
+                visible: false, //the window will not appear before its .open method is called
+                width: "400px",
+                height: "200px",
+            }).data("kendoWindow");
+
+            $("#ccrApplications").kendoGrid({
+                  dataSource: applications,
+                  editable: "inline",
+                  scrollable:  true,
+                  noRecords: true,
+                  height:300,
+                  dataBound:gridDatabound,
+                  toolbar: [
+                      {
+                          name: "create",
+                          text: "Add New Application"
+
+                      }
+                      ],
+                  columns: [
+                            {
+                                field:"Id",
+                                hidden: true,
+                                editable:false
+
+                            },
+
+                            {
+                                field:"Application__c",
+                                title:"Applications",
+                                editor:applicationPicklistEditor
+                            },
+                            {
+                                field:"Description__c",
+                                title:"Description",
+                                width:500
+
+                            },
+
+                            {   title:"Action",
+                                command: ["edit",
+                                 {name: "Delete",
+                                  click: function(e){  //add a click event listener on the delete button
+                                         e.preventDefault(); //prevent page scroll reset
+                                         var tr = $(e.target).closest("tr"); //get the row for deletion
+                                         var data = this.dataItem(tr); //get the row data so it can be referred later
+                                         window.content(windowTemplate(data)); //send the row data object to the template and render it
+                                         window.center().open();
+                                         $("#yesButton").click(function(){
+                                              var grid = $("#ccrApplications").data("kendoGrid");
+                                              window.close();
+                                              $('#loading').modal({
+                                                   backdrop: 'static',
+                                                   keyboard: false
+                                              });
+                                              $('#loading').modal('show');
+                                             CCRApplicationController.DeleteApplication(
+                                                 data.Id,
+                                                 function(result,event){
+                                                      if (event.status) {
+                                                          var returnResult = result;
+                                                          if(result != 'Failed'){
+                                                              grid.dataSource.remove(data);
+                                                              loadApplications();
+                                                              $('#loading').modal('hide');
+                                                          }else{
+                                                                displayError('Delete Unsuccessful.');
+                                                                 $('#loading').modal('hide');
+                                                          }
+                                                      }else{
+                                                           displayError(event.message);
+                                                      }
+                                                   },
+                                                 {escape: false}
+                                             );
+                                         });
+                                         $("#noButton").click(function(){
+                                                window.close();
+                                         });
+                                  }
+                                  }
+                                 ]
+                            }
+                  ]
+            });
+
+        }
+
+
+        function applicationPicklistEditor(container, options) {
+            $('<input style="width:95%" required  id="ApplicationType" name="ApplicationType"  data-bind="value:' + options.field + '"/>')
+             .appendTo(container)
+             .kendoDropDownList({
+                  autobind: false,
+                  dataSource: {
+                      data:{!applicationList}
+                  },
+                  value: options.model.DeviceType
+             });
+        }
+
+        function displayError(message){
+         $("div#success").empty();
+         $("div#success").hide();
+         $("div#java-errors").css("display", "block");
+         document.getElementById("java-errors").innerHTML =  message;
+         $('#warning').modal('show');
+         console.log('error =>' + message);
+        }
+
+        function gridDatabound(e){
+            $("#ccrApplications").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
+            var CCRStatus = '{!ccrApplication.Status__c}';
+            $("#ccrApplications tbody tr .k-grid-edit").each(function () {
+                var currentDataItem = $("#ccrApplications").data("kendoGrid").dataItem($(this).closest("tr"));
+                //Check in the current dataItem if the row is editable
+                if (CCRStatus == 'Closed') {
+                    $(this).remove();
+                }
+            });
+
+             $("#ccrApplications tbody tr a.k-grid-Delete").each(function () {
+                var currentDataItem = $("#ccrApplications").data("kendoGrid").dataItem($(this).closest("tr"));
+                //Check in the current dataItem if the row is deletable
+                 if (CCRStatus == 'Closed') {
+                    $(this).remove();
+                }
+            })
+        }
+
+        function hideError(){
+             $("div#java-errors").css("display", "none");
+             document.getElementById("java-errors").innerHTML = ' ';
+        }
+
+
+
+    </script>
+
+
+
+
+
+
+</apex:page>

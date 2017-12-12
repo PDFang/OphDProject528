@@ -96,8 +96,8 @@
                 <apex:pageBlockButtons title="" location="bottom">
                     <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
                     <apex:outputPanel rendered="{!Asset.Quantity > 1 && !Asset.FullyImplemented__c}">
-                        <button title="Edit On hold/Cancelled Quantity " onClick="openEditCancSuspQuantityModal(); return false;">
-                            Edit On hold/Cancelled Quantity
+                        <button title="Edit On Hold/Cancelled Quantity " onClick="openEditCancSuspQuantityModal(); return false;">
+                            Edit On Hold/Cancelled Quantity
                         </button>
                     </apex:outputPanel>
                 </apex:pageBlockButtons>
@@ -133,8 +133,8 @@
                 <apex:pageBlockButtons title="" location="bottom">
                     <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
                     <apex:outputPanel rendered="{!Subscription.Quantity__c > 1 && !Subscription.FullyImplemented__c}">
-                        <button title="Edit On hold/Cancelled Quantity " onClick="openSubsEditCancSuspQuantityModal(); return false;">
-                            Edit On hold/Cancelled Quantity
+                        <button title="Edit On Hold/Cancelled Quantity " onClick="openSubsEditCancSuspQuantityModal(); return false;">
+                            Edit On Hold/Cancelled Quantity
                         </button>
                     </apex:outputPanel>
                 </apex:pageBlockButtons>
@@ -206,7 +206,7 @@
                 <div class="modal-dialog" role="document" style="width:60%;">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="cancSuspModalLabel" style="font-weight:bold">Edit On hold/Cancelled Quantity </h5>
+                            <h5 class="modal-title" id="cancSuspModalLabel" style="font-weight:bold">Edit On Hold/Cancelled Quantity </h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -214,6 +214,7 @@
                         <div class="modal-body" style="font-size:14px;">
                             <apex:pageBlock id="cancSuspPageBlck" >
                                 <apex:pageMessages id="messages" />
+
                                 <apex:pageBlockSection columns="2" >
                                     <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Editable_Fields}" var="f">
                                         <apex:inputField value="{!Asset[f.fieldPath]}"/>
@@ -222,9 +223,22 @@
                             </apex:pageBlock>
                         </div>
                         <div class="modal-footer">
+                            <apex:outputPanel id="deleteAllocationSection" style="float:left;" >
+                                <apex:actionStatus id="deleteAllocationAsset" >
+                                    <apex:facet name="stop">
+                                        <apex:commandButton value="Delete All Non-Implemented Allocations" reRender="messages" status="deleteAllocationAsset" rendered="{!showdeleteButton}" action="{!deleteAssetAllocation}" onComplete="overridePageMessages('delete');"/>
+                                    </apex:facet>
+                                    <apex:facet name="start">
+                                        <apex:outputPanel >
+                                            <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                                            <apex:commandButton styleClass="k-button"  value="Deleting..." status="deleteAllocationAsset" disabled="true"/>
+                                        </apex:outputPanel>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                            </apex:outputPanel>
                             <!--<apex:commandButton reRender="cancSuspPageBlck, cancSuspQuanPBS" title="Cancel" value="Cancel" action="{!cancel}" immediate="true"/>-->
-                            <apex:commandButton value="Save" action="{!SaveCancSuspQuantity}" reRender="cancSuspPageBlck, cancSuspQuanPBS"  style="color:black !important;" onComplete="overridePageMessages('save');"></apex:commandButton>
-                            <apex:commandButton value="Save and Close" action="{!SaveCancSuspQuantity}" reRender="cancSuspPageBlck, cancSuspQuanPBS, refreshAfterSave"  style="color:black !important;" onComplete="overridePageMessages('saveClose');"></apex:commandButton>
+                            <apex:commandButton value="Save" action="{!SaveCancSuspQuantity}" reRender="cancSuspPageBlck, cancSuspQuanPBS, deleteAllocationSection"  style="color:black !important;" onComplete="overridePageMessages('save');"></apex:commandButton>
+                            <apex:commandButton value="Save and Close" action="{!SaveCancSuspQuantity}" reRender="cancSuspPageBlck, cancSuspQuanPBS, refreshAfterSave, deleteAllocationSection"  style="color:black !important;" onComplete="overridePageMessages('saveClose');"></apex:commandButton>
                             <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>
                         </div>
                     </div>
@@ -244,7 +258,7 @@
                 <div class="modal-dialog" role="document" style="width:56%;">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="subsCancSuspModalLabel" style="font-weight:bold">Edit On hold/Cancelled Quantity</h5>
+                            <h5 class="modal-title" id="subsCancSuspModalLabel" style="font-weight:bold">Edit On Hold/Cancelled Quantity</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close"  onclick="reloadDetails();">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -260,9 +274,21 @@
                             </apex:pageBlock>
                         </div>
                         <div class="modal-footer">
-                            <!--<apex:commandButton reRender="cancSuspPageBlck, cancSuspQuanPBS" title="Cancel" value="Cancel" action="{!cancel}" immediate="true"/>-->
-                            <apex:commandButton value="Save" action="{!SaveCancSuspQuantitySubs}" reRender="subsCancSuspPageBlck, subsCancSuspQuanPBS"  style="color:black !important;" onComplete="overridePageMessages('save');"></apex:commandButton>
-                            <apex:commandButton value="Save and Close" action="{!SaveCancSuspQuantitySubs}" reRender="subsCancSuspPageBlck, subsCancSuspQuanPBS, refreshAfterSave"  style="color:black !important;" onComplete="overridePageMessages('saveClose');"></apex:commandButton>
+                            <apex:outputPanel id="deleteAllocationSectionSubs" style="float:left;" >
+                                <apex:actionStatus id="deleteSubsAllocation" >
+                                    <apex:facet name="stop">
+                                        <apex:commandButton value="Delete All Non-Implemented Allocations" reRender="messagesSubs" status="deleteSubsAllocation" rendered="{!showdeleteButton}" action="{!deleteSubsAllocation}" onComplete="overridePageMessages('delete');"/>
+                                    </apex:facet>
+                                    <apex:facet name="start">
+                                        <apex:outputPanel >
+                                            <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                                            <apex:commandButton styleClass="k-button"  value="Deleting..." status="deleteSubsAllocation" disabled="true"/>
+                                        </apex:outputPanel>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                            </apex:outputPanel>
+                            <apex:commandButton value="Save" action="{!SaveCancSuspQuantitySubs}" reRender="subsCancSuspPageBlck, subsCancSuspQuanPBS, deleteAllocationSectionSubs"  style="color:black !important;" onComplete="overridePageMessages('save');"></apex:commandButton>
+                            <apex:commandButton value="Save and Close" action="{!SaveCancSuspQuantitySubs}" reRender="subsCancSuspPageBlck, subsCancSuspQuanPBS, refreshAfterSave, deleteAllocationSectionSubs"  style="color:black !important;" onComplete="overridePageMessages('saveClose');"></apex:commandButton>
                             <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" onclick="reloadDetails();">Cancel</button>
                         </div>
                     </div>
@@ -282,7 +308,7 @@
                 </div>
             </div>
         </div>
-        <apex:actionFunction name="reloadDetails" action="{!reloadDetails}" reRender="detailSection,detailSubscription,detailAsset,detailProject, refreshScript" immediate="true"/>
+        <apex:actionFunction name="reloadDetails" action="{!reloadDetails}" reRender="detailSection,detailSubscription,detailAsset,detailProject, refreshScript, deleteAllocationSection, deleteAllocationSectionSubs" immediate="true"/>
 
         <!--Implemented Product lists-->
         <div class="modal fade" id="ImplementedProducts" tabindex="-1" role="dialog" aria-labelledby="ImplementedProductslabel" aria-hidden="true" >
@@ -411,6 +437,10 @@
                               Project.Project_Phase_Allocation__c = '{!Project.Project_Phase_Allocation__c}';
                               subscriptionAllocationData('{!currentId}', null);
                               assetAllocationData('{!currentId}', null);
+                              var projectGoLiveDate = '{!Project.ActualProjectGoLiveDate__c}';
+                              if(projectGoLiveDate != '' && projectGoLiveDate != null){
+                                   $("a.k-grid-add").hide();
+                              }
                            }
                     }
                 }

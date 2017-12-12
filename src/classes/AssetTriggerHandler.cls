@@ -1,5 +1,6 @@
 public class AssetTriggerHandler extends TriggerHandler {
 
+    @TestVisible
     private static Id assetRollupQueueableJobID;
 
     public override void afterUpdate()
