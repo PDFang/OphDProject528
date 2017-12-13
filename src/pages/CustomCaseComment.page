@@ -20,8 +20,7 @@
                     </apex:column>
                     <apex:column >
                         <apex:facet name="header">Comment Date</apex:facet>
-                        <apex:outputText value="{0,date,MM/dd/yy HH:mm:ss a}">
-                            <apex:param value="{!comment.CreateDate}"> </apex:param>
+                        <apex:outputText value=" {!comment.CreateDate}">
                         </apex:outputText>
                     </apex:column>
                     <apex:column >

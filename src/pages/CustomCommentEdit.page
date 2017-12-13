@@ -9,11 +9,16 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="col-md-1">
-                            <apex:outputLabel value="Public"></apex:outputLabel>
+                            <apex:outputLabel style="display:none" value="Public"></apex:outputLabel>
                         </div>
                         <div class="col-md-3">
-                            <apex:inputCheckbox value="{!isPublic}"></apex:inputCheckbox>
+                            <apex:inputCheckbox  style="display:none"  value="{!isPublic}"></apex:inputCheckbox>
                         </div>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="col-md-offset-1 col-md-12">
+                        <apex:outputLabel value="Please note, all new case comments will be public and visible to the client"></apex:outputLabel>
                     </div>
                 </div>
                 <div class="row">
