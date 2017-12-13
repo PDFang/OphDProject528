@@ -748,6 +748,57 @@ private class InContactTestClass
         update tsks;
     }
 
+    static testMethod  void AccountHighlightComponentControllerTest(){
+
+        Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
+
+        test.startTest();
+
+        Account testAccount = new Account(
+                Name = 'Test Account',
+                Billing_Group__c = 'Verizon',
+                Health_Score__c = 90,
+                Type = 'Partner',
+                RecordTypeId = accountRecordTypeMap.get('Customers').getRecordTypeId(),
+                CadebillAccountNo__c = 877121
+        );
+
+        insert testAccount;
+
+        Map<String,Schema.RecordTypeInfo> opportunityRecordTypeMap = Schema.SObjectType.Opportunity.getRecordTypeInfosByName();
+
+        Opportunity opportunity1 = new Opportunity();
+
+        opportunity1.RecordTypeId = opportunityRecordTypeMap.get('Historical Products').getRecordTypeId();
+        opportunity1.Name = 'test';
+        opportunity1.CloseDate = system.today().addDays(20);
+        opportunity1.StageName = 'Open';
+        opportunity1.AccountId = testAccount.Id;
+
+        insert opportunity1;
+
+        ImplementedProduct__c ip1 = new ImplementedProduct__c();
+        ip1.Account__c = testAccount.Id;
+        ip1.GoLiveDate__c = system.today().addDays(25);
+        ip1.Status__c = 'Implemented';
+        ip1.Product__c = 'inContact';
+        ip1.Opportunity__c = opportunity1.Id;
+
+        insert ip1;
+
+        AccountHighlightComponentController controller = new AccountHighlightComponentController();
+        controller.acctId = testAccount.Id;
+
+        AccountHighlightComponentController.AccountWrapper wrapper = controller.getAcctWrapper();
+
+        system.assertEquals(true, wrapper.isVerizon);
+        system.assertEquals('Happy', wrapper.healthScoreImage);
+        system.assertEquals('orange', wrapper.goLiveBackground);
+
+        test.stopTest();
+
+    }
+
     public static testMethod void TestOpportunityAfterInsert()
     {
         Account a = new Account();
