@@ -21,6 +21,7 @@ private class AssetSubscriptionAllocationNewCtrlTest {
 
     static Map<String, Id> recordTypeMap = null;
     static Account acct = null;
+    static ImplementedProduct__c implementedProduct = null;
     static List<Product2> productList = null;
     static List<Project__c> projectList = null;
     static List<Asset> assetList = null;
@@ -37,20 +38,20 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         createAssets();
         Test.startTest();
         Test.setCurrentPage(Page.AssetSubscriptionAllocationNew);
-        ApexPages.currentPage().getParameters().put('id', projectList[2].Id);
+        ApexPages.currentPage().getParameters().put('id', projectList[1].Id);
         asstSubsAlloCont = new AssetSubscriptionAllocationNewController();
-        ApexPages.currentPage().getParameters().put('id', assetList[2].Id);
+        ApexPages.currentPage().getParameters().put('id', assetList[0].Id);
         asstSubsAlloCont = new AssetSubscriptionAllocationNewController();
 
         Asset testAsset = asstSubsAlloCont.Asset;
         SubscriptionReplica__c testReplica = asstSubsAlloCont.Subscription;
         Project__c testProject = asstSubsAlloCont.Project;
 
-        string objType = AssetSubscriptionAllocationNewController.getObjectType(assetList[2].Id);
+        string objType = AssetSubscriptionAllocationNewController.getObjectType(assetList[0].Id);
         System.debug('objType =>' + objType);
         System.assertEquals('Asset', objType);
 
-        string assetAllocationRes = AssetSubscriptionAllocationNewController.getAssetAllocationData(null, assetList[2].Id);
+        string assetAllocationRes = AssetSubscriptionAllocationNewController.getAssetAllocationData(null, assetList[0].Id);
         System.debug('assetAllocationRes =>' + assetAllocationRes);
         System.assertNotEquals(null, assetAllocationRes);
 
@@ -61,26 +62,26 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         System.debug('assetAllocationRes1 =>' + assetAllocationRes1);
         System.assertNotEquals(null, assetAllocationRes1);
 
-        string phaseProjectResponse = AssetSubscriptionAllocationNewController.PhaseProjectDetails(assetList[2].Id, objType);
+        string phaseProjectResponse = AssetSubscriptionAllocationNewController.PhaseProjectDetails(assetList[0].Id, objType);
         System.debug('phaseProjectResponse =>' + phaseProjectResponse);
         System.assertNotEquals(null, phaseProjectResponse);
 
-        string assetSubsResponseFromProj = AssetSubscriptionAllocationNewController.AssetSubscriptionDetailsFromProjectPhase(projectList[2].Id, objType);
-        System.debug('assetSubsResponseFromProj =>' + assetSubsResponseFromProj);
+        string assetSubsResponseFromProj = AssetSubscriptionAllocationNewController.AssetSubscriptionDetailsFromProjectPhase(projectList[1].Id, objType);
+        //System.debug('assetSubsResponseFromProj =>' + assetSubsResponseFromProj);
         System.assertNotEquals(null, assetSubsResponseFromProj);
 
         string assetAllocationDel = AssetSubscriptionAllocationNewController.DeleteAllocation(projectAssetAllocation.Id, objType);
-        System.debug('assetAllocationDel =>' + assetAllocationDel);
+        //System.debug('assetAllocationDel =>' + assetAllocationDel);
         System.assertNotEquals(null, assetAllocationDel);
 
         asstSubsAlloCont.Asset.QuantityCancelled__c = 2;
         asstSubsAlloCont.SaveCancSuspQuantity();
-        System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
+        //System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
         system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Department Responsible or Root Cause can not be empty if Quantity Cancelled is greater than 0.');
 
         asstSubsAlloCont.Asset.QuantityonHold__c = 2;
         asstSubsAlloCont.SaveCancSuspQuantity();
-        System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
+        //System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
         system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Department Responsible or Root Cause can not be empty if Quantity On Hold is greater than 0.');
 
         asstSubsAlloCont.Asset.QuantityCancelled__c = 5;
@@ -88,16 +89,38 @@ private class AssetSubscriptionAllocationNewCtrlTest {
        // asstSubsAlloCont.Asset.Root_Cause__c = 'Test2';
        // asstSubsAlloCont.Asset.Department_Responsible__c = 'Test1';
         asstSubsAlloCont.SaveCancSuspQuantity();
-        System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
-        system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Only managers can suspend or cancel the entire quantity of an asset or subscription.');
+        //System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
+        //system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Only managers can suspend or cancel the entire quantity of an asset or subscription.');
 
-        asstSubsAlloCont.Asset.QuantityCancelled__c = 2;
-        asstSubsAlloCont.Asset.QuantityonHold__c = 2;
-        //asstSubsAlloCont.Asset.Root_Cause__c = 'Test2';
-        //asstSubsAlloCont.Asset.Department_Responsible__c = 'Test1';
+        asstSubsAlloCont.Asset.QuantityCancelled__c = 1;
+        asstSubsAlloCont.Asset.QuantityonHold__c = 1;
+        asstSubsAlloCont.Asset.Root_Cause__c = 'Configuration';
+        asstSubsAlloCont.Asset.Department_Responsible__c = 'Customer';
         asstSubsAlloCont.SaveCancSuspQuantity();
-        System.debug('ApexPages.hasMessages(ApexPages.Severity.CONFIRM) ==>' + ApexPages.hasMessages(ApexPages.Severity.CONFIRM));
-        system.assert(ApexPages.hasMessages(ApexPages.Severity.CONFIRM), 'Saved Successfully.');
+        //System.debug('ApexPages.hasMessages(ApexPages.Severity.CONFIRM) ==>' + ApexPages.hasMessages(ApexPages.Severity.CONFIRM));
+       //system.assert(ApexPages.hasMessages(ApexPages.Severity.CONFIRM), 'Saved Successfully.');
+
+        asstSubsAlloCont.Asset.QuantityCancelled__c = 6;
+        asstSubsAlloCont.Asset.QuantityonHold__c = 0;
+        asstSubsAlloCont.Asset.Root_Cause__c = 'Configuration';
+        asstSubsAlloCont.Asset.Department_Responsible__c = 'Customer';
+        asstSubsAlloCont.SaveCancSuspQuantity();
+        //System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
+        system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), '"Cancelled Quantity" cannot exceed the contract quantity');
+
+        asstSubsAlloCont.Asset.QuantityCancelled__c = 0;
+        asstSubsAlloCont.Asset.QuantityonHold__c = 6;
+        asstSubsAlloCont.Asset.Root_Cause__c = 'Configuration';
+        asstSubsAlloCont.Asset.Department_Responsible__c = 'Customer';
+        asstSubsAlloCont.SaveCancSuspQuantity();
+        //System.debug('ApexPages.hasMessages(ApexPages.Severity.CONFIRM) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
+        system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), '"On Hold Quantity" cannot exceed the contract quantity');
+
+        Test.setCurrentPageReference(new PageReference('Page.AssetSubscriptionAllocationNew'));
+	    System.debug('implementedProduct =>> ' + implementedProduct);
+        System.currentPageReference().getParameters().put('rowid', implementedProduct.Id);
+        asstSubsAlloCont.saveImplementedProduct();
+
 
         Test.stopTest();
 
@@ -190,6 +213,23 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         createProducts();
         createProjects();
 
+        Opportunity o = new Opportunity();
+        o.RecordTypeId = inContactBaseClass.SelectRecordTypeIDByName('Historical Products', 'Opportunity');
+        o.Name = 'test';
+        o.CloseDate = system.today().addDays(30);
+        o.StageName = 'Open';
+        o.AccountId = acct.Id;
+
+        insert o;
+
+        implementedProduct = new ImplementedProduct__c();
+        implementedProduct.Account__c = acct.Id;
+        implementedProduct.GoLiveDate__c = system.today() - 1;
+        implementedProduct.Status__c = 'Implemented';
+        implementedProduct.Product__c = 'inContact';
+        implementedProduct.Opportunity__c = o.Id;
+        insert implementedProduct;
+
     }
 
     static void createAccount()
@@ -224,18 +264,6 @@ private class AssetSubscriptionAllocationNewCtrlTest {
 
     static void createProjects()
     {
-//        Map<String,Schema.RecordTypeInfo> contactRecordTypeMap = Schema.SObjectType.Contact.getRecordTypeInfosByName();
-//        Contact testContact = new Contact(
-//                LastName = 'Contact',
-//                FirstName = 'ContactTriggerHandlerTest',
-//                Email = 'contact1@test.com',
-//                RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
-//                AccountId = testAccount.Id,
-//                xmPerson__c = person.Id
-//        );
-//
-//        insert testContact;
-
         projectList = new List<Project__c>();
 
         Project__c project1 = new Project__c();
@@ -244,23 +272,11 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         //project1.Projected_Deadline__c = system.today() + 30;
         projectList.add(project1);
 
-        Project__c project2 = new Project__c();
-        project2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
-        project2.ProjectManager__c = '00539000005M7TO';
-        //project2.Projected_Deadline__c = system.today() + 30;
-        projectList.add(project2);
-
         Project__c phase1 = new Project__c();
         phase1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_SAAS);
         phase1.ProjectManager__c = '00539000005M7TO';
         //phase1.Projected_Deadline__c = system.today() + 30;
         projectList.add(phase1);
-
-        Project__c phase2 = new Project__c();
-        phase2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_SAAS);
-        phase2.ProjectManager__c = '00539000005M7TO';
-        //phase2.Projected_Deadline__c = system.today() + 30;
-        projectList.add(phase2);
 
         insert projectList;
 
@@ -274,58 +290,25 @@ private class AssetSubscriptionAllocationNewCtrlTest {
     {
         assetList = new List<Asset>();
 
-        Asset asset1 = new Asset();
-        asset1.RecordTypeId = recordTypeMap.get(ASSET_TYPE_PREMISE);
-        asset1.Name = 'AssetTriggerHandlerTest Asset 1';
-        asset1.AccountId = acct.Id;
-        asset1.Parent_Project__c = projectList[0].Id;
-        asset1.Project_Phase__c = projectList[2].Id;
-        asset1.Product2Id = productList[0].Id;
-        asset1.Quantity = 1;
-        asset1.Price = 10.00;
-        assetList.add(asset1);
-
-        Asset asset2 = new Asset();
-        asset2.RecordTypeId = recordTypeMap.get(ASSET_TYPE_PREMISE);
-        asset2.Name = 'AssetTriggerHandlerTest Asset 2';
-        asset2.AccountId = acct.Id;
-        asset2.Parent_Project__c = projectList[0].Id;
-        asset2.Project_Phase__c = projectList[2].Id;
-        asset2.Product2Id = productList[0].Id;
-        asset2.Quantity = 1;
-        asset2.Price = 100.00;
-        assetList.add(asset2);
-
         //create SaaS assets
         Asset asset3 = new Asset();
         asset3.RecordTypeId = recordTypeMap.get(ASSET_TYPE_SAAS);
         asset3.Name = 'AssetTriggerHandlerTest Saas Asset 1';
         asset3.AccountId = acct.Id;
         asset3.Parent_Project__c = projectList[0].Id;
-        asset3.Project_Phase__c = projectList[2].Id;
+        asset3.Project_Phase__c = projectList[1].Id;
         asset3.Sales_Price__c = 500.00;
         asset3.Quantity = 5.00;
         asset3.Type__c = 'MRC';
         assetList.add(asset3);
 
-        Asset asset4 = new Asset();
-        asset4.RecordTypeId = recordTypeMap.get(ASSET_TYPE_SAAS);
-        asset4.Name = 'AssetTriggerHandlerTest Saas Asset 1';
-        asset4.AccountId = acct.Id;
-        asset4.Parent_Project__c = projectList[0].Id;
-        asset4.Project_Phase__c = projectList[2].Id;
-        asset4.Sales_Price__c = 1000.00;
-        asset4.Quantity = 2.00;
-        asset4.Type__c = 'NRC';
-        assetList.add(asset4);
-
         insert assetList;
         System.debug('assetList =>' + assetList.size());
-        System.debug('assetList[2] =>' + assetList[2]);
+
 
         projectAssetAllocation = new Project_Asset_Allocation__c(
-                Asset__c = assetList[2].Id,
-                Project__c = assetList[2].Project_Phase__c,
+                Asset__c = assetList[0].Id,
+                Project__c = assetList[0].Project_Phase__c,
                 Quantity_Allocation__c = 1
 
         );
