@@ -187,7 +187,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
                 newProject.Number_of_Open_Phases__c = 0;
                 newProject.Times_Go_Live_Date_Changed__c = null;
                 newProject.Original_Phase_Forecasted_Go_Live_Date__c = null;
-                newProject.Logged_Hours__c = 0;
+               // newProject.Logged_Hours__c = 0;
             }
         }
 
@@ -273,7 +273,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         || (newProject.Phase_Status__c != 'Closed' && newProject.Phase_Status__c != 'Cancelled')
                         || newProject.Actual_NRR__c > 0 || newProject.Contracted_NRR__c > 0
                         || newProject.Actual_MRR__c > 0 || newProject.Contracted_MRR__c > 0
-                        || newProject.Logged_Hours__c > 0))
+                        || newProject.Asset_Logged_Hours__c > 0
+                        || newProject.Subscription_Logged_Hours__c > 0 ))
                 {
                     system.debug('**** setParentProjectGoLiveDates(): created Phase Project ');
                     parentProjectIdSet.add(newProject.ParentProject__c);
@@ -283,7 +284,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         || newProject.ParentProject__c != oldProject.ParentProject__c
                         || newProject.Actual_NRR__c != oldProject.Actual_NRR__c
                         || newProject.Contracted_NRR__c != oldProject.Contracted_NRR__c
-                        || newProject.Logged_Hours__c != oldProject.Logged_Hours__c
+                        || newProject.Asset_Logged_Hours__c != oldProject.Asset_Logged_Hours__c
+                        || newProject.Subscription_Logged_Hours__c != oldProject.Subscription_Logged_Hours__c
                         || newProject.Actual_MRR__c != oldProject.Actual_MRR__c
                         || newProject.Contracted_MRR__c != oldProject.Contracted_MRR__c) )
                 {
