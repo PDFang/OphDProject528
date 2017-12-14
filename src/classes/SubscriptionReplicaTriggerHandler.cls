@@ -100,6 +100,7 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
                     subscription.Implemented_Product__c = subscriptionReplica.Implemented_Product__c;
                     subscription.Total_Allocated_Quantity__c = subscriptionReplica.Total_Allocated_Quantity__c;
                     subscription.Total_Implemented_Quantity__c = subscriptionReplica.Total_Implemented_Quantity__c;
+                    subscription.Logged_Hours__c = subscriptionReplica.Logged_Hours__c;
 
                     // add changed Subscriptions to update list
                     lstUpdateSubscriptions.add(subscription);
