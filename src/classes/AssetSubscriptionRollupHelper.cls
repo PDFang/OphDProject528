@@ -11,7 +11,8 @@ public class AssetSubscriptionRollupHelper {
         // project record type must be 'PS Project Phase SaaS' or 'PS Project Phase Premise WFO'
         projectCache = new Map<Id, Project__c>([
                 Select Id, Contracted_NRR__c, Actual_NRR__c,
-                        Contracted_MRR__c, Actual_MRR__c, Logged_Hours__c
+                        Contracted_MRR__c, Actual_MRR__c,
+                        Asset_Logged_Hours__c, Subscription_Logged_Hours__c
                 from Project__c
                 where Id IN :projectIds
         ]);
@@ -31,7 +32,7 @@ public class AssetSubscriptionRollupHelper {
 
         for (AggregateResult ar : [
                 Select sum(Subscription__r.Contracted_MRR__c) totalContractedMRR, sum(Subscription__r.Actual_MRR__c) totalActualMRR,
-                        Project__c
+                        sum(Logged_Hours__c) totalHours, Project__c
                 from Project_Subscription_Allocation__c
                 where Project__c IN :projectCache.keySet()
                 group by Project__c
@@ -42,14 +43,16 @@ public class AssetSubscriptionRollupHelper {
             Project__c project = new Project__c(
                     Id = (Id) ar.get('Project__c'),
                     Contracted_MRR__c = ar.get('totalContractedMRR') != null ? (Decimal) ar.get('totalContractedMRR') : 0,
-                    Actual_MRR__c = ar.get('totalActualMRR') != null ? (Decimal) ar.get('totalActualMRR') : 0
+                    Actual_MRR__c = ar.get('totalActualMRR') != null ? (Decimal) ar.get('totalActualMRR') : 0,
+                    Subscription_Logged_Hours__c = ar.get('totalHours') != null ? (Decimal) ar.get('totalHours') : 0
             );
 
             Project__c projectOld = projectCache.get(project.Id);
             system.debug('**** rollupSubscriptionFinancials(): projectOld - ' + projectOld);
 
             if(project.Contracted_MRR__c != projectOld.Contracted_MRR__c
-                    || project.Actual_MRR__c != projectOld.Actual_MRR__c)
+                    || project.Actual_MRR__c != projectOld.Actual_MRR__c
+                    || project.Subscription_Logged_Hours__c != projectOld.Subscription_Logged_Hours__c)
             {
                 system.debug('**** rollupSubscriptionFinancials(): one or more fields value have changed');
                 phaseProjects.add(project);
@@ -83,7 +86,7 @@ public class AssetSubscriptionRollupHelper {
                     Id = (Id) ar.get('Project__c'),
                     Contracted_NRR__c = ar.get('totalContractedNRR') != null ? (Decimal) ar.get('totalContractedNRR') : 0,
                     Actual_NRR__c = ar.get('totalActualNRR') != null ? (Decimal) ar.get('totalActualNRR') : 0,
-                    Logged_Hours__c = ar.get('totalHours') != null ? (Decimal) ar.get('totalHours') : 0
+                    Asset_Logged_Hours__c = ar.get('totalHours') != null ? (Decimal) ar.get('totalHours') : 0
             );
 
             Project__c projectOld = projectCache.get(project.Id);
@@ -91,7 +94,7 @@ public class AssetSubscriptionRollupHelper {
 
             if(project.Contracted_NRR__c != projectOld.Contracted_NRR__c
                     || project.Actual_NRR__c != projectOld.Actual_NRR__c
-                    || project.Logged_Hours__c != projectOld.Logged_Hours__c)
+                    || project.Asset_Logged_Hours__c != projectOld.Asset_Logged_Hours__c)
             {
                 system.debug('**** rollupAssetFinancials(): one or more fields value have changed');
                 phaseProjects.add(project);
