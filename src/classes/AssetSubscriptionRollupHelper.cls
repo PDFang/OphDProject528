@@ -90,7 +90,7 @@ public class AssetSubscriptionRollupHelper {
             );
 
             Project__c projectOld = projectCache.get(project.Id);
-            system.debug('**** rollupAssetFinancials(): projectOld - ' + projectOld);
+            system.debug('**** rollupAssetFinancials(): projectNew - ' + project);
 
             if(project.Contracted_NRR__c != projectOld.Contracted_NRR__c
                     || project.Actual_NRR__c != projectOld.Actual_NRR__c
