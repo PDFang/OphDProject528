@@ -141,7 +141,7 @@ public class OpportunityRollupQueueable implements Queueable{
         for (AggregateResult ar : [
                 Select sum(Contracted_NRR__c) totalContractedNRR, sum(Actual_NRR__c) totalActualNRR,
                         sum(Contracted_MRR__c) totalContractedMRR, sum(Actual_MRR__c) totalActualMRR,
-                        sum(Logged_Hours__c) totalHours, Opportunity__c
+                        sum(Parent_Logged_Hours__c) totalHours, Opportunity__c
                 from Project__c
                 where Opportunity__c IN :opportunityCache.keySet() and RecordTypeId IN :psProjectParentRecordTypeIds
                 group by Opportunity__c
