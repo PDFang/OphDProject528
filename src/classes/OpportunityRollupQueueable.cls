@@ -44,7 +44,7 @@ public class OpportunityRollupQueueable implements Queueable{
                     Select Id, Original_Forecasted_Initial_Go_Live_Date__c, PM_Estimated_Go_Live__c,
                             Times_Go_Live_Date_Changed__c, PM_Go_Live_Date__c,
                             Contracted_NRR__c, Actual_NRR__c, Contracted_MRR__c, Actual_MRR__c,
-                            Logged_Hours__c
+                            Logged_Hours__c, Allocated_Hours__c
                     from Opportunity
                     where Id IN :opportunityIds and RecordTypeId IN :validOpportunityRecordTypeIds
             ]);
@@ -141,7 +141,7 @@ public class OpportunityRollupQueueable implements Queueable{
         for (AggregateResult ar : [
                 Select sum(Contracted_NRR__c) totalContractedNRR, sum(Actual_NRR__c) totalActualNRR,
                         sum(Contracted_MRR__c) totalContractedMRR, sum(Actual_MRR__c) totalActualMRR,
-                        sum(Parent_Logged_Hours__c) totalHours, Opportunity__c
+                        sum(Parent_Allocated_Hours__c) allocatedHours, sum(Parent_Logged_Hours__c) loggedHours, Opportunity__c
                 from Project__c
                 where Opportunity__c IN :opportunityCache.keySet() and RecordTypeId IN :psProjectParentRecordTypeIds
                 group by Opportunity__c
@@ -161,7 +161,8 @@ public class OpportunityRollupQueueable implements Queueable{
 
             opp.Actual_NRR__c = ar.get('totalActualNRR') != null ? (Decimal)ar.get('totalActualNRR') : 0;
             opp.Contracted_NRR__c = ar.get('totalContractedNRR') != null ? (Decimal)ar.get('totalContractedNRR') : 0;
-            opp.Logged_Hours__c = ar.get('totalHours') != null ? (Decimal)ar.get('totalHours') : 0;
+            opp.Allocated_Hours__c = ar.get('allocatedHours') != null ? (Decimal)ar.get('allocatedHours') : 0;
+            opp.Logged_Hours__c = ar.get('loggedHours') != null ? (Decimal)ar.get('loggedHours') : 0;
             opp.Actual_MRR__c = ar.get('totalActualMRR') != null ? (Decimal)ar.get('totalActualMRR') : 0;
             opp.Contracted_MRR__c = ar.get('totalContractedMRR') != null ? (Decimal)ar.get('totalContractedMRR') : 0;
 
