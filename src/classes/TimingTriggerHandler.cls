@@ -82,7 +82,7 @@ public class TimingTriggerHandler extends TriggerHandler{
 
                 system.debug(' **** TimingTriggerHandler(): subscription ar - ' + ar);
 
-                if(ar.get('Project_Asset_Allocation__c') != null){
+                if(ar.get('Project_Subscription_Allocation__c') != null){
                     Project_Subscription_Allocation__c allocation = new Project_Subscription_Allocation__c(
                             Id = (Id) ar.get('Project_Subscription_Allocation__c'),
                             Logged_Hours__c = ar.get('totalHours') == null ? 0 : (Decimal) ar.get('totalHours')
