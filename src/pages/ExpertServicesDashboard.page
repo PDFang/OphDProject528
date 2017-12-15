@@ -1,0 +1,2502 @@
+<apex:page Controller="ESConsole" >
+<HTML>
+<head>
+
+<!-- APEX Controller Functions and Panels -->
+<apex:form >
+
+<apex:actionFunction name="passPhaseStatusToController" action="{!phaseStatusMethod}" rerender="myHiddenField">
+    <apex:param name="p1" value="" assignTo="{!projId}" />
+    <apex:param name="p2" value="" assignTo="{!fieldName}" />
+</apex:actionFunction>
+<apex:actionFunction name="passProjectCompleteToController" action="{!projectCompleteMethod}" rerender="myHiddenField">
+    <apex:param name="p1" value="" assignTo="{!projId}" />
+</apex:actionFunction>
+<apex:actionFunction name="passPercentCompleteToController" action="{!percentCompleteMethod}" rerender="myHiddenField">
+    <apex:param name="p1" value="" assignTo="{!projId}" />
+    <apex:param name="p2" value="" assignTo="{!percentVal}" />
+</apex:actionFunction>
+<apex:actionFunction name="passEstGoLiveToController" action="{!estimatedGoLiveMethod}" rerender="myHiddenField">
+    <apex:param name="p1" value="" assignTo="{!projId}" />
+    <apex:param name="p2" value="" assignTo="{!estimatedGoLive}" />
+</apex:actionFunction>
+<apex:actionFunction name="passColorToController" action="{!projectColorMethod}" rerender="myHiddenField">
+    <apex:param name="p1" value="" assignTo="{!projId}" />
+    <apex:param name="p2" value="" assignTo="{!colorHex}" />
+</apex:actionFunction>
+<apex:actionFunction name="passNotesToController" action="{!insertNotesMethod}" rerender="myHiddenField">
+    <apex:param name="p1" value="" assignTo="{!projId}" />
+    <apex:param name="p2" value="" assignTo="{!noteBody}" />
+    <apex:param name="p3" value="" assignTo="{!noteTitle}" />
+</apex:actionFunction>
+<apex:actionFunction name="getNotesFromController" action="{!getNotesMethod}" rerender="populateNotes">
+    <apex:param name="p1" value="" assignTo="{!projId}" />
+</apex:actionFunction>
+<apex:actionFunction name="getAttachmentsFromController" action="{!getAttachmentsMethod}" rerender="populateAttachments">
+    <apex:param name="p1" value="" assignTo="{!projId}" />
+</apex:actionFunction>
+<apex:actionFunction name="passAttachmentsToController" action="{!uploadFileMethod}" rerender="myHiddenField">
+    <apex:param name="p1" value="" assignTo="{!projId}" />
+    <apex:param name="p2" value="" assignTo="{!fileBody}" />
+    <apex:param name="p3" value="" assignTo="{!fileName}" />
+</apex:actionFunction>
+<apex:actionFunction name="udpateProjectScoreToController" action="{!projectScoreMethod}" rerender="myHiddenField">
+    <apex:param name="p1" value="" assignTo="{!projId}" />
+</apex:actionFunction>
+
+
+<apex:outputPanel id="populateNotes">
+  <script>
+    var notesString = '{!resultStringNotes}';
+    notesJSON = sanitizeJSON(notesString);
+    var notesCount = Object.keys(notesJSON).length;
+    for (i=0; i<notesCount; i++) {
+      var newDiv = document.createElement('div');
+      newDiv.id = 'formerNoteDiv' + i;
+      newDiv.className = 'formerNote';
+      var noteDate = notesJSON[i].CreatedDate;
+      var noteDate = noteDate.substring(0,10);
+      var noteBody = notesJSON[i].Body;
+      newDiv.innerHTML = '<b>' + noteDate + ' | ' + notesJSON[i].Title + '</b></br></br>' + noteBody;
+      document.getElementById("previousNotes").appendChild(newDiv);
+      document.getElementById("formerNoteDiv" + i).style["animation-delay"] = (i * 0.1) + 's';
+    }
+  </script>
+</apex:outputPanel>
+<apex:outputPanel id="populateAttachments">
+  <script>
+    var attachmentsString = '{!resultStringAttachments}';
+    //notesString = notesString.replace(/(\r\n|\n|\r)/gm,"%%%%% ");
+    var attachmentsJSON = JSON.parse(attachmentsString);
+    var attachmentsCount = Object.keys(attachmentsJSON).length;
+    for (i=0; i<attachmentsCount; i++) {
+      var newDiv = document.createElement('div');
+      newDiv.id = 'attachmentDiv' + i;
+      newDiv.name = attachmentsJSON[i].Id;
+      newDiv.className = 'attachment';
+
+      var fileType = attachmentsJSON[i].Name;
+      var fileType = fileType.split(".").pop();
+      var backgroundImage;
+
+      switch (fileType) {
+        case "doc":
+        case "docx": backgroundImage = "url('{!urlfor($Resource.esDashboardZip, 'Images/esWordIcon.png')}')"; break;
+        case "pdf": backgroundImage =  "url('{!urlfor($Resource.esDashboardZip, 'Images/esPdfIcon.png')}')"; break;
+        case "vsd": backgroundImage =  "url('{!urlfor($Resource.esDashboardZip, 'Images/esVisioIcon.png')}')"; break;
+        case "msg": backgroundImage =  "url('{!urlfor($Resource.esDashboardZip, 'Images/esEmailIcon.png')}')"; break;
+        case "xls":
+        case "xlsx":
+        case "xlsm":
+        case "csv":
+        default: backgroundImage =  "url('{!urlfor($Resource.esDashboardZip, 'Images/esExcelIcon2.png')}')"; break;
+      }
+
+      //updateDownloadVariableMethod(attachmentsJSON[i].Id);
+
+      newDiv.innerHTML = '<a class="attachmentPic" style="background-image:' + backgroundImage + '" href="/servlet/servlet.FileDownload?file=' + attachmentsJSON[i].Id + '"></a><div class="attachmentText">' + attachmentsJSON[i].Name + '</div>'
+      //var attachmentsLink = '<a href="https://cs53.salesforce.com/' + attachmentsJSON[i].Id + '">' + attachmentsJSON[i].Name + '</a>';
+      //var noteBody = noteBody.replace(/%%%%% /g,"</br>");
+      //newDiv.innerHTML = '<b>' + attachmentsJSON[i].Name + '</b></br></br>' + attachmentsLink;
+      document.getElementById("attachments").appendChild(newDiv);
+      document.getElementById("attachmentDiv" + i).style["animation-delay"] = (i * 0.1) + 's';
+    }
+  </script>
+</apex:outputPanel>
+
+</apex:form>
+
+
+<!-- CSS Style Classes -->
+<style>
+
+@keyframes notesSubmittedAnim {
+    0% {opacity: 0.7;}
+    100% {opacity: 0;}
+}
+@keyframes formerNoteFlash {
+    0% {opacity: 0;}
+    100% {opacity: 1;}
+}
+@keyframes coverAnim {
+    0% {opacity: 0.6;}
+    100% {opacity: 1;}
+}
+@keyframes goLive {
+    0% {background-color: #000000;}
+    100% {background-color: #ffe266;}
+}
+
+a:link    {
+  text-decoration:  none;
+  color:            black;
+  }
+
+table, td {
+    padding: 0px 2px 0px 2px;
+    color: white;
+}
+
+.wrapper {
+    position: relative;
+    background-image: url('{!urlfor($Resource.esDashboardZip, 'Images/esDashboardStarWars.jpg')}');
+    top: -6px;
+    left: -21px;
+    width: 102%;
+    height: auto;
+    min-height: 1000px;
+}
+.projectDivBackground {
+    position: absolute;
+    bottom: 0px;
+    right: 20px;
+    font-size: 60px;
+    font-family: calibri light;
+    opacity: 0.2;
+    font-style: italic;
+    overflow: hidden;
+    color: #000000;
+}
+.projectDivHours {
+    position: absolute;
+    text-align: center;
+    top: 8px;
+    right: 8px;
+    font-size: 30px;
+    color: #ffffff;
+    width: 40px;
+}
+.projectDivHoursDivider{
+    width: 40px;
+    height: 3px;
+    background-color: white;
+}
+.projectDiv {
+    position: relative;
+    width: 330px;
+    height: 90px;
+    opacity: 0.9;
+    margin: 10px 3px 0px 23px;
+    box-shadow: 0px 3px 4px black;
+    font-weight: normal;
+}
+.projectAccountText {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: normal;
+    text-shadow: 0px 1px 2px black;
+    text-align: left;
+    z-index: 5;
+}
+.projectTooltip {
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    height: 82px;
+    width: 160px;
+    background-color: #0a0a0a;
+    opacity: 0;
+    z-index: 6;
+    transition: opacity 0.2s;
+    border-radius:1px;
+    white-space: nowrap;
+    overflow-x: hidden;
+}
+.projectDiv:hover {
+    opacity: 1;
+}
+.caseDiv {
+    width: 500px;
+    height: 100px;
+    margin: 3px;
+    padding: 5px 5px 5px 5px;
+    box-shadow: 3px 3px 5px grey;
+    background: linear-gradient(175deg, #33ccff, #00b3b3);
+    color: #ffffff;
+    font-size: 20px;
+}
+.notesdiv {
+  position: absolute;
+  top: 40px;
+  left: 20px;
+}
+.formerNote {
+    position: relative;
+    background-color: white;
+    margin: 7px 6px 15px 6px;
+    padding: 5px 5px 5px 5px;
+    word-wrap: break-word;
+    box-shadow: 1px 3px 5px black;
+    width: 360px;
+    height: auto;
+    min-height: 50px;
+    font-size: 12px;
+    color: #000000;
+    animation-name: formerNoteFlash;
+    animation-fill-mode: forwards;
+    animation-duration: 1s;
+    animation-iteration-count: 1;
+    border-radius:1px;
+    opacity: 0;
+}
+.summarydesc {
+    font-size: 12px;
+    color: #ffffff;
+}
+.sliderStyle {
+    position: absolute;
+    bottom: -3px;
+    left: 50px;
+    height: 50px;
+    width: 900px;
+    z-index:15;
+    color: #ffffff;
+}
+.sliderBackground {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    font-size: 150px;
+    opacity: 0.2;
+    font-style: italic;
+    overflow: hidden;
+    color: #000000;
+    z-index:11;
+}
+.hoursGraph {
+  position: absolute;
+  bottom: 0px;
+  left: 15px;
+  width: 30px;
+  box-shadow: 0px 0px 8px black;
+  overflow: hidden;
+  z-index: 4;
+}
+.hours2Graph {
+  position: absolute;
+  bottom: 0px;
+  left: 20px;
+  width: 30px;
+  box-shadow: 0px 0px 8px black;
+  overflow: hidden;
+  z-index: 4;
+}
+.hours3Graph {
+  position: absolute;
+  bottom: 0px;
+  left: 253px;
+  width: 30px;
+  box-shadow: 0px 0px 8px black;
+  overflow: hidden;
+  z-index: 4;
+}
+.percentGraph {
+  position: absolute;
+  bottom: 0px;
+  left: 55px;
+  width: 30px;
+  height: 15px;
+  box-shadow: 0px 0px 8px black;
+  overflow: hidden;
+  transition: height 0.3s;
+  transition-delay: 1s;
+  background: none;
+  z-index: 4;
+}
+.bargraphText {
+  position: absolute;
+  bottom: 0px;
+  width: 30px;
+  opacity: 0.4;
+  font-weight: bold;
+  text-align: center;
+  font-size: 15px;
+  color: black;
+  z-index: 1;
+}
+.projectGraphTooltipText {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  font-size: 12px;
+  font-weight: normal;
+  color: white;
+  padding: 2px 3px;
+  text-align: left;
+}
+.attachment {
+  position: relative;
+  display: inline-block;
+  vertical-align: top;
+  margin: 4px 20px 45px 20px;
+  width: 50px;
+  height: 50px;
+  animation-name: formerNoteFlash;
+  animation-fill-mode: forwards;
+  animation-duration: 1s;
+  animation-iteration-count: 1;
+  opacity: 0;
+}
+.attachmentPic {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 50px;
+  height: 50px;
+  box-shadow: 1px 3px 5px black;
+  background-size: 100% 100%;
+}
+.attachmentPic:hover {
+  box-shadow: 1px 1px 5px 3px black;
+}
+.attachmentPic:active {
+  top: 3px;
+  box-shadow: 1px 1px 1px black;
+}
+.attachmentText {
+  position: absolute;
+  left: -15px;
+  top: 57px;
+  width: 80px;
+  font-weight: bold;
+  color: black;
+  font-size: 10px;
+  text-align: center;
+  word-wrap: break-word;
+}
+.pipelineDay {
+  position: relative;
+  display: inline-block;
+  vertical-align: bottom;
+  width: 6px;
+  margin: 0px 1px 0px 1px;
+  box-shadow: 0px 3px 5px black;
+}
+.pipelineDayText {
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  width: 6px;
+  color: white;
+  text-align: center;
+}
+
+#dropWrapper {
+  position: absolute;
+  top: 180px;
+  left: 0px;
+  height: auto;
+  width: 1540px;
+}
+#ALIGN {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 380px;
+    height: auto;
+    min-height:500px;
+    margin: 10px 0px 0px 7px;
+    padding: 10px 0px 5px 0px;
+    background-color: rgba(200,200,200,0.3);
+    box-shadow: 0px 4px 5px black;
+    color: #ffffff;
+    font-weight: bold;
+    text-align: center;
+    font-size: 16px;
+    z-index: 2;
+}
+#BUILD {
+    position: absolute;
+    left: 390px;
+    top: 0px;
+    width: 380px;
+    height: auto;
+    min-height:500px;
+    margin: 10px 0px 0px 7px;
+    padding: 10px 0px 5px 0px;
+    background-color: rgba(200,200,200,0.3);
+    box-shadow: 0px 4px 5px black;
+    color: #ffffff;
+    font-weight: bold;
+    text-align: center;
+    font-size: 16px;
+    z-index: 2;
+}
+#DEPLOY {
+    position: absolute;
+    left: 780px;
+    top: 0px;
+    width: 380px;
+    height: auto;
+    min-height:500px;
+    margin: 10px 0px 0px 7px;
+    padding: 10px 0px 5px 0px;
+    background-color: rgba(200,200,200,0.3);
+    box-shadow: 0px 4px 5px black;
+    color: #ffffff;
+    font-weight: bold;
+    text-align: center;
+    font-size: 16px;
+    z-index: 2;
+}
+#COMPLETE {
+    position: absolute;
+    left: 1170px;
+    top: 0px;
+    width: 381px;
+    height: auto;
+    min-height:500px;
+    margin: 10px 0px 0px 7px;
+    padding: 10px 0px 5px 0px;
+    background-color: rgba(200,200,200,0.3);
+    box-shadow: 0px 4px 5px black;
+    color: #ffffff;
+    font-weight: bold;
+    text-align: center;
+    font-size: 16px;
+    transition: width 0.2s;
+    overflow-x: hidden;
+}
+#ONHOLD {
+    position: absolute;
+    right: -18px;
+    top: 0px;
+    width: 0px;
+    height: auto;
+    min-height:500px;
+    margin: 10px 0px 0px 7px;
+    padding: 10px 0px 0px 0px;
+    background-color: rgba(30,30,30,0.9);
+    box-shadow: 0px 4px 5px black;
+    color: #ffffff;
+    font-weight: bold;
+    text-align: center;
+    font-size: 16px;
+    transition: width 0.2s;
+    opacity: 0;
+    overflow-x: hidden;
+}
+
+#dashboardContainer {
+    position: relative;
+    display: inline-block;
+    vertical-align: top;
+    background-color: rgba(30,30,30,0.95);
+    box-shadow: 3px 3px 5px black;
+    margin: 10px 0px 0px 7px;
+    color: #ffffff;
+    width: 1540px;
+    height: 150px;
+    padding: 10px 0px 10px 10px;
+}
+#pipeline{
+  position: absolute;
+  bottom: 0px;
+  left: 10px;
+  width: 850px;
+  height: 100px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  font-size: 10px;
+}
+#pipeline::-webkit-scrollbar-track{
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+  background-color: none;
+}
+#pipeline::-webkit-scrollbar{
+  height: 10px;
+    background-color: none;
+}
+#pipeline::-webkit-scrollbar-thumb{
+  background-color: #32a3ff;
+}
+#notesbox {
+    background: transparent;
+    position: absolute;
+    top: 100px;
+    left: -5px;
+    padding: 3px 3px 3px 3px;
+    width: 400px;
+    height: 300px;
+    margin: 0px 3px 0px 0px;
+    color: #222428;
+}
+#notesboxBack {
+    position: absolute;
+    top: 100px;
+    left: -5px;
+    width: 400px;
+    height: 300px;
+    margin: 0px 3px 0px 0px;
+    opacity: 0.3;
+    outline-offset: -20px;
+    outline-width: thick;
+    outline-color: #222428;
+    outline-style: dashed;
+    color: #222428;
+    transition: opacity 0.3s;
+}
+#notesboxBackText {
+    position: absolute;
+    left: 95px;
+    top: 25px;
+    text-align: center;
+    font-style: italic;
+    font-size: 25px
+}
+#noteBackImage {
+    position: absolute;
+    left: 100px;
+    top: 100px;
+    width: 200px;
+    height: 150px;
+}
+#notestitlebox {
+  position: absolute;
+  top: 105px;
+  left: 15px;
+  background-color: white;
+  padding: 3px 3px 3px 3px;
+  width: 400px;
+  height: 20px;
+  margin: 0px 3px 0px 0px;
+  font-size: 12px;
+  color: #002e4d;
+}
+#NotesSubmitted {
+    position: absolute;
+    top: 100px;
+    left: -5px;
+    padding: 15px 3px 3px 3px;
+    width: 402px;
+    height: 291px;
+    margin: 0px 3px 0px 0px;
+    font-size: 20px;
+    text-align: center;
+    color: #ffffff;
+    animation-name: notesSubmittedAnim;
+    animation-duration: 3s;
+    animation-iteration-count: 1;
+    animation-delay: 3s;
+}
+#projectPageSubmitButton {
+    position: absolute;
+    top: 460px;
+    left: 15px;
+    height: 30px;
+    width: 120px;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0px 1px 1px black;
+    border-radius:2px;
+    opacity: 0.8;
+    cursor: pointer;
+}
+#projectPageSubmitButton:hover {
+    opacity: 0.9;
+}
+#projectPageSubmitButton:active {
+    opacity: 1;
+    box-shadow: 0px 0px 0px white;
+    top: 461px;
+}
+#previousNotes {
+    position: absolute;
+    overflow-y: auto;
+    top: 15px;
+    right: 40px;
+    padding: 3px 3px 3px 3px;
+    width: 400px;
+    height: 425px;
+    margin: 0px 3px 3px 3px;
+    font-size: 12px;
+    border: 1;
+}
+#previousNotes::-webkit-scrollbar-track{
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+  background-color: none;
+}
+#previousNotes::-webkit-scrollbar{
+  height: 2px;
+  width: 8px;
+    background-color: none;
+}
+#previousNotes::-webkit-scrollbar-thumb{
+  background-color: grey;
+}
+#attachments {
+    position: absolute;
+    overflow-y: auto;
+    overflow-x: hidden;
+    top: 460px;
+    right: 40px;
+    padding: 4px 10px 10px 10px;
+    width: 380px;
+    height: 180px;
+    margin: 0px 3px 0px 0px;
+    font-size: 12px;
+    border: 1;
+}
+#attachments::-webkit-scrollbar-track{
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+  background-color: none;
+}
+#attachments::-webkit-scrollbar{
+  height: 2px;
+  width: 8px;
+    background-color: none;
+}
+#attachments::-webkit-scrollbar-thumb{
+  background-color: grey;
+}
+#attachmentsBack {
+    position: absolute;
+    overflow-y: auto;
+    top: 460px;
+    right: 40px;
+    padding: 3px 3px 3px 3px;
+    width: 400px;
+    height: 200px;
+    margin: 0px 3px 0px 0px;
+    font-size: 12px;
+    border: 1;
+    border-radius:3px;
+    opacity: 0.2;
+}
+#uploadProgressBar {
+  position: absolute;
+  top: 461px;
+  left: 153px;
+  height: 30px;
+  width: 0px;
+  background-color: #000000;
+  padding: 0;
+  border: none;
+  border-radius:2px;
+  transition: width 0.05s;
+  transition: background-color 1s 1s;
+  z-index: 13;
+}
+#uploadProgressBarOutline {
+  position: absolute;
+  top: 460px;
+  left: 152px;
+  height: 18px;
+  width: 258px;
+  padding: 6px 6px 6px 6px;
+  border-width: 1px;
+  border-radius:2px;
+  border-style: solid;
+  border-color: grey;
+  color: white;
+  text-align: center;
+  font-weight: bold;
+  z-index: 14;
+}
+#previousNotesBack {
+    position: absolute;
+    overflow-y: auto;
+    top: 15px;
+    right: 40px;
+    padding: 3px 3px 3px 3px;
+    width: 400px;
+    height: 433px;
+    margin: 0px 3px 0px 0px;
+    font-size: 12px;
+    border: 1;
+    border-radius:3px;
+    opacity: 0.2;
+}
+#projectPageTitle {
+    position: absolute;
+    top: 12px;
+    left: 80px;
+    font-size: 18px;
+    color: #000000;
+}
+#cover {
+    position:fixed;
+    top:0;
+    left:0;
+    background:rgba(0,0,0,0.9);
+    z-index: 6;
+    width:100%;
+    height:100%;
+    display: none;
+    animation-name: coverAnim;
+    animation-fill-mode: forwards;
+    animation-duration: 5s;
+    animation-iteration-count: 1;
+}
+#projectPage {
+    height:700px;
+    width:1000px;
+    padding: 5px;
+    margin:0 auto;
+    position:fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index:10;
+    display:none;
+    background-color: #ffffff;
+    border-radius:7px;
+}
+#projectHelpPage {
+    position:absolute;
+    height:700px;
+    width:0px;
+    padding: 5px;
+    margin:0 auto;
+    bottom: 0px;
+    left: 1000px;
+    background-color: #ffffff;
+    border-radius:7px;
+    transition: width 0.3s;
+}
+
+#goLivePage {
+    height:300px;
+    width:300px;
+    padding: 5px;
+    margin:0 auto;
+    position:fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index:10;
+    display:none;
+    background-color: #ffffff;
+    border-radius:7px;
+}
+#goLivePageTitle {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 14px;
+    color: #000000;
+    width: 260px;
+    text-align: left;
+    font-size: 16px;
+}
+#goLiveDatePicker {
+    position: absolute;
+    top:90px;
+    left:20px;
+}
+#goLiveSubmitButton {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    height: 30px;
+    width: 100px;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0px 1px 1px black;
+    border-radius:2px;
+    opacity: 0.8;
+    cursor: pointer;
+}
+#goLiveSubmitButton:hover {
+    opacity: 0.9;
+}
+#goLiveSubmitButton:active {
+    opacity: 1;
+    box-shadow: 0px 0px 0px white;
+    bottom: 19px;
+}
+#goLiveCancelButton {
+    position: absolute;
+    bottom: 20px;
+    left: 140px;
+    height: 30px;
+    width: 150px;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0px 1px 1px black;
+    border-radius:2px;
+    opacity: 0.7;
+    cursor: pointer;
+}
+#goLiveCancelButton:hover {
+    opacity: 0.9;
+}
+#goLiveCancelButton:active {
+    opacity: 1;
+    box-shadow: 0px 0px 0px white;
+    bottom: 19px;
+}
+#cover2 {
+    position:fixed;
+    top:0;
+    left:0;
+    background:rgba(0,0,0,0.9);
+    z-index: 6;
+    width:100%;
+    height:100%;
+    display: none;
+    animation-name: coverAnim;
+    animation-fill-mode: forwards;
+    animation-duration: 5s;
+    animation-iteration-count: 1;
+}
+
+#areYouSurePage {
+    position:absolute;
+    height:100px;
+    width:0px;
+    padding: 5px;
+    margin:0 auto;
+    top: 160px;
+    left: 1000px;
+    overflow: hidden;
+    text-align: center;
+    overflow: hidden;
+    font-weight: bold;
+    background-color: #ffffff;
+    border-radius:7px;
+    transition: width 0.3s;
+}
+#areYouSurePageText {
+    position:absolute;
+    top: 10px;
+    left: 25px;
+    height: 40px;
+    width: 160px;
+    text-align: center;
+    color: black;
+}
+#areYouSureYes {
+    position: absolute;
+    bottom: 10px;
+    left: 20px;
+    height: 30px;
+    width: 50px;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0px 1px 1px black;
+    border-radius:2px;
+    opacity: 0.8;
+    cursor: pointer;
+}
+#areYouSureYes:hover {
+    opacity: 0.9;
+}
+#areYouSureYes:active {
+    opacity: 1;
+    box-shadow: 0px 0px 0px white;
+    bottom: 9px;
+}
+#areYouSureNo {
+    position: absolute;
+    bottom: 10px;
+    left: 80px;
+    height: 30px;
+    width: 120px;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0px 1px 1px black;
+    border-radius:2px;
+    opacity: 0.7;
+    cursor: pointer;
+}
+#areYouSureNo:hover {
+    opacity: 0.9;
+}
+#areYouSureNo:active {
+    opacity: 1;
+    box-shadow: 0px 0px 0px white;
+    bottom: 9px;
+}
+
+#reevaluatePage {
+    position:absolute;
+    height:100px;
+    width:0px;
+    padding: 5px;
+    margin:0 auto;
+    top: 70px;
+    left: 1000px;
+    overflow: hidden;
+    text-align: center;
+    overflow: hidden;
+    font-weight: bold;
+    background-color: #ffffff;
+    border-radius:7px;
+    transition: width 0.3s;
+}
+#reevaluatePageText {
+    position:absolute;
+    top: 10px;
+    left: 25px;
+    height: 40px;
+    width: 160px;
+    text-align: center;
+    color: black;
+}
+#reevaluateYes {
+    position: absolute;
+    bottom: 10px;
+    left: 20px;
+    height: 30px;
+    width: 50px;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0px 1px 1px black;
+    border-radius:2px;
+    opacity: 0.8;
+    cursor: pointer;
+}
+#reevaluateYes:hover {
+    opacity: 0.9;
+}
+#reevaluateYes:active {
+    opacity: 1;
+    box-shadow: 0px 0px 0px white;
+    bottom: 9px;
+}
+#reevaluateNo {
+    position: absolute;
+    bottom: 10px;
+    left: 80px;
+    height: 30px;
+    width: 120px;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0px 1px 1px black;
+    border-radius:2px;
+    opacity: 0.7;
+    cursor: pointer;
+}
+#reevaluateNo:hover {
+    opacity: 0.9;
+}
+#reevaluateNo:active {
+    opacity: 1;
+    box-shadow: 0px 0px 0px white;
+    bottom: 9px;
+}
+
+#projectColorPicker {
+    position: absolute;
+    top: 12px;
+    left: 15px;
+    z-index: 12;
+    width: 50px;
+    height: 50px;
+    background-color: #ffffff;
+    border:1px solid #cccccc;
+    border-radius:3px;
+}
+#cancel {
+    display:block;
+    position:absolute;
+    top:3px;
+    right:2px;
+    color:black;
+    height:30px;
+    width:35px;
+    font-size:30px;
+    text-decoration:none;
+    text-align:center;
+    font-weight:bold;
+    cursor: pointer;
+}
+#help {
+    display:block;
+    position:absolute;
+    top:50px;
+    right:2px;
+    color:black;
+    height:30px;
+    width:35px;
+    font-size:30px;
+    text-decoration:none;
+    text-align:center;
+    font-weight:bold;
+    cursor: pointer;
+}
+#reevaluate {
+    display:block;
+    position:absolute;
+    top:100px;
+    right:2px;
+    color:black;
+    height:30px;
+    width:35px;
+    font-size:30px;
+    text-decoration:none;
+    text-align:center;
+    font-weight:bold;
+    cursor: pointer;
+}
+#trash {
+    display:block;
+    position:absolute;
+    top:205px;
+    right:10px;
+    height:26px;
+    width:20px;
+    font-size:30px;
+    background-image: url('{!urlfor($Resource.esDashboardZip, 'Images/esTrashIcon.png')}');
+    background-size: 100% 100%;
+    cursor: pointer;
+}
+#hold {
+    display:block;
+    position:absolute;
+    top:155px;
+    right:10px;
+    height:20px;
+    width:20px;
+    font-size:30px;
+    background-image: url('{!urlfor($Resource.esDashboardZip, 'Images/esHoldIcon.png')}');
+    background-size: 100% 100%;
+    cursor: pointer;
+}
+#holdList {
+    display:block;
+    position:absolute;
+    top:4px;
+    right:700px;
+    height:35px;
+    width:35px;
+    font-size:30px;
+    background-image: url('{!urlfor($Resource.esDashboardZip, 'Images/esHoldingIcon.png')}');
+    background-size: 100% 100%;
+    cursor: pointer;
+}
+#clear {
+    display:block;
+    position:absolute;
+    top:2px;
+    right:2px;
+    color:white;
+    height:20px;
+    width:20px;
+    font-size:20px;
+    text-decoration:none;
+    text-align:center;
+    font-weight:bold;
+    cursor: pointer;
+}
+#quarterGraphGoalBox {
+  position:absolute;
+  bottom: 0px;
+  right: 0px;
+  height: 150px;
+  width: 55px;
+  border-style: solid;
+  border-width: 2px 0px 0px 0px;
+  border-color: #32a3ff;
+}
+#quarterGraphGoalBoxText {
+  position:absolute;
+  left: 4px;
+  bottom: 153px;
+  text-align: left;
+  font-weight: bold;
+  color: #32a3ff;
+}
+
+#dashboardTitle {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    margin: 5px 0px 0px 5px;
+    font-size: 24px;
+    z-index: 5;
+}
+#dashboardMessage {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    margin: 35px 0px 0px 5px;
+    z-index: 5;
+}
+#debug {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    margin: 50px 0px 0px 5px;
+}
+#dashboardTooltipBack {
+  position:absolute;
+  padding: 1px 1px;
+  top: 0px;
+  right: 280px;
+  height: 168px;
+  width: 400px;
+  background-color: #0a0a0a;
+}
+#dashboardTooltip {
+  position:absolute;
+  padding: 1px 1px;
+  top: 0px;
+  right: 280px;
+  height: 168px;
+  width: 400px;
+  background-color: #0a0a0a;
+  color: #ffffff;
+  transition: opacity 0.2s;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  z-index: 2;
+}
+#dashboardTooltipTextArea1 {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 240px;
+  font-size: 10px;
+  height: 148px;
+  overflow-y: hidden;
+}
+#dashboardTooltipTextArea1 a:link {
+  text-decoration:  none;
+  font-weight:      bold;
+  color: #51c2ff;
+}
+#dashboardTooltipTextArea1 a:visited {
+  text-decoration:  none;
+  font-weight:      bold;
+  color: #51c2ff;
+}
+#dashboardTooltipTextArea1 a:hover {
+  text-decoration:  none;
+  font-weight:      bold;
+  color: #51c2ff;
+}
+#dashboardTooltipTextArea2 {
+  position: absolute;
+  left: 255px;
+  top: 10px;
+  width: 150px;
+  font-size: 10px;
+  height: 148px;
+}
+#dashboardTooltipPanel {
+  position:absolute;
+  padding: 1px 1px;
+  top: 0px;
+  right: 280px;
+  height: 168px;
+  width: 400px;
+  background-color: #000000;
+  color: #ffffff;
+  transition: opacity 0.2s;
+  overflow: hidden;
+  white-space: nowrap;
+  z-index: 3;
+}
+#DashboardTooltipPanelText1 {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  width: 240px;
+  height: 148px;
+  font-size: 10px;
+  overflow-y: auto;
+  z-index: 4;
+}
+#DashboardTooltipPanelText1::-webkit-scrollbar-track{
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+  background-color: none;
+}
+#DashboardTooltipPanelText1::-webkit-scrollbar{
+  width: 5px;
+    background-color: none;
+}
+#DashboardTooltipPanelText1::-webkit-scrollbar-thumb{
+  background-color: #32a3ff;
+}
+#DashboardTooltipPanelText1 a:link {
+  text-decoration:  none;
+  font-weight:      bold;
+  color: #51c2ff;
+}
+#DashboardTooltipPanelText1 a:visited {
+  text-decoration:  none;
+  font-weight:      bold;
+  color: #51c2ff;
+}
+#DashboardTooltipPanelText1 a:hover {
+  text-decoration:  none;
+  font-weight:      bold;
+  color: #8cd6ff;
+}
+#DashboardTooltipPanelText2 {
+  position: absolute;
+  left: 255px;
+  top: 10px;
+  width: 150px;
+  height: 148px;
+  font-size: 10px;
+  z-index: 4;
+}
+#dashboardTooltipPanelCancel {
+  display:block;
+  position:absolute;
+  top:1px;
+  right:1px;
+  color:white;
+  height:18px;
+  width:18px;
+  font-size:18px;
+  text-decoration:none;
+  text-align:center;
+  font-weight:bold;
+  cursor: pointer;
+  z-index: 5;
+}
+
+#projectsAlign {
+  position:absolute;
+  bottom: 0px;
+  right: 210px;
+  width: 30px;
+  background-color: #72a8ff;
+  box-shadow: 0px 3px 5px black;
+  transition: height 0.5s;
+  z-index: 5;
+}
+#projectsAlign:hover {
+  background-color: #3f81ea;
+}
+#projectsBuild {
+  position:absolute;
+  bottom: 0px;
+  right: 160px;
+  width: 30px;
+  background-color: #3a86ff;
+  box-shadow: 0px 3px 5px black;
+  transition: height 0.5s;
+  z-index: 5;
+}
+#projectsBuild:hover {
+  background-color: #2770e5;
+}
+#projectsDeploy {
+  position:absolute;
+  bottom: 0px;
+  right: 110px;
+  width: 30px;
+  background-color: #0767ff;
+  box-shadow: 0px 3px 5px black;
+  transition: height 0.5s;
+  z-index: 5;
+}
+#projectsDeploy:hover {
+  background-color: #0b5de0;
+}
+#projectsComplete {
+  position:absolute;
+  bottom: 0px;
+  right: 60px;
+  width: 30px;
+  background-color: #004cc6;
+  box-shadow: 0px 3px 5px black;
+  transition: height 0.5s;
+  z-index: 5;
+}
+#projectsComplete:hover {
+  background-color: #013c9b;
+}
+#projectsTotal {
+  position:absolute;
+  bottom: 0px;
+  right: 10px;
+  width: 30px;
+  background-color: #0aa7ff;
+  box-shadow: 0px 3px 5px black;
+  transition: height 0.5s;
+  z-index: 5;
+}
+#projectsTotal:hover {
+  background-color: #3ab8ff;
+}
+#teamProjectsComplete {
+  position:absolute;
+  bottom: 0px;
+  right: 65px;
+  width: 30px;
+  background-color: #004cc6;
+  box-shadow: 0px 3px 5px black;
+  transition: height 0.5s;
+  z-index: 4;
+  opacity: 0.6;
+}
+#teamProjectsComplete:hover {
+  background-color: #013c9b;
+}
+#teamProjectsAlign {
+  position:absolute;
+  bottom: 0px;
+  right: 215px;
+  width: 30px;
+  background-color: #72a8ff;
+  box-shadow: 0px 3px 5px black;
+  transition: height 0.5s;
+  z-index: 4;
+  opacity: 0.6;
+}
+#teamProjectsAlign:hover {
+  background-color: #3f81ea;
+}
+#teamProjectsBuild {
+  position:absolute;
+  bottom: 0px;
+  right: 165px;
+  width: 30px;
+  background-color: #3a86ff;
+  box-shadow: 0px 3px 5px black;
+  transition: height 0.5s;
+  z-index: 4;
+  opacity: 0.6;
+}
+#teamProjectsBuild:hover {
+  background-color: #2770e5;
+}
+#teamProjectsDeploy {
+  position:absolute;
+  bottom: 0px;
+  right: 115px;
+  width: 30px;
+  background-color: #0767ff;
+  box-shadow: 0px 3px 5px black;
+  transition: height 0.5s;
+  z-index: 4;
+  opacity: 0.6;
+}
+#teamProjectsDeploy:hover {
+  background-color: #0b5de0;
+}
+#teamProjectsTotal {
+  position:absolute;
+  bottom: 0px;
+  right: 15px;
+  width: 30px;
+  background-color: #0aa7ff;
+  box-shadow: 0px 3px 5px black;
+  transition: height 0.5s;
+  z-index: 4;
+  opacity: 0.6;
+}
+#teamProjectsTotal:hover {
+  background-color: #3ab8ff;
+}
+
+</style>
+</head>
+
+<!-- HTML Body -->
+<Body>
+  <div id="htmlMain" class="wrapper">
+
+  <!-- Project Details Page -->
+  <div id="projectPage">
+      <a id="cancel" onclick="projectPageClose()">&times;</a>
+      <a id="help" onclick="projectHelpPageOpen()">?</a>
+      <a id="reevaluate" onclick="projectPageReevaluate()">&#916;</a>
+      <a id="trash" onclick="projectPageSure()"></a>
+      <a id="hold" ></a>
+      <div id="projectPageTitle"></div>
+      <textarea id="notestitlebox" onfocus="noteTitleFocus(this)" onblur="noteTitleBlur(this)">Enter Note Title Here</textarea>
+      <div id="notesboxdiv" class="notesdiv">
+          <div id="notesboxBack"><div id="notesboxBackText">Enter Notes<br/>or Drag File Here</div><img id="noteBackImage" src="{!urlfor($Resource.esDashboardZip, 'Images/esDownload2.png')}" /></div>
+          <textarea id="notesbox" onfocus="noteFocus(this)" onblur="noteBlur(this)" onmouseenter="noteOver('mouseIn')" onmouseleave="noteOver('mouseOut')" ondragenter="noteOver('dragIn')" ondragleave="noteOver('dragOut')" ondrop="onFileDrop(event)" ></textarea>
+      </div>
+      <div id="previousNotes"></div>
+      <div id="attachmentsBack"></div>
+      <div id="attachments"></div>
+      <div id="previousNotesBack"></div>
+      <div id="projectHelpPage"></div>
+
+      <div id="reevaluatePage">
+          <div id="reevaluatePageText">Send this project for<br/>Re-Evaluation?</div>
+          <input type="button" id="reevaluateYes" value="YES" onclick="projectReevaluate()"></input>
+          <input type="button" id="reevaluateNo" value="NO" onclick="projectPageReevaluate()"></input>
+      </div>
+
+      <div id="areYouSurePage">
+          <div id="areYouSurePageText">Are you sure you want to cancel this project?</div>
+          <input type="button" id="areYouSureYes" value="YES" onclick="projectPageTrash()"></input>
+          <input type="button" id="areYouSureNo" value="NO" onclick="projectPageSure()"></input>
+      </div>
+
+      <div id="uploadProgressBarOutline"></div>
+      <div id="uploadProgressBar"></div>
+      <input type="button" id="projectPageSubmitButton" name="" value="Submit" onclick="noteSubmit(this.name);" />
+      <input type="color" id="projectColorPicker" value=""></input>
+      <input type="range" id="percentCompleteSlider" class="sliderStyle" min="0" value="10" max="100" step="1" oninput="sliderUpdate(value)"/>
+      <output for="percentCompleteSlider" id="currentPercent" class="sliderBackground"></output>
+  </div>
+  <div id="cover" onclick="projectPageClose()"></div>
+
+  <div id="goLivePage">
+      <div id="goLivePageTitle"></div>
+      <input type="date" id="goLiveDatePicker" value=""></input>
+      <input type="button" id="goLiveSubmitButton" value="Submit" onclick="goLiveSubmit()"></input>
+      <input type="button" id="goLiveCancelButton" value="Cancel" onclick="goLivePageClose()"></input>
+      <a id="cancel" onclick="goLivePageClose()">&times;</a>
+  </div>
+  <div id="cover2" onclick="goLivePageClose('cancel')"></div>
+
+  <!-- Dashboard and Metrics -->
+  <div id="dashboardContainer">
+    <div id="dashboardTitle">Expert Services Dashboard</div>
+    <div id="dashboardMessage">Welcome {!$User.FirstName} {!$User.LastName}!</div>
+    <div id="debug"></div>
+    <div id="pipeline"></div>
+    <a id="holdList" onclick="holdListOpen()"></a>
+    <div id="dashboardTooltipBack"></div>
+    <div id="dashboardTooltip"><div id="dashboardTooltipTextArea1"></div><div id="dashboardTooltipTextArea2"></div></div>
+    <div id="quarterGraphGoalBox"><div id="quarterGraphGoalBoxText">{!$User.ES_Project_Quarter_Goal__c}</div></div>
+    <div id="projectsAlign" onmouseover="dashboardTooltip('Align')" onmouseout="dashboardTooltip('out')" onclick="dashboardTooltipPanel('Align')"><div class="bargraphText">A</div></div>
+    <div id="projectsBuild" onmouseover="dashboardTooltip('Build')" onmouseout="dashboardTooltip('out')" onclick="dashboardTooltipPanel('Build')"><div class="bargraphText">B</div></div>
+    <div id="projectsDeploy" onmouseover="dashboardTooltip('Deploy')" onmouseout="dashboardTooltip('out')" onclick="dashboardTooltipPanel('Deploy')"><div class="bargraphText">D</div></div>
+    <div id="projectsComplete" onmouseover="dashboardTooltip('Complete')" onmouseout="dashboardTooltip('out')" onclick="dashboardTooltipPanel('Complete')"><div class="bargraphText">C</div></div>
+    <div id="projectsTotal" onmouseover="dashboardTooltip('Total')" onmouseout="dashboardTooltip('out')" onclick="dashboardTooltipPanel('Total')"><div class="bargraphText">T</div></div>
+    <div id="teamProjectsAlign"></div>
+    <div id="teamProjectsBuild"></div>
+    <div id="teamProjectsDeploy"></div>
+    <div id="teamProjectsComplete"></div>
+    <div id="teamProjectsTotal"></div>
+  </div>
+
+
+  <br/>
+  <div id="dropWrapper">
+    <div id="ALIGN" ondrop="drop(event,'ALIGN')" ondragover="allowDrop(event)">ALIGN</div>
+    <div id="BUILD" ondrop="drop(event,'BUILD')" ondragover="allowDrop(event)">BUILD</div>
+    <div id="DEPLOY" ondrop="drop(event,'DEPLOY')" ondragover="allowDrop(event)">DEPLOY</div>
+    <div id="COMPLETE" ondrop="drop(event,'COMPLETE')" ondragover="allowDrop(event)">COMPLETE</div>
+    <div id="ONHOLD" ondrop="drop(event, 'ONHOLD')" ondragover="allowDrop(event)">ON HOLD</div>
+  </div>
+
+  </div>
+</Body>
+</HTML>
+
+<!-- Javascript Begin -->
+<script>
+
+//Global Vars for JS Functions
+var projectPageId, projectPagePercent, projectPageDivId, resultObj, resultTeamObj, recordTeamCount,
+    todayVar, recordCount, currentQuarter, helpState, sureState, holdState, revState,
+    alignTooltipHTML = "", buildTooltipHTML = "", deployTooltipHTML = "", completeTooltipHTML = "", totalTooltipHTML = "",
+    teamAlignHTML = "", teamBuildHTML = "", teamDeployHTML = "", teamCompleteHTML = "",
+    averageTeamAlignScore = 0, averageTeamBuildScore = 0, averageTeamDeployScore = 0, averageTeamCompleteScore = 0, averageTeamTotalScore = 0,
+    averageTeamAlignComplexity = 0, averageTeamBuildComplexity = 0, averageTeamDeployComplexity = 0, averageTeamCompleteComplexity = 0;
+
+var projectScoreGoal = '{!$User.ES_Project_Quarter_Goal__c}';
+var baseURL = '{!$CurrentPage.URL}';
+var baseURL = baseURL.substr(0, baseURL.indexOf('.com') + 5);
+
+if (!projectScoreGoal) { projectScoreGoal = 40 }
+
+var pointPixelValue = (150/projectScoreGoal);
+var Color = document.getElementById("projectColorPicker"),
+    debug = document.getElementById("debug"),
+    Align = document.getElementById("ALIGN"),
+    Build = document.getElementById("BUILD"),
+    Complete = document.getElementById("COMPLETE"),
+    Onhold = document.getElementById("ONHOLD"),
+    Deploy = document.getElementById("DEPLOY");
+
+//Run on Page Open
+parseResultJSON(); //debug.innerHTML = 'JSON parsed';
+todayDate(); //debug.innerHTML = 'Date created';
+graphTeamAverages(); //debug.innerHTML = 'Team Projects Created';
+createProjectDivs(); //debug.innerHTML = 'Project Divs Created';
+populateScoreGraph();
+populatePipeline(); //debug.innerHTML = 'Pipeline Populated';
+
+//JS Listeners
+Color.addEventListener("input", function() {
+    colorUpdate(projectPageId, Color.value, projectPageDivId);
+}, false);
+
+
+//---------- JS Functions ------------//
+
+function parseResultJSON() {
+  var quote = String.fromCharCode(34)
+
+  var apexResult = '{!resultString}';
+  resultObj = sanitizeJSON(apexResult);
+  recordCount = Object.keys(resultObj).length;
+  for (var i=0; i < recordCount; i++) {
+      if (!resultObj[i].ES_Project_Color__c) { resultObj[i].ES_Project_Color__c = '11262d' }
+      if (!resultObj[i].Days_to_Go_Live__c) { resultObj[i].Days_to_Go_Live__c = 0 }
+      if (!resultObj[i].TotalWorkLogHours__c) { resultObj[i].TotalWorkLogHours__c = 0 }
+      if (!resultObj[i].ES_PrevQ_PercentComplete__c) { resultObj[i].ES_PrevQ_PercentComplete__c = 0 }
+      if (!resultObj[i].PercentComplete__c) { resultObj[i].PercentComplete__c = 0 }
+      if (!resultObj[i].ES_AssetCount__c) { resultObj[i].ES_AssetCount__c = 0 }
+      if (!resultObj[i].ES_ProjectComplexity__c) { resultObj[i].ES_ProjectComplexity__c = 0 }
+      if (!resultObj[i].Project_Score__c) { resultObj[i].Project_Score__c = 0 }
+      if (!resultObj[i].EstimatedProjectGoLiveDate__c) { resultObj[i].EstimatedProjectGoLiveDate__c = 0 }
+      resultObj[i].completeTest = 0
+  }
+
+  var apexTeamResult = '{!resultTeamString}';
+  resultTeamObj = sanitizeJSON(apexTeamResult);
+  recordTeamCount = Object.keys(resultTeamObj).length;
+  for (var i=0; i < recordTeamCount; i++) {
+      if (!resultTeamObj[i].ES_Project_Color__c) { resultTeamObj[i].ES_Project_Color__c = '11262d' }
+      if (!resultTeamObj[i].Days_to_Go_Live__c) { resultTeamObj[i].Days_to_Go_Live__c = 0 }
+      if (!resultTeamObj[i].TotalWorkLogHours__c) { resultTeamObj[i].TotalWorkLogHours__c = 0 }
+      if (!resultTeamObj[i].ES_PrevQ_PercentComplete__c) { resultTeamObj[i].ES_PrevQ_PercentComplete__c = 0 }
+      if (!resultTeamObj[i].PercentComplete__c) { resultTeamObj[i].PercentComplete__c = 0 }
+      if (!resultTeamObj[i].Project_Score__c) { resultTeamObj[i].Project_Score__c = 0 }
+  }
+}
+function todayDate() {
+  var today = new Date();
+  var dd = today.getDate();
+  var mm = today.getMonth()+1; //January is 0!
+  var yyyy = today.getFullYear();
+  if(dd<10){
+      dd='0'+dd;
+  }
+  if(mm<10){
+      mm='0'+mm;
+  }
+  var todayVar = yyyy+'-'+mm+'-'+dd;
+  switch (mm) {
+    case '01':
+    case '02':
+    case '03': currentQuarter = 1; break;
+    case '04':
+    case '05':
+    case '06': currentQuarter = 2; break;
+    case '07':
+    case '08':
+    case '09': currentQuarter = 3; break;
+    case '10':
+    case '11':
+    case '12': currentQuarter = 4; break;
+  }
+}
+
+//Dashboard Functions
+function drop(event, phaseStatus) {
+    event.preventDefault();
+    var container = document.getElementById(phaseStatus);
+    var data = event.dataTransfer.getData("Text");
+    container.insertBefore(document.getElementById(data), container.firstElementChild);
+    phaseStatus = phaseStatus.toLowerCase();
+    phaseStatus = phaseStatus.charAt(0).toUpperCase() + phaseStatus.slice(1);
+    dragDropPhase = phaseStatus;
+    switch (phaseStatus) {
+      case 'Onhold':
+          resultObj[dragDivId].ProjectStatus__c = 'On Hold';
+          resultObj[dragDivId].Phase_Status__c = 'On Hold';
+          passPhaseStatusToController(dragProjId, 'On Hold');
+          populateScoreGraph();
+          break;
+      case 'Complete':
+          resultObj[dragDivId].ProjectStatus__c = 'Completed';
+          resultObj[dragDivId].Phase_Status__c = 'Closed';
+          resultObj[dragDivId].PercentComplete__c = '100';
+          var percentHeight = 100;
+          percentHeight = percentHeight * 0.8;
+          percentHeight = Math.round(percentHeight);
+          passProjectCompleteToController(dragProjId);
+          setTimeout(function(){
+              populateScoreGraph();
+              document.getElementById('percentGraph' + dragDivId).style.height = percentHeight + "px";
+          }, 1000);
+          break;
+      case 'Align':
+          resultObj[dragDivId].ProjectStatus__c = phaseStatus;
+          resultObj[dragDivId].Phase_Status__c = phaseStatus;
+          passPhaseStatusToController(dragProjId, phaseStatus);
+          populateScoreGraph();
+          break;
+      default:
+          if (resultObj[dragDivId].EstimatedProjectGoLiveDate__c == 0) {
+              goLivePageOpen(dragDivId);
+          } else {
+              resultObj[dragDivId].ProjectStatus__c = phaseStatus;
+              resultObj[dragDivId].Phase_Status__c = phaseStatus;
+              passPhaseStatusToController(dragProjId, phaseStatus);
+              populateScoreGraph();
+          }
+          break;
+    }
+}
+function populatePipeline(){
+    var pipelineDays = [], pipelineBuildList = [], pipelineAlignList = [], pipelineDeployList = [], pipelineGoLiveList = [];
+
+    for (i=0; i<recordCount; i++){
+      if (resultObj[i].Days_to_Go_Live__c > 0) {
+        for (j=0; j<resultObj[i].Days_to_Go_Live__c; j++) {
+          if (!pipelineDays[j]) {
+            pipelineDays[j] = 0;
+            pipelineAlignList[j] = '';
+            pipelineBuildList[j] = '';
+            pipelineDeployList[j] = '';
+            pipelineGoLiveList[j] = '';
+          }
+
+          var currentProjectScore = resultObj[i].Project_Score__c - (resultObj[i].Project_Score__c * (resultObj[i].PercentComplete__c/100));
+          currentProjectScore = Math.round(currentProjectScore * 10) / 10;
+
+          switch (true) {
+            case ((resultObj[i].Days_to_Go_Live__c - j) == 1): //GO-Live
+                pipelineDays[j] = pipelineDays[j] + (resultObj[i].Project_Score__c * 2);
+                pipelineGoLiveList[j] = pipelineGoLiveList[j] + '<br/>' + resultObj[i].Name + ' | ' + resultObj[i].PercentComplete__c + '% | ' + resultObj[i].ES_ProjectComplexity__c + ' | ' + resultObj[i].Project_Score__c;
+                break;
+            case ((resultObj[i].Days_to_Go_Live__c - j) < 21): //Deploy
+                pipelineDays[j] = pipelineDays[j] + (currentProjectScore * 0.5);
+                pipelineDeployList[j] = pipelineDeployList[j] + '<br/>' + resultObj[i].Name + ' | ' + resultObj[i].PercentComplete__c + '% | ' + resultObj[i].ES_ProjectComplexity__c + ' | ' + resultObj[i].Project_Score__c;
+                break;
+            case ((resultObj[i].Days_to_Go_Live__c - j) < 35): // Build
+                pipelineDays[j] = pipelineDays[j] + currentProjectScore;
+                pipelineBuildList[j] = pipelineBuildList[j] + '<br/>' + resultObj[i].Name + ' | ' + resultObj[i].PercentComplete__c + '% | ' + resultObj[i].ES_ProjectComplexity__c + ' | ' + resultObj[i].Project_Score__c;
+                break;
+            default: // Align
+                pipelineDays[j] = pipelineDays[j] + (currentProjectScore * 0.2);
+                pipelineAlignList[j] = pipelineAlignList[j] + '<br/>' + resultObj[i].Name + ' | ' + resultObj[i].PercentComplete__c + '% | ' + resultObj[i].ES_ProjectComplexity__c + ' | ' + resultObj[i].Project_Score__c;
+                break;
+          }
+        }
+      }
+    }
+
+    var pipelineCount = Object.keys(pipelineDays).length;
+    var largestDayHeight = 0;
+
+    for (k=0; k<pipelineCount; k++) {
+
+        var dayDiv = document.createElement('div');
+
+        dayDiv.className = 'pipelineDay';
+
+        var pipelineDayDate = new Date();
+        pipelineDayDate.setDate(pipelineDayDate.getDate() + k + 1);
+        var dayOfWeek = pipelineDayDate.getDay();
+        var dayOfMonth = pipelineDayDate.getDate();
+        var monthNum = pipelineDayDate.getMonth();
+        var newDate = pipelineDayDate.toString();
+        var newDate = newDate.substring(0,15);
+
+        switch (monthNum) {
+          case 0: monthName = 'January'; monthDays = '31'; break;
+          case 1: monthName = 'February'; monthDays = '28'; break;
+          case 2: monthName = 'March'; monthDays = '31'; break;
+          case 3: monthName = 'April'; monthDays = '30'; break;
+          case 4: monthName = 'May'; monthDays = '31'; break;
+          case 5: monthName = 'June'; monthDays = '30'; break;
+          case 6: monthName = 'July'; monthDays = '31'; break;
+          case 7: monthName = 'August'; monthDays = '31'; break;
+          case 8: monthName = 'September'; monthDays = '30'; break;
+          case 9: monthName = 'October'; monthDays = '31'; break;
+          case 10: monthName = 'November'; monthDays = '30'; break;
+          case 11: monthName = 'December'; monthDays = '31'; break;
+        }
+
+        var dayHeight = pipelineDays[k]
+        switch (true) {
+          case (dayHeight < 5): dayHeight = 5; break;
+        }
+
+        if (dayHeight > largestDayHeight) { largestDayHeight = dayHeight }
+
+        switch (dayOfWeek) {
+            case 6:
+            case 0:
+                dayDiv.dataset.color = '#1e1e1e';
+                dayDiv.style.backgroundColor = '#1e1e1e';
+                dayDiv.style.boxShadow = '0px 0px 0px black';
+                dayDiv.style.opacity = 1;
+                break;
+            default:
+                dayDiv.dataset.color = '#51c2ff';
+                dayDiv.style.backgroundColor = '#51c2ff';
+                //dayDiv.style.opacity = dayOpacity;
+                break;
+        }
+
+        //Create Month Label
+        switch (true) {
+          case (k==0):
+              dayDiv.innerHTML = '<div style="position: absolute; bottom: -14px; left: 0px; height:10px; width:' + ((monthDays - dayOfMonth)* 8) + 'px; text-align: center; color: white; border-width: 0px 3px 0px 3px; border-color: white; border-style:solid;">' + monthName + '</div>';
+              break;
+          case (dayOfMonth == 1):
+              dayDiv.innerHTML = '<div style="position: absolute; bottom: -14px; left: 0px; height:10px; width:' + ((monthDays - 1) * 8) + 'px; text-align: center; color: white; border-width: 0px 3px 0px 3px; border-color: white; border-style:solid;">' + monthName + '</div>';
+              break;
+        }
+
+        dayDiv.id = 'pipelineDay' + k;
+        dayDiv.name = k;
+
+        if (!pipelineAlignList[k] == '') {var pipelineAlignHTML = '<br/><br/><div style="color: #51c2ff; font-weight: bold">ALIGN' + pipelineAlignList[k] + '</div>'} else {var pipelineAlignHTML = ''}
+        if (!pipelineBuildList[k] == '') {var pipelineBuildHTML = '<br/><br/><div style="color: #51c2ff; font-weight: bold">BUILD' + pipelineBuildList[k] + '</div>'} else {var pipelineBuildHTML = ''}
+        if (!pipelineDeployList[k] == '') {var pipelineDeployHTML = '<br/><br/><div style="color: #51c2ff; font-weight: bold">DEPLOY' + pipelineDeployList[k] + '</div>'} else {var pipelineDeployHTML = ''}
+        if (!pipelineGoLiveList[k] == '') {var pipelineGoLiveHTML = '<br/><br/><div style="color: #ffe266; font-weight: bold">GO-LIVE' + pipelineGoLiveList[k] + '</div>'} else {var pipelineGoLiveHTML = ''}
+
+        dayDiv.dataset.html = newDate + pipelineGoLiveHTML + pipelineDeployHTML + pipelineBuildHTML + pipelineAlignHTML;
+        dayDiv.style.height = Math.round(dayHeight) + 'px';
+        dayDiv.addEventListener('click', function() {dashboardTooltipPanel('Pipeline', this.id)}, false);
+        dayDiv.addEventListener('mouseenter', function() {dashboardTooltip('Pipeline', this.id)}, false);
+        dayDiv.addEventListener('mouseout', function() {dashboardTooltip('Out', this.id)}, false);
+        document.getElementById('pipeline').appendChild(dayDiv);
+    }
+
+    document.getElementById('pipeline').style.height = Math.round(largestDayHeight + 30) + 'px';
+
+    //Format Go-Live Days
+    for (m=0; m<recordCount; m++) {
+      var due = resultObj[m].Days_to_Go_Live__c - 1
+      if (resultObj[m].Days_to_Go_Live__c > 0) {
+        document.getElementById('pipelineDay' + due).style.backgroundColor = '#ffe266';
+        document.getElementById('pipelineDay' + due).dataset.color = '#ffe266';
+
+        if (resultObj[m].Days_to_Go_Live__c < 7) {
+            document.getElementById('pipelineDay' + due).style.animationName = 'goLive';
+            document.getElementById('pipelineDay' + due).style.animationDuration = '1s';
+            document.getElementById('pipelineDay' + due).style.animationIterationCount = 'infinite';
+            document.getElementById('pipelineDay' + due).style.animationDirection = 'alternate';
+            document.getElementById('pipelineDay' + due).style.animationDelay = '1s';
+        }
+
+        document.getElementById('pipelineDay' + due).style.opacity = '1';
+        document.getElementById('pipelineDay' + due).style.boxShadow = '0px 3px 5px black';
+      }
+    }
+}
+function graphTeamAverages(){
+    var uniqueComplete = [], uniqueAlign = [], uniqueBuild = [], uniqueDeploy = [], uniqueTotal = [];
+    var uniqueCompleteCount = 0, uniqueAlignCount = 0, uniqueBuildCount = 0, uniqueDeployCount = 0, uniqueTotalCount = 0;
+    var totalCompleteCount = 0, totalAlignCount = 0, totalBuildCount = 0, totalDeployCount = 0;
+    var totalCompleteScore = 0, totalAlignScore = 0, totalBuildScore = 0, totalDeployScore = 0, totalTotalScore = 0;
+    var totalCompleteComplexity = 0, totalAlignComplexity = 0, totalBuildComplexity = 0, totalDeployComplexity = 0;
+
+    for (i=0; i<recordTeamCount; i++){
+        var teamOwnerId = resultTeamObj[i].OwnerId;
+        var teamPhaseStatus = resultTeamObj[i].Phase_Status__c;
+        var currentQuarterPercent = resultTeamObj[i].PercentComplete__c - resultTeamObj[i].ES_PrevQ_PercentComplete__c;
+        var currentProjectScore = resultTeamObj[i].Project_Score__c * (currentQuarterPercent/100);
+        currentProjectScore = Math.round(currentProjectScore * 10) / 10;
+
+        switch (teamPhaseStatus){
+          case 'Align':
+              totalAlignCount = totalAlignCount + 1;
+              totalAlignScore = totalAlignScore + currentProjectScore;
+              totalAlignComplexity = totalAlignComplexity + resultTeamObj[i].ES_ProjectComplexity__c;
+
+              if (teamOwnerId in uniqueAlign) {} else {
+                  uniqueAlign[teamOwnerId] = teamOwnerId;
+                  uniqueAlignCount = uniqueAlignCount + 1;
+              }
+              break;
+          case 'Build':
+              totalBuildCount = totalBuildCount + 1;
+              totalBuildScore = totalBuildScore + currentProjectScore;
+              totalBuildComplexity = totalBuildComplexity + resultTeamObj[i].ES_ProjectComplexity__c;
+
+              if (teamOwnerId in uniqueBuild) {} else {
+                  uniqueBuild[teamOwnerId] = teamOwnerId;
+                  uniqueBuildCount = uniqueBuildCount + 1;
+              }
+              break;
+          case 'Deploy':
+              totalDeployCount = totalDeployCount + 1;
+              totalDeployScore = totalDeployScore + currentProjectScore;
+              totalDeployComplexity = totalDeployComplexity + resultTeamObj[i].ES_ProjectComplexity__c;
+
+              if (teamOwnerId in uniqueDeploy) {} else {
+                  uniqueDeploy[teamOwnerId] = teamOwnerId;
+                  uniqueDeployCount = uniqueDeployCount + 1;
+              }
+              break;
+          case 'Closed':
+          default:
+              totalCompleteCount = totalCompleteCount + 1;
+              totalCompleteScore = totalCompleteScore + currentProjectScore;
+              totalCompleteComplexity = totalCompleteComplexity + resultTeamObj[i].ES_ProjectComplexity__c;
+
+              if (teamOwnerId in uniqueComplete) {} else {
+                  uniqueComplete[teamOwnerId] = teamOwnerId;
+                  uniqueCompleteCount = uniqueCompleteCount + 1;
+              }
+              break;
+        }
+
+        if (teamOwnerId in uniqueTotal) {} else {
+            uniqueTotal[teamOwnerId] = teamOwnerId;
+            uniqueTotalCount = uniqueTotalCount + 1;
+        }
+        totalTotalScore = totalTotalScore + currentProjectScore;
+        //debug.innerHTML = "build " + totalBuildCount + " " + totalBuildScore + " " + currentProjectScore + " " + currentQuarterPercent + resultTeamObj[i].Name + " " + teamPhaseStatus;
+    }
+
+    averageTeamAlignScore = totalAlignScore / uniqueAlignCount;
+    averageTeamBuildScore = totalBuildScore / uniqueBuildCount;
+    averageTeamDeployScore = totalDeployScore / uniqueDeployCount;
+    averageTeamCompleteScore = totalCompleteScore / uniqueCompleteCount;
+    averageTeamTotalScore = totalTotalScore / uniqueTotalCount;
+
+    averageTeamAlignComplexity = totalAlignComplexity / totalAlignCount;
+    averageTeamBuildComplexity = totalBuildComplexity / totalBuildCount;
+    averageTeamDeployComplexity = totalDeployComplexity / totalDeployCount;
+    averageTeamCompleteComplexity = totalCompleteComplexity / totalCompleteCount;
+
+    document.getElementById('teamProjectsAlign').style.height = Math.round(averageTeamAlignScore * pointPixelValue) + "px";
+    document.getElementById('teamProjectsBuild').style.height = Math.round(averageTeamBuildScore * pointPixelValue) + "px";
+    document.getElementById('teamProjectsDeploy').style.height = Math.round(averageTeamDeployScore * pointPixelValue) + "px";
+    document.getElementById('teamProjectsComplete').style.height = Math.round(averageTeamCompleteScore * pointPixelValue) + "px";
+    document.getElementById('teamProjectsTotal').style.height = Math.round(averageTeamTotalScore * pointPixelValue) + "px";
+
+    teamAlignHTML = '<b>Team Align Averages</b><br/><br/>Score: ' + averageTeamAlignScore.toFixed(1) + '<br/>Complexity: ' + averageTeamAlignComplexity.toFixed(1);
+    teamBuildHTML = '<b>Team Build Averages</b><br/><br/>Score: ' + averageTeamBuildScore.toFixed(1) + '<br/>Complexity: ' + averageTeamBuildComplexity.toFixed(1);
+    teamDeployHTML = '<b>Team Deploy Averages</b><br/><br/>Score: ' + averageTeamDeployScore.toFixed(1) + '<br/>Complexity: ' + averageTeamDeployComplexity.toFixed(1);
+    teamCompleteHTML = '<b>Team Complete Averages</b><br/><br/>Score: ' + averageTeamCompleteScore.toFixed(1) + '<br/>Complexity: ' + averageTeamCompleteComplexity.toFixed(1);
+    teamTotalHTML = '<b>Team Total Point Average</b><br/><br/>Score: ' + averageTeamTotalScore.toFixed(1);
+}
+function populateScoreGraph() {
+    var completeScore = 0, alignScore = 0, buildScore = 0, deployScore = 0, totalScore = 0;
+    completeTooltipHTML = "<table>", alignTooltipHTML = "<table>", buildTooltipHTML = "<table>", deployTooltipHTML = "<table>", totalTooltipHTML = "<table>";
+
+    //Parse Current Project Scores
+    for (i=0; i<recordCount; i++) {
+      var projectNum = '<a href="' + baseURL + resultObj[i].Id + '">' + resultObj[i].Name + '</a>';
+      if (resultObj[i].Account__r) {
+        var accountCluster = resultObj[i].Account__r.inContact_Cluster__c;
+        var accountName = '<a href="' + baseURL + resultObj[i].Account__r.Id + '">' + resultObj[i].Account__r.Name + '</a>';
+      } else {
+        var accountCluster = '';
+        var accountName = '';
+      }
+
+      var currentQuarterPercent = resultObj[i].PercentComplete__c - resultObj[i].ES_PrevQ_PercentComplete__c;
+      var currentProjectScore = resultObj[i].Project_Score__c * (currentQuarterPercent/100);
+      var possibleProjectScore = resultObj[i].Project_Score__c * ((100 - resultObj[i].ES_PrevQ_PercentComplete__c)/100)
+      currentProjectScore = Math.round(currentProjectScore * 10) / 10;
+
+      switch (true) {
+        case (resultObj[i].completeTest == 1):
+            completeScore = completeScore + possibleProjectScore;
+            completeTooltipHTML = completeTooltipHTML + '<tr><td>' + possibleProjectScore.toFixed(1) + '</td><td>/ ' + resultObj[i].Project_Score__c + '</td><td>' + projectNum + '</td><td>' + accountCluster + '</td><td>' + accountName + '</td></tr>';
+            totalScore = totalScore + possibleProjectScore;
+            totalTooltipHTML = totalTooltipHTML + '<tr><td>' + possibleProjectScore.toFixed(1) + '</td><td>/ ' + resultObj[i].Project_Score__c + '</td><td>' + projectNum + '</td><td>' + accountCluster + '</td><td>' + accountName + '</td></tr>';
+            break;
+        case (resultObj[i].Phase_Status__c == 'Build'):
+            buildScore = buildScore + currentProjectScore;
+            buildTooltipHTML = buildTooltipHTML + '<tr><td>' + currentProjectScore + '</td><td>/ ' + resultObj[i].Project_Score__c + '</td><td>' + projectNum + '</td><td>' + accountCluster + '</td><td>' + accountName + '</td></tr>';
+            totalScore = totalScore + currentProjectScore;
+            totalTooltipHTML = totalTooltipHTML + '<tr><td>' + currentProjectScore + '</td><td>/ ' + resultObj[i].Project_Score__c + '</td><td>' + projectNum + '</td><td>' + accountCluster + '</td><td>' + accountName + '</td></tr>';
+            break;
+        case (resultObj[i].Phase_Status__c == 'Deploy'):
+            deployScore = deployScore + currentProjectScore;
+            deployTooltipHTML = deployTooltipHTML + '<tr><td>' + currentProjectScore + '</td><td>/ ' + resultObj[i].Project_Score__c + '</td><td>' + projectNum + '</td><td>' + accountCluster + '</td><td>' + accountName + '</td></tr>';
+            totalScore = totalScore + currentProjectScore;
+            totalTooltipHTML = totalTooltipHTML + '<tr><td>' + currentProjectScore + '</td><td>/ ' + resultObj[i].Project_Score__c + '</td><td>' + projectNum + '</td><td>' + accountCluster + '</td><td>' + accountName + '</td></tr>';
+            break;
+        case (resultObj[i].Phase_Status__c == 'On Hold'): break;
+        case (resultObj[i].Phase_Status__c == 'Closed'):
+        case (resultObj[i].Phase_Status__c == 'Complete'):
+            completeScore = completeScore + currentProjectScore;
+            completeTooltipHTML = completeTooltipHTML + '<tr><td>' + currentProjectScore + '</td><td>/ ' + resultObj[i].Project_Score__c + '</td><td>' + projectNum + '</td><td>' + accountCluster + '</td><td>' + accountName + '</td></tr>';
+            totalScore = totalScore + currentProjectScore;
+            totalTooltipHTML = totalTooltipHTML + '<tr><td>' + currentProjectScore + '</td><td>/ ' + resultObj[i].Project_Score__c + '</td><td>' + projectNum + '</td><td>' + accountCluster + '</td><td>' + accountName + '</td></tr>';
+            break;
+        case (resultObj[i].Phase_Status__c == 'Align'):
+        default:
+            alignScore = alignScore + currentProjectScore;
+            alignTooltipHTML = alignTooltipHTML + '<tr><td>' + currentProjectScore + '</td><td>/ ' + resultObj[i].Project_Score__c + '</td><td>' + projectNum + '</td><td>' + accountCluster + '</td><td>' + accountName + '</td></tr>';
+            totalScore = totalScore + currentProjectScore;
+            totalTooltipHTML = totalTooltipHTML + '<tr><td>' + currentProjectScore + '</td><td>/ ' + resultObj[i].Project_Score__c + '</td><td>' + projectNum + '</td><td>' + accountCluster + '</td><td>' + accountName + '</td></tr>';
+            break;
+      }
+    }
+
+    document.getElementById('projectsComplete').style.height = Math.round(completeScore * pointPixelValue) + "px";
+    document.getElementById('projectsAlign').style.height = Math.round(alignScore * pointPixelValue) + "px";
+    document.getElementById('projectsBuild').style.height = Math.round(buildScore * pointPixelValue) + "px";
+    document.getElementById('projectsDeploy').style.height = Math.round(deployScore * pointPixelValue) + "px";
+    document.getElementById('projectsTotal').style.height = Math.round(totalScore * pointPixelValue) + "px";
+
+    completeTooltipHTML = '<b>Q' + currentQuarter + ' Completed Projects: ' + completeScore.toFixed(1) + '</b></u><br/><br/>' + completeTooltipHTML + '</table>';
+    alignTooltipHTML = '<b>Align Score: ' + alignScore.toFixed(1) + '</b><br/><br/>' + alignTooltipHTML + '</table>';
+    buildTooltipHTML = '<b>Build Score: ' + buildScore.toFixed(1) + '</b><br/><br/>' + buildTooltipHTML + '</table>';
+    deployTooltipHTML = '<b>Deploy Score: ' + deployScore.toFixed(1) + '</b><br/><br/>' + deployTooltipHTML + '</table>';
+    totalTooltipHTML = '<b>Total Current Project Score for Q' + currentQuarter + ': ' + totalScore.toFixed(1) + '</b><br/><br/>' + totalTooltipHTML + '</table>';
+}
+function dashboardTooltip(graphAction, id){
+  var dashboardTooltip = document.getElementById('dashboardTooltip');
+  var tooltipText1 = document.getElementById('dashboardTooltipTextArea1');
+  var tooltipText2 = document.getElementById('dashboardTooltipTextArea2');
+  if (id) { var pipeDay = document.getElementById(id) }
+  switch (graphAction) {
+    case "Complete": dashboardTooltip.style.opacity = "1"; tooltipText1.innerHTML = completeTooltipHTML; tooltipText2.innerHTML = teamCompleteHTML; break;
+    case "Align": dashboardTooltip.style.opacity = "1"; tooltipText1.innerHTML = alignTooltipHTML; tooltipText2.innerHTML = teamAlignHTML; break;
+    case "Build": dashboardTooltip.style.opacity = "1"; tooltipText1.innerHTML = buildTooltipHTML; tooltipText2.innerHTML = teamBuildHTML; break;
+    case "Deploy": dashboardTooltip.style.opacity = "1"; tooltipText1.innerHTML = deployTooltipHTML; tooltipText2.innerHTML = teamDeployHTML; break;
+    case "Total": dashboardTooltip.style.opacity = "1"; tooltipText1.innerHTML = totalTooltipHTML; tooltipText2.innerHTML = teamTotalHTML; break;
+    case 'Pipeline':
+        tooltipText1.innerHTML = pipeDay.dataset.html;
+        tooltipText2.innerHTML = "";
+        dashboardTooltip.style.opacity = "1";
+        pipeDay.style.backgroundColor = '#ffffff';
+        break;
+    case "Out":
+    default:
+        if (id) { pipeDay.style.backgroundColor = pipeDay.dataset.color }
+        dashboardTooltip.style.opacity = "0";
+        break;
+  }
+}
+function dashboardTooltipPanel(graphAction, id) {
+    switch (graphAction) {
+      case 'Complete': var divInnerHTML1 = completeTooltipHTML; var divInnerHTML2 = teamCompleteHTML; break;
+      case 'Build': var divInnerHTML1 = buildTooltipHTML; var divInnerHTML2 = teamBuildHTML; break;
+      case 'Deploy': var divInnerHTML1 = deployTooltipHTML; var divInnerHTML2 = teamDeployHTML; break;
+      case 'Total': var divInnerHTML1 = totalTooltipHTML; var divInnerHTML2 = teamTotalHTML; break;
+      case 'Pipeline': var pipeDay = document.getElementById(id); var divInnerHTML1 = pipeDay.dataset.html; var divInnerHTML2 = ''; break;
+      case 'Align':
+      default: var divInnerHTML1 = alignTooltipHTML; var divInnerHTML2 = teamAlignHTML; break;
+    }
+    var newDiv = document.createElement('div');
+    newDiv.id = 'dashboardTooltipPanel';
+    newDiv.innerHTML = '<div id="DashboardTooltipPanelText1">' + divInnerHTML1 + '</div><div id="DashboardTooltipPanelText2">' + divInnerHTML2 + '</div><a id="dashboardTooltipPanelCancel" onclick="dashboardTooltipClose()">&times;</a>';
+    document.getElementById("dashboardContainer").appendChild(newDiv);
+}
+function dashboardTooltipClose() {
+    var element = document.getElementById("dashboardTooltipPanel");
+    element.style.opacity = '0';
+    setTimeout(function(){
+        element.parentNode.removeChild(element);
+    }, 500);
+}
+
+function holdListOpen() {
+  var holdPage = document.getElementById('ONHOLD');
+  var completePage = document.getElementById('COMPLETE');
+  var holdImage = document.getElementById('holdList');
+  switch (holdState) {
+    case 'open':
+        holdPage.style.width = '0px';
+        holdImage.style.backgroundImage = "url('{!urlfor($Resource.esDashboardZip, 'Images/esHoldingIcon.png')}')";
+        holdState = 'closed';
+        setTimeout(function(){
+            completePage.style.width = '380px';
+            completePage.style.opacity = '1';
+            holdPage.style.opacity = '0';
+        }, 100);
+        break;
+    default:
+        completePage.style.width = '0px';
+        holdImage.style.backgroundImage = "url('{!urlfor($Resource.esDashboardZip, 'Images/esHoldingActiveIcon.png')}')";
+        holdState = 'open';
+        setTimeout(function(){
+            holdPage.style.width = '380px';
+            holdPage.style.opacity = '1';
+            completePage.style.opacity = '0';
+        }, 100);
+        break;
+  }
+}
+
+//Project Div Functions
+function createProjectDivs() {
+  for (var i=0; i < recordCount; i++) {
+    var newDiv = document.createElement('div');
+    newDiv.id = i;
+    newDiv.name = resultObj[i].Id;
+    newDiv.draggable = 'true';
+    newDiv.addEventListener('dragstart', function() {dragStart(event, this.name, this.id)}, false);
+    newDiv.addEventListener('click', function() {projectPageOpen(this.name, this.id, event)}, false);
+    newDiv.className = 'projectDiv';
+    //newDiv.style.backgroundColor = '#' + resultObj[i].ES_Project_Color__c;
+
+    if (resultObj[i].Account__r) {
+       if (resultObj[i].Account__r.inContact_Cluster__c) {
+         var cluster = resultObj[i].Account__r.inContact_Cluster__c
+         cluster = cluster.charAt(0).toUpperCase() + cluster.slice(1);
+         resultObj[i].Account__r.inContact_Cluster__c = cluster;
+         var clusterBackground = '<div class="projectDivBackground">' + cluster + '</div>';
+       } else {
+         resultObj[i].Account__r.inContact_Cluster__c = '';
+         var clusterBackground = '';
+       }
+       var accountLink = '<div class="projectAccountText" onmouseover="projectGraphTooltip(\'' + i + '\',\'account\')" onmouseout="projectGraphTooltip(\'' + i + '\',\'out\')">' + resultObj[i].Account__r.Name + '</div>';
+    } else {
+       var accountLink = '<div class="projectAccountText" onmouseover="projectGraphTooltip(\'' + i + '\',\'account\')" onmouseout="projectGraphTooltip(\'' + i + '\',\'out\')">' + resultObj[i].Summary__c + '</div>';
+       var clusterBackground = '';
+    }
+
+    if (resultObj[i].TotalWorkLogHours__c > 40) {
+     var hours2GraphHTML = '<div class="hours2Graph" id="hours2Graph' + i + '" onmouseover="projectGraphTooltip(\'' + i + '\',\'hours\')" onmouseout="projectGraphTooltip(\'' + i + '\',\'out\')"></div>';
+    } else {
+     var hours2GraphHTML = '';
+    }
+
+    var hoursGraphHTML = '<div class="hoursGraph" id="hoursGraph' + i + '" onmouseenter="projectGraphTooltip(\'' + i + '\',\'hours\')" onmouseout="projectGraphTooltip(\'' + i + '\',\'out\')"><div class="bargraphText">H</div></div>';
+    var percentGraphHTML = '<div class="percentGraph" id="percentGraph' + i + '" onmouseenter="projectGraphTooltip(\'' + i + '\',\'percent\')" onmouseout="projectGraphTooltip(\'' + i + '\',\'out\')"><div class="bargraphText" id="percentGraphText' + i + '" onmouseenter="projectGraphTooltip(\'' + i + '\',\'percent\')" onmouseout="projectGraphTooltip(\'' + i + '\',\'out\')">%</div></div>';
+    var projectDivBack = accountLink + hoursGraphHTML + hours2GraphHTML + percentGraphHTML + '<div class="projectTooltip" id="projectTooltip' + i + '"><div class="projectGraphTooltipText" id="projectGraphTooltipText' + i +'"></div></div>'
+
+    newDiv.style.backgroundColor = '#' + resultObj[i].ES_Project_Color__c;
+    newDiv.innerHTML = projectDivBack + clusterBackground;
+    var tempProjId = resultObj[i].Id;
+
+    //Div Creation Happens Here
+    var tempProjStatus = resultObj[i].Phase_Status__c;
+    switch (tempProjStatus) {
+      case "Align": Align.appendChild(newDiv); break;
+      case "Build": Build.appendChild(newDiv); break;
+      case "Deploy": Deploy.appendChild(newDiv); break;
+      case "On Hold": Onhold.appendChild(newDiv); break;
+      case "Complete":
+      case "Deployed":
+      case "Closed": Complete.appendChild(newDiv); break;
+      case "New":
+      case "Open":
+      case "Assigned":
+          Align.appendChild(newDiv);
+          passPhaseStatusToController(tempProjId, "Align");
+          break;
+      case "In Development":
+      case "In Progress":
+          Build.appendChild(newDiv);
+          passPhaseStatusToController(tempProjId, "Build");
+          break;
+      case "In QA":
+      case "Needs Final Customer Approval":
+      case "Pending Customer Review":
+      case "Ready to Release to Production":
+      case "Release to Production":
+          Deploy.appendChild(newDiv);
+          passPhaseStatusToController(tempProjId, "Deploy");
+          break;
+      default:
+          Align.appendChild(newDiv);
+          break;
+    }
+
+    //Check for hours greater than 40
+    switch (true) {
+      case (resultObj[i].TotalWorkLogHours__c == 0): var logHoursHeight = 0; break;
+      case (resultObj[i].TotalWorkLogHours__c > 40):
+        var logHours2Height = (Number(resultObj[i].TotalWorkLogHours__c) - 40) * (80 / 40);
+        var logHoursHeight = 40 * (80 / 40);
+        logHoursHeight = Math.round(logHoursHeight);
+        logHours2Height = Math.round(logHours2Height);
+        document.getElementById('percentGraph' + i).style.left = '60px';
+        document.getElementById('hours2Graph' + i).style.height = logHours2Height + 'px';
+        break;
+      default:
+        var logHoursHeight = Number(resultObj[i].TotalWorkLogHours__c);
+        logHoursHeight = logHoursHeight * (80 / 40);
+        logHoursHeight = Math.round(logHoursHeight);
+        break;
+    }
+
+    if (resultObj[i].PercentComplete__c == 0) {
+      var percentHeight = 0;
+    } else {
+      var percentHeight = Number(resultObj[i].PercentComplete__c);
+      percentHeight = percentHeight * 0.8;
+      percentHeight = Math.round(percentHeight);
+    }
+
+  document.getElementById('hoursGraph' + i).style.height = logHoursHeight + 'px';
+  document.getElementById('percentGraph' + i).style.height = percentHeight + 'px';
+  }
+}
+function dragStart(event, projectId, divId) {
+    event.dataTransfer.setData("Text", event.target.id);
+    dragProjId = projectId;
+    dragDivId = divId;
+    dragParentId = event.target.parentNode.id;
+}
+function projectGraphTooltip(id,graphAction){
+  var tooltipText = document.getElementById('projectGraphTooltipText' + id);
+  var tooltip = document.getElementById('projectTooltip' + id);
+  switch (graphAction) {
+    case "hours": tooltip.style.opacity = "1"; tooltipText.innerHTML = resultObj[id].TotalWorkLogHours__c + '/ 40 Hours Logged'; break;
+    case "percent": tooltip.style.opacity = "1"; tooltipText.innerHTML = resultObj[id].PercentComplete__c + '% Complete<br/>Assets: ' + resultObj[id].ES_AssetCount__c +'<br/>Complexity: ' + resultObj[id].ES_ProjectComplexity__c + '<br/>Score: ' + resultObj[id].Project_Score__c; break;
+    case "account":
+        tooltip.style.opacity = "1";
+        if (resultObj[id].ImplementationConsultant__r) { var Imp = resultObj[id].ImplementationConsultant__r.Name; } else { var Imp = ''; }
+        tooltipText.innerHTML = resultObj[id].Summary__c + '<br/>' + resultObj[id].Account__r.inContact_Cluster__c + ' | ' + resultObj[id].Name + '<br/>Go Live: ' + resultObj[id].EstimatedProjectGoLiveDate__c + '<br/>IM: ' + Imp; break;
+    case "Out":
+    default:
+        tooltip.style.opacity = "0";
+        break;
+  }
+}
+
+//Project Page Functions
+function projectPageOpen(id, divId, event) {
+    switch (event.target.id) {
+      case ('percentGraph' + divId):
+      case ('percentGraphText' + divId):
+          switch (resultObj[divId].completeTest) {
+            case 0: document.getElementById('percentGraph' + divId).style.background = '#1c1c1c'; document.getElementById('percentGraphText' + divId).style.color = 'white'; resultObj[divId].completeTest = 1; populateScoreGraph(); break;
+            case 1:
+            default: document.getElementById('percentGraph' + divId).style.background = 'transparent'; document.getElementById('percentGraphText' + divId).style.color = 'black'; resultObj[divId].completeTest = 0; populateScoreGraph(); break;
+          }
+          break;
+      default:
+          //debug.innerHTML = "projectPageOpen begin" + " " + id + " " + divId;
+          document.getElementById('projectPageSubmitButton').style.backgroundColor = '#' + resultObj[divId].ES_Project_Color__c;
+          document.getElementById('previousNotesBack').style.backgroundColor = '#' + resultObj[divId].ES_Project_Color__c;
+          document.getElementById('attachmentsBack').style.backgroundColor = '#' + resultObj[divId].ES_Project_Color__c;
+          document.getElementById('uploadProgressBar').style.backgroundColor = '#' + resultObj[divId].ES_Project_Color__c;
+          document.getElementById('areYouSureYes').style.backgroundColor = '#' + resultObj[divId].ES_Project_Color__c;
+          document.getElementById('areYouSureNo').style.backgroundColor = '#' + resultObj[divId].ES_Project_Color__c;
+          document.getElementById('reevaluateYes').style.backgroundColor = '#' + resultObj[divId].ES_Project_Color__c;
+          document.getElementById('reevaluateNo').style.backgroundColor = '#' + resultObj[divId].ES_Project_Color__c;
+          Color.value = '#' + resultObj[divId].ES_Project_Color__c;
+          projectPageId = resultObj[divId].Id;
+          projectPageDivId = divId;
+          projectPagePercent = resultObj[divId].PercentComplete__c;
+
+          var element = document.getElementById("previousNotes");
+            element.parentNode.removeChild(element);
+          var element2 = document.getElementById("attachments");
+            element2.parentNode.removeChild(element2);
+          var newDiv = document.createElement('div');
+            newDiv.id = 'previousNotes';
+          var newDiv2 = document.createElement('div');
+            newDiv2.id = 'attachments';
+          document.getElementById('projectPage').appendChild(newDiv);
+          document.getElementById('projectPage').appendChild(newDiv2);
+
+          getNotesFromController(id);
+          getAttachmentsFromController(id);
+
+          if (resultObj[divId].Account__r) {
+            var accountLink = '<a href="' + baseURL + resultObj[divId].Account__r.Id + '">' + resultObj[divId].Account__r.Name + '</a>';
+            var projectLink = '<a href="' + baseURL + resultObj[divId].Id + '">' + resultObj[divId].Name + '</a>';
+            var clusterBackground = '<div class="projectDivBackground">' + resultObj[divId].Account__r.inContact_Cluster__c + '</div>';
+          } else {
+            var accountLink = 'No Account Found';
+            var projectLink = '<a href="https://cs53.salesforce.com/' + resultObj[divId].Id + '">' + resultObj[divId].Name + '</a>';
+            var clusterBackground = '';
+          }
+          document.getElementById('projectPageTitle').innerHTML = accountLink + '<div style="font-size:12px;">' + projectLink + ' | ' + resultObj[divId].Summary__c + '</div>';
+          document.getElementById('projectPageSubmitButton').name = divId;
+          if (resultObj[divId].ES_PrevQ_PercentComplete__c == '100') { document.getElementById('percentCompleteSlider').style.visibility = 'hidden' } else { document.getElementById('percentCompleteSlider').style.visibility = 'visible' }
+          document.getElementById('percentCompleteSlider').min = resultObj[divId].ES_PrevQ_PercentComplete__c;
+          document.getElementById('percentCompleteSlider').value = resultObj[divId].PercentComplete__c;
+          document.getElementById('currentPercent').value = resultObj[divId].PercentComplete__c + "%";
+          document.getElementById('projectPage').style.display = 'block';
+          document.getElementById('cover').style.display = 'block';
+    }
+}
+function colorUpdate(projId, projColor, divId) {
+    projColor = projColor.substring(1,7);
+    passColorToController(projId, projColor);
+    resultObj[divId].ES_Project_Color__c = projColor;
+    document.getElementById('projectPageSubmitButton').style.backgroundColor = '#' + projColor;
+    document.getElementById('areYouSureNo').style.backgroundColor = '#' + projColor;
+    document.getElementById('areYouSureYes').style.backgroundColor = '#' + projColor;
+    document.getElementById('previousNotesBack').style.backgroundColor = '#' + projColor;
+    document.getElementById('attachmentsBack').style.backgroundColor = '#' + projColor;
+    document.getElementById(divId).style.backgroundColor = '#' + projColor;
+    document.getElementById('previousNotesBack').style.opacity = '0.5';
+    document.getElementById('attachmentsBack').style.opacity = '0.5';
+}
+function noteFocus(element) {
+    document.getElementById('notesboxBack').style.opacity = '0.0';
+}
+function noteBlur(element) {
+    if ((document.getElementById('notesbox').value == "") && (document.activeElement != document.getElementById('notesbox'))) { document.getElementById('notesboxBack').style.opacity = '0.3'; }
+}
+function noteTitleFocus(element) {
+  if (element.value == 'Enter Note Title Here') {
+    element.value = '';
+  }
+}
+function noteTitleBlur(element) {
+  if (element.value == '') {
+    element.value = 'Enter Note Title Here';
+  }
+}
+function noteOver(action){
+  switch (action) {
+    case "dragIn": document.getElementById('notesboxBack').style.opacity = '0.6'; document.getElementById('notesbox').style.color = 'white'; break;
+    case "dragOut": document.getElementById('notesboxBack').style.opacity = '0.3';
+      document.getElementById('notesbox').style.color = 'black';
+      if (document.getElementById('notesbox').value == "") { document.getElementById('notesboxBack').style.opacity = '0.3'; }
+        else { document.getElementById('notesboxBack').style.opacity = '0.0'; }
+      break;
+    case "mouseIn": if (document.getElementById('notesbox').value == "") { document.getElementById('notesboxBack').style.opacity = '0.0'; } break;
+    case "mouseOut": if ((document.getElementById('notesbox').value == "") && (document.activeElement != document.getElementById('notesbox'))) { document.getElementById('notesboxBack').style.opacity = '0.3'; } break;
+    default:
+  }
+}
+function noteSubmit(DivId) {
+    var inputText = document.getElementById('notesbox').value;
+    var inputTitle = document.getElementById('notestitlebox').value;
+    switch (true) {
+      case (inputText == "Enter Notes Here" || inputText == ""):
+        var newDiv = document.createElement('div');
+        newDiv.id = 'NotesSubmitted';
+        newDiv.style.backgroundColor = '#' + resultObj[DivId].ES_Project_Color__c;
+        newDiv.innerHTML = '<div>Empty!</div>';
+        document.getElementById('notesboxdiv').appendChild(newDiv);
+        break;
+      case (inputTitle == "Enter Note Title Here" || inputTitle == ""):
+        var newDiv = document.createElement('div');
+        newDiv.id = 'NotesSubmitted';
+        newDiv.style.backgroundColor = '#' + resultObj[DivId].ES_Project_Color__c;
+        newDiv.innerHTML = '<div>YOU NEED A TITLE!</div>';
+        document.getElementById('notesboxdiv').appendChild(newDiv);
+        break;
+      default:
+        passNotesToController(resultObj[DivId].Id, inputText, inputTitle);
+        var newDiv = document.createElement('div');
+        newDiv.id = 'NotesSubmitted';
+        if (resultObj[DivId].ES_Project_Color__c) {
+          newDiv.style.backgroundColor = '#' + resultObj[DivId].ES_Project_Color__c;
+        } else {
+          newDiv.style.backgroundColor = '#e5efff';
+        }
+        newDiv.innerHTML = '<div>NOTE SUBMITTED!</div>';
+        document.getElementById('notesboxdiv').appendChild(newDiv);
+        document.getElementById('notestitlebox').value = "Enter Note Title Here";
+        document.getElementById('notesbox').value = "";
+        break;
+    }
+    var newNoteDiv = document.createElement('div');
+    newNoteDiv.id = 'newformerNoteDiv';
+    newNoteDiv.className = 'formerNote';
+    newNoteDiv.innerHTML = '<b>Just Now | ' + inputTitle + '</b></br></br>' + inputText;
+    var container = document.getElementById("previousNotes");
+    container.insertBefore(newNoteDiv, container.firstElementChild);
+    document.getElementById("newformerNoteDiv").style["animation-delay"] = (i * 0.1) + 's';
+    setTimeout(function(){
+        var element = document.getElementById("NotesSubmitted");
+        element.parentNode.removeChild(element);
+    }, 5800);
+}
+function onFileDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    document.getElementById('uploadProgressBar').style.backgroundColor = '#' + resultObj[projectPageDivId].ES_Project_Color__c;
+    document.getElementById('uploadProgressBar').style.display = 'block';
+    document.getElementById('notesbox').style.color = 'black';
+    var files = event.dataTransfer.files;
+
+    var fileName = event.dataTransfer.files[0].name;
+    var fileKind = event.dataTransfer.items[0].kind;
+    var fileType = fileName.split(".").pop();
+
+    var reader = new FileReader();
+
+    reader.onprogress = function (event) {
+        var totalSize = event.total;
+        var progressPixelValue = totalSize / 270;
+        var progress = event.loaded;
+        var progressWidth = Math.round(progress / progressPixelValue);
+
+        document.getElementById('uploadProgressBarOutline').innerHTML = Math.round((progress/totalSize) * 100) + '% Complete';
+        document.getElementById('uploadProgressBar').style.width = progressWidth + 'px';
+    }
+
+    reader.onloadend = function () {
+        document.getElementById('uploadProgressBarOutline').innerHTML = '100% Complete';
+        document.getElementById('uploadProgressBar').style.backgroundColor = '#ffffff';
+
+        passAttachmentsToController(projectPageId, reader.result, fileName);
+
+        var newAttachmentDiv = document.createElement('div');
+        newAttachmentDiv.id = 'newAttachmentDiv';
+        newAttachmentDiv.className = 'attachment';
+        var backgroundImage;
+
+        switch (fileType) {
+          case "doc":
+          case "docx": backgroundImage = "url('{!urlfor($Resource.esDashboardZip, 'Images/esWordIcon.png')}')"; break;
+          case "pdf": backgroundImage =  "url('{!urlfor($Resource.esDashboardZip, 'Images/esPdfIcon.png')}')"; break;
+          case "vsd": backgroundImage =  "url('{!urlfor($Resource.esDashboardZip, 'Images/esVisioIcon.png')}')"; break;
+          case "msg": backgroundImage =  "url('{!urlfor($Resource.esDashboardZip, 'Images/esEmailIcon.png')}')"; break;
+          case "xls":
+          case "xlsx":
+          case "xlsm":
+          case "csv":
+          default: backgroundImage =  "url('{!urlfor($Resource.esDashboardZip, 'Images/esExcelIcon2.png')}')"; break;
+        }
+
+        newAttachmentDiv.innerHTML = '<a class="attachmentPic" style="background-image:' + backgroundImage + '"></a><div class="attachmentText">' + fileName + '</div>';
+        var container = document.getElementById("attachments");
+        container.insertBefore(newAttachmentDiv, container.firstElementChild);
+        document.getElementById("newAttachmentDiv").style["animation-delay"] = (i * 0.1) + 's';
+        setTimeout(function(){
+            document.getElementById('uploadProgressBar').style.display = 'none';
+            document.getElementById('uploadProgressBar').style.width = '0';
+            document.getElementById('uploadProgressBarOutline').innerHTML = '';
+        }, 2500);
+    }
+
+    reader.readAsDataURL(event.dataTransfer.files[0]);
+}
+function projectHelpPageOpen(){
+  var helpPage = document.getElementById('projectHelpPage');
+  var revPage = document.getElementById('reevaluatePage');
+  var surePage = document.getElementById('areYouSurePage');
+  if (sureState == 'open') { surePage.style.width = '0px'; sureState = 'closed'; }
+  if (revState == 'open') { revPage.style.width = '0px'; revState = 'closed'; }
+  switch (helpState) {
+    case 'open': helpPage.style.width = '0px'; helpState = 'closed'; break;
+    default: helpPage.style.width = '200px'; helpState = 'open'; break;
+  }
+}
+function projectPageReevaluate() {
+    var revPage = document.getElementById('reevaluatePage');
+    var helpPage = document.getElementById('projectHelpPage');
+    var surePage = document.getElementById('areYouSurePage');
+    if (helpState == 'open') { helpPage.style.width = '0px'; helpState = 'closed'; }
+    if (sureState == 'open') { surePage.style.width = '0px'; sureState = 'closed'; }
+    switch (revState) {
+      case 'open': revPage.style.width = '0px'; revState = 'closed'; break;
+      default: revPage.style.width = '200px'; revState = 'open'; break;
+    }
+}
+function projectReevaluate() {
+    udpateProjectScoreToController(projectPageId);
+    var revPage = document.getElementById('reevaluatePage');
+    if (revState == 'open') { revPage.style.width = '0px'; revState = 'closed'; }
+}
+function projectPageSure() {
+  var revPage = document.getElementById('reevaluatePage');
+  var helpPage = document.getElementById('projectHelpPage');
+  var surePage = document.getElementById('areYouSurePage');
+  if (helpState == 'open') { helpPage.style.width = '0px'; helpState = 'closed'; }
+  if (revState == 'open') { revPage.style.width = '0px'; revState = 'closed'; }
+  switch (sureState) {
+    case 'open': surePage.style.width = '0px'; sureState = 'closed'; break;
+    default: surePage.style.width = '200px'; sureState = 'open'; break;
+  }
+}
+function projectPageTrash() {
+    passPhaseStatusToController(projectPageId, "Cancelled");
+    var element = document.getElementById(projectPageDivId);
+    element.parentNode.removeChild(element);
+    projectPageClose();
+}
+function projectPageReEvaluate() {}
+function sliderUpdate(vol) {
+    document.querySelector('#currentPercent').value = vol + "%";
+}
+function projectPageClose() {
+    var projectPagePercentNew = document.getElementById('percentCompleteSlider').value
+    //debug.innerHTML = projectPageId + " | " + projectPagePercentNew + " | " + projectPageDivId;
+
+    //Check if Project Complete Percent has changed - update if it has
+    if (projectPagePercent != projectPagePercentNew) {
+      passPercentCompleteToController(projectPageId, projectPagePercentNew);
+      resultObj[projectPageDivId].PercentComplete__c = projectPagePercentNew;
+      var percentHeight = Number(projectPagePercentNew);
+      percentHeight = percentHeight * 0.8;
+      percentHeight = Math.round(percentHeight);
+      document.getElementById('percentGraph' + projectPageDivId).style.height = percentHeight + "px";
+      populateScoreGraph();
+    }
+
+    var x = document.getElementById('projectPage');
+    var y = document.getElementById('cover');
+    projectPageId = "";
+    projectPagePercent = "";
+    helpState = 'closed';
+    sureState = 'closed';
+    document.getElementById('projectHelpPage').style.width = '0px';
+    document.getElementById('areYouSurePage').style.width = '0px';
+    document.getElementById('reevaluatePage').style.width = '0px';
+    x.style.display = 'none';
+    y.style.display = 'none';
+}
+
+//Go Live Page Functions
+function goLivePageOpen(divId) {
+    document.getElementById('goLiveSubmitButton').style.backgroundColor = '#' + resultObj[divId].ES_Project_Color__c;
+    document.getElementById('goLiveCancelButton').style.backgroundColor = '#' + resultObj[divId].ES_Project_Color__c;
+    document.getElementById('goLivePage').style.display = 'block';
+    document.getElementById('cover2').style.display = 'block';
+
+    var projTitle = resultObj[divId].Name;
+    document.getElementById('goLivePageTitle').innerHTML = "Please select an </br>Estimated Go-Live Date </br>for Project #<b>" + projTitle + "</b>";
+}
+function goLivePageClose() {
+    document.getElementById('goLivePage').style.display = 'none';
+    document.getElementById('cover2').style.display = 'none';
+    var newContainer = document.getElementById(dragParentId);
+    newContainer.insertBefore(document.getElementById(dragDivId), newContainer.firstElementChild);
+}
+function goLiveSubmit() {
+    var estimatedGoLive = document.getElementById('goLiveDatePicker').value;
+    document.getElementById('debug').innerHTML = estimatedGoLive;
+    resultObj[dragDivId].EstimatedProjectGoLiveDate__c = estimatedGoLive;
+    resultObj[dragDivId].ProjectStatus__c = dragDropPhase;
+    resultObj[dragDivId].Phase_Status__c = dragDropPhase;
+    passPhaseStatusToController(dragProjId, dragDropPhase);
+    passEstGoLiveToController(dragProjId, estimatedGoLive);
+    populateScoreGraph();
+    document.getElementById('goLivePage').style.display = 'none';
+    document.getElementById('cover2').style.display = 'none';
+}
+
+//Utility Functions
+function sanitizeJSON(inputJSONstring) {
+    var quote = String.fromCharCode(34);
+    var apost = String.fromCharCode(39);
+
+    //inputJSONstring = inputJSONstring.replace(/(\r\n|\n|\r)/gm,"%%%%% ");
+    inputJSONstring = inputJSONstring.replace(/(\r\n|\n|\r)/gm,"</br>");
+
+    inputJSONstring = inputJSONstring.replace(/(\"\:\")/gm,"JSONvalidQuoteString1");
+    inputJSONstring = inputJSONstring.replace(/(\"\,\")/gm,"JSONvalidQuoteString2");
+    inputJSONstring = inputJSONstring.replace(/(\"\:\{\")/gm,"JSONvalidQuoteString3");
+    inputJSONstring = inputJSONstring.replace(/(\"\}\")/gm,"JSONvalidQuoteString4");
+    inputJSONstring = inputJSONstring.replace(/(\{\")/gm,"JSONvalidQuoteString5");
+    inputJSONstring = inputJSONstring.replace(/(\"\}\,\")/gm,"JSONvalidQuoteString6");
+    inputJSONstring = inputJSONstring.replace(/(\"\})/gm,"JSONvalidQuoteString7");
+    inputJSONstring = inputJSONstring.replace(/(\"\:)/gm,"JSONvalidQuoteString8");
+    inputJSONstring = inputJSONstring.replace(/(\,\")/gm,"JSONvalidQuoteString9");
+    inputJSONstring = inputJSONstring.replace(/(\')/gm,"JSONvalidQuoteString10");
+    inputJSONstring = inputJSONstring.replace(/(\")/gm,"");
+
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString1)/gm,quote + ':' + quote);
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString2)/gm,quote + ',' + quote);
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString3)/gm,quote + ':{' + quote);
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString4)/gm,quote + '}' + quote);
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString5)/gm,'{' + quote);
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString6)/gm,quote + "}," + quote);
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString7)/gm,quote + '}');
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString8)/gm,quote + ':');
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString9)/gm,',' + quote);
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString10)/gm, apost);
+    inputJSONstring = inputJSONstring.replace(/(singleQuoteStringReplace)/gm, "'");
+
+    var inputJSON = JSON.parse(inputJSONstring);
+
+    return inputJSON
+}
+
+//Possibly don't need?
+function allowDrop(event) {
+    event.preventDefault();
+    if (!event.target.ondrop) {
+      event.dataTransfer.dropeffect = "none";
+    } else {
+      event.dataTransfer.dropeffect = "all";
+    }
+}
+function correctPhaseStatus(ProjId, phaseStatus) {
+    passPhaseStatusToController(ProjId, phaseStatus);
+}
+
+
+</script>
+</apex:page>

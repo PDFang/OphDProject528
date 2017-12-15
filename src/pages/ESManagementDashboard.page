@@ -1,0 +1,2274 @@
+<apex:page Controller="ESManageConsole" >
+<HTML>
+<head>
+
+<!-- APEX Controller Functions and Panels -->
+<apex:form >
+<apex:actionFunction name="getScorableProjectsFromController" action="{!getScorableProjectsMethod}" rerender="refreshProjectScoreDivs">
+</apex:actionFunction>
+<apex:actionFunction name="passProjectScoreToController" action="{!projectScoreMethod}" rerender="myHiddenField">
+    <apex:param name="p1" value="" assignTo="{!projId}" />
+    <apex:param name="p2" value="" assignTo="{!assetCount}" />
+    <apex:param name="p3" value="" assignTo="{!projComplexity}" />
+</apex:actionFunction>
+<apex:actionFunction name="getProjNotesFromController" action="{!getProjNotesMethod}" rerender="populateProjNotes">
+    <apex:param name="p1" value="" assignTo="{!projId}" />
+</apex:actionFunction>
+<apex:actionFunction name="getOppNotesFromController" action="{!getOppNotesMethod}" rerender="populateOppNotes">
+    <apex:param name="p1" value="" assignTo="{!oppId}" />
+</apex:actionFunction>
+<apex:actionFunction name="getParentProjNotesFromController" action="{!getParentProjNotesMethod}" rerender="populateParentProjNotes">
+    <apex:param name="p1" value="" assignTo="{!pProjId}" />
+</apex:actionFunction>
+<apex:actionFunction name="passUserColorToController" action="{!userColorMethod}" rerender="myHiddenField">
+    <apex:param name="p1" value="" assignTo="{!userId}" />
+    <apex:param name="p2" value="" assignTo="{!colorHex}" />
+</apex:actionFunction>
+<apex:actionFunction name="passProjectHistoryToController" action="{!projectHistoryMethod}" rerender="myHiddenField">
+    <apex:param name="p1" value="" assignTo="{!projId}" />
+    <apex:param name="p2" value="" assignTo="{!projectHistory}" />
+    <apex:param name="p3" value="" assignTo="{!percentComplete}" />
+</apex:actionFunction>
+<apex:actionFunction name="passUserProjectHistoryToController" action="{!userProjectHistoryMethod}" rerender="myHiddenField">
+    <apex:param name="p1" value="" assignTo="{!teamId}" />
+    <apex:param name="p2" value="" assignTo="{!userProjectHistory}" />
+</apex:actionFunction>
+
+
+<apex:outputPanel id="refreshProjectScoreDivs">
+  <script>
+      var apexScoreProjResult = '{!resultScoreProjectsString}';
+      apexScoreProjResult = sanitizeJSON(apexScoreProjResult);
+      var resultScoreProjObj = JSON.parse(apexScoreProjResult);
+      var scoreProjectCount = Object.keys(resultScoreProjObj).length;
+
+      document.getElementById('projectScoreQueue').style.color = '#81dbf9';
+
+      // Check for new projects
+      for (var i=0; i < scoreProjectCount; i++) {
+
+          if (resultScoreProjObj[i].Id in projectScoreList) {} else {
+
+              if (resultScoreProjObj[i].Opportunity__r) { resultScoreProjObj[i].oppId = resultScoreProjObj[i].Opportunity__r.Id } else { resultScoreProjObj[i].oppId = '0' }
+              if (!resultScoreProjObj[i].ParentProject__c) { resultScoreProjObj[i].ParentProject__c = '0' }
+              if (resultScoreProjObj[i].ParentProject__r) {
+                  if (resultScoreProjObj[i].ParentProject__r.Opportunity__c) {
+                      resultScoreProjObj[i].oppId = resultScoreProjObj[i].ParentProject__r.Opportunity__c
+                  }
+              }
+              if (resultScoreProjObj[i].Account__r) { resultScoreProjObj[i].accountName = resultScoreProjObj[i].Account__r.Name } else { resultScoreProjObj[i].accountName = '' }
+
+              var Id = resultScoreProjObj[i].Id;
+              var oppId = resultScoreProjObj[i].oppId;
+              var pProjId = resultScoreProjObj[i].ParentProject__c;
+
+              projectScoreList[Id] = Id;
+
+              if (!resultScoreProjObj[i].ES_AssetCount__c) { resultScoreProjObj[i].ES_AssetCount__c = 0 }
+              if (!resultScoreProjObj[i].ES_ProjectComplexity__c) { resultScoreProjObj[i].ES_ProjectComplexity__c = 0 }
+              if (!resultScoreProjObj[i].Owner.Name) { resultScoreProjObj[i].Owner.Name = 'Unassigned' }
+
+              var divColor = '#a0e5ff';
+              for (var j=0; j < recordTeamCount; j++) {
+                  if (resultTeamObj[j].Id == resultScoreProjObj[i].Owner.Id) { divColor = resultTeamObj[j].ES_User_Color__c }
+              }
+              if (!divColor) {divColor = '#a0e5ff'}
+
+              var newDiv = document.createElement('div');
+              newDiv.id = Id;
+              newDiv.name = resultScoreProjObj[i].Owner.Id;
+              newDiv.style.color = divColor;
+              newDiv.dataset.oppId = oppId;
+              newDiv.dataset.pProjId = pProjId;
+              newDiv.className = 'scoreProjectDiv ID' + resultScoreProjObj[i].Owner.Id;
+              newDiv.addEventListener('click', function() {projectNotesOpen(this.id, this.dataset.oppId, this.dataset.pProjId)}, false);
+              //newDiv.style.backgroundColor = '#51cdff'
+              var title = '<div class="scoreProjectTitle">' + resultScoreProjObj[i].Owner.Name + ' | ' + resultScoreProjObj[i].accountName + '<br/>' + resultScoreProjObj[i].Name + ' | ' + resultScoreProjObj[i].Summary__c + '</div><br/><br/>';
+              var input1 = '<table><tr><td><input type="number" id="assetCount' + Id + '" name="' + Id + '" value="' + resultScoreProjObj[i].ES_AssetCount__c + '" onchange="scoreUpdate(this.name)"></td><td><div class="tableText">Assets</div></td></tr>';
+              var input2 = '<tr><td><input type="number" id="projectComplexity' + Id + '" name="' + Id + '" step="0.1" value="' + resultScoreProjObj[i].ES_ProjectComplexity__c + '" onchange="scoreUpdate(this.name)"></td><td><div class="tableText">Complexity</div></td></tr>';
+              var output = '<tr><td><output id="projectScore' + Id + '" for="assetCount' + Id + ' projectComplexity' + Id + '" class="scoreOutput"></output></td><td><div class="tableText">Score</div></td></tr></table>';
+              var submitbutton = '<input class="scoreProjectDivSubmit IDB' + resultScoreProjObj[i].Owner.Id + '" value="Submit" style="background-color:' + divColor + ';" onclick="updateProjectScore(\'' + Id + '\')"></input>'
+              newDiv.innerHTML = title + input1 + input2 + output + submitbutton;
+              document.getElementById('projectScoreQueue').appendChild(newDiv);
+
+              document.getElementById('projectScore' + Id).value = resultScoreProjObj[i].Project_Score__c;
+          }
+      }
+
+      // Remove any projects that are no longer listed
+
+      setTimeout(function(){
+          document.getElementById('projectScoreQueue').style.color = 'white';
+      }, 1000);
+
+  </script>
+</apex:outputPanel>
+<apex:outputPanel id="populateProjNotes">
+    <script>
+        var projNotesString = '{!resultStringProjNotes}';
+        projNotesString = sanitizeJSON(projNotesString);
+        var projNotesJSON = JSON.parse(projNotesString);
+        var projNotesCount = Object.keys(projNotesJSON).length;
+        for (i=0; i<projNotesCount; i++) {
+            var newDiv = document.createElement('div');
+            newDiv.id = 'projectNoteDiv' + i;
+            newDiv.className = 'projectNote';
+            var noteDate = projNotesJSON[i].CreatedDate;
+            var noteDate = noteDate.substring(0,10);
+            var noteBody = projNotesJSON[i].Body;
+            var noteBody = noteBody.replace(/%%%%% /g,"</br>");
+            newDiv.innerHTML = '<b>' + noteDate + '</br></br>' + projNotesJSON[i].Title + '</b></br>---------</br>' + noteBody;
+            document.getElementById("notesLegendFrame").appendChild(newDiv);
+            document.getElementById("projectNoteDiv" + i).style["animation-delay"] = (i * 0.1) + 's';
+        }
+    </script>
+</apex:outputPanel>
+<apex:outputPanel id="populateOppNotes">
+    <script>
+        var oppNotesString = '{!resultStringOppNotes}';
+        oppNotesString = sanitizeJSON(oppNotesString);
+        var oppNotesJSON = JSON.parse(oppNotesString);
+        var oppNotesCount = Object.keys(oppNotesJSON).length;
+        for (i=0; i<oppNotesCount; i++) {
+            var newDiv = document.createElement('div');
+            newDiv.id = 'oppNoteDiv' + i;
+            newDiv.className = 'opportunityNote';
+            var noteDate = oppNotesJSON[i].CreatedDate;
+            var noteDate = noteDate.substring(0,10);
+            var noteBody = oppNotesJSON[i].Body;
+            var noteBody = noteBody.replace(/%%%%% /g,"</br>");
+            newDiv.innerHTML = '<b>Opportunity: ' + oppNotesJSON[i].Parent.Name + '</br></br>' + noteDate + '</br></br>' + oppNotesJSON[i].Title + '</b></br>---------</br>' + noteBody;
+            document.getElementById("notesLegendFrame").appendChild(newDiv);
+            document.getElementById("oppNoteDiv" + i).style["animation-delay"] = (i * 0.1) + 's';
+        }
+    </script>
+</apex:outputPanel>
+<apex:outputPanel id="populateParentProjNotes">
+    <script>
+        var pProjNotesString = '{!resultStringParentProjNotes}';
+        pProjNotesString = sanitizeJSON(pProjNotesString);
+        var pProjNotesJSON = JSON.parse(pProjNotesString);
+        var pProjNotesCount = Object.keys(pProjNotesJSON).length;
+        for (i=0; i<pProjNotesCount; i++) {
+            var newDiv = document.createElement('div');
+            newDiv.id = 'parentProjectNoteDiv' + i;
+            newDiv.className = 'parentProjectNote';
+            var noteDate = pProjNotesJSON[i].CreatedDate;
+            var noteDate = noteDate.substring(0,10);
+            var noteBody = pProjNotesJSON[i].Body;
+            var noteBody = noteBody.replace(/%%%%% /g,"</br>");
+            newDiv.innerHTML = '<b>Parent Project: ' + pProjNotesJSON[i].Parent.Name + '</br></br>' + noteDate + '</br></br>' + pProjNotesJSON[i].Title + '</b></br>---------</br>' + noteBody;
+            document.getElementById("notesLegendFrame").appendChild(newDiv);
+            document.getElementById("parentProjectNoteDiv" + i).style["animation-delay"] = (i * 0.1) + 's';
+        }
+    </script>
+</apex:outputPanel>
+
+</apex:form>
+
+<!-- CSS Style Classes -->
+<style>
+
+@keyframes formerNoteFlash {
+    0% {opacity: 0;}
+    100% {opacity: 1;}
+}
+@keyframes coverAnim {
+    0% {opacity: 0.6;}
+    100% {opacity: 1;}
+}
+
+table, td {
+    position: relative;
+    padding: 0px 2px 0px 2px;
+    color: white;
+    font-size: 11px;
+    vertical-align: bottom;
+    text-align: left;
+}
+.tableText {
+  position: absolute;
+  padding: 1px 1px 1px 1px;
+  bottom: 0px;
+}
+
+input[type=number]{
+    width: 35px;
+    font-size: 12px;
+    font-weight: bold;
+}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="color"] {
+    -webkit-appearance: none;
+    border: 1px;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 1px 0 0 0;
+}
+
+
+.legendDiv {
+    position: relative;
+    margin: 5px 5px 5px 5px;
+    width: 200px;
+    height: 18px;
+    font-weight: bold;
+    font-size: 14px;
+}
+.legendColor {
+    z-index: 12;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    width: 15px;
+    height: 15px;
+    background-color: #ffffff;
+    border:1px solid #cccccc;
+    border-radius:1px;
+}
+
+.barGraphContainer {
+    position: relative;
+    display: inline-block;
+    vertical-align: bottom;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    bottom: 0px;
+    padding-left: 2px;
+    margin-right: 15px;
+    height: 660px;
+    transition: 0.3s ease;
+}
+.barGraphScale {
+    position: relative;
+    display: inline-block;
+    vertical-align: bottom;
+    bottom: 0px;
+    height: 660px;
+    width: 0px;
+}
+.barGraphDiv {
+    position: relative;
+    display: inline-block;
+    vertical-align: bottom;
+    flex-direction: column-reverse;
+    bottom: 0px;
+    height: 0px;
+    transform-origin: 50% 100%;
+    transform: scale(1,0);
+    box-shadow: 0px 2px 3px 1px black;
+    margin-right: 3px;
+    z-index: 2;
+}
+.barGraphGoal {
+    position: absolute;
+    bottom: 500px;
+    left: 0px;
+    border-bottom: thin solid #ffffff;
+    font-size: 14px;
+    font-weight: bold;
+    width: 100%;
+    height: 20px;
+    box-shadow: 0px 3px 3px #000000;
+    text-shadow: 0px 2px 1px #000000;
+    text-align: center;
+    z-index: 3;
+}
+.barGraphGrid {
+    position: absolute;
+    left: -20px;
+    border-bottom: 1px dotted #0f0f0f;
+    font-size: 12px;
+    width: 100%;
+    height: 18px;
+}
+.align {
+  transition: 0.2s ease-in-out;
+}
+.build {
+  transition: 0.2s ease-in-out;
+}
+.deploy {
+  transition: 0.2s ease-in-out;
+}
+.complete {
+  transition: 0.2s ease-in-out;
+}
+
+.stackGraphContainer {
+    position: relative;
+    display: inline-block;
+    vertical-align: bottom;
+    white-space: nowrap;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    bottom: 0px;
+    padding-left: 2px;
+    margin-right: 15px;
+    height: 660px;
+    transition: 0.3s ease;
+}
+.stackGraphScale {
+  position: relative;
+  display: inline-block;
+  vertical-align: bottom;
+  bottom: 0px;
+  height: 660px;
+  width: 0px;
+}
+.stackGraphDiv {
+    position: absolute;
+    bottom: 0px;
+    height: 0px;
+    transform-origin: 50% 100%;
+    transform: scale(1,0);
+    box-shadow: 0px 1px 1px black;
+    z-index: 2;
+}
+.stackGraphGoal {
+    position: absolute;
+    bottom: 500px;
+    left: 0px;
+    border-bottom: thin solid #ffffff;
+    font-size: 14px;
+    font-weight: bold;
+    width: 100%;
+    height: 20px;
+    box-shadow: 0px 3px 3px #000000;
+    text-shadow: 0px 2px 1px #000000;
+    text-align: center;
+    z-index: 3;
+}
+.stackGraphGrid {
+    position: absolute;
+    left: -20px;
+    border-bottom: 1px dotted #0f0f0f;
+    font-size: 12px;
+    width: 100%;
+    height: 18px;
+}
+.stackAlign {
+  transition: 0.3s;
+}
+.stackBuild {
+  transition: 0.3s;
+}
+.stackDeploy {
+  transition: 0.3s;
+}
+.stackComplete {
+  transition: 0.3s;
+}
+
+.quarterGraphContainer {
+    position: relative;
+    display: inline-block;
+    vertical-align: bottom;
+    white-space: nowrap;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    bottom: 0px;
+    padding-left: 2px;
+    margin-right: 15px;
+    height: 660px;
+    transition: 0.3s ease;
+}
+.quarterGraphScale {
+  position: relative;
+  display: inline-block;
+  vertical-align: bottom;
+  bottom: 0px;
+  height: 660px;
+  width: 0px;
+}
+.quarterGraphDiv {
+    position: absolute;
+    bottom: 0px;
+    height: 0px;
+    transform-origin: 50% 100%;
+    transform: scale(1,0);
+    box-shadow: 0px 1px 1px black;
+    z-index: 2;
+}
+.quarterGraphGoal {
+    position: absolute;
+    bottom: 500px;
+    left: 0px;
+    border-bottom: thin solid #ffffff;
+    font-size: 14px;
+    font-weight: bold;
+    width: 100%;
+    height: 20px;
+    box-shadow: 0px 3px 3px #000000;
+    text-shadow: 0px 2px 1px #000000;
+    text-align: center;
+    z-index: 3;
+}
+.quarterGraphGrid {
+    position: absolute;
+    left: -20px;
+    border-bottom: 1px dotted #0f0f0f;
+    font-size: 12px;
+    width: 100%;
+    height: 18px;
+}
+.quarterAlign {
+  transition: 0.3s;
+}
+.quarterBuild {
+  transition: 0.3s;
+}
+.quarterDeploy {
+  transition: 0.3s;
+}
+.quarterComplete {
+  transition: 0.3s;
+}
+
+.scoreProjectDiv {
+    position: relative;
+    width: 270px;
+    height: 100px;
+    margin: 10px 3px 0px 11px;
+    box-shadow: 0px 3px 4px black;
+    opacity: 0;
+    background-color: #0f0f0f;
+    animation-name: formerNoteFlash;
+    animation-fill-mode: forwards;
+    animation-duration: 1s;
+    animation-iteration-count: 1;
+    border-radius:1px;
+    overflow-y: hidden;
+    transition: height 0.2s, margin-top 0.2s;
+}
+.scoreOutput {
+    width: 30px;
+    padding: 1px 1px 1px 1px;
+    height: 20px;
+    font-size: 16px;
+}
+.scoreProjectTitle {
+    position: absolute;
+    left: 5px;
+    top: 5px;
+    width: auto;
+    max-width: 255px;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    white-space: nowrap;
+    height: 40px;
+    opacity: 0.9;
+    font-weight: lighter;
+    font-size: 12px;
+    text-align: left;
+    font-weight: bold;
+}
+.scoreProjectDivSubmit {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 90px;
+    height: 25px;
+    color: white;
+    text-align: center;
+    border: none;
+    box-shadow: 0px 2px 3px black;
+    text-shadow: 0px 1px 2px #000000;
+    border-radius:1px;
+    cursor: pointer;
+}
+
+.closedReport {
+    position: relative;
+    height: auto;
+    width: 190px;
+    left: 10px;
+    color: #2bb4ff;
+    font-size: 11px;
+    font-weight: bold;
+    padding-bottom: 5px;
+}
+
+.projectNote {
+    position: relative;
+    background-color: #aae4ff;
+    margin: 7px 6px 15px 6px;
+    padding: 5px 5px 5px 5px;
+    word-wrap: break-word;
+    box-shadow: 1px 3px 5px black;
+    width: 180px;
+    height: auto;
+    min-height: 50px;
+    font-size: 10px;
+    color: #000000;
+    animation-name: formerNoteFlash;
+    animation-fill-mode: forwards;
+    animation-duration: 1s;
+    animation-iteration-count: 1;
+    border-radius:1px;
+    opacity: 0;
+}
+.opportunityNote {
+    position: relative;
+    background-color: #c3bcff;
+    margin: 7px 6px 15px 6px;
+    padding: 5px 5px 5px 5px;
+    word-wrap: break-word;
+    box-shadow: 1px 3px 5px black;
+    width: 180px;
+    height: auto;
+    min-height: 50px;
+    font-size: 10px;
+    color: #000000;
+    animation-name: formerNoteFlash;
+    animation-fill-mode: forwards;
+    animation-duration: 1s;
+    animation-iteration-count: 1;
+    border-radius:1px;
+    opacity: 0;
+}
+.parentProjectNote {
+    position: relative;
+    background-color: #99ffec;
+    margin: 7px 6px 15px 6px;
+    padding: 5px 5px 5px 5px;
+    word-wrap: break-word;
+    box-shadow: 1px 3px 5px black;
+    width: 180px;
+    height: auto;
+    min-height: 50px;
+    font-size: 10px;
+    color: #000000;
+    animation-name: formerNoteFlash;
+    animation-fill-mode: forwards;
+    animation-duration: 1s;
+    animation-iteration-count: 1;
+    border-radius:1px;
+    opacity: 0;
+}
+
+.teamLegendName {
+  position: absolute;
+  left: 20px;
+  top: 1px;
+  cursor: pointer;
+}
+
+
+#wrapper {
+    position: relative;
+    background-color: #282828;
+    top: -6px;
+    left: -21px;
+    width: 102%;
+    height: auto;
+    min-height: 1000px;
+}
+#projectScoreQueue {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 300px;
+    height: auto;
+    min-height:600px;
+    margin: 10px 0px 0px 7px;
+    padding: 10px 0px 10px 0px;
+    background-color: rgba(25,25,25,0.3);
+    box-shadow: 0px 4px 5px black;
+    text-shadow: 0px 2px 1px #000000;
+    color: #ffffff;
+    font-weight: bold;
+    text-align: center;
+    font-size: 16px;
+    z-index: 2;
+}
+#teamGoalPanel {
+    position: absolute;
+    left: 320px;
+    top: 600px;
+    width: 1250px;
+    height: 50px;
+    color: #ffffff;
+    text-align: left;
+    font-size: 16px;
+    z-index: 2;
+    overflow-x: auto;
+    overflow-y: visible;
+    white-space: nowrap;
+}
+#metricPanel {
+    position: absolute;
+    overflow-x: hidden;
+    left: 320px;
+    top: 0px;
+    width: 1250px;
+    height: 660px;
+    margin: 10px 0px 0px 7px;
+    padding: 10px 0px 0px 0px;
+    background-color: rgba(25,25,25,0.3);
+    box-shadow: 0px 4px 5px black;
+    color: #ffffff;
+    text-align: left;
+    font-size: 16px;
+}
+#scalePanel {
+    position: absolute;
+    white-space: nowrap;
+    left: 0px;
+    bottom: 0px;
+    height: 660px;
+    width: 1020px;
+    z-index: 1;
+}
+#graphWrapper {
+    position: absolute;
+    white-space: nowrap;
+    left: 270px;
+    bottom: 0px;
+    height: 660px;
+    width: auto;
+    z-index: 2;
+}
+#barGraphPanel {
+    position: absolute;
+    white-space: nowrap;
+    left: 0px;
+    bottom: 0px;
+    height: 660px;
+    width: auto;
+    z-index: 2;
+    visibility: hidden;
+}
+#stackGraphPanel {
+    position: absolute;
+    white-space: nowrap;
+    left: 0px;
+    bottom: 0px;
+    height: 660px;
+    width: 100%;
+    z-index: 2;
+    visibility: hidden;
+}
+#pipelineWrapper {
+    position: absolute;
+    white-space: nowrap;
+    left: 270px;
+    top: 0px;
+    height: 660px;
+    width: auto;
+    z-index: 2;
+    visibility: hidden;
+}
+#legendPanel {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    height: 640px;
+    width: 210px;
+    box-shadow: 0px 4px 5px black;
+    background-color: #0f0f0f;
+}
+
+#userPage {
+    height:700px;
+    width:1000px;
+    padding: 5px;
+    margin:0 auto;
+    position:fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index:10;
+    display:none;
+    background-color: #ffffff;
+    border-radius:7px;
+}
+#userColorPicker {
+    position: absolute;
+    top: 12px;
+    left: 15px;
+    z-index: 12;
+    width: 50px;
+    height: 50px;
+    background-color: #ffffff;
+    border:1px solid #cccccc;
+    border-radius:3px;
+}
+#userPageTitle {
+    position: absolute;
+    top: 12px;
+    left: 80px;
+    font-size: 18px;
+    color: #000000;
+}
+#cancel {
+    display:block;
+    position:absolute;
+    top:3px;
+    right:2px;
+    color:black;
+    height:30px;
+    width:35px;
+    font-size:30px;
+    text-decoration:none;
+    text-align:center;
+    font-weight:bold;
+    cursor: pointer;
+}
+#download {
+    display:block;
+    position:absolute;
+    top:20px;
+    right:2px;
+    color:black;
+    height:30px;
+    width:35px;
+    font-size:30px;
+    text-decoration:none;
+    text-align:center;
+    font-weight:bold;
+    cursor: pointer;
+}
+#canvas {
+  position: absolute;
+  top: 170px;
+  left: 170px;
+  z-index: 1;
+}
+#canvasBack {
+  position: absolute;
+  height: 500px;
+  width: 800px;
+  top: 170px;
+  left: 170px;
+  background-color: #f2f2f2;
+  z-index: 0;
+}
+#cover {
+    position:fixed;
+    top:0;
+    left:0;
+    background:rgba(0,0,0,0.9);
+    z-index: 6;
+    width:100%;
+    height:100%;
+    display: none;
+    animation-name: coverAnim;
+    animation-fill-mode: forwards;
+    animation-duration: 5s;
+    animation-iteration-count: 1;
+}
+
+#graphLegendFrame {
+    position: absolute;
+    top: 100px;
+    left: 0px;
+    width: 210px;
+    height: auto;
+    min-height: 300px;
+    opacity: 0;
+    z-index: 2;
+    transition: opacity 0.5s;
+    visibility: hidden;
+}
+#tooltipLegendFrame {
+    position: absolute;
+    padding-left: 10px;
+    font-size: 12px;
+    top: 100px;
+    left: 0px;
+    width: 200px;
+    height: 530px;
+    background-color: #0f0f0f;
+    overflow-y: auto;
+    z-index: 5;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+#notesLegendFrame {
+    position: absolute;
+    top: 100px;
+    left: 0px;
+    width: 210px;
+    height: 530px;
+    overflow-y: auto;
+    z-index: 4;
+    visibility: hidden;
+}
+#notesLegendFrame::-webkit-scrollbar-track{
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+  background-color: none;
+}
+#notesLegendFrame::-webkit-scrollbar{
+  height: 2px;
+  width: 8px;
+    background-color: none;
+}
+#notesLegendFrame::-webkit-scrollbar-thumb{
+  background-color: #2bb4ff;
+}
+#closedReportLegendFrame {
+    position: absolute;
+    top: 100px;
+    left: 0px;
+    width: 210px;
+    height: 530px;
+    overflow-y: auto;
+    z-index: 4;
+    visibility: hidden;
+}
+#closedReportLegendFrame::-webkit-scrollbar-track{
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+  background-color: none;
+}
+#closedReportLegendFrame::-webkit-scrollbar{
+  height: 2px;
+  width: 8px;
+    background-color: none;
+}
+#closedReportLegendFrame::-webkit-scrollbar-thumb{
+  background-color: #2bb4ff;
+}
+#optionsLegendFrame {
+    position: absolute;
+    top: 100px;
+    left: 0px;
+    width: 210px;
+    height: 530px;
+    opacity: 0;
+    z-index: 2;
+    transition: opacity 0.5s;
+    visibility: hidden;
+}
+#teamLegendFrame {
+    position: absolute;
+    top: 100px;
+    left: 0px;
+    width: 210px;
+    height: auto;
+    min-height: 300px;
+    opacity: 0;
+    z-index: 2;
+    transition: opacity 0.5s;
+    visibility: hidden;
+}
+#closeQuarterLegendFrame {
+  position: absolute;
+  top: 100px;
+  left: 0px;
+  width: 210px;
+  height: auto;
+  min-height: 300px;
+  opacity: 0;
+  z-index: 2;
+  transition: opacity 0.5s;
+  visibility: hidden;
+}
+
+#debug {
+    position: absolute;
+    width: 200px;
+    height: 50px;
+    right: 10px;
+    top: 10px;
+    color: white;
+}
+
+#graphSelectButton {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    height: 30px;
+    width: 190px;
+    background-color: #2bb4ff;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0px 1px 1px black;
+    border-radius:2px;
+    opacity: 0.8;
+    cursor: pointer;
+}
+#graphSelectButton:hover {
+    opacity: 0.9;
+}
+#graphSelectButton:active {
+    opacity: 1;
+    box-shadow: 0px 0px 0px white;
+    top: 11px;
+}
+#pipelineSelectButton {
+    position: absolute;
+    top: 10px;
+    left: 110px;
+    height: 30px;
+    width: 90px;
+    color: #ffffff;
+    background-color: #2bb4ff;
+    border: none;
+    box-shadow: 0px 1px 1px black;
+    border-radius:2px;
+    opacity: 0.8;
+    cursor: pointer;
+}
+#pipelineSelectButton:hover {
+    opacity: 0.9;
+}
+#pipelineSelectButton:active {
+    opacity: 1;
+    box-shadow: 0px 0px 0px white;
+    top: 11px;
+}
+#optionsFrameButton {
+    position: absolute;
+    top: 50px;
+    left: 10px;
+    height: 30px;
+    width: 90px;
+    color: #ffffff;
+    background-color: #2bb4ff;
+    border: none;
+    box-shadow: 0px 1px 1px black;
+    border-radius:2px;
+    opacity: 0.8;
+    cursor: pointer;
+}
+#optionsFrameButton:hover {
+    opacity: 0.9;
+}
+#optionsFrameButton:active {
+    opacity: 1;
+    box-shadow: 0px 0px 0px white;
+    top: 51px;
+}
+#teamFrameButton {
+    position: absolute;
+    top: 50px;
+    left: 110px;
+    height: 30px;
+    width: 90px;
+    color: #ffffff;
+    background-color: #2bb4ff;
+    border: none;
+    box-shadow: 0px 1px 1px black;
+    border-radius:2px;
+    opacity: 0.8;
+    cursor: pointer;
+}
+#teamFrameButton:hover {
+    opacity: 0.9;
+}
+#teamFrameButton:active {
+    opacity: 1;
+    box-shadow: 0px 0px 0px white;
+    top: 51px;
+}
+
+/* Close Quarter Panel Styles */
+#closeQuarterButton {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    height: 30px;
+    width: 190px;
+    background-color: #2bb4ff;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0px 1px 1px black;
+    border-radius:2px;
+    opacity: 0.8;
+    cursor: pointer;
+}
+#closeQuarterButton:hover {
+    opacity: 0.9;
+}
+#closeQuarterButton:active {
+    opacity: 1;
+    box-shadow: 0px 0px 0px white;
+    bottom: 9px;
+}
+#closeQuarterAreYouSurePanel {
+    position: absolute;
+    left: 10px;
+    bottom: 50px;
+    height: 200px;
+    width: 190px;
+    background-color: #0a0a0a;
+    color: #ffffff;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 1s;
+}
+#closeQuarterAreYouSurePanelText {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    width: 170px;
+    height: 140px;
+    color: #2bb4ff;
+    text-align: center;
+    font-size: 12px;
+}
+#closeQuarterSelectPanel {
+    position: absolute;
+    left: 10px;
+    bottom: 50px;
+    height: 200px;
+    width: 190px;
+    background-color: #0a0a0a;
+    color: #ffffff;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 1s;
+}
+#closeQuarterSelectPanelText {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    width: 170px;
+    height: 140px;
+    color: #2bb4ff;
+    text-align: center;
+    font-size: 12px;
+}
+#closeQuarterQuarterSelect {
+    position: absolute;
+    text-align: center;
+    font-weight: bold;
+    bottom: 100px;
+    left: 10px;
+    height: 30px;
+    width: 80px;
+    border: none;
+    box-shadow: 0px 1px 1px black;
+    border-radius:2px;
+    opacity: 0.8;
+    cursor: pointer;
+}
+#closeQuarterYearSelect {
+    position: absolute;
+    text-align: center;
+    font-weight: bold;
+    bottom: 100px;
+    left: 100px;
+    height: 30px;
+    width: 80px;
+    border: none;
+    box-shadow: 0px 1px 1px black;
+    border-radius:2px;
+    opacity: 0.8;
+    cursor: pointer;
+}
+.closeQuarterYesButton {
+    position: absolute;
+    bottom: 10px;
+    left: 100px;
+    height: 30px;
+    width: 80px;
+    background-color: #2bb4ff;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0px 1px 1px black;
+    border-radius:2px;
+    opacity: 0.8;
+    cursor: pointer;
+}
+.closeQuarterYesButton:hover {
+    opacity: 0.9;
+}
+.closeQuarterYesButton:active {
+    opacity: 1;
+    box-shadow: 0px 0px 0px white;
+    bottom: 9px;
+}
+.closeQuarterNoButton {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    height: 30px;
+    width: 80px;
+    background-color: #2bb4ff;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0px 1px 1px black;
+    border-radius:2px;
+    opacity: 0.8;
+    cursor: pointer;
+}
+.closeQuarterNoButton:hover {
+    opacity: 0.9;
+}
+.closeQuarterNoButton:active {
+    opacity: 1;
+    box-shadow: 0px 0px 0px white;
+    bottom: 9px;
+}
+
+
+</style>
+
+</head>
+
+<!-- HTML Body -->
+<Body>
+<div id="wrapper">
+  <div id="projectScoreQueue">PROJECT SCORE QUEUE</div>
+  <a id="downloadAnchorElem"></a>
+  <div id="metricPanel">
+      <div id="legendPanel">
+          <input type="button" id="graphSelectButton"  value="Select Graph" onclick="legendView('graph')"></input>
+          <input type="button" id="optionsFrameButton" value="Options"      onclick="legendView('options')"></input>
+          <input type="button" id="teamFrameButton"    value="Team"         onclick="legendView('team')"></input>
+          <div id="graphLegendFrame">
+              <div id="barGraphSelect" class="legendDiv"><input name="graphRadio" type="radio" id="barGraphRadio" onchange="graphSelect('bar')"></input>Current Quarter Bar</div>
+              <div id="stackGraphSelect" class="legendDiv"><input name="graphRadio" type="radio" id="stackGraphRadio" onchange="graphSelect('stack')"></input>Current Quarter Stack</div>
+              <div id="progressGraphSelect" class="legendDiv"><input name="graphRadio" type="radio" id="progressGraphRadio" onchange="graphSelect('progress')"></input>Quarterly Progress</div>
+              <div id="pipelineGraphSelect" class="legendDiv"><input name="graphRadio" type="radio" id="pipelineGraphRadio" onchange="graphSelect('pipeline')"></input>Pipeline</div>
+          </div>
+          <div id="notesLegendFrame"></div>
+          <div id="closedReportLegendFrame"></div>
+          <div id="tooltipLegendFrame"></div>
+          <div id="optionsLegendFrame">
+              <div id="alignLegend"    class="legendDiv"><input type="checkbox" id="alignCheckBox"    onchange="updatePhases('align')"    checked="checked"></input>Align Scores</div>
+              <div id="buildLegend"    class="legendDiv"><input type="checkbox" id="buildCheckBox"    onchange="updatePhases('build')"    checked="checked"></input>Build Scores</div>
+              <div id="deployLegend"   class="legendDiv"><input type="checkbox" id="deployCheckBox"   onchange="updatePhases('deploy')"   checked="checked"></input>Deploy Scores</div>
+              <div id="completeLegend" class="legendDiv"><input type="checkbox" id="completeCheckBox" onchange="updatePhases('complete')" checked="checked"></input>Complete Scores</div>
+              <div id="gridLegend"     class="legendDiv"><input type="checkbox" id="gridCheckBox"     onchange="updateGrid()"             checked="checked"></input>Show Grid Lines</div>
+              <div id="goalLegend"     class="legendDiv"><input type="checkbox" id="goalCheckBox"     onchange="updateGoals()"            checked="checked"></input>Personal Goals</div>
+              <div id="closeQuarterAreYouSurePanel">
+                  <label id="closeQuarterAreYouSurePanelText"></label>
+                  <input type="button" class="closeQuarterYesButton"  value="Yes" onclick="closeQuarter()"></input>
+                  <input type="button" class="closeQuarterNoButton"   value="No"  onclick="closeQuarterAreYouSure()"></input>
+              </div>
+              <div id="closeQuarterSelectPanel">
+                  <label id="closeQuarterSelectPanelText"></label>
+                  <select type="List" id="closeQuarterQuarterSelect"></select>
+                  <select type="List" id="closeQuarterYearSelect"></select>
+                  <input type="button" class="closeQuarterYesButton" value="Submit" onclick="closeQuarterAreYouSure()"></input>
+                  <input type="button" class="closeQuarterNoButton"  value="Cancel" onclick="closeQuarterSelect()"></input>
+              </div>
+              <input type="button" id="closeQuarterButton" value="Close Quarter" onclick="closeQuarterSelect()"></input>
+          </div>
+          <div id="teamLegendFrame">
+              <div id="legendAll" class="legendDiv"><input type="checkbox" id="checkboxAll" onchange="selectAll()" checked="checked"></input>Select All</div>
+          </div>
+      </div>
+      <div id="debug"></div>
+      <div id="graphWrapper">
+        <div id="barGraphPanel"></div>
+        <div id="stackGraphPanel"></div>
+        <div id="timeGraphPanel"></div>
+        <div id="scalePanel">
+            <div id="grid1" class="barGraphGrid" style="bottom:60px;" >10</div>
+            <div id="grid2" class="barGraphGrid" style="bottom:120px;" >20</div>
+            <div id="grid3" class="barGraphGrid" style="bottom:180px;" >30</div>
+            <div id="grid4" class="barGraphGrid" style="bottom:240px;" >40</div>
+            <div id="grid5" class="barGraphGrid" style="bottom:300px;" >50</div>
+            <div id="grid6" class="barGraphGrid" style="bottom:360px;" >60</div>
+            <div id="grid7" class="barGraphGrid" style="bottom:420px;" >70</div>
+            <div id="grid8" class="barGraphGrid" style="bottom:480px;" >80</div>
+            <div id="grid9" class="barGraphGrid" style="bottom:540px;" >90</div>
+            <div id="grid10" class="barGraphGrid" style="bottom:600px;" >100</div>
+        </div>
+      </div>
+      <div id="pipelineWrapper"></div>
+  </div>
+
+  <div id="userPage">
+      <a id="cancel" onclick="closeTeamMemberPage()">&times;</a>
+      <a id="download" onclick="downloadUserQuarterData()">XYZ</a>
+      <div id="userPageTitle"></div>
+      <input type="color" id="userColorPicker" value=""></input>
+      <canvas id="canvas" width="800px" height="500px">
+      Your browser does not support the HTML5 canvas tag.
+      </canvas>
+      <div id="canvasBack"></div>
+  </div>
+  <div id="cover" onclick="closeTeamMemberPage()"></div>
+</div>
+</Body>
+</HTML>
+
+<!-- Javascript Begin -->
+<script>
+
+var resultTeamObj, recordTeamCount, resultProjectObj, recordProjectCount, selectedUser;
+var highestProjectTotal = 0, stackHeightPixelAdjuster = 0;
+var projectScoreList = []; teamScores = {};
+var quote = '"';
+var Color = document.getElementById("userColorPicker");
+
+// Canvas Data
+var timer;
+var yTicker = 0, xTicker = 0;
+var canvas  = document.getElementById("canvas");
+var context = canvas.getContext("2d");
+var cWidth  = canvas.width;
+var cHeight = canvas.height;
+
+// Test Canvas Data
+var index = [];
+index[0] = 150;
+index[1] = 300;
+index[2] = 230;
+index[3] = 500;
+var indexCount = Object.keys(index).length;
+var xCount     = indexCount * 10;
+
+parseResultJSON();
+populateLegend();
+closeQuarterSetup();
+calculateStackHeight();
+createBarGraph();
+createStackedGraph();
+populatePipelines();
+getScorableProjectsFromController();
+setInterval(function(){ getScorableProjectsFromController(); }, 300000);
+
+Color.addEventListener("input", function() {
+    colorUpdate(userPageId, Color.value, userId);
+}, false);
+
+//---------- JS Functions ------------//
+
+function parseResultJSON() {
+
+  var apexTeamResult = '{!resultTeamString}';
+  apexTeamResult = sanitizeJSON(apexTeamResult);
+  resultTeamObj = JSON.parse(apexTeamResult);
+  recordTeamCount = Object.keys(resultTeamObj).length;
+  for (var i=0; i < recordTeamCount; i++) {
+      if (!resultTeamObj[i].ES_Project_Quarter_Goal__c) { resultTeamObj[i].ES_Project_Quarter_Goal__c = 0 }
+      if (!resultTeamObj[i].ES_User_Color__c) { resultTeamObj[i].ES_User_Color__c = '#30c1ff' }
+      if (!resultTeamObj[i].ES_Project_History__c) { resultTeamObj[i].ES_Project_History__c = '' }
+
+      var teamId = resultTeamObj[i].Id;
+
+      teamScores[teamId + 'align'] = 0;
+      teamScores[teamId + 'build'] = 0;
+      teamScores[teamId + 'deploy'] = 0;
+      teamScores[teamId + 'complete'] = 0;
+
+      teamScores[teamId + 'alignHTML'] = '<b>' + resultTeamObj[i].Name + ' Align</b></br></br>';
+      teamScores[teamId + 'buildHTML'] = '<b>' + resultTeamObj[i].Name + ' Build</b></br></br>';
+      teamScores[teamId + 'deployHTML'] = '<b>' + resultTeamObj[i].Name + ' Deploy</b></br></br>';
+      teamScores[teamId + 'completeHTML'] = '<b>' + resultTeamObj[i].Name + ' Complete</b></br></br>';
+
+      teamScores[teamId + 'projectList'] = ""
+  }
+
+  var apexProjectResult = '{!resultProjectString}';
+  apexProjectResult = sanitizeJSON(apexProjectResult);
+  resultProjectObj = JSON.parse(apexProjectResult);
+  //resultProjectObj = apexProjectResult
+  recordProjectCount = Object.keys(resultProjectObj).length;
+  for (var i=0; i < recordProjectCount; i++) {
+      if (!resultProjectObj[i].ES_PrevQ_PercentComplete__c) { resultProjectObj[i].ES_PrevQ_PercentComplete__c = 0 }
+      if (resultProjectObj[i].Opportunity__r)               { resultProjectObj[i].OppId       = resultProjectObj[i].Opportunity__r.Id } else { resultProjectObj[i].OppId       = '0' }
+      if (resultProjectObj[i].Account__r)                   { resultProjectObj[i].AccountName = resultProjectObj[i].Account__r.Name   } else { resultProjectObj[i].AccountName = ''  }
+
+      var percentPrevious      = resultProjectObj[i].ES_PrevQ_PercentComplete__c;
+      var percentTotal         = resultProjectObj[i].PercentComplete__c;
+      var percentCompleted     = percentTotal - percentPrevious;
+
+      resultProjectObj[i].percentCompleted     = percentCompleted;
+      resultProjectObj[i].projectPointsEarned  = (resultProjectObj[i].Project_Score__c * (percentCompleted / 100)).toFixed(2);
+
+      var teamId = resultProjectObj[i].OwnerId;
+      switch (resultProjectObj[i].Phase_Status__c) {
+          case 'Closed':
+          case 'Completed':
+              var currentScore = teamScores[teamId + 'complete'];
+              var currentHTML = teamScores[teamId + 'completeHTML'];
+              teamScores[teamId + 'complete'] = currentScore + resultProjectObj[i].Project_Score__c;
+              teamScores[teamId + 'completeHTML'] = currentHTML + resultProjectObj[i].Name + ' | ' + resultProjectObj[i].AccountName + '</br>' + resultProjectObj[i].Summary__c + '</br></br>';
+              break;
+
+          case 'Deploy':
+              var currentScore = teamScores[teamId + 'deploy'];
+              var currentHTML = teamScores[teamId + 'deployHTML'];
+              teamScores[teamId + 'deploy'] = currentScore + resultProjectObj[i].Project_Score__c;
+              teamScores[teamId + 'deployHTML'] = currentHTML + resultProjectObj[i].Name + ' | ' + resultProjectObj[i].AccountName + '</br>' + resultProjectObj[i].Summary__c + '</br></br>';
+              break;
+
+          case 'Build':
+              var currentScore = teamScores[teamId + 'build'];
+              var currentHTML = teamScores[teamId + 'buildHTML'];
+              teamScores[teamId + 'build'] = currentScore + resultProjectObj[i].Project_Score__c;
+              teamScores[teamId + 'buildHTML'] = currentHTML + resultProjectObj[i].Name + ' | ' + resultProjectObj[i].AccountName + '</br>' + resultProjectObj[i].Summary__c + '</br></br>';
+              break;
+
+          case 'Align':
+          default:
+              var currentScore = teamScores[teamId + 'align'];
+              var currentHTML = teamScores[teamId + 'alignHTML'];
+              teamScores[teamId + 'align'] = currentScore + resultProjectObj[i].Project_Score__c;
+              teamScores[teamId + 'alignHTML'] = currentHTML + resultProjectObj[i].Name + ' | ' + resultProjectObj[i].AccountName + '</br>' + resultProjectObj[i].Summary__c + '</br></br>';
+              break;
+      }
+      var projectList = teamScores[teamId + 'projectList'];
+
+      if (!projectList) {
+          teamScores[teamId + 'projectList'] = resultProjectObj[i].Id + ";" + resultProjectObj[i].Name + ";" + resultProjectObj[i].percentCompleted + ";" + resultProjectObj[i].projectPointsEarned;
+      } else {
+          teamScores[teamId + 'projectList'] = projectList + ',' + resultProjectObj[i].Id + ";" + resultProjectObj[i].Name + ";" + resultProjectObj[i].percentCompleted + ";" + resultProjectObj[i].projectPointsEarned;
+      }
+  }
+}
+
+// Graph Creation Functions
+function createBarGraph() {
+  barGraphWidth = calculateBarWidth('bar');
+  barContainerWidth = calculateBarWidth('container');
+
+  for (var i=0; i < recordTeamCount; i++) {
+
+      var teamId = resultTeamObj[i].Id;
+      var alignheight = (teamScores[teamId + 'align'] * stackHeightPixelAdjuster) + 'px';
+      var buildheight = (teamScores[teamId + 'build'] * stackHeightPixelAdjuster) + 'px';
+      var deployheight = (teamScores[teamId + 'deploy'] * stackHeightPixelAdjuster) + 'px';
+      var completeheight = (teamScores[teamId + 'complete'] * stackHeightPixelAdjuster) + 'px';
+
+      var scaleBar = '<div id="scale' + i + '" class="barGraphScale" ></div>';
+
+      var alignBar = '<div data-teamId="' + teamId + '" id="barAlign' + i + '" class="barGraphDiv align" onmouseenter="tooltip(\'enter\',\'bar\',\'Align\',\'' + i + '\')" onmouseout="tooltip(\'out\',\'bar\',\'Align\',\'' + i + '\')"></div>';
+      var buildBar = '<div data-teamId="' + teamId + '" id="barBuild' + i + '" class="barGraphDiv build" onmouseenter="tooltip(\'enter\',\'bar\',\'Build\',\'' + i + '\')" onmouseout="tooltip(\'out\',\'bar\',\'Build\',\'' + i + '\')"></div>';
+      var deployBar = '<div data-teamId="' + teamId + '" id="barDeploy' + i + '" class="barGraphDiv deploy" onmouseenter="tooltip(\'enter\',\'bar\',\'Deploy\',\'' + i + '\')" onmouseout="tooltip(\'out\',\'bar\',\'Deploy\',\'' + i + '\')"></div>';
+      var completeBar = '<div data-teamId="' + teamId + '" id="barComplete' + i + '" class="barGraphDiv complete" onmouseenter="tooltip(\'enter\',\'bar\',\'Complete\',\'' + i + '\')" onmouseout="tooltip(\'out\',\'bar\',\'Complete\',\'' + i + '\')"></div>';
+
+      var goalBox = '<div class="barGraphGoal" id="goal' + i + '">' +  resultTeamObj[i].ES_Project_Quarter_Goal__c + '</div>';
+
+      var userColor = resultTeamObj[i].ES_User_Color__c;
+      var alignColor = LightenDarkenColor(userColor, .5);
+      var buildColor = LightenDarkenColor(userColor, .2);
+      var deployColor = LightenDarkenColor(userColor, -.2);
+      var completeColor = LightenDarkenColor(userColor, -.5);
+
+      var newDiv = document.createElement('div');
+      newDiv.id = 'barGraphContainer' + i;
+      newDiv.name = resultTeamObj[i].Id;
+      newDiv.className = 'barGraphContainer';
+      newDiv.style.width = barContainerWidth;
+      newDiv.innerHTML = scaleBar + alignBar + buildBar + deployBar + completeBar + goalBox;
+      document.getElementById('barGraphPanel').appendChild(newDiv);
+
+      document.getElementById('barAlign' + i).style.height = alignheight;
+      document.getElementById('barAlign' + i).style.backgroundColor = alignColor;
+
+      document.getElementById('barBuild' + i).style.height = buildheight;
+      document.getElementById('barBuild' + i).style.backgroundColor = buildColor;
+
+      document.getElementById('barDeploy' + i).style.height = deployheight;
+      document.getElementById('barDeploy' + i).style.backgroundColor = deployColor;
+
+      document.getElementById('barComplete' + i).style.height = completeheight;
+      document.getElementById('barComplete' + i).style.backgroundColor = completeColor;
+
+      document.getElementById('goal' + i).style.bottom = resultTeamObj[i].ES_Project_Quarter_Goal__c * stackHeightPixelAdjuster + 'px';
+      document.getElementById('goal' + i).style.color = userColor;
+      document.getElementById('goal' + i).style.borderBottom = 'thick solid ' + userColor;
+    }
+
+    var x = document.getElementsByClassName('barGraphDiv');
+    for (var i=0; i < x.length; i++) {
+        x[i].style.width = barGraphWidth;
+    }
+}
+function createStackedGraph() {
+  barGraphWidth = calculateBarWidth('stack');
+  barContainerWidth = calculateBarWidth('container');
+
+  for (var i=0; i < recordTeamCount; i++) {
+
+      var teamId = resultTeamObj[i].Id;
+      var alignheight = (teamScores[teamId + 'align'] * stackHeightPixelAdjuster);
+      var buildheight = (teamScores[teamId + 'build'] * stackHeightPixelAdjuster);
+      var deployheight = (teamScores[teamId + 'deploy'] * stackHeightPixelAdjuster);
+      var completeheight = (teamScores[teamId + 'complete'] * stackHeightPixelAdjuster);
+
+      var alignBar = '<div data-teamId="' + teamId + '" id="stackAlign' + i + '" class="stackGraphDiv stackAlign" onmouseenter="tooltip(\'enter\',\'stack\',\'Align\',\'' + i + '\')" onmouseout="tooltip(\'out\',\'stack\',\'Align\',\'' + i + '\')"></div>';
+      var buildBar = '<div data-teamId="' + teamId + '" id="stackBuild' + i + '" class="stackGraphDiv stackBuild" onmouseenter="tooltip(\'enter\',\'stack\',\'Build\',\'' + i + '\')" onmouseout="tooltip(\'out\',\'stack\',\'Build\',\'' + i + '\')"></div>';
+      var deployBar = '<div data-teamId="' + teamId + '" id="stackDeploy' + i + '" class="stackGraphDiv stackDeploy" onmouseenter="tooltip(\'enter\',\'stack\',\'Deploy\',\'' + i + '\')" onmouseout="tooltip(\'out\',\'stack\',\'Deploy\',\'' + i + '\')"></div>';
+      var completeBar = '<div data-teamId="' + teamId + '" id="stackComplete' + i + '" class="stackGraphDiv stackComplete" onmouseenter="tooltip(\'enter\',\'stack\',\'Complete\',\'' + i + '\')" onmouseout="tooltip(\'out\',\'stack\',\'Complete\',\'' + i + '\')"></div>';
+
+      var goalBox = '<div class="barGraphGoal" id="goalStack' + i + '">' +  resultTeamObj[i].ES_Project_Quarter_Goal__c + '</div>';
+
+      var userColor = resultTeamObj[i].ES_User_Color__c;
+      var alignColor = LightenDarkenColor(userColor, .5);
+      var buildColor = LightenDarkenColor(userColor, .2);
+      var deployColor = LightenDarkenColor(userColor, -.2);
+      var completeColor = LightenDarkenColor(userColor, -.5);
+
+      var newDiv = document.createElement('div');
+      newDiv.id = 'stackGraphContainer' + i;
+      newDiv.name = resultTeamObj[i].Id;
+      newDiv.className = 'stackGraphContainer';
+      newDiv.style.width = barContainerWidth;
+      newDiv.innerHTML = alignBar + buildBar + deployBar + completeBar + goalBox;
+      document.getElementById('stackGraphPanel').appendChild(newDiv);
+
+      document.getElementById('stackAlign' + i).style.height = alignheight + 'px';
+      document.getElementById('stackAlign' + i).style.backgroundColor = alignColor;
+
+      document.getElementById('stackBuild' + i).style.height = buildheight + 'px';
+      document.getElementById('stackBuild' + i).style.backgroundColor = buildColor;
+
+      document.getElementById('stackDeploy' + i).style.height = deployheight + 'px';
+      document.getElementById('stackDeploy' + i).style.backgroundColor = deployColor;
+
+      document.getElementById('stackComplete' + i).style.height = completeheight + 'px';
+      document.getElementById('stackComplete' + i).style.backgroundColor = completeColor;
+
+      document.getElementById('goalStack' + i).style.bottom = resultTeamObj[i].ES_Project_Quarter_Goal__c * stackHeightPixelAdjuster + 'px';
+      document.getElementById('goalStack' + i).style.color = userColor;
+      document.getElementById('goalStack' + i).style.borderBottom = 'thick solid ' + userColor;
+    }
+
+    var x = document.getElementsByClassName('stackGraphDiv');
+    for (var i=0; i < x.length; i++) {
+        x[i].style.width = barGraphWidth;
+    }
+}
+function createQuarterGraph() {
+  barGraphWidth = calculateBarWidth('stack');
+  barContainerWidth = calculateBarWidth('container');
+
+  for (var i=0; i < recordTeamCount; i++) {
+
+      var teamId = resultTeamObj[i].Id;
+      var alignheight = (teamScores[teamId + 'align'] * stackHeightPixelAdjuster);
+      var buildheight = (teamScores[teamId + 'build'] * stackHeightPixelAdjuster);
+      var deployheight = (teamScores[teamId + 'deploy'] * stackHeightPixelAdjuster);
+      var completeheight = (teamScores[teamId + 'complete'] * stackHeightPixelAdjuster);
+
+      var alignBar = '<div data-teamId="' + teamId + '" id="quarterAlign' + i + '" class="stackGraphDiv quarterAlign" onmouseenter="tooltip(\'enter\',\'Stack\',\'align\',\'' + i + '\')" onmouseout="tooltip(\'out\',\'Stack\',\'align\',\'' + i + '\')"></div>';
+      var buildBar = '<div data-teamId="' + teamId + '" id="quarterBuild' + i + '" class="stackGraphDiv quarterBuild" onmouseenter="tooltip(\'enter\',\'Stack\',\'build\',\'' + i + '\')" onmouseout="tooltip(\'out\',\'Stack\',\'build\',\'' + i + '\')"></div>';
+      var deployBar = '<div data-teamId="' + teamId + '" id="quarterDeploy' + i + '" class="stackGraphDiv quarterDeploy" onmouseenter="tooltip(\'enter\',\'Stack\',\'deploy\',\'' + i + '\')" onmouseout="tooltip(\'out\',\'Stack\',\'deploy\',\'' + i + '\')"></div>';
+      var completeBar = '<div data-teamId="' + teamId + '" id="quarterComplete' + i + '" class="stackGraphDiv quarterComplete" onmouseenter="tooltip(\'enter\',\'Stack\',\'complete\',\'' + i + '\')" onmouseout="tooltip(\'out\',\'Stack\',\'complete\',\'' + i + '\')"></div>';
+
+      var goalBox = '<div class="barGraphGoal" id="goalStack' + i + '">' +  resultTeamObj[i].ES_Project_Quarter_Goal__c + '</div>';
+
+      var userColor = resultTeamObj[i].ES_User_Color__c;
+      var alignColor = LightenDarkenColor(userColor, .5);
+      var buildColor = LightenDarkenColor(userColor, .2);
+      var deployColor = LightenDarkenColor(userColor, -.2);
+      var completeColor = LightenDarkenColor(userColor, -.5);
+
+      var newDiv = document.createElement('div');
+      newDiv.id = 'stackGraphContainer' + i;
+      newDiv.name = resultTeamObj[i].Id;
+      newDiv.className = 'stackGraphContainer';
+      newDiv.style.width = barContainerWidth;
+      newDiv.innerHTML = alignBar + buildBar + deployBar + completeBar + goalBox;
+      document.getElementById('stackGraphPanel').appendChild(newDiv);
+
+      document.getElementById('quarterAlign' + i).style.height = alignheight + 'px';
+      document.getElementById('quarterAlign' + i).style.backgroundColor = alignColor;
+
+      document.getElementById('quarterBuild' + i).style.height = buildheight + 'px';
+      document.getElementById('quarterBuild' + i).style.backgroundColor = buildColor;
+
+      document.getElementById('quarterDeploy' + i).style.height = deployheight + 'px';
+      document.getElementById('quarterDeploy' + i).style.backgroundColor = deployColor;
+
+      document.getElementById('quarterComplete' + i).style.height = completeheight + 'px';
+      document.getElementById('quarterComplete' + i).style.backgroundColor = completeColor;
+
+      document.getElementById('goalQuarter' + i).style.bottom = resultTeamObj[i].ES_Project_Quarter_Goal__c * 6 + 'px';
+      document.getElementById('goalQuarter' + i).style.color = userColor;
+      document.getElementById('goalQuarter' + i).style.borderBottom = 'thick solid ' + userColor;
+    }
+
+    var x = document.getElementsByClassName('stackGraphDiv');
+    for (var i=0; i < x.length; i++) {
+        x[i].style.width = barGraphWidth;
+    }
+}
+function createOverTimeGraph() {}
+function populatePipelines() {
+
+    for (var i=0; i < recordTeamCount; i++) {
+
+        var newDiv = document.createElement('div');
+        newDiv.id = 'pipelineContainer' + i;
+        newDiv.name = resultTeamObj[i].Id;
+        newDiv.className = 'pipelineContainer';
+        newDiv.innerHTML = '';
+        document.getElementById('pipelineWrapper').appendChild(newDiv);
+    }
+}
+
+// Legend Panel Functions
+function populateLegend() {
+
+    //Create Legend Entry for every Team Member
+    for (var i=0; i < recordTeamCount; i++) {
+
+        var newDiv = document.createElement('div');
+
+        var checkBox = '<input type="checkbox" name="' + resultTeamObj[i].Id + '" value="' + resultTeamObj[i].Id + '" id="checkbox' + i + '" onchange="updateMembers(\'' + i + '\')" checked>';
+        //var colorButton = '<input type="color" class="legendColor" id="legendColor' + resultTeamObj[i].Id + '" value="' + resultTeamObj[i].ES_User_Color__c + '" oninput="updateUserColor(\'' + resultTeamObj[i].Id + '\',\'' + i + '\')"></input>';
+
+        newDiv.id = 'legend' + i;
+        newDiv.name = resultTeamObj[i].Id;
+        newDiv.className = 'legendDiv';
+        newDiv.style.color = resultTeamObj[i].ES_User_Color__c;
+        newDiv.innerHTML = checkBox + '<div id="legend' + resultTeamObj[i].Name + '" class="teamLegendName" onclick="openTeamMemberPage(\'' + i + '\')">' + resultTeamObj[i].Name + '</div>';
+        document.getElementById('teamLegendFrame').appendChild(newDiv);
+    }
+}
+function legendView(view) {
+
+    var setPage = document.getElementById('optionsLegendFrame');
+    var teamPage = document.getElementById('teamLegendFrame');
+    var graphPage = document.getElementById('graphLegendFrame');
+
+    var setButton = document.getElementById('optionsFrameButton');
+    var teamButton = document.getElementById('teamFrameButton');
+    var graphButton = document.getElementById('graphSelectButton');
+
+    document.getElementById('notesLegendFrame').style.visibility = 'hidden';
+    document.getElementById('closedReportLegendFrame').style.visibility = 'hidden';
+    teamPage.style.opacity = '0'; teamPage.style.visibility = 'hidden'; teamButton.style.opacity = '0.8'; teamLegendState = 'closed';
+    graphPage.style.opacity = '0'; graphPage.style.visibility = 'hidden'; graphButton.style.opacity = '0.8'; graphState = 'closed';
+    setPage.style.opacity = '0'; setPage.style.visibility = 'hidden'; setButton.style.opacity = '0.8'; optionsState = 'closed';
+
+    switch (view) {
+        case 'options': setPage.style.opacity = '1'; setPage.style.visibility = 'visible'; setButton.style.opacity = '1'; optionsState = 'open'; break;
+        case 'team': teamPage.style.opacity = '1'; teamPage.style.visibility = 'visible'; teamButton.style.opacity = '1'; teamLegendState = 'open'; break;
+        case 'graph': graphPage.style.opacity = '1'; graphPage.style.visibility = 'visible'; graphButton.style.opacity = '1'; graphState = 'open'; break;
+    }
+}
+function graphSelect(view) {
+
+    var barPanel = document.getElementById('barGraphPanel');
+    var stackPanel = document.getElementById('stackGraphPanel');
+
+    var x = document.getElementsByClassName('stackGraphDiv');
+    for (var i=0; i < x.length; i++) {
+        x[i].style.transform = 'scale(1,0) translate(0px, 0px)';
+    }
+    var x = document.getElementsByClassName('barGraphDiv');
+    for (var i=0; i < x.length; i++) {
+        x[i].style.transform = 'scale(1,0)';
+    }
+
+    setTimeout(function(){
+
+        barPanel.style.visibility = 'hidden';
+        stackPanel.style.visibility = 'hidden';
+
+        switch (view) {
+            case 'stack':
+                stackPanel.style.visibility = 'visible';
+                var alignCheckState = document.getElementById('alignCheckBox');
+                var buildCheckState = document.getElementById('buildCheckBox');
+                var deployCheckState = document.getElementById('deployCheckBox');
+                var completeCheckState = document.getElementById('completeCheckBox');
+                for (var i=0; i < recordTeamCount; i++) {
+
+                  var teamId = resultTeamObj[i].Id;
+                  if (alignCheckState.checked) { var alignheight = (teamScores[teamId + 'align'] * stackHeightPixelAdjuster); var alignBarScale = "Scale(1,1)" } else { var alignheight = 0; var alignBarScale = "Scale(1,0)" }
+                  if (buildCheckState.checked) { var buildheight = (teamScores[teamId + 'build'] * stackHeightPixelAdjuster); var buildBarScale = "Scale(1,1)" } else { var buildheight = 0; var buildBarScale = "Scale(1,0)" }
+                  if (deployCheckState.checked) { var deployheight = (teamScores[teamId + 'deploy'] * stackHeightPixelAdjuster); var deployBarScale = "Scale(1,1)" } else { var deployheight = 0; var deployBarScale = "Scale(1,0)" }
+                  if (completeCheckState.checked) { var completeheight = (teamScores[teamId + 'complete'] * stackHeightPixelAdjuster); var completeBarScale = "Scale(1,1)" } else { var completeheight = 0; var completeBarScale = "Scale(1,0)" }
+
+                  var alignDisplace = buildheight + deployheight + completeheight;
+                  var buildDisplace = deployheight + completeheight;
+                  var deployDisplace = completeheight;
+
+                  document.getElementById('stackAlign' + i).style.transform = alignBarScale + ' translate(0px, -' + alignDisplace + 'px)';
+                  document.getElementById('stackBuild' + i).style.transform = buildBarScale + ' translate(0px, -' + buildDisplace + 'px)';
+                  document.getElementById('stackDeploy' + i).style.transform = deployBarScale + ' translate(0px, -' + deployDisplace + 'px)';
+                  document.getElementById('stackComplete' + i).style.transform = completeBarScale + ' translate(0px, 0px)';
+                }
+                break;
+            case 'bar':
+            default:
+                barPanel.style.visibility = 'visible';
+                var x = document.getElementsByClassName('barGraphDiv');
+                for (var i=0; i < x.length; i++) {
+                    x[i].style.transform = 'scale(1,1)';
+                }
+                break;
+        }
+    }, 600);
+
+}
+function selectAll() {
+    var checkStatus = document.getElementById('checkboxAll');
+    if (checkStatus.checked) {
+        for (var i=0; i < recordTeamCount; i++) {
+            document.getElementById('checkbox' + i).checked = true;
+        }
+    } else {
+        for (var i=0; i < recordTeamCount; i++) {
+            document.getElementById('checkbox' + i).checked = false;
+        }
+    }
+    updateMembers();
+}
+function updateUserColor(userId, id) {
+
+    var newColor = document.getElementById('legendColor' + userId).value;
+    resultTeamObj[id].ES_User_Color__c = newColor;
+
+    passUserColorToController(userId, newColor);
+
+    var alignColor = LightenDarkenColor(newColor, .5);
+    var buildColor = LightenDarkenColor(newColor, .2);
+    var deployColor = LightenDarkenColor(newColor, -.2);
+    var completeColor = LightenDarkenColor(newColor, -.5);
+
+    document.getElementById('legend' + id).style.color = newColor;
+    document.getElementById('align' + id).style.backgroundColor = alignColor;
+    document.getElementById('build' + id).style.backgroundColor = buildColor;
+    document.getElementById('deploy' + id).style.backgroundColor = deployColor;
+    document.getElementById('complete' + id).style.backgroundColor = completeColor;
+    document.getElementById('goal' + id).style.color = newColor;
+    document.getElementById('goal' + id).style.borderBottom = 'thick solid ' + newColor;
+
+    var elementList = document.querySelectorAll(".ID" + userId);
+    for (i=0; i < elementList.length; i++) { elementList[i].style.color = newColor; }
+
+    var elementButtonList = document.querySelectorAll(".IDB" + userId);
+    for (i=0; i < elementButtonList.length; i++) { elementButtonList[i].style.backgroundColor = newColor; }
+}
+function projectNotesOpen(id, oppId, pProjId) {
+
+    var setPage = document.getElementById('optionsLegendFrame');
+    var teamPage = document.getElementById('teamLegendFrame');
+    var setButton = document.getElementById('optionsFrameButton');
+    var teamButton = document.getElementById('teamFrameButton');
+    teamPage.style.opacity = '0'; teamPage.style.visibility = 'hidden'; teamButton.style.opacity = '0.8'; teamLegendState = 'closed';
+    setPage.style.opacity = '0'; setPage.style.visibility = 'hidden'; setButton.style.opacity = '0.8'; optionsState = 'closed';
+
+    var element = document.getElementById("notesLegendFrame");
+    element.parentNode.removeChild(element);
+
+    var newDiv = document.createElement('div');
+    newDiv.id = 'notesLegendFrame';
+
+    document.getElementById('legendPanel').appendChild(newDiv);
+    document.getElementById('notesLegendFrame').style.visibility = 'visible';
+    getOppNotesFromController(oppId);
+    setTimeout(function(){ getParentProjNotesFromController(pProjId); }, 300);
+    setTimeout(function(){ getProjNotesFromController(id); }, 600);
+}
+function tooltip(action, graph, bar, id) {
+
+    var teamId = resultTeamObj[id].Id;
+    var userColor = resultTeamObj[id].ES_User_Color__c;
+
+    switch (bar) {
+      case 'Build': exitColor = LightenDarkenColor(userColor, .2); enterColor = LightenDarkenColor(userColor, .3); break;
+      case 'Deploy': exitColor = LightenDarkenColor(userColor, -.2); enterColor = LightenDarkenColor(userColor, -.1); break;
+      case 'Complete': exitColor = LightenDarkenColor(userColor, -.5); enterColor = LightenDarkenColor(userColor, -.4); break;
+      case 'Align':
+      default: exitColor = LightenDarkenColor(userColor, .5); enterColor = LightenDarkenColor(userColor, .6); break;
+    }
+
+    switch (action) {
+      case 'enter':
+          document.getElementById('tooltipLegendFrame').style.visibility = 'visible';
+          document.getElementById('tooltipLegendFrame').style.opacity = 1;
+          document.getElementById('tooltipLegendFrame').style.color = userColor;
+          var barLower = bar.toLowerCase();
+          document.getElementById('tooltipLegendFrame').innerHTML = teamScores[teamId + barLower + 'HTML'];
+          document.getElementById(graph + bar + id).style.backgroundColor = enterColor;
+          break;
+      case 'out':
+      default:
+          document.getElementById('tooltipLegendFrame').style.opacity = 0;
+          document.getElementById(graph + bar + id).style.backgroundColor = exitColor;
+          document.getElementById('tooltipLegendFrame').style.visibility = 'hidden';
+          break;
+    }
+}
+
+// Quarter Close Functions
+function closeQuarterSetup() {
+    document.getElementById('closeQuarterAreYouSurePanel').style.visibility = 'hidden';
+    document.getElementById('closeQuarterSelectPanel').style.visibility     = 'hidden';
+
+    var dateStamp       = quarterStamp();
+    var d               = new Date();
+    var currentYear     = d.getFullYear();
+    var lastYear        = currentYear - 1;
+    var currentQuarter  = dateStamp.charAt(5);
+    var quarterListText = "";
+
+    for (var i = 1; i < 5; i++) {
+        if (i == currentQuarter) { quarterListText = quarterListText + '<option value="' + i + '" selected>' + i + '</option>' } else { quarterListText = quarterListText + '<option value="' + i + '">' + i + '</option>' }
+    }
+
+    document.getElementById('closeQuarterQuarterSelect').innerHTML = quarterListText;
+    document.getElementById('closeQuarterYearSelect').innerHTML    = '<option value="' + currentYear + '" selected>' + currentYear + '</option><option value="' + lastYear + '">' + lastYear + '</option>';
+}
+function closeQuarterAreYouSure(selectedQuarter, selectedYear) {
+
+    document.getElementById('closeQuarterSelectPanel').style.visibility = 'hidden';
+
+    var selectedQuarter     = document.getElementById('closeQuarterQuarterSelect').value;
+    var selectedYear        = document.getElementById('closeQuarterYearSelect').value;
+
+    switch (selectedQuarter) {
+        case '1': var quarterName = 'first';  var quarterNum = '1st'; break;
+        case '2': var quarterName = 'second'; var quarterNum = '2nd'; break;
+        case '3': var quarterName = 'third';  var quarterNum = '3rd'; break;
+        case '4': var quarterName = 'fourth'; var quarterNum = '4th'; break;
+        default: break;
+    }
+
+    document.getElementById('closeQuarterAreYouSurePanelText').innerHTML = '<p style="color:white">Are you sure you want to close the ' + quarterNum + ' Quarter of ' + selectedYear + '?</p><p>The updates made will be <b><u>PERMANENT</u></b> and cannot be reversed.</p>'
+    var panelState = document.getElementById('closeQuarterAreYouSurePanel').style.visibility;
+
+    if (panelState == 'hidden') {
+        document.getElementById('closeQuarterAreYouSurePanel').style.visibility = 'visible';
+        document.getElementById('closeQuarterAreYouSurePanel').style.opacity = '1';
+    } else {
+        document.getElementById('closeQuarterAreYouSurePanel').style.opacity = '0';
+        setTimeout( function(){ document.getElementById('closeQuarterAreYouSurePanel').style.visibility = 'hidden'; }, 500);
+    }
+}
+function closeQuarterSelect() {
+
+    document.getElementById('closeQuarterAreYouSurePanel').style.visibility = 'hidden';
+    document.getElementById('closeQuarterSelectPanelText').innerHTML = '<p style="color:white">Please Select the Quarter and Year you want to close.</p>'
+    var panelState = document.getElementById('closeQuarterSelectPanel').style.visibility;
+
+    if (panelState == 'hidden') {
+        document.getElementById('closeQuarterSelectPanel').style.visibility = 'visible';
+        document.getElementById('closeQuarterSelectPanel').style.opacity = '1';
+    } else {
+        document.getElementById('closeQuarterSelectPanel').style.opacity = '0';
+        setTimeout( function(){ document.getElementById('closeQuarterSelectPanel').style.visibility = 'hidden'; }, 500);
+    }
+}
+function closeQuarter() {
+
+    var selectedQuarter     = document.getElementById('closeQuarterQuarterSelect').value;
+    var selectedYear        = document.getElementById('closeQuarterYearSelect').value;
+    var setPage             = document.getElementById('optionsLegendFrame');
+    var teamPage            = document.getElementById('teamLegendFrame');
+    var setButton           = document.getElementById('optionsFrameButton');
+    var teamButton          = document.getElementById('teamFrameButton');
+    teamPage.style.opacity  = '0'; teamPage.style.visibility = 'hidden'; teamButton.style.opacity = '0.8'; teamLegendState = 'closed';
+    setPage.style.opacity   = '0'; setPage.style.visibility = 'hidden'; setButton.style.opacity = '0.8'; optionsState = 'closed';
+
+    var element = document.getElementById("closedReportLegendFrame");
+    element.parentNode.removeChild(element);
+    var newDiv = document.createElement('div');
+    newDiv.id = 'closedReportLegendFrame';
+    document.getElementById('legendPanel').appendChild(newDiv);
+    document.getElementById('closedReportLegendFrame').style.visibility = 'visible';
+
+    var selectedQuarterYear = selectedYear + '.' + selectedQuarter;
+
+    updateProjectHistory(selectedQuarterYear);
+    setTimeout( function(){ updateUserProjectHistory(selectedQuarterYear); }, 300);
+}
+function updateProjectHistory(currentQuarter){
+
+  var newreport         = document.createElement('div');
+  newreport.className   = "closedReport";
+  newreport.id          = "reportBegin";
+  newreport.innerHTML   = "-- Update Project History Log --"
+  document.getElementById('closedReportLegendFrame').appendChild(newreport);
+  document.getElementById('reportBegin').style.fontSize = '12px';
+  document.getElementById('reportBegin').style.paddingBottom = '15px';
+
+
+  for (var i=0; i < recordProjectCount; i++) {
+
+      var projId               = resultProjectObj[i].Id;
+      var projName             = resultProjectObj[i].Name;
+      var historyString        = resultProjectObj[i].ES_Project_Completion_History__c;
+      var percentPrevious      = resultProjectObj[i].ES_PrevQ_PercentComplete__c;
+      var percentTotal         = resultProjectObj[i].PercentComplete__c;
+      var percentCompleted     = resultProjectObj[i].percentCompleted
+      var projectPointsEarned  = resultProjectObj[i].projectPointsEarned
+      var quote                = String.fromCharCode(34);
+
+      var newreport = document.createElement('div');
+      newreport.className = "closedReport";
+      newreport.id        = "report" + i;
+      newreport.innerHTML = projName + "... "
+      document.getElementById('closedReportLegendFrame').appendChild(newreport);
+
+      if (historyString) { // Check to see if project has a Quarter History Object
+          historyString = historyString.replace(/%/g,quote);
+          historyString = historyString.replace(/&/g,"}");
+          historyString = historyString.replace(/@/g,"{");
+          var historyJSON   = JSON.parse(historyString);
+      } else { // Create new Quarter History Object
+          var historyJSON                 = {};
+          historyJSON['metaData']         = {};
+          historyJSON['metaData'].Id      = projId;
+          historyJSON['metaData'].Name    = projName;
+      }
+
+      if (!(currentQuarter in historyJSON)) { // Check to see if project has already been closed for current quarter
+
+          historyJSON[currentQuarter] = {};
+          historyJSON[currentQuarter].ownerId             = resultProjectObj[i].OwnerId;
+          historyJSON[currentQuarter].ownerName           = resultProjectObj[i].Owner.Name;
+          historyJSON[currentQuarter].percentPrevious     = percentPrevious;
+          historyJSON[currentQuarter].percentTotal        = percentTotal;
+          historyJSON[currentQuarter].percentCompleted    = percentCompleted;
+          historyJSON[currentQuarter].projectPointsEarned = projectPointsEarned;
+
+          var projectHistoryString = JSON.stringify(historyJSON);
+          projectHistoryString = projectHistoryString.replace(/"/g,"%");
+          projectHistoryString = projectHistoryString.replace(/{/g,"@");
+          projectHistoryString = projectHistoryString.replace(/}/g,"&");
+
+          passProjectHistoryToController(projId, projectHistoryString, percentTotal); // Append current Quarter information to Quarter History Object
+          document.getElementById('report' + i).style.color = "rgb(66, 244, 83)"
+          document.getElementById('report' + i).innerHTML = projName + "... " + " Quarter closed.</br>" + percentCompleted + "% Completed | " + projectPointsEarned + "pts Earned";
+      } else {
+          document.getElementById('report' + i).innerHTML = projName + "... " + " Quarter already closed.";
+      }
+  }
+}
+function updateUserProjectHistory(currentQuarter){
+
+  var newreport         = document.createElement('div');
+  newreport.className   = "closedReport";
+  newreport.id          = "teamReportBegin";
+  newreport.innerHTML   = "-- Update User History Log --"
+  document.getElementById('closedReportLegendFrame').appendChild(newreport);
+  document.getElementById('teamReportBegin').style.color         = 'rgb(63, 213, 255)';
+  document.getElementById('teamReportBegin').style.fontSize      = '12px';
+  document.getElementById('teamReportBegin').style.paddingTop    = '15px';
+  document.getElementById('teamReportBegin').style.paddingBottom = '15px';
+
+  for (var i=0; i < recordTeamCount; i++) {
+
+      var teamMemberName    = resultTeamObj[i].Name;
+      var teamId            = resultTeamObj[i].Id;
+      var historyString     = resultTeamObj[i].ES_Project_History__c;
+      var projectList       = teamScores[teamId + 'projectList'];
+      var projectArray      = projectList.split(",")
+
+      var quote = '"';
+
+      var newreport         = document.createElement('div');
+      newreport.className   = "closedReport";
+      newreport.id          = "teamReport" + i;
+      newreport.innerHTML   = teamMemberName + "... "
+      document.getElementById('closedReportLegendFrame').appendChild(newreport);
+
+      if (historyString) { // Check to see if Team Member has a Quarter History Object
+          historyString = historyString.replace(/%/g,quote);
+          historyString = historyString.replace(/&/g,"}");
+          historyString = historyString.replace(/@/g,"{");
+          var historyJSON   = JSON.parse(historyString);
+      } else { // Create new Quarter History Object
+          var historyJSON                 = {};
+          historyJSON['metaData']         = {};
+          historyJSON['metaData'].Id      = teamId;
+          historyJSON['metaData'].Name    = teamMemberName;
+      }
+
+      if (!(currentQuarter in historyJSON)) { // Check to see if project has already been closed for current quarter
+
+          historyJSON[currentQuarter] = {};
+          var projectHistoryObjectPiece = '"projects":['
+          var projectPointTotal = 0;
+
+          for (var j = 0; j < projectArray.length; j++) {
+              var projectDetailArray = projectArray[j].split(";");
+              if (j != 0) { projectHistoryObjectPiece = projectHistoryObjectPiece + ',' }
+              projectHistoryObjectPiece = projectHistoryObjectPiece + '{"Id":"' + projectDetailArray[0] + '","Name":"' + projectDetailArray[1] + '","PercentCompleted":"' + projectDetailArray[2] + '","ProjectPointsEarned":"' + projectDetailArray[3] + '"}'
+              projectPointTotal = projectPointTotal + (projectDetailArray[3] * 1);
+          }
+
+          projectHistoryObjectPiece = projectHistoryObjectPiece + ']}'
+          projectHistoryObjectPiece = '{"projectPointTotal":"' + projectPointTotal + '","quarter":"' + currentQuarter + '",' + projectHistoryObjectPiece
+          projectHistoryObjectPiece = projectHistoryObjectPiece.replace(/"/g,"%");
+          historyJSON[currentQuarter] = projectHistoryObjectPiece;
+
+          var projectHistoryString = JSON.stringify(historyJSON);
+          projectHistoryString = projectHistoryString.replace(/"/g,"%");
+          projectHistoryString = projectHistoryString.replace(/{/g,"@");
+          projectHistoryString = projectHistoryString.replace(/}/g,"&");
+          projectHistoryString = projectHistoryString.replace(/%@%projectPointTotal%/g,"@%projectPointTotal%");
+          projectHistoryString = projectHistoryString.replace(/%&]&%&/g,"%&]&&");
+
+          resultTeamObj[i].ES_Project_History__c = projectHistoryString;
+
+          passUserProjectHistoryToController(teamId, projectHistoryString); // Append current Quarter information to Quarter History Object
+          document.getElementById('teamReport' + i).style.color = 'rgb(66, 244, 83)';
+          document.getElementById('teamReport' + i).innerHTML = teamMemberName + "... " + "</br>Quarter closed.";
+      } else {
+          document.getElementById('teamReport' + i).style.color = 'rgb(63, 213, 255)';
+          document.getElementById('teamReport' + i).innerHTML = teamMemberName + "... " + "</br>Quarter already closed.";
+      }
+  }
+}
+
+function updatePhases(phase) {
+
+    var checkState = document.getElementById(phase + 'CheckBox');
+
+    var alignCheckState = document.getElementById('alignCheckBox');
+    var buildCheckState = document.getElementById('buildCheckBox');
+    var deployCheckState = document.getElementById('deployCheckBox');
+    var completeCheckState = document.getElementById('completeCheckBox');
+
+    var x = document.getElementsByClassName(phase);
+
+    for (var i=0; i < x.length; i++) {
+        //var teamId = x[i].getAttribute('data-teamId');
+        if (checkState.checked) { var barScale = "Scale(1,1)"; } else { var barScale = "Scale(1,0)" }
+
+        x[i].style.transform = barScale;
+    }
+
+    // Update Stacked Graph Positions
+    for (var i=0; i < recordTeamCount; i++) {
+
+      var teamId = resultTeamObj[i].Id;
+      if (alignCheckState.checked) { var alignheight = (teamScores[teamId + 'align'] * stackHeightPixelAdjuster); var alignBarScale = "Scale(1,1)" } else { var alignheight = 0; var alignBarScale = "Scale(1,0)" }
+      if (buildCheckState.checked) { var buildheight = (teamScores[teamId + 'build'] * stackHeightPixelAdjuster); var buildBarScale = "Scale(1,1)" } else { var buildheight = 0; var buildBarScale = "Scale(1,0)" }
+      if (deployCheckState.checked) { var deployheight = (teamScores[teamId + 'deploy'] * stackHeightPixelAdjuster); var deployBarScale = "Scale(1,1)" } else { var deployheight = 0; var deployBarScale = "Scale(1,0)" }
+      if (completeCheckState.checked) { var completeheight = (teamScores[teamId + 'complete'] * stackHeightPixelAdjuster); var completeBarScale = "Scale(1,1)" } else { var completeheight = 0; var completeBarScale = "Scale(1,0)" }
+
+      var alignDisplace = buildheight + deployheight + completeheight;
+      var buildDisplace = deployheight + completeheight;
+      var deployDisplace = completeheight;
+
+      document.getElementById('stackAlign' + i).style.transform = alignBarScale + ' translate(0px, -' + alignDisplace + 'px)';
+      document.getElementById('stackBuild' + i).style.transform = buildBarScale + ' translate(0px, -' + buildDisplace + 'px)';
+      document.getElementById('stackDeploy' + i).style.transform = deployBarScale + ' translate(0px, -' + deployDisplace + 'px)';
+      document.getElementById('stackComplete' + i).style.transform = completeBarScale + ' translate(0px, 0px)';
+    }
+}
+function updateMembers(teamId) {
+
+    var activeGraphcount = 0;
+    var activeCount = 0;
+
+    for (var j=0; j < recordTeamCount; j++) {
+        var checkState = document.getElementById('checkbox' + j);
+        if (checkState.checked) { activeGraphcount = activeGraphcount + 1; }
+    }
+
+    //var scale = recordTeamCount / activeGraphcount;
+    var scale = 1;
+
+    for (var i=0; i < recordTeamCount; i++) {
+
+        var checkStatus = document.getElementById('checkbox' + i);
+        var stackContainer = document.getElementById('stackGraphContainer' + i);
+        var barContainer = document.getElementById('barGraphContainer' + i);
+
+        if (checkStatus.checked) {
+            //var xPosition = (activeCount * (100 / activeGraphcount)).toFixed(1);
+            //var activeCount = activeCount + 1;
+            stackContainer.style.transform = "scale(" + scale + ",1)";
+            barContainer.style.transform = "scale(" + scale + ",1)";
+            //barContainer.style.transform = "scale(" + scale + ",1) translate(" + xPosition + "%, 0%)";
+        } else {
+            stackContainer.style.transform = "scale(0,1)";
+            barContainer.style.transform = "scale(0,1)";
+            //barContainer.style.transform = "scale(0,1) translate(0%, 0%)";
+        }
+    }
+}
+function updateGrid() {
+    var checkStatus = document.getElementById('gridCheckBox');
+    if (checkStatus.checked) {
+        document.getElementById('scalePanel').style.visibility = 'visible';
+    } else {
+        document.getElementById('scalePanel').style.visibility = 'hidden';
+    }
+}
+function updateGoals() {
+    var checkStatus = document.getElementById('goalCheckBox');
+    if (checkStatus.checked) {
+        for (var i=0; i < recordTeamCount; i++) {
+            document.getElementById('goal' + i).style.visibility = 'visible';
+        }
+    } else {
+        for (var i=0; i < recordTeamCount; i++) {
+            document.getElementById('goal' + i).style.visibility = 'hidden';
+        }
+    }
+}
+
+function scoreUpdate(id) {
+
+    var assets = document.getElementById('assetCount' + id).value;
+    var comp = document.getElementById('projectComplexity' + id).value;
+    var score = assets * comp;
+    document.getElementById('projectScore' + id).value = score.toFixed(1);
+}
+function updateProjectScore(projId) {
+
+    var assetCount = document.getElementById('assetCount' + projId).value
+    var complexity = document.getElementById('projectComplexity' + projId).value
+
+    passProjectScoreToController(projId, assetCount, complexity)
+
+    var element = document.getElementById(projId);
+    element.style.marginTop = "0px";
+    element.style.height = "0px";
+
+    setTimeout(function(){
+        element.parentNode.removeChild(element);
+    }, 500);
+}
+
+// Team Member Page Functions
+function openTeamMemberPage(teamId) {
+
+    userPageId    = resultTeamObj[teamId].Id;
+    userId        = teamId;
+    selectedUser  = teamId;
+
+    document.getElementById("debug").innerHTML = "Working " + userId;
+
+    var userProjectHistoryString  = resultTeamObj[teamId].ES_Project_History__c;
+    userProjectHistoryString      = userProjectHistoryString.replace(/%/g,quote);
+
+    document.getElementById("debug").innerHTML = "Working2 " + userId;
+
+    userProjectHistoryString      = userProjectHistoryString.replace(/&/g,"}");
+    userProjectHistoryString      = userProjectHistoryString.replace(/@/g,"{");
+
+    document.getElementById("debug").innerHTML = "Working3 " + userProjectHistoryString;
+    userProjectHistory            = JSON.parse(userProjectHistoryString);
+    userQuarterCount              = Object.keys(userProjectHistory).length;
+
+
+
+    //var quarterList = [];
+    //for (var i = 0; i < userQuarterCount; i++) {
+
+    //  quarterList[i] = userProjectHistory
+    //}
+    //quarterList = quarterList.sort();
+
+    //document.getElementById('debug').innerHTML = userProjectHistoryString;
+
+    document.getElementById('userPageTitle').innerHTML = resultTeamObj[teamId].Name + '<div style="font-size:12px;">' + resultTeamObj[teamId].Title + '</div>';
+    //document.getElementById('debug').innerHTML = resultTeamObj[teamId].ES_User_Color__c;
+    Color.value = resultTeamObj[teamId].ES_User_Color__c;
+
+    yTicker = 0;
+    xTicker = 0;
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.beginPath();
+    context.moveTo(0,cHeight - index[0]);
+    context.strokeStyle = resultTeamObj[teamId].ES_User_Color__c;
+    context.lineWidth=3;
+    context.font = "10px Calibri";
+
+    document.getElementById('userPage').style.display = 'block';
+    document.getElementById('cover').style.display = 'block';
+
+    timer = setInterval(draw, 15)
+}
+function draw() {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    var lowerBound          = Math.floor(yTicker);
+    var upperBound          = Math.ceil(yTicker);
+    var tickSetMaximum  = index[upperBound];
+    var tickSetMinimum  = index[lowerBound];
+    var tick                        = yTicker - lowerBound;
+    var heightDiff          = tickSetMaximum - tickSetMinimum;
+
+    var x = Math.round((cWidth / (xCount - 10)) * xTicker);
+    var y = Math.round(cHeight - tickSetMinimum - (heightDiff * tick));
+
+    context.lineTo(x,y);
+    context.stroke();
+    //context.strokeText("hello",x,y);
+
+    if (xTicker == xCount) { clearTimeout(timer); }
+    yTicker = yTicker + 0.1;
+    xTicker = xTicker + 1;
+}
+function downloadUserQuarterData() {
+
+    var userProjectHistoryString  = resultTeamObj[selectedUser].ES_Project_History__c;
+    var teamMemberName            = resultTeamObj[selectedUser].Name;
+    userProjectHistoryString      = userProjectHistoryString.replace(/%/g,quote);
+    userProjectHistoryString      = userProjectHistoryString.replace(/&/g,"}");
+    userProjectHistoryString      = userProjectHistoryString.replace(/@/g,"{");
+
+    var dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(userProjectHistoryString);
+    var dlAnchorElem = document.getElementById('downloadAnchorElem');
+
+    dlAnchorElem.setAttribute("href",     dataStr     );
+    dlAnchorElem.setAttribute("download", teamMemberName + "_ProjectHistory.csv");
+    dlAnchorElem.click();
+}
+function closeTeamMemberPage() {
+    var x = document.getElementById('userPage');
+    var y = document.getElementById('cover');
+    x.style.display = 'none';
+    y.style.display = 'none';
+}
+
+// Utility Functions
+function quarterStamp() {
+
+   var currentQuarter = 0;
+   var d = new Date();
+   var currentYear = d.getFullYear();
+   var currentMonth = d.getMonth();
+   var currentDay = d.getDate();
+
+   switch (true) { // Provide a 5 day grace period after the end of the quarter to close it
+       case (currentMonth == 0 && currentDay > 5):
+       case (currentMonth == 1):
+       case (currentMonth == 2):
+       case (currentMonth == 3 && currentDay < 6): currentQuarter = 1; break;
+       case (currentMonth == 3 && currentDay > 5):
+       case (currentMonth == 4):
+       case (currentMonth == 5):
+       case (currentMonth == 6 && currentDay < 6): currentQuarter = 2; break;
+       case (currentMonth == 6 && currentDay > 5):
+       case (currentMonth == 7):
+       case (currentMonth == 8):
+       case (currentMonth == 9 && currentDay < 6): currentQuarter = 3; break;
+       case (currentMonth == 9 && currentDay > 5):
+       case (currentMonth == 10):
+       case (currentMonth == 11):
+       case (currentMonth == 0 && currentDay < 6): currentQuarter = 4; break;
+   }
+
+   var result = currentYear + "." + currentQuarter;
+
+   return result;
+}
+function LightenDarkenColor(color, percent) {
+
+      var f=parseInt(color.slice(1),16),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=f>>16,G=f>>8&0x00FF,B=f&0x0000FF;
+      return "#"+(0x1000000+(Math.round((t-R)*p)+R)*0x10000+(Math.round((t-G)*p)+G)*0x100+(Math.round((t-B)*p)+B)).toString(16).slice(1);
+}
+function calculateBarWidth(type) {
+
+    var activeGraphcount = 0;
+
+    for (var j=0; j < recordTeamCount; j++) {
+        var checkState = document.getElementById('checkbox' + j);
+        if (checkState.checked) { activeGraphcount = activeGraphcount + 1; }
+    }
+
+    var alignCheckStatus = document.getElementById('alignCheckBox');
+    var buildCheckStatus = document.getElementById('buildCheckBox');
+    var deployCheckStatus = document.getElementById('deployCheckBox');
+    var completeCheckStatus = document.getElementById('completeCheckBox');
+
+    switch (type) {
+        case 'container':
+            return Math.round(600 / activeGraphcount) + 'px';
+            break;
+        case 'stack':
+            return Math.round((600 / activeGraphcount) - 3) + 'px';
+            break;
+        case 'bar':
+        default:
+            var graphNumber = 0;
+            if (alignCheckStatus.checked) { graphNumber = graphNumber + 1}
+            if (buildCheckStatus.checked) { graphNumber = graphNumber + 1}
+            if (deployCheckStatus.checked) { graphNumber = graphNumber + 1}
+            if (completeCheckStatus.checked) { graphNumber = graphNumber + 1}
+            return Math.round(((600 / activeGraphcount) - (3 * graphNumber)) / graphNumber) + 'px';
+            break;
+    }
+
+}
+function calculateStackHeight() {
+
+    for (var i=0; i < recordTeamCount; i++) {
+        var teamId = resultTeamObj[i].Id;
+        var stackHeight = teamScores[teamId + 'align'] + teamScores[teamId + 'build'] + teamScores[teamId + 'deploy'] + teamScores[teamId + 'complete'];
+        if (stackHeight > highestProjectTotal) { highestProjectTotal = stackHeight }
+    }
+
+    stackHeightPixelAdjuster = Math.round((100 / highestProjectTotal) * 6);
+
+    for (var i=1; i < 11; i++) {
+        var scaleGridValue = Math.round((highestProjectTotal / 10) * i);
+        document.getElementById('grid' + i).innerHTML = scaleGridValue;
+    }
+}
+function sanitizeJSON(inputJSONstring) {
+    var quote = String.fromCharCode(34);
+    var apost = String.fromCharCode(39);
+
+    inputJSONstring = inputJSONstring.replace(/(\"\:\")/gm,"JSONvalidQuoteString1");
+    inputJSONstring = inputJSONstring.replace(/(\"\,\")/gm,"JSONvalidQuoteString2");
+    inputJSONstring = inputJSONstring.replace(/(\"\:\{\")/gm,"JSONvalidQuoteString3");
+    inputJSONstring = inputJSONstring.replace(/(\"\}\")/gm,"JSONvalidQuoteString4");
+    inputJSONstring = inputJSONstring.replace(/(\{\")/gm,"JSONvalidQuoteString5");
+    inputJSONstring = inputJSONstring.replace(/(\"\}\,\")/gm,"JSONvalidQuoteString6");
+    inputJSONstring = inputJSONstring.replace(/(\"\})/gm,"JSONvalidQuoteString7");
+    inputJSONstring = inputJSONstring.replace(/(\"\:)/gm,"JSONvalidQuoteString8");
+    inputJSONstring = inputJSONstring.replace(/(\,\")/gm,"JSONvalidQuoteString9");
+    inputJSONstring = inputJSONstring.replace(/(\')/gm,"JSONvalidQuoteString10");
+    inputJSONstring = inputJSONstring.replace(/(\")/gm,"");
+
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString1)/gm,quote + ':' + quote);
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString2)/gm,quote + ',' + quote);
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString3)/gm,quote + ':{' + quote);
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString4)/gm,quote + '}' + quote);
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString5)/gm,'{' + quote);
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString6)/gm,quote + "}," + quote);
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString7)/gm,quote + '}');
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString8)/gm,quote + ':');
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString9)/gm,',' + quote);
+    inputJSONstring = inputJSONstring.replace(/(JSONvalidQuoteString10)/gm, apost);
+    inputJSONstring = inputJSONstring.replace(/(singleQuoteStringReplace)/gm, "'");
+
+    return inputJSONstring
+}
+function colorUpdate(userPageId, userColor, userId) {
+
+    resultTeamObj[userId].ES_User_Color__c = userColor;
+
+    var alignColor = LightenDarkenColor(userColor, .5);
+    var buildColor = LightenDarkenColor(userColor, .2);
+    var deployColor = LightenDarkenColor(userColor, -.2);
+    var completeColor = LightenDarkenColor(userColor, -.5);
+
+    document.getElementById('legend' + userId).style.color = userColor;
+
+    document.getElementById('barAlign' + userId).style.backgroundColor = alignColor;
+    document.getElementById('barBuild' + userId).style.backgroundColor = buildColor;
+    document.getElementById('barDeploy' + userId).style.backgroundColor = deployColor;
+    document.getElementById('barComplete' + userId).style.backgroundColor = completeColor;
+    document.getElementById('goal' + userId).style.color = userColor;
+    document.getElementById('goal' + userId).style.borderBottom = 'thick solid ' + userColor;
+
+    document.getElementById('stackAlign' + userId).style.backgroundColor = alignColor;
+    document.getElementById('stackBuild' + userId).style.backgroundColor = buildColor;
+    document.getElementById('stackDeploy' + userId).style.backgroundColor = deployColor;
+    document.getElementById('stackComplete' + userId).style.backgroundColor = completeColor;
+    document.getElementById('goalStack' + userId).style.color = userColor;
+    document.getElementById('goalStack' + userId).style.borderBottom = 'thick solid ' + userColor;
+
+    context.strokeStyle = userColor;
+
+    var elementList = document.querySelectorAll(".ID" + userPageId);
+    for (i=0; i < elementList.length; i++) { elementList[i].style.color = userColor; }
+
+    var elementButtonList = document.querySelectorAll(".IDB" + userPageId);
+    for (i=0; i < elementButtonList.length; i++) { elementButtonList[i].style.backgroundColor = userColor; }
+
+    //userColor = userColor.substring(1,7);
+    passUserColorToController(userPageId, userColor);
+}
+
+</script>
+
+</apex:page>
