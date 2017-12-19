@@ -69,7 +69,7 @@ public with sharing class CaseEventCloseExtension
         comment= comment.replace('{Description}', c.Description);
     }
     
-    public PageReference Save()
+    public void Save()
     {
         /*if(comment == null || comment == '')
         {
@@ -107,7 +107,7 @@ public with sharing class CaseEventCloseExtension
         catch(DmlException ex)
         {
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getDmlMessage(0)));
-            return null;
+            //return null;
         }
         
         if(newRCARendered)
@@ -142,10 +142,10 @@ public with sharing class CaseEventCloseExtension
         }
         
         //return to case page
-        PageReference casePage = new PageReference('/' + c.Id);
-        casePage.setRedirect(true);
+        //PageReference casePage = new PageReference('/' + c.Id);
+       // casePage.setRedirect(true);
         
-        return casePage;
+      //  return casePage;
     }
     
     public PageReference Cancel()
