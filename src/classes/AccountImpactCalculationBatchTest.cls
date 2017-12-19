@@ -48,7 +48,7 @@ private class AccountImpactCalculationBatchTest {
         // create accounts
         Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
         Account[] accountList = new Account[]{};
-        for(Integer i=0; i<25; i++){
+        for(Integer i=0; i<10; i++){
             Account testAccount = new Account(
                     Name = 'AccountImpactCalculationBatch Account '+ i,
                     Type = 'Customer',
