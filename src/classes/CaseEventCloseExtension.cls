@@ -103,6 +103,8 @@ public with sharing class CaseEventCloseExtension
             {
                 insert comments;
             }
+
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Record was saved successfully.'));
         }
         catch(DmlException ex)
         {
