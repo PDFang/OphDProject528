@@ -92,18 +92,21 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
             SubscriptionReplica__c oldSubscriptionReplica = (oldMap != null) ? oldMap.get(subscriptionReplica.Id) : null;
             if (oldSubscriptionReplica != null)
             {
+                SBQQ__Subscription__c subscription = new SBQQ__Subscription__c(Id = subscriptionReplica.Subscription__c);
+                subscription.Total_Allocated_Quantity__c = subscriptionReplica.Total_Allocated_Quantity__c;
+                subscription.Total_Implemented_Quantity__c = subscriptionReplica.Total_Implemented_Quantity__c;
+                subscription.Logged_Hours__c = subscriptionReplica.Logged_Hours__c;
+                subscription.Allocated_Hours__c = subscriptionReplica.Total_Allocated_Hours__c;
+
+                // add changed Subscriptions to update list
+                lstUpdateSubscriptions.add(subscription);
+
                 // do not update back to subscription table if it ever set to '4 - Delivered'
                 if (oldSubscriptionReplica.Delivered__c != true) {
-                    SBQQ__Subscription__c subscription = new SBQQ__Subscription__c(Id = subscriptionReplica.Subscription__c);
+
                     subscription.Status__c = subscriptionReplica.Status1__c;
                     subscription.Install_Date__c = subscriptionReplica.Install_Date__c;
                     subscription.Implemented_Product__c = subscriptionReplica.Implemented_Product__c;
-                    subscription.Total_Allocated_Quantity__c = subscriptionReplica.Total_Allocated_Quantity__c;
-                    subscription.Total_Implemented_Quantity__c = subscriptionReplica.Total_Implemented_Quantity__c;
-                    subscription.Logged_Hours__c = subscriptionReplica.Logged_Hours__c;
-
-                    // add changed Subscriptions to update list
-                    lstUpdateSubscriptions.add(subscription);
 
                     // only update implemented product when first time the subscription status set to '4 - Delivered'
                     if (subscriptionReplica.Implemented_Product__c != null && subscriptionReplica.Install_Date__c != null) {

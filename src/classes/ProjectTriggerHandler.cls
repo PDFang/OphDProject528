@@ -309,12 +309,12 @@ public class ProjectTriggerHandler extends TriggerHandler{
         system.debug('**** setParentProjectGoLiveDates(): parentProjectIdSet - ' + parentProjectIdSet);
         system.debug('**** setParentProjectGoLiveDates(): projectOppIdSet - ' + projectOppIdSet);
 
-        if(parentProjectIdSet.size() > 0 && projectRollupQueueableJobID == null){
+        if(parentProjectIdSet.size() > 0 && projectRollupQueueableJobID == null && RollupUtility.isRollupEnabled){
             projectRollupQueueableJobID = System.enqueueJob(new ProjectRollupQueueable(parentProjectIdSet));
             system.debug('**** setParentProjectGoLiveDates(): projectRollupQueueableJobID - ' + projectRollupQueueableJobID);
         }
 
-        if(projectOppIdSet.size() > 0 && opportunityRollupQueueableJobID == null){
+        if(projectOppIdSet.size() > 0 && opportunityRollupQueueableJobID == null && RollupUtility.isRollupEnabled){
             opportunityRollupQueueableJobID = System.enqueueJob(new OpportunityRollupQueueable(projectOppIdSet));
             system.debug('**** setParentProjectGoLiveDates(): opportunityRollupQueueableJobID - ' + opportunityRollupQueueableJobID);
         }

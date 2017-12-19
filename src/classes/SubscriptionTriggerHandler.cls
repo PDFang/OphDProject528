@@ -53,7 +53,7 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
 
         system.debug('**** rollupMRRToPhaseProject(): subscriptionIds - ' + subscriptionIds);
 
-        if(subscriptionIds.size() > 0 && subscriptionRollupQueueableJobID == null){
+        if(subscriptionIds.size() > 0 && subscriptionRollupQueueableJobID == null && RollupUtility.isRollupEnabled){
             subscriptionRollupQueueableJobID = System.enqueueJob(new SubscriptionRollupQueueable(subscriptionIds));
             system.debug('**** rollupMRRToPhaseProject(): subscriptionRollupQueueableJobID - ' + subscriptionRollupQueueableJobID);
         }
