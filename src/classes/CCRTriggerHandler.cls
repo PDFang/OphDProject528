@@ -82,20 +82,16 @@ public with sharing class CCRTriggerHandler extends TriggerHandler{
 
     private void addNewTopics(List<FeedItem> feedItems) {
         //check to see if the topic, which is the application field, already exists
-        List<String> usedTopics = new List<String>();
+        Set<String> usedTopics = new Set<String>();
         for(FeedItem item : feedItems) {
             usedTopics.add(item.Title);
         }
 
         //remove any topics from usedTopics that already exist
         List<Topic> existingTopics = [Select Id, Name from Topic];
+
         for(Topic existingTopic : existingTopics) {
-            for(Integer newTopicIndex = 0; newTopicIndex < usedTopics.size(); newTopicIndex++) {
-                if(usedTopics[newTopicIndex] == existingTopic.Name) {
-                    usedTopics.remove(newTopicIndex);
-                    break;
-                }
-            }
+            usedTopics.remove(existingTopic.Name);
         }
 
         //insert the new topics
