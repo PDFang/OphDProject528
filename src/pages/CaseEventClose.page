@@ -1,8 +1,9 @@
 <apex:page StandardController="Case" extensions="CaseEventCloseExtension" >
     <apex:includeScript value="/support/console/28.0/integration.js"/>
     <apex:form rendered="{!RenderClosePage}" >
-        <div style="color:red"><apex:messages id="msg" /></div>
+
         <apex:pageBlock mode="edit" title="Close Event" id="mainPage">
+            <div style="color:red"><apex:messages id="msg" /></div>
             <apex:inputHidden value="{!Case.Status}"/>
             <apex:inputHidden value="{!Case.NonEvent__c}"/>
             <apex:inputHidden value="{!Case.ProductImpacted__c}"/>
