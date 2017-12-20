@@ -54,10 +54,11 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
     protected override void beforeInsert(){
 
+        resetCalculatedFieldsBeforeClone();
+
         //if it is a phase project validate the phase number
         ProjectTriggerHelper.setNextPhaseNumber(Trigger.new);
 
-        resetCalculatedFieldsBeforeClone();
         setPhaseProjectGoLiveDates();
 
         // Assign Project owners and set status to New
@@ -187,7 +188,12 @@ public class ProjectTriggerHandler extends TriggerHandler{
                 newProject.Number_of_Open_Phases__c = 0;
                 newProject.Times_Go_Live_Date_Changed__c = null;
                 newProject.Original_Phase_Forecasted_Go_Live_Date__c = null;
-               // newProject.Logged_Hours__c = 0;
+                newProject.Parent_Logged_Hours__c = 0;
+                newProject.Parent_Allocated_Hours__c = 0;
+                newProject.Asset_Allocated_Hours__c = 0;
+                newProject.Asset_Logged_Hours__c = 0;
+                newProject.Subscription_Allocated_Hours__c = 0;
+                newProject.Subscription_Logged_Hours__c = 0;
             }
         }
 
