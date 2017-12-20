@@ -57,7 +57,14 @@ public with sharing class CCRTriggerHandler extends TriggerHandler{
         //get a Set of the topics we need to query for
         Set<String> topicNames = new Set<String>();
         for(FeedItem item : feedItems) {
-            topicNames.add(item.Title);
+            String originalTopic = item.Title;
+            String noSpacesTopic = originalTopic.replace(' ', '');
+            topicNames.add(originalTopic);
+
+            //Salesforce treats the Topic Names as duplicates if they are only different because of spaces
+            if(originalTopic.length() > noSpacesTopic.length()) {
+                topicNames.add(noSpacesTopic);
+            }
         }
 
         Map<String, Id> topicNameLookup = new Map<String, Id>();
@@ -65,14 +72,16 @@ public with sharing class CCRTriggerHandler extends TriggerHandler{
         List<Topic> topics = [Select Id, Name from Topic where Name in :topicNames];
 
         for(Topic t : topics) {
-            topicNameLookup.put(t.Name, t.Id);
+            String fullName = t.Name.replace(' ', '').toLowerCase();
+            topicNameLookup.put(fullName, t.Id);
         }
 
         //create a list of TopicAssignments
         List<TopicAssignment> topicAssignments = new List<TopicAssignment>();
         for(FeedItem item : feedItems) {
             TopicAssignment assignment = new TopicAssignment();
-            assignment.TopicId = topicNameLookup.get(item.Title);
+            String lookupName = item.Title.replace(' ', '').toLowerCase();
+            assignment.TopicId = topicNameLookup.get(lookupName);
             assignment.EntityId = item.Id;
             topicAssignments.add(assignment);
         }
@@ -84,15 +93,29 @@ public with sharing class CCRTriggerHandler extends TriggerHandler{
         //check to see if the topic, which is the application field, already exists
         Set<String> usedTopics = new Set<String>();
         for(FeedItem item : feedItems) {
-            usedTopics.add(item.Title);
+            String originalTopic = item.Title;
+            String noSpacesTopic = originalTopic.replace(' ', '');
+            usedTopics.add(originalTopic);
+
+            //Salesforce treats the Topic Names as duplicates if they are only different because of spaces
+            if(originalTopic.length() > noSpacesTopic.length()) {
+                usedTopics.add(noSpacesTopic);
+            }
         }
 
         //remove any topics from usedTopics that already exist
         List<Topic> existingTopics = [Select Id, Name from Topic where Name in :usedTopics];
-
+        List<String> topicsToRemove = new List<String>();
         for(Topic existingTopic : existingTopics) {
-            usedTopics.remove(existingTopic.Name);
+            for(String usedTopic : usedTopics) {
+                if(usedTopic.toLowerCase().replace(' ', '') == existingTopic.Name.toLowerCase().replace(' ', '')) {
+                    topicsToRemove.add(usedTopic);
+                    break;
+                }
+            }
         }
+
+        usedTopics.removeAll(topicsToRemove);
 
         //insert the new topics
         List<Topic> newTopics = new List<Topic>();
