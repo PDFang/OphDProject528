@@ -535,41 +535,6 @@ private class InContactTestClass
         Test.stopTest();
     }
 
-    public static testMethod void TestPHTimeOffDetailExtension()
-    {
-        Project__c p = new Project__c();
-        p.RecordTypeId = '01270000000MH8d';
-        p.Summary__c = 'Test';
-        p.ProjectType__c = 'Time Card';
-
-        insert p;
-
-        Test.startTest();
-        //Test StandardTextExtension
-        ApexPages.StandardController stdCtrl = new ApexPages.StandardController(p);
-        PHTimeOffDetailExtension todExt = new PHTimeOffDetailExtension(stdCtrl);
-
-        PageReference pageRef = Page.PHTimeOffDetail;
-        Test.setCurrentPage(pageRef);
-
-        todExt.AddRow();
-
-        ApexPages.currentPage().getParameters().put('todIND', '0');
-        todExt.DeleteRow();
-
-        List<TimeOffDetail__c> todList = new List<TimeOffDetail__c> ();
-        TimeOffDetail__c todRec = new TimeOffDetail__c();
-        todRec.EarningCode__c = 'ATO';
-        todRec.Hours__c = 8.0;
-        todRec.Project__c = p.Id;
-        todRec.DateRequested__c = system.today();
-        todList.add(todRec);
-
-        todExt.TimeOffDetail = todList;
-        todExt.Save();
-        Test.stopTest();
-    }
-
     public static testMethod void TestCaseWorkflowBatch()
     {
         Profile p = [SELECT Id FROM Profile WHERE Name = 'System Administrator'];
@@ -855,33 +820,6 @@ private class InContactTestClass
         Test.startTest();
         l.Status = 'Test Change';
         update l;
-        Test.stopTest();
-    }
-
-    public static testMethod void TestADFSLinkExtension()
-    {
-        Account a = new Account();
-        a.Name = 'Test Account';
-        a.CostGuard_Acct__c = '0000';
-        insert a;
-
-        Contact c = new Contact();
-        c.FirstName = 'test';
-        c.LastName = 'Test';
-        c.Email = 'Test@test.com';
-        c.AccountId = a.Id;
-        insert c;
-        Test.startTest();
-        ApexPages.StandardController controller = new ApexPages.StandardController(c);
-        ADFSLinkExtension extension = new ADFSLinkExtension(controller);
-
-        c.ADFSGuid__c = 'test';
-        update c;
-
-        c = [SELECT Id, FirstName, LastName, Email, CostGuardAcct__c, ADFSGuid__c FROM Contact WHERE Id = :c.Id];
-
-        ApexPages.StandardController controller2 = new ApexPages.StandardController(c);
-        ADFSLinkExtension extension2 = new ADFSLinkExtension(controller2);
         Test.stopTest();
     }
 
