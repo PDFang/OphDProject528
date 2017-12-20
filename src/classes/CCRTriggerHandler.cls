@@ -88,7 +88,7 @@ public with sharing class CCRTriggerHandler extends TriggerHandler{
         }
 
         //remove any topics from usedTopics that already exist
-        List<Topic> existingTopics = [Select Id, Name from Topic];
+        List<Topic> existingTopics = [Select Id, Name from Topic where Name in :usedTopics];
 
         for(Topic existingTopic : existingTopics) {
             usedTopics.remove(existingTopic.Name);
