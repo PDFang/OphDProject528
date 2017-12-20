@@ -823,33 +823,6 @@ private class InContactTestClass
         Test.stopTest();
     }
 
-    public static testMethod void TestADFSLinkExtension()
-    {
-        Account a = new Account();
-        a.Name = 'Test Account';
-        a.CostGuard_Acct__c = '0000';
-        insert a;
-
-        Contact c = new Contact();
-        c.FirstName = 'test';
-        c.LastName = 'Test';
-        c.Email = 'Test@test.com';
-        c.AccountId = a.Id;
-        insert c;
-        Test.startTest();
-        ApexPages.StandardController controller = new ApexPages.StandardController(c);
-        ADFSLinkExtension extension = new ADFSLinkExtension(controller);
-
-        c.ADFSGuid__c = 'test';
-        update c;
-
-        c = [SELECT Id, FirstName, LastName, Email, CostGuardAcct__c, ADFSGuid__c FROM Contact WHERE Id = :c.Id];
-
-        ApexPages.StandardController controller2 = new ApexPages.StandardController(c);
-        ADFSLinkExtension extension2 = new ADFSLinkExtension(controller2);
-        Test.stopTest();
-    }
-
     public static testMethod void TestKnowledgeBaseProxy()
     {
         Test.setMock(WebServiceMock.class, new IKnowledgeBaseProxy());
