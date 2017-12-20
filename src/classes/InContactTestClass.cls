@@ -535,41 +535,6 @@ private class InContactTestClass
         Test.stopTest();
     }
 
-    public static testMethod void TestPHTimeOffDetailExtension()
-    {
-        Project__c p = new Project__c();
-        p.RecordTypeId = '01270000000MH8d';
-        p.Summary__c = 'Test';
-        p.ProjectType__c = 'Time Card';
-
-        insert p;
-
-        Test.startTest();
-        //Test StandardTextExtension
-        ApexPages.StandardController stdCtrl = new ApexPages.StandardController(p);
-        PHTimeOffDetailExtension todExt = new PHTimeOffDetailExtension(stdCtrl);
-
-        PageReference pageRef = Page.PHTimeOffDetail;
-        Test.setCurrentPage(pageRef);
-
-        todExt.AddRow();
-
-        ApexPages.currentPage().getParameters().put('todIND', '0');
-        todExt.DeleteRow();
-
-        List<TimeOffDetail__c> todList = new List<TimeOffDetail__c> ();
-        TimeOffDetail__c todRec = new TimeOffDetail__c();
-        todRec.EarningCode__c = 'ATO';
-        todRec.Hours__c = 8.0;
-        todRec.Project__c = p.Id;
-        todRec.DateRequested__c = system.today();
-        todList.add(todRec);
-
-        todExt.TimeOffDetail = todList;
-        todExt.Save();
-        Test.stopTest();
-    }
-
     public static testMethod void TestCaseWorkflowBatch()
     {
         Profile p = [SELECT Id FROM Profile WHERE Name = 'System Administrator'];
