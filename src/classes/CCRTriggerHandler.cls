@@ -1,8 +1,5 @@
-/**
- * Created by adriana.mcquiston on 10/30/2017.
- */
-
 public with sharing class CCRTriggerHandler extends TriggerHandler{
+    @TestVisible
     private static String changeLogGroup = 'Information Systems Change Log';
     map<string, list<string>> topicMap = new  map<string, list<string>>();
 
@@ -58,33 +55,39 @@ public with sharing class CCRTriggerHandler extends TriggerHandler{
         Set<String> topicNames = new Set<String>();
         for(FeedItem item : feedItems) {
             String originalTopic = item.Title;
-            String noSpacesTopic = originalTopic.replace(' ', '');
+            String noSpacesTopic = originalTopic.replaceAll( '\\s+', '');
             topicNames.add(originalTopic);
+            topicNames.add(noSpacesTopic);
 
             //Salesforce treats the Topic Names as duplicates if they are only different because of spaces
-            if(originalTopic.length() > noSpacesTopic.length()) {
-                topicNames.add(noSpacesTopic);
-            }
+            //if(originalTopic.length() > noSpacesTopic.length()) {
+            //  topicNames.add(noSpacesTopic);
+            //}
         }
 
         Map<String, Id> topicNameLookup = new Map<String, Id>();
+        //create a list of TopicAssignments
+        List<TopicAssignment> topicAssignments = new List<TopicAssignment>();
 
         List<Topic> topics = [Select Id, Name from Topic where Name in :topicNames];
 
+
         for(Topic t : topics) {
-            String fullName = t.Name.replace(' ', '').toLowerCase();
-            topicNameLookup.put(fullName, t.Id);
+            // String fullName = t.Name.replace(' ', '').toLowerCase();
+            //topicNameLookup.put(fullName, t.Id);
+            for(FeedItem item : feedItems) {
+                if(item.Title.toLowerCase().replaceAll( '\\s+', '') == t.Name.toLowerCase().replaceAll( '\\s+', '')){
+                    TopicAssignment assignment = new TopicAssignment();
+                    assignment.TopicId = t.Id;
+                    assignment.EntityId = item.Id;
+                    topicAssignments.add(assignment);
+                }
+
+            }
+
         }
 
-        //create a list of TopicAssignments
-        List<TopicAssignment> topicAssignments = new List<TopicAssignment>();
-        for(FeedItem item : feedItems) {
-            TopicAssignment assignment = new TopicAssignment();
-            String lookupName = item.Title.replace(' ', '').toLowerCase();
-            assignment.TopicId = topicNameLookup.get(lookupName);
-            assignment.EntityId = item.Id;
-            topicAssignments.add(assignment);
-        }
+
 
         insert topicAssignments;
     }
@@ -94,23 +97,24 @@ public with sharing class CCRTriggerHandler extends TriggerHandler{
         Set<String> usedTopics = new Set<String>();
         for(FeedItem item : feedItems) {
             String originalTopic = item.Title;
-            String noSpacesTopic = originalTopic.replace(' ', '');
+            String noSpacesTopic = originalTopic.replaceAll( '\\s+', '');
             usedTopics.add(originalTopic);
 
-            //Salesforce treats the Topic Names as duplicates if they are only different because of spaces
-            if(originalTopic.length() > noSpacesTopic.length()) {
-                usedTopics.add(noSpacesTopic);
-            }
+            usedTopics.add(noSpacesTopic);
         }
 
         //remove any topics from usedTopics that already exist
         List<Topic> existingTopics = [Select Id, Name from Topic where Name in :usedTopics];
-        List<String> topicsToRemove = new List<String>();
+        set<String> topicsToRemove = new set<String>();
         for(Topic existingTopic : existingTopics) {
             for(String usedTopic : usedTopics) {
-                if(usedTopic.toLowerCase().replace(' ', '') == existingTopic.Name.toLowerCase().replace(' ', '')) {
+                //Salesforce treats the Topic Names as duplicates if they are only different because of spaces
+                system.debug('usedTopic => ' + usedTopic.toLowerCase().replaceAll( '\\s+', ''));
+                system.debug('existingTopic => ' + existingTopic.Name.toLowerCase().replaceAll( '\\s+', ''));
+
+                if(usedTopic.toLowerCase().replaceAll( '\\s+', '') == existingTopic.Name.toLowerCase().replaceAll( '\\s+', '')) {
                     topicsToRemove.add(usedTopic);
-                    break;
+
                 }
             }
         }
