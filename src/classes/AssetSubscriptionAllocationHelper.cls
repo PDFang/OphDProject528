@@ -456,11 +456,21 @@ public class AssetSubscriptionAllocationHelper {
             decimal quantityCancelled = Decimal.valueOf(string.valueOf(asset.get('QuantityCancelled__c'))) ;
             decimal quantityonHold =  Decimal.valueOf(string.valueOf(asset.get('QuantityonHold__c')));
             decimal totalCanceledOrHold = quantityCancelled + quantityonHold;
+
+            if(quantityCancelled != null && Math.floor(quantityCancelled) != quantityCancelled){
+                return 'Decimal value is not allowed for Cancelled Quantity';
+
+            }
+            if(quantityonHold != null && Math.floor(quantityonHold) != quantityonHold){
+                return 'Decimal value is not allowed for On Hold Quantity';
+
+            }
             if(quantityCancelled > 0 && (asset.get('Department_Responsible__c') == null
                     || asset.get('Root_Cause__c') == null)){
                 return 'Department Responsible and Root Cause must be populated if the Quantity on Hold is greater than 0';
 
             }
+
             else if(quantityonHold > 0 && (asset.get('Department_Responsible__c') == null
                     || asset.get('Root_Cause__c') == null)){
                 return 'Department Responsible and Root Cause must be populated if the Quantity on Hold is greater than 0';
@@ -488,6 +498,10 @@ public class AssetSubscriptionAllocationHelper {
                 if(quantityonHold > (asset.Quantity - asset.Total_Implemented_Quantity__c) && asset.Total_Implemented_Quantity__c  > 0){
                     return '"On Hold Quantity" cannot exceed the remaining quantity';
                 }
+                else{
+                  callSaveAsset(asset);
+                  return 'Saved successfully.';
+                }
             }
             else if(quantityCancelled > asset.Quantity){
                 return '"Cancelled Quantity" cannot exceed the contract quantity';
@@ -497,9 +511,13 @@ public class AssetSubscriptionAllocationHelper {
                        || asset.Total_Implemented_Quantity__c == 0){
                    return '“Cancelled Quantity” cannot exceed remaining quantity. Please modify or delete existing allocations if the remaining quantity needs to be increased.';
                }
-               if(quantityonHold > (asset.Quantity - asset.Total_Implemented_Quantity__c) && asset.Total_Implemented_Quantity__c  > 0){
+               if(quantityCancelled > (asset.Quantity - asset.Total_Implemented_Quantity__c) && asset.Total_Implemented_Quantity__c  > 0){
                     return '"Cancelled Quantity" cannot exceed the remaining quantity';
                 }
+               else{
+                   callSaveAsset(asset);
+                   return 'Saved successfully.';
+               }
 
             }
             else if(totalCanceledOrHold > asset.Quantity){
@@ -520,20 +538,26 @@ public class AssetSubscriptionAllocationHelper {
                 if(totalCanceledOrHold > (asset.Quantity - asset.Total_Implemented_Quantity__c) && asset.Total_Implemented_Quantity__c  > 0){
                     return '"Cancelled Quantity" and “On Hold Quantity” cannot exceed the remaining quantity';
                 }
+                else{
+                    callSaveAsset(asset);
+                    return 'Saved successfully.';
+                }
 
             }
             else{
-                update asset;
-//                isSuccesfullySaved = true;
+                callSaveAsset(asset);
                 return 'Saved successfully.';
-
             }
 
 
         }catch (Exception ex){
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
+            return ex.getMessage();
         }
         return null;
+    }
+
+    public void callSaveAsset(Asset asset){
+        update asset;
     }
 
 
@@ -549,6 +573,14 @@ public class AssetSubscriptionAllocationHelper {
             decimal quantityCancelled = Decimal.valueOf(string.valueOf(subscription.get('QuantityCancelled__c'))) ;
             decimal quantityonHold =  Decimal.valueOf(string.valueOf(subscription.get('QuantityonHold__c')));
             decimal totalCanceledOrHold = quantityCancelled + quantityonHold;
+            if(quantityCancelled != null && Math.floor(quantityCancelled) != quantityCancelled){
+                return 'Decimal value is not allowed for Cancelled Quantity';
+
+            }
+            if(quantityonHold != null && Math.floor(quantityonHold) != quantityonHold){
+                return 'Decimal value is not allowed for On Hold Quantity';
+
+            }
             if(quantityCancelled > 0 && (subscription.get('Department_Responsible__c') == null
                     || subscription.get('Root_Cause__c') == null)){
                 return 'Department Responsible and Root Cause must be populated if the Quantity Cancelled is greater than 0';
@@ -580,6 +612,10 @@ public class AssetSubscriptionAllocationHelper {
                 if(quantityonHold > (subscription.Quantity__c - subscription.Total_Implemented_Quantity__c) && subscription.Total_Implemented_Quantity__c  > 0){
                     return '"On Hold Quantity" cannot exceed the remaining quantity';
                 }
+                else{
+                    callSaveSubscription(subscription);
+                    return 'Saved successfully.';
+                }
             }
             else if(quantityCancelled > subscription.Quantity__c){
                 return '"Cancelled Quantity" cannot exceed the contract quantity';
@@ -592,6 +628,10 @@ public class AssetSubscriptionAllocationHelper {
                 }
                 if(quantityCancelled > (subscription.Quantity__c - subscription.Total_Implemented_Quantity__c) && subscription.Total_Implemented_Quantity__c  > 0){
                     return '"Cancelled Quantity" cannot exceed the remaining quantity';
+                }
+                else{
+                    callSaveSubscription(subscription);
+                    return 'Saved successfully.';
                 }
             }
             else if(totalCanceledOrHold > subscription.Quantity__c){
@@ -606,23 +646,29 @@ public class AssetSubscriptionAllocationHelper {
                 if(totalCanceledOrHold > (subscription.Quantity__c - subscription.Total_Implemented_Quantity__c) && subscription.Total_Implemented_Quantity__c  > 0){
                     return '"Cancelled Quantity" and “On Hold Quantity” cannot exceed the remaining quantity';
                 }
+                else{
+                    callSaveSubscription(subscription);
+                    return 'Saved successfully.';
+                }
             }
             else if((quantityCancelled >= subscription.Quantity__c
                     || quantityonHold >= subscription.Quantity__c) && !manager){
                 return 'Only managers can suspend or cancel the entire quantity of an asset or subscription.';
             }
             else{
-                update subscription;
-//                isSuccesfullySaved = true;
+                callSaveSubscription(subscription);
                 return 'Saved successfully.';
-
             }
 
 
         }catch (Exception ex){
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
+            return ex.getMessage();
         }
         return null;
+    }
+
+    public void callSaveSubscription(SubscriptionReplica__c subscription){
+        update subscription;
     }
 
     public void deleteNonImplementedAssetAllocations(id assetId){

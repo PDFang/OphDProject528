@@ -119,6 +119,10 @@
                                                 input.attr("data-quantityValidation-msg", 'Cannot allocate more than “Contract Quantity” if there is any quantity on hold or cancelled');
                                                 return false;
                                             }
+                                            if(input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && Number(input.val()) % 1 != 0){
+                                                 input.attr("data-quantityValidation-msg", 'Decimal values are not allowed in Allocated Quantity field');
+                                                return false;
+                                            }
                                         return true;
                                         }
                                      }

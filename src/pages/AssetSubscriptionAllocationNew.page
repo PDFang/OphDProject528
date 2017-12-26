@@ -309,6 +309,7 @@
             </div>
         </div>
         <apex:actionFunction name="reloadDetails" action="{!reloadDetails}" reRender="detailSection,detailSubscription,detailAsset,detailProject, refreshScript, deleteAllocationSection, deleteAllocationSectionSubs" immediate="true"/>
+        <apex:actionFunction name="reloadModal" action="{!reloadDetails}" reRender="subsCancSuspPageBlck,cancSuspPageBlck" immediate="true"/>
 
         <!--Implemented Product lists-->
         <div class="modal fade" id="ImplementedProducts" tabindex="-1" role="dialog" aria-labelledby="ImplementedProductslabel" aria-hidden="true" >
@@ -477,6 +478,7 @@
                 backdrop: 'static',
                 keyboard: false
            });
+           reloadModal();
      }
      function hideMessage(){
             $("div.cusotmMessage").hide();
@@ -509,6 +511,7 @@
                 backdrop: 'static',
                 keyboard: false
            });
+            reloadModal();
      }
 
     function closeModal(){
