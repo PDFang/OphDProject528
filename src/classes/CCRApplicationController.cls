@@ -63,19 +63,7 @@ public class CCRApplicationController {
 			result = 'Success';
 		}
 		catch (DmlException ex){
-			result = 'Failed';
-			message = ex.getMessage();
-			Integer occurence;
-			if (ex.getMessage().contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
-				occurence = message.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
-				message = message.mid(occurence, message.length());
-				occurence = message.lastIndexOf(':');
-				message = message.mid(0, occurence);
-			}
-			else {
-				message = ex.getMessage();
-			}
-
+			return handleException(ex);
 		}
 		return sendResponse(result, message);
 
@@ -90,22 +78,10 @@ public class CCRApplicationController {
 			result = 'Success';
 		}
 		catch (DmlException ex){
-			result = 'Failed';
-			message = ex.getMessage();
-			Integer occurence;
-			if (ex.getMessage().contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
-				occurence = message.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
-				message = message.mid(occurence, message.length());
-				occurence = message.lastIndexOf(':');
-				message = message.mid(0, occurence);
-			}
-			else {
-				message = ex.getMessage();
-			}
+			return handleException(ex);
 
 		}
 		return sendResponse(result, message);
-
 	}
 
 
@@ -118,7 +94,21 @@ public class CCRApplicationController {
 		return generator.getAsString();
 	}
 
-
+	private static string handleException(DmlException ex) {
+		String result = 'Failed';
+		String message = ex.getMessage();
+		Integer occurrence;
+		if (ex.getMessage().contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
+			occurrence = message.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
+			message = message.mid(occurrence, message.length());
+			occurrence = message.lastIndexOf(':');
+			message = message.mid(0, occurrence);
+		}
+		else {
+			message = ex.getMessage();
+		}
+		return sendResponse(result, message);
+	}
 
 
 
