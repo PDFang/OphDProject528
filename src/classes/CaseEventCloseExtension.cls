@@ -104,23 +104,15 @@ public with sharing class CaseEventCloseExtension
                 insert comments;
             }
 
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Record was saved successfully.'));
-        }
-        catch(DmlException ex)
-        {
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getDmlMessage(0)));
-            //return null;
-        }
-        
-        if(newRCARendered)
-        {
-            rca.Event__c = c.Id;
-            insert rca;
-        }
-        
-        if(!childCases.isEmpty())
-        {
-            
+            if(newRCARendered)
+            {
+                rca.Event__c = c.Id;
+                insert rca;
+            }
+
+            if(!childCases.isEmpty())
+            {
+
         	/* moved to CaseEventClass
             for(Case ic:childCases)
             {
@@ -129,19 +121,29 @@ public with sharing class CaseEventCloseExtension
                 {
                     ic.Status = c.Status;
                 }
-                
+
                 ic.Disposition__c = c.Disposition__c;
                 ic.Reason = c.Reason;
                 ic.Issue_Product__c = c.Issue_Product__c;
                 ic.Clients__c = c.Clients__c;
-                
-                
+
+
             }
-            
+
             update childCases;
            	*/
-            CaseEventClass.SyncChildCases(c.Id);
+                CaseEventClass.SyncChildCases(c.Id);
+            }
+
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Record was saved successfully. Pleaes click on Cancel to go back'));
         }
+        catch(DmlException ex)
+        {
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getDmlMessage(0)));
+            //return null;
+        }
+        
+
         
         //return to case page
         //PageReference casePage = new PageReference('/' + c.Id);
