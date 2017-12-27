@@ -98,7 +98,7 @@
         <apex:pageBlock mode="edit" title="Close Event" rendered="{!IF(Case.Status == 'Closed',true, false)}" >
 
             <apex:outputPanel >This case is in closed status. Please click Cancel to refresh the page.</apex:outputPanel>
-            <apex:outputPanel><apex:commandButton value="Cancel" onClick="CancelRequest();"/></apex:outputPanel>
+            <apex:outputPanel><apex:commandButton value="Cancel" onClick="CancelRequest();return false;"/></apex:outputPanel>
             <apex:actionFunction action="{!Cancel}" name="GoToCase"/>
 
         </apex:pageBlock>
