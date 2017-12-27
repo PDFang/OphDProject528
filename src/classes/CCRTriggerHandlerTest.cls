@@ -51,6 +51,7 @@ public with sharing class CCRTriggerHandlerTest {
 
             system.assert(topicName != null, 'Topic was not assigned for ' + item.Title);
             system.assertEquals(ccrApplications[index].Application__c, topicName, 'Topic was not assigned correctly for ' + item.Title);
+            index++;
         }
     }
 
