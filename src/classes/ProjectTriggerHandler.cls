@@ -492,7 +492,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
         }
 
         List<Project_Asset_Allocation__c> listProjectAssetAllocations = new List<Project_Asset_Allocation__c>(
-        [Select Id, Asset__c, Percent_Allocation__c, Implemented__c, Phase_Allocated__c,Phase_Implemented__c, PhaseImplemented__c, Phase_Implemented_Quantity__c,
+        [Select Id, Asset__c, Percent_Allocation__c, Implemented__c, Phase_Implemented__c, PhaseImplemented__c, Phase_Implemented_Quantity__c,
                 Quantity_Allocation__c from  Project_Asset_Allocation__c where Project__c IN : projectIds]);
 
         List<Project_Asset_Allocation__c> updateProjectAssetAllocationsList = new List<Project_Asset_Allocation__c>();
@@ -513,7 +513,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         List<Project_Subscription_Allocation__c> listProjectSubscriptionAllocations = new List<Project_Subscription_Allocation__c>(
         [Select Id, Subscription__c, Phase_Implemented_Quantity__c, Phase_Implemented__c, Subscription__r.Subscription__c,
-                Phase_Allocated__c, Percent_Allocation__c, PhaseImplemented__c, Quantity_Allocation__c from  Project_Subscription_Allocation__c where Project__c IN : projectIds]);
+                Percent_Allocation__c, PhaseImplemented__c, Quantity_Allocation__c from  Project_Subscription_Allocation__c where Project__c IN : projectIds]);
 
         System.debug('listProjectSubscriptionAllocations' + listProjectSubscriptionAllocations);
         List<SBQQ__Subscription__c> updateSubscriptionList = new List<SBQQ__Subscription__c>();
