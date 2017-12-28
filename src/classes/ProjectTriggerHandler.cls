@@ -280,7 +280,9 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         || newProject.Actual_NRR__c > 0 || newProject.Contracted_NRR__c > 0
                         || newProject.Actual_MRR__c > 0 || newProject.Contracted_MRR__c > 0
                         || newProject.Asset_Logged_Hours__c > 0
-                        || newProject.Subscription_Logged_Hours__c > 0 ))
+                        || newProject.Subscription_Logged_Hours__c > 0
+                        || newProject.Asset_Allocated_Hours__c > 0
+                        || newProject.Subscription_Allocated_Hours__c > 0))
                 {
                     system.debug('**** setParentProjectGoLiveDates(): created Phase Project ');
                     parentProjectIdSet.add(newProject.ParentProject__c);
@@ -292,6 +294,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         || newProject.Contracted_NRR__c != oldProject.Contracted_NRR__c
                         || newProject.Asset_Logged_Hours__c != oldProject.Asset_Logged_Hours__c
                         || newProject.Subscription_Logged_Hours__c != oldProject.Subscription_Logged_Hours__c
+                        || newProject.Asset_Allocated_Hours__c != oldProject.Asset_Allocated_Hours__c
+                        || newProject.Subscription_Allocated_Hours__c != oldProject.Subscription_Allocated_Hours__c
                         || newProject.Actual_MRR__c != oldProject.Actual_MRR__c
                         || newProject.Contracted_MRR__c != oldProject.Contracted_MRR__c) )
                 {
