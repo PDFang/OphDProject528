@@ -2,6 +2,7 @@
 private class AssetTriggerHandlerTest {
 
     static final String ACCOUNT_TYPE_CUSTOMERS = 'Customers';
+    static final String OPPORTUNITY_TYPE_PM_STANDARD = 'PM-Standard';
     static final String PROJECT_TYPE_PARENT_SAAS = 'PS Parent Project - SaaS';
     static final String PROJECT_TYPE_PHASE_SAAS = 'PS Project Phase SaaS';
     static final String ASSET_TYPE_PREMISE = 'Premise Asset';
@@ -10,6 +11,7 @@ private class AssetTriggerHandlerTest {
     static final Set<String> recordTypeSet = new Set<String>
     {
             ACCOUNT_TYPE_CUSTOMERS,
+            OPPORTUNITY_TYPE_PM_STANDARD,
             PROJECT_TYPE_PARENT_SAAS,
             PROJECT_TYPE_PHASE_SAAS,
             ASSET_TYPE_PREMISE,
@@ -18,6 +20,7 @@ private class AssetTriggerHandlerTest {
 
     static Map<String, Id> recordTypeMap = null;
     static Account acct = null;
+    static Opportunity testOpportunity = null;
     static List<Product2> productList = null;
     static List<Project__c> projectList = null;
     static List<Asset> assetList = null;
@@ -107,7 +110,7 @@ private class AssetTriggerHandlerTest {
         assetList[2].Type__c = 'Telco';
         assetList[3].Type__c = 'MRC'; // Change Type
         update assetList;
-        Test.stopTest();
+
 
         /*** Assert PS Project Phase ***/
         // Expected
@@ -220,6 +223,8 @@ private class AssetTriggerHandlerTest {
         system.assertEquals(projectMRC, result.ProjectMRC__c);
         system.assertEquals(projectNRC, result.ProjectNRC__c);
 
+        Test.stopTest();
+
     } // end of updateAssetTotalTest()
 
     /**** Validate Project asset totals on asset deletion ***/
@@ -305,6 +310,7 @@ private class AssetTriggerHandlerTest {
         }
 
         createAccount();
+        createOpportunity();
         createProducts();
         createProjects();
         //createAssets();
@@ -318,6 +324,23 @@ private class AssetTriggerHandlerTest {
                 RecordTypeId = recordTypeMap.get(ACCOUNT_TYPE_CUSTOMERS)
         );
         insert acct;
+    }
+
+    static void createOpportunity(){
+
+        testOpportunity = new Opportunity(
+                Name = 'AssetTriggerHandlerTest Opp 1',
+                AccountId = acct.Id,
+                RecordTypeId = recordTypeMap.get(OPPORTUNITY_TYPE_PM_STANDARD),
+                StageName = 'Prospecting',
+                CloseDate = Date.today(),
+                Probability = 25,
+                Partner_Deal__c = 'NO',
+                Contract_Type__c = 'New Customer'
+        );
+
+        insert testOpportunity;
+
     }
 
     static void createProducts()
@@ -347,11 +370,13 @@ private class AssetTriggerHandlerTest {
         Project__c project1 = new Project__c();
         project1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
         project1.Projected_Deadline__c = system.today() + 30;
+        project1.Opportunity__c = testOpportunity.Id;
         projectList.add(project1);
 
         Project__c project2 = new Project__c();
         project2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
         project2.Projected_Deadline__c = system.today() + 30;
+        project2.Opportunity__c = testOpportunity.Id;
         projectList.add(project2);
 
         Project__c phase1 = new Project__c();
@@ -368,6 +393,7 @@ private class AssetTriggerHandlerTest {
 
         phase1.ParentProject__c = project1.Id;
         phase1.Phase_Status__c = 'Closed';
+        phase1.ActualProjectGoLiveDate__c = system.today();
         update phase1;
 
     }
