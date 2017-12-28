@@ -1,16 +1,65 @@
-/**
- * Created by adriana.mcquiston on 12/19/2017.
- */
-@IsTest()
+
+@IsTest
 public with sharing class CCRTriggerHandlerTest {
     static testMethod void CCRCreateFeedItemsTest() {
-        BMCServiceDesk__Change_Request__c changeRequest = TestUtilities.createRFChangeRequest();
-        insert changeRequest;
-        TestUtilities.insertCCRControlCustomSetting();
-//Call ChangeControlRequest object
+        ChangeControlRequest__c ccr = insertTestData();
+        CCRTriggerHandler.changeLogGroup = 'Unit Test Chatter Group';
+
+        List<CCRApplication__c> ccrApplications = new List<CCRApplication__c>();
+        ccrApplications.add(new CCRApplication__c(
+                Application__c = 'Support Site Unit Test',
+                ChangeControlRequest__c = ccr.Id,
+                Description__c = 'test - Support Site'
+        ));
+
+        ccrApplications.add(new CCRApplication__c(
+                Application__c = 'Where Is Unit Test',
+                ChangeControlRequest__c = ccr.Id,
+                Description__c = 'test - Where Is'
+        ));
+        insert ccrApplications;
+
+        ccr.Status__c = 'Deployed';
+        update ccr;
+
+        test.startTest();
+
+        //set the status to closed
+        ccr.Status__c = 'Closed';
+        update ccr;
+
+        test.stopTest();
+
+        //verify that FeedItems were created and topics were correctly assigned
+        List<FeedItem> feedItems = [select Title, ParentId, Body from FeedItem order by Title];
+        List<TopicAssignment> topicAssignments = [select Topic.Name, EntityId from TopicAssignment];
+
+        //there are only two FeedItems, the first one will be the Support Site one
+        //the second will be the Where Is
+        system.assertEquals(2, feedItems.size());
+        system.assertEquals(2, topicAssignments.size());
+        Integer index = 0;
+        for(FeedItem item : feedItems) {
+            system.assertEquals(ccrApplications[index].Description__c, item.Body);
+            String topicName = null;
+            for(TopicAssignment ta : topicAssignments) {
+                if(ta.EntityId == item.Id) {
+                    topicName = ta.Topic.Name;
+                    break;
+                }
+            }
+
+            system.assert(topicName != null, 'Topic was not assigned for ' + item.Title);
+            system.assertEquals(ccrApplications[index].Application__c, topicName, 'Topic was not assigned correctly for ' + item.Title);
+            index++;
+        }
+    }
+
+    private static ChangeControlRequest__c insertTestData() {
+        List<RecordType> ccrRecordType = [select Id from RecordType where Name = 'Corporate IT' and SobjectType = 'ChangeControlRequest__c'];
+        //Call ChangeControlRequest object
         ChangeControlRequest__c changeControlRequest =
                 new ChangeControlRequest__c(
-                        id ='111',
                         Summary__c = 'Testing CCRs',
                         CCRStartTime__c = system.today(),
                         ChangeReason__c = 'Fix',
@@ -37,23 +86,51 @@ public with sharing class CCRTriggerHandlerTest {
                         Security__c = '2 - Access affected',
                         Validation__c = '3 - Minor',
                         Backout__c = '2 - In place, easy to do',
-                        OutageScope__c = '6 - Partial System'
+                        OutageScope__c = '6 - Partial System',
+                        RecordTypeId = ccrRecordType[0].Id
                 );
 
         insert changeControlRequest;
-        RecordType rt = [select Id from RecordType where Name = 'Communication Task' and SobjectType = 'CCRTask__c'];
-        CCRTask__c task123 = new CCRTask__c(Order__c = 1,
-                AssignedTo__c = userinfo.getUserId(),
-                Description__c = 'Validation',
-                Duration__c = 1,
-                Status__c = 'OPEN',
-                RecordTypeID = rt.id,
-                ChangeControlRequest__c = changeControlRequest.Id);
-        insert task123;
-        BMCServiceDesk__Status__c statusvalop = [Select Id,Name from BMCServiceDesk__Status__c where Name = 'OPENED'];
-        List<BMCServiceDesk__Task__c> tasks = TestUtilities.createRFTaskRecords(changeRequest, statusvalop.Id);
-        insert tasks;
 
+        //create each type of task
+        List<RecordType> recordTypes = [select Id from RecordType where Name in ('Communication Task', 'Validation Task', 'Work Task') and SobjectType = 'CCRTask__c'];
 
+        List<CCRTask__c> ccrTasks = new List<CCRTask__c>();
+        for(RecordType r : recordTypes) {
+            ccrTasks.add(new CCRTask__c(
+                    Order__c = 1,
+                    AssignedTo__c = userinfo.getUserId(),
+                    Description__c = 'Validation',
+                    Duration__c = 1,
+                    Status__c = 'OPEN',
+                    RecordTypeID = r.id,
+                    ChangeControlRequest__c = changeControlRequest.Id
+            ));
+        }
+
+        insert ccrTasks;
+
+        CollaborationGroup feedItemGroup = new CollaborationGroup(
+                Name = 'Unit Test Chatter Group',
+                CollaborationType = 'Private'
+        );
+        insert feedItemGroup;
+
+        //insert the new topics
+        List<Topic> newTopics = new List<Topic>();
+
+        newTopics.add(new Topic(
+                Description = 'Support Site Unit Test',
+                Name = 'Support Site Unit Test'
+        ));
+
+        newTopics.add(new Topic(
+                Description = 'Where Is Unit Test',
+                Name = 'Where Is Unit Test'
+        ));
+
+        insert newTopics;
+
+        return changeControlRequest;
     }
 }
