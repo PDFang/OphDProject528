@@ -229,8 +229,6 @@
                     {
                         field:"AllocatedQuantity",
                         title:"Allocated Quantity",
-                        format: "{0:n}",
-                        decimal:0,
                         editable:true
                     },
                     {
