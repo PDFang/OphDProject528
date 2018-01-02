@@ -3,81 +3,18 @@ private class SubscriptionRollupTest {
 
     static testMethod void testSubscriptionRollup() {
 
-        Project__c testparentProject = [
+        Project__c testPhaseProject = [
                 Select Id, Account__c, Opportunity__c
-                from Project__c where RecordType.Name = 'PS Parent Project - SaaS'
+                from Project__c where RecordType.Name = 'PS Project Phase SaaS'
         ];
 
-        Account testAccount = [
-                Select Id, Name
-                from Account where Name = 'SubscriptionRollupTest Customer'
-        ];
-
-        Opportunity testOpportunity = [
-                Select Id, Name, AccountId
-                from Opportunity where Name = 'ProjectAndOpportunityRollupTest'
+        SBQQ__Subscription__c testSubscription = [
+                Select Id
+                from SBQQ__Subscription__c limit 1
         ];
 
         test.startTest();
-        // create Phase Project
         ProjectRollupQueueable.doChainJob = false;
-
-        Map<String, RecordTypeInfo> projectRecordTypes = Schema.sObjectType.Project__c.getRecordTypeInfosByName();
-        Project__c testPhaseProject = new Project__c(
-            RecordTypeId = projectRecordTypes.get('PS Project Phase SaaS').getRecordTypeId(),
-            EstimatedProjectGoLiveDate__c = Date.today().addDays(7),
-            ActualProjectGoLiveDate__c = Date.today().addDays(7),
-            Summary__c = 'Phase 1',
-            Opportunity__c = testParentProject.Opportunity__c,
-            Account__c = testParentProject.Account__c,
-            ParentProject__c = testParentProject.Id,
-            Phase_Status__c = 'Open'
-        );
-        insert testPhaseProject;
-
-        // create Product
-        Product2 testProduct = new Product2(
-            Name     = 'AssetTriggerHandlerTest 1',
-            ProductCode ='1111',
-            Category__c = 'Maintenance'
-        );
-        insert testProduct;
-
-        // create Quote
-        Id strRecordTypeId = Schema.SObjectType.SBQQ__Quote__c.RecordTypeInfosByName.get('SaaS').RecordTypeId;
-        SBQQ__Quote__c testQuote = new SBQQ__Quote__c(
-            SBQQ__Account__c = testOpportunity.AccountId,
-            SBQQ__Opportunity2__c = testOpportunity.Id,
-            SBQQ__Type__c = 'Quote',
-            SBQQ__Status__c = 'Draft',
-            RecordTypeId = strRecordtypeId,
-            Usage_Rate_Type__c = 'Flat Usage Rates',
-            Flat_Usage_Rates__c ='0.0140'
-        );
-        insert testQuote;
-
-        // create Quoteline
-        SBQQ__QuoteLine__c testQuoteLine = new SBQQ__QuoteLine__c(
-            SBQQ__Product__c = testProduct.Id,
-            SBQQ__Existing__c = true,
-            SBQQ__NetPrice__c  = 20.00,
-            SBQQ__Quantity__c = 5,
-            SBQQ__Quote__c = testQuote.Id,
-            SBQQ__Bundled__c = false,
-            SBQQ__ListPrice__c = 20
-        );
-        insert (testQuoteLine);
-
-        // create Subscription
-        SBQQ__Subscription__c testSubscription = new SBQQ__Subscription__c(
-            SBQQ__Account__c =  testAccount.id,
-            SBQQ__Quantity__c = 10,
-            SBQQ__Product__c = testProduct.Id,
-            Budgeted_Hours__c = 10,
-            SBQQ__QuoteLine__c = testQuoteLine.id,
-            Project_Phase__c = testPhaseProject.Id
-        );
-        insert testSubscription;
 
         SubscriptionReplica__c testSubscriptionReplica = new SubscriptionReplica__c();
         testSubscriptionReplica = [SELECT Id, Account__c, Product__c, Subscription__r.Project_Phase__c, Quantity__c, Subscription__c FROM SubscriptionReplica__c WHERE Subscription__c = :testSubscription.Id limit 1];
@@ -98,7 +35,6 @@ private class SubscriptionRollupTest {
 
         // can’t chain queueable jobs in an Apex test so calling explicitly
         System.enqueueJob(new SubscriptionRollupQueueable(new Set<Id>{testSubscription.Id}));
-
         test.stopTest();
 
         SBQQ__Subscription__c resultSubscription = [
@@ -186,6 +122,63 @@ private class SubscriptionRollupTest {
                 Account__c = testAccount.Id
         );
         insert testParentProject;
+
+        // create Phase
+        Project__c testPhaseProject = new Project__c(
+                RecordTypeId = projectRecordTypes.get('PS Project Phase SaaS').getRecordTypeId(),
+                EstimatedProjectGoLiveDate__c = Date.today().addDays(7),
+                ActualProjectGoLiveDate__c = Date.today().addDays(7),
+                Summary__c = 'Phase 1',
+                Opportunity__c = testParentProject.Opportunity__c,
+                Account__c = testParentProject.Account__c,
+                ParentProject__c = testParentProject.Id,
+                Phase_Status__c = 'Open'
+        );
+        insert testPhaseProject;
+
+        // create Product
+        Product2 testProduct = new Product2(
+                Name     = 'AssetTriggerHandlerTest 1',
+                ProductCode ='1111',
+                Category__c = 'Maintenance'
+        );
+        insert testProduct;
+
+        // create Quote
+        Id strRecordTypeId = Schema.SObjectType.SBQQ__Quote__c.RecordTypeInfosByName.get('SaaS').RecordTypeId;
+        SBQQ__Quote__c testQuote = new SBQQ__Quote__c(
+                SBQQ__Account__c = testOpportunity.AccountId,
+                SBQQ__Opportunity2__c = testOpportunity.Id,
+                SBQQ__Type__c = 'Quote',
+                SBQQ__Status__c = 'Draft',
+                RecordTypeId = strRecordtypeId,
+                Usage_Rate_Type__c = 'Flat Usage Rates',
+                Flat_Usage_Rates__c ='0.0140'
+        );
+        insert testQuote;
+
+        // create Quoteline
+        SBQQ__QuoteLine__c testQuoteLine = new SBQQ__QuoteLine__c(
+                SBQQ__Product__c = testProduct.Id,
+                SBQQ__Existing__c = true,
+                SBQQ__NetPrice__c  = 20.00,
+                SBQQ__Quantity__c = 5,
+                SBQQ__Quote__c = testQuote.Id,
+                SBQQ__Bundled__c = false,
+                SBQQ__ListPrice__c = 20
+        );
+        insert (testQuoteLine);
+
+        // create Subscription
+        SBQQ__Subscription__c testSubscription = new SBQQ__Subscription__c(
+                SBQQ__Account__c =  testAccount.id,
+                SBQQ__Quantity__c = 10,
+                SBQQ__Product__c = testProduct.Id,
+                Budgeted_Hours__c = 10,
+                SBQQ__QuoteLine__c = testQuoteLine.id,
+                Project_Phase__c = testPhaseProject.Id
+        );
+        insert testSubscription;
     }
 
 }
