@@ -3,21 +3,12 @@ private class SubscriptionRollupTest {
 
     static testMethod void testSubscriptionRollup() {
 
-        Project__c testPhaseProject = [
-                Select Id, Account__c, Opportunity__c
-                from Project__c where RecordType.Name = 'PS Project Phase SaaS'
-        ];
-
-        SBQQ__Subscription__c testSubscription = [
-                Select Id
-                from SBQQ__Subscription__c limit 1
-        ];
-
         test.startTest();
         ProjectRollupQueueable.doChainJob = false;
 
-        SubscriptionReplica__c testSubscriptionReplica = new SubscriptionReplica__c();
-        testSubscriptionReplica = [SELECT Id, Account__c, Product__c, Subscription__r.Project_Phase__c, Quantity__c, Subscription__c FROM SubscriptionReplica__c WHERE Subscription__c = :testSubscription.Id limit 1];
+        SubscriptionReplica__c testSubscriptionReplica = [
+                SELECT Id, Account__c, Product__c, Subscription__r.Project_Phase__c, Quantity__c, Subscription__c FROM SubscriptionReplica__c limit 1
+        ];
 
         // create Project Subscription Allocation
         Project_Subscription_Allocation__c testprojectSubscriptionAllocation = new Project_Subscription_Allocation__c(
@@ -34,17 +25,17 @@ private class SubscriptionRollupTest {
         update testprojectSubscriptionAllocation;
 
         // can’t chain queueable jobs in an Apex test so calling explicitly
-        System.enqueueJob(new SubscriptionRollupQueueable(new Set<Id>{testSubscription.Id}));
+        System.enqueueJob(new SubscriptionRollupQueueable(new Set<Id>{testSubscriptionReplica.Subscription__c}));
         test.stopTest();
 
         SBQQ__Subscription__c resultSubscription = [
                 Select Id, Name, Total_Implemented_Quantity__c, SBQQ__Quantity__c, Contracted_MRR__c, Actual_MRR__c
-                from SBQQ__Subscription__c where Id = :testSubscription.Id
+                from SBQQ__Subscription__c where Id = :testSubscriptionReplica.Subscription__c
         ];
 
         Project__c resultPhaseProject = [
                 Select Id, Name, Contracted_MRR__c, Actual_MRR__c
-                from Project__c where Id = : testPhaseProject.Id
+                from Project__c where Id = :testSubscriptionReplica.Subscription__r.Project_Phase__c
         ];
 
         // assert subscription contracted MMR and Actual MMR are the same as phase project
