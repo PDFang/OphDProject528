@@ -38,10 +38,15 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         createAssets();
         Test.startTest();
         Test.setCurrentPage(Page.AssetSubscriptionAllocationNew);
-        ApexPages.currentPage().getParameters().put('id', projectList[1].Id);
+
+	    ApexPages.currentPage().getParameters().put('id', null);
+	    asstSubsAlloCont = new AssetSubscriptionAllocationNewController();
+
+	    ApexPages.currentPage().getParameters().put('id', projectList[1].Id);
         asstSubsAlloCont = new AssetSubscriptionAllocationNewController();
         ApexPages.currentPage().getParameters().put('id', assetList[0].Id);
         asstSubsAlloCont = new AssetSubscriptionAllocationNewController();
+
 
         Asset testAsset = asstSubsAlloCont.Asset;
         SubscriptionReplica__c testReplica = asstSubsAlloCont.Subscription;
@@ -70,59 +75,139 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         //System.debug('assetSubsResponseFromProj =>' + assetSubsResponseFromProj);
         System.assertNotEquals(null, assetSubsResponseFromProj);
 
-        string assetAllocationDel = AssetSubscriptionAllocationNewController.DeleteAllocation(projectAssetAllocation.Id, objType);
-        //System.debug('assetAllocationDel =>' + assetAllocationDel);
-        System.assertNotEquals(null, assetAllocationDel);
 
         asstSubsAlloCont.Asset.QuantityCancelled__c = 2;
+	    asstSubsAlloCont.Asset.QuantityonHold__c = 0;
         asstSubsAlloCont.SaveCancSuspQuantity();
         //System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
         system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Department Responsible or Root Cause can not be empty if Quantity Cancelled is greater than 0.');
 
         asstSubsAlloCont.Asset.QuantityonHold__c = 2;
+	    asstSubsAlloCont.Asset.QuantityCancelled__c = 0;
+
         asstSubsAlloCont.SaveCancSuspQuantity();
         //System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
         system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Department Responsible or Root Cause can not be empty if Quantity On Hold is greater than 0.');
 
+	    asstSubsAlloCont.Asset.QuantityonHold__c = 2;
+	    asstSubsAlloCont.Asset.QuantityCancelled__c = 0;
+	    asstSubsAlloCont.Asset.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Asset.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Asset.Additional_Detail__c = null;
+	    asstSubsAlloCont.SaveCancSuspQuantity();
+	    //System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
+	    system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Additional Detail must be populated if the Quantity  on Hold is greater than 0.');
+
+	    asstSubsAlloCont.Asset.QuantityonHold__c = 2;
+	    asstSubsAlloCont.Asset.QuantityCancelled__c = 0;
+	    asstSubsAlloCont.Asset.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Asset.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Asset.Additional_Detail__c = null;
+	    asstSubsAlloCont.SaveCancSuspQuantity();
+	    //System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
+	    system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Additional Detail must be populated if the Quantity  Cancelled is greater than 0.');
+
         asstSubsAlloCont.Asset.QuantityCancelled__c = 5;
-        asstSubsAlloCont.Asset.QuantityonHold__c = 2;
-       // asstSubsAlloCont.Asset.Root_Cause__c = 'Test2';
-       // asstSubsAlloCont.Asset.Department_Responsible__c = 'Test1';
+        asstSubsAlloCont.Asset.QuantityonHold__c = 0;
+	    asstSubsAlloCont.Asset.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Asset.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Asset.Additional_Detail__c = 'test';
         asstSubsAlloCont.SaveCancSuspQuantity();
         //System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
-        //system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Only managers can suspend or cancel the entire quantity of an asset or subscription.');
+        system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Only managers can suspend or cancel the entire quantity of an asset or subscription.');
+
+
+	    asstSubsAlloCont.Asset.QuantityCancelled__c = 3;
+	    asstSubsAlloCont.Asset.QuantityonHold__c = 3;
+	    asstSubsAlloCont.Asset.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Asset.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Asset.Additional_Detail__c = 'test';
+	    asstSubsAlloCont.SaveCancSuspQuantity();
 
         asstSubsAlloCont.Asset.QuantityCancelled__c = 1;
         asstSubsAlloCont.Asset.QuantityonHold__c = 1;
         asstSubsAlloCont.Asset.Root_Cause__c = 'Configuration';
         asstSubsAlloCont.Asset.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Asset.Additional_Detail__c = 'test';
         asstSubsAlloCont.SaveCancSuspQuantity();
-        //System.debug('ApexPages.hasMessages(ApexPages.Severity.CONFIRM) ==>' + ApexPages.hasMessages(ApexPages.Severity.CONFIRM));
+
+	    asstSubsAlloCont.Asset.QuantityCancelled__c = 1;
+	    asstSubsAlloCont.Asset.QuantityonHold__c = 1;
+	    asstSubsAlloCont.Asset.Root_Cause__c = 'Against policy/regulations';
+	    asstSubsAlloCont.Asset.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Asset.Additional_Detail__c = 'test';
+	    asstSubsAlloCont.SaveCancSuspQuantity();
+
+
+	    //System.debug('ApexPages.hasMessages(ApexPages.Severity.CONFIRM) ==>' + ApexPages.hasMessages(ApexPages.Severity.CONFIRM));
        //system.assert(ApexPages.hasMessages(ApexPages.Severity.CONFIRM), 'Saved Successfully.');
 
-        asstSubsAlloCont.Asset.QuantityCancelled__c = 6;
+        asstSubsAlloCont.Asset.QuantityCancelled__c = 16;
         asstSubsAlloCont.Asset.QuantityonHold__c = 0;
         asstSubsAlloCont.Asset.Root_Cause__c = 'Configuration';
         asstSubsAlloCont.Asset.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Asset.Additional_Detail__c = 'test';
         asstSubsAlloCont.SaveCancSuspQuantity();
         //System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
         system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), '"Cancelled Quantity" cannot exceed the contract quantity');
 
         asstSubsAlloCont.Asset.QuantityCancelled__c = 0;
-        asstSubsAlloCont.Asset.QuantityonHold__c = 6;
+        asstSubsAlloCont.Asset.QuantityonHold__c = 4;
         asstSubsAlloCont.Asset.Root_Cause__c = 'Configuration';
         asstSubsAlloCont.Asset.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Asset.Additional_Detail__c = 'test';
         asstSubsAlloCont.SaveCancSuspQuantity();
-        //System.debug('ApexPages.hasMessages(ApexPages.Severity.CONFIRM) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
-        system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), '"On Hold Quantity" cannot exceed the contract quantity');
 
-        Test.setCurrentPageReference(new PageReference('Page.AssetSubscriptionAllocationNew'));
+
+        asstSubsAlloCont.Asset.QuantityCancelled__c = 4;
+        asstSubsAlloCont.Asset.QuantityonHold__c = 0;
+        asstSubsAlloCont.Asset.Root_Cause__c = 'Configuration';
+        asstSubsAlloCont.Asset.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Asset.Additional_Detail__c = 'test';
+        asstSubsAlloCont.SaveCancSuspQuantity();
+
+
+
+
+        projectAssetAllocation.Implemented__c = true;
+	    projectAssetAllocation.Phase_Implemented_Quantity__c = 2;
+        update projectAssetAllocation;
+
+        asstSubsAlloCont.Asset.QuantityCancelled__c = 0;
+        asstSubsAlloCont.Asset.QuantityonHold__c = 4;
+        asstSubsAlloCont.Asset.Root_Cause__c = 'Configuration';
+        asstSubsAlloCont.Asset.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Asset.Additional_Detail__c = 'test';
+        asstSubsAlloCont.SaveCancSuspQuantity();
+
+
+	    asstSubsAlloCont.Asset.QuantityCancelled__c = 4;
+	    asstSubsAlloCont.Asset.QuantityonHold__c = 0;
+	    asstSubsAlloCont.Asset.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Asset.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Asset.Additional_Detail__c = 'test';
+	    asstSubsAlloCont.SaveCancSuspQuantity();
+
+	    asstSubsAlloCont.Asset.QuantityCancelled__c = 2;
+	    asstSubsAlloCont.Asset.QuantityonHold__c = 2;
+	    asstSubsAlloCont.Asset.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Asset.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Asset.Additional_Detail__c = 'test';
+	    asstSubsAlloCont.SaveCancSuspQuantity();
+
+
+
+	    Test.setCurrentPageReference(new PageReference('Page.AssetSubscriptionAllocationNew'));
 	    System.debug('implementedProduct =>> ' + implementedProduct);
         System.currentPageReference().getParameters().put('rowid', implementedProduct.Id);
         asstSubsAlloCont.saveImplementedProduct();
+        asstSubsAlloCont.deleteAssetAllocation();
 
+	    string assetAllocationDel = AssetSubscriptionAllocationNewController.DeleteAllocation(projectAssetAllocation.Id, objType);
+	    //System.debug('assetAllocationDel =>' + assetAllocationDel);
+	    System.assertNotEquals(null, assetAllocationDel);
 
-        Test.stopTest();
+	    Test.stopTest();
 
     }
 
@@ -156,45 +241,150 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         System.debug('phaseProjectResponse =>' + phaseProjectResponse);
         System.assertNotEquals(null, phaseProjectResponse);
 
-        string assetSubsResponseFromProj = AssetSubscriptionAllocationNewController.AssetSubscriptionDetailsFromProjectPhase(projectList[2].Id, objType);
+        string assetSubsResponseFromProj = AssetSubscriptionAllocationNewController.AssetSubscriptionDetailsFromProjectPhase(projectList[1].Id, objType);
         System.debug('assetSubsResponseFromProj =>' + assetSubsResponseFromProj);
         System.assertNotEquals(null, assetSubsResponseFromProj);
 
-        string subscriptionAllocationDel = AssetSubscriptionAllocationNewController.DeleteAllocation(projectSubscriptionAllocation.Id, objType);
-        System.debug('subscriptionAllocationDel =>' + subscriptionAllocationDel);
-        System.assertNotEquals(null, subscriptionAllocationDel);
 
         asstSubsAlloCont.cancel();
         asstSubsAlloCont.reloadDetails();
 
 
         asstSubsAlloCont.Subscription.QuantityCancelled__c = 2;
+        asstSubsAlloCont.Subscription.QuantityonHold__c = 0;
+	    asstSubsAlloCont.Subscription.Additional_Detail__c = 'test';
         asstSubsAlloCont.SaveCancSuspQuantitySubs();
         System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
         system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Department Responsible or Root Cause can not be empty if Quantity Cancelled is greater than 0.');
 
         asstSubsAlloCont.Subscription.QuantityonHold__c = 2;
+        asstSubsAlloCont.Subscription.QuantityonHold__c = 0;
+	    asstSubsAlloCont.Subscription.Additional_Detail__c = 'test';
         asstSubsAlloCont.SaveCancSuspQuantitySubs();
         System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
         system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Department Responsible or Root Cause can not be empty if Quantity On Hold is greater than 0.');
 
-        asstSubsAlloCont.Subscription.QuantityCancelled__c = 10;
-        asstSubsAlloCont.Subscription.QuantityonHold__c = 2;
-        //asstSubsAlloCont.Subscription.Root_Cause__c = 'Test2';
-       // asstSubsAlloCont.Subscription.Department_Responsible__c = 'Test1';
-        asstSubsAlloCont.SaveCancSuspQuantitySubs();
-        System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
-        system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Only managers can suspend or cancel the entire quantity of an asset or subscription.');
+        asstSubsAlloCont.Subscription.QuantityCancelled__c = 0;
+	    asstSubsAlloCont.Subscription.QuantityonHold__c = 5;
+	    asstSubsAlloCont.Subscription.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Subscription.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Subscription.Additional_Detail__c = 'test';
+	    asstSubsAlloCont.SaveCancSuspQuantitySubs();
+	    System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
+	    system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Only managers can suspend or cancel the entire quantity of an asset or subscription.');
 
-        asstSubsAlloCont.Subscription.QuantityCancelled__c = 2;
+	    asstSubsAlloCont.Subscription.QuantityCancelled__c = 2;
+	    asstSubsAlloCont.Subscription.QuantityonHold__c = 0;
+	    asstSubsAlloCont.Subscription.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Subscription.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Subscription.Additional_Detail__c = null;
+	    asstSubsAlloCont.SaveCancSuspQuantitySubs();
+	    System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
+	    system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Additional Detail must be populated if the Quantity Cancelled is greater than 0.');
+
+	    asstSubsAlloCont.Subscription.QuantityCancelled__c = 2;
+	    asstSubsAlloCont.Subscription.QuantityonHold__c = 0;
+	    asstSubsAlloCont.Subscription.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Subscription.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Subscription.Additional_Detail__c = null;
+	    asstSubsAlloCont.SaveCancSuspQuantitySubs();
+	    System.debug('ApexPages.hasMessages(ApexPages.Severity.ERROR) ==>' + ApexPages.hasMessages(ApexPages.Severity.ERROR));
+	    system.assert(ApexPages.hasMessages(ApexPages.Severity.ERROR), 'Additional Detail must be populated if the Quantity on Hold is greater than 0.');
+
+
+
+	    asstSubsAlloCont.Subscription.QuantityCancelled__c = 2;
         asstSubsAlloCont.Subscription.QuantityonHold__c = 2;
-       // asstSubsAlloCont.Subscription.Root_Cause__c = 'Test2';
-        //asstSubsAlloCont.Subscription.Department_Responsible__c = 'Test1';
+        asstSubsAlloCont.Subscription.Root_Cause__c = 'Configuration';
+        asstSubsAlloCont.Subscription.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Subscription.Additional_Detail__c = 'test';
         asstSubsAlloCont.SaveCancSuspQuantitySubs();
         System.debug('ApexPages.hasMessages(ApexPages.Severity.CONFIRM) ==>' + ApexPages.hasMessages(ApexPages.Severity.CONFIRM));
-        system.assert(ApexPages.hasMessages(ApexPages.Severity.CONFIRM), 'Saved Successfully.');
+        //system.assert(ApexPages.hasMessages(ApexPages.Severity.CONFIRM), 'Saved Successfully.');
 
-        Test.stopTest();
+        asstSubsAlloCont.Subscription.QuantityCancelled__c = 15;
+        asstSubsAlloCont.Subscription.QuantityonHold__c = 0;
+        asstSubsAlloCont.Subscription.Root_Cause__c = 'Configuration';
+        asstSubsAlloCont.Subscription.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Subscription.Additional_Detail__c = 'test';
+        asstSubsAlloCont.SaveCancSuspQuantitySubs();
+
+	    asstSubsAlloCont.Subscription.QuantityCancelled__c = 0;
+	    asstSubsAlloCont.Subscription.QuantityonHold__c = 15;
+	    asstSubsAlloCont.Subscription.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Subscription.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Subscription.Additional_Detail__c = 'test';
+	    asstSubsAlloCont.SaveCancSuspQuantitySubs();
+
+	    asstSubsAlloCont.Subscription.QuantityCancelled__c = 3;
+	    asstSubsAlloCont.Subscription.QuantityonHold__c = 3;
+	    asstSubsAlloCont.Subscription.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Subscription.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Subscription.Additional_Detail__c = 'test';
+	    asstSubsAlloCont.SaveCancSuspQuantitySubs();
+
+	    asstSubsAlloCont.Subscription.QuantityCancelled__c = 3;
+	    asstSubsAlloCont.Subscription.QuantityonHold__c = 2;
+	    asstSubsAlloCont.Subscription.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Subscription.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Subscription.Additional_Detail__c = 'test';
+	    asstSubsAlloCont.SaveCancSuspQuantitySubs();
+
+	    projectSubscriptionAllocation.Implemented__c = true;
+	    projectSubscriptionAllocation.Phase_Implemented_Quantity__c = 2;
+	    update projectSubscriptionAllocation;
+
+	    asstSubsAlloCont.Subscription.QuantityCancelled__c = 4;
+	    asstSubsAlloCont.Subscription.QuantityonHold__c = 0;
+	    asstSubsAlloCont.Subscription.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Subscription.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Subscription.Additional_Detail__c = 'test';
+	    asstSubsAlloCont.SaveCancSuspQuantitySubs();
+
+	    asstSubsAlloCont.Subscription.QuantityCancelled__c = 0;
+	    asstSubsAlloCont.Subscription.QuantityonHold__c = 4;
+	    asstSubsAlloCont.Subscription.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Subscription.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Subscription.Additional_Detail__c = 'test';
+	    asstSubsAlloCont.SaveCancSuspQuantitySubs();
+
+	    asstSubsAlloCont.Subscription.QuantityCancelled__c = 2;
+	    asstSubsAlloCont.Subscription.QuantityonHold__c = 2;
+	    asstSubsAlloCont.Subscription.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Subscription.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Subscription.Additional_Detail__c = 'test';
+	    asstSubsAlloCont.SaveCancSuspQuantitySubs();
+
+	    asstSubsAlloCont.Subscription.QuantityCancelled__c =1;
+	    asstSubsAlloCont.Subscription.QuantityonHold__c = 1;
+	    asstSubsAlloCont.Subscription.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Subscription.Department_Responsible__c = 'Customer';
+	    asstSubsAlloCont.Subscription.Additional_Detail__c = 'test';
+	    asstSubsAlloCont.SaveCancSuspQuantitySubs();
+
+
+	    asstSubsAlloCont.Subscription.QuantityCancelled__c =1;
+	    asstSubsAlloCont.Subscription.QuantityonHold__c = 1;
+	    asstSubsAlloCont.Subscription.Root_Cause__c = 'Configuration';
+	    asstSubsAlloCont.Subscription.Department_Responsible__c = 'Accounting/Billing';
+	    asstSubsAlloCont.Subscription.Additional_Detail__c = 'test';
+	    asstSubsAlloCont.SaveCancSuspQuantitySubs();
+
+        Test.setCurrentPageReference(new PageReference('Page.AssetSubscriptionAllocationNew'));
+        System.debug('implementedProduct =>> ' + implementedProduct);
+        System.currentPageReference().getParameters().put('rowid', implementedProduct.Id);
+        asstSubsAlloCont.saveImplementedProduct();
+        asstSubsAlloCont.deleteSubsAllocation();
+        boolean isManager = asstSubsAlloCont.Manager;
+
+        system.assertEquals(false, isManager);
+
+	    string subscriptionAllocationDel = AssetSubscriptionAllocationNewController.DeleteAllocation(projectSubscriptionAllocation.Id, objType);
+	    System.debug('subscriptionAllocationDel =>' + subscriptionAllocationDel);
+	    System.assertNotEquals(null, subscriptionAllocationDel);
+
+
+	    Test.stopTest();
 
     }
 
@@ -309,7 +499,7 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         projectAssetAllocation = new Project_Asset_Allocation__c(
                 Asset__c = assetList[0].Id,
                 Project__c = assetList[0].Project_Phase__c,
-                Quantity_Allocation__c = 1
+                Quantity_Allocation__c = 2
 
         );
 
@@ -323,10 +513,10 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         subscription = new SBQQ__Subscription__c();
         subscription.SBQQ__Account__c =  acct.id;
         //subscription.SBQQ__QuoteLine__c = QuoteLine.id;
-        subscription.SBQQ__Quantity__c = 10;
+        subscription.SBQQ__Quantity__c = 5;
         subscription.SBQQ__Product__c = productList[0].Id;
         subscription.Budgeted_Hours__c = 10;
-        subscription.Project_Phase__c = projectList[2].Id;
+        subscription.Project_Phase__c = projectList[1].Id;
 
         insert subscription;
 
@@ -338,7 +528,7 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         projectSubscriptionAllocation = new Project_Subscription_Allocation__c(
                 Project__c = subscriptionReplica.Subscription__r.Project_Phase__c,
                 Subscription__c  = subscriptionReplica.Id,
-                Quantity_Allocation__c = 5
+                Quantity_Allocation__c = 2
         );
         insert projectSubscriptionAllocation;
     }
