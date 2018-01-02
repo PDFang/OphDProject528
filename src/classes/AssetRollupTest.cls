@@ -1,6 +1,7 @@
 @IsTest
 private class AssetRollupTest {
     static final String ACCOUNT_TYPE_CUSTOMERS = 'Customers';
+    static final String OPPORTUNITY_TYPE_PM_STANDARD = 'PM-Standard';
     static final String PROJECT_TYPE_PARENT_SAAS = 'PS Parent Project - SaaS';
     static final String PROJECT_TYPE_PHASE_SAAS = 'PS Project Phase SaaS';
     static final String ASSET_TYPE_PREMISE = 'Premise Asset';
@@ -9,6 +10,7 @@ private class AssetRollupTest {
     static final Set<String> recordTypeSet = new Set<String>
     {
             ACCOUNT_TYPE_CUSTOMERS,
+            OPPORTUNITY_TYPE_PM_STANDARD,
             PROJECT_TYPE_PARENT_SAAS,
             PROJECT_TYPE_PHASE_SAAS,
             ASSET_TYPE_PREMISE,
@@ -17,6 +19,7 @@ private class AssetRollupTest {
 
     private static Map<String, Id> recordTypeMap;
     private static Account acct;
+    static Opportunity testOpportunity = null;
     private static List<Product2> productList;
     private static List<Project__c> projectList;
     private static List<Asset> assetList;
@@ -59,6 +62,40 @@ private class AssetRollupTest {
         system.assertEquals(1130, testProject.Actual_NRR__c, 'Sum of Actual_NRR__C was incorrect');
     }
 
+    static testMethod void assetRollupSchedulableTest() {
+
+        createTestData();
+
+        Datetime nextRun = system.now().addSeconds(5);
+        String dateTimeFormat = '{0} {1} {2} {3} {4} ? {5}';
+        String scheduledTime = string.format(
+                dateTimeFormat,
+                new String[]{
+                        nextRun.second().format(),
+                        nextRun.minute().format(),
+                        nextRun.hour().format(),
+                        nextRun.day().format(),
+                        nextRun.month().format(),
+                        nextRun.year().format().remove(',')
+                }
+        );
+        system.debug('scheduleJob(): scheduledTime - ' + scheduledTime);
+
+        test.startTest();
+
+        AssetRollupSchedulable schedulable = new AssetRollupSchedulable(1);
+        schedulable = new AssetRollupSchedulable('Select Id from Asset', 10);
+
+        String scheduledJobId = system.schedule('assetRollupSchedulableTest1', scheduledTime, schedulable);
+
+        test.stopTest();
+
+        CronTrigger job = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
+
+        system.assertEquals(scheduledTime, job.CronExpression);
+
+    }
+
     static void createTestData()
     {
         recordTypeMap = new Map<String, Id>();
@@ -69,6 +106,8 @@ private class AssetRollupTest {
         }
 
         createAccount();
+
+        createOpportunity();
 
         createProducts();
 
@@ -84,6 +123,23 @@ private class AssetRollupTest {
                 RecordTypeId = recordTypeMap.get(ACCOUNT_TYPE_CUSTOMERS)
         );
         insert acct;
+    }
+
+    static void createOpportunity(){
+
+        testOpportunity = new Opportunity(
+                Name = 'AssetTriggerHandlerTest Opp 1',
+                AccountId = acct.Id,
+                RecordTypeId = recordTypeMap.get(OPPORTUNITY_TYPE_PM_STANDARD),
+                StageName = 'Prospecting',
+                CloseDate = Date.today(),
+                Probability = 25,
+                Partner_Deal__c = 'NO',
+                Contract_Type__c = 'New Customer'
+        );
+
+        insert testOpportunity;
+
     }
 
     private static void createProducts()
@@ -113,18 +169,22 @@ private class AssetRollupTest {
         Project__c project1 = new Project__c();
         project1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
         project1.Projected_Deadline__c = system.today() + 30;
+        project1.Opportunity__c = testOpportunity.Id;
         projectList.add(project1);
+
+        insert project1;
 
         Project__c phase1 = new Project__c();
         phase1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_SAAS);
         phase1.Projected_Deadline__c = system.today() + 30;
+        phase1.ParentProject__c = project1.Id;
         projectList.add(phase1);
 
-        insert projectList;
+        insert phase1;
 
-        phase1.ParentProject__c = project1.Id;
-        phase1.Phase_Status__c = 'Closed';
-        update phase1;
+//        phase1.ParentProject__c = project1.Id;
+//        phase1.Phase_Status__c = 'Closed';
+//        update phase1;
 
     }
 

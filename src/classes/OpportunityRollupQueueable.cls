@@ -173,6 +173,7 @@ public class OpportunityRollupQueueable implements Queueable{
 
             if(opp.Contracted_NRR__c != oppOld.Contracted_NRR__c || opp.Actual_NRR__c != oppOld.Actual_NRR__c
                     || opp.Contracted_MRR__c != oppOld.Contracted_MRR__c || opp.Actual_MRR__c != oppOld.Actual_MRR__c
+                    || opp.Allocated_Hours__c != oppOld.Allocated_Hours__c
                     || opp.Logged_Hours__c != oppOld.Logged_Hours__c)
             {
                 system.debug('**** rollupFinancials(): one or more fields value have changed');

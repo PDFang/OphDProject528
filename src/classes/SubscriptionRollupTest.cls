@@ -138,14 +138,17 @@ private class SubscriptionRollupTest {
         String query = 'Select Id from SBQQ__Subscription__c';
 
         test.startTest();
-        String scheduledJobId = system.schedule('testProjectRollupSchedulable', scheduledTime, new SubscriptionRollupSchedulable(5));
-        String scheduledJobId2 = system.schedule('test2ProjectRollupSchedulable', scheduledTime, new SubscriptionRollupSchedulable(query, 5));
+
+        SubscriptionRollupSchedulable schedulable = new SubscriptionRollupSchedulable(5);
+        schedulable = new SubscriptionRollupSchedulable(query, 5);
+
+        String scheduledJobId = system.schedule('testProjectRollupSchedulable', scheduledTime, schedulable);
+
         test.stopTest();
 
         CronTrigger job = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
-        CronTrigger job2 = [Select Id, State, NextFireTime, CronExpression From CronTrigger where Id = :scheduledJobId];
+
         system.assertEquals(scheduledTime, job.CronExpression);
-        system.assertEquals(scheduledTime, job2.CronExpression);
 
     } // end of SubscriptionRollupSchedulableTest()
 
