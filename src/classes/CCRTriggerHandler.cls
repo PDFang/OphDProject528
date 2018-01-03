@@ -1,7 +1,3 @@
-/**
- * Created by adriana.mcquiston on 10/30/2017.
- */
-
 public with sharing class CCRTriggerHandler extends TriggerHandler{
 	@TestVisible
 	private static String changeLogGroup = 'Information Systems Change Log';
