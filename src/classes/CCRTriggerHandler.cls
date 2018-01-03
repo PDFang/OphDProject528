@@ -3,6 +3,7 @@
  */
 
 public with sharing class CCRTriggerHandler extends TriggerHandler{
+	@TestVisible
 	private static String changeLogGroup = 'Information Systems Change Log';
 	map<string, list<string>> topicMap = new  map<string, list<string>>();
 
