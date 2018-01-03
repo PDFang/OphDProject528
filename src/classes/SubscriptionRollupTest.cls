@@ -6,6 +6,28 @@ private class SubscriptionRollupTest {
         test.startTest();
         ProjectRollupQueueable.doChainJob = false;
 
+        Project__c testPhaseProject = [
+                Select Id from Project__c
+                where RecordType.Name = 'PS Project Phase SaaS'
+        ];
+
+        SBQQ__QuoteLine__c testQuoteLine = [
+                Select Id, SBQQ__Product__c, SBQQ__Quote__r.SBQQ__Account__c
+                from SBQQ__QuoteLine__c limit 1
+        ];
+
+        // create Subscription
+        SBQQ__Subscription__c testSubscription = new SBQQ__Subscription__c(
+                SBQQ__Account__c =  testQuoteLine.SBQQ__Quote__r.SBQQ__Account__c,
+                SBQQ__Quantity__c = 10,
+                SBQQ__Product__c = testQuoteLine.SBQQ__Product__c,
+                Budgeted_Hours__c = 10,
+                SBQQ__QuoteLine__c = testQuoteLine.Id,
+                Project_Phase__c = testPhaseProject.Id
+        );
+
+        insert testSubscription;
+
         SubscriptionReplica__c testSubscriptionReplica = [
                 SELECT Id, Account__c, Product__c, Subscription__r.Project_Phase__c, Quantity__c, Subscription__c FROM SubscriptionReplica__c limit 1
         ];
@@ -65,6 +87,28 @@ private class SubscriptionRollupTest {
         String query = 'Select Id from SBQQ__Subscription__c';
 
         test.startTest();
+
+        Project__c testPhaseProject = [
+                Select Id from Project__c
+                where RecordType.Name = 'PS Project Phase SaaS'
+        ];
+
+        SBQQ__QuoteLine__c testQuoteLine = [
+                Select Id, SBQQ__Product__c, SBQQ__Quote__r.SBQQ__Account__c
+                from SBQQ__QuoteLine__c limit 1
+        ];
+
+        // create Subscription
+        SBQQ__Subscription__c testSubscription = new SBQQ__Subscription__c(
+                SBQQ__Account__c =  testQuoteLine.SBQQ__Quote__r.SBQQ__Account__c,
+                SBQQ__Quantity__c = 10,
+                SBQQ__Product__c = testQuoteLine.SBQQ__Product__c,
+                Budgeted_Hours__c = 10,
+                SBQQ__QuoteLine__c = testQuoteLine.Id,
+                Project_Phase__c = testPhaseProject.Id
+        );
+
+        insert testSubscription;
 
         SubscriptionRollupSchedulable schedulable = new SubscriptionRollupSchedulable(5);
         schedulable = new SubscriptionRollupSchedulable(query, 5);
@@ -160,16 +204,7 @@ private class SubscriptionRollupTest {
         );
         insert (testQuoteLine);
 
-        // create Subscription
-        SBQQ__Subscription__c testSubscription = new SBQQ__Subscription__c(
-                SBQQ__Account__c =  testAccount.id,
-                SBQQ__Quantity__c = 10,
-                SBQQ__Product__c = testProduct.Id,
-                Budgeted_Hours__c = 10,
-                SBQQ__QuoteLine__c = testQuoteLine.id,
-                Project_Phase__c = testPhaseProject.Id
-        );
-        insert testSubscription;
+
     }
 
 }
