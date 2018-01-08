@@ -110,7 +110,7 @@ private class AssetTriggerHandlerTest {
         assetList[2].Type__c = 'Telco';
         assetList[3].Type__c = 'MRC'; // Change Type
         update assetList;
-
+        Test.stopTest();
 
         /*** Assert PS Project Phase ***/
         // Expected
@@ -222,8 +222,6 @@ private class AssetTriggerHandlerTest {
         system.assertEquals(projectAsset, result.Project_Asset__c);
         system.assertEquals(projectMRC, result.ProjectMRC__c);
         system.assertEquals(projectNRC, result.ProjectNRC__c);
-
-        Test.stopTest();
 
     } // end of updateAssetTotalTest()
 
@@ -391,10 +389,10 @@ private class AssetTriggerHandlerTest {
 
         insert projectList;
 
-        phase1.ParentProject__c = project1.Id;
-        phase1.Phase_Status__c = 'Closed';
-        phase1.ActualProjectGoLiveDate__c = system.today();
-        update phase1;
+//        phase1.ParentProject__c = project1.Id;
+//        phase1.Phase_Status__c = 'Closed';
+//        phase1.ActualProjectGoLiveDate__c = system.today();
+//        update phase1;
 
     }
 
