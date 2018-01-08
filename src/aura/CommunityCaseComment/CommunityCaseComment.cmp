@@ -10,6 +10,9 @@
                 <div class="slds-truncate" title="Created Date" style="font-weight: bold !important; text-align:center">Created Date</div>
             </th>
             <th scope="col">
+                <div class="slds-truncate" title="Created By" style="font-weight: bold !important; text-align:center">Created By</div>
+            </th>
+            <th scope="col">
                 <div class="slds-truncate" title="Comment" style="font-weight: bold !important; text-align:center">Comment</div>
             </th>
         </tr>
@@ -19,8 +22,11 @@
                 <tr>
                     <td data-label="CreatedDate">
                         <div class="slds-truncate" title="CreatedDate">
-                            <ui:outputDate value="{!item.CreatedDate}"/>
+                            <ui:outputDateTime value="{!item.CreatedDate}"/>
                         </div>
+                    </td>
+                    <td data-label="CommentBody">
+                        <div class="slds-truncate" title="Comment" style="white-space:normal;">{!item.CreatedBy.Name}</div>
                     </td>
                     <td data-label="CommentBody">
                         <div class="slds-truncate" title="Comment" style="white-space:normal;">{!item.CommentBody}</div>

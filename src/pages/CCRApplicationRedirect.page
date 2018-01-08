@@ -1,0 +1,9 @@
+<!--
+ - Created by arnab.karsarkar on 12/19/2017.
+ -->
+
+<apex:page id="CCRApplicationRedirect" standardController="CCRApplication__c"  tabStyle="ChangeControlRequest__c" action="{!URLFOR('/apex/CCRApplicationManage?id=' + CCRApplication__c.ChangeControlRequest__c)}">
+        <apex:form >
+            <apex:inputHidden value="{!CCRApplication__c.ChangeControlRequest__c}"/>
+        </apex:form>
+</apex:page>

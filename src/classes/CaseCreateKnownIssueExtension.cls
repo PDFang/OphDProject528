@@ -128,6 +128,7 @@ public with sharing class CaseCreateKnownIssueExtension
             if(createJiraBug){
                 system.debug('User requested to create a JIRA bug for KI - ' + relatedCase.Id);
                 CaseTriggerHandler.createJiraBug = true;
+                relatedCase.JIRA_Key__c = CaseTriggerHandler.JIRA_KEY_TEMP;
                 //need to populate the Description field with concatenated
                 //summary + steps to reproduce + internal notes
                 relatedCase.JIRA_Description__c = getJIRADescription(relatedCase);

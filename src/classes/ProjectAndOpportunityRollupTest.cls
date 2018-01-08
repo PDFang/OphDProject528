@@ -1,7 +1,3 @@
-/**
- * Created by mohandaas.rangaswamy on 12/7/2017.
- */
-
 @IsTest
 private class ProjectAndOpportunityRollupTest {
 
@@ -86,8 +82,8 @@ private class ProjectAndOpportunityRollupTest {
 
         // Original_Forecasted_Initial_Go_Live_Date__c displays the earliest value of Field Original_Forecasted_Initial_Go_Live_Date from all related Projects with "PS Parent Project - Saas" record type
         system.assertEquals(parent.Original_Forecasted_Initial_Go_Live_Date__c, testOpportunity.Original_Forecasted_Initial_Go_Live_Date__c);
-        // PM_Estimated_Go_Live__c displays the earliest value of Field Estimated_Project_End__c from all related Projects with "PS Parent Project - Saas" record type
-        system.assertEquals(parent.Estimated_Project_End__c, testOpportunity.PM_Estimated_Go_Live__c);
+        // PM_Estimated_Go_Live__c displays the earliest value of Field Estimated_Project_Initial_Go_Live_Date__c from all related Projects with "PS Parent Project - Saas" record type
+        system.assertEquals(parent.Estimated_Project_Initial_Go_Live_Date__c, testOpportunity.PM_Estimated_Go_Live__c);
         // PM_Go_Live_Date__c displays the earliest value of Field Actual_Initial_Phase_Go_Live__c from all related Projects with "PS Parent Project - Saas" record type
         system.assertEquals(parent.Actual_Initial_Phase_Go_Live__c, testOpportunity.PM_Go_Live_Date__c);
 

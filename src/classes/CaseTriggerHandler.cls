@@ -446,7 +446,7 @@ public class CaseTriggerHandler extends TriggerHandler
         List<Id> caseIds = new List<Id>();
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
-            if(newCase.RecordTypeId == knownIssueRecordType && oldCase == null && String.isBlank(newCase.JIRA_Key__c)
+            if(newCase.RecordTypeId == knownIssueRecordType && oldCase == null && newCase.JIRA_Key__c == JIRA_KEY_TEMP
                     || (oldCase != null && oldCase.JIRA_Key__c != newCase.JIRA_Key__c && newCase.JIRA_Key__c == JIRA_KEY_TEMP))
             {
                 caseIds.add(newCase.Id);

@@ -10,7 +10,7 @@ public class SandboxPostCopy_UpdateSiteConfiguration extends SandboxPostCopyTask
 
     public override string task(SandboxContext context){
         string sandboxOrgId;
-        if(context != null){
+        if(context != null){ SandboxPostCopy_ContactFieldCleane
             sandboxOrgId = ((String)context.organizationId()).left(15);
         }else{
             sandboxOrgId = UserInfo.getOrganizationId().left(15);

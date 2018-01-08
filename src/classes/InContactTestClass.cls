@@ -535,41 +535,6 @@ private class InContactTestClass
         Test.stopTest();
     }
 
-    public static testMethod void TestPHTimeOffDetailExtension()
-    {
-        Project__c p = new Project__c();
-        p.RecordTypeId = '01270000000MH8d';
-        p.Summary__c = 'Test';
-        p.ProjectType__c = 'Time Card';
-
-        insert p;
-
-        Test.startTest();
-        //Test StandardTextExtension
-        ApexPages.StandardController stdCtrl = new ApexPages.StandardController(p);
-        PHTimeOffDetailExtension todExt = new PHTimeOffDetailExtension(stdCtrl);
-
-        PageReference pageRef = Page.PHTimeOffDetail;
-        Test.setCurrentPage(pageRef);
-
-        todExt.AddRow();
-
-        ApexPages.currentPage().getParameters().put('todIND', '0');
-        todExt.DeleteRow();
-
-        List<TimeOffDetail__c> todList = new List<TimeOffDetail__c> ();
-        TimeOffDetail__c todRec = new TimeOffDetail__c();
-        todRec.EarningCode__c = 'ATO';
-        todRec.Hours__c = 8.0;
-        todRec.Project__c = p.Id;
-        todRec.DateRequested__c = system.today();
-        todList.add(todRec);
-
-        todExt.TimeOffDetail = todList;
-        todExt.Save();
-        Test.stopTest();
-    }
-
     public static testMethod void TestCaseWorkflowBatch()
     {
         Profile p = [SELECT Id FROM Profile WHERE Name = 'System Administrator'];
@@ -748,6 +713,57 @@ private class InContactTestClass
         update tsks;
     }
 
+    static testMethod  void AccountHighlightComponentControllerTest(){
+
+        Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
+
+        test.startTest();
+
+        Account testAccount = new Account(
+                Name = 'Test Account',
+                Billing_Group__c = 'Verizon',
+                Health_Score__c = 90,
+                Type = 'Partner',
+                RecordTypeId = accountRecordTypeMap.get('Customers').getRecordTypeId(),
+                CadebillAccountNo__c = 877121
+        );
+
+        insert testAccount;
+
+        Map<String,Schema.RecordTypeInfo> opportunityRecordTypeMap = Schema.SObjectType.Opportunity.getRecordTypeInfosByName();
+
+        Opportunity opportunity1 = new Opportunity();
+
+        opportunity1.RecordTypeId = opportunityRecordTypeMap.get('Historical Products').getRecordTypeId();
+        opportunity1.Name = 'test';
+        opportunity1.CloseDate = system.today().addDays(20);
+        opportunity1.StageName = 'Open';
+        opportunity1.AccountId = testAccount.Id;
+
+        insert opportunity1;
+
+        ImplementedProduct__c ip1 = new ImplementedProduct__c();
+        ip1.Account__c = testAccount.Id;
+        ip1.GoLiveDate__c = system.today().addDays(25);
+        ip1.Status__c = 'Implemented';
+        ip1.Product__c = 'inContact';
+        ip1.Opportunity__c = opportunity1.Id;
+
+        insert ip1;
+
+        AccountHighlightComponentController controller = new AccountHighlightComponentController();
+        controller.acctId = testAccount.Id;
+
+        AccountHighlightComponentController.AccountWrapper wrapper = controller.getAcctWrapper();
+
+        system.assertEquals(true, wrapper.isVerizon);
+        system.assertEquals('Happy', wrapper.healthScoreImage);
+        system.assertEquals('orange', wrapper.goLiveBackground);
+
+        test.stopTest();
+
+    }
+
     public static testMethod void TestOpportunityAfterInsert()
     {
         Account a = new Account();
@@ -804,33 +820,6 @@ private class InContactTestClass
         Test.startTest();
         l.Status = 'Test Change';
         update l;
-        Test.stopTest();
-    }
-
-    public static testMethod void TestADFSLinkExtension()
-    {
-        Account a = new Account();
-        a.Name = 'Test Account';
-        a.CostGuard_Acct__c = '0000';
-        insert a;
-
-        Contact c = new Contact();
-        c.FirstName = 'test';
-        c.LastName = 'Test';
-        c.Email = 'Test@test.com';
-        c.AccountId = a.Id;
-        insert c;
-        Test.startTest();
-        ApexPages.StandardController controller = new ApexPages.StandardController(c);
-        ADFSLinkExtension extension = new ADFSLinkExtension(controller);
-
-        c.ADFSGuid__c = 'test';
-        update c;
-
-        c = [SELECT Id, FirstName, LastName, Email, CostGuardAcct__c, ADFSGuid__c FROM Contact WHERE Id = :c.Id];
-
-        ApexPages.StandardController controller2 = new ApexPages.StandardController(c);
-        ADFSLinkExtension extension2 = new ADFSLinkExtension(controller2);
         Test.stopTest();
     }
 

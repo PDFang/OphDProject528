@@ -200,6 +200,8 @@ private class ConsoleTestClass
         //Test second half of the Trip_AttendeeExtension.SaveAttendee Method
         ApexPages.StandardController controller = new ApexPages.StandardController(acct);
         ConsoleAccountHighlightPanelExtension ext = new ConsoleAccountHighlightPanelExtension(controller);
+
+        AccountClass.BannerClass banner = ext.GetBanner;
         
         string packageHours = ext.PsPackageHours;
         system.assertEquals('0.0', packageHours);

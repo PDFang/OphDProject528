@@ -54,10 +54,11 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
     protected override void beforeInsert(){
 
+        resetCalculatedFieldsBeforeClone();
+
         //if it is a phase project validate the phase number
         ProjectTriggerHelper.setNextPhaseNumber(Trigger.new);
 
-        resetCalculatedFieldsBeforeClone();
         setPhaseProjectGoLiveDates();
 
         // Assign Project owners and set status to New
@@ -187,6 +188,12 @@ public class ProjectTriggerHandler extends TriggerHandler{
                 newProject.Number_of_Open_Phases__c = 0;
                 newProject.Times_Go_Live_Date_Changed__c = null;
                 newProject.Original_Phase_Forecasted_Go_Live_Date__c = null;
+                newProject.Parent_Logged_Hours__c = 0;
+                newProject.Parent_Allocated_Hours__c = 0;
+                newProject.Asset_Allocated_Hours__c = 0;
+                newProject.Asset_Logged_Hours__c = 0;
+                newProject.Subscription_Allocated_Hours__c = 0;
+                newProject.Subscription_Logged_Hours__c = 0;
             }
         }
 
@@ -271,7 +278,11 @@ public class ProjectTriggerHandler extends TriggerHandler{
                 if (trigger.isInsert && (newProject.EstimatedProjectGoLiveDate__c != null || newProject.ActualProjectGoLiveDate__c != null
                         || (newProject.Phase_Status__c != 'Closed' && newProject.Phase_Status__c != 'Cancelled')
                         || newProject.Actual_NRR__c > 0 || newProject.Contracted_NRR__c > 0
-                        || newProject.Actual_MRR__c > 0 || newProject.Contracted_MRR__c > 0))
+                        || newProject.Actual_MRR__c > 0 || newProject.Contracted_MRR__c > 0
+                        || newProject.Asset_Logged_Hours__c > 0
+                        || newProject.Subscription_Logged_Hours__c > 0
+                        || newProject.Asset_Allocated_Hours__c > 0
+                        || newProject.Subscription_Allocated_Hours__c > 0))
                 {
                     system.debug('**** setParentProjectGoLiveDates(): created Phase Project ');
                     parentProjectIdSet.add(newProject.ParentProject__c);
@@ -281,6 +292,10 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         || newProject.ParentProject__c != oldProject.ParentProject__c
                         || newProject.Actual_NRR__c != oldProject.Actual_NRR__c
                         || newProject.Contracted_NRR__c != oldProject.Contracted_NRR__c
+                        || newProject.Asset_Logged_Hours__c != oldProject.Asset_Logged_Hours__c
+                        || newProject.Subscription_Logged_Hours__c != oldProject.Subscription_Logged_Hours__c
+                        || newProject.Asset_Allocated_Hours__c != oldProject.Asset_Allocated_Hours__c
+                        || newProject.Subscription_Allocated_Hours__c != oldProject.Subscription_Allocated_Hours__c
                         || newProject.Actual_MRR__c != oldProject.Actual_MRR__c
                         || newProject.Contracted_MRR__c != oldProject.Contracted_MRR__c) )
                 {
@@ -304,12 +319,12 @@ public class ProjectTriggerHandler extends TriggerHandler{
         system.debug('**** setParentProjectGoLiveDates(): parentProjectIdSet - ' + parentProjectIdSet);
         system.debug('**** setParentProjectGoLiveDates(): projectOppIdSet - ' + projectOppIdSet);
 
-        if(parentProjectIdSet.size() > 0 && projectRollupQueueableJobID == null){
+        if(parentProjectIdSet.size() > 0 && projectRollupQueueableJobID == null && RollupUtility.isRollupEnabled){
             projectRollupQueueableJobID = System.enqueueJob(new ProjectRollupQueueable(parentProjectIdSet));
             system.debug('**** setParentProjectGoLiveDates(): projectRollupQueueableJobID - ' + projectRollupQueueableJobID);
         }
 
-        if(projectOppIdSet.size() > 0 && opportunityRollupQueueableJobID == null){
+        if(projectOppIdSet.size() > 0 && opportunityRollupQueueableJobID == null && RollupUtility.isRollupEnabled){
             opportunityRollupQueueableJobID = System.enqueueJob(new OpportunityRollupQueueable(projectOppIdSet));
             system.debug('**** setParentProjectGoLiveDates(): opportunityRollupQueueableJobID - ' + opportunityRollupQueueableJobID);
         }
@@ -481,7 +496,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
         }
 
         List<Project_Asset_Allocation__c> listProjectAssetAllocations = new List<Project_Asset_Allocation__c>(
-        [Select Id, Asset__c, Percent_Allocation__c, Implemented__c, Phase_Allocated__c,Phase_Implemented__c, PhaseImplemented__c, Phase_Implemented_Quantity__c,
+        [Select Id, Asset__c, Percent_Allocation__c, Implemented__c, Phase_Implemented__c, PhaseImplemented__c, Phase_Implemented_Quantity__c,
                 Quantity_Allocation__c from  Project_Asset_Allocation__c where Project__c IN : projectIds]);
 
         List<Project_Asset_Allocation__c> updateProjectAssetAllocationsList = new List<Project_Asset_Allocation__c>();
@@ -502,7 +517,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         List<Project_Subscription_Allocation__c> listProjectSubscriptionAllocations = new List<Project_Subscription_Allocation__c>(
         [Select Id, Subscription__c, Phase_Implemented_Quantity__c, Phase_Implemented__c, Subscription__r.Subscription__c,
-                Phase_Allocated__c, Percent_Allocation__c, PhaseImplemented__c, Quantity_Allocation__c from  Project_Subscription_Allocation__c where Project__c IN : projectIds]);
+                Percent_Allocation__c, PhaseImplemented__c, Quantity_Allocation__c from  Project_Subscription_Allocation__c where Project__c IN : projectIds]);
 
         System.debug('listProjectSubscriptionAllocations' + listProjectSubscriptionAllocations);
         List<SBQQ__Subscription__c> updateSubscriptionList = new List<SBQQ__Subscription__c>();

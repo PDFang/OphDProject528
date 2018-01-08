@@ -1,5 +1,6 @@
 public class AssetTriggerHandler extends TriggerHandler {
 
+    @TestVisible
     private static Id assetRollupQueueableJobID;
 
     public override void afterUpdate()
@@ -47,7 +48,7 @@ public class AssetTriggerHandler extends TriggerHandler {
 
         system.debug('**** rollupNRRToPhaseProject(): assetIdSet - ' + assetIdSet);
 
-        if(assetIdSet.size() > 0 && assetRollupQueueableJobID == null){
+        if(assetIdSet.size() > 0 && assetRollupQueueableJobID == null && RollupUtility.isRollupEnabled){
             assetRollupQueueableJobID = System.enqueueJob(new AssetRollupQueueable(assetIdSet));
             system.debug('**** rollupNRRToPhaseProject(): assetRollupQueueableJobID - ' + assetRollupQueueableJobID);
         }

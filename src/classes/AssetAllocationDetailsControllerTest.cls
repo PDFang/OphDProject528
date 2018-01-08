@@ -29,6 +29,7 @@ private class AssetAllocationDetailsControllerTest {
     private static SBQQ__Subscription__c subscription;
     private static SubscriptionReplica__c subscriptionReplica;
     private static Project_Subscription_Allocation__c projectSubscriptionAllocation;
+    static Contact testContact;
 
     static testMethod void testAssetAllocationDetails() {
 
@@ -47,13 +48,13 @@ private class AssetAllocationDetailsControllerTest {
         testComponentController.setProjectId(projectId);
         testComponentController.getProjectId();
         System.debug('testComponentController.project.Certified_Implementation_Manager__c =>' + testComponentController.project.Certified_Implementation_Manager__c);
-        testComponentController.project.Certified_Implementation_Manager__c = '0033C0000055ll9';
+        testComponentController.project.Certified_Implementation_Manager__c = testContact.Id;
         testComponentController.enableEdit();
         testComponentController.saveProjectInfo();
         testComponentController.cancel();
 
         System.debug('testComponentController.project.Certified_Implementation_Manager__c =>' + testComponentController.project.Certified_Implementation_Manager__c);
-        System.assertEquals('0033C0000055ll9', testComponentController.project.Certified_Implementation_Manager__c);
+        System.assertEquals(testContact.Id, testComponentController.project.Certified_Implementation_Manager__c);
 
     }
 
@@ -74,13 +75,13 @@ private class AssetAllocationDetailsControllerTest {
         testComponentController.setProjectId(projectId);
         testComponentController.getProjectId();
         System.debug('testComponentController.project.Certified_Implementation_Manager__c =>' + testComponentController.project.Certified_Implementation_Manager__c);
-        testComponentController.project.Certified_Implementation_Manager__c = '0033C0000055ll9';
+        testComponentController.project.Certified_Implementation_Manager__c = testContact.Id;
         testComponentController.enableEdit();
         testComponentController.saveProjectInfo();
         testComponentController.cancel();
 
         System.debug('testComponentController.project.Certified_Implementation_Manager__c =>' + testComponentController.project.Certified_Implementation_Manager__c);
-        System.assertEquals('0033C0000055ll9', testComponentController.project.Certified_Implementation_Manager__c);
+        System.assertEquals(testContact.Id, testComponentController.project.Certified_Implementation_Manager__c);
 
     }
 
@@ -132,17 +133,16 @@ private class AssetAllocationDetailsControllerTest {
 
     static void createProjects()
     {
-//        Map<String,Schema.RecordTypeInfo> contactRecordTypeMap = Schema.SObjectType.Contact.getRecordTypeInfosByName();
-//        Contact testContact = new Contact(
-//                LastName = 'Contact',
-//                FirstName = 'ContactTriggerHandlerTest',
-//                Email = 'contact1@test.com',
-//                RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
-//                AccountId = testAccount.Id,
-//                xmPerson__c = person.Id
-//        );
-//
-//        insert testContact;
+        Map<String,Schema.RecordTypeInfo> contactRecordTypeMap = Schema.SObjectType.Contact.getRecordTypeInfosByName();
+        testContact = new Contact(
+                LastName = 'Contact',
+                FirstName = 'ContactTriggerHandlerTest',
+                Email = 'contact1@test.com',
+                RecordTypeId = contactRecordTypeMap.get('Customer-Other').getRecordTypeId(),
+                Account = acct
+        );
+
+        insert testContact;
 
         projectList = new List<Project__c>();
 
