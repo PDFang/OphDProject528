@@ -118,6 +118,7 @@
             </apex:actionRegion>
                 <apex:pageBlockSection columns="1" >
                     <apex:inputField styleClass="long" value="{!relatedCase.Subject}" required="true"/>
+                    <apex:inputField value="{!relatedCase.Priority}" required="true"/>
                     <apex:inputField styleClass="long" value="{!relatedCase.Summary__c}" required="true"/>
                     <apex:inputField styleClass="long" value="{!relatedCase.Steps_to_Recreate__c}" required="true"/>
                     <apex:inputField styleClass="long" value="{!relatedCase.InternalNotes__c}" required="true"/>
