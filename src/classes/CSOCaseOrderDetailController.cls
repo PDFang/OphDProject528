@@ -16,7 +16,7 @@ public class CSOCaseOrderDetailController {
 
 	// query string parameter
 	public String currentId{get;set;}
-	private CSOCaseOrderDetailHelper helper;
+	private static CSOCaseOrderDetailHelper helper;
 
 	public CSOCaseOrderDetailController(){
 		currentId = ApexPages.currentPage().getParameters().get('id');
@@ -26,11 +26,17 @@ public class CSOCaseOrderDetailController {
 			ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Invalid URL: Missing ID Parameter.'));
 			return;
 		}
+	}
 
-		helper = new CSOCaseOrderDetailHelper(currentId);
-		comments = new List<CaseComment>();
-		comments = helper.getCaseComments(currentId);
+	@AuraEnabled
+	public static list<string> GetFieldList(){
+		return CSOCaseOrderDetailHelper.getFieldList();
+	}
 
+	@AuraEnabled
+	public static Case GetCaseRecord(string caseId){
+		helper = new CSOCaseOrderDetailHelper(caseId);
+		return helper.currentCase;
 	}
 
 

@@ -2,5 +2,20 @@
  - Created by arnab.karsarkar on 1/8/2018.
  -->
 
-<aura:component description="CSOCaseDetailComponent">
+<aura:component description="CSOCaseDetailComponent" controller="CSOCaseOrderDetailController" access="global" implements="forceCommunity:availableForAllPageTypes">
+
+    
+    <!-- attributes to populate when Component is used -->
+    <aura:attribute name="fieldsToShow" type="String" description="The comma separated field values"/>
+    <aura:attribute access="global" name="caseId" default="" type="string"></aura:attribute>
+
+    <!-- Below are the attributes populated from Controller -->
+    <aura:attribute name="detailRecord" type="SObject" description="The detail record to display values"/>
+    <aura:attribute name="fieldList" type="String[]" description="the list of fields to show"/>
+
+    <!-- Init -->
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <h1><ui:outputText value="{!v.detailRecord.Name}"/></h1>
+        {!v.body}
+
 </aura:component>

@@ -65,4 +65,14 @@ public class CSOCaseOrderDetailHelper {
 		return retlist;
 	}
 
+	public static list<string> getFieldList(){
+		List<Schema.FieldSetMember> fsMembers = Schema.SobjectType.Case.fieldSets.CSO_Order_Resolution.getFields();
+		list<string> caseFieldsToShow = new list<string>();
+		for(Schema.FieldSetMember member : fsMembers){
+			caseFieldsToShow.add(member.getFieldPath());
+		}
+		return caseFieldsToShow;
+
+	}
+
 }
