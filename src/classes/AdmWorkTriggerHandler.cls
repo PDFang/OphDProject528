@@ -23,6 +23,7 @@ public class AdmWorkTriggerHandler  extends TriggerHandler
                     projectEpics.put(epic.Project__c, epic.Id);
                 }
             }
+
         }
 
         for(Id projectId:projectIds){
