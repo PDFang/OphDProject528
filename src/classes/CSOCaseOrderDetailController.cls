@@ -13,6 +13,9 @@ public class CSOCaseOrderDetailController {
 	}
 
 	public list<CaseComment> comments{get;set;}
+//	public list<CSOCaseHistoryModel> caseHistory{get;set;}
+//	public list<CSOCaseHistoryModel> caseAssignedTo{get;set;}
+
 
 	// query string parameter
 	public String currentId{get;set;}
@@ -30,6 +33,9 @@ public class CSOCaseOrderDetailController {
 		helper = new CSOCaseOrderDetailHelper(currentId);
 		comments = new List<CaseComment>();
 		comments = helper.getCaseComments(currentId);
+//		caseHistory = new List<CSOCaseHistoryModel>();
+//		caseHistory = helper.getCaseHistory(currentId);
+//		caseAssignedTo = helper.caseAssignedTo;
 
 	}
 
