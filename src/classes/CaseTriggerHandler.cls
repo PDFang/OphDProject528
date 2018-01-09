@@ -435,9 +435,9 @@ public class CaseTriggerHandler extends TriggerHandler
     private void createJiraBugForKI(List<Case> newList, Map<Id, Case> oldMap){
 
         system.debug('createJiraBugForKI(): createJiraBug - ' + createJiraBug);
-        system.debug('createJiraBugForKI(): known issues - ' + newList.size());
+        system.debug('createJiraBugForKI(): Cases - ' + newList.size());
 
-        if(createJiraBug == false || newList.size() > 1){
+        if(createJiraBug == false){
             system.debug('createJiraBugForKI(): skipped @future callout');
             return;
         }
@@ -447,7 +447,7 @@ public class CaseTriggerHandler extends TriggerHandler
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
             if(newCase.RecordTypeId == knownIssueRecordType && oldCase == null && newCase.JIRA_Key__c == JIRA_KEY_TEMP
-                    || (oldCase != null && oldCase.JIRA_Key__c != newCase.JIRA_Key__c && newCase.JIRA_Key__c == JIRA_KEY_TEMP))
+                    || (oldCase != null && oldCase.JIRA_Key__c != newCase.JIRA_Key__c && String.isBlank(oldCase.JIRA_Key__c) && newCase.JIRA_Key__c == JIRA_KEY_TEMP))
             {
                 caseIds.add(newCase.Id);
             }
@@ -456,24 +456,26 @@ public class CaseTriggerHandler extends TriggerHandler
         system.debug('createJiraBugForKI(): caseIds - ' + caseIds);
 
         if(caseIds.size() > 0 && !system.isFuture() && !system.isBatch()){
-            createJiraBugForKIFuture(caseIds[0], newList[0].JIRA_Key__c == JIRA_KEY_TEMP);
+            createJiraBugForKIFuture(caseIds[0]);
         }
 
     }
 
     @Future(callout=true)
-    private static void createJiraBugForKIFuture(String caseId, boolean isTempKey){
+    private static void createJiraBugForKIFuture(String caseId){
 
         String jiraKey = null;
+        Case kiCase;
         try{
+            kiCase = [Select Id, JIRA_Key__c from Case where Id = :caseId];
             JiraRestWrapper wrapper = new JiraRestWrapper();
-            jiraKey = wrapper.CreateJIRABug(caseId);
+            jiraKey = wrapper.CreateJIRABug(kiCase.Id);
         }catch(Exception ex) {
             inContactBaseClass.SendErrorEmail(ex,caseId);
         }
 
         // clear the TEMP key in case of error
-        if(String.isBlank(jiraKey) && isTempKey){
+        if(String.isBlank(jiraKey) && kiCase.JIRA_Key__c == JIRA_KEY_TEMP){
             Case knownIssue = new Case(
                     Id = caseId,
                     JIRA_Key__c = null
