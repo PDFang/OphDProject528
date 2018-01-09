@@ -456,57 +456,29 @@ public class CaseTriggerHandler extends TriggerHandler
         system.debug('createJiraBugForKI(): caseIds - ' + caseIds);
 
         if(caseIds.size() > 0 && !system.isFuture() && !system.isBatch()){
-            createJiraBugForKIFuture(new List<Id>(caseIds));
+            createJiraBugForKIFuture(new List<Id>(caseIds)[0]);
         }
 
     }
 
     @Future(callout=true)
-    private static void createJiraBugForKIFuture(List<Id> caseIds){
+    private static void createJiraBugForKIFuture(String caseId){
 
-        List<Case> kiCases = new List<Case>();
-
+        String jiraKey = null;
         try{
-
             JiraRestWrapper wrapper = new JiraRestWrapper();
-
-            Integer skippedCallouts = 0;
-
-            for(Case knownIssue : [Select Id, JIRA_Key__c from Case where Id IN :caseIds]){
-
-                String jiraKey = null;
-
-                if(Limits.getCallouts() < Limits.getLimitCallouts()){
-
-                    jiraKey = wrapper.CreateJIRABug(knownIssue.Id);
-
-                } else{
-
-                    skippedCallouts++;
-
-                }
-
-                // clear the TEMP key in case of error
-                if(String.isBlank(jiraKey) && knownIssue.JIRA_Key__c == JIRA_KEY_TEMP){
-                    knownIssue.JIRA_Key__c = null;
-                    kiCases.add(knownIssue);
-                }
-
-            }
-
-            if(kiCases.size() > 0){
-                update kiCases;
-            }
-
-            if(skippedCallouts > 0){
-                inContactBaseClass.SendErrorEmail(
-                        'Class.CaseTriggerHandler.createJiraBugForKIFuture: Total number of callouts limit exceeded. ' + skippedCallouts + ' Known Issue Case(s) were not processed by JIRA integration.',
-                        null
-                );
-            }
-
+            jiraKey = wrapper.CreateJIRABug(caseId);
         }catch(Exception ex) {
-            inContactBaseClass.SendErrorEmail(ex, kiCases.size() > 0 ? kiCases[0].Id : caseIds[0]);
+            inContactBaseClass.SendErrorEmail(ex,caseId);
+        }
+
+        // clear the TEMP key in case of error
+        if(String.isBlank(jiraKey)){
+            Case knownIssue = new Case(
+                    Id = caseId,
+                    JIRA_Key__c = null
+            );
+            update knownIssue;
         }
 
     }
