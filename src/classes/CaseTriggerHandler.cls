@@ -464,33 +464,49 @@ public class CaseTriggerHandler extends TriggerHandler
     @Future(callout=true)
     private static void createJiraBugForKIFuture(List<Id> caseIds){
 
-        try{
+        List<Case> kiCases = new List<Case>();
 
-            List<Case> kiCases = new List<Case>();
+        try{
 
             JiraRestWrapper wrapper = new JiraRestWrapper();
 
+            Integer skippedCallouts = 0;
+
             for(Case knownIssue : [Select Id, JIRA_Key__c from Case where Id IN :caseIds]){
+
+                String jiraKey = null;
 
                 if(Limits.getCallouts() < Limits.getLimitCallouts()){
 
-                    String jiraKey = wrapper.CreateJIRABug(knownIssue.Id);
+                    jiraKey = wrapper.CreateJIRABug(knownIssue.Id);
 
-                    // clear the TEMP key in case of error
-                    if(String.isBlank(jiraKey) && knownIssue.JIRA_Key__c == JIRA_KEY_TEMP){
-                        knownIssue.JIRA_Key__c = null;
-                        kiCases.add(knownIssue);
+                } else{
 
-                    }
+                    skippedCallouts++;
+
                 }
+
+                // clear the TEMP key in case of error
+                if(String.isBlank(jiraKey) && knownIssue.JIRA_Key__c == JIRA_KEY_TEMP){
+                    knownIssue.JIRA_Key__c = null;
+                    kiCases.add(knownIssue);
+                }
+
             }
 
             if(kiCases.size() > 0){
                 update kiCases;
             }
 
+            if(skippedCallouts > 0){
+                inContactBaseClass.SendErrorEmail(
+                        'Class.CaseTriggerHandler.createJiraBugForKIFuture: Total number of callouts limit exceeded. ' + skippedCallouts + ' Known Issue Case(s) were not processed by JIRA integration.',
+                        null
+                );
+            }
+
         }catch(Exception ex) {
-            inContactBaseClass.SendErrorEmail(ex,caseIds[0]);
+            inContactBaseClass.SendErrorEmail(ex, kiCases.size() > 0 ? kiCases[0].Id : caseIds[0]);
         }
 
     }
