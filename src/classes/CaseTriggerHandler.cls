@@ -443,7 +443,7 @@ public class CaseTriggerHandler extends TriggerHandler
         }
 
         createJiraBug = false;
-        List<Id> caseIds = new List<Id>();
+        Set<Id> caseIds = new Set<Id>();
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
             if(newCase.RecordTypeId == knownIssueRecordType && oldCase == null && newCase.JIRA_Key__c == JIRA_KEY_TEMP
@@ -456,31 +456,41 @@ public class CaseTriggerHandler extends TriggerHandler
         system.debug('createJiraBugForKI(): caseIds - ' + caseIds);
 
         if(caseIds.size() > 0 && !system.isFuture() && !system.isBatch()){
-            createJiraBugForKIFuture(caseIds[0]);
+            createJiraBugForKIFuture(new List<Id>(caseIds));
         }
 
     }
 
     @Future(callout=true)
-    private static void createJiraBugForKIFuture(String caseId){
+    private static void createJiraBugForKIFuture(List<Id> caseIds){
 
-        String jiraKey = null;
-        Case kiCase;
         try{
-            kiCase = [Select Id, JIRA_Key__c from Case where Id = :caseId];
-            JiraRestWrapper wrapper = new JiraRestWrapper();
-            jiraKey = wrapper.CreateJIRABug(kiCase.Id);
-        }catch(Exception ex) {
-            inContactBaseClass.SendErrorEmail(ex,caseId);
-        }
 
-        // clear the TEMP key in case of error
-        if(String.isBlank(jiraKey) && kiCase.JIRA_Key__c == JIRA_KEY_TEMP){
-            Case knownIssue = new Case(
-                    Id = caseId,
-                    JIRA_Key__c = null
-            );
-            update knownIssue;
+            List<Case> kiCases = new List<Case>();
+
+            JiraRestWrapper wrapper = new JiraRestWrapper();
+
+            for(Case knownIssue : [Select Id, JIRA_Key__c from Case where Id IN :caseIds]){
+
+                if(Limits.getCallouts() < Limits.getLimitCallouts()){
+
+                    String jiraKey = wrapper.CreateJIRABug(knownIssue.Id);
+
+                    // clear the TEMP key in case of error
+                    if(String.isBlank(jiraKey) && knownIssue.JIRA_Key__c == JIRA_KEY_TEMP){
+                        knownIssue.JIRA_Key__c = null;
+                        kiCases.add(knownIssue);
+
+                    }
+                }
+            }
+
+            if(kiCases.size() > 0){
+                update kiCases;
+            }
+
+        }catch(Exception ex) {
+            inContactBaseClass.SendErrorEmail(ex,caseIds[0]);
         }
 
     }
