@@ -23,7 +23,6 @@ global class CaseUpdateBatch implements Database.Batchable<sObject>, Database.St
     public static final String NEW_ARTICLE = 'New';
     public static final String KNOWN_ARTICLE = 'Known';
 
-
     global CaseUpdateBatch(String query)
     {
         Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SobjectType.Case.getRecordTypeInfosByName();
