@@ -1,0 +1,39 @@
+<!--
+ - Created by ravish.chawla on 1/8/2018.
+ -->
+
+<apex:page id="CSOCaseOrderDetail" controller="CSOCaseOrderDetailController" title="Salesforce Order Resolution Page - DID" tabStyle="Case">
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+
+        <div class="listRelatedObject customnotabBlock bRelatedList first bPageBlock brandSecondaryBrd secondaryPalette" >
+            <apex:form id="CSOCaseOrderDetailForm">
+                <apex:pageBlock title="Information">
+                    <apex:pageMessages />
+                    <apex:pageBlockSection columns="2" >
+                        <apex:repeat value="{!$ObjectType.Case.FieldSets.CSO_Order_Resolution}" var="f">
+                            <apex:outputfield value="{!CurrentCase[f]}" />
+                        </apex:repeat>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Comment History" columns="1">
+                        <apex:dataTable value="{!comments}" var="comment" id="CSOCommentHistory" rowClasses="odd,even" styleClass="table table-bordered table-condensed" >
+                            <apex:column >
+                                <apex:facet name="header">Comment Date</apex:facet>
+                                <apex:outputText value=" {!comment.CreatedDate}">
+                                </apex:outputText>
+                            </apex:column>
+                            <apex:column >
+                                <apex:facet name="header">Created By</apex:facet>
+                                <apex:outputText >{!comment.CreatedBy.Name}</apex:outputText>
+                            </apex:column>
+                            <apex:column >
+                                <apex:facet name="header">Comment</apex:facet>
+                                <apex:outputText >{!comment.CommentBody}</apex:outputText>
+                            </apex:column>
+                        </apex:dataTable>
+                    </apex:pageBlockSection>
+                </apex:pageBlock>
+            </apex:form>
+        </div>
+</apex:page>
