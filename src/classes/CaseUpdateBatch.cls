@@ -15,13 +15,13 @@ global class CaseUpdateBatch implements Database.Batchable<sObject>, Database.St
         'Incident',
         'Incident - Premise',
         'Work Orders',
-        'Service Request'
+        'Service Request',
+        'Known Issue'
     };
 
     public static final String NO_ARTICLE = 'N/A';
     public static final String NEW_ARTICLE = 'New';
     public static final String KNOWN_ARTICLE = 'Known';
-
 
     global CaseUpdateBatch(String query)
     {
