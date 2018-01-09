@@ -15,7 +15,8 @@ global class CaseUpdateBatch implements Database.Batchable<sObject>, Database.St
         'Incident',
         'Incident - Premise',
         'Work Orders',
-        'Service Request'
+        'Service Request',
+        'Known Issue'
     };
 
     public static final String NO_ARTICLE = 'N/A';
