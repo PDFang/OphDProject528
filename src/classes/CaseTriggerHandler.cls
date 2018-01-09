@@ -435,19 +435,19 @@ public class CaseTriggerHandler extends TriggerHandler
     private void createJiraBugForKI(List<Case> newList, Map<Id, Case> oldMap){
 
         system.debug('createJiraBugForKI(): createJiraBug - ' + createJiraBug);
-        system.debug('createJiraBugForKI(): known issues - ' + newList.size());
+        system.debug('createJiraBugForKI(): Cases - ' + newList.size());
 
-        if(createJiraBug == false || newList.size() > 1){
+        if(createJiraBug == false){
             system.debug('createJiraBugForKI(): skipped @future callout');
             return;
         }
 
         createJiraBug = false;
-        List<Id> caseIds = new List<Id>();
+        Set<Id> caseIds = new Set<Id>();
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
             if(newCase.RecordTypeId == knownIssueRecordType && oldCase == null && newCase.JIRA_Key__c == JIRA_KEY_TEMP
-                    || (oldCase != null && oldCase.JIRA_Key__c != newCase.JIRA_Key__c && newCase.JIRA_Key__c == JIRA_KEY_TEMP))
+                    || (oldCase != null && oldCase.JIRA_Key__c != newCase.JIRA_Key__c && String.isBlank(oldCase.JIRA_Key__c) && newCase.JIRA_Key__c == JIRA_KEY_TEMP))
             {
                 caseIds.add(newCase.Id);
             }
@@ -456,29 +456,57 @@ public class CaseTriggerHandler extends TriggerHandler
         system.debug('createJiraBugForKI(): caseIds - ' + caseIds);
 
         if(caseIds.size() > 0 && !system.isFuture() && !system.isBatch()){
-            createJiraBugForKIFuture(caseIds[0], newList[0].JIRA_Key__c == JIRA_KEY_TEMP);
+            createJiraBugForKIFuture(new List<Id>(caseIds));
         }
 
     }
 
     @Future(callout=true)
-    private static void createJiraBugForKIFuture(String caseId, boolean isTempKey){
+    private static void createJiraBugForKIFuture(List<Id> caseIds){
 
-        String jiraKey = null;
+        List<Case> kiCases = new List<Case>();
+
         try{
-            JiraRestWrapper wrapper = new JiraRestWrapper();
-            jiraKey = wrapper.CreateJIRABug(caseId);
-        }catch(Exception ex) {
-            inContactBaseClass.SendErrorEmail(ex,caseId);
-        }
 
-        // clear the TEMP key in case of error
-        if(String.isBlank(jiraKey) && isTempKey){
-            Case knownIssue = new Case(
-                    Id = caseId,
-                    JIRA_Key__c = null
-            );
-            update knownIssue;
+            JiraRestWrapper wrapper = new JiraRestWrapper();
+
+            Integer skippedCallouts = 0;
+
+            for(Case knownIssue : [Select Id, JIRA_Key__c from Case where Id IN :caseIds]){
+
+                String jiraKey = null;
+
+                if(Limits.getCallouts() < Limits.getLimitCallouts()){
+
+                    jiraKey = wrapper.CreateJIRABug(knownIssue.Id);
+
+                } else{
+
+                    skippedCallouts++;
+
+                }
+
+                // clear the TEMP key in case of error
+                if(String.isBlank(jiraKey) && knownIssue.JIRA_Key__c == JIRA_KEY_TEMP){
+                    knownIssue.JIRA_Key__c = null;
+                    kiCases.add(knownIssue);
+                }
+
+            }
+
+            if(kiCases.size() > 0){
+                update kiCases;
+            }
+
+            if(skippedCallouts > 0){
+                inContactBaseClass.SendErrorEmail(
+                        'Class.CaseTriggerHandler.createJiraBugForKIFuture: Total number of callouts limit exceeded. ' + skippedCallouts + ' Known Issue Case(s) were not processed by JIRA integration.',
+                        null
+                );
+            }
+
+        }catch(Exception ex) {
+            inContactBaseClass.SendErrorEmail(ex, kiCases.size() > 0 ? kiCases[0].Id : caseIds[0]);
         }
 
     }
