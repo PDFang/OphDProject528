@@ -6,6 +6,8 @@ public class CSOCaseOrderDetailHelper {
 
 	public Case currentCase;
 
+	//public list<CSOCaseHistoryModel> caseAssignedTo;
+
 	static Set<String> caseFields = new Set<String>{
 			'RecordType.Name'
 	};
@@ -64,6 +66,44 @@ public class CSOCaseOrderDetailHelper {
 		retlist = [SELECT CommentBody,CreatedDate,CreatedBy.Name,Id,IsDeleted,IsPublished,ParentId FROM CaseComment where parentId =:caseId  order by CreatedDate desc];
 		return retlist;
 	}
+
+//	public list<CSOCaseHistoryModel> getCaseHistory(string caseId){
+//
+//		List<CSOCaseHistoryModel> finalCaseHisList = new List<CSOCaseHistoryModel>();
+//		caseAssignedTo = new List<CSOCaseHistoryModel>();
+//		list<CaseHistory> retCaseHisList = new list<CaseHistory>();
+//		retCaseHisList = [SELECT CreatedDate,CreatedBy.Name,Id, CreatedById, Field, IsDeleted, OldValue, NewValue FROM CaseHistory where CaseId =:caseId  order by CreatedDate desc];
+//
+//		System.debug(retCaseHisList);
+//		for(CaseHistory test : retCaseHisList)
+//		{
+//			CSOCaseHistoryModel csoCaseHist = new CSOCaseHistoryModel();
+//			csoCaseHist.UserName = test.CreatedBy.Name;
+//			csoCaseHist.UserId = test.CreatedById;
+//			//DateTime dT = test.CreatedDate;
+//			System.debug(test.CreatedDate);
+//			csoCaseHist.csoDateTime = test.CreatedDate.format('hh:mma MM/dd/yy');
+//			System.debug(csoCaseHist.csoDateTime);
+//			if(test.Field == 'Status')
+//				csoCaseHist.Field = 'changed status';
+//			if(test.Field == 'created')
+//				csoCaseHist.Field = 'created';
+//
+//			if(test.Field == 'IsVisibleInSelfService')
+//				csoCaseHist.Field = 'updated IsVisibleInSelfService';
+//			if(test.Field == 'Last_Comment_Date_Time__c')
+//				csoCaseHist.Field = 'updated Last Comment Date Time';
+//			if(test.Field == 'ownerAssignment')
+//			{
+//				csoCaseHist.Field = 'changed Owner';
+//				caseAssignedTo.Add(csoCaseHist);
+//			}
+//
+//
+//			finalCaseHisList.add(csoCaseHist);
+//		}
+//		return finalCaseHisList;
+//	}
 
 	public static list<string> getFieldList(){
 		List<Schema.FieldSetMember> fsMembers = Schema.SobjectType.Case.fieldSets.CSO_Order_Resolution.getFields();
