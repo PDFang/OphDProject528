@@ -5,17 +5,6 @@
 <apex:component id="CSOOrderActionComponent" controller="CSOOrderActionCompController"  allowDML="true" >
     <apex:attribute name="CaseId" description="This is the Case Id" type="String" required="true" assignTo="{!currentCaseId}"/>
 
-    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
-    <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
-    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
-
-    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
-    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
-    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.common.min.css')}"/>
-    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.mobile.min.css')}"/>
-    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
-    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
-
     <style>
         .btn-primary {
                     color: #fff !important;
@@ -172,7 +161,7 @@
             <div class="modal-dialog" role="document" style="width:35%;">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="modalChangeStatusHeader" style="font-weight:bold">Change Line Item Status</h5>
+                        <h5 class="modal-title" id="modalChangeStatusHeader" style="font-weight:bold">Change Line Item Status for <span id="LineItem"> </span></h5>
 
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
@@ -180,7 +169,7 @@
                     </div>
                     <div class="modal-body" style="font-size:14px;">
                         <inputHidden id="hiddenIdStatus"/>
-                        <span id="LineItem"> </span>
+
                         <div class="form-group">
                             <apex:outputLabel for="status">Update Status</apex:outputLabel>
                             <input id="status" styleClass="form-control"/>

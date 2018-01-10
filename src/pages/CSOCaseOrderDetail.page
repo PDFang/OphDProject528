@@ -2,63 +2,91 @@
  - Created by ravish.chawla on 1/8/2018.
  -->
 
-<apex:page id="CSOCaseOrderDetail" controller="CSOCaseOrderDetailController" title="Salesforce Order Resolution Page - DID" tabStyle="Case">
+<apex:page id="CSOCaseOrderDetail" controller="CSOCaseOrderDetailController" title="Salesforce Order Resolution Page - DID" tabStyle="Case" standardStylesheets="false" applyBodyTag="false" sideBar="false">
+
+
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
-
-    <div class="listRelatedObject customnotabBlock bRelatedList first bPageBlock brandSecondaryBrd secondaryPalette" >
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.common.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.mobile.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
+        <style>
+            .commentCell{
+                    border-style: solid;
+                    border-width: 0 0 1px 0 !important;
+                    padding: .4em .6em;
+                    overflow: hidden;
+                    line-height: 1.6em;
+                    vertical-align: middle;
+                    text-overflow: ellipsis;
+                    border-color: #d5d5d5;
+                    width:15%
+            }
+            .pbSubheader {
+                cursor:pointer !important;
+            }
+            .nav-tabs>li.active>a, .nav-tabs>li.active>a:focus, .nav-tabs>li.active>a:hover{
+                    background-color: #58b6dc;
+                    color:white;
+            }
+        </style>
         <apex:form id="CSOCaseOrderDetailForm">
-            <apex:pageBlock title="Information">
+            <apex:pageBlock title="Information" id="caseDetailBlock">
                 <apex:pageMessages />
                 <apex:pageBlockSection columns="2" >
                     <apex:repeat value="{!$ObjectType.Case.FieldSets.CSO_Order_Resolution}" var="f">
                         <apex:outputfield value="{!CurrentCase[f]}" />
                     </apex:repeat>
                 </apex:pageBlockSection>
-                <apex:pageBlockSection title="Comment History" columns="1" id="pbSection">
+                <apex:pageBlockSection title="Comment History" columns="1" id="commentSection" >
                     <div style="height:150px; overflow-y: scroll;">
-                        <table>
-                            <tr>
-                                <th>Created By</th><th >Comment Date</th><th>Comment</th>
-                            </tr>
+                        <table style="table-layout:fixed; width:100%;">
+                            <thead>
+                                <th class="commentCell">Created By</th>
+                                <th class="commentCell">Comment Date</th>
+                                <th style="width:70%" class="commentCell">Comment</th>
+                            </thead>
+                            <tbody>
                             <apex:repeat var="comment" value="{!comments}">
                                 <tr>
-                                    <td style="width:15%">{!comment.CreatedByName}</td>
-                                    <td style="width:15%">{!comment.CreatedDate}</td>
-                                    <td style="width:70%">{!comment.CommentBody}</td>
+                                    <td class="commentCell">{!comment.CreatedByName}</td>
+                                    <td class="commentCell">{!comment.CreatedDate}</td>
+                                    <td style="width:70%" class="commentCell">{!comment.CommentBody}</td>
                                 </tr>
                             </apex:repeat>
+                            </tbody>
                         </table>
                     </div>
                 </apex:pageBlockSection>
-                <!--<apex:pageBlockSection columns="1" title="Case Assigned To">-->
-                <!--<div style="height:150px; overflow-y: scroll;">-->
-                <!--<table>-->
-                <!--<apex:repeat var="caseAssign" value="{!caseAssignedTo}" >-->
-                <!--<tr>-->
-                <!--<td style="width:15%"><label><a href="/{!caseAssign.UserId}">{!caseAssign.UserName}</a>&nbsp;</label><span>at&nbsp;</span><span>{!caseAssign.csoDateTime}</span></td>-->
-                <!--</tr>-->
-                <!--</apex:repeat>-->
-                <!--</table>-->
-                <!--</div>-->
-                <!--</apex:pageBlockSection>-->
-                <!--<apex:pageBlockSection columns="1" title="Case History">-->
-                <!--<div style="height:150px; overflow-y: scroll;">-->
-                <!--<table>-->
-                <!--<apex:repeat var="caseHist" value="{!caseHistory}">-->
-                <!--<tr>-->
-                <!--<td><label><a href="/{!caseHist.UserId}">{!caseHist.UserName}</a>&nbsp;</label><span>{!caseHist.Field}&nbsp;</span><span>at&nbsp;</span><span>{!caseHist.csoDateTime}</span></td>-->
-                <!--</tr>-->
-                <!--</apex:repeat>-->
-                <!--</table>-->
-                <!--</div>-->
-                <!--</apex:pageBlockSection>-->
-
+                <script>twistSection(document.getElementById('{!$Component.caseDetailBlock.commentSection}').getElementsByTagName('img')[0]) </script>
             </apex:pageBlock>
         </apex:form>
-        <!--<apex:relatedList list="CaseHistory" subject="{!currentId}"></apex:relatedList>-->
-    </div>
 
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#order">Order Actions</a></li>
+            <li><a href="#case">Case Actions</a></li>
+        </ul>
+        <div class="tab-content">
+            <div id="order" class="tab-pane fade in active">
+                <br/>
+                <c:CSOOrderActionComponent CaseId="{!currentId}"/>
+            </div>
+            <div id="case" class="tab-pane fade">
+                <h3>Case</h3>
+                <p>Case Action Placeholder</p>
+            </div>
+        </div>
+    <script>
+        $(document).ready(function(){
+            $(".nav-tabs a").click(function(){
+                $(this).tab('show');
+            });
+        });
+    </script>
 
 </apex:page>
