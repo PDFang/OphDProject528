@@ -16,13 +16,13 @@
                         <apex:outputfield value="{!CurrentCase[f]}" />
                     </apex:repeat>
                 </apex:pageBlockSection>
-                <apex:pageBlockSection title="Comment History" columns="1" id="pbSection">
+                <apex:pageBlockSection title="Case Comment History" columns="1"  rendered="{!comments.size > 1}">
                     <div style="height:150px; overflow-y: scroll;">
                         <table>
                             <tr>
                                 <th>Created By</th><th >Comment Date</th><th>Comment</th>
                             </tr>
-                            <apex:repeat var="comment" value="{!comments}">
+                            <apex:repeat var="comment" value="{!comments}" rendered="{!comments.size > 1}">
                                 <tr>
                                     <td style="width:15%">{!comment.CreatedByName}</td>
                                     <td style="width:15%">{!comment.CreatedDate}</td>
@@ -31,6 +31,9 @@
                             </apex:repeat>
                         </table>
                     </div>
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Case Comment History" columns="1" rendered="{!comments.size < 1}">
+                    <span>No Comments to display.</span>
                 </apex:pageBlockSection>
                 <!--<apex:pageBlockSection columns="1" title="Case Assigned To">-->
                 <!--<div style="height:150px; overflow-y: scroll;">-->
