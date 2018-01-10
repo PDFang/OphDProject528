@@ -212,6 +212,30 @@ public class CaseEventAccountsExtension
     {
         // todo: create group in Xmatters
         // todo: create Notification Group with xMatters group name
+        // todo: queue the accounts batch job
+
+        // create group in Xmatters
+        string xmGroupName =  'Event_' + c.CaseNumber + '_' + Datetime.now().format('yyyyMMddHHmmss'); // e.g.Event_00830369_12012017
+        XMRestGroup xm = new XMRestGroup();
+        XMGroupModel xmGroup = null;
+        xmGroup = xm.CreateNewGroupWithResponseDetail(xmGroupName);
+
+        // create Notification Group with xMatters group name
+        if (xmGroup.id != '')
+        {
+            xmNotificationGroups__c xmNotificationGroup = new xmNotificationGroups__c(
+                Case__c = c.Id,
+                Name = xmGroup.targetName,
+                xmGroupUID__c = xmGroup.id,
+                Status__c = 'New'
+            );
+
+            insert xmNotificationGroup;
+        }
+
+        // queue the accounts batch job
+        // Id xmNotificationAccountQueueableJobID = System.enqueueJob(new xmNotificationAccountQueueable(xmNotificationGroup));
+
         return null;
     }
     
