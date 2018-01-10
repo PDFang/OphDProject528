@@ -16,7 +16,109 @@
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
 
+    <style>
+        .btn-primary {
+                    color: #fff !important;
+                    background-color: #007bff !important;
+                    border-color: #007bff !important;
+        }
+
+        .btn {
+
+                padding: 6px 12px !important;
+                margin-bottom: 0 !important;
+                font-size: 14px !important;
+                font-weight: 400 !important;
+                line-height: 1.42857143 !important;
+                text-align: center !important;
+                white-space: nowrap !important;
+                vertical-align: middle !important;
+                -ms-touch-action: manipulation !important;
+                touch-action: manipulation !important;
+                cursor: pointer !important;
+                -webkit-user-select: none !important;
+                -moz-user-select: none !important;
+                -ms-user-select: none !important;
+                user-select: none !important;
+                background-image: none !important;
+                border: 1px solid transparent !important;
+                border-radius: 4px !important;
+        }
+
+        #toaster {
+                visibility: hidden;
+                min-width: 250px;
+                margin-left: -125px;
+                color: #fff;
+                text-align: center;
+                border-radius: 2px;
+                padding: 16px;
+                position: fixed;
+                z-index: 9999;
+                left: 40%;
+                top: 30px;
+                bottom:0px;
+                font-size: 17px;
+                height:50px;
+        }
+
+         #toaster.alert{
+             background-color: #f57f8a;
+             border-color: #f57f8a;
+         }
+
+         #toaster.success{
+             background-color: #28a745;
+             border-color: #28a745;
+         }
+
+         #toaster.show {
+            visibility: visible;
+            -webkit-animation: fadein 0.5s, fadeout 0.5s 4.5s;
+            animation: fadein 0.5s, fadeout 0.5s 4.5s;
+         }
+
+         @-webkit-keyframes fadein {
+                from {top: 0; opacity: 0;}
+                to {top: 30px; opacity: 1;}
+         }
+
+         @keyframes fadein {
+                from {top: 0; opacity: 0;}
+                to {top: 30px; opacity: 1;}
+         }
+
+         @-webkit-keyframes fadeout {
+            from {top: 30px; opacity: 1;}
+            to {top: 0; opacity: 0;}
+         }
+
+         @keyframes fadeout {
+                from {top: 30px; opacity: 1;}
+                to {top: 0; opacity: 0;}
+         }
+         .spinnerClass {
+            background:url('../../img/loading32.gif') no-repeat;
+            height:32px;
+            margin:20px;
+            padding-left:40px;
+            padding-top:9px;
+            font-size: 0.75em;
+        }
+
+        .custom-control-input{
+                vertical-align: top !important;
+        }
+
+
+    </style>
+
+
     <apex:form>
+
+        <div id="toaster"></div>
+
+
     <div id="orderAction">
         <apex:pageBlock id="orderActionBlock">
             <h>Order Details</h>
@@ -38,7 +140,7 @@
 
     <!--Add comment-->
     <div class="modal fade" id="modalDetailComment" tabindex="-1" role="dialog" aria-labelledby="modalDetailCommentlabel" aria-hidden="true" >
-        <div class="modal-dialog" role="document" style="width:56%;">
+        <div class="modal-dialog" role="document" style="width:45%;">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalDetailCommentHeader" style="font-weight:bold">Add Comment</h5>
@@ -48,22 +150,55 @@
                     </button>
                 </div>
                 <div class="modal-body" style="font-size:14px;">
+                    <inputHidden id="hiddenId"/>
                     <div class="form-group">
-                        <apex:outputLabel for="textArea">New Comment</apex:outputLabel>
-                        <apex:inputTextarea id="textArea" styleClass="form-control" rows="5" style="width:60%"/>
+                        <apex:outputLabel for="commentTextArea">New Comment</apex:outputLabel>
+                        <apex:inputTextarea id="commentTextArea" styleClass="form-control" rows="5" onKeyDown="toggleSaveButton(this)" onKeyPress="toggleSaveButton(this)" onKeyUp="toggleSaveButton(this)"/>
                     </div>
                     <p>
                         All Comments saved here are visible to customers reviewing orders on the Support Site. Please use Case Resolution tab to add an internal comment to the Case.
                     </p>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-primary">Save</button>
-                    <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>
+                    <button class="btn btn-primary" style="display:none;" id="commentSaveButton" onclick="SaveComment(this); return false;">Save</button>
+                    <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" id="cancelCommentbtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!--Change Status-->
+        <div class="modal fade" id="modalChangeStatus" tabindex="-1" role="dialog" aria-labelledby="modalChangeStatuslabel" aria-hidden="true" >
+            <div class="modal-dialog" role="document" style="width:35%;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalChangeStatusHeader" style="font-weight:bold">Change Line Item Status</h5>
+
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" style="font-size:14px;">
+                        <inputHidden id="hiddenIdStatus"/>
+                        <span id="LineItem"> </span>
+                        <div class="form-group">
+                            <apex:outputLabel for="status">Update Status</apex:outputLabel>
+                            <input id="status" styleClass="form-control"/>
+                        </div>
+                        <div class="custom-control custom-checkbox">
+                            <apex:inputCheckbox styleClass="custom-control-input" id="updateAllCheckbox"/>
+                            <apex:outputLabel  style="font-weight:100;" styleClass="custom-control-label" for="updateAllCheckbox">Check this checbox if you want to update all other Line Item Status.</apex:outputLabel>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" id="statusSaveButton" onclick="UpdateStatus(this); return false;">Save</button>
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" id="cancelstatus">Cancel</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-    </div>
+
     </apex:form>
 
     <script>
@@ -79,11 +214,14 @@
                    '{!currentCaseId}',
                     function(result,event){
                           if (event.status){
-                              if(result != null && result.length > 1){
-
+                              if(result != null && result.length > 1 && result.indexOf('Error') == -1){
                                    generateGrid(JSON.parse(result));
                                    console.log('results =>' +result);
+                              }else{
+                                  showError(result);
                               }
+                          }else{
+                               showError(event.message);
                           }
                       },
                     {escape: false}
@@ -121,7 +259,11 @@
                         else if(name == 'Name'){
                             var template = '#{ #<a href="/#: data.Id #" target="_blank" name="Name" style="color:blue;">#= data.Name #</a># } #';
                             return { field: name, title: 'Line Item Id', template: template};
+                        } else if(name == 'LastComment'){
+
+                            return { field: name, title: 'Last Comment', width:350};
                         }
+
                       return { field: name, title: name, format: (isDateField[name] ? "{0:D}" : "") };
                  });
         var buttons = response["buttons"];
@@ -174,15 +316,140 @@
       }
 
       function openModal(e){
-           if(e.currentTarget.text == 'Add Comment'){
+          var tr = $(e.target).closest("tr");
+          var data = this.dataItem(tr);
+          if(e.currentTarget.text == 'Add Comment'){
+                $('#hiddenId').val(data.Id);
+                $('[id$=commentTextArea]').val('');
+                $('#commentSaveButton').hide();
                 $('div#modalDetailComment').modal({
                 backdrop: 'static',
                 keyboard: false
                });
                $('div#modalDetailComment').modal('show');
+          }else if(e.currentTarget.text == 'Update Status'){
+                $('#hiddenIdStatus').val(data.Id);
+                $('#LineItem').html('Line Item Id ' + data.Name);
+                $("#status").kendoDropDownList({
+                       autobind: false,
+                        dataSource: {
+                            data: {!ItemStatus}
+                        },
+                        value:data.Status
+                    });
 
-           }
+
+                $('div#modalChangeStatus').modal({
+                backdrop: 'static',
+                keyboard: false
+               });
+
+
+               $('div#modalChangeStatus').modal('show');
+          }
+
       }
+
+      function toggleSaveButton(obj){
+          if($(obj).val() == ''){
+              $('#commentSaveButton').hide();
+          }else{
+              $('#commentSaveButton').show();
+          }
+      }
+
+      function showError(result){
+          $('#toaster').html(result);
+          $('#toaster').addClass('alert');
+          $('#toaster').addClass('show');
+          window.setTimeout(function(){ $('#toaster').removeClass('show');$('#toaster').removeClass('alert');$('#toaster').html('');}, 5000);
+      }
+
+
+      function showSuccess(result){
+          $('#toaster').html(result);
+          $('#toaster').addClass('success');
+          $('#toaster').addClass('show');
+          window.setTimeout(function(){ $('#toaster').removeClass('show');$('#toaster').removeClass('success');$('#toaster').html('');}, 5000);
+      }
+
+
+       function SaveComment(obj){
+            $(obj).prop("disabled", true);
+            $(obj).text("Saving...");
+            $('#cancelCommentbtn').hide();
+            var comment = $('[id$=commentTextArea]').val();
+            var lineItemId = $('#hiddenId').val();
+            CSOOrderActionCompController.saveComment(
+                comment,
+                lineItemId,
+                '{!currentCaseId}',
+                function(result,event){
+                  if (event.status){
+                      if(result == 'Success'){
+                        $('div#modalDetailComment').modal('hide');
+                        $(obj).prop("disabled", false);
+                        $(obj).text("Save");
+                        $('#cancelCommentbtn').show();
+                        showSuccess('Comments were saved successfully.');
+                        getDetails();
+
+                      }else{
+                            $(obj).prop("disabled", false);
+                            $(obj).text("Save");
+                            $('#cancelCommentbtn').show();
+                          showError(result);
+                      }
+                  }else{
+                        $(obj).prop("disabled", false);
+                        $(obj).text("Save");
+                        $('#cancelCommentbtn').show();
+                        showError(event.message);
+                  }
+                },
+                {escape: false}
+            );
+       }
+
+       function UpdateStatus(obj){
+            $(obj).prop("disabled", true);
+            $(obj).text("Saving...");
+            $('#cancelstatus').hide();
+            var status = $("#status").data("kendoDropDownList").value();
+            var lineItemId = $('#hiddenIdStatus').val();
+            var updateAll =  $('[id$=updateAllCheckbox]').prop('checked');
+
+            CSOOrderActionCompController.updateStatus(
+                status,
+                lineItemId,
+                '{!currentCaseId}',
+                updateAll,
+                function(result,event){
+                  if (event.status){
+                      if(result == 'Success'){
+                        $('div#modalChangeStatus').modal('hide');
+                        $(obj).prop("disabled", false);
+                        $(obj).text("Save");
+                        $('#cancelstatus').show();
+                        showSuccess('Successfully changed status.');
+                        getDetails();
+
+                      }else{
+                        $(obj).prop("disabled", false);
+                        $(obj).text("Save");
+                        $('#cancelstatus').show();
+                        showError(result);
+                      }
+                  }else{
+                        $(obj).prop("disabled", false);
+                        $(obj).text("Save");
+                        $('#cancelstatus').show();
+                        showError(event.message);
+                  }
+                },
+                {escape: false}
+            );
+       }
 
     </script>
 
