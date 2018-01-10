@@ -4,6 +4,12 @@
 
 public class CSOCaseOrderDetailController {
 
+    //Case Comment History Model
+    public class CSOCaseComment{
+        public string CreatedDate {get; set;}
+        public string CreatedByName {get; set;}
+        public string CommentBody {get; set;}
+    }
 	// current asset record
 	public Case CurrentCase{
 		get {
@@ -12,7 +18,7 @@ public class CSOCaseOrderDetailController {
 		}set{}
 	}
 
-	public list<CaseComment> comments{get;set;}
+	public list<CSOCaseComment> comments{get;set;}
 //	public list<CSOCaseHistoryModel> caseHistory{get;set;}
 //	public list<CSOCaseHistoryModel> caseAssignedTo{get;set;}
 
@@ -31,7 +37,7 @@ public class CSOCaseOrderDetailController {
 		}
 
 		helper = new CSOCaseOrderDetailHelper(currentId);
-		comments = new List<CaseComment>();
+		comments = new List<CSOCaseComment>();
 		comments = helper.getCaseComments(currentId);
 //		caseHistory = new List<CSOCaseHistoryModel>();
 //		caseHistory = helper.getCaseHistory(currentId);

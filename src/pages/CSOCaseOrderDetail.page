@@ -7,58 +7,58 @@
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
 
-        <div class="listRelatedObject customnotabBlock bRelatedList first bPageBlock brandSecondaryBrd secondaryPalette" >
-            <apex:form id="CSOCaseOrderDetailForm">
-                <apex:pageBlock title="Information">
-                    <apex:pageMessages />
-                    <apex:pageBlockSection columns="2" >
-                        <apex:repeat value="{!$ObjectType.Case.FieldSets.CSO_Order_Resolution}" var="f">
-                            <apex:outputfield value="{!CurrentCase[f]}" />
-                        </apex:repeat>
-                    </apex:pageBlockSection>
-                    <apex:pageBlockSection title="Comment History" columns="1" id="pbSection">
-                        <div style="height:150px; overflow-y: scroll;">
-                            <table>
+    <div class="listRelatedObject customnotabBlock bRelatedList first bPageBlock brandSecondaryBrd secondaryPalette" >
+        <apex:form id="CSOCaseOrderDetailForm">
+            <apex:pageBlock title="Information">
+                <apex:pageMessages />
+                <apex:pageBlockSection columns="2" >
+                    <apex:repeat value="{!$ObjectType.Case.FieldSets.CSO_Order_Resolution}" var="f">
+                        <apex:outputfield value="{!CurrentCase[f]}" />
+                    </apex:repeat>
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Comment History" columns="1" id="pbSection">
+                    <div style="height:150px; overflow-y: scroll;">
+                        <table>
+                            <tr>
+                                <th>Created By</th><th >Comment Date</th><th>Comment</th>
+                            </tr>
+                            <apex:repeat var="comment" value="{!comments}">
                                 <tr>
-                                    <th >Comment Date</th><th>Created By</th><th>Comment</th>
+                                    <td style="width:15%">{!comment.CreatedByName}</td>
+                                    <td style="width:15%">{!comment.CreatedDate}</td>
+                                    <td style="width:70%">{!comment.CommentBody}</td>
                                 </tr>
-                                <apex:repeat var="comment" value="{!comments}">
-                                    <tr>
-                                        <td style="width:15%">{!comment.CreatedDate}</td>
-                                        <td style="width:15%">{!comment.CreatedBy.Name}</td>
-                                        <td style="width:70%">{!comment.CommentBody}</td>
-                                    </tr>
-                                </apex:repeat>
-                            </table>
-                        </div>
-                    </apex:pageBlockSection>
-                    <!--<apex:pageBlockSection columns="1" title="Case Assigned To">-->
-                        <!--<div style="height:150px; overflow-y: scroll;">-->
-                            <!--<table>-->
-                                <!--<apex:repeat var="caseAssign" value="{!caseAssignedTo}" >-->
-                                    <!--<tr>-->
-                                        <!--<td style="width:15%"><label><a href="/{!caseAssign.UserId}">{!caseAssign.UserName}</a>&nbsp;</label><span>at&nbsp;</span><span>{!caseAssign.csoDateTime}</span></td>-->
-                                    <!--</tr>-->
-                                <!--</apex:repeat>-->
-                            <!--</table>-->
-                        <!--</div>-->
-                    <!--</apex:pageBlockSection>-->
-                    <!--<apex:pageBlockSection columns="1" title="Case History">-->
-                        <!--<div style="height:150px; overflow-y: scroll;">-->
-                            <!--<table>-->
-                                <!--<apex:repeat var="caseHist" value="{!caseHistory}">-->
-                                    <!--<tr>-->
-                                        <!--<td><label><a href="/{!caseHist.UserId}">{!caseHist.UserName}</a>&nbsp;</label><span>{!caseHist.Field}&nbsp;</span><span>at&nbsp;</span><span>{!caseHist.csoDateTime}</span></td>-->
-                                    <!--</tr>-->
-                                <!--</apex:repeat>-->
-                            <!--</table>-->
-                        <!--</div>-->
-                    <!--</apex:pageBlockSection>-->
+                            </apex:repeat>
+                        </table>
+                    </div>
+                </apex:pageBlockSection>
+                <!--<apex:pageBlockSection columns="1" title="Case Assigned To">-->
+                <!--<div style="height:150px; overflow-y: scroll;">-->
+                <!--<table>-->
+                <!--<apex:repeat var="caseAssign" value="{!caseAssignedTo}" >-->
+                <!--<tr>-->
+                <!--<td style="width:15%"><label><a href="/{!caseAssign.UserId}">{!caseAssign.UserName}</a>&nbsp;</label><span>at&nbsp;</span><span>{!caseAssign.csoDateTime}</span></td>-->
+                <!--</tr>-->
+                <!--</apex:repeat>-->
+                <!--</table>-->
+                <!--</div>-->
+                <!--</apex:pageBlockSection>-->
+                <!--<apex:pageBlockSection columns="1" title="Case History">-->
+                <!--<div style="height:150px; overflow-y: scroll;">-->
+                <!--<table>-->
+                <!--<apex:repeat var="caseHist" value="{!caseHistory}">-->
+                <!--<tr>-->
+                <!--<td><label><a href="/{!caseHist.UserId}">{!caseHist.UserName}</a>&nbsp;</label><span>{!caseHist.Field}&nbsp;</span><span>at&nbsp;</span><span>{!caseHist.csoDateTime}</span></td>-->
+                <!--</tr>-->
+                <!--</apex:repeat>-->
+                <!--</table>-->
+                <!--</div>-->
+                <!--</apex:pageBlockSection>-->
 
-                </apex:pageBlock>
-            </apex:form>
-            <!--<apex:relatedList list="CaseHistory" subject="{!currentId}"></apex:relatedList>-->
-        </div>
+            </apex:pageBlock>
+        </apex:form>
+        <!--<apex:relatedList list="CaseHistory" subject="{!currentId}"></apex:relatedList>-->
+    </div>
 
 
 </apex:page>
