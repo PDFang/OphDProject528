@@ -14,6 +14,7 @@ public class CaseEventAccountsExtension
     public string selectedExcludedAccount{get;set;}
     private Set<Id> accountIds;
     public boolean canEdit{public get;private set;}
+    public boolean canBatch{public get; private set;}
     public CaseEventClass cec{public get;private set;}
     public CaseEventClass.AccountIncident[] acctIncidents{
         												get{
@@ -48,9 +49,10 @@ public class CaseEventAccountsExtension
              canEdit = inContactBaseClass.HasEditAccess(c.Id,UserInfo.getUserId());
          
         }
-        
-        
-       
+
+        if(c.RecordType.Name == 'Maintenance Notification'){
+            canBatch = true;
+        }
     }
     
     public void AccountSearch()
@@ -205,6 +207,13 @@ public class CaseEventAccountsExtension
         AccountIncidentsUpdate();
       return null;
    }
+
+    public PageReference BatchAssociatedAccounts()
+    {
+        // todo: create group in Xmatters
+        // todo: create Notification Group with xMatters group name
+        return null;
+    }
     
     public PageReference Beginning() 
     { //user clicked beginning

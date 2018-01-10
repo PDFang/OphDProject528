@@ -5,6 +5,7 @@
 public class CSOCaseOrderDetailHelper {
 
 	public Case currentCase;
+	public CSOCaseOrderDetailController.CSOCaseComment csoCaseComment;
 
 	//public list<CSOCaseHistoryModel> caseAssignedTo;
 
@@ -61,10 +62,21 @@ public class CSOCaseOrderDetailHelper {
 
 	}
 
-	public list<CaseComment> getCaseComments(string caseId){
+	public list<CSOCaseOrderDetailController.CSOCaseComment> getCaseComments(string caseId){
+		List<CSOCaseOrderDetailController.CSOCaseComment> finalCaseCommentList = new List<CSOCaseOrderDetailController.CSOCaseComment>();
 		list<CaseComment> retlist = new list<CaseComment>();
 		retlist = [SELECT CommentBody,CreatedDate,CreatedBy.Name,Id,IsDeleted,IsPublished,ParentId FROM CaseComment where parentId =:caseId  order by CreatedDate desc];
-		return retlist;
+
+
+        for(CaseComment retlistComment: retlist)
+        {
+			csoCaseComment = new CSOCaseOrderDetailController.CSOCaseComment();
+			csoCaseComment.CreatedDate = retlistComment.CreatedDate.format('MM/dd/yy hh:mma');
+			csoCaseComment.CreatedByName = retlistComment.CreatedBy.Name;
+			csoCaseComment.CommentBody = retlistComment.CommentBody;
+			finalCaseCommentList.add(csoCaseComment);
+        }
+		return finalCaseCommentList;
 	}
 
 //	public list<CSOCaseHistoryModel> getCaseHistory(string caseId){

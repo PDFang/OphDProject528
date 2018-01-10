@@ -190,6 +190,12 @@
 
         function GETFieldNames(fieldName){
             switch (fieldName){
+                case 'product' :
+                    return 'Product Impacted';
+                    break;
+                case 'fixVersion' :
+                    return 'JIRA Fixed Version';
+                    break;
                 case 'KINum' :
                     return 'KI#';
                     break;
@@ -296,7 +302,9 @@
                                 incidentCount: { from: "KINumOfIncidents", type: "number" },
                                 priority: { from: "KIPriority", type: "string" },
                                 JIRALink :{from: "KIJIRALink", type: "string" },
-                                scoreChange :{from : "KIScoreChange", type:"string", defaultValue:"NoChange"}
+                                scoreChange :{from : "KIScoreChange", type:"string", defaultValue:"NoChange"},
+                                product :{from: "KIProductImpacted", type:"string"},
+                                fixVersion :{from: "KIFixedVersion", type:"string"}
                         }
                     }
                   },
@@ -373,6 +381,14 @@
                                 filterable:false
                             },
                             {
+                                field:"product",
+                                title:"Product Impacted",
+                                filterable :
+                                {
+                                    ui: filterProduct
+                                }
+                            },
+                            {
                                 field:"team",
                                 title:"Team",
                                 filterable :
@@ -414,6 +430,14 @@
                                  filterable :
                                 {
                                     ui: filterTfsIteration
+                                }
+                            },
+                            {
+                                field:"fixVersion",
+                                title:"JIRA Fix Version",
+                                 filterable :
+                                {
+                                    ui: filterFixVersion
                                 }
                             }
                   ]
@@ -530,6 +554,64 @@
                            value = $(element).val();
                           console.log('value =>' + value);
                                var result =  GetFilter(value, "JIRA Id", e);
+
+                            }
+                       },
+
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"}
+                            }
+                        }
+                    }
+                    }
+            });
+
+     }
+
+     function filterProduct(element){
+
+          console.log(JSON.stringify(element));
+
+             element.kendoAutoComplete({
+                       dataSource: {
+                       serverFiltering:true,
+                      transport:{
+                      read: function(e){
+                           value = $(element).val();
+                          console.log('value =>' + value);
+                               var result =  GetFilter(value, "Product Impacted", e);
+
+                            }
+                       },
+
+                    schema: {
+                        model: {
+                            id: "value",
+                            fields: {
+                                value: {type: "string"}
+                            }
+                        }
+                    }
+                    }
+            });
+
+     }
+
+     function filterFixVersion(element){
+
+          console.log(JSON.stringify(element));
+
+             element.kendoAutoComplete({
+                       dataSource: {
+                       serverFiltering:true,
+                      transport:{
+                      read: function(e){
+                           value = $(element).val();
+                          console.log('value =>' + value);
+                               var result =  GetFilter(value, "JIRA Fixed Version", e);
 
                             }
                        },

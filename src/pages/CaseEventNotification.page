@@ -175,6 +175,13 @@
                     <apex:outputField value="{!c[field]}" />
                 </apex:repeat>
 
+                <apex:pageBlockSectionItem>
+                    <apex:outputLabel value="Send Method" title="Select the Send Method of Maintenance notification"></apex:outputLabel>
+                    <apex:selectRadio value="{!xmSelectedSendMethod}">
+                        <apex:selectOptions value="{!SendMethodOptions}"/>
+                    </apex:selectRadio>
+                </apex:pageBlockSectionItem>
+
                 <apex:pageBlockSectionItem >
                     <apex:outputLabel value="Maintenance Template" title="Select Maintenance template for this notification" for="xmForm"></apex:outputLabel>
                     <apex:selectList id="xmForm" size="1" value="{!xmSelectedForm}">
