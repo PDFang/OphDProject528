@@ -460,6 +460,12 @@ public with sharing class CaseEventClass
 		if (counter + listSize < totalSize) return false; else return true;
 	}
 
+	public Boolean getDisableBatchAccount()
+	{
+		// todo: check batch status, then determine enable/disable
+		return true;
+	}
+
 	public Integer getTotal_size()
 	{
 		return totalSize;

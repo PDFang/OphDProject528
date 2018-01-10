@@ -16,13 +16,55 @@
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
 
-
+    <apex:form>
     <div id="orderAction">
         <apex:pageBlock id="orderActionBlock">
-            <h1 title="Order Details"/>
+            <h>Order Details</h>
             <div id="orderLineItems"></div>
         </apex:pageBlock>
+
     </div>
+
+    <!-- loading Modal -->
+    <div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="width:40%; top: 182px;">
+                <div class="modal-body" style="font-size:14px;">
+                    <div class="spinnerClass">Please wait</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Add comment-->
+    <div class="modal fade" id="modalDetailComment" tabindex="-1" role="dialog" aria-labelledby="modalDetailCommentlabel" aria-hidden="true" >
+        <div class="modal-dialog" role="document" style="width:56%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalDetailCommentHeader" style="font-weight:bold">Add Comment</h5>
+
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="font-size:14px;">
+                    <div class="form-group">
+                        <apex:outputLabel for="textArea">New Comment</apex:outputLabel>
+                        <apex:inputTextarea id="textArea" styleClass="form-control" rows="5" style="width:60%"/>
+                    </div>
+                    <p>
+                        All Comments saved here are visible to customers reviewing orders on the Support Site. Please use Case Resolution tab to add an internal comment to the Case.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary">Save</button>
+                    <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    </apex:form>
 
     <script>
 
@@ -71,20 +113,26 @@
 
       function generateColumns(response){
         var columnNames = response["columns"];
-        return columnNames.map(function(name){
-            if(name == 'Id'){
-                return { field: name, title: name,  hidden: true};
-            }
+        var columnMap =  columnNames.map(function(name){
+                        if(name == 'Id'){
+                            return { field: name, title: name,  hidden: true};
+                        }
 
-            else if(name == 'Name'){
-                var template = '#{ #<a href="/#: data.Id #" target="_blank" name="Name" style="color:blue;">#= data.Name #</a># } #';
-                return { field: name, title: 'Line Item Id', template: template};
-            }
+                        else if(name == 'Name'){
+                            var template = '#{ #<a href="/#: data.Id #" target="_blank" name="Name" style="color:blue;">#= data.Name #</a># } #';
+                            return { field: name, title: 'Line Item Id', template: template};
+                        }
+                      return { field: name, title: name, format: (isDateField[name] ? "{0:D}" : "") };
+                 });
+        var buttons = response["buttons"];
+        if(buttons){
+            var buttonMap = buttons.map(function(bName){
+               return {name : bName, click : openModal};
+            });
+            columnMap.push({ title: 'Action', command:buttonMap, width:300});
 
-
-
-          return { field: name, title: name, format: (isDateField[name] ? "{0:D}" : "") };
-        });
+        }
+         return columnMap;
       }
 
       function generateModel(response) {
@@ -123,6 +171,17 @@
         model.fields = fields;
 
         return model;
+      }
+
+      function openModal(e){
+           if(e.currentTarget.text == 'Add Comment'){
+                $('div#modalDetailComment').modal({
+                backdrop: 'static',
+                keyboard: false
+               });
+               $('div#modalDetailComment').modal('show');
+
+           }
       }
 
     </script>
