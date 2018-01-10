@@ -20,6 +20,7 @@ public class CaseEventNotificationExtension
     public boolean canEdit{public get;private set;}
     public boolean allowNotifications{public get;private set;}
     public string xmSelectedForm{get;set;}
+    public string xmSelectedSendMethod {get; set;}
 
     // For product eligible for select Customers enable legacy notification otherwise enable xMatters notification
     public boolean enableXmatters{public get;private set;}
@@ -478,6 +479,17 @@ public class CaseEventNotificationExtension
         }
     }
 
+    public List<selectOption> SendMethodOptions
+    {
+        get
+        {
+            List<SelectOption> options = new List<SelectOption>();
+            options.add(new SelectOption('ByAccounts', 'By Associated Accounts'));
+            options.add(new SelectOption('ByProducts', 'By Protucts'));
+            return options;
+        }
+    }
+
     public List<selectOption> StandardTextOptions
     {
         get
@@ -541,10 +553,15 @@ public class CaseEventNotificationExtension
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.INFO, 'xMatters Maintenance Notification is disabled. Please contact your administrator.'));
                 return null;
             }
+            if(String.isBlank(xmSelectedSendMethod)){ // safety check
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'You must choose a Send Method before sending the notification.'));
+                return null;
+            }
             if(String.isBlank(xmSelectedForm)){ // safety check
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'You must choose a maintenance template before sending the notification.'));
                 return null;
             }
+
             xmNotification__c xmNotification = new xmNotification__c(
                     Case__c = c.Id,
                     Request_Date__c = system.now(),
