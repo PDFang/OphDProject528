@@ -21,6 +21,7 @@ public with sharing class CSOOrderActionCompController {
 		'Status'
 	};
 
+	static set<string> stColumns = new set<string>();
 
 	@RemoteAction
 	public static string getCurrentOrderDetails(string caseId){
@@ -37,10 +38,12 @@ public with sharing class CSOOrderActionCompController {
 		if(lineGeneralItems == null)
 			return null;
 
-		list<string> columns = getComunMappings(instrumentId);
+		list<CSOOrderResolutionColumnMapping__c> mappings = getMappings(instrumentId);
+		list<string> columns = getColumnMappings(mappings);
+		list<string> buttons = getButtons(mappings);
 
 		if(columns.size() > 0){
-			string jsonString = generateJSONString(columns, lineGeneralItems);
+			string jsonString = generateJSONString(columns, lineGeneralItems, buttons);
 			System.debug('JSONstring ==>' + jsonString);
 			return jsonString;
 		}
@@ -70,24 +73,37 @@ public with sharing class CSOOrderActionCompController {
 				from OrderLineGeneralItems__c where CustomerOrder__c = : orderId and InstrumentType__c = :instrumentId];
 	}
 
-
-	private static list<String> getComunMappings(decimal instrumentId){
-
-		list<string> columns = new list<string>();
-		columns.addAll(lineItemColumns);
-		list<CSOOrderResolutionColumnMapping__c> mapping = new list<CSOOrderResolutionColumnMapping__c>{
-				[Select DisplayColumns__c, OrderProduct__c from CSOOrderResolutionColumnMapping__c where IntrumentNumber__c =: instrumentId Limit 1]
-		};
-
-
-		for(string st : mapping[0].DisplayColumns__c.split(';')){
-			columns.add( st.replaceAll( '\\s+', ''));
-		}
-		return columns;
+	private static list<CSOOrderResolutionColumnMapping__c> getMappings(decimal instrumentId){
+			return [Select DisplayColumns__c, OrderProduct__c,Display_Buttons__c from CSOOrderResolutionColumnMapping__c where IntrumentNumber__c =: instrumentId Limit 1];
 	}
 
 
-	private static string generateJSONString(list<string> columns, list<OrderLineGeneralItems__c> lineItems){
+	private static list<String> getColumnMappings(list<CSOOrderResolutionColumnMapping__c> mappings){
+
+		list<string> columns = new list<string>();
+		columns.addAll(lineItemColumns);
+		if(mappings == null)
+			return columns;
+
+		for(string st : mappings[0].DisplayColumns__c.split(';')){
+			columns.add( st.replaceAll( '\\s+', ''));
+
+		}
+		stColumns.addAll(columns);
+		return columns;
+	}
+
+	private static list<string> getButtons(list<CSOOrderResolutionColumnMapping__c> mappings){
+		if(mappings == null)
+			return new list<string>();
+
+		list<string> buttons = mappings[0].Display_Buttons__c.split(';');
+		return buttons;
+	}
+
+
+
+	private static string generateJSONString(list<string> columns, list<OrderLineGeneralItems__c> lineItems, list<string> buttons){
 
 		JSONGenerator gen = JSON.createGenerator(true);
 		gen.writeStartObject();
@@ -102,8 +118,11 @@ public with sharing class CSOOrderActionCompController {
 					set<string> stCols = new set<string>();
 					for(OrderLineSpecificItem__c si : li.Order_Line_Specific_Items__r){
 						string col = si.SpecificItem__c.replaceAll( '\\s+', '');
-							gen.writeStringField(col, si.ItemValue__c);
-							stCols.add(col);
+							if(stColumns.contains(col)){
+								gen.writeStringField(col, si.ItemValue__c);
+								stCols.add(col);
+							}
+
 					}
 					for(string col : columns) {
 						if(!stCols.contains(col) && !lineItemColumns.contains(col)){
@@ -115,10 +134,12 @@ public with sharing class CSOOrderActionCompController {
 			gen.writeEndArray();
 
 		gen.writeObjectField('columns', columns);
+		gen.writeObjectField('buttons', buttons);
 
 		gen.writeEndObject();
 
 		return gen.getAsString();
 	}
+
 
 }
