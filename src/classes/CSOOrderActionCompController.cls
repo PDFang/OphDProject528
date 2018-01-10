@@ -7,11 +7,11 @@ public with sharing class CSOOrderActionCompController {
 	public String currentCaseId{get;set;}
 
 
-
 	public CSOOrderActionCompController(){
 		if (currentCaseId == null) {
 			currentCaseId = System.currentPageReference().getParameters().get('id');
 		}
+
 
 	}
 
@@ -19,36 +19,66 @@ public with sharing class CSOOrderActionCompController {
 		'Id',
 		'Name',
 		'Status'
+
 	};
 
 	static set<string> stColumns = new set<string>();
+	static Case currentCase;
+
+	public string ItemStatus
+	{
+		get
+		{
+			Schema.DescribeFieldResult F = OrderLineGeneralItems__c.ItemStatus__c.getDescribe();
+			String[] statusList = new String[]{};
+
+			for(Schema.PicklistEntry pl:F.getPicklistValues())
+			{
+				if(pl.getValue() != 'none')
+					statusList.add(pl.getValue());
+			}
+
+			statusList.sort();
+
+			return JSON.Serialize(statusList);
+		}
+	}
+
+
 
 	@RemoteAction
 	public static string getCurrentOrderDetails(string caseId){
-		Case currentCase = [select CustomerOrder__c, SubProductorService__c, Origin from Case where Id = : caseId and Origin like '%CSO%' Limit 1];
+		try{
+			list<case> cases = new list<case>([select CustomerOrder__c, SubProductorService__c, Origin from Case where Id = : caseId and Origin like '%CSO%' Limit 1]);
 
-		if(currentCase == null)
+			if(cases == null || cases.isEmpty())
+				return 'Error occured while loading the order line items grid. Invalid Case type. ';
+
+			currentCase = cases[0];
+
+			string orderId = currentCase.CustomerOrder__c;
+			decimal instrumentId = getInstrumentId(currentCase.SubProductorService__c);
+
+			List<OrderLineGeneralItems__c> lineGeneralItems = getAllLineItems(orderId, instrumentId);
+
+			if(lineGeneralItems == null)
+				return 'Error occured while loading the order line items grid. No Line Items were found to show';
+
+			list<CSOOrderResolutionColumnMapping__c> mappings = getMappings(instrumentId);
+			list<string> columns = getColumnMappings(mappings);
+			list<string> buttons = getButtons(mappings);
+
+			if(columns.size() > 0){
+				string jsonString = generateJSONString(columns, lineGeneralItems, buttons);
+				System.debug('JSONstring ==>' + jsonString);
+				return jsonString;
+			}
+
 			return null;
-
-		string orderId = currentCase.CustomerOrder__c;
-		decimal instrumentId = getInstrumentId(currentCase.SubProductorService__c);
-
-		List<OrderLineGeneralItems__c> lineGeneralItems = getAllLineItems(orderId, instrumentId);
-
-		if(lineGeneralItems == null)
-			return null;
-
-		list<CSOOrderResolutionColumnMapping__c> mappings = getMappings(instrumentId);
-		list<string> columns = getColumnMappings(mappings);
-		list<string> buttons = getButtons(mappings);
-
-		if(columns.size() > 0){
-			string jsonString = generateJSONString(columns, lineGeneralItems, buttons);
-			System.debug('JSONstring ==>' + jsonString);
-			return jsonString;
+		}Catch(Exception ex){
+			return 'Error occured while loading the order line items grid. - ' + ex.getMessage();
 		}
 
-		return null;
 	}
 
 	private static decimal getInstrumentId(string product){
@@ -68,7 +98,7 @@ public with sharing class CSOOrderActionCompController {
 
 
 	private static list<OrderLineGeneralItems__c> getAllLineItems(string orderId, decimal instrumentId){
-		return [select Id, Name, ItemStatus__c, InstrumentType__c,
+		return [select Id, Name, ItemStatus__c, InstrumentType__c,Last_Comment__c,
 				(select SpecificItem__c, ItemValue__c,OrderLineGeneralItem__c from Order_Line_Specific_Items__r)
 				from OrderLineGeneralItems__c where CustomerOrder__c = : orderId and InstrumentType__c = :instrumentId];
 	}
@@ -82,7 +112,7 @@ public with sharing class CSOOrderActionCompController {
 
 		list<string> columns = new list<string>();
 		columns.addAll(lineItemColumns);
-		if(mappings == null)
+		if(mappings == null || mappings.isEmpty())
 			return columns;
 
 		for(string st : mappings[0].DisplayColumns__c.split(';')){
@@ -94,7 +124,7 @@ public with sharing class CSOOrderActionCompController {
 	}
 
 	private static list<string> getButtons(list<CSOOrderResolutionColumnMapping__c> mappings){
-		if(mappings == null)
+		if(mappings == null || mappings.isEmpty())
 			return new list<string>();
 
 		list<string> buttons = mappings[0].Display_Buttons__c.split(';');
@@ -115,6 +145,7 @@ public with sharing class CSOOrderActionCompController {
 					gen.writeStringField('Id', li.Id);
 					gen.writeStringField('Name', li.Name);
 					gen.writeStringField('Status', li.ItemStatus__c);
+					gen.writeStringField('LastComment', li.Last_Comment__c == null ? '' : li.Last_Comment__c);
 					set<string> stCols = new set<string>();
 					for(OrderLineSpecificItem__c si : li.Order_Line_Specific_Items__r){
 						string col = si.SpecificItem__c.replaceAll( '\\s+', '');
@@ -133,6 +164,7 @@ public with sharing class CSOOrderActionCompController {
 				}
 			gen.writeEndArray();
 
+		columns.add('LastComment');
 		gen.writeObjectField('columns', columns);
 		gen.writeObjectField('buttons', buttons);
 
@@ -141,5 +173,52 @@ public with sharing class CSOOrderActionCompController {
 		return gen.getAsString();
 	}
 
+	@RemoteAction
+	public static string saveComment(string comment, string lineItemId, string caseId){
+		try{
+			if(comment == '' || comment == null)
+				return 'Empty comments are not allowed to save.';
+			Id customerOrderId = [select CustomerOrder__c from Case where Id = : caseId limit 1].CustomerOrder__c;
+			LineItemComment__c lineItemComment = new LineItemComment__c(
+					Comment__c = comment,
+					OrderLineGeneralItem__c = lineItemId,
+					CustomerOrder__c = customerOrderId,
+					Case__c = caseId,
+					Public__c = true
+			);
 
+			insert lineItemComment;
+			return 'Success';
+		}catch (Exception ex){
+			return 'Error while saving comment. Technical error message -  ' + ex.getMessage();
+		}
+	}
+
+	@RemoteAction
+	public static string updateStatus(string status, string lineItemId, string caseId, boolean updateAll){
+		try{
+			if(status == '' || status == null)
+				return 'Invalid Staus.';
+			if(updateAll){
+				currentCase = [select CustomerOrder__c, SubProductorService__c, Origin from Case where Id = : caseId and Origin like '%CSO%' Limit 1];
+				string orderId = currentCase.CustomerOrder__c;
+				decimal instrumentId = getInstrumentId(currentCase.SubProductorService__c);
+				List<OrderLineGeneralItems__c> lineGeneralItems = getAllLineItems(orderId, instrumentId);
+				for(OrderLineGeneralItems__c li : lineGeneralItems){
+					li.ItemStatus__c = status;
+				}
+				update lineGeneralItems;
+			}else{
+				OrderLineGeneralItems__c lineItem = new OrderLineGeneralItems__c(
+						Id = lineItemId,
+						ItemStatus__c = status
+				);
+
+				update lineItem;
+			}
+			return 'Success';
+		}catch (Exception ex){
+			return 'Error while updating Status change. Technical error message -  ' + ex.getMessage();
+		}
+	}
 }
