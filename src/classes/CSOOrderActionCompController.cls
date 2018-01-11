@@ -13,6 +13,7 @@ public with sharing class CSOOrderActionCompController {
 		}
 
 
+
 	}
 
 	final static set<string> lineItemColumns = new set<string>{
@@ -29,15 +30,14 @@ public with sharing class CSOOrderActionCompController {
 	{
 		get
 		{
-			Schema.DescribeFieldResult F = OrderLineGeneralItems__c.ItemStatus__c.getDescribe();
 			String[] statusList = new String[]{};
-
-			for(Schema.PicklistEntry pl:F.getPicklistValues())
-			{
-				if(pl.getValue() != 'none')
-					statusList.add(pl.getValue());
+			list<case> cases = getCurrentCase(currentCaseId);
+			if(cases.isEmpty())
+				return 'NONE';
+			list<CSOOrderResolutionColumnMapping__c> mappings = getMappings(cases[0].CSO_Case_Type__c);
+			if(!mappings.isEmpty()){
+				statusList = mappings[0].Line_Item_Status__c.split(';');
 			}
-
 			statusList.sort();
 
 			return JSON.Serialize(statusList);
@@ -49,22 +49,17 @@ public with sharing class CSOOrderActionCompController {
 	@RemoteAction
 	public static string getCurrentOrderDetails(string caseId){
 		try{
-			list<case> cases = new list<case>([select CustomerOrder__c, SubProductorService__c, Origin from Case where Id = : caseId and Origin like '%CSO%' Limit 1]);
-
+			list<case> cases = getCurrentCase(caseId);
 			if(cases == null || cases.isEmpty())
 				return 'Error occured while loading the order line items grid. Invalid Case type. ';
 
 			currentCase = cases[0];
 
-			string orderId = currentCase.CustomerOrder__c;
-			decimal instrumentId = getInstrumentId(currentCase.SubProductorService__c);
-
-			List<OrderLineGeneralItems__c> lineGeneralItems = getAllLineItems(orderId, instrumentId);
-
+			List<OrderLineGeneralItems__c> lineGeneralItems = getAllLineItems(currentCase);
 			if(lineGeneralItems == null)
 				return 'Error occured while loading the order line items grid. No Line Items were found to show';
 
-			list<CSOOrderResolutionColumnMapping__c> mappings = getMappings(instrumentId);
+			list<CSOOrderResolutionColumnMapping__c> mappings = getMappings(currentCase.CSO_Case_Type__c);
 			list<string> columns = getColumnMappings(mappings);
 			list<string> buttons = getButtons(mappings);
 
@@ -81,30 +76,37 @@ public with sharing class CSOOrderActionCompController {
 
 	}
 
-	private static decimal getInstrumentId(string product){
+	private static decimal getInstrumentId(string caseType){
 		decimal instrumentId = 0;
 
-		if(product == null)
+		if(caseType == null)
 			return 0;
 
-		if(product.contains('DID'))
+		if(caseType.contains('DID'))
 			instrumentId = 12554;
-		else if (product.contains('IP Voice'))
+		else if (caseType.contains('IP Voice'))
 			instrumentId = 12709;
 
 		return instrumentId;
 
 	}
 
+	private static list<Case> getCurrentCase(string caseId){
+		return [select CustomerOrder__c, SubProductorService__c,CSO_Case_Type__c, Origin from Case where Id = : caseId and CSO_Case_Type__c != null Limit 1];
 
-	private static list<OrderLineGeneralItems__c> getAllLineItems(string orderId, decimal instrumentId){
+	}
+
+	private static list<OrderLineGeneralItems__c> getAllLineItems(case currentCase){
+		string orderId = currentCase.CustomerOrder__c;
+		decimal instrumentId = getInstrumentId(currentCase.CSO_Case_Type__c);
+
 		return [select Id, Name, ItemStatus__c, InstrumentType__c,Last_Comment__c,
 				(select SpecificItem__c, ItemValue__c,OrderLineGeneralItem__c from Order_Line_Specific_Items__r)
 				from OrderLineGeneralItems__c where CustomerOrder__c = : orderId and InstrumentType__c = :instrumentId];
 	}
 
-	private static list<CSOOrderResolutionColumnMapping__c> getMappings(decimal instrumentId){
-			return [Select DisplayColumns__c, OrderProduct__c,Display_Buttons__c from CSOOrderResolutionColumnMapping__c where IntrumentNumber__c =: instrumentId Limit 1];
+	private static list<CSOOrderResolutionColumnMapping__c> getMappings(string CSOCaseType){
+			return [Select DisplayColumns__c, CSO_Case_Type__c,Line_Item_Status__c , Display_Buttons__c from CSOOrderResolutionColumnMapping__c where  CSO_Case_Type__c = :CSOCaseType Limit 1];
 	}
 
 
@@ -178,7 +180,8 @@ public with sharing class CSOOrderActionCompController {
 		try{
 			if(comment == '' || comment == null)
 				return 'Empty comments are not allowed to save.';
-			Id customerOrderId = [select CustomerOrder__c from Case where Id = : caseId limit 1].CustomerOrder__c;
+			list<case> cases = getCurrentCase(caseId);
+			Id customerOrderId = cases[0].CustomerOrder__c;
 			LineItemComment__c lineItemComment = new LineItemComment__c(
 					Comment__c = comment,
 					OrderLineGeneralItem__c = lineItemId,
@@ -200,10 +203,9 @@ public with sharing class CSOOrderActionCompController {
 			if(status == '' || status == null)
 				return 'Invalid Staus.';
 			if(updateAll){
-				currentCase = [select CustomerOrder__c, SubProductorService__c, Origin from Case where Id = : caseId and Origin like '%CSO%' Limit 1];
-				string orderId = currentCase.CustomerOrder__c;
-				decimal instrumentId = getInstrumentId(currentCase.SubProductorService__c);
-				List<OrderLineGeneralItems__c> lineGeneralItems = getAllLineItems(orderId, instrumentId);
+				list<case> cases = getCurrentCase(caseId);
+				currentCase = cases[0];
+				List<OrderLineGeneralItems__c> lineGeneralItems = getAllLineItems(currentCase);
 				for(OrderLineGeneralItems__c li : lineGeneralItems){
 					li.ItemStatus__c = status;
 				}
