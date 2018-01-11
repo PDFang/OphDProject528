@@ -60,7 +60,7 @@ global class SubscriptionRollupSchedulable implements Schedulable, Database.Batc
 
     global void finish(Database.BatchableContext bc){
 
-        Profile userProfile = [Select Id from Profile where Id = :userinfo.getProfileId()];
+        Profile userProfile = [Select Name from Profile where Id = :userinfo.getProfileId()];
 
         if(userProfile.Name.containsIgnoreCase('System Administrator') == false){
             return;
