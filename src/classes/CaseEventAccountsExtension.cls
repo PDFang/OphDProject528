@@ -12,6 +12,7 @@ public class CaseEventAccountsExtension
     public string selectedAccount{get;set;}
     public string selectedAccountFromMasterList{get;set;}
     public string selectedExcludedAccount{get;set;}
+    public string batchMessage{get;set;}
     private Set<Id> accountIds;
     public boolean canEdit{public get;private set;}
     public boolean canBatch{public get; private set;}
@@ -208,14 +209,11 @@ public class CaseEventAccountsExtension
       return null;
    }
 
-    public PageReference BatchAssociatedAccounts()
+    // public PageReference BatchAssociatedAccounts()
+    public void BatchAssociatedAccounts()
     {
-        // todo: create group in Xmatters
-        // todo: create Notification Group with xMatters group name
-        // todo: queue the accounts batch job
-
         // create group in Xmatters
-        string xmGroupName =  'Event_' + c.CaseNumber + '_' + Datetime.now().format('yyyyMMddHHmmss'); // e.g.Event_00830369_12012017
+        string xmGroupName =  'Event_' + c.CaseNumber + '_' + Datetime.now().format('yyyyMMddHHmmss'); // e.g.Event_00830369_12012017225545
         XMRestGroup xm = new XMRestGroup();
         XMGroupModel xmGroup = null;
         xmGroup = xm.CreateNewGroupWithResponseDetail(xmGroupName);
@@ -223,20 +221,44 @@ public class CaseEventAccountsExtension
         // create Notification Group with xMatters group name
         if (xmGroup.id != '')
         {
-            xmNotificationGroups__c xmNotificationGroup = new xmNotificationGroups__c(
-                Case__c = c.Id,
-                Name = xmGroup.targetName,
-                xmGroupUID__c = xmGroup.id,
-                Status__c = 'New'
-            );
+            try{
+                xmNotificationGroups__c xmNotificationGroup = new xmNotificationGroups__c(
+                        Case__c = c.Id,
+                        Name = xmGroup.targetName,
+                        xmGroupUID__c = xmGroup.id,
+                        Status__c = 'New'
+                );
 
-            insert xmNotificationGroup;
+                insert xmNotificationGroup;
+            }catch(Exception ex){
+                System.Debug('BatchAssociatedAccounts - creating Account Group in Salesforce' + ex.getMessage());
+                batchMessage = 'Error: there is an issue creating Account Group in Salesforce';
+            }
+        }
+        else
+        {
+            batchMessage = 'Error: there is an issue creating Account Group in Xmatters';
         }
 
         // queue the accounts batch job
         // Id xmNotificationAccountQueueableJobID = System.enqueueJob(new xmNotificationAccountQueueable(xmNotificationGroup));
+    }
 
-        return null;
+    public Boolean getDisableBatchAccount()
+    {
+        // check if there is any previous batch still in progress, then determine enable/disable
+        xmNotificationGroups__c[] xmGroups = [SELECT Case__c,Name,Status__c FROM xmNotificationGroups__c WHERE Status__c != 'Completed' AND Status__c != 'Failed' AND Case__c = :c.id];
+
+        if (!xmGroups.isEmpty())
+        {
+            batchMessage = 'An Account Batch is currently in progress.';
+            return true;    // disable batch button
+        }
+        else
+        {
+            return false;   // enable batch button
+        }
+
     }
     
     public PageReference Beginning() 
