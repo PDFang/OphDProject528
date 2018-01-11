@@ -80,8 +80,10 @@
                     </apex:pageBlockSection>
                 </apex:pageBlock>
 
-                <apex:pageBlock rendered="{!canBatch}">
-                    <apex:commandButton action="{!BatchAssociatedAccounts}" title="BatchAccounts" value="Batch Associated Accounts" disabled="{!cec.disableBatchAccount}" reRender="asBlock"/>
+                <apex:pageBlock id="batchBlock" rendered="{!canBatch}">
+                    <apex:commandButton action="{!BatchAssociatedAccounts}" title="BatchAccounts" value="Batch Associated Accounts" disabled="{!disableBatchAccount}" reRender="batchBlock"/>
+                    <br />
+                    <apex:outputText value="{!batchMessage}" />
                 </apex:pageBlock>
             </div>
 
