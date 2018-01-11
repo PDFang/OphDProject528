@@ -4,7 +4,6 @@ global class CaseKBAttachedScheduler implements Schedulable {
     {
         // Last_Batch_Run_Date__c batchRunDt = Last_Batch_Run_Date__c.getall().values();
         //dateTime lastBatchRunTime = batchRunDt.LastRunTime__c;
-
         //determine if the day is Sunday
         Date currentDate = system.today();
 
