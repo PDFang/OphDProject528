@@ -294,7 +294,18 @@ private class AssetTriggerHandlerTest {
 
     } // end of deleteAssetTotalTest()
 
+    static testMethod void scheduleAssetRollupTest() {
 
+        createTestData();
+        createAssets();
+
+        Test.startTest();
+
+        AssetTriggerHandler.scheduleAssetRollup(new Set<Id>{[Select Id From Asset Limit 1].Id});
+
+        Test.stopTest();
+
+    }
     /**** Following methods create test data ******/
 
     static void createTestData()

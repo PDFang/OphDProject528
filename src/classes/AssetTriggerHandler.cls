@@ -1,7 +1,7 @@
 public class AssetTriggerHandler extends TriggerHandler {
 
     @TestVisible
-    private static Id assetRollupQueueableJobID;
+    private static String assetRollupQueueableJobID;
 
     public override void afterUpdate()
     {
@@ -49,8 +49,42 @@ public class AssetTriggerHandler extends TriggerHandler {
         system.debug('**** rollupNRRToPhaseProject(): assetIdSet - ' + assetIdSet);
 
         if(assetIdSet.size() > 0 && assetRollupQueueableJobID == null && RollupUtility.isRollupEnabled){
-            assetRollupQueueableJobID = System.enqueueJob(new AssetRollupQueueable(assetIdSet));
-            system.debug('**** rollupNRRToPhaseProject(): assetRollupQueueableJobID - ' + assetRollupQueueableJobID);
+            if(limits.getQueueableJobs() < limits.getLimitQueueableJobs()) {
+                assetRollupQueueableJobID = System.enqueueJob(new AssetRollupQueueable(assetIdSet));
+                system.debug('**** rollupNRRToPhaseProject(): assetRollupQueueableJobID - ' + assetRollupQueueableJobID);
+            } else{
+                assetRollupQueueableJobID = '';
+                scheduleAssetRollup(assetIdSet);
+            }
+
+        }
+
+    }
+
+    @TestVisible
+    private static void scheduleAssetRollup(Set<Id> assetIdSet){
+
+        try{
+            Datetime nextRun = system.now().addSeconds(45);
+            String dateTimeFormat = '0 {0} {1} {2} {3} ? {4}';
+            String scheduledTime = string.format(
+                    dateTimeFormat,
+                    new String[]{
+                            nextRun.minute().format(),
+                            nextRun.hour().format(),
+                            nextRun.day().format(),
+                            nextRun.month().format(),
+                            nextRun.year().format().remove(',')
+                    }
+            );
+            system.debug('scheduleSubscriptionRollup(): scheduledTime - ' + scheduledTime);
+
+            AssetRollupSchedulable sch = new AssetRollupSchedulable(assetIdSet);
+            assetRollupQueueableJobID = System.schedule('scheduleAssetRollup '+ system.now(), scheduledTime, sch);
+
+        } catch (Exception ex){
+            system.debug('**** scheduleAssetRollup(): Exception - ' + ex);
+            inContactBaseClass.SendErrorEmail(ex, assetIdSet.iterator().next());
         }
 
     }
