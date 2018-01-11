@@ -1,6 +1,38 @@
 @isTest
 public class CaseUpdateBatchTest {
 
+    static testMethod void testschedule() {
+        Test.StartTest();
+        CaseKBAttachedScheduler sh1 = new CaseKBAttachedScheduler();
+
+        String sch = '0 0 23 * * ?'; system.schedule('Run batch', sch, sh1);
+        Test.stopTest();
+    }
+
+    static testMethod void testSendErrorEmail(){
+        Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SobjectType.Case.getRecordTypeInfosByName();
+        Map<Id,String> errorDetails = new Map<Id, String>();
+
+        Case caseObj = new Case(
+                RecordTypeId = recordTypeMap.get('Service Request').getRecordTypeId(),
+                Type = 'Help Request',
+                Status = 'New',
+                KB_Attached__c = false,
+                Subject = 'CaseUpdateBatchTest',
+                Description = 'KB testNewVsKnown',
+                Origin = 'Web'
+
+        );
+
+        insert caseObj;
+        errorDetails.put(caseObj.Id, 'Test Error Email');
+
+        test.startTest();
+        CaseUpdateBatch cub = new CaseUpdateBatch('SELECT Id FROM Case LIMIT 1');
+        cub.sendErrorEmail(errorDetails);
+        test.stopTest();
+    }
+
     static testMethod void testNewVsKnown(){
 
         Map<String,Schema.RecordTypeInfo> recordTypeMap = Schema.SobjectType.Case.getRecordTypeInfosByName();

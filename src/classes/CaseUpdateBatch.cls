@@ -168,7 +168,8 @@ global class CaseUpdateBatch implements Database.Batchable<sObject>, Database.St
 
     } // end of readKnowledgeArticleVersions()
 
-    private void sendErrorEmail(Map<Id,String> errorDetails){
+
+    @TestVisible private void sendErrorEmail(Map<Id,String> errorDetails){
         string subject = 'Case KB Update Batch Errors' ;
         Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
         String[] toAddresses = new String[]{};
