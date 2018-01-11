@@ -35,7 +35,9 @@
                     color:white;
             }
         </style>
+        <div class="container-fluid" style="font-size: 14px;">
         <apex:form id="CSOCaseOrderDetailForm">
+
             <apex:pageBlock title="Information" id="caseDetailBlock">
                 <apex:pageMessages />
                 <apex:pageBlockSection columns="2" >
@@ -80,6 +82,7 @@
                 <h3>Case</h3>
                 <p>Case Action Placeholder</p>
             </div>
+        </div>
         </div>
     <script>
         $(document).ready(function(){
