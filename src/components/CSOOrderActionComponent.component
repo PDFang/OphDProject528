@@ -304,6 +304,26 @@
         return model;
       }
 
+       function gridDataBound(e){
+        $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
+        $("#assetAllocationList tbody tr .k-grid-edit").each(function () {
+            var currentDataItem = $("#assetAllocationList").data("kendoGrid").dataItem($(this).closest("tr"));
+            //Check in the current dataItem if the row is editable
+            if (currentDataItem.Implemented == true && isManager == false) {
+                $(this).remove();
+            }
+        });
+         //Selects all delete buttons
+         $("#assetAllocationList tbody tr a.k-grid-Delete").each(function () {
+                var currentDataItem = $("#assetAllocationList").data("kendoGrid").dataItem($(this).closest("tr"));
+                //Check in the current dataItem if the row is deletable
+                if (currentDataItem.Implemented == true && isManager == false) {
+                    $(this).remove();
+                }
+            })
+
+     }
+
       function openModal(e){
           var tr = $(e.target).closest("tr");
           var data = this.dataItem(tr);
