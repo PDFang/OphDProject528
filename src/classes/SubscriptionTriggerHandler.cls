@@ -5,7 +5,7 @@
 public class SubscriptionTriggerHandler extends TriggerHandler{
 
     public static Boolean InSubscriptionCustomTrigger = false;
-    private static Id subscriptionRollupQueueableJobID;
+    private static String subscriptionRollupQueueableJobID;
 
     public override void beforeUpdate()
     {
@@ -54,8 +54,41 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
         system.debug('**** rollupMRRToPhaseProject(): subscriptionIds - ' + subscriptionIds);
 
         if(subscriptionIds.size() > 0 && subscriptionRollupQueueableJobID == null && RollupUtility.isRollupEnabled){
-            subscriptionRollupQueueableJobID = System.enqueueJob(new SubscriptionRollupQueueable(subscriptionIds));
-            system.debug('**** rollupMRRToPhaseProject(): subscriptionRollupQueueableJobID - ' + subscriptionRollupQueueableJobID);
+            if(limits.getQueueableJobs() < limits.getLimitQueueableJobs()) {
+                subscriptionRollupQueueableJobID = System.enqueueJob(new SubscriptionRollupQueueable(subscriptionIds));
+                system.debug('**** rollupMRRToPhaseProject(): subscriptionRollupQueueableJobID - ' + subscriptionRollupQueueableJobID);
+            }else{
+                subscriptionRollupQueueableJobID = '';
+                scheduleSubscriptionRollup(subscriptionIds);
+            }
+        }
+
+    }
+
+    @TestVisible
+    private static void scheduleSubscriptionRollup(Set<Id> subscriptionIds){
+
+        try{
+            Datetime nextRun = system.now().addSeconds(45);
+            String dateTimeFormat = '0 {0} {1} {2} {3} ? {4}';
+            String scheduledTime = string.format(
+                    dateTimeFormat,
+                    new String[]{
+                            nextRun.minute().format(),
+                            nextRun.hour().format(),
+                            nextRun.day().format(),
+                            nextRun.month().format(),
+                            nextRun.year().format().remove(',')
+                    }
+            );
+            system.debug('scheduleSubscriptionRollup(): scheduledTime - ' + scheduledTime);
+
+            SubscriptionRollupSchedulable sch = new SubscriptionRollupSchedulable(subscriptionIds);
+            subscriptionRollupQueueableJobID = System.schedule('SubscriptionRollupSchedulable '+ system.now(), scheduledTime, sch);
+
+        } catch (Exception ex){
+            system.debug('**** scheduleSubscriptionRollup(): Exception - ' + ex);
+            inContactBaseClass.SendErrorEmail(ex, subscriptionIds.iterator().next());
         }
 
     }

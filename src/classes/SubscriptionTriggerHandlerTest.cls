@@ -3,8 +3,6 @@ private class SubscriptionTriggerHandlerTest {
 
     static testMethod void testUpdateSubscriptionReplica() {
 
-        createTestData();
-
         ImplementedProduct__c ip = [Select Account__c, Id from ImplementedProduct__c limit 1];
 
         SBQQ__Subscription__c subscription = new SBQQ__Subscription__c(
@@ -33,8 +31,6 @@ private class SubscriptionTriggerHandlerTest {
     }
 
     static testMethod void testInsertSubscriptionReplica() {
-
-        createTestData();
 
         ImplementedProduct__c ip = [Select Account__c, Id from ImplementedProduct__c limit 1];
 
@@ -73,6 +69,31 @@ private class SubscriptionTriggerHandlerTest {
 
     }
 
+    static testMethod void scheduleSubscriptionRollupTest(){
+
+        ImplementedProduct__c ip = [Select Account__c, Id from ImplementedProduct__c limit 1];
+
+        SBQQ__Subscription__c subscription = new SBQQ__Subscription__c(
+                SBQQ__Account__c = ip.Account__c,
+                SBQQ__Discount__c = 2.05,
+                SBQQ__AdditionalDiscountAmount__c = 2500,
+                SBQQ__Bundled__c = true,
+                SBQQ__ListPrice__c = 50,
+                SBQQ__Quantity__c = 200,
+                Implemented_Product__c = ip.Id
+        );
+
+        insert subscription;
+
+        Test.startTest();
+
+        SubscriptionTriggerHandler.scheduleSubscriptionRollup(new Set<Id>{subscription.Id});
+
+        Test.stopTest();
+
+    }
+
+    @TestSetup
     static void createTestData(){
         Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
         Account testAccount = new Account(
