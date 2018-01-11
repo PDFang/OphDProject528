@@ -78,8 +78,13 @@
                         <apex:outputField value="{!Case.ProductImpacted__c}"/>
                         <apex:outputField value="{!Case.PlatformsImpacted__c}"/>
                     </apex:pageBlockSection>
-                </apex:pageBlock>    
+                </apex:pageBlock>
+
+                <apex:pageBlock rendered="{!canBatch}">
+                    <apex:commandButton action="{!BatchAssociatedAccounts}" title="BatchAccounts" value="Batch Associated Accounts" disabled="{!cec.disableBatchAccount}" reRender="asBlock"/>
+                </apex:pageBlock>
             </div>
+
             
         <apex:variable var="positioncount" value=""/>
         

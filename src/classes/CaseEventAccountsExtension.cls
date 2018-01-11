@@ -14,6 +14,7 @@ public class CaseEventAccountsExtension
     public string selectedExcludedAccount{get;set;}
     private Set<Id> accountIds;
     public boolean canEdit{public get;private set;}
+    public boolean canBatch{public get; private set;}
     public CaseEventClass cec{public get;private set;}
     public CaseEventClass.AccountIncident[] acctIncidents{
         												get{
@@ -48,9 +49,10 @@ public class CaseEventAccountsExtension
              canEdit = inContactBaseClass.HasEditAccess(c.Id,UserInfo.getUserId());
          
         }
-        
-        
-       
+
+        if(c.RecordType.Name == 'Maintenance Notification'){
+            canBatch = true;
+        }
     }
     
     public void AccountSearch()
@@ -205,6 +207,37 @@ public class CaseEventAccountsExtension
         AccountIncidentsUpdate();
       return null;
    }
+
+    public PageReference BatchAssociatedAccounts()
+    {
+        // todo: create group in Xmatters
+        // todo: create Notification Group with xMatters group name
+        // todo: queue the accounts batch job
+
+        // create group in Xmatters
+        string xmGroupName =  'Event_' + c.CaseNumber + '_' + Datetime.now().format('yyyyMMddHHmmss'); // e.g.Event_00830369_12012017
+        XMRestGroup xm = new XMRestGroup();
+        XMGroupModel xmGroup = null;
+        xmGroup = xm.CreateNewGroupWithResponseDetail(xmGroupName);
+
+        // create Notification Group with xMatters group name
+        if (xmGroup.id != '')
+        {
+            xmNotificationGroups__c xmNotificationGroup = new xmNotificationGroups__c(
+                Case__c = c.Id,
+                Name = xmGroup.targetName,
+                xmGroupUID__c = xmGroup.id,
+                Status__c = 'New'
+            );
+
+            insert xmNotificationGroup;
+        }
+
+        // queue the accounts batch job
+        // Id xmNotificationAccountQueueableJobID = System.enqueueJob(new xmNotificationAccountQueueable(xmNotificationGroup));
+
+        return null;
+    }
     
     public PageReference Beginning() 
     { //user clicked beginning

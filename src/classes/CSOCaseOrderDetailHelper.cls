@@ -5,6 +5,9 @@
 public class CSOCaseOrderDetailHelper {
 
 	public Case currentCase;
+	public CSOCaseOrderDetailController.CSOCaseComment csoCaseComment;
+
+	//public list<CSOCaseHistoryModel> caseAssignedTo;
 
 	static Set<String> caseFields = new Set<String>{
 			'RecordType.Name'
@@ -59,11 +62,60 @@ public class CSOCaseOrderDetailHelper {
 
 	}
 
-	public list<CaseComment> getCaseComments(string caseId){
+	public list<CSOCaseOrderDetailController.CSOCaseComment> getCaseComments(string caseId){
+		List<CSOCaseOrderDetailController.CSOCaseComment> finalCaseCommentList = new List<CSOCaseOrderDetailController.CSOCaseComment>();
 		list<CaseComment> retlist = new list<CaseComment>();
 		retlist = [SELECT CommentBody,CreatedDate,CreatedBy.Name,Id,IsDeleted,IsPublished,ParentId FROM CaseComment where parentId =:caseId  order by CreatedDate desc];
-		return retlist;
+
+
+        for(CaseComment retlistComment: retlist)
+        {
+			csoCaseComment = new CSOCaseOrderDetailController.CSOCaseComment();
+			csoCaseComment.CreatedDate = retlistComment.CreatedDate.format('MM/dd/yy hh:mma');
+			csoCaseComment.CreatedByName = retlistComment.CreatedBy.Name;
+			csoCaseComment.CommentBody = retlistComment.CommentBody;
+			finalCaseCommentList.add(csoCaseComment);
+        }
+		return finalCaseCommentList;
 	}
+
+//	public list<CSOCaseHistoryModel> getCaseHistory(string caseId){
+//
+//		List<CSOCaseHistoryModel> finalCaseHisList = new List<CSOCaseHistoryModel>();
+//		caseAssignedTo = new List<CSOCaseHistoryModel>();
+//		list<CaseHistory> retCaseHisList = new list<CaseHistory>();
+//		retCaseHisList = [SELECT CreatedDate,CreatedBy.Name,Id, CreatedById, Field, IsDeleted, OldValue, NewValue FROM CaseHistory where CaseId =:caseId  order by CreatedDate desc];
+//
+//		System.debug(retCaseHisList);
+//		for(CaseHistory test : retCaseHisList)
+//		{
+//			CSOCaseHistoryModel csoCaseHist = new CSOCaseHistoryModel();
+//			csoCaseHist.UserName = test.CreatedBy.Name;
+//			csoCaseHist.UserId = test.CreatedById;
+//			//DateTime dT = test.CreatedDate;
+//			System.debug(test.CreatedDate);
+//			csoCaseHist.csoDateTime = test.CreatedDate.format('hh:mma MM/dd/yy');
+//			System.debug(csoCaseHist.csoDateTime);
+//			if(test.Field == 'Status')
+//				csoCaseHist.Field = 'changed status';
+//			if(test.Field == 'created')
+//				csoCaseHist.Field = 'created';
+//
+//			if(test.Field == 'IsVisibleInSelfService')
+//				csoCaseHist.Field = 'updated IsVisibleInSelfService';
+//			if(test.Field == 'Last_Comment_Date_Time__c')
+//				csoCaseHist.Field = 'updated Last Comment Date Time';
+//			if(test.Field == 'ownerAssignment')
+//			{
+//				csoCaseHist.Field = 'changed Owner';
+//				caseAssignedTo.Add(csoCaseHist);
+//			}
+//
+//
+//			finalCaseHisList.add(csoCaseHist);
+//		}
+//		return finalCaseHisList;
+//	}
 
 	public static list<string> getFieldList(){
 		List<Schema.FieldSetMember> fsMembers = Schema.SobjectType.Case.fieldSets.CSO_Order_Resolution.getFields();

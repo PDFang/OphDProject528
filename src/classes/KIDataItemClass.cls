@@ -21,4 +21,7 @@ public with sharing class KIDataItemClass {
     public String   KIJIRATeam{get; set;}
     public String   KIJIRAStatus{get; set;}
     public string   KIJIRAIteration{get;set;}
+    public string   KIProductImpacted{get;set;}
+    public string   KIFixedVersion{get;set;}
+
 }
