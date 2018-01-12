@@ -9,7 +9,7 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
 
     public override void beforeUpdate()
     {
-        UpdateSubscriptionFromProjectPhase();
+        //UpdateSubscriptionFromProjectPhase();
     }
 
     public override void afterInsert(){
@@ -93,7 +93,7 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
 
     }
 
-    // Get associated Project Phase information and update to Subscription
+    /*/ Get associated Project Phase information and update to Subscription
     public static void UpdateSubscriptionFromProjectPhase(){
 
         Set<String> subscriptionIds = new Set<String>();
@@ -131,7 +131,7 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
                 }
             }
         }
-    }
+    }*/
 
 
     private static boolean throwExceptionBollean = false;
@@ -191,21 +191,21 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
             if (isUpdate) {
                 lstUpdateSubscriptionReplicas.add(subscriptionReplica);
 
-                // only update implemented product when first time the subscription status set to '4 - Delivered'
+                /*/ only update implemented product when first time the subscription status set to '4 - Delivered'
                 if (subscription.Implemented_Product__c != null && subscription.Install_Date__c != null) {
                     if (subscription.Status__c == '4 - Delivered' && oldSubscription.Status__c != '4 - Delivered') {
                         if (!ImplementationProductDates.containsKey(subscription.Implemented_Product__c)) {
                             ImplementationProductDates.put(subscription.Implemented_Product__c, subscription.Install_Date__c);
                         }
                     }
-                }
+                }*/
 
             }
 
             // update implemenation product
         }
 
-        //update certain fields in Implemented Product table
+        /*/update certain fields in Implemented Product table
         for ( ImplementedProduct__c implementedProduct : [
                 SELECT Id, Status__c, GoLiveDate__c FROM ImplementedProduct__c
                 WHERE Id IN : ImplementationProductDates.keyset()
@@ -218,15 +218,15 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
 
             // add changed implementedProduct to update list
             lstUpdateImplementedProducts.add(implementedProduct);
-        }
+        }*/
 
         if(lstUpdateSubscriptionReplicas.size() > 0){
             update lstUpdateSubscriptionReplicas;
         }
 
-        if(lstUpdateImplementedProducts.size() > 0){
-            update lstUpdateImplementedProducts;
-        }
+        //if(lstUpdateImplementedProducts.size() > 0){
+        //    update lstUpdateImplementedProducts;
+        //}
     }
 
     public class triggerException extends Exception{}

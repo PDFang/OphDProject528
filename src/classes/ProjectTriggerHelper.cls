@@ -43,77 +43,110 @@ public class ProjectTriggerHelper
 	 */
 	public static void updateAssetStatusForPhasedProject(List<Project__c> listNewProjects, Map<Id, Project__c> oldMapProjects)
 	{
-		List<Asset> assetsToUpdate = new List<Asset> ();
-		List<SBQQ__Subscription__c> subscriptionsToUpdate = new List<SBQQ__Subscription__c> ();
-		
+		Map<Id, Asset> assetsToUpdate = new Map<Id, Asset> ();
+		Map<Id, SubscriptionReplica__c> subscriptionsToUpdate = new Map<Id, SubscriptionReplica__c> ();
+
 		Map<Id, ImplementedProduct__c> implementedProductToUpdate = new Map<Id, ImplementedProduct__c> ();
 		Map<Id, Project__c> projectsToUpdate = new Map<Id, Project__c> ();
 		Set<Id> setProjectIds = new set<Id>();
-        
+
         for(Project__c proj : listNewProjects)
         {
             // Ensure that we are only running this if the GoLive date actually changed and its not null
             if(proj.ActualProjectGoLiveDate__c != oldMapProjects.get(proj.Id).ActualProjectGoLiveDate__c
                	&& proj.ActualProjectGoLiveDate__c != null)
-            	setProjectIds.add(proj.Id);            
+            	setProjectIds.add(proj.Id);
         }
-        
+
         system.debug('setProjectIds ==>' + setProjectIds);
-        
-        
+
+
         if(setProjectIds.size() > 0)
         {
-            for (Asset assetRecord :[SELECT Id, Status, Project_Phase__r.ActualProjectGoLiveDate__c, ImplementedProduct__c FROM Asset WHERE Project_Phase__c in :listNewProjects AND Project_Phase__r.Go_Live_Locked__c = false])
+            for (Project_Asset_Allocation__c assetAllocation : [SELECT Id, Project__c, Project__r.ActualProjectGoLiveDate__c, Asset__c, Asset__r.InstallDate, Asset__r.ImplementedProduct__c, Asset__r.ImplementedProduct__r.GoLiveDate__c FROM Project_Asset_Allocation__c WHERE  Project__c IN :listNewProjects AND Project__r.Go_Live_Locked__c = false])
             {
-                    Project__c oldValue = oldMapProjects.get(assetRecord.Project_Phase__c);                    
-                    // Update Asset Status to Delivered				
-                    assetRecord.Status = '4 - Delivered'; // TODO: Should find how to dynamically find this value
-                    assetsToUpdate.add(assetRecord);
-    
-                    if (!implementedProductToUpdate.containsKey(assetRecord.ImplementedProduct__c) && assetRecord.ImplementedProduct__c != null)
-                    {
-                        // Update associated Implemented Product Status to Implemented and set GoLiveDate
-                        ImplementedProduct__c ip = new ImplementedProduct__c
-                        (
-                         Id = assetRecord.ImplementedProduct__c,
-                         GoLiveDate__c = assetRecord.Project_Phase__r.ActualProjectGoLiveDate__c,
-                         Status__c = 'Implemented'
-                        );
-    
-                        implementedProductToUpdate.put(assetRecord.ImplementedProduct__c, ip);
-                    }
-    
-                    Project__c project = new Project__c(Id = oldValue.Id, Go_Live_Locked__c = true);
-    
-                    projectsToUpdate.put(project.Id, project);
-                }                  
-		
-
-            for (SBQQ__Subscription__c subscriptionRecord :[SELECT Id, Status__c, Project_Phase__r.ActualProjectGoLiveDate__c, Implemented_Product__c FROM SBQQ__Subscription__c WHERE Project_Phase__c in :listNewProjects AND Project_Phase__r.Go_Live_Locked__c = false])
-            {
-                Project__c oldValue = oldMapProjects.get(subscriptionRecord.Project_Phase__c);
-               
+                    Project__c oldValue = oldMapProjects.get(assetAllocation.Project__c);
                     // Update Asset Status to Delivered
-                    subscriptionRecord.Status__c = '4 - Delivered'; // TODO: Should find how to dynamically find this value
-                    subscriptionsToUpdate.add(subscriptionRecord);
-    
-                    if (!implementedProductToUpdate.containsKey(subscriptionRecord.Implemented_Product__c) && subscriptionRecord.Implemented_Product__c != null)
+                    if(!assetsToUpdate.containsKey(assetAllocation.Asset__c)) {
+
+                        Date installDate;
+                        if(assetAllocation.Asset__r.InstallDate == null){
+                            installDate = assetAllocation.Project__r.ActualProjectGoLiveDate__c;
+                        } else {
+                            installDate = assetAllocation.Asset__r.InstallDate;
+                        }
+
+						Asset assetRecord = new Asset(
+								Id = assetAllocation.Asset__c,
+								Status = '4 - Delivered',
+								InstallDate = installDate,
+                                Last_Install_Date__c = assetAllocation.Project__r.ActualProjectGoLiveDate__c
+						); // TODO: Should find how to dynamically find this value
+						assetsToUpdate.put(assetRecord.Id, assetRecord);
+					}
+
+                    if (!implementedProductToUpdate.containsKey(assetAllocation.Asset__r.ImplementedProduct__c) && assetAllocation.Asset__r.ImplementedProduct__c != null && assetAllocation.Asset__r.ImplementedProduct__r.GoLiveDate__c == null)
                     {
                         // Update associated Implemented Product Status to Implemented and set GoLiveDate
                         ImplementedProduct__c ip = new ImplementedProduct__c
                         (
-                         Id = subscriptionRecord.Implemented_Product__c,
-                         GoLiveDate__c = subscriptionRecord.Project_Phase__r.ActualProjectGoLiveDate__c,
+                         Id = assetAllocation.Asset__r.ImplementedProduct__c,
+                         GoLiveDate__c = assetAllocation.Project__r.ActualProjectGoLiveDate__c,
+                         Status__c = 'Implemented'
+                        );
+
+                        implementedProductToUpdate.put(assetAllocation.Asset__r.ImplementedProduct__c, ip);
+                    }
+
+                    Project__c project = new Project__c(Id = oldValue.Id, Go_Live_Locked__c = true);
+
+                    projectsToUpdate.put(project.Id, project);
+                }
+
+
+			for (Project_Subscription_Allocation__c subscriptionAllocation : [SELECT Id, Project__c, Project__r.ActualProjectGoLiveDate__c, Subscription__c, Subscription__r.Install_Date__c, Subscription__r.Implemented_Product__c, Subscription__r.Implemented_Product__r.GoLiveDate__c FROM Project_Subscription_Allocation__c WHERE  Project__c IN :listNewProjects AND Project__r.Go_Live_Locked__c = false])
+            {
+                Project__c oldValue = oldMapProjects.get(subscriptionAllocation.Project__c);
+
+                    // Update subscription Status to Delivered
+                    if(!subscriptionsToUpdate.containsKey(subscriptionAllocation.Subscription__c)) {
+
+                        Date installDate;
+                        if(subscriptionAllocation.Subscription__r.Install_Date__c == null){
+                            installDate = subscriptionAllocation.Project__r.ActualProjectGoLiveDate__c;
+                        } else {
+                            installDate = subscriptionAllocation.Subscription__r.Install_Date__c;
+                        }
+
+                        SubscriptionReplica__c updatedSub = new SubscriptionReplica__c(
+                                Id = subscriptionAllocation.Subscription__c,
+                                Status1__c = '4 - Delivered',
+								Delivered__c = true,
+                                Install_Date__c = installDate,
+                                Last_Install_Date__c = subscriptionAllocation.Project__r.ActualProjectGoLiveDate__c
+                        );// TODO: Should find how to dynamically find this value
+                        subscriptionsToUpdate.put(subscriptionAllocation.Id, updatedSub);
+                    }
+
+
+                    if (!implementedProductToUpdate.containsKey(subscriptionAllocation.Subscription__r.Implemented_Product__c) && subscriptionAllocation.Subscription__r.Implemented_Product__c != null && subscriptionAllocation.Subscription__r.Implemented_Product__r.GoLiveDate__c == null)
+                    {
+                        // Update associated Implemented Product Status to Implemented and set GoLiveDate
+                        ImplementedProduct__c ip = new ImplementedProduct__c
+                        (
+                         Id = subscriptionAllocation.Subscription__r.Implemented_Product__c,
+                         GoLiveDate__c = subscriptionAllocation.Project__r.ActualProjectGoLiveDate__c,
                          Status__c = 'Implemented'
                         );
     
-                        implementedProductToUpdate.put(subscriptionRecord.Implemented_Product__c, ip);
+                        implementedProductToUpdate.put(subscriptionAllocation.Subscription__r.Implemented_Product__c, ip);
                     }
     
                     Project__c project = new Project__c(Id = oldValue.Id, Go_Live_Locked__c = true);
                     projectsToUpdate.put(project.Id, project);
                 }            
-          }
+        }
+
 		if (!implementedProductToUpdate.isEmpty())
 		{
 			update implementedProductToUpdate.values();
@@ -121,7 +154,7 @@ public class ProjectTriggerHelper
 
 		if (!assetsToUpdate.isEmpty())
 		{
-			update assetsToUpdate;
+			update assetsToUpdate.values();
 		}
 
 		if (!projectsToUpdate.isEmpty())
@@ -131,7 +164,7 @@ public class ProjectTriggerHelper
 
 		if (!subscriptionsToUpdate.isEmpty())
 		{
-			update subscriptionsToUpdate;
+			update subscriptionsToUpdate.values();
 		}
 	}
 

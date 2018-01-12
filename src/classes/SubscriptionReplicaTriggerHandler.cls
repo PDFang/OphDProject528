@@ -7,7 +7,7 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
 
     public override void beforeUpdate()
     {
-        UpdateSubscriptionReplicaFromProjectPhase();
+        //UpdateSubscriptionReplicaFromProjectPhase();
     }
 
     public override void afterInsert()
@@ -23,7 +23,7 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
         }
     }
 
-    // Get associated Project Phase information and update to SubscriptionReplica
+    /*/ Get associated Project Phase information and update to SubscriptionReplica
     public static void UpdateSubscriptionReplicaFromProjectPhase(){
 
         Set<String> subscriptionReplicaIds = new Set<String>();
@@ -62,7 +62,7 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
             }
         }
     }
-
+    */
     public static void AttachParentProject(){
         Set<Id> subscriptionIds = new Set<Id>();
         Set<Id> quoteLineIds = new Set<Id>();
@@ -89,7 +89,10 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
         //update certain fields in Subscription table
         for ( SubscriptionReplica__c subscriptionReplica : lstSubscriptionReplicas) {
 
-            SubscriptionReplica__c oldSubscriptionReplica = (oldMap != null) ? oldMap.get(subscriptionReplica.Id) : null;
+            SubscriptionReplica__c oldSubscriptionReplica = new SubscriptionReplica__c();
+            if(oldMap != null){
+                oldSubscriptionReplica = oldMap.get(subscriptionReplica.Id);
+            }
             if (oldSubscriptionReplica != null)
             {
                 SBQQ__Subscription__c subscription = new SBQQ__Subscription__c(Id = subscriptionReplica.Subscription__c);
@@ -108,6 +111,7 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
                     subscription.Install_Date__c = subscriptionReplica.Install_Date__c;
                     subscription.Implemented_Product__c = subscriptionReplica.Implemented_Product__c;
 
+                    /*
                     // only update implemented product when first time the subscription status set to '4 - Delivered'
                     if (subscriptionReplica.Implemented_Product__c != null && subscriptionReplica.Install_Date__c != null) {
                         if (subscriptionReplica.Status1__c == '4 - Delivered' && oldSubscriptionReplica.Delivered__c != true) {
@@ -115,12 +119,12 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
                                 ImplementationProductDates.put(subscriptionReplica.Implemented_Product__c, subscriptionReplica.Install_Date__c);
                             }
                         }
-                    }
+                    }*/
                 }
             }
         }
 
-        //update certain fields in Implemented Product table
+        /*/update certain fields in Implemented Product table
         for ( ImplementedProduct__c implementedProduct : [
                 SELECT Id, Status__c, GoLiveDate__c FROM ImplementedProduct__c
                 WHERE Id IN : ImplementationProductDates.keyset()
@@ -133,15 +137,15 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
 
             // add changed implementedProduct to update list
             lstUpdateImplementedProducts.add(implementedProduct);
-        }
+        }*/
 
         if(lstUpdateSubscriptions.size() > 0){
             update lstUpdateSubscriptions;
         }
 
-        if(lstUpdateImplementedProducts.size() > 0){
-            update lstUpdateImplementedProducts;
-        }
+        //if(lstUpdateImplementedProducts.size() > 0){
+        //    update lstUpdateImplementedProducts;
+        //}
     }
 
 }

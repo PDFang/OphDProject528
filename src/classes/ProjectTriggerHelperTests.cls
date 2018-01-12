@@ -130,7 +130,13 @@ public class ProjectTriggerHelperTests
             Opportunity__c = opp.Id
         );
 
+        ImplementedProduct__c ip2 = new ImplementedProduct__c(
+                Account__c = accountRecord.Id,
+                Opportunity__c = opp.Id
+        );
+
         implementedProducts.add(ip1);
+        implementedProducts.add(ip2);
         insert implementedProducts;
 
         Asset asset1 = new Asset(
@@ -143,6 +149,34 @@ public class ProjectTriggerHelperTests
         assets.add(asset1);
 
         insert assets;
+
+        Project_Asset_Allocation__c assetAllocation = new Project_Asset_Allocation__c(
+                Asset__c = asset1.Id,
+                Project__c = childProject1.Id
+        );
+
+        insert assetAllocation;
+
+        SBQQ__Subscription__c subscription = new SBQQ__Subscription__c(
+                SBQQ__Account__c = accountRecord.Id,
+                SBQQ__Discount__c = 2.05,
+                SBQQ__AdditionalDiscountAmount__c = 2500,
+                SBQQ__Bundled__c = true,
+                SBQQ__ListPrice__c = 50,
+                SBQQ__Quantity__c = 200,
+                Implemented_Product__c = ip2.Id
+        );
+
+        insert subscription;
+
+        SubscriptionReplica__c subscriptionCustom = [SELECT Id FROM SubscriptionReplica__c WHERE Subscription__c = :subscription.Id];
+
+        Project_Subscription_Allocation__c subscriptionAllocation = new Project_Subscription_Allocation__c(
+                Subscription__c = subscriptionCustom.Id,
+                Project__c = childProject1.Id
+        );
+
+        insert subscriptionAllocation;
 
         Test.startTest();
 
