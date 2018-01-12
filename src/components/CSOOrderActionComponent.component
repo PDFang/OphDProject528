@@ -145,7 +145,13 @@
                         <apex:inputTextarea id="commentTextArea" styleClass="form-control" rows="5" onKeyDown="toggleSaveButton(this)" onKeyPress="toggleSaveButton(this)" onKeyUp="toggleSaveButton(this)"/>
                     </div>
                     <p>
-                        All Comments saved here are visible to customers reviewing orders on the Support Site. Please use Case Resolution tab to add an internal comment to the Case.
+                    <div class="custom-control custom-checkbox" >
+                        <span id="publiccommentDiv" data-toggle="popover" data-trigger="hover" data-content="Checking this box will make your comment visible to the Customer in Support Site">
+                             <apex:outputLabel  style="font-weight:100; padding-right:5px;" styleClass="custom-control-label" for="publicLIComment">Public</apex:outputLabel>
+                            <apex:inputCheckbox styleClass="custom-control-input" id="publicLIComment"/>
+                        </span>
+                    </div>
+
                     </p>
                 </div>
                 <div class="modal-footer">
@@ -174,8 +180,8 @@
                             <apex:outputLabel for="status">Update Status</apex:outputLabel>
                             <input id="status" styleClass="form-control"/>
                         </div>
-                        <div class="custom-control custom-checkbox">
-                            <apex:inputCheckbox styleClass="custom-control-input" id="updateAllCheckbox"/>
+                        <div class="custom-control custom-checkbox" >
+                            <apex:inputCheckbox styleClass="custom-control-input" id="updateAllCheckbox" />
                             <apex:outputLabel  style="font-weight:100;" styleClass="custom-control-label" for="updateAllCheckbox">Check this checbox if you want to update all other Line Item Status.</apex:outputLabel>
                         </div>
                     </div>
@@ -194,6 +200,7 @@
 
       $(document).ready(function() {
            getDetails();
+           $("#publiccommentDiv").popover({ trigger: "hover" });
         });
 
       var isDateField =[];
@@ -203,7 +210,7 @@
                    '{!currentCaseId}',
                     function(result,event){
                           if (event.status){
-                              if(result != null && result.length > 1 && result.indexOf('Error') == -1){
+                              if(result != null && result.length > 1 && result.indexOf('Error occured while loading the order line') == -1){
                                    generateGrid(JSON.parse(result));
                                    console.log('results =>' +result);
                               }else{
@@ -234,27 +241,44 @@
                   model: model
                 }
               },
-              columns: columns
+              columns: columns,
+              dataBound:gridDataBound,
+              reorderable: true
             });
+
+
+
       }
 
       function generateColumns(response){
         var columnNames = response["columns"];
-        var columnMap =  columnNames.map(function(name){
-                        if(name == 'Id'){
-                            return { field: name, title: name,  hidden: true};
-                        }
+        var columnMap =  [];
 
-                        else if(name == 'Name'){
-                            var template = '#{ #<a href="/#: data.Id #" target="_blank" name="Name" style="color:blue;">#= data.Name #</a># } #';
-                            return { field: name, title: 'Line Item Id', template: template};
-                        } else if(name == 'LastComment'){
+        for(var i = 0; i < columnNames.length; i++){
+            var colObject = new Object();
+            colObject.title = columnNames[i].substring(columnNames[i].indexOf('~')+1, columnNames[i].length);
+            colObject.field = columnNames[i].substring(0,columnNames[i].indexOf('~'));
+            var name = colObject.field;
 
-                            return { field: name, title: 'Last Comment', width:350};
-                        }
+            if(name == 'Id' || name == 'RelatedLineItem__c' ||  colObject.title == 'Parent Line Item'){
+                colObject.hidden = true;
+            }
+            else if(name == 'Name'){
+                colObject.title = 'Line Item Id';
+                var template = '#{ #<a href="/#: data.Id #" target="_blank" name="Name" style="color:blue;">#= data.Name #</a># } #';
+                 colObject.template = template;
+            } else if(name == 'Last_Comment__c'){
+                 colObject.width = 350;
+            }else if(name == 'ParentLineItem'){
+                colObject.title = 'Parent Line Item';
+                var template = '#{ #<a href="/#: data.RelatedLineItem__c #" target="_blank" name="ParentLineItem" style="color:blue;">#= data.ParentLineItem #</a># } #';
+                 colObject.template = template;
+            }
 
-                      return { field: name, title: name, format: (isDateField[name] ? "{0:D}" : "") };
-                 });
+            columnMap.push(colObject);
+
+        }
+
         var buttons = response["buttons"];
         if(buttons){
             var buttonMap = buttons.map(function(bName){
@@ -263,6 +287,9 @@
             columnMap.push({ title: 'Action', command:buttonMap, width:300});
 
         }
+
+        console.log('columnMap ==>' + JSON.stringify(columnMap));
+
          return columnMap;
       }
 
@@ -305,19 +332,21 @@
       }
 
        function gridDataBound(e){
-        $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
-        $("#assetAllocationList tbody tr .k-grid-edit").each(function () {
-            var currentDataItem = $("#assetAllocationList").data("kendoGrid").dataItem($(this).closest("tr"));
-            //Check in the current dataItem if the row is editable
-            if (currentDataItem.Implemented == true && isManager == false) {
-                $(this).remove();
+            var grid = $("#orderLineItems").data("kendoGrid");
+
+            var columnindexName = 0;
+            var columnindexLastComment = 0;
+
+            for (var i = 0; i < grid.options.columns.length; i++) {
+                var col = grid.options.columns[i];
+                if (col.title == 'Line Item Id') {
+                    columnindexName = i;
+                }
             }
-        });
-         //Selects all delete buttons
-         $("#assetAllocationList tbody tr a.k-grid-Delete").each(function () {
-                var currentDataItem = $("#assetAllocationList").data("kendoGrid").dataItem($(this).closest("tr"));
-                //Check in the current dataItem if the row is deletable
-                if (currentDataItem.Implemented == true && isManager == false) {
+           grid.reorderColumn(0, grid.columns[columnindexName]);
+           $("#orderLineItems tbody tr a.k-grid-UpdateStatus").each(function () {
+                var currentDataItem = $("#orderLineItems").data("kendoGrid").dataItem($(this).closest("tr"));
+                if (currentDataItem.ParentLineItem != '') {
                     $(this).remove();
                 }
             })
@@ -344,7 +373,7 @@
                         dataSource: {
                             data: {!ItemStatus}
                         },
-                        value:data.Status
+                        value:data.ItemStatus__c
                     });
 
 
@@ -389,8 +418,11 @@
             $('#cancelCommentbtn').hide();
             var comment = $('[id$=commentTextArea]').val();
             var lineItemId = $('#hiddenId').val();
+            var isPublic =  $('[id$=publicLIComment]').prop('checked');
+
             CSOOrderActionCompController.saveComment(
                 comment,
+                isPublic,
                 lineItemId,
                 '{!currentCaseId}',
                 function(result,event){
@@ -401,6 +433,9 @@
                         $(obj).text("Save");
                         $('#cancelCommentbtn').show();
                         showSuccess('Comments were saved successfully.');
+                        var grid = $("#orderLineItems").data("kendoGrid");
+                        grid.destroy();
+                        $("#grid").remove();
                         getDetails();
 
                       }else{
@@ -441,6 +476,9 @@
                         $(obj).text("Save");
                         $('#cancelstatus').show();
                         showSuccess('Successfully changed status.');
+                        var grid = $("#orderLineItems").data("kendoGrid");
+                        grid.destroy();
+                        $("#grid").remove();
                         getDetails();
 
                       }else{
