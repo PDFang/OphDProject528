@@ -1,4 +1,4 @@
-public with sharing class xmNotificationAccountQueueable implements Queueable {
+public without sharing class xmNotificationAccountQueueable implements Queueable {
     private xmNotificationGroups__c notificationGroup;
 
     public xmNotificationAccountQueueable(xmNotificationGroups__c NotificationGroup) {
@@ -8,13 +8,22 @@ public with sharing class xmNotificationAccountQueueable implements Queueable {
     public void execute(QueueableContext context) {
 
         try {
-            Set<String> accountIds = getAssociatedAccounts(notificationGroup.Case__c);
-            createNotificationAccounts(accountIds);
+            List<CaseEventClass.AccountIncident> accountList = getAssociatedAccounts(notificationGroup.Case__c);
+            createNotificationAccounts(accountList);
             notificationGroup.Status__c = 'Accounts Associated';
+
+            system.debug('Added Notification Account records ==> ' + accountList.size());
+
+            //kick off the batch
+            system.debug('triggering the XMNotificationGroupBatch');
+            XMNotificationGroupBatch batch = new XMNotificationGroupBatch(notificationGroup);
+
+            Database.executeBatch(batch);
         }
         catch(Exception ex) {
             system.debug(ex);
             notificationGroup.Status__c = 'Failed';
+            inContactBaseClass.SendErrorEmail(ex, 'Error in xmNotificationAccountQueueable while processing Notification Group ' + notificationGroup.Id);
         }
         finally {
             update notificationGroup;
@@ -22,13 +31,13 @@ public with sharing class xmNotificationAccountQueueable implements Queueable {
     }
 
     //create the Notification Account records for each selected account
-    private void createNotificationAccounts(Set<String> accountIds) {
+    private void createNotificationAccounts(List<CaseEventClass.AccountIncident> accountList) {
         List<xmNotificationAccounts__c> accountNotifications = new List<xmNotificationAccounts__c>();
 
-        system.debug('Loaded Associated Accounts ===> ' + accountIds.size());
-        for(String id : accountIds) {
+        system.debug('Loaded Associated Accounts ===> ' + accountList.size());
+        for(CaseEventClass.AccountIncident acct : accountList) {
             xmNotificationAccounts__c notificationAccount = new xmNotificationAccounts__c(
-                Account__c = id,
+                Account__c = acct.acct.Id,
                 Notification_Group__c = notificationGroup.Id
             );
 
@@ -41,19 +50,15 @@ public with sharing class xmNotificationAccountQueueable implements Queueable {
     }
 
     //load the list of associated accounts that were selected
-    private Set<String> getAssociatedAccounts(String caseId) {
-        Set<String> accountIds = new Set<String>();
+    private List<CaseEventClass.AccountIncident> getAssociatedAccounts(String caseId) {
+        List<CaseEventClass.AccountIncident> accountList = new List<CaseEventClass.AccountIncident>();
         List<Case> associatedCaseList = [select Id, RecordTypeId from Case where Id = :caseId];
         if(associatedCaseList != null && associatedCaseList.size() == 1) {
             CaseEventClass cec = new CaseEventClass(associatedCaseList[0]);
 
-            List<CaseEventClass.AccountIncident> accountList = cec.AccountIncidentList();
-
-            for(CaseEventClass.AccountIncident acc : accountList) {
-                accountIds.add(acc.acct.Id);
-            }
+            accountList = cec.AccountIncidentList();
         }
 
-        return accountIds;
+        return accountList;
     }
 }
