@@ -65,7 +65,7 @@ public class AssetTriggerHandler extends TriggerHandler {
     private static void scheduleAssetRollup(Set<Id> assetIdSet){
 
         try{
-            Datetime nextRun = system.now().addSeconds(45);
+            Datetime nextRun = system.now().addMinutes(1);
             String dateTimeFormat = '0 {0} {1} {2} {3} ? {4}';
             String scheduledTime = string.format(
                     dateTimeFormat,

@@ -13,6 +13,7 @@ public class CaseEventAccountsExtension
     public string selectedAccountFromMasterList{get;set;}
     public string selectedExcludedAccount{get;set;}
     public string batchMessage{get;set;}
+    public string batchStatus{get;set;}
     private Set<Id> accountIds;
     public boolean canEdit{public get;private set;}
     public boolean canBatch{public get; private set;}
@@ -52,7 +53,7 @@ public class CaseEventAccountsExtension
         }
 
         if(c.RecordType.Name == 'Maintenance Notification'){
-            canBatch = true;
+                canBatch = true;
         }
     }
     
@@ -209,17 +210,16 @@ public class CaseEventAccountsExtension
       return null;
    }
 
-    // public PageReference BatchAssociatedAccounts()
     public void BatchAssociatedAccounts()
     {
         // create group in Xmatters
-        string xmGroupName =  'Event_' + c.CaseNumber + '_' + Datetime.now().format('yyyyMMddHHmmss'); // e.g.Event_00830369_12012017225545
+        string xmGroupName =  'Event_' + c.CaseNumber + '_' + Datetime.now().format('yyyyMMddHHmmssSSS'); // e.g.Event_00830369_12012017225545
         XMRestGroup xm = new XMRestGroup();
         XMGroupModel xmGroup = null;
         xmGroup = xm.CreateNewGroupWithResponseDetail(xmGroupName);
 
-        // create Notification Group with xMatters group name
-        if (xmGroup.id != '')
+        // create Notification Group
+        if (xmGroup.id != '' && xm.AddShiftToGroup(xmGroupName, '24x7'))
         {
             try{
                 xmNotificationGroups__c xmNotificationGroup = new xmNotificationGroups__c(
@@ -228,10 +228,13 @@ public class CaseEventAccountsExtension
                         xmGroupUID__c = xmGroup.id,
                         Status__c = 'New'
                 );
-
                 insert xmNotificationGroup;
+
+                // queue the Accounts Batch job
+                Id xmNotificationAccountQueueableJobID = System.enqueueJob(new xmNotificationAccountQueueable(xmNotificationGroup));
+
             }catch(Exception ex){
-                System.Debug('BatchAssociatedAccounts - creating Account Group in Salesforce' + ex.getMessage());
+                System.Debug('BatchAssociatedAccounts - creating Account Group in Salesforce: ' + ex.getMessage());
                 batchMessage = 'Error: there is an issue creating Account Group in Salesforce';
             }
         }
@@ -239,26 +242,63 @@ public class CaseEventAccountsExtension
         {
             batchMessage = 'Error: there is an issue creating Account Group in Xmatters';
         }
-
-        // queue the accounts batch job
-        // Id xmNotificationAccountQueueableJobID = System.enqueueJob(new xmNotificationAccountQueueable(xmNotificationGroup));
     }
 
+    // Determine to enable/disable the Accounts Batch button and display status
     public Boolean getDisableBatchAccount()
     {
-        // check if there is any previous batch still in progress, then determine enable/disable
-        xmNotificationGroups__c[] xmGroups = [SELECT Case__c,Name,Status__c FROM xmNotificationGroups__c WHERE Status__c != 'Completed' AND Status__c != 'Failed' AND Case__c = :c.id];
+        boolean disableBatchAccountButton = true;
+        string prefixBatchStatus = 'Account Batch Status: ';
+        string displayBatchStatus = '';
+        batchStatus = '';
 
-        if (!xmGroups.isEmpty())
+        // get the latest xmNotificationGroups__c and its status
+        xmNotificationGroups__c[] xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
+        if (xmGroup.size() > 0)
         {
-            batchMessage = 'An Account Batch is currently in progress.';
-            return true;    // disable batch button
-        }
-        else
-        {
-            return false;   // enable batch button
+            if (xmGroup[0].Status__c == 'New')
+            {
+                displayBatchStatus = 'New';
+            }
+            else if (xmGroup[0].Status__c == 'Failed')
+            {
+                displayBatchStatus = 'Failed';
+            }
+            else if (xmGroup[0].Status__c == 'Completed')
+            {
+                displayBatchStatus = 'Ready';
+            }
+            else
+            {
+                displayBatchStatus = 'Processing';
+            }
+            batchStatus =  prefixBatchStatus + displayBatchStatus;
         }
 
+        if (displayBatchStatus == 'Ready' || displayBatchStatus == 'Failed' || displayBatchStatus == '')
+        {
+            disableBatchAccountButton = false;  // enable batch button
+        }
+
+        // check how many Batch jobs currently are running, disable batch button if excceed the max
+        if (!disableBatchAccountButton)
+        {
+            List<AsyncApexJob> jobList = [
+                        Select Id, Status
+                        from AsyncApexJob
+                        where Status IN ('Preparing', 'Processing', 'Queued') and JobType = 'BatchApex'
+                        order by createddate desc
+                        LIMIT 5
+            ];
+
+            if (jobList.size() == 5)
+            {
+                batchMessage = 'Max number of batches are currently running, please wait for some time if you want to batch the associated accounts!';
+                disableBatchAccountButton = true; // disable batch button
+            }
+        }
+
+        return disableBatchAccountButton;
     }
     
     public PageReference Beginning() 
