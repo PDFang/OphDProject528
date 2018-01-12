@@ -52,7 +52,7 @@ public without sharing class xmNotificationAccountQueueable implements Queueable
     //load the list of associated accounts that were selected
     private List<CaseEventClass.AccountIncident> getAssociatedAccounts(String caseId) {
         List<CaseEventClass.AccountIncident> accountList = new List<CaseEventClass.AccountIncident>();
-        List<Case> associatedCaseList = [select Id, RecordTypeId from Case where Id = :caseId];
+        List<Case> associatedCaseList = [select Id, RecordTypeId, ProductImpacted__c, PlatformsImpacted__c from Case where Id = :caseId];
         if(associatedCaseList != null && associatedCaseList.size() == 1) {
             CaseEventClass cec = new CaseEventClass(associatedCaseList[0]);
 

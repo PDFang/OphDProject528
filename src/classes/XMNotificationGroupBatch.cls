@@ -4,8 +4,8 @@ global class XMNotificationGroupBatch implements Database.Batchable<Sobject>, Da
     private String notificationGroupId;
 
     global XMNotificationGroupBatch(xmNotificationGroups__c notificationGroup){
-        queryString = 'Select xmPerson__c from Contact where AccountId IN (Select Account from xmNotificationAccounts__c where Notfication_Group__c = \'' + notificationGroup.Id + '\')'
-                + ' And xmPerson__c != null order by xmPerson__c ';
+        queryString = 'Select xmPerson__r.xmPersonUID__c from Contact where AccountId IN (Select Account__c from xmNotificationAccounts__c where Notification_Group__c = \'' + notificationGroup.Id + '\')'
+                + ' And xmPerson__c != null order by xmPerson__r.xmPersonUID__c';
 
         groupName = notificationGroup.xmGroupUID__c;
         notificationGroupId = notificationGroup.Id;
@@ -30,10 +30,10 @@ global class XMNotificationGroupBatch implements Database.Batchable<Sobject>, Da
 
             for(Contact c : scope) {
                 if(!xmPersonIds.contains(c.xmPerson__c)) {
-                    String primaryDeviceId = getPrimaryEmailDeviceId(c.xmPerson__c, deviceService);
+                    String primaryDeviceId = getPrimaryEmailDeviceId(c.xmPerson__r.xmPersonUID__c, deviceService);
                     if (primaryDeviceId != null) {
                         //the method returns the Json, but it already logs it using System.debug in the method that is called
-                        String resultJson = groupService.AddUserToGroup(groupName, primaryDeviceId, 'EMAIL');
+                        String resultJson = groupService.AddUserToGroup(groupName, primaryDeviceId, 'DEVICE');
                     }
                     xmPersonIds.add(c.xmPerson__c);
                 }

@@ -141,6 +141,27 @@ public with sharing class XMRestGroup {
         return newGroup;
     }
 
+    public boolean AddShiftToGroup(string groupName, string shiftName) {
+        string body = '{ "name": "' + shiftName + '" }';
+        string jsonResponse;
+        String encodedGroupName = EncodingUtil.urlEncode(groupName,'UTF-8');
+
+        String url = GroupUrl + '/' + encodedGroupName + '/shifts';
+
+        System.debug('body = ' + body);
+        System.debug('url = ' + url);
+
+        XMRestWrapper wrapper = new XMRestWrapper();
+        jsonResponse = wrapper.performCallOut(url, 'POST', body);
+
+        if(jsonResponse != null) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
     //Delete a group
     public boolean DeleteAGroup(string groupName){
         string url;
