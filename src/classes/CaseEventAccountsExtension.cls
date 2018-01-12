@@ -219,7 +219,7 @@ public class CaseEventAccountsExtension
         xmGroup = xm.CreateNewGroupWithResponseDetail(xmGroupName);
 
         // create Notification Group
-        if (xmGroup.id != '')
+        if (xmGroup.id != '' && xm.AddShiftToGroup(xmGroupName, '24x7'))
         {
             try{
                 xmNotificationGroups__c xmNotificationGroup = new xmNotificationGroups__c(
@@ -248,34 +248,36 @@ public class CaseEventAccountsExtension
     public Boolean getDisableBatchAccount()
     {
         boolean disableBatchAccountButton = true;
+        string prefixBatchStatus = 'Account Batch Status: ';
+        string displayBatchStatus = '';
+        batchStatus = '';
 
         // get the latest xmNotificationGroups__c and its status
         xmNotificationGroups__c[] xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
         if (xmGroup.size() > 0)
         {
-            batchStatus = 'Account Batch Status: ';
             if (xmGroup[0].Status__c == 'New')
             {
-                batchStatus += 'New';
+                displayBatchStatus = 'New';
             }
             else if (xmGroup[0].Status__c == 'Failed')
             {
-                batchStatus += 'Failed';
+                displayBatchStatus = 'Failed';
             }
             else if (xmGroup[0].Status__c == 'Completed')
             {
-                batchStatus += 'Ready';
-                disableBatchAccountButton = false;
+                displayBatchStatus = 'Ready';
             }
             else
             {
-                batchStatus += 'Processing';
+                displayBatchStatus = 'Processing';
             }
+            batchStatus =  prefixBatchStatus + displayBatchStatus;
         }
-        else
+
+        if (displayBatchStatus == 'Ready' || displayBatchStatus == 'Failed' || displayBatchStatus == '')
         {
-            // no Account batch
-            disableBatchAccountButton = false;
+            disableBatchAccountButton = false;  // enable batch button
         }
 
         // check how many Batch jobs currently are running, disable batch button if excceed the max
@@ -284,14 +286,14 @@ public class CaseEventAccountsExtension
             List<AsyncApexJob> jobList = [
                         Select Id, Status
                         from AsyncApexJob
-                        where Status IN ('Preparing', 'Processing', 'Queued'  ) and JobType = 'BatchApex'
+                        where Status IN ('Preparing', 'Processing', 'Queued') and JobType = 'BatchApex'
                         order by createddate desc
                         LIMIT 5
             ];
 
             if (jobList.size() == 5)
             {
-                batchMessage = 'Max number of batches are currently running, please wait for sometime and try again!';
+                batchMessage = 'Max number of batches are currently running, please wait for some time if you want to batch the associated accounts!';
                 disableBatchAccountButton = true; // disable batch button
             }
         }
