@@ -41,6 +41,10 @@ global class XMNotificationGroupBatch implements Database.Batchable<Sobject>, Da
         }
         catch(Exception ex) {
             System.debug(ex);
+            inContactBaseClass.SendErrorEmail(ex, 'Error in XMNotificationGroupBatch while processing Notification Group ' + notificationGroupId);
+
+            //cause the batch to terminate
+            throw ex;
         }
     }
 
