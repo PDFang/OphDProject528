@@ -1,11 +1,60 @@
 /* =================================================================================================
 *   Version     Date                   Comment
 * =================================================================================================
-*   1.0         15-Feb-2017           OpportunityTriggerHandler
-*   1.1         21-Feb-2017           Changed functionality from Offering object to Opportunity object
+*   1.0         15-Feb-2017         OpportunityTriggerHandler
+*   1.1         21-Feb-2017         Changed functionality from Offering object to Opportunity object
+*   2.0			12-Jan-2018			Implemented trigger design pattern
 **/
-public with sharing class OpportunityTriggerHandler {
+public class OpportunityTriggerHandler extends TriggerHandler{
 
+    protected override void beforeInsert(){
+
+        updateOrInsertOpportunity((List<Opportunity>)trigger.new);
+
+        OpportunityTriggerHelper.isAvailableForCCHandOff((List<Opportunity>)trigger.new, (Map<Id, Opportunity>)trigger.oldMap);
+        OpportunityTriggerHelper.updateSalesRep((List<Opportunity>)trigger.new, true);
+        OpportunityTriggerHelper.updateTimeStamps((List<Opportunity>)trigger.new);
+
+        OpportunityTriggerHelper.timestampHelper((List<Opportunity>)trigger.new, (Map<Id, Opportunity>)trigger.oldMap);
+        OpportunityTriggerHelper.updateSalesRepFromAccount((List<Opportunity>)trigger.new);
+
+    }
+
+    protected override void beforeUpdate(){
+
+        checkOppIsUpdated((List<Opportunity>)trigger.new, (Map<Id, Opportunity>)trigger.oldMap);
+
+        OpportunityTriggerHelper.isAvailableForCCHandOff((List<Opportunity>)trigger.new, (Map<Id, Opportunity>)trigger.oldMap);
+        OpportunityTriggerHelper.performOtherOperations((List<Opportunity>)trigger.new, (Map<Id, Opportunity>)trigger.oldMap);
+        OpportunityTriggerHelper.updateSalesRep((List<Opportunity>)trigger.new, false);
+
+        OpportunityTriggerHelper.timestampHelper((List<Opportunity>)trigger.new, (Map<Id, Opportunity>)trigger.oldMap);
+        OpportunityTriggerHelper.updateSalesRepFromAccount((List<Opportunity>)trigger.new);
+
+    }
+
+    protected override void afterInsert(){
+
+        OpportunityTriggerHelper.salesEnginnerReassign((List<Opportunity>)trigger.new, null, true);
+        new OpportunityShareHelper().addShare((List<Opportunity>)trigger.new, (Map<Id, Opportunity>)trigger.oldMap);
+
+        OpportunityTriggerHelper.createTripAndProjects((List<Opportunity>)trigger.new);
+
+    }
+
+    protected override void afterUpdate(){
+
+        OpportunityTriggerHelper.salesEnginnerReassign((List<Opportunity>)trigger.new, (Map<Id, Opportunity>)trigger.oldMap, false);
+        new OpportunityShareHelper().deleteShare((List<Opportunity>)trigger.new, (Map<Id, Opportunity>)trigger.oldMap);
+        new OpportunityShareHelper().addShare((List<Opportunity>)trigger.new, (Map<Id, Opportunity>)trigger.oldMap);
+
+        OpportunityTriggerHelper.createTripAndProjects((List<Opportunity>)trigger.new);
+
+    }
+
+    /**********************************************************************************************
+     Below methods were created by Simplus for File Connect
+    ***********************************************************************************************/
 	//method to check if opportunity is updated
 	public void checkOppIsUpdated(List<Opportunity> lstNewOpportunity, Map<Id,Opportunity> oldMap) {
 		List<Opportunity> listOfUpdatedOpportunity = new List<Opportunity>();
@@ -148,4 +197,8 @@ public with sharing class OpportunityTriggerHandler {
 		objOpp.Portfolio_Scope__c = portfolio;
 		return objOpp;
 	}
+
+    /**********************************************************************************************
+     Above methods were created by Simplus for File Connect
+    ***********************************************************************************************/
 }
