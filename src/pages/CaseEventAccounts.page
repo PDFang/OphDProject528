@@ -83,7 +83,7 @@
                 <apex:pageBlock id="batchBlock" rendered="{!canBatch}">
                     <apex:actionStatus id="clickStatus">
                         <apex:facet name="stop">
-                            <apex:commandButton action="{!BatchAssociatedAccounts}" title="BatchAccounts" value="Batch Associated Accounts" status="clickStatus" onclick="this.disabled=true;" disabled="{!disableBatchAccount}" reRender="batchBlock"/>
+                            <apex:commandButton action="{!BatchAssociatedAccounts}" title="BatchAccounts" value="Batch Associated Accounts" status="clickStatus" disabled="{!disableBatchAccount}" reRender="batchBlock"/>
                         </apex:facet>
                         <apex:facet name="start">
                             <apex:commandButton value="Batch Associated Accounts" disabled="true" status="clickStatus"/>
