@@ -11,9 +11,6 @@ public with sharing class CSOOrderActionCompController {
 		if (currentCaseId == null) {
 			currentCaseId = System.currentPageReference().getParameters().get('id');
 		}
-
-
-
 	}
 
 	final static set<string> lineItemColumns = new set<string>{
