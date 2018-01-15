@@ -182,6 +182,7 @@
                             <apex:selectOptions value="{!SendMethodOptions}"/>
                         </apex:selectRadio>
                         <apex:outputText value="{!batchStatus}" />
+                        <apex:actionPoller action="{!refreshBatchStatus}" rerender="batchBlock" interval="60"/>
                     </apex:outputPanel>
                 </apex:pageBlockSectionItem>
 

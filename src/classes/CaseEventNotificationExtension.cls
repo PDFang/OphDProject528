@@ -521,6 +521,10 @@ public class CaseEventNotificationExtension
         return displayedBatchStatus;
     }
 
+    public PageReference refreshBatchStatus()
+    {
+        return null;
+    }
 
     public List<selectOption> StandardTextOptions
     {
@@ -537,8 +541,6 @@ public class CaseEventNotificationExtension
             }
             return options;
         }
-
-
     }
 
     public PageReference RefreshPage()

@@ -92,6 +92,7 @@
                     <apex:outputText value="{!batchStatus}" />
                     <br />
                     <apex:outputText value="{!batchMessage}" />
+                    <apex:actionPoller action="{!refreshBatchStatus}" rerender="batchBlock" interval="60"/>
                 </apex:pageBlock>
             </div>
 
