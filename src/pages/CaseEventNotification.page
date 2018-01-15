@@ -177,9 +177,12 @@
 
                 <apex:pageBlockSectionItem>
                     <apex:outputLabel value="Send Method" title="Select the Send Method of Maintenance notification"></apex:outputLabel>
-                    <apex:selectRadio value="{!xmSelectedSendMethod}">
-                        <apex:selectOptions value="{!SendMethodOptions}"/>
-                    </apex:selectRadio>
+                    <apex:outputPanel id="batchBlock">
+                        <apex:selectRadio value="{!xmSelectedSendMethod}">
+                            <apex:selectOptions value="{!SendMethodOptions}"/>
+                        </apex:selectRadio>
+                        <apex:outputText value="{!batchStatus}" />
+                    </apex:outputPanel>
                 </apex:pageBlockSectionItem>
 
                 <apex:pageBlockSectionItem >
