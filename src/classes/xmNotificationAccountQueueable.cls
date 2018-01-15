@@ -18,7 +18,18 @@ public without sharing class xmNotificationAccountQueueable implements Queueable
             system.debug('triggering the XMNotificationGroupBatch');
             XMNotificationGroupBatch batch = new XMNotificationGroupBatch(notificationGroup);
 
-            Database.executeBatch(batch);
+            //get the batch size
+            Integer batchSize;
+            List<AppConfiguration__c> configurations = [select XM_Notification_Group_Batch_Size__c from AppConfiguration__c];
+
+            if(configurations != null) {
+                batchSize = (Integer)configurations[0].XM_Notification_Group_Batch_Size__c;
+                System.debug(batchSize);
+            }
+            else {
+                batchSize = 50;
+            }
+            Database.executeBatch(batch, batchSize);
         }
         catch(Exception ex) {
             system.debug(ex);
