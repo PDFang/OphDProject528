@@ -27,6 +27,7 @@ public class XMRestEventService {
 
         String caseRecordType = recordTypeMapById.get(eventCase.RecordTypeId).getName();
         Boolean isMaintenance = (caseRecordType == 'Maintenance Notification' || caseRecordType == 'Maintenance Preview');
+        Boolean isMaintenanceForSpecificAccounts = isMaintenance && xmNotificationRecord.Notification_Group__r.xmGroupUID__c != null;
 
         XMEventData xmEventData = new XMEventData();
 
@@ -37,10 +38,19 @@ public class XMRestEventService {
 
         String inboundIntegrationGuid;
         String platformsAffected;
+        String xMattersGroupName;
 
         if(xmNotificationRecord.Request_Type__c == 'Event Platforms Add'){
             platformsAffected = xmNotificationRecord.AddedPlatforms__c;
             inboundIntegrationGuid = (config != null) ? config.XM_Add_Platform_Inbound_GUID__c : null;
+        } else if (isMaintenanceForSpecificAccounts) {
+            platformsAffected = null;
+            inboundIntegrationGuid = (config != null) ? config.XM_Event_Notification_Inbound_GUID__c : null;
+
+            //set a value indicating the xMatters Group for this Maintenance is already created
+            xMattersGroupName = xmNotificationRecord.Notification_Group__r.xmGroupUID__c;
+
+            system.debug('xMatters Group for Specific Accounts Maintenance ==> ' + xMattersGroupName);
         } else if (xmNotificationRecord.Request_Type__c == 'Maintenance Notification'
                 || xmNotificationRecord.Request_Type__c == 'Event Initial Confirmation'
                 || xmNotificationRecord.Request_Type__c == 'Event Resolved'
@@ -56,7 +66,9 @@ public class XMRestEventService {
 
         system.debug('startExternalEventProcessing() ===> inboundIntegrationGuid - ' + inboundIntegrationGuid);
 
-        xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c, isMaintenance);
+        if(!isMaintenanceForSpecificAccounts) {
+            xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c, isMaintenance);
+        }
 
         // Build the specific event details needed to process the event.
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();
@@ -64,9 +76,24 @@ public class XMRestEventService {
         // PartnerPrefix is a place holder to be replaced by the inbound integration
         eventGroupInfo.eventName = ('Event_' + eventCase.CaseNumber + '_{PartnerPrefix}').replace(' ', '');
         eventGroupInfo.salesforceCaseId = eventCase.Id;
-        eventGroupInfo.partnerDetails = getSupportedPartners();
+
         eventGroupInfo.xmNotificationId = xmNotificationRecord.Id;
+        eventGroupInfo.xmGroupName = xMattersGroupName;
         xmEventData.eventGroupInfo = eventGroupInfo;
+
+
+        if(isMaintenanceForSpecificAccounts) {
+            //maintenance events for selected accounts will currently only support 1 partner 'INC'
+            //this will be improved in a future story
+            eventGroupInfo.partnerDetails = new List<XMEventData.PartnerInfo>();
+            XMEventData.PartnerInfo info = new XMEventData.PartnerInfo();
+            info.partnerPrefix = 'INC';
+            info.xmFormId = null;
+            eventGroupInfo.partnerDetails.add(info);
+        }
+        else {
+            eventGroupInfo.partnerDetails = getSupportedPartners();
+        }
 
         // xMatters form ID
         if(isMaintenance){
