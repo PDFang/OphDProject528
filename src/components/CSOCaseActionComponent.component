@@ -108,7 +108,7 @@
     </style>
 
 
-    <apex:form>
+    <apex:form >
         <div id="caseCommentToaster"></div>
         <div id="caseAction">
             <apex:pageBlock id="caseActionBlock" title="Case Comment Details">
@@ -125,7 +125,7 @@
                             </apex:selectList>
                         </div>
                         <div class="modal-footer" id="caseClosenCancelDiv">
-                            <button class="btn btn-primary" id="caseCloseSaveButton" onclick="CloseCSOCase(this); return false;">Close</button>
+                            <button class="btn btn-primary" id="caseCloseSaveButton" onclick="CloseCSOCase(this); return false;">Close Case</button>
                             <!--<apex:commandButton id="caseCommentSaveButton" onclick="SaveCaseComment(this); return false;" reRender="{!rerender}">Save</apex:commandButton>-->
                             <button type="button" class="btn button-cancel" data-dismiss="modal" onclick="showCloseButton(this);" style="color:black !important;" id="cancelCaseCloseBtn">Cancel</button>
                         </div>
@@ -135,7 +135,7 @@
                     <div id="saveCaseAction">
                         <apex:outputLabel for="caseCommentTextArea">Add Case Comment</apex:outputLabel>
                         <apex:inputTextarea id="caseCommentTextArea" styleClass="form-control" rows="5" cols="3" onKeyDown="toggleSaveButton(this)" onKeyPress="toggleSaveButton(this)" onKeyUp="toggleSaveButton(this)"/>
-                        <apex:inputCheckbox styleClass="custom-control-input" id="publicCommentCheckbox"/><span>&nbsp;Public ?</span>
+                        <apex:inputCheckbox styleClass="custom-control-input" id="publicCommentCheckbox"/><span>&nbsp;Public?</span>
                     </div>
 
                     <div class="modal-footer">
@@ -171,7 +171,6 @@
             }
             else{
                 $('#sendToCOPButton').attr("disabled", false);
-                $('#sendToCOPButton').show();
             }
         }
 
@@ -190,14 +189,12 @@
 
         $('#csoCaseSubReasonDiv').hide();
         $('#caseClosenCancelDiv').hide();
-//        $('#cancelCaseCloseBtn').hide();
 
 
     })
 
 
     function sendToCOPQueue(obj){
-                //$(obj).prop("disabled", true);
                 $(obj).text("Sending...");
                 CSOCaseActionCompController.SendToCOPQueue(
                     '{!queueIds[0].Id}',
@@ -212,10 +209,12 @@
 
                           }else{
                                 $(obj).prop("disabled", false);
+                              $(obj).text("Send To COPs Queue");
                               showCaseError(result);
                           }
                       }else{
                             $(obj).prop("disabled", false);
+                          $(obj).text("Send To COPs Queue");
                             showCaseError(event.message);
                       }
                     },
@@ -224,13 +223,10 @@
             }
 
             function SaveCaseComment(obj){
-                //$(obj).prop("disabled", true);
                 $(obj).text("Saving...");
                 $('#cancelCaseCommentBtn').hide();
                 var comment = $('[id$=caseCommentTextArea]').val();
                 var isPublic = $('[id$=publicCommentCheckbox]').prop('checked');
-                console.log(comment);
-                console.log(isPublic);
                 CSOCaseActionCompController.saveCaseComment(
                     comment,
                     isPublic,
@@ -243,20 +239,20 @@
                             $(obj).prop("disabled", false);
                             $(obj).text("Save");
                             $('#cancelCaseCommentBtn').show();
-                            showSuccess('Comments were saved successfully.');
+                            showCaseSuccess('Comment saved successfully.');
 
 
                           }else{
                                 $(obj).prop("disabled", false);
                                 $(obj).text("Save");
                                 $('#cancelCommentbtn').show();
-                              showError(result);
+                              showCaseError(result);
                           }
                       }else{
                             $(obj).prop("disabled", false);
                             $(obj).text("Save");
                             $('#cancelCommentbtn').show();
-                            showError(event.message);
+                            showCaseError(event.message);
                       }
                     },
                     {escape: false}
@@ -272,21 +268,22 @@
                     closeSubReason,
                     '{!currentCommentCaseId}',
                     function(result,event){
-                        console.log('Test1');
                       if (event.status){
                           if(result == 'Success'){
                             $('#closeCaseButton').hide();
                             $('#caseClosenCancelDiv').hide();
                             $('#csoCaseSubReasonDiv').hide();
-                            showCaseSuccess('Case was closed successfully.');
+                            showCaseSuccess('Case closed successfully.');
 
 
                           }else{
                                 $('#closeCaseDiv').show();
+                              $(obj).text("Close Case");
                               showCaseError(result);
                           }
                       }else{
                             $('#closeCaseDiv').show();
+                          $(obj).text("Close Case");
                             showCaseError(event.message);
                       }
                     },
