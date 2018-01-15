@@ -298,7 +298,12 @@ public class CaseEventAccountsExtension
 
         return jobList.size();
     }
-    
+
+    public PageReference refreshBatchStatus()
+    {
+        return null;
+    }
+
     public PageReference Beginning() 
     { //user clicked beginning
       counter = 0;
