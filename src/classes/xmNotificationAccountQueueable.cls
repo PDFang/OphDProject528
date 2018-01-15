@@ -10,7 +10,7 @@ public without sharing class xmNotificationAccountQueueable implements Queueable
         try {
             List<CaseEventClass.AccountIncident> accountList = getAssociatedAccounts(notificationGroup.Case__c);
             createNotificationAccounts(accountList);
-            notificationGroup.Status__c = 'Accounts Associated';
+
 
             system.debug('Added Notification Account records ==> ' + accountList.size());
 
@@ -29,14 +29,17 @@ public without sharing class xmNotificationAccountQueueable implements Queueable
             else {
                 batchSize = 50;
             }
+
+            //update the notification group status
+            notificationGroup.Status__c = 'Accounts Associated';
+            update notificationGroup;
+
             Database.executeBatch(batch, batchSize);
         }
         catch(Exception ex) {
             system.debug(ex);
             notificationGroup.Status__c = 'Failed';
             inContactBaseClass.SendErrorEmail(ex, 'Error in xmNotificationAccountQueueable while processing Notification Group ' + notificationGroup.Id);
-        }
-        finally {
             update notificationGroup;
         }
     }
