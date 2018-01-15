@@ -1,0 +1,352 @@
+<!--
+ - Created by ravish.chawla on 1/11/2018.
+ -->
+
+<apex:component id="CSOCaseActionComponent" controller="CSOCaseActionCompController"  allowDML="true" >
+    <apex:attribute name="CaseId" description="This is the Case Id" type="String" required="true" assignTo="{!currentCommentCaseId}"/>
+    <apex:attribute name="rerender" required="false" description="rendering" type="String"/>
+
+    <style>
+        .btn-primary {
+                    color: #fff !important;
+                    background-color: #007bff !important;
+                    border-color: #007bff !important;
+        }
+
+        .btn {
+
+                padding: 6px 12px !important;
+                margin-bottom: 0 !important;
+                font-size: 14px !important;
+                font-weight: 400 !important;
+                line-height: 1.42857143 !important;
+                text-align: center !important;
+                white-space: nowrap !important;
+                vertical-align: middle !important;
+                -ms-touch-action: manipulation !important;
+                touch-action: manipulation !important;
+                cursor: pointer !important;
+                -webkit-user-select: none !important;
+                -moz-user-select: none !important;
+                -ms-user-select: none !important;
+                user-select: none !important;
+                background-image: none !important;
+                border: 1px solid transparent !important;
+                border-radius: 4px !important;
+        }
+
+        #caseCommentToaster {
+                visibility: hidden;
+                min-width: 250px;
+                margin-left: -125px;
+                color: #fff;
+                text-align: center;
+                border-radius: 2px;
+                padding: 16px;
+                position: fixed;
+                z-index: 9999;
+                left: 40%;
+                top: 30px;
+                bottom:0px;
+                font-size: 17px;
+                height:50px;
+        }
+
+         #caseCommentToaster.alert{
+             background-color: #f57f8a;
+             border-color: #f57f8a;
+         }
+
+         #caseCommentToaster.success{
+             background-color: #28a745;
+             border-color: #28a745;
+         }
+
+         #caseCommentToaster.show {
+            visibility: visible;
+            -webkit-animation: fadein 0.5s, fadeout 0.5s 4.5s;
+            animation: fadein 0.5s, fadeout 0.5s 4.5s;
+         }
+
+         @-webkit-keyframes fadein {
+                from {top: 0; opacity: 0;}
+                to {top: 30px; opacity: 1;}
+         }
+
+         @keyframes fadein {
+                from {top: 0; opacity: 0;}
+                to {top: 30px; opacity: 1;}
+         }
+
+         @-webkit-keyframes fadeout {
+            from {top: 30px; opacity: 1;}
+            to {top: 0; opacity: 0;}
+         }
+
+         @keyframes fadeout {
+                from {top: 30px; opacity: 1;}
+                to {top: 0; opacity: 0;}
+         }
+         .spinnerClass {
+            background:url('../../img/loading32.gif') no-repeat;
+            height:32px;
+            margin:20px;
+            padding-left:40px;
+            padding-top:9px;
+            font-size: 0.75em;
+        }
+
+        .custom-control-input{
+                vertical-align: top !important;
+        }
+
+        #txtComment{
+            height:100px;
+        }
+
+
+    </style>
+
+
+    <apex:form>
+        <div id="caseCommentToaster"></div>
+        <div id="caseAction">
+            <apex:pageBlock id="caseActionBlock" title="Case Comment Details">
+                <div style="float:left; width:40%; padding-top:10px">
+
+                    <div id="closeCaseDiv" style="text-align:right; margin-right:20px;">
+                        <button class="btn btn-primary" id="closeCaseButton" value="Send" onclick="hideCloseButton(this); return false;">Close Case</button>
+                    </div>
+                    <div id="saveClosedCaseDiv">
+                        <div id="csoCaseSubReasonDiv">
+                            <apex:outputLabel id="csoCaseCloseSubReasonLbl" value="Select Sub-Reason"></apex:outputLabel>
+                            <apex:selectList styleClass="form-control" value="{!cosCaseCloseSubReason}" id="cosCaseCloseSubReasonSel" onChange="showCloseNCancel(this);" size="0" style="width:50%; margin-top:5px; hidden:true">
+                                <apex:selectOptions id="cosCaseCloseSubReason" value="{!cosCaseCloseSubReason}"/><label style="color:Red;">*</label>
+                            </apex:selectList>
+                        </div>
+                        <div class="modal-footer" id="caseClosenCancelDiv">
+                            <button class="btn btn-primary" id="caseCloseSaveButton" onclick="CloseCSOCase(this); return false;">Close</button>
+                            <!--<apex:commandButton id="caseCommentSaveButton" onclick="SaveCaseComment(this); return false;" reRender="{!rerender}">Save</apex:commandButton>-->
+                            <button type="button" class="btn button-cancel" data-dismiss="modal" onclick="showCloseButton(this);" style="color:black !important;" id="cancelCaseCloseBtn">Cancel</button>
+                        </div>
+                    </div>
+
+
+                    <div id="saveCaseAction">
+                        <apex:outputLabel for="caseCommentTextArea">Add Case Comment</apex:outputLabel>
+                        <apex:inputTextarea id="caseCommentTextArea" styleClass="form-control" rows="5" cols="3" onKeyDown="toggleSaveButton(this)" onKeyPress="toggleSaveButton(this)" onKeyUp="toggleSaveButton(this)"/>
+                        <apex:inputCheckbox styleClass="custom-control-input" id="publicCommentCheckbox"/><span>&nbsp;Public ?</span>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" id="caseCommentSaveButton" onclick="SaveCaseComment(this); return false;">Save</button>
+                        <!--<apex:commandButton id="caseCommentSaveButton" onclick="SaveCaseComment(this); return false;" reRender="{!rerender}">Save</apex:commandButton>-->
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" id="cancelCaseCommentBtn">Cancel</button>
+                        <button class="btn btn-primary" id="sendToCOPButton" onclick="sendToCOPQueue(this); return false;">Send To COPs Queue</button>
+                        <div id="sendToCOPDiv" style="float:left" >
+
+                            <!--<hr/>-->
+                        </div>
+                    </div>
+                </div>
+
+            </apex:pageBlock>
+        </div>
+
+    </apex:form>
+    <script>
+
+    $(document).ready(function(){
+        if({!csoCaseDetails.CSO_Resolution_Type__c == 'DID'}){
+            $('#sendToCOPButton').show();
+        }
+        else{
+            $('#sendToCOPButton').hide();
+        }
+
+        if({!queueIds != null}){
+            if({!csoCaseDetails.OwnerId == queueIds[0].Id}){
+                $('#sendToCOPButton').attr("disabled", true);
+                $('#sendToCOPButton').hide();
+            }
+            else{
+                $('#sendToCOPButton').attr("disabled", false);
+                $('#sendToCOPButton').show();
+            }
+        }
+
+        if({!showCloseCaseButton == false}){
+            $('#closeCaseDiv').hide();
+        }
+        else{
+            $('#closeCaseDiv').show();
+        }
+
+        if({!csoCaseDetails.Closed_Reason__c != ''}){
+            $('#closeCaseDiv').hide();
+            $('#caseClosenCancelDiv').hide();
+            $('#csoCaseSubReasonDiv').hide();
+        }
+
+        $('#csoCaseSubReasonDiv').hide();
+        $('#caseClosenCancelDiv').hide();
+//        $('#cancelCaseCloseBtn').hide();
+
+
+    })
+
+
+    function sendToCOPQueue(obj){
+                //$(obj).prop("disabled", true);
+                $(obj).text("Sending...");
+                CSOCaseActionCompController.SendToCOPQueue(
+                    '{!queueIds[0].Id}',
+                    '{!currentCommentCaseId}',
+                    function(result,event){
+                      if (event.status){
+                          if(result == 'Success'){
+                            $(obj).prop("disabled", true);
+                            $(obj).text("Assigned To COPs");
+                            showCaseSuccess('Successfully assigned to COP.');
+
+
+                          }else{
+                                $(obj).prop("disabled", false);
+                              showCaseError(result);
+                          }
+                      }else{
+                            $(obj).prop("disabled", false);
+                            showCaseError(event.message);
+                      }
+                    },
+                    {escape: false}
+                );
+            }
+
+            function SaveCaseComment(obj){
+                //$(obj).prop("disabled", true);
+                $(obj).text("Saving...");
+                $('#cancelCaseCommentBtn').hide();
+                var comment = $('[id$=caseCommentTextArea]').val();
+                var isPublic = $('[id$=publicCommentCheckbox]').prop('checked');
+                console.log(comment);
+                console.log(isPublic);
+                CSOCaseActionCompController.saveCaseComment(
+                    comment,
+                    isPublic,
+                    '{!currentCommentCaseId}',
+                    function(result,event){
+                        console.log('Test1');
+                      if (event.status){
+                          if(result == 'Success'){
+                            $('[id$=caseCommentTextArea]').val('');
+                            $(obj).prop("disabled", false);
+                            $(obj).text("Save");
+                            $('#cancelCaseCommentBtn').show();
+                            showSuccess('Comments were saved successfully.');
+
+
+                          }else{
+                                $(obj).prop("disabled", false);
+                                $(obj).text("Save");
+                                $('#cancelCommentbtn').show();
+                              showError(result);
+                          }
+                      }else{
+                            $(obj).prop("disabled", false);
+                            $(obj).text("Save");
+                            $('#cancelCommentbtn').show();
+                            showError(event.message);
+                      }
+                    },
+                    {escape: false}
+                );
+            }
+
+
+            function CloseCSOCase(obj){
+                $(obj).text("Closing...");
+                var closeSubReason = $('[id$=cosCaseCloseSubReasonSel]').val();
+                console.log(closeSubReason);
+                CSOCaseActionCompController.closeCSOCase(
+                    closeSubReason,
+                    '{!currentCommentCaseId}',
+                    function(result,event){
+                        console.log('Test1');
+                      if (event.status){
+                          if(result == 'Success'){
+                            $('#closeCaseButton').hide();
+                            $('#caseClosenCancelDiv').hide();
+                            $('#csoCaseSubReasonDiv').hide();
+                            showCaseSuccess('Case was closed successfully.');
+
+
+                          }else{
+                                $('#closeCaseDiv').show();
+                              showCaseError(result);
+                          }
+                      }else{
+                            $('#closeCaseDiv').show();
+                            showCaseError(event.message);
+                      }
+                    },
+                    {escape: false}
+                );
+            }
+
+
+
+            function toggleSaveButton(obj){
+                  if($(obj).val() == ''){
+                      $('#commentSaveButton').hide();
+                  }else{
+                      $('#commentSaveButton').show();
+                  }
+            }
+
+            function hideCloseButton(obj){
+                  $('#closeCaseButton').hide();
+                  $('#csoCaseSubReasonDiv').show();
+                  $('#caseClosenCancelDiv').show();
+                  $('#caseCloseSaveButton').attr("disabled", true);
+
+
+            }
+
+            function showCloseButton(obj){
+                  $('#closeCaseButton').show();
+                  $('#csoCaseSubReasonDiv').hide();
+                  $('#caseClosenCancelDiv').hide();
+
+            }
+            function showCloseNCancel(obj){
+                  $('#csoCaseSubReasonHr').hide();
+                  var closeSubReason = $('[id$=cosCaseCloseSubReasonSel]').val();
+                  console.log(closeSubReason);
+                  console.log('Test');
+                  if(closeSubReason == ''){
+                      $('#caseCloseSaveButton').attr("disabled", true);
+                  }
+                  else
+                      $('#caseCloseSaveButton').attr("disabled", false);
+
+            }
+
+
+            function showCaseSuccess(result){
+                  $('#caseCommentToaster').html(result);
+                  $('#caseCommentToaster').addClass('success');
+                  $('#caseCommentToaster').addClass('show');
+                  window.setTimeout(function(){ $('#caseCommentToaster').removeClass('show');$('#caseCommentToaster').removeClass('success');$('#caseCommentToaster').html('');}, 5000);
+                  //document.location.reload();
+            }
+
+            function showCaseError(result){
+                  $('#caseCommentToaster').html(result);
+                  $('#caseCommentToaster').addClass('alert');
+                  $('#caseCommentToaster').addClass('show');
+                  window.setTimeout(function(){ $('#caseCommentToaster').removeClass('show');$('#caseCommentToaster').removeClass('alert');$('#caseCommentToaster').html('');}, 5000);
+            }
+
+    </script>
+</apex:component>

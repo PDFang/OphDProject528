@@ -81,8 +81,7 @@
                 <c:CSOOrderActionComponent CaseId="{!currentId}"/>
             </div>
             <div id="case" class="tab-pane fade">
-                <h3>Case</h3>
-                <p>Case Action Placeholder</p>
+                <c:CSOCaseActionComponent CaseId="{!currentId}" rerender="CSOCaseOrderDetail:CSOCaseOrderDetailForm" />
             </div>
         </div>
         </div>
