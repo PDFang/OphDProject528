@@ -89,6 +89,7 @@
                             <apex:commandButton value="Create Notification Group" disabled="true" status="clickStatus"/>
                         </apex:facet>
                     </apex:actionStatus>
+                    <span style="white-space: pre"></span>
                     <apex:outputText value="{!batchStatus}" />
                     <br />
                     <apex:outputText value="{!batchMessage}" />

@@ -235,12 +235,12 @@ public class CaseEventAccountsExtension
 
             }catch(Exception ex){
                 System.Debug('BatchAssociatedAccounts - creating Account Group in Salesforce: ' + ex.getMessage());
-                batchMessage = 'Error: there is an issue creating Account Group in Salesforce';
+                batchMessage = 'An error occurred with Salesforce when attempting to create the account group. Please try again.';
             }
         }
         else
         {
-            batchMessage = 'Error: there is an issue creating Account Group in Xmatters';
+            batchMessage = 'An error occurred with xMatters when attempting to create the account group. Please try again.';
         }
     }
 
@@ -258,7 +258,7 @@ public class CaseEventAccountsExtension
         // disable button if exceeds maxium running batches
         if (!disableBatchAccountButton) {
             if (getNumOfRunningBatches() == 5) {
-                batchMessage = 'Max number of batches are currently running, please wait for some time if you want to batch the associated accounts!';
+                batchMessage = 'Warning: Max number of account group batches are currently running, please wait until the other account groups are created and try again.';
                 disableBatchAccountButton = true;
             }
         }
