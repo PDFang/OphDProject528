@@ -24,12 +24,15 @@ public class CSOCaseOrderDetailHelper {
 			system.debug('getCase(): currentCase - ' + currentCase);
 
 			if(currentCase == null){
-				ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'No asset record found.'));
+				ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'No Case record found.'));
 				return;
 			}
 
 			if(currentCase.CustomerOrder__c == null){
-				ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'This Case does not have a Customer Order placed via CSO.  Click here to return to the Case record.'));
+				String html = '<a href="/' + currentCase.Id + '"><b><u>here</u></b></a>';
+				ApexPages.addMessage(
+						new ApexPages.Message(ApexPages.Severity.INFO, 'This Case does not have a Customer Order placed via CSO.  Click' + html + 'to return to the Case record.')
+				);
 				return;
 			}
 
