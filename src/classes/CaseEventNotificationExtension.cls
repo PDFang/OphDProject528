@@ -496,7 +496,7 @@ public class CaseEventNotificationExtension
 
             List<SelectOption> options = new List<SelectOption>();
             options.add(new SelectOption('ByAccounts', 'By Associated Accounts', disableGroupOption));
-            options.add(new SelectOption('ByProducts', 'By Protucts'));
+            options.add(new SelectOption('ByProducts', 'By Protucts / Platforms'));
             return options;
         }
     }
