@@ -98,5 +98,17 @@ public  class XMRestGroupTest {
         System.debug('isGroupCreated -->' + isGroupCreated);
     }
 
+    public static testmethod void TestAddShiftToGroup() {
+
+        XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+        test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, fakeResponse);
+        XMRestGroup xm = new XMRestGroup();
+        Boolean isAddShiftToGroup  =  xm.AddShiftToGroup('Test01', '24x7');
+        test.stopTest();
+        System.debug('isAddShiftToGroup -->' + isAddShiftToGroup);
+    }
+
 
 }
