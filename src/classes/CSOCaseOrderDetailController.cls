@@ -18,7 +18,14 @@ public class CSOCaseOrderDetailController {
 		}set{}
 	}
 
-	public list<CSOCaseComment> comments{get;set;}
+	public list<CSOCaseComment> comments{
+		get {
+			return helper != null
+					? helper.caseComments : null;
+		}set{
+
+		}
+	}
 //	public list<CSOCaseHistoryModel> caseHistory{get;set;}
 //	public list<CSOCaseHistoryModel> caseAssignedTo{get;set;}
 
@@ -37,8 +44,8 @@ public class CSOCaseOrderDetailController {
 		}
 
 		helper = new CSOCaseOrderDetailHelper(currentId);
-		comments = new List<CSOCaseComment>();
-		comments = helper.getCaseComments(currentId);
+//		comments = new List<CSOCaseComment>();
+//		comments = helper.getCaseComments(currentId);
 //		caseHistory = new List<CSOCaseHistoryModel>();
 //		caseHistory = helper.getCaseHistory(currentId);
 //		caseAssignedTo = helper.caseAssignedTo;

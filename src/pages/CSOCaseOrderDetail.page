@@ -36,54 +36,60 @@
             }
         </style>
         <div class="container-fluid" style="font-size: 14px;">
-        <apex:form id="CSOCaseOrderDetailForm">
-
-            <apex:pageBlock title="Information" id="caseDetailBlock">
-                <apex:pageMessages />
-                <div id="divCommentInfo">
-                    <apex:pageBlockSection columns="2">
-                        <apex:repeat value="{!$ObjectType.Case.FieldSets.CSO_Order_Resolution}" var="f">
-                            <apex:outputfield value="{!CurrentCase[f]}"  />
-                        </apex:repeat>
-                    </apex:pageBlockSection>
-                </div>
-                <apex:pageBlockSection title="Comment History" columns="1" id="commentSection" >
-                    <div style="height:150px; overflow-y: scroll;">
-                        <table style="table-layout:fixed; width:100%;">
-                            <thead>
-                                <th class="commentCell">Created By</th>
-                                <th class="commentCell">Comment Date</th>
-                                <th style="width:70%" class="commentCell">Comment</th>
-                            </thead>
-                            <tbody>
-                            <apex:repeat var="comment" value="{!comments}">
-                                <tr>
-                                    <td class="commentCell">{!comment.CreatedByName}</td>
-                                    <td class="commentCell">{!comment.CreatedDate}</td>
-                                    <td style="width:70%" class="commentCell">{!comment.CommentBody}</td>
-                                </tr>
-                            </apex:repeat>
-                            </tbody>
-                        </table>
-                    </div>
-                </apex:pageBlockSection>
-                <script>twistSection(document.getElementById('{!$Component.caseDetailBlock.commentSection}').getElementsByTagName('img')[0]) </script>
+            <apex:pageBlock rendered="{!OR(ISBLANK(CurrentCase), ISBLANK(CurrentCase.CustomerOrder__c))}">
+                <apex:pageMessages/>
             </apex:pageBlock>
-        </apex:form>
 
-        <ul class="nav nav-tabs">
-            <li class="active"><a href="#order">Order Actions</a></li>
-            <li><a href="#case">Case Actions</a></li>
-        </ul>
-        <div class="tab-content">
-            <div id="order" class="tab-pane fade in active">
-                <br/>
-                <c:CSOOrderActionComponent CaseId="{!currentId}"/>
-            </div>
-            <div id="case" class="tab-pane fade">
-                <c:CSOCaseActionComponent CaseId="{!currentId}" rerender="CSOCaseOrderDetail:CSOCaseOrderDetailForm" />
-            </div>
-        </div>
+            <apex:outputPanel rendered="{!AND(NOT(ISBLANK(CurrentCase)), NOT(ISBLANK(CurrentCase.CustomerOrder__c)))}">
+                <apex:form id="CSOCaseOrderDetailForm">
+
+                    <apex:pageBlock title="Information" id="caseDetailBlock">
+                        <apex:pageMessages />
+                            <div id="divCommentInfo">
+                                <apex:pageBlockSection columns="2">
+                                    <apex:repeat value="{!$ObjectType.Case.FieldSets.CSO_Order_Resolution}" var="f">
+                                        <apex:outputfield value="{!CurrentCase[f]}"  />
+                                    </apex:repeat>
+                                </apex:pageBlockSection>
+                            </div>
+                            <apex:pageBlockSection title="Comment History" columns="1" id="commentSection" >
+                                <div style="height:150px; overflow-y: scroll;">
+                                    <table style="table-layout:fixed; width:100%;">
+                                        <thead>
+                                            <th class="commentCell">Created By</th>
+                                            <th class="commentCell">Comment Date</th>
+                                            <th style="width:70%" class="commentCell">Comment</th>
+                                        </thead>
+                                        <tbody>
+                                        <apex:repeat var="comment" value="{!comments}">
+                                            <tr>
+                                                <td class="commentCell">{!comment.CreatedByName}</td>
+                                                <td class="commentCell">{!comment.CreatedDate}</td>
+                                                <td style="width:70%" class="commentCell">{!comment.CommentBody}</td>
+                                            </tr>
+                                        </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </apex:pageBlockSection>
+                            <script>twistSection(document.getElementById('{!$Component.caseDetailBlock.commentSection}').getElementsByTagName('img')[0]) </script>
+                    </apex:pageBlock>
+                </apex:form>
+
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="#order">Order Actions</a></li>
+                    <li><a href="#case">Case Actions</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div id="order" class="tab-pane fade in active">
+                        <br/>
+                        <c:CSOOrderActionComponent CaseId="{!currentId}"/>
+                    </div>
+                    <div id="case" class="tab-pane fade">
+                        <c:CSOCaseActionComponent CaseId="{!currentId}" rerender="CSOCaseOrderDetail:CSOCaseOrderDetailForm" />
+                    </div>
+                </div>
+            </apex:outputPanel>
         </div>
     <script>
         $(document).ready(function(){
