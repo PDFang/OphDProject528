@@ -5,7 +5,7 @@
 public class CSOCaseOrderDetailHelper {
 
 	public Case currentCase;
-	public CSOCaseOrderDetailController.CSOCaseComment csoCaseComment;
+	public List<CSOCaseOrderDetailController.CSOCaseComment> caseComments;
 
 	//public list<CSOCaseHistoryModel> caseAssignedTo;
 
@@ -13,10 +13,10 @@ public class CSOCaseOrderDetailHelper {
 			'RecordType.Name'
 	};
 
-
-
 	// constructor
 	public CSOCaseOrderDetailHelper(String idParam){
+
+		caseComments = new List<CSOCaseOrderDetailController.CSOCaseComment>();
 
 		String sObjType = getSObjectType(idParam);
 		if(sObjType == 'Case'){
@@ -28,6 +28,12 @@ public class CSOCaseOrderDetailHelper {
 				return;
 			}
 
+			if(currentCase.CustomerOrder__c == null){
+				ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'This Case does not have a Customer Order placed via CSO.  Click here to return to the Case record.'));
+				return;
+			}
+
+			getCaseComments(idParam);
 		}
 	}
 
@@ -62,21 +68,20 @@ public class CSOCaseOrderDetailHelper {
 
 	}
 
-	public list<CSOCaseOrderDetailController.CSOCaseComment> getCaseComments(string caseId){
-		List<CSOCaseOrderDetailController.CSOCaseComment> finalCaseCommentList = new List<CSOCaseOrderDetailController.CSOCaseComment>();
-		list<CaseComment> retlist = new list<CaseComment>();
-		retlist = [SELECT CommentBody,CreatedDate,CreatedBy.Name,Id,IsDeleted,IsPublished,ParentId FROM CaseComment where parentId =:caseId  order by CreatedDate desc];
+	private void getCaseComments(string caseId){
 
-
-        for(CaseComment retlistComment: retlist)
-        {
-			csoCaseComment = new CSOCaseOrderDetailController.CSOCaseComment();
-			csoCaseComment.CreatedDate = retlistComment.CreatedDate.format('MM/dd/yy hh:mma');
-			csoCaseComment.CreatedByName = retlistComment.CreatedBy.Name;
-			csoCaseComment.CommentBody = retlistComment.CommentBody;
-			finalCaseCommentList.add(csoCaseComment);
+        for(CaseComment comment: [
+				SELECT CommentBody,CreatedDate,CreatedBy.Name,Id,IsDeleted,IsPublished,ParentId
+				FROM CaseComment
+				where parentId =:caseId  order by CreatedDate desc
+		]){
+			CSOCaseOrderDetailController.CSOCaseComment csoCaseComment = new CSOCaseOrderDetailController.CSOCaseComment();
+			csoCaseComment.CreatedDate = comment.CreatedDate.format('MM/dd/yy hh:mma');
+			csoCaseComment.CreatedByName = comment.CreatedBy.Name;
+			csoCaseComment.CommentBody = comment.CommentBody;
+			caseComments.add(csoCaseComment);
         }
-		return finalCaseCommentList;
+
 	}
 
 //	public list<CSOCaseHistoryModel> getCaseHistory(string caseId){
