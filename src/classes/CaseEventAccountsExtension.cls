@@ -248,11 +248,22 @@ public class CaseEventAccountsExtension
     public boolean getDisableBatchAccount() {
         boolean disableBatchAccountButton = true;
 
-        // enable button in certain status
-        string displayedBatchStatus = getDisplayedBatchStatus();
-        batchStatus = (string.isBlank(displayedBatchStatus)) ? displayedBatchStatus : 'Account Batch Status: ' + displayedBatchStatus;
-        if (displayedBatchStatus == 'Ready' || displayedBatchStatus == 'Failed' || string.isBlank(displayedBatchStatus)) {
+        // enable button if the default group has been changed
+        if (isDefaultGroupChanged()) {
             disableBatchAccountButton = false;
+        }
+
+        // enable button in certain status
+        if (!disableBatchAccountButton) {
+            string displayedBatchStatus = getDisplayedBatchStatus();
+            batchStatus = (string.isBlank(displayedBatchStatus)) ? displayedBatchStatus : 'Account Batch Status: ' + displayedBatchStatus;
+            if (displayedBatchStatus == 'Ready' || displayedBatchStatus == 'Failed' || string.isBlank(displayedBatchStatus)) {
+                disableBatchAccountButton = false;
+            }
+            else
+            {
+                disableBatchAccountButton = true;
+            }
         }
 
         // disable button if exceeds maxium running batches
@@ -264,6 +275,24 @@ public class CaseEventAccountsExtension
         }
 
         return disableBatchAccountButton;
+    }
+
+    private boolean isDefaultGroupChanged()
+    {
+        Set<ID> setAccountIds;
+        boolean isChanged = false;
+        setAccountIds = cec.AddedAccountIds(c.id);
+
+        if (setAccountIds.size() <= 0)
+        {
+            setAccountIds = cec.ExcludedAccountIds(c.id);
+        }
+        if (setAccountIds.size() > 0)
+        {
+            isChanged = true;
+        }
+
+        return isChanged;
     }
 
     private string getDisplayedBatchStatus()
