@@ -8,6 +8,7 @@ public with sharing class CSOCaseActionCompController {
     public List<Group> queueIds {get; set;}
     public Boolean showCloseCaseButton {get; set;}
     public List<SelectOption> cosCaseCloseSubReason {get; set;}
+    public string retURL {get; set;}
 
 
     public CSOCaseActionCompController(){
@@ -18,8 +19,11 @@ public with sharing class CSOCaseActionCompController {
         queueIds = getQueueId();
         showCloseCaseButton = getOrderLineItemsStatus(csoCaseDetails);
         cosCaseCloseSubReason = getCSOCaseCloseSubReason();
+        retURL = Apexpages.currentPage().getUrl();
+        System.debug('retURL' + retURL);
 
     }
+
 
     static Case currentCase;
 

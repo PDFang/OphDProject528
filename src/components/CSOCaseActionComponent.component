@@ -115,7 +115,8 @@
                 <div style="float:left; width:40%; padding-top:10px">
 
                     <div id="closeCaseDiv" style="text-align:right; margin-right:20px;">
-                        <button class="btn btn-primary" id="closeCaseButton" value="Send" onclick="hideCloseButton(this); return false;">Close Case</button>
+                        <!--<button class="btn btn-primary" id="closeCaseButton" value="Send" onclick="hideCloseButton(this); return false;">Close Case</button>-->
+                        <a id="closeCaseButton" class="btn btn-primary" href="/{!currentCommentCaseId}/s?retURL={!retURL}">Close Case</a>
                     </div>
                     <div id="saveClosedCaseDiv">
                         <div id="csoCaseSubReasonDiv">
@@ -181,7 +182,7 @@
             $('#closeCaseDiv').show();
         }
 
-        if({!csoCaseDetails.Closed_Reason__c != ''}){
+        if({!csoCaseDetails.Disposition__c != ''}){
             $('#closeCaseDiv').hide();
             $('#caseClosenCancelDiv').hide();
             $('#csoCaseSubReasonDiv').hide();
