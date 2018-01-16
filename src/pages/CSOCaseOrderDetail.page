@@ -36,11 +36,11 @@
             }
         </style>
         <div class="container-fluid" style="font-size: 14px;">
-            <apex:pageBlock rendered="{!OR(ISBLANK(CurrentCase), ISBLANK(CurrentCase.CustomerOrder__c))}">
+            <apex:pageBlock rendered="{!hasNoOrder}">
                 <apex:pageMessages escape="false"/>
             </apex:pageBlock>
 
-            <apex:outputPanel rendered="{!AND(NOT(ISBLANK(CurrentCase)), NOT(ISBLANK(CurrentCase.CustomerOrder__c)))}">
+            <apex:outputPanel rendered="{!!hasNoOrder}">
                 <apex:form id="CSOCaseOrderDetailForm">
 
                     <apex:pageBlock title="Information" id="caseDetailBlock">

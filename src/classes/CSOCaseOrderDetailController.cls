@@ -26,9 +26,13 @@ public class CSOCaseOrderDetailController {
 
 		}
 	}
-//	public list<CSOCaseHistoryModel> caseHistory{get;set;}
-//	public list<CSOCaseHistoryModel> caseAssignedTo{get;set;}
 
+    public boolean getHasNoOrder(){
+
+        return (helper != null && helper.currentCase != null)
+                ? String.isBlank(helper.currentCase.CustomerOrder__c) : false;
+
+    }
 
 	// query string parameter
 	public String currentId{get;set;}
