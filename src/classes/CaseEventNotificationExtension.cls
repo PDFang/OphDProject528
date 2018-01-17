@@ -489,9 +489,7 @@ public class CaseEventNotificationExtension
             boolean disableGroupOption = true;
             string displayedBatchStatus = getDisplayedBatchStatus();
             batchStatus = (string.isBlank(displayedBatchStatus)) ? displayedBatchStatus : 'Account Batch Status: ' + displayedBatchStatus;
-            if (displayedBatchStatus == 'Ready') {
-                disableGroupOption = false;
-            }
+            disableGroupOption = (displayedBatchStatus == 'Ready') ? false : true;
 
             List<SelectOption> options = new List<SelectOption>();
             options.add(new SelectOption('ByAccounts', 'By Associated Accounts', disableGroupOption));

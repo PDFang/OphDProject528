@@ -17,6 +17,7 @@ public class CaseEventAccountsExtension
     private Set<Id> accountIds;
     public boolean canEdit{public get;private set;}
     public boolean canBatch{public get; private set;}
+    public boolean enablePoller {public get; private set;}
     public CaseEventClass cec{public get;private set;}
     public CaseEventClass.AccountIncident[] acctIncidents{
         												get{
@@ -54,6 +55,11 @@ public class CaseEventAccountsExtension
 
         if(c.RecordType.Name == 'Maintenance Notification'){
                 canBatch = true;
+                enablePoller = true;
+                xmNotificationGroups__c[] xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
+                if (xmGroup.size() <= 0) {
+                    enablePoller = false;
+                }
         }
     }
     
@@ -256,14 +262,11 @@ public class CaseEventAccountsExtension
         // enable button in certain status
         if (!disableBatchAccountButton) {
             string displayedBatchStatus = getDisplayedBatchStatus();
-            batchStatus = (string.isBlank(displayedBatchStatus)) ? displayedBatchStatus : 'Account Batch Status: ' + displayedBatchStatus;
-            if (displayedBatchStatus == 'Ready' || displayedBatchStatus == 'Failed' || string.isBlank(displayedBatchStatus)) {
-                disableBatchAccountButton = false;
+            if (!string.isBlank(displayedBatchStatus)){
+                batchStatus = 'Account Batch Status: ' + displayedBatchStatus;
+                enablePoller = true;
             }
-            else
-            {
-                disableBatchAccountButton = true;
-            }
+            disableBatchAccountButton = (displayedBatchStatus == 'Ready' || displayedBatchStatus == 'Failed' || string.isBlank(displayedBatchStatus)) ? false : true;
         }
 
         // disable button if exceeds maxium running batches
