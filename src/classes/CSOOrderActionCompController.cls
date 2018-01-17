@@ -46,15 +46,34 @@ public with sharing class CSOOrderActionCompController {
 			if(cases.isEmpty())
 				return 'NONE';
 			list<CSOOrderResolutionColumnMapping__c> mappings = getMappings(cases[0].CSO_Resolution_Type__c);
-			if(!mappings.isEmpty()){
+			if(mappings != null && !mappings.isEmpty()){
 				statusList = mappings[0].Line_Item_Status__c.split(';');
 			}
+            statusList = new string[]{};
 			statusList.sort();
 
 			return JSON.Serialize(statusList);
 		}
 	}
 
+	public string POPSite
+	{
+		get
+		{
+			String[] statusList = new String[]{};
+			list<case> cases = getCurrentCase(currentCaseId);
+			if(cases.isEmpty())
+				return 'NONE';
+			list<CSOOrderResolutionColumnMapping__c> mappings = getMappings(cases[0].CSO_Resolution_Type__c);
+			if(!mappings.isEmpty()){
+                if(mappings[0].POP_Site__c != null)
+				    statusList = mappings[0].POP_Site__c.split(';');
+			}
+			statusList.sort();
+
+			return JSON.Serialize(statusList);
+		}
+	}
 
 
 	@RemoteAction
@@ -142,7 +161,7 @@ public with sharing class CSOOrderActionCompController {
 	}
 
 	private static list<CSOOrderResolutionColumnMapping__c> getMappings(string CSOCaseType){
-			return [Select DisplayColumns__c, CSO_Resolution_Type__c, Line_Item_Status__c , Display_Buttons__c, Instrument_Id__c from CSOOrderResolutionColumnMapping__c where  CSO_Resolution_Type__c = :CSOCaseType Limit 1];
+			return [Select DisplayColumns__c, CSO_Resolution_Type__c, Line_Item_Status__c ,POP_Site__c, Display_Buttons__c, Instrument_Id__c from CSOOrderResolutionColumnMapping__c where  CSO_Resolution_Type__c = :CSOCaseType Limit 1];
 	}
 
 
@@ -259,4 +278,25 @@ public with sharing class CSOOrderActionCompController {
 			return 'Error while updating Status change. Technical error message -  ' + ex.getMessage();
 		}
 	}
+
+    @RemoteAction
+    public static string updatePOPSite(string POP, string lineItemId){
+        try{
+            if(POP == '' || POP == null)
+                return 'Invalid POP.';
+
+            list<OrderLineSpecificItem__c> specificItems = new list<OrderLineSpecificItem__c>();
+            for(OrderLineSpecificItem__c specificItem : [select Id, ItemValue__c, SpecificItem__c
+                                                        from OrderLineSpecificItem__c where OrderLineGeneralItem__c = :lineItemId and SpecificItem__c like '%POP%']){
+                specificItems.add(new OrderLineSpecificItem__c(
+                        Id = specificItem.Id,
+                        ItemValue__c = POP
+                        ));
+            }
+            update specificItems;
+            return 'Success';
+        }catch (Exception ex){
+            return 'Error while updating POP Site change. Technical error message -  ' + ex.getMessage();
+        }
+    }
 }

@@ -164,34 +164,60 @@
 
         <!--Change Status-->
         <div class="modal fade" id="modalChangeStatus" tabindex="-1" role="dialog" aria-labelledby="modalChangeStatuslabel" aria-hidden="true" >
-            <div class="modal-dialog" role="document" style="width:35%;">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalChangeStatusHeader" style="font-weight:bold">Change Line Item Status for <span id="LineItem"> </span></h5>
+        <div class="modal-dialog" role="document" style="width:35%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalChangeStatusHeader" style="font-weight:bold">Change Line Item Status for <span id="LineItem"> </span></h5>
 
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body" style="font-size:14px;">
-                        <inputHidden id="hiddenIdStatus"/>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="font-size:14px;">
+                    <inputHidden id="hiddenIdStatus"/>
 
-                        <div class="form-group">
-                            <apex:outputLabel for="status">Update Status</apex:outputLabel>
-                            <input id="status" styleClass="form-control"/>
-                        </div>
-                        <div class="custom-control custom-checkbox" >
-                            <apex:inputCheckbox styleClass="custom-control-input" id="updateAllCheckbox" />
-                            <apex:outputLabel  style="font-weight:100;" styleClass="custom-control-label" for="updateAllCheckbox">Check this checbox if you want to update all other Line Item Status.</apex:outputLabel>
-                        </div>
+                    <div class="form-group">
+                        <apex:outputLabel for="status">Update Status</apex:outputLabel>
+                        <input id="status" styleClass="form-control"/>
                     </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-primary" id="statusSaveButton" onclick="UpdateStatus(this); return false;">Save</button>
-                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" id="cancelstatus">Cancel</button>
+                    <div class="custom-control custom-checkbox" >
+                        <apex:inputCheckbox styleClass="custom-control-input" id="updateAllCheckbox" />
+                        <apex:outputLabel  style="font-weight:100;" styleClass="custom-control-label" for="updateAllCheckbox">Check this checbox if you want to update all other Line Item Status.</apex:outputLabel>
                     </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="statusSaveButton" onclick="UpdateStatus(this); return false;">Save</button>
+                    <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" id="cancelstatus">Cancel</button>
                 </div>
             </div>
         </div>
+    </div>
+    <!--Change POP Site-->
+    <div class="modal fade" id="modalUpdatePOPSite" tabindex="-1" role="dialog" aria-labelledby="modalUpdatePOPSitelabel" aria-hidden="true" >
+        <div class="modal-dialog" role="document" style="width:35%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalUpdatePOPSiteHeader" style="font-weight:bold">Update POP Site for <span id="LineItemPOPSite"> </span></h5>
+
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="font-size:14px;">
+                    <inputHidden id="hiddenIdPOPSite"/>
+
+                    <div class="form-group">
+                        <apex:outputLabel for="updatePOPSite">Update POP Site</apex:outputLabel>
+                        <input id="inputPOPSite" styleClass="form-control"/>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="SaveButtonPOPSite" onclick="UpdatePOPSite(this); return false;">Save</button>
+                    <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" id="cancelPOPSite">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
     </apex:form>
@@ -242,11 +268,8 @@
                 }
               },
               columns: columns,
-              dataBound:gridDataBound,
-              reorderable: true
+              dataBound:gridDataBound
             });
-
-
 
       }
 
@@ -268,7 +291,7 @@
                 var template = '#{ #<a href="/#: data.Id #" target="_blank" name="Name" style="color:blue;">#= data.Name #</a># } #';
                  colObject.template = template;
             } else if(name == 'Last_Comment__c'){
-                 colObject.width = 350;
+                 colObject.width = 250;
             }else if(name == 'ParentLineItem'){
                 colObject.title = 'Parent Line Item';
                 var template = '#{ #<a href="/#: data.RelatedLineItem__c #" target="_blank" name="ParentLineItem" style="color:blue;">#= data.ParentLineItem #</a># } #';
@@ -384,6 +407,21 @@
 
 
                $('div#modalChangeStatus').modal('show');
+          }else if(e.currentTarget.text == 'Update POP Site'){
+                $('#hiddenIdPOPSite').val(data.Id);
+                $('#LineItemPOPSite').html('Line Item Id ' + data.Name);
+                $("#inputPOPSite").kendoDropDownList({
+                       autobind: false,
+                        dataSource: {
+                            data: {!POPSite}
+                        },
+                        value:data.POP
+                    });
+
+                $('div#modalUpdatePOPSite').modal({
+                backdrop: 'static',
+                keyboard: false
+               });
           }
 
       }
@@ -491,6 +529,46 @@
                         $(obj).prop("disabled", false);
                         $(obj).text("Save");
                         $('#cancelstatus').show();
+                        showError(event.message);
+                  }
+                },
+                {escape: false}
+            );
+       }
+
+       function UpdatePOPSite(obj){
+            $(obj).prop("disabled", true);
+            $(obj).text("Saving...");
+            $('#cancelPOPSite').hide();
+            var pop = $("#inputPOPSite").data("kendoDropDownList").value();
+            var lineItemId = $('#hiddenIdPOPSite').val();
+
+            CSOOrderActionCompController.updatePOPSite(
+                pop,
+                lineItemId,
+                function(result,event){
+                  if (event.status){
+                      if(result == 'Success'){
+                        $('div#modalUpdatePOPSite').modal('hide');
+                        $(obj).prop("disabled", false);
+                        $(obj).text("Save");
+                        $('#cancelPOPSite').show();
+                        showSuccess('Successfully changed POP Site.');
+                        var grid = $("#orderLineItems").data("kendoGrid");
+                        grid.destroy();
+                        $("#grid").remove();
+                        getDetails();
+
+                      }else{
+                        $(obj).prop("disabled", false);
+                        $(obj).text("Save");
+                        $('#cancelPOPSite').show();
+                        showError(result);
+                      }
+                  }else{
+                        $(obj).prop("disabled", false);
+                        $(obj).text("Save");
+                        $('#cancelPOPSite').show();
                         showError(event.message);
                   }
                 },
