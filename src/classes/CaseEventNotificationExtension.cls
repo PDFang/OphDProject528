@@ -21,6 +21,7 @@ public class CaseEventNotificationExtension
     public boolean allowNotifications{public get;private set;}
     public string xmSelectedForm{get;set;}
     public string xmSelectedSendMethod {get; set;}
+    public string batchStatus {get; set;}
 
     // For product eligible for select Customers enable legacy notification otherwise enable xMatters notification
     public boolean enableXmatters{public get;private set;}
@@ -28,6 +29,7 @@ public class CaseEventNotificationExtension
     public List<String> xMattersFieldMapping{get; private set;}
     // list of forms setup in xMatters_Forms__mdt
     public List<SelectOption> xMattersForms{get; private set;}
+    public xmNotificationGroups__c[] xmGroup {private get; private set;}
 
     private final List<RecordType> recordTypes;
     private ID selRecordTypeId;
@@ -38,7 +40,6 @@ public class CaseEventNotificationExtension
     public string contactRole{public get;private set;}
     private string recordTypeName;
     public static list<string> clusters;
-
 
     private static boolean isxMattersMaintenanceNotificationsTurnedOff = false;
 
@@ -483,11 +484,46 @@ public class CaseEventNotificationExtension
     {
         get
         {
+            xmSelectedSendMethod = '';
+
+            // enable account radio option in certain status
+            boolean disableGroupOption = true;
+            string displayedBatchStatus = getDisplayedBatchStatus();
+            batchStatus = (string.isBlank(displayedBatchStatus)) ? displayedBatchStatus : 'Account Batch Status: ' + displayedBatchStatus;
+            if (displayedBatchStatus == 'Ready') {
+                disableGroupOption = false;
+            }
+
             List<SelectOption> options = new List<SelectOption>();
-            options.add(new SelectOption('ByAccounts', 'By Associated Accounts'));
-            options.add(new SelectOption('ByProducts', 'By Protucts'));
+            options.add(new SelectOption('ByAccounts', 'By Associated Accounts', disableGroupOption));
+            options.add(new SelectOption('ByProducts', 'By Protucts / Platforms'));
             return options;
         }
+    }
+
+    private string getDisplayedBatchStatus()
+    {
+        xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
+
+        string displayedBatchStatus;
+        if (xmGroup.size() > 0) {
+            if (xmGroup[0].Status__c == 'New') {
+                displayedBatchStatus = 'New';
+            } else if (xmGroup[0].Status__c == 'Failed') {
+                displayedBatchStatus = 'Failed';
+            } else if (xmGroup[0].Status__c == 'Completed') {
+                displayedBatchStatus = 'Ready';
+            } else {
+                displayedBatchStatus = 'Processing';
+            }
+        }
+
+        return displayedBatchStatus;
+    }
+
+    public PageReference refreshBatchStatus()
+    {
+        return null;
     }
 
     public List<selectOption> StandardTextOptions
@@ -505,8 +541,6 @@ public class CaseEventNotificationExtension
             }
             return options;
         }
-
-
     }
 
     public PageReference RefreshPage()
@@ -562,11 +596,20 @@ public class CaseEventNotificationExtension
                 return null;
             }
 
+            // get xmNotificationGroups__c batch id
+            string xmGroupId;
+            if (xmGroup.size() > 0)
+            {
+                if (xmGroup[0].Status__c == 'Completed')
+                    xmGroupId = xmGroup[0].Id;
+            }
+
             xmNotification__c xmNotification = new xmNotification__c(
                     Case__c = c.Id,
                     Request_Date__c = system.now(),
                     Request_Type__c = 'Maintenance Notification',
-                    xMatters_Form__c = xmSelectedForm
+                    xMatters_Form__c = xmSelectedForm,
+                    Notification_Group__c = xmGroupId
             );
 
             insert xmNotification;

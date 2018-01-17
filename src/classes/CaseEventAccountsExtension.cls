@@ -219,7 +219,7 @@ public class CaseEventAccountsExtension
         xmGroup = xm.CreateNewGroupWithResponseDetail(xmGroupName);
 
         // create Notification Group
-        if (xmGroup.id != '' && xm.AddShiftToGroup(xmGroupName, '24x7'))
+        if (!String.isBlank(xmGroup.id) && xm.AddShiftToGroup(xmGroupName, '24x7'))
         {
             try{
                 xmNotificationGroups__c xmNotificationGroup = new xmNotificationGroups__c(
@@ -235,72 +235,104 @@ public class CaseEventAccountsExtension
 
             }catch(Exception ex){
                 System.Debug('BatchAssociatedAccounts - creating Account Group in Salesforce: ' + ex.getMessage());
-                batchMessage = 'Error: there is an issue creating Account Group in Salesforce';
+                batchMessage = 'An error occurred with Salesforce when attempting to create the account group. Please try again.';
             }
         }
         else
         {
-            batchMessage = 'Error: there is an issue creating Account Group in Xmatters';
+            batchMessage = 'An error occurred with xMatters when attempting to create the account group. Please try again.';
         }
     }
 
-    // Determine to enable/disable the Accounts Batch button and display status
-    public Boolean getDisableBatchAccount()
-    {
+    // Enable/Disable the Accounts Batch button and display status
+    public boolean getDisableBatchAccount() {
         boolean disableBatchAccountButton = true;
-        string prefixBatchStatus = 'Account Batch Status: ';
-        string displayBatchStatus = '';
-        batchStatus = '';
 
-        // get the latest xmNotificationGroups__c and its status
-        xmNotificationGroups__c[] xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
-        if (xmGroup.size() > 0)
-        {
-            if (xmGroup[0].Status__c == 'New')
-            {
-                displayBatchStatus = 'New';
-            }
-            else if (xmGroup[0].Status__c == 'Failed')
-            {
-                displayBatchStatus = 'Failed';
-            }
-            else if (xmGroup[0].Status__c == 'Completed')
-            {
-                displayBatchStatus = 'Ready';
+        // enable button if the default group has been changed
+        if (isDefaultGroupChanged()) {
+            disableBatchAccountButton = false;
+        }
+
+        // enable button in certain status
+        if (!disableBatchAccountButton) {
+            string displayedBatchStatus = getDisplayedBatchStatus();
+            batchStatus = (string.isBlank(displayedBatchStatus)) ? displayedBatchStatus : 'Account Batch Status: ' + displayedBatchStatus;
+            if (displayedBatchStatus == 'Ready' || displayedBatchStatus == 'Failed' || string.isBlank(displayedBatchStatus)) {
+                disableBatchAccountButton = false;
             }
             else
             {
-                displayBatchStatus = 'Processing';
+                disableBatchAccountButton = true;
             }
-            batchStatus =  prefixBatchStatus + displayBatchStatus;
         }
 
-        if (displayBatchStatus == 'Ready' || displayBatchStatus == 'Failed' || displayBatchStatus == '')
-        {
-            disableBatchAccountButton = false;  // enable batch button
-        }
-
-        // check how many Batch jobs currently are running, disable batch button if excceed the max
-        if (!disableBatchAccountButton)
-        {
-            List<AsyncApexJob> jobList = [
-                        Select Id, Status
-                        from AsyncApexJob
-                        where Status IN ('Preparing', 'Processing', 'Queued') and JobType = 'BatchApex'
-                        order by createddate desc
-                        LIMIT 5
-            ];
-
-            if (jobList.size() == 5)
-            {
-                batchMessage = 'Max number of batches are currently running, please wait for some time if you want to batch the associated accounts!';
-                disableBatchAccountButton = true; // disable batch button
+        // disable button if exceeds maxium running batches
+        if (!disableBatchAccountButton) {
+            if (getNumOfRunningBatches() == 5) {
+                batchMessage = 'Warning: Max number of account group batches are currently running, please wait until the other account groups are created and try again.';
+                disableBatchAccountButton = true;
             }
         }
 
         return disableBatchAccountButton;
     }
-    
+
+    private boolean isDefaultGroupChanged()
+    {
+        Set<ID> setAccountIds;
+        boolean isChanged = false;
+        setAccountIds = cec.AddedAccountIds(c.id);
+
+        if (setAccountIds.size() <= 0)
+        {
+            setAccountIds = cec.ExcludedAccountIds(c.id);
+        }
+        if (setAccountIds.size() > 0)
+        {
+            isChanged = true;
+        }
+
+        return isChanged;
+    }
+
+    private string getDisplayedBatchStatus()
+    {
+        xmNotificationGroups__c[] xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
+
+        string displayedBatchStatus;
+        if (xmGroup.size() > 0) {
+            if (xmGroup[0].Status__c == 'New') {
+                displayedBatchStatus = 'New';
+            } else if (xmGroup[0].Status__c == 'Failed') {
+                displayedBatchStatus = 'Failed';
+            } else if (xmGroup[0].Status__c == 'Completed') {
+                displayedBatchStatus = 'Ready';
+            } else {
+                displayedBatchStatus = 'Processing';
+            }
+        }
+
+        return displayedBatchStatus;
+    }
+
+    private integer getNumOfRunningBatches()
+    {
+        List<AsyncApexJob> jobList = [
+                SELECT Id, Status
+                FROM AsyncApexJob
+                WHERE Status IN ('Preparing', 'Processing', 'Queued') AND JobType = 'BatchApex'
+                ORDER BY createddate DESC
+                LIMIT 5
+        ];
+
+        return jobList.size();
+    }
+
+    public PageReference refreshBatchStatus()
+    {
+        return null;
+    }
+
     public PageReference Beginning() 
     { //user clicked beginning
       counter = 0;

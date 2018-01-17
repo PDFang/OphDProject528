@@ -30,12 +30,17 @@ global class XMNotificationGroupBatch implements Database.Batchable<Sobject>, Da
 
             for(Contact c : scope) {
                 if(!xmPersonIds.contains(c.xmPerson__c)) {
-                    String primaryDeviceId = getPrimaryEmailDeviceId(c.xmPerson__r.xmPersonUID__c, deviceService);
-                    if (primaryDeviceId != null) {
-                        //the method returns the Json, but it already logs it using System.debug in the method that is called
-                        String resultJson = groupService.AddUserToGroup(groupName, primaryDeviceId, 'DEVICE');
+                    try {
+                        String primaryDeviceId = getPrimaryEmailDeviceId(c.xmPerson__r.xmPersonUID__c, deviceService);
+                        if (primaryDeviceId != null) {
+                            //the method returns the Json, but it already logs it using System.debug in the method that is called
+                            String resultJson = groupService.AddUserToGroup(groupName, primaryDeviceId, 'DEVICE');
+                        }
+                        xmPersonIds.add(c.xmPerson__c);
                     }
-                    xmPersonIds.add(c.xmPerson__c);
+                    catch(Exception ex) {
+                        //ignore the error and move on to the next user
+                    }
                 }
             }
         }
