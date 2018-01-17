@@ -29,7 +29,6 @@ public class CaseEventNotificationExtension
     public List<String> xMattersFieldMapping{get; private set;}
     // list of forms setup in xMatters_Forms__mdt
     public List<SelectOption> xMattersForms{get; private set;}
-    public xmNotificationGroups__c[] xmGroup {private get; private set;}
 
     private final List<RecordType> recordTypes;
     private ID selRecordTypeId;
@@ -503,7 +502,7 @@ public class CaseEventNotificationExtension
 
     private string getDisplayedBatchStatus()
     {
-        xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
+        xmNotificationGroups__c[] xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
 
         string displayedBatchStatus;
         if (xmGroup.size() > 0) {
@@ -598,10 +597,14 @@ public class CaseEventNotificationExtension
 
             // get xmNotificationGroups__c batch id
             string xmGroupId;
-            if (xmGroup.size() > 0)
+            if (xmSelectedSendMethod == 'ByAccounts')
             {
-                if (xmGroup[0].Status__c == 'Completed')
-                    xmGroupId = xmGroup[0].Id;
+                xmNotificationGroups__c[] xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
+                if (xmGroup.size() > 0)
+                {
+                    if (xmGroup[0].Status__c == 'Completed')
+                        xmGroupId = xmGroup[0].Id;
+                }
             }
 
             xmNotification__c xmNotification = new xmNotification__c(
