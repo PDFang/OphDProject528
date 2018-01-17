@@ -29,9 +29,9 @@ public class CSOCaseOrderDetailHelper {
 			}
 
 			if(currentCase.CustomerOrder__c == null){
-				String html = '<a href="/' + currentCase.Id + '"><b><u>here</u></b></a>';
+				String html = '<a href="/' + currentCase.Id + '"><b><u>Click here</u></b></a>';
 				ApexPages.addMessage(
-						new ApexPages.Message(ApexPages.Severity.INFO, 'This Case does not have a Customer Order placed via CSO.  Click' + html + 'to return to the Case record.')
+						new ApexPages.Message(ApexPages.Severity.INFO, 'This Case does not have a Customer Order placed via CSO.' + html + 'to return to the Case record.')
 				);
 				return;
 			}
