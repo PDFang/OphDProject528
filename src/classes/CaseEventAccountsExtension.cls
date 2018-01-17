@@ -220,13 +220,23 @@ public class CaseEventAccountsExtension
     {
         // create group in Xmatters
         string xmGroupName =  'Event_' + c.CaseNumber + '_' + Datetime.now().format('yyyyMMddHHmmssSSS'); // e.g.Event_00830369_12012017225545
-        XMRestGroup xm = new XMRestGroup();
+        boolean xmError = false;
         XMGroupModel xmGroup = null;
-        xmGroup = xm.CreateNewGroupWithResponseDetail(xmGroupName);
+        try {
+            XMRestGroup xm = new XMRestGroup();
+            xmGroup = xm.CreateNewGroupWithResponseDetail(xmGroupName);
+            boolean xmAddShiftToGroup = xm.AddShiftToGroup(xmGroupName, '24x7');
+            xmError = (String.isBlank(xmGroup.id) || !xmAddShiftToGroup) ? true: false;
+        }catch(Exception ex){
+            xmError = true;
+        }
 
-        // create Notification Group
-        if (!String.isBlank(xmGroup.id) && xm.AddShiftToGroup(xmGroupName, '24x7'))
+        if (xmError) {
+            batchMessage = 'An error occurred with xMatters when attempting to create the account group. Please try again.';
+        }
+        else
         {
+            // create Notification Group
             try{
                 xmNotificationGroups__c xmNotificationGroup = new xmNotificationGroups__c(
                         Case__c = c.Id,
@@ -240,13 +250,8 @@ public class CaseEventAccountsExtension
                 Id xmNotificationAccountQueueableJobID = System.enqueueJob(new xmNotificationAccountQueueable(xmNotificationGroup));
 
             }catch(Exception ex){
-                System.Debug('BatchAssociatedAccounts - creating Account Group in Salesforce: ' + ex.getMessage());
                 batchMessage = 'An error occurred with Salesforce when attempting to create the account group. Please try again.';
             }
-        }
-        else
-        {
-            batchMessage = 'An error occurred with xMatters when attempting to create the account group. Please try again.';
         }
     }
 
