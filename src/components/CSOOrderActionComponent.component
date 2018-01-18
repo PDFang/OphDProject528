@@ -103,11 +103,13 @@
     </style>
 
 
-    <apex:form>
+    <apex:form >
 
         <div id="toaster"></div>
 
-
+    <div id="showThresholdExeedMessageDiv">
+        <label>{!retMappings[0].Threshold_Exceeds_Message__c}</label>
+    </div>
     <div id="orderAction">
         <apex:pageBlock id="orderActionBlock">
             <h>Order Details</h>
@@ -147,7 +149,7 @@
                     <p>
                     <div class="custom-control custom-checkbox" >
                         <span id="publiccommentDiv" data-toggle="popover" data-trigger="hover" data-content="Checking this box will make your comment visible to the Customer in Support Site">
-                             <apex:outputLabel  style="font-weight:100; padding-right:5px;" styleClass="custom-control-label" for="publicLIComment">Public</apex:outputLabel>
+                             <apex:outputLabel style="font-weight:100; padding-right:5px;" styleClass="custom-control-label" for="publicLIComment">Public</apex:outputLabel>
                             <apex:inputCheckbox styleClass="custom-control-input" id="publicLIComment"/>
                         </span>
                     </div>
@@ -182,7 +184,7 @@
                     </div>
                     <div class="custom-control custom-checkbox" >
                         <apex:inputCheckbox styleClass="custom-control-input" id="updateAllCheckbox" />
-                        <apex:outputLabel  style="font-weight:100;" styleClass="custom-control-label" for="updateAllCheckbox">Check this checbox if you want to update all other Line Item Status.</apex:outputLabel>
+                        <apex:outputLabel style="font-weight:100;" styleClass="custom-control-label" for="updateAllCheckbox">Check this checbox if you want to update all other Line Item Status.</apex:outputLabel>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -227,6 +229,13 @@
       $(document).ready(function() {
            getDetails();
            $("#publiccommentDiv").popover({ trigger: "hover" });
+
+           if({!caseDet[0].CSO_Resolution_Type__c == 'Disconnected IP Voice'}){
+               $('#showThresholdExeedMessageDiv').show();
+           }
+           else{
+               $('#showThresholdExeedMessageDiv').hide();
+           }
         });
 
       var isDateField =[];
@@ -296,6 +305,10 @@
                 colObject.title = 'Parent Line Item';
                 var template = '#{ #<a href="/#: data.RelatedLineItem__c #" target="_blank" name="ParentLineItem" style="color:blue;">#= data.ParentLineItem #</a># } #';
                  colObject.template = template;
+            }else if(name == 'StartDate__c'){
+                var format = '{0:MM/dd/yy hh:mm tt}'
+                console.log(colObject.format);
+                colObject.format = format;
             }
 
             columnMap.push(colObject);

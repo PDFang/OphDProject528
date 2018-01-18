@@ -5,12 +5,18 @@
 public with sharing class CSOOrderActionCompController {
 
 	public String currentCaseId{get;set;}
+	public List<Case> caseDet{get; set;}
+	public List<CSOOrderResolutionColumnMapping__c> retMappings {get; set;}
 
 
 	public CSOOrderActionCompController(){
 		if (currentCaseId == null) {
 			currentCaseId = System.currentPageReference().getParameters().get('id');
 		}
+
+		caseDet = getCurrentCase(currentCaseId);
+		retMappings = getMappings(caseDet[0].CSO_Resolution_Type__c);
+
 	}
 
 	final static set<string> lineItemColumns = new set<string>{
@@ -37,6 +43,7 @@ public with sharing class CSOOrderActionCompController {
 	static map<string,string> columnNameTitleMap = new map<string, string>();
 	static Case currentCase;
 
+
 	public string ItemStatus
 	{
 		get
@@ -48,10 +55,11 @@ public with sharing class CSOOrderActionCompController {
 			list<CSOOrderResolutionColumnMapping__c> mappings = getMappings(cases[0].CSO_Resolution_Type__c);
 			if(mappings != null && !mappings.isEmpty()){
 				statusList = mappings[0].Line_Item_Status__c.split(';');
+			}else{
+				statusList = new string[]{};
 			}
-            statusList = new string[]{};
 			statusList.sort();
-
+			system.debug('statusList ==>' + statusList);
 			return JSON.Serialize(statusList);
 		}
 	}
@@ -60,18 +68,18 @@ public with sharing class CSOOrderActionCompController {
 	{
 		get
 		{
-			String[] statusList = new String[]{};
+			String[] popsiteList = new String[]{};
 			list<case> cases = getCurrentCase(currentCaseId);
 			if(cases.isEmpty())
 				return 'NONE';
 			list<CSOOrderResolutionColumnMapping__c> mappings = getMappings(cases[0].CSO_Resolution_Type__c);
 			if(!mappings.isEmpty()){
-                if(mappings[0].POP_Site__c != null)
-				    statusList = mappings[0].POP_Site__c.split(';');
+				if(mappings[0].POP_Site__c != null)
+					popsiteList = mappings[0].POP_Site__c.split(';');
 			}
-			statusList.sort();
+			popsiteList.sort();
 
-			return JSON.Serialize(statusList);
+			return JSON.Serialize(popsiteList);
 		}
 	}
 
@@ -161,7 +169,8 @@ public with sharing class CSOOrderActionCompController {
 	}
 
 	private static list<CSOOrderResolutionColumnMapping__c> getMappings(string CSOCaseType){
-			return [Select DisplayColumns__c, CSO_Resolution_Type__c, Line_Item_Status__c ,POP_Site__c, Display_Buttons__c, Instrument_Id__c from CSOOrderResolutionColumnMapping__c where  CSO_Resolution_Type__c = :CSOCaseType Limit 1];
+        System.debug('CSOCaseType =>>' + CSOCaseType);
+			return [Select DisplayColumns__c, CSO_Resolution_Type__c, Line_Item_Status__c ,POP_Site__c, Display_Buttons__c, Instrument_Id__c, Threshold_Exceeds_Message__c from CSOOrderResolutionColumnMapping__c where  CSO_Resolution_Type__c = :CSOCaseType Limit 1];
 	}
 
 
@@ -256,9 +265,11 @@ public with sharing class CSOOrderActionCompController {
 		try{
 			if(status == '' || status == null)
 				return 'Invalid Staus.';
+			List<OrderLineGeneralItems__c> orderLineItemList = new List<OrderLineGeneralItems__c>();
+			list<case> cases = getCurrentCase(caseId);
+			currentCase = cases[0];
 			if(updateAll){
-				list<case> cases = getCurrentCase(caseId);
-				currentCase = cases[0];
+
 				list<CSOOrderResolutionColumnMapping__c> mappings = getMappings(currentCase.CSO_Resolution_Type__c);
 				List<OrderLineGeneralItems__c> lineGeneralItems = getAllLineItems(currentCase, mappings);
 				for(OrderLineGeneralItems__c li : lineGeneralItems){
@@ -266,12 +277,26 @@ public with sharing class CSOOrderActionCompController {
 				}
 				update lineGeneralItems;
 			}else{
-				OrderLineGeneralItems__c lineItem = new OrderLineGeneralItems__c(
+				orderLineItemList.add(new OrderLineGeneralItems__c(
 						Id = lineItemId,
 						ItemStatus__c = status
+				));
+
+
+				List<OrderLineGeneralItems__c> childOrderLineItemList = new List<OrderLineGeneralItems__c>(
+					[Select Id from OrderLineGeneralItems__c where RelatedLineItem__c =: lineItemId]
 				);
 
-				update lineItem;
+				if(currentCase.CSO_Resolution_Type__c == 'DID'){
+					for(OrderLineGeneralItems__c childOrderLineItem: childOrderLineItemList){
+						orderLineItemList.add(new OrderLineGeneralItems__c(
+								Id = childOrderLineItem.Id,
+								ItemStatus__c = status
+						));
+					}
+				}
+
+				update orderLineItemList;
 			}
 			return 'Success';
 		}catch (Exception ex){

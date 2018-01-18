@@ -142,7 +142,7 @@
                     <div class="modal-footer">
                         <button class="btn btn-primary" id="caseCommentSaveButton" onclick="SaveCaseComment(this); return false;">Save</button>
                         <!--<apex:commandButton id="caseCommentSaveButton" onclick="SaveCaseComment(this); return false;" reRender="{!rerender}">Save</apex:commandButton>-->
-                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" id="cancelCaseCommentBtn">Cancel</button>
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" id="cancelCaseCommentBtn" onclick="clearComments(this); return false;">Cancel</button>
                         <button class="btn btn-primary" id="sendToCOPButton" onclick="sendToCOPQueue(this); return false;">Send To COPs Queue</button>
                         <div id="sendToCOPDiv" style="float:left" >
 
@@ -240,6 +240,7 @@
                             $(obj).prop("disabled", false);
                             $(obj).text("Save");
                             $('#cancelCaseCommentBtn').show();
+                            $('[id$=publicCommentCheckbox]').prop('checked', false);
                             showCaseSuccess('Comment saved successfully.');
 
 
@@ -344,6 +345,12 @@
                   $('#caseCommentToaster').addClass('alert');
                   $('#caseCommentToaster').addClass('show');
                   window.setTimeout(function(){ $('#caseCommentToaster').removeClass('show');$('#caseCommentToaster').removeClass('alert');$('#caseCommentToaster').html('');}, 5000);
+            }
+
+            function clearComments(obj){
+                  $('[id$=caseCommentTextArea]').val('');
+                  $('[id$=publicCommentCheckbox]').prop('checked', false);
+
             }
 
     </script>

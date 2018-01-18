@@ -17,6 +17,7 @@ public class CaseEventAccountsExtension
     private Set<Id> accountIds;
     public boolean canEdit{public get;private set;}
     public boolean canBatch{public get; private set;}
+    public boolean enablePoller {public get; private set;}
     public CaseEventClass cec{public get;private set;}
     public CaseEventClass.AccountIncident[] acctIncidents{
         												get{
@@ -54,6 +55,11 @@ public class CaseEventAccountsExtension
 
         if(c.RecordType.Name == 'Maintenance Notification'){
                 canBatch = true;
+                enablePoller = true;
+                xmNotificationGroups__c[] xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
+                if (xmGroup.size() <= 0) {
+                    enablePoller = false;
+                }
         }
     }
     
@@ -214,13 +220,23 @@ public class CaseEventAccountsExtension
     {
         // create group in Xmatters
         string xmGroupName =  'Event_' + c.CaseNumber + '_' + Datetime.now().format('yyyyMMddHHmmssSSS'); // e.g.Event_00830369_12012017225545
-        XMRestGroup xm = new XMRestGroup();
+        boolean xmError = false;
         XMGroupModel xmGroup = null;
-        xmGroup = xm.CreateNewGroupWithResponseDetail(xmGroupName);
+        try {
+            XMRestGroup xm = new XMRestGroup();
+            xmGroup = xm.CreateNewGroupWithResponseDetail(xmGroupName);
+            boolean xmAddShiftToGroup = xm.AddShiftToGroup(xmGroupName, '24x7');
+            xmError = (String.isBlank(xmGroup.id) || !xmAddShiftToGroup) ? true: false;
+        }catch(Exception ex){
+            xmError = true;
+        }
 
-        // create Notification Group
-        if (!String.isBlank(xmGroup.id) && xm.AddShiftToGroup(xmGroupName, '24x7'))
+        if (xmError) {
+            batchMessage = 'An error occurred with xMatters when attempting to create the account group. Please try again.';
+        }
+        else
         {
+            // create Notification Group
             try{
                 xmNotificationGroups__c xmNotificationGroup = new xmNotificationGroups__c(
                         Case__c = c.Id,
@@ -234,13 +250,8 @@ public class CaseEventAccountsExtension
                 Id xmNotificationAccountQueueableJobID = System.enqueueJob(new xmNotificationAccountQueueable(xmNotificationGroup));
 
             }catch(Exception ex){
-                System.Debug('BatchAssociatedAccounts - creating Account Group in Salesforce: ' + ex.getMessage());
                 batchMessage = 'An error occurred with Salesforce when attempting to create the account group. Please try again.';
             }
-        }
-        else
-        {
-            batchMessage = 'An error occurred with xMatters when attempting to create the account group. Please try again.';
         }
     }
 
@@ -256,14 +267,11 @@ public class CaseEventAccountsExtension
         // enable button in certain status
         if (!disableBatchAccountButton) {
             string displayedBatchStatus = getDisplayedBatchStatus();
-            batchStatus = (string.isBlank(displayedBatchStatus)) ? displayedBatchStatus : 'Account Batch Status: ' + displayedBatchStatus;
-            if (displayedBatchStatus == 'Ready' || displayedBatchStatus == 'Failed' || string.isBlank(displayedBatchStatus)) {
-                disableBatchAccountButton = false;
+            if (!string.isBlank(displayedBatchStatus)){
+                batchStatus = 'Account Batch Status: ' + displayedBatchStatus;
+                enablePoller = true;
             }
-            else
-            {
-                disableBatchAccountButton = true;
-            }
+            disableBatchAccountButton = (displayedBatchStatus == 'Ready' || displayedBatchStatus == 'Failed' || string.isBlank(displayedBatchStatus)) ? false : true;
         }
 
         // disable button if exceeds maxium running batches
