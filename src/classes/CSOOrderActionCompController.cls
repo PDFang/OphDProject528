@@ -5,12 +5,16 @@
 public with sharing class CSOOrderActionCompController {
 
 	public String currentCaseId{get;set;}
+	public List<Case> caseDet{get; set;}
 
 
 	public CSOOrderActionCompController(){
 		if (currentCaseId == null) {
 			currentCaseId = System.currentPageReference().getParameters().get('id');
 		}
+
+		caseDet = getCurrentCase(currentCaseId);
+
 	}
 
 	final static set<string> lineItemColumns = new set<string>{
@@ -37,6 +41,7 @@ public with sharing class CSOOrderActionCompController {
 	static map<string,string> columnNameTitleMap = new map<string, string>();
 	static Case currentCase;
 
+
 	public string ItemStatus
 	{
 		get
@@ -48,10 +53,11 @@ public with sharing class CSOOrderActionCompController {
 			list<CSOOrderResolutionColumnMapping__c> mappings = getMappings(cases[0].CSO_Resolution_Type__c);
 			if(mappings != null && !mappings.isEmpty()){
 				statusList = mappings[0].Line_Item_Status__c.split(';');
+			}else{
+				statusList = new string[]{};
 			}
-            statusList = new string[]{};
 			statusList.sort();
-
+			system.debug('statusList ==>' + statusList);
 			return JSON.Serialize(statusList);
 		}
 	}
@@ -60,18 +66,18 @@ public with sharing class CSOOrderActionCompController {
 	{
 		get
 		{
-			String[] statusList = new String[]{};
+			String[] popsiteList = new String[]{};
 			list<case> cases = getCurrentCase(currentCaseId);
 			if(cases.isEmpty())
 				return 'NONE';
 			list<CSOOrderResolutionColumnMapping__c> mappings = getMappings(cases[0].CSO_Resolution_Type__c);
 			if(!mappings.isEmpty()){
-                if(mappings[0].POP_Site__c != null)
-				    statusList = mappings[0].POP_Site__c.split(';');
+				if(mappings[0].POP_Site__c != null)
+					popsiteList = mappings[0].POP_Site__c.split(';');
 			}
-			statusList.sort();
+			popsiteList.sort();
 
-			return JSON.Serialize(statusList);
+			return JSON.Serialize(popsiteList);
 		}
 	}
 
