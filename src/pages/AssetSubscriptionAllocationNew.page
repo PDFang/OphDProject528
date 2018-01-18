@@ -353,7 +353,7 @@
     <script type="text/x-kendo-template" id="windowTemplate">
         <p>Delete this Allocation for <strong>#= AssetName == null ? SubscriptionName : AssetName #</strong> ? </p>
         <p>Allocated Quantity = <strong>#= AllocatedQuantity == null ? 0 : AllocatedQuantity #</strong></p>
-        <p>Allocated Percentage = <strong>#= AllocatedPercentage == null ? 0 : AllocatedPercentage #</strong></p>
+        <p>Allocated Hours % = <strong>#= AllocatedPercentage == null ? 0 : AllocatedPercentage #</strong></p>
         <p>Allocated Hours = <strong>#= AllocatedHours #</strong> </p>
         <div class="modal-footer">
             <button class="k-button" id="yesButton">Yes</button>
