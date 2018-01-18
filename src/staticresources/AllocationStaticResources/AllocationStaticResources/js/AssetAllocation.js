@@ -147,7 +147,7 @@
                                                 return false;
                                             }
                                              if(input.val() == 0 && input.is("[name='AllocatedPercentage']") && rowData.Quantity == 1){
-                                                input.attr("data-percentageValidation-msg", " Allocated Percentage cannot be zero");
+                                                input.attr("data-percentageValidation-msg", " Allocated Hours % cannot be zero");
                                                 return false;
                                             }
 
@@ -233,7 +233,7 @@
                     },
                     {
                         field:"AllocatedPercentage",
-                        title:"Allocated Percentage",
+                        title:"Allocated Hours %",
                         editable:true
                     },
                     {
@@ -583,7 +583,7 @@
           if(rowData){
               rowData.Asset = dataItem.AssetId;
               rowData.AssetName = dataItem.AssetName;
-              rowData.AllocatedPercentage = null;
+              rowData.AllocatedPercentage = dataItem.RemainingPercentage;
               rowData.AllocatedQuantity = dataItem.RemainingQuantity;
               rowData.AllocatedHours = 0;
               rowData.Quantity = dataItem.Quantity;
