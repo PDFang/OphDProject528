@@ -167,6 +167,7 @@ public with sharing class CSOOrderActionCompController {
 	}
 
 	private static list<CSOOrderResolutionColumnMapping__c> getMappings(string CSOCaseType){
+        System.debug('CSOCaseType =>>' + CSOCaseType);
 			return [Select DisplayColumns__c, CSO_Resolution_Type__c, Line_Item_Status__c ,POP_Site__c, Display_Buttons__c, Instrument_Id__c from CSOOrderResolutionColumnMapping__c where  CSO_Resolution_Type__c = :CSOCaseType Limit 1];
 	}
 
