@@ -6,6 +6,7 @@ public with sharing class CSOOrderActionCompController {
 
 	public String currentCaseId{get;set;}
 	public List<Case> caseDet{get; set;}
+	public List<CSOOrderResolutionColumnMapping__c> retMappings {get; set;}
 
 
 	public CSOOrderActionCompController(){
@@ -14,6 +15,7 @@ public with sharing class CSOOrderActionCompController {
 		}
 
 		caseDet = getCurrentCase(currentCaseId);
+		retMappings = getMappings(caseDet[0].CSO_Resolution_Type__c);
 
 	}
 
@@ -168,7 +170,7 @@ public with sharing class CSOOrderActionCompController {
 
 	private static list<CSOOrderResolutionColumnMapping__c> getMappings(string CSOCaseType){
         System.debug('CSOCaseType =>>' + CSOCaseType);
-			return [Select DisplayColumns__c, CSO_Resolution_Type__c, Line_Item_Status__c ,POP_Site__c, Display_Buttons__c, Instrument_Id__c from CSOOrderResolutionColumnMapping__c where  CSO_Resolution_Type__c = :CSOCaseType Limit 1];
+			return [Select DisplayColumns__c, CSO_Resolution_Type__c, Line_Item_Status__c ,POP_Site__c, Display_Buttons__c, Instrument_Id__c, Threshold_Exceeds_Message__c from CSOOrderResolutionColumnMapping__c where  CSO_Resolution_Type__c = :CSOCaseType Limit 1];
 	}
 
 
@@ -263,9 +265,11 @@ public with sharing class CSOOrderActionCompController {
 		try{
 			if(status == '' || status == null)
 				return 'Invalid Staus.';
+			List<OrderLineGeneralItems__c> orderLineItemList = new List<OrderLineGeneralItems__c>();
+			list<case> cases = getCurrentCase(caseId);
+			currentCase = cases[0];
 			if(updateAll){
-				list<case> cases = getCurrentCase(caseId);
-				currentCase = cases[0];
+
 				list<CSOOrderResolutionColumnMapping__c> mappings = getMappings(currentCase.CSO_Resolution_Type__c);
 				List<OrderLineGeneralItems__c> lineGeneralItems = getAllLineItems(currentCase, mappings);
 				for(OrderLineGeneralItems__c li : lineGeneralItems){
@@ -273,12 +277,26 @@ public with sharing class CSOOrderActionCompController {
 				}
 				update lineGeneralItems;
 			}else{
-				OrderLineGeneralItems__c lineItem = new OrderLineGeneralItems__c(
+				orderLineItemList.add(new OrderLineGeneralItems__c(
 						Id = lineItemId,
 						ItemStatus__c = status
+				));
+
+
+				List<OrderLineGeneralItems__c> childOrderLineItemList = new List<OrderLineGeneralItems__c>(
+					[Select Id from OrderLineGeneralItems__c where RelatedLineItem__c =: lineItemId]
 				);
 
-				update lineItem;
+				if(currentCase.CSO_Resolution_Type__c == 'DID'){
+					for(OrderLineGeneralItems__c childOrderLineItem: childOrderLineItemList){
+						orderLineItemList.add(new OrderLineGeneralItems__c(
+								Id = childOrderLineItem.Id,
+								ItemStatus__c = status
+						));
+					}
+				}
+
+				update orderLineItemList;
 			}
 			return 'Success';
 		}catch (Exception ex){
