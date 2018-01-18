@@ -147,7 +147,7 @@
                                                 return false;
                                             }
                                              if(input.val() == 0 && input.is("[name='AllocatedPercentage']") && rowData.Quantity == 1){
-                                                input.attr("data-percentageValidation-msg", " Allocated Percentage cannot be zero");
+                                                input.attr("data-percentageValidation-msg", " Allocated Hours % cannot be zero");
                                                 return false;
                                             }
 
@@ -233,7 +233,7 @@
                     },
                     {
                         field:"AllocatedPercentage",
-                        title:"Allocated Percentage",
+                        title:"Allocated Hours %",
                         editable:true
                     },
                     {
