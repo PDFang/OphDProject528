@@ -468,11 +468,21 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         //phase1.Projected_Deadline__c = system.today() + 30;
         projectList.add(phase1);
 
+        Project__c phase2 = new Project__c();
+        phase2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_SAAS);
+        phase2.ProjectManager__c = '00539000005M7TO';
+        //phase1.Projected_Deadline__c = system.today() + 30;
+        projectList.add(phase2);
+
         insert projectList;
 
         phase1.ParentProject__c = project1.Id;
         //phase1.Phase_Status__c = 'Closed';
         update phase1;
+
+        phase2.ParentProject__c = project1.Id;
+        //phase1.Phase_Status__c = 'Closed';
+        update phase2;
 
     }
 
@@ -491,6 +501,17 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         asset3.Quantity = 5.00;
         asset3.Type__c = 'MRC';
         assetList.add(asset3);
+
+        //create SaaS assets
+        Asset asset4 = new Asset();
+        asset4.RecordTypeId = recordTypeMap.get(ASSET_TYPE_SAAS);
+        asset4.Name = 'AssetTriggerHandlerTest Saas Asset 2';
+        asset4.AccountId = acct.Id;
+        asset4.Parent_Project__c = projectList[0].Id;
+        asset4.Sales_Price__c = 1000.00;
+        asset4.Quantity = 1.00;
+        asset4.Type__c = 'NRC';
+        assetList.add(asset4);
 
         insert assetList;
         System.debug('assetList =>' + assetList.size());
@@ -520,10 +541,25 @@ private class AssetSubscriptionAllocationNewCtrlTest {
 
         insert subscription;
 
+        SBQQ__Subscription__c subscription2 = new SBQQ__Subscription__c();
+        subscription2.SBQQ__Account__c =  acct.id;
+        //subscripti2on.SBQQ__QuoteLine__c = QuoteLine.id;
+        subscription2.SBQQ__Quantity__c = 1;
+        subscription2.SBQQ__Product__c = productList[0].Id;
+        subscription2.Budgeted_Hours__c = 10;
+        subscription2.Project_Phase__c = projectList[1].Id;
+
+        insert subscription2;
+
         subscriptionReplica = new SubscriptionReplica__c();
         subscriptionReplica = [SELECT Id, Account__c, Product__c, ParentProject__c, Subscription__r.Project_Phase__c, Quantity__c, Subscription__c FROM SubscriptionReplica__c WHERE Subscription__c = :subscription.Id limit 1];
         subscriptionReplica.ParentProject__c = projectList[0].id;
         update subscriptionReplica;
+
+        SubscriptionReplica__c subscriptionReplica2 = new SubscriptionReplica__c();
+        subscriptionReplica2 = [SELECT Id, Account__c, Product__c, ParentProject__c, Subscription__r.Project_Phase__c, Quantity__c, Subscription__c FROM SubscriptionReplica__c WHERE Subscription__c = :subscription2.Id limit 1];
+        subscriptionReplica2.ParentProject__c = projectList[0].id;
+        update subscriptionReplica2;
 
         projectSubscriptionAllocation = new Project_Subscription_Allocation__c(
                 Project__c = subscriptionReplica.Subscription__r.Project_Phase__c,
