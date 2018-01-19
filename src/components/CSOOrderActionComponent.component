@@ -253,8 +253,11 @@
                    '{!currentCaseId}',
                     function(result,event){
                           if (event.status){
-                              if(result != null && result.length > 1 && result.indexOf('Error occured while loading the order line') == -1){
-                                   generateGrid(JSON.parse(result));
+                              if(result != null && result.indexOf('Error occured while loading the order line') == -1){
+                                   if(result == '')
+                                        generateGrid('');
+                                   else
+                                        generateGrid(JSON.parse(result));
                                    console.log('results =>' +result);
                               }else{
                                   showError(result);
@@ -268,8 +271,8 @@
       }
 
        function generateGrid(response) {
-           var model = generateModel(response);
-           var columns = generateColumns(response);
+           var model = response == '' ? '' : generateModel(response);
+           var columns = response == '' ? '' : generateColumns(response);
             var grid = $("#orderLineItems").kendoGrid({
               dataSource: {
                 transport:{
@@ -286,7 +289,8 @@
               },
               columns: columns,
               dataBound:gridDataBound,
-              resizable: true
+              resizable: true,
+              noRecords: true
             });
       }
 

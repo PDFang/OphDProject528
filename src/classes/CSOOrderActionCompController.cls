@@ -112,7 +112,7 @@ public with sharing class CSOOrderActionCompController {
 
 			List<OrderLineGeneralItems__c> lineGeneralItems = getAllLineItems(currentCase, mappings);
 			if(lineGeneralItems == null || lineGeneralItems.isEmpty())
-				return 'Error occured while loading the order line items grid. No Line Items were found to show';
+				return '';
 
 			list<string> buttons = getButtons(mappings);
 
@@ -304,7 +304,7 @@ public with sharing class CSOOrderActionCompController {
 					[Select Id from OrderLineGeneralItems__c where RelatedLineItem__c =: lineItemId]
 				);
 
-				if(currentCase.CSO_Resolution_Type__c == 'DID'){
+				if(currentCase.CSO_Resolution_Type__c == 'DID - Add - Manual Process'){
 					for(OrderLineGeneralItems__c childOrderLineItem: childOrderLineItemList){
 						orderLineItemList.add(new OrderLineGeneralItems__c(
 								Id = childOrderLineItem.Id,
