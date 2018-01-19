@@ -583,7 +583,7 @@
           if(rowData){
               rowData.Asset = dataItem.AssetId;
               rowData.AssetName = dataItem.AssetName;
-              rowData.AllocatedPercentage = null;
+              rowData.AllocatedPercentage = dataItem.RemainingPercentage;
               rowData.AllocatedQuantity = dataItem.RemainingQuantity;
               rowData.AllocatedHours = 0;
               rowData.Quantity = dataItem.Quantity;
