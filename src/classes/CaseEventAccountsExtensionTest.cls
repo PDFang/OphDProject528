@@ -1,6 +1,9 @@
 @IsTest
 private class CaseEventAccountsExtensionTest {
 
+    private static Case cNotification;
+    private static xmNotificationGroups__c xmNotificationGroup;
+
     static testMethod void TestCaseEventAccountsExtension()
     {
         createSiteConfig();
@@ -95,6 +98,117 @@ private class CaseEventAccountsExtensionTest {
         Test.stopTest();
     }
 
+    static testMethod void TestGroupBatchNew()
+    {
+        createGroupBatchTestData();
+        XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+
+        Test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, fakeResponse);
+        CaseEventAccountsExtension  testExtension = new CaseEventAccountsExtension (new ApexPages.StandardController(cNotification));
+        update xmNotificationGroup;
+        boolean disableBatchAccount = testExtension.getDisableBatchAccount();
+
+        Test.stopTest();
+
+        system.assertEquals(true, disableBatchAccount);
+    }
+
+    static testMethod void TestGroupBatchInProgress()
+    {
+        createGroupBatchTestData();
+        XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+
+        Test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, fakeResponse);
+        CaseEventAccountsExtension  testExtension = new CaseEventAccountsExtension (new ApexPages.StandardController(cNotification));
+        xmNotificationGroup.Status__c = 'In Progress';
+        update xmNotificationGroup;
+        boolean disableBatchAccount = testExtension.getDisableBatchAccount();
+
+        Test.stopTest();
+
+        system.assertEquals(true, disableBatchAccount);
+    }
+
+    static testMethod void TestGroupBatchCompleted()
+    {
+        createGroupBatchTestData();
+        XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+
+        Test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, fakeResponse);
+        CaseEventAccountsExtension  testExtension = new CaseEventAccountsExtension (new ApexPages.StandardController(cNotification));
+        xmNotificationGroup.Status__c = 'Completed';
+        update xmNotificationGroup;
+        boolean disableBatchAccount = testExtension.getDisableBatchAccount();
+
+        Test.stopTest();
+
+        system.assertEquals(false, disableBatchAccount);
+    }
+
+    static testMethod void TestGroupBatchFailed()
+    {
+        createGroupBatchTestData();
+        XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+
+        Test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, fakeResponse);
+        CaseEventAccountsExtension  testExtension = new CaseEventAccountsExtension (new ApexPages.StandardController(cNotification));
+        xmNotificationGroup.Status__c = 'Failed';
+        update xmNotificationGroup;
+        boolean disableBatchAccount = testExtension.getDisableBatchAccount();
+
+        Test.stopTest();
+
+        system.assertEquals(false, disableBatchAccount);
+    }
+
+    static testMethod void TestBatchAssociatedAccounts()
+    {
+
+        createGroupBatchTestData();
+
+        XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+
+        Test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, fakeResponse);
+        CaseEventAccountsExtension  testController = new CaseEventAccountsExtension (new ApexPages.StandardController(cNotification));
+
+        testController.BatchAssociatedAccounts();
+
+        Test.stopTest();
+
+        system.assertEquals(null, testController.batchMessage);
+    }
+
+    static testMethod void TestCaseEventAccountsExtensionPages()
+    {
+        createGroupBatchTestData();
+
+        XMRestGroupMockHttpGenerator fakeResponse = new XMRestGroupMockHttpGenerator(200,'Complete','[{"Name": "sForceTest1"}]',null);
+
+        Test.startTest();
+
+        Test.setMock(HttpCalloutMock.class, fakeResponse);
+        CaseEventAccountsExtension  testController = new CaseEventAccountsExtension (new ApexPages.StandardController(cNotification));
+        testController.searchString = '';
+        testController.AssociatedBeginning();
+        testController.AssociatedEnd();
+        testController.refreshBatchStatus();
+        testController.Beginning();
+        testController.Next();
+        testController.End();
+
+        Test.stopTest();
+    }
+
     private static void createSiteConfig()
     {
         SiteConfiguration__c sbx = new SiteConfiguration__c();
@@ -108,4 +222,46 @@ private class CaseEventAccountsExtensionTest {
         insert sbx;
     }
 
+    private static void createGroupBatchTestData()
+    {
+        Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
+        Map<String, Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
+
+        //set default assignment rule
+        database.DMLOptions dmo = new database.DMLOptions();
+        dmo.assignmentRuleHeader.useDefaultRule = true;
+
+        cNotification = new Case(
+                RecordTypeId = rtMapByName.get('Maintenance Notification').getRecordTypeId(),
+                Subject = 'Test Maintenance Notification',
+                Description = 'Test Maintenance Notification',
+                Status = 'New',
+                EventType__c = 'Service Disruption',
+                PlatformsImpacted__c = 'C6 - inContact',
+                ProductImpacted__c = 'inContact',
+                InternalEvent__c = false,
+                Priority = 'P1'
+        );
+
+        cNotification.setOptions(dmo);
+
+        insert cNotification;
+
+        EventAccount__c ea = new EventAccount__c(
+                Event__c = cNotification.Id,
+                Excluded__c = true,
+                Account__c = '0013C0000061qctQAA'
+        );
+
+        insert ea;
+
+        xmNotificationGroup = new xmNotificationGroups__c(
+                Case__c = cNotification.Id,
+                Name = 'test',
+                xmGroupUID__c = 'testID',
+                Status__c = 'New'
+        );
+
+        insert xmNotificationGroup;
+    }
 }
