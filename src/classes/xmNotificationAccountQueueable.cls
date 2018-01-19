@@ -9,31 +9,36 @@ public without sharing class xmNotificationAccountQueueable implements Queueable
 
         try {
             List<CaseEventClass.AccountIncident> accountList = getAssociatedAccounts(notificationGroup.Case__c);
-            createNotificationAccounts(accountList);
-
             system.debug('Added Notification Account records ==> ' + accountList.size());
 
-            //kick off the batch
-            system.debug('triggering the XMNotificationGroupBatch');
-            XMNotificationGroupBatch batch = new XMNotificationGroupBatch(notificationGroup);
+            if(accountList.size() > 0) {
+                createNotificationAccounts(accountList);
 
-            //get the batch size
-            Integer batchSize;
-            AppConfiguration__c config = AppConfiguration__c.getInstance();
-            if(config != null) {
-                batchSize = (Integer)config.XM_Notification_Group_Batch_Size__c;
+                //kick off the batch
+                system.debug('triggering the XMNotificationGroupBatch');
+                XMNotificationGroupBatch batch = new XMNotificationGroupBatch(notificationGroup);
+
+                //get the batch size
+                Integer batchSize;
+                AppConfiguration__c config = AppConfiguration__c.getInstance();
+                if (config != null) {
+                    batchSize = (Integer) config.XM_Notification_Group_Batch_Size__c;
+                } else {
+                    batchSize = 50;
+                }
+
+                System.debug('BatchSize = ' + batchSize);
+
+                //update the notification group status
+                notificationGroup.Status__c = 'Accounts Associated';
+                update notificationGroup;
+
+                Database.executeBatch(batch, batchSize);
             }
             else {
-                batchSize = 50;
+                notificationGroup.Status__c = 'Failed';
+                update notificationGroup;
             }
-
-            System.debug('BatchSize = ' + batchSize);
-
-            //update the notification group status
-            notificationGroup.Status__c = 'Accounts Associated';
-            update notificationGroup;
-
-            Database.executeBatch(batch, batchSize);
         }
         catch(Exception ex) {
             system.debug(ex);
@@ -66,7 +71,10 @@ public without sharing class xmNotificationAccountQueueable implements Queueable
     private List<CaseEventClass.AccountIncident> getAssociatedAccounts(String caseId) {
         List<CaseEventClass.AccountIncident> accountList = new List<CaseEventClass.AccountIncident>();
         List<Case> associatedCaseList = [select Id, RecordTypeId, ProductImpacted__c, PlatformsImpacted__c from Case where Id = :caseId];
+
         if(associatedCaseList != null && associatedCaseList.size() == 1) {
+            system.debug('getting associated accounts for Case ');
+            system.debug(associatedCaseList[0]);
             CaseEventClass cec = new CaseEventClass(associatedCaseList[0]);
 
             accountList = cec.AccountIncidentList();
