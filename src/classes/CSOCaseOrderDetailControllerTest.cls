@@ -20,15 +20,11 @@ private class CSOCaseOrderDetailControllerTest {
 
     static testMethod void CSOCaseActionCompTest() {
         createTestData();
-        //createAssets();
         Test.startTest();
         Test.setCurrentPage(Page.CSOCaseOrderDetail);
 
         ApexPages.currentPage().getParameters().put('id', caseTest.Id);
         CSOCaseActionCompController csoCaseActionCompContrTest = new CSOCaseActionCompController();
-
-
-
         Id copQueueId = '00G70000002CaKC';
 
         string commentTest = CSOCaseActionCompController.saveCaseComment( 'This is from test class', false, caseTest.Id);
@@ -37,19 +33,16 @@ private class CSOCaseOrderDetailControllerTest {
         system.assertEquals('Empty comments are not allowed to save.', commentTest);
 
         string commentTestError = CSOCaseActionCompController.saveCaseComment( 'This is from test class', false, 'test');
-        //system.assertEquals('Success', commentTestError);
 
         string sendToCOPTest = CSOCaseActionCompController.SendToCOPQueue( copQueueId, caseTest.Id);
         system.assertEquals('Success', sendToCOPTest);
 
         string sendToCOPTestError = CSOCaseActionCompController.SendToCOPQueue( copQueueId, 'Test');
-        //system.assertEquals('Success', sendToCOPTest);
 
         string closeCaseTest = CSOCaseActionCompController.closeCSOCase( 'Access', caseTest.Id);
         system.assertEquals('Success', closeCaseTest);
 
         string closeCaseTestError = CSOCaseActionCompController.closeCSOCase( 'Access', 'Test');
-        //system.assertEquals('Success', closeCaseTest);
 
         Test.stopTest();
 
@@ -58,7 +51,6 @@ private class CSOCaseOrderDetailControllerTest {
 
     static testMethod void CSOOrderActionCompTest() {
         createTestData();
-        //createAssets();
         Test.startTest();
         Test.setCurrentPage(Page.CSOCaseOrderDetail);
 
@@ -67,14 +59,10 @@ private class CSOCaseOrderDetailControllerTest {
         String testItemStatus = CSOOrderActionCompContrTest.ItemStatus;
         String testPOPSite = CSOOrderActionCompContrTest.POPSite;
 
-
-
-
         string orderDetailTest = CSOOrderActionCompController.getCurrentOrderDetails(caseTest.Id);
         system.assertNotEquals(null, orderDetailTest);
 
         string orderDetailTestError = CSOOrderActionCompController.getCurrentOrderDetails('test');
-        //system.assertEquals('Success', commentTestError);
 
         string saveCommentTest = CSOOrderActionCompController.saveComment( 'Test Comment', false, orderLineGeneralItemsTest.Id, caseTest.Id);
         system.assertEquals('Success', saveCommentTest);
@@ -82,7 +70,6 @@ private class CSOCaseOrderDetailControllerTest {
         string saveCommentErrorTest = CSOOrderActionCompController.saveComment( null, false, orderLineGeneralItemsTest.Id, caseTest.Id);
         system.assertEquals('Empty comments are not allowed to save.', saveCommentErrorTest);
         saveCommentErrorTest = CSOOrderActionCompController.saveComment( 'Test Comment', false, orderLineGeneralItemsTest.Id,'Test');
-        //system.assertEquals('Success', sendToCOPTest);
 
         string updateStatusTest = CSOOrderActionCompController.updateStatus( 'Completed', orderLineGeneralItemsTest.Id, caseTest.Id, false);
         system.assertEquals('Success', updateStatusTest);
@@ -104,7 +91,6 @@ private class CSOCaseOrderDetailControllerTest {
 
     static testMethod void CSOCaseOrderDetailTest() {
         createTestData();
-        //createAssets();
         Test.startTest();
         Test.setCurrentPage(Page.CSOCaseOrderDetail);
 
@@ -114,7 +100,6 @@ private class CSOCaseOrderDetailControllerTest {
         Boolean hasorderTest = CSOCaseOrderDetailCntrlTest.getHasNoOrder();
         list<CSOCaseOrderDetailController.CSOCaseComment> commentsTest = CSOCaseOrderDetailCntrlTest.comments;
         Case CurrentCaseTest = CSOCaseOrderDetailCntrlTest.CurrentCase;
-
 
         ApexPages.currentPage().getParameters().put('id', caseTest1.Id);
         CSOCaseOrderDetailController CSOCaseOrderDetailCntrlTest1 = new CSOCaseOrderDetailController();
