@@ -52,7 +52,7 @@
                                     </apex:repeat>
                                 </apex:pageBlockSection>
                             </div>
-                            <apex:pageBlockSection title="Comment History" columns="1" id="commentSection" rendered="{!comments.size > 1}">
+                            <apex:pageBlockSection title="Comment History" columns="1" id="commentSection" rendered="{!comments.size > 0}">
                                 <div style="height:150px; overflow-y: scroll;">
                                     <table style="table-layout:fixed; width:100%;">
                                         <thead>
@@ -72,10 +72,12 @@
                                     </table>
                                 </div>
                             </apex:pageBlockSection>
-                            <apex:pageBlockSection title="Case Comment History" columns="1" rendered="{!comments.size < 1}">
+                        <script>twistSection(document.getElementById('{!$Component.caseDetailBlock.commentSection}').getElementsByTagName('img')[0]) </script>
+                            <apex:pageBlockSection title="Case Comment History" columns="1" rendered="{!comments.size < 1}" id="casecommentNoColumn">
                                 <span>No Comments to display.</span>
                             </apex:pageBlockSection>
-                            <script>twistSection(document.getElementById('{!$Component.caseDetailBlock.commentSection}').getElementsByTagName('img')[0]) </script>
+
+                        <script>twistSection(document.getElementById('{!$Component.caseDetailBlock.casecommentNoColumn}').getElementsByTagName('img')[0]) </script>
                     </apex:pageBlock>
                 </apex:form>
 

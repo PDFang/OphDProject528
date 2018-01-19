@@ -7,15 +7,24 @@ public with sharing class CSOOrderActionCompController {
 	public String currentCaseId{get;set;}
 	public List<Case> caseDet{get; set;}
 	public List<CSOOrderResolutionColumnMapping__c> retMappings {get; set;}
+	public string thresholdMessage{get;set;}
 
 
 	public CSOOrderActionCompController(){
 		if (currentCaseId == null) {
 			currentCaseId = System.currentPageReference().getParameters().get('id');
 		}
-
+		thresholdMessage = '';
 		caseDet = getCurrentCase(currentCaseId);
-		retMappings = getMappings(caseDet[0].CSO_Resolution_Type__c);
+		if(!caseDet.isEmpty()){
+			retMappings = getMappings(caseDet[0].CSO_Resolution_Type__c);
+			if(retMappings != null)
+				thresholdMessage = retMappings[0].Threshold_Exceeds_Message__c;
+
+		}
+
+
+
 
 	}
 
@@ -39,6 +48,12 @@ public with sharing class CSOOrderActionCompController {
 
 	};
 
+	static set<string> stConstantCols = new set<string>{
+		'Name~Name',
+		'ItemStatus__c~Item Status',
+		'Last_Comment__c~Last Comment'
+	};
+
 	static set<string> columnTitles = new set<string>();
 	static map<string,string> columnNameTitleMap = new map<string, string>();
 	static Case currentCase;
@@ -50,7 +65,7 @@ public with sharing class CSOOrderActionCompController {
 		{
 			String[] statusList = new String[]{};
 			list<case> cases = getCurrentCase(currentCaseId);
-			if(cases.isEmpty())
+			if(cases.isEmpty() || cases == null)
 				return 'NONE';
 			list<CSOOrderResolutionColumnMapping__c> mappings = getMappings(cases[0].CSO_Resolution_Type__c);
 			if(mappings != null && !mappings.isEmpty()){
@@ -70,7 +85,7 @@ public with sharing class CSOOrderActionCompController {
 		{
 			String[] popsiteList = new String[]{};
 			list<case> cases = getCurrentCase(currentCaseId);
-			if(cases.isEmpty())
+			if(cases.isEmpty() || cases == null)
 				return 'NONE';
 			list<CSOOrderResolutionColumnMapping__c> mappings = getMappings(cases[0].CSO_Resolution_Type__c);
 			if(!mappings.isEmpty()){
@@ -225,9 +240,11 @@ public with sharing class CSOOrderActionCompController {
 			gen.writeEndArray();
 
 		list<string> colName= new list<string>();
+		colName.addAll(stConstantCols);
 		for(string col : columnNameTitleMap.keySet()){
 			string formatColName = col + '~' + columnNameTitleMap.get(col);
-			colName.add(formatColName);
+			if(!stConstantCols.contains(formatColName))
+				colName.add(formatColName);
 		}
 
 		gen.writeObjectField('columns', colName);

@@ -44,8 +44,8 @@
                 padding: 16px;
                 position: fixed;
                 z-index: 9999;
-                left: 40%;
-                top: 30px;
+                left: 28%;
+                top: 361px;
                 bottom:0px;
                 font-size: 17px;
                 height:50px;
@@ -54,11 +54,13 @@
          #toaster.alert{
              background-color: #f57f8a;
              border-color: #f57f8a;
+             visibility: visible;
          }
 
          #toaster.success{
              background-color: #28a745;
              border-color: #28a745;
+              visibility: visible;
          }
 
          #toaster.show {
@@ -99,127 +101,138 @@
                 vertical-align: top !important;
         }
 
+        #btnClose{
+            position: relative;
+            bottom: 41px;
+            left: 10px;
+            color: rgba(255, 255, 255, 1);
+        }
 
     </style>
 
 
     <apex:form >
 
-        <div id="toaster"></div>
+        <div id="toaster">
+            <div id="toasterText"></div>
+            <button aria-label="Close" class="close" id="btnClose" type="button" onclick="hideDiv();">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
 
-    <div id="showThresholdExeedMessageDiv">
-        <label>{!retMappings[0].Threshold_Exceeds_Message__c}</label>
-    </div>
-    <div id="orderAction">
-        <apex:pageBlock id="orderActionBlock">
-            <h>Order Details</h>
-            <div id="orderLineItems"></div>
-        </apex:pageBlock>
+        <div id="showThresholdExeedMessageDiv">
+            <label>{!thresholdMessage}</label>
+        </div>
+        <div id="orderAction">
+            <apex:pageBlock id="orderActionBlock">
+                <h>Order Details</h>
+                <div id="orderLineItems"></div>
+            </apex:pageBlock>
 
-    </div>
+        </div>
 
-    <!-- loading Modal -->
-    <div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content" style="width:40%; top: 182px;">
-                <div class="modal-body" style="font-size:14px;">
-                    <div class="spinnerClass">Please wait</div>
+        <!-- loading Modal -->
+        <div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content" style="width:40%; top: 182px;">
+                    <div class="modal-body" style="font-size:14px;">
+                        <div class="spinnerClass">Please wait</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!--Add comment-->
-    <div class="modal fade" id="modalDetailComment" tabindex="-1" role="dialog" aria-labelledby="modalDetailCommentlabel" aria-hidden="true" >
-        <div class="modal-dialog" role="document" style="width:45%;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalDetailCommentHeader" style="font-weight:bold">Add Comment</h5>
+        <!--Add comment-->
+        <div class="modal fade" id="modalDetailComment" tabindex="-1" role="dialog" aria-labelledby="modalDetailCommentlabel" aria-hidden="true" >
+            <div class="modal-dialog" role="document" style="width:45%;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalDetailCommentHeader" style="font-weight:bold">Add Comment</h5>
 
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" style="font-size:14px;">
-                    <inputHidden id="hiddenId"/>
-                    <div class="form-group">
-                        <apex:outputLabel for="commentTextArea">New Comment</apex:outputLabel>
-                        <apex:inputTextarea id="commentTextArea" styleClass="form-control" rows="5" onKeyDown="toggleSaveButton(this)" onKeyPress="toggleSaveButton(this)" onKeyUp="toggleSaveButton(this)"/>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
-                    <p>
-                    <div class="custom-control custom-checkbox" >
+                    <div class="modal-body" style="font-size:14px;">
+                        <inputHidden id="hiddenId"/>
+                        <div class="form-group">
+                            <apex:outputLabel for="commentTextArea">New Comment</apex:outputLabel>
+                            <apex:inputTextarea id="commentTextArea" styleClass="form-control" rows="5" onKeyDown="toggleSaveButton(this)" onKeyPress="toggleSaveButton(this)" onKeyUp="toggleSaveButton(this)"/>
+                        </div>
+                        <p>
+                        <div class="custom-control custom-checkbox" >
                         <span id="publiccommentDiv" data-toggle="popover" data-trigger="hover" data-content="Checking this box will make your comment visible to the Customer in Support Site">
                              <apex:outputLabel style="font-weight:100; padding-right:5px;" styleClass="custom-control-label" for="publicLIComment">Public</apex:outputLabel>
                             <apex:inputCheckbox styleClass="custom-control-input" id="publicLIComment"/>
                         </span>
-                    </div>
+                        </div>
 
-                    </p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-primary" style="display:none;" id="commentSaveButton" onclick="SaveComment(this); return false;">Save</button>
-                    <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" id="cancelCommentbtn">Cancel</button>
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" style="display:none;" id="commentSaveButton" onclick="SaveComment(this); return false;">Save</button>
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" id="cancelCommentbtn">Cancel</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
         <!--Change Status-->
         <div class="modal fade" id="modalChangeStatus" tabindex="-1" role="dialog" aria-labelledby="modalChangeStatuslabel" aria-hidden="true" >
-        <div class="modal-dialog" role="document" style="width:35%;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalChangeStatusHeader" style="font-weight:bold">Change Line Item Status for <span id="LineItem"> </span></h5>
+            <div class="modal-dialog" role="document" style="width:35%;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalChangeStatusHeader" style="font-weight:bold">Change Line Item Status for <span id="LineItem"> </span></h5>
 
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" style="font-size:14px;">
-                    <inputHidden id="hiddenIdStatus"/>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" style="font-size:14px;">
+                        <inputHidden id="hiddenIdStatus"/>
 
-                    <div class="form-group">
-                        <apex:outputLabel for="status">Update Status</apex:outputLabel>
-                        <input id="status" styleClass="form-control"/>
+                        <div class="form-group">
+                            <apex:outputLabel for="status">Update Status</apex:outputLabel>
+                            <input id="status" styleClass="form-control"/>
+                        </div>
+                        <div class="custom-control custom-checkbox" >
+                            <apex:inputCheckbox styleClass="custom-control-input" id="updateAllCheckbox" />
+                            <apex:outputLabel style="font-weight:100;" styleClass="custom-control-label" for="updateAllCheckbox">Check this checbox if you want to update all other Line Item Status.</apex:outputLabel>
+                        </div>
                     </div>
-                    <div class="custom-control custom-checkbox" >
-                        <apex:inputCheckbox styleClass="custom-control-input" id="updateAllCheckbox" />
-                        <apex:outputLabel style="font-weight:100;" styleClass="custom-control-label" for="updateAllCheckbox">Check this checbox if you want to update all other Line Item Status.</apex:outputLabel>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" id="statusSaveButton" onclick="UpdateStatus(this); return false;">Save</button>
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" id="cancelstatus">Cancel</button>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-primary" id="statusSaveButton" onclick="UpdateStatus(this); return false;">Save</button>
-                    <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" id="cancelstatus">Cancel</button>
                 </div>
             </div>
         </div>
-    </div>
-    <!--Change POP Site-->
-    <div class="modal fade" id="modalUpdatePOPSite" tabindex="-1" role="dialog" aria-labelledby="modalUpdatePOPSitelabel" aria-hidden="true" >
-        <div class="modal-dialog" role="document" style="width:35%;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalUpdatePOPSiteHeader" style="font-weight:bold">Update POP Site for <span id="LineItemPOPSite"> </span></h5>
+        <!--Change POP Site-->
+        <div class="modal fade" id="modalUpdatePOPSite" tabindex="-1" role="dialog" aria-labelledby="modalUpdatePOPSitelabel" aria-hidden="true" >
+            <div class="modal-dialog" role="document" style="width:35%;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalUpdatePOPSiteHeader" style="font-weight:bold">Update POP Site for <span id="LineItemPOPSite"> </span></h5>
 
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" style="font-size:14px;">
-                    <inputHidden id="hiddenIdPOPSite"/>
-
-                    <div class="form-group">
-                        <apex:outputLabel for="updatePOPSite">Update POP Site</apex:outputLabel>
-                        <input id="inputPOPSite" styleClass="form-control"/>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-primary" id="SaveButtonPOPSite" onclick="UpdatePOPSite(this); return false;">Save</button>
-                    <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" id="cancelPOPSite">Cancel</button>
+                    <div class="modal-body" style="font-size:14px;">
+                        <inputHidden id="hiddenIdPOPSite"/>
+
+                        <div class="form-group">
+                            <apex:outputLabel for="updatePOPSite">Update POP Site</apex:outputLabel>
+                            <input id="inputPOPSite" styleClass="form-control"/>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" id="SaveButtonPOPSite" onclick="UpdatePOPSite(this); return false;">Save</button>
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" id="cancelPOPSite">Cancel</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
 
     </apex:form>
@@ -230,12 +243,7 @@
            getDetails();
            $("#publiccommentDiv").popover({ trigger: "hover" });
 
-           if({!caseDet[0].CSO_Resolution_Type__c == 'Disconnected IP Voice'}){
-               $('#showThresholdExeedMessageDiv').show();
-           }
-           else{
-               $('#showThresholdExeedMessageDiv').hide();
-           }
+
         });
 
       var isDateField =[];
@@ -277,9 +285,9 @@
                 }
               },
               columns: columns,
-              dataBound:gridDataBound
+              dataBound:gridDataBound,
+              resizable: true
             });
-
       }
 
       function generateColumns(response){
@@ -368,18 +376,7 @@
       }
 
        function gridDataBound(e){
-            var grid = $("#orderLineItems").data("kendoGrid");
 
-            var columnindexName = 0;
-            var columnindexLastComment = 0;
-
-            for (var i = 0; i < grid.options.columns.length; i++) {
-                var col = grid.options.columns[i];
-                if (col.title == 'Line Item Id') {
-                    columnindexName = i;
-                }
-            }
-           grid.reorderColumn(0, grid.columns[columnindexName]);
            $("#orderLineItems tbody tr a.k-grid-UpdateStatus").each(function () {
                 var currentDataItem = $("#orderLineItems").data("kendoGrid").dataItem($(this).closest("tr"));
                 if (currentDataItem.ParentLineItem != '') {
@@ -448,18 +445,30 @@
       }
 
       function showError(result){
-          $('#toaster').html(result);
+         // $('#toaster').removeClass('show');
+          $('#toaster').removeClass('alert');
+          $('#toasterText').html('');
+          $('#toasterText').html(result);
           $('#toaster').addClass('alert');
-          $('#toaster').addClass('show');
-          window.setTimeout(function(){ $('#toaster').removeClass('show');$('#toaster').removeClass('alert');$('#toaster').html('');}, 5000);
+          $('#toaster').show();
+          //$('#toaster').addClass('show');
+         // window.setTimeout(function(){ $}, 5000);
       }
 
 
       function showSuccess(result){
-          $('#toaster').html(result);
+         // $('#toaster').removeClass('show');
+          $('#toaster').removeClass('success');
+          $('#toasterText').html('');
+          $('#toasterText').html(result);
           $('#toaster').addClass('success');
-          $('#toaster').addClass('show');
-          window.setTimeout(function(){ $('#toaster').removeClass('show');$('#toaster').removeClass('success');$('#toaster').html('');}, 5000);
+          $('#toaster').show();
+          //$('#toaster').addClass('show');
+         // window.setTimeout(function(){ $('#toaster').removeClass('show');$('#toaster').removeClass('success');$('#toaster').html('');}, 5000);
+      }
+
+      function hideDiv(){
+          $('#toaster').hide();
       }
 
 
