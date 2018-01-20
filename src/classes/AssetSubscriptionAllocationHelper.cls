@@ -384,7 +384,14 @@ public class AssetSubscriptionAllocationHelper {
 
             soql += ' and FullyImplemented__c = false  order by createddate ';
 
-            List<Asset> assets = Database.query(soql);
+            List<Asset> assets = new List<Asset>();
+
+            for(Asset ast : Database.query(soql)){
+                if(ast.Quantity == 1 && ast.Remaning_Percentage__c <= 0){
+                    continue;
+                }
+                assets.add(ast);
+            }
 
             if(assets.size() > 0)
                 return JSON.serialize(assets);
@@ -399,7 +406,15 @@ public class AssetSubscriptionAllocationHelper {
 
             soql += ' and FullyImplemented__c = false order by createddate ';
 
-            List<SubscriptionReplica__c> subscriptions = Database.query(soql);
+            List<SubscriptionReplica__c> subscriptions = new List<SubscriptionReplica__c>();
+
+            for(SubscriptionReplica__c sub :Database.query(soql)){
+                if(sub.Quantity__c == 1 && sub.Remaning_Percentage__c <= 0){
+                    continue;
+                }
+                subscriptions.add(sub);
+            }
+
             system.debug('subscriptions - ' + subscriptions);
             if(subscriptions.size() > 0)
                 return JSON.serialize(subscriptions);

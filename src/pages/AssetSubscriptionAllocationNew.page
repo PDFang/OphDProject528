@@ -529,10 +529,12 @@
 
     function showHideAddButton(allocation){
 
-        if(implemented || (allocation != '' && allocation['Quantity'] == 1 && allocation['RemainingPercentage'] <= 0) ){
-            $("a.k-grid-add").hide();
-        }else{
-            $("a.k-grid-add").show();
+        if(currentObjectType == 'Asset' || currentObjectType == 'Subscription'){
+            if(implemented || (allocation != '' && allocation['Quantity'] == 1 && allocation['RemainingPercentage'] <= 0) ){
+                $("a.k-grid-add").hide();
+            }else{
+                $("a.k-grid-add").show();
+            }
         }
 
     }
