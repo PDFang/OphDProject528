@@ -243,7 +243,7 @@ public class AssetSubscriptionAllocationHelper {
 
         String soql = 'Select Project__c, Project__r.Name, Name, ProjectPhase__c, Percent_Allocation__c, Asset__r.Name, Asset__c, Asset__r.Quantity, Asset__r.Budgeted_Hours__c, '
                 + 'Quantity_Allocation__c, Hours_Allocated__c, Asset__r.Total_Allocated_Quantity__c, Asset__r.Total_Allocated_Hours__c, Implemented__c,  '
-                + 'Asset__r.QuantityonHold__c, Asset__r.QuantityCancelled__c, Asset__r.RemainingQuantity__c '
+                + 'Asset__r.QuantityonHold__c, Asset__r.QuantityCancelled__c, Asset__r.RemainingQuantity__c, Asset__r.Remaning_Percentage__c '
                 + ' from Project_Asset_Allocation__c where ';
 
         if(projectId != null){
@@ -278,7 +278,7 @@ public class AssetSubscriptionAllocationHelper {
         String soql = 'Select Project__c, Project__r.Name, Subscription__r.Subscription__r.SBQQ__Product__r.Name, Subscription__r.Subscription__r.SBQQ__Product__c,' +
                 ' Subscription__c, Subscription__r.Name, Name, ProjectPhase__c, Subscription__r.Quantity__c, Subscription__r.Budgeted_Hours__c, Percent_Allocation__c,'+
                 ' Quantity_Allocation__c, Hours_Allocated__c, Subscription__r.Total_Allocated_Quantity__c, Subscription__r.Total_Allocated_Hours__c,Implemented__c, ' +
-                ' Subscription__r.QuantityonHold__c, Subscription__r.QuantityCancelled__c, Subscription__r.RemainingQuantity__c ' +
+                ' Subscription__r.QuantityonHold__c, Subscription__r.QuantityCancelled__c, Subscription__r.RemainingQuantity__c, Subscription__r.Remaning_Percentage__c ' +
                 ' from Project_Subscription_Allocation__c where ';
         if(projectId != null){
             soql += ' Project__c = \'' + projectId + '\'';
