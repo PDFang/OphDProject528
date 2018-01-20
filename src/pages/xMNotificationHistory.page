@@ -1,0 +1,44 @@
+<!--
+ - Created by Antara Bhattacharya on 1/19/2018.
+ -->
+
+<apex:page id="xMNotificationHistory" showHeader="false" sideBar="false" standardController="Contact" title="Contact Notification History" extensions="xMNotificationHistoryController" applyBodyTag="false">
+    <apex:form>
+        <apex:pageBlock>
+            <apex:pageBlockSection columns="1" rendered="{!NotificationHistoryList.size > 0}">
+              <apex:pageMessages />
+
+            <apex:pageBlockTable value="{!NotificationHistoryList}" var="history" >
+                <apex:column headerValue="Case Id">
+                    <apex:outputLink value="/{!history.CaseId}" target="_blank">{!history.CaseNumber}</apex:outputLink>
+                </apex:column>
+                <apex:column headerValue="Case Subject">
+                        {!history.CaseSubject}
+                </apex:column >
+                <apex:column headerValue="Notification ID">
+                    <apex:outputLink value="/{!history.NotificationId}" target="_blank">{!history.NotificationName}</apex:outputLink>
+                </apex:column >
+                <apex:column headerValue="Notification Type ">
+                        {!history.NotificationType}
+                </apex:column >
+                <apex:column headerValue="Notification Date ">
+                        {!history.NotificationDate}
+                </apex:column >
+                <apex:column headerValue="Device Type">
+                        {!history.NotificationDeviceType}
+                </apex:column >
+                <apex:column headerValue="Delivery Device">
+                        {!history.NotificationDeliveryDevice}
+                </apex:column >
+                <apex:column headerValue="Delivery Status">
+                        {!history.NotifcationDeliveryStatus}
+                </apex:column >
+            </apex:pageBlockTable>
+                <apex:outputLink target="_blank" value="/apex/xMNotificationHistory?Id={!currentContact.Id}&&numOfRecord=50000&&showLink=false" rendered="{!showLink}">Go To List</apex:outputLink>
+            </apex:pageBlockSection>
+            <apex:pageBlockTable value="{!NotificationHistoryList}" var="history" rendered="{!NotificationHistoryList.size == 0}">
+                No Records found
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

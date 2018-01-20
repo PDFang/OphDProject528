@@ -320,12 +320,11 @@ public class AssetSubscriptionAllocationHelper {
         }
 
 
-
-
         if(ProjectId != null && ProjectId != ''){
             String soql = 'Select Id, Name, Summary__c, ProjectStatus__c, Phase__c , Phase_Status__c ' +
                     + ' from Project__c where ';
             soql += ' ParentProject__c = \'' + ProjectId + '\'';
+            soql += ' AND Id NOT IN(SELECT Project__c FROM Project_' + objType + '_Allocation__c WHERE ' + objType + '__c = \'' + objId + '\')';
             soql += ' and ActualProjectGoLiveDate__c = null order by createddate ';
 
             projects = Database.query(soql);
@@ -378,9 +377,9 @@ public class AssetSubscriptionAllocationHelper {
 
         if(objType == 'Asset'){
             String soql = 'Select Id, Name, Remaning_Percentage__c, Quantity, Budgeted_Hours__c, RemainingQuantity__c, Remaining_Hours__c, QuantityCancelled__c, QuantityonHold__c ' +
-                    + ' from Asset where ';
+                    + ' from Asset where Id NOT IN(SELECT Asset__c FROM Project_Asset_Allocation__c WHERE Project__c = \'' + projId + '\')';
             if(projId != null){
-                soql += ' Parent_Project__c = \'' + thisProject.ParentProject__c + '\'';
+                soql += ' AND Parent_Project__c = \'' + thisProject.ParentProject__c + '\'';
             }
 
             soql += ' and FullyImplemented__c = false  order by createddate ';
@@ -393,9 +392,9 @@ public class AssetSubscriptionAllocationHelper {
         else if(objType == 'Subscription'){
             system.debug('objType - ' + objType);
             String soql = 'Select Id, Name,Budgeted_Hours__c, Quantity__c, Product_Name__c, Remaning_Percentage__c, RemainingQuantity__c, Remaining_Hours__c, QuantityCancelled__c, QuantityonHold__c ' +
-                    + ' from SubscriptionReplica__c where ';
+                    + ' from SubscriptionReplica__c where Id NOT IN(SELECT Subscription__c FROM Project_Subscription_Allocation__c WHERE Project__c = \'' + projId + '\')';
             if(projId != null){
-                soql += ' ParentProject__c = \'' + thisProject.ParentProject__c + '\'';
+                soql += ' AND ParentProject__c = \'' + thisProject.ParentProject__c + '\'';
             }
 
             soql += ' and FullyImplemented__c = false order by createddate ';
