@@ -40,6 +40,7 @@ global class XMNotificationGroupBatch implements Database.Batchable<Sobject>, Da
                     }
                     catch(Exception ex) {
                         //ignore the error and move on to the next user
+                        system.debug(ex);
                     }
                 }
             }

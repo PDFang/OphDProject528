@@ -3,10 +3,11 @@
 @IsTest
 private class CaseEventNotificationExtensionTest {
 
+    private static Case cNotification;
+
     static testMethod void TestCaseEventNotificationExtension()
     {
         createSiteConfig();
-
 
         Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
         Map<String, Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
@@ -76,17 +77,21 @@ private class CaseEventNotificationExtensionTest {
 
         insert st;
 
+
         Case insertedCase = [SELECT Id, StartDateTimeUTC__c, CustomersMayExperienceTheFollowing__c, Description, InternalEvent__c, CustomerAction__c, Status, CaseNumber, OwnerId, Owner.Name, RecordTypeId, Subject, EventType__c, PlatformsImpacted__c, ProductImpacted__c FROM Case WHERE Id = :c.Id];
 
         Test.setMock(WebServiceMock.class, new INotificationProxy());
-        NotificationHelperClass.futureCallout(new String[] { 'test@test.com' }, 'test', 'test', 'test', 3, '123');
+
+       //  NotificationHelperClass.futureCallout(new String[] { 'test@test.com' }, 'test', 'test', 'test', 3, '123');
 
         Test.startTest();
 
         ApexPages.StandardController eventCont = new ApexPages.StandardController(insertedCase);
 
+
         //test CaseEventAccountsExtension
         CaseEventNotificationExtension notify = new CaseEventNotificationExtension(eventCont);
+
 
         notify.EventAccounts();
 
@@ -101,7 +106,6 @@ private class CaseEventNotificationExtensionTest {
         notify.SendNotification();
 
         Test.stopTest();
-
     }
 
     static testMethod void TestMaintenanceNotificationViaXmatters(){
@@ -182,6 +186,7 @@ private class CaseEventNotificationExtensionTest {
         CaseEventNotificationExtension testExtension = new CaseEventNotificationExtension(new ApexPages.StandardController(testMaintenance));
         xMatters_Forms__mdt xmattersForm = [SELECT Form_Name__c FROM xMatters_Forms__mdt LIMIT 1];
         testExtension.xmSelectedForm = xmattersForm.Form_Name__c;
+        testExtension.xmSelectedSendMethod = 'ByProducts';
 
         system.assertEquals(true, testExtension.enableXmatters, 'xMatters maintenance notification should be enabled.');
         system.assert(testExtension.xMattersFieldMapping.size() > 0, 'Case Field to xMatters form property mapping is empty.');
@@ -192,8 +197,159 @@ private class CaseEventNotificationExtensionTest {
 
         List<xmNotification__c> xmNotifications = [Select Id from  xmNotification__c where Case__c = :testMaintenance.Id];
         system.assertEquals(1, xmNotifications.size(), 'Notification record should be created.');
+    }
 
+    static testMethod void TestGroupBatchNew()
+    {
+        createGroupBatchTestData();
 
+        xmNotificationGroups__c xmNotificationGroup = new xmNotificationGroups__c(
+                Case__c = cNotification.Id,
+                Name = 'test',
+                xmGroupUID__c = 'testID',
+                Status__c = 'New'
+        );
+
+        Test.startTest();
+
+        CaseEventNotificationExtension testExtension = new CaseEventNotificationExtension(new ApexPages.StandardController(cNotification));
+        boolean disableGroupOption = testExtension.SendMethodOptions.get(0).getDisabled();
+
+        Test.stopTest();
+
+        System.assertEquals(true, disableGroupOption);
+    }
+
+    static testMethod void TestGroupBatchInProgress()
+    {
+        createGroupBatchTestData();
+
+        xmNotificationGroups__c xmNotificationGroup = new xmNotificationGroups__c(
+                Case__c = cNotification.Id,
+                Name = 'test',
+                xmGroupUID__c = 'testID',
+                Status__c = 'In Progress'
+        );
+
+        Test.startTest();
+
+        CaseEventNotificationExtension testExtension = new CaseEventNotificationExtension(new ApexPages.StandardController(cNotification));
+        boolean disableGroupOption = testExtension.SendMethodOptions.get(0).getDisabled();
+
+        Test.stopTest();
+
+        System.assertEquals(true, disableGroupOption);
+    }
+
+    static testMethod void TestGroupBatchCompleted()
+    {
+        createGroupBatchTestData();
+
+        xmNotificationGroups__c xmNotificationGroup = new xmNotificationGroups__c(
+                Case__c = cNotification.Id,
+                Name = 'test',
+                xmGroupUID__c = 'testID',
+                Status__c = 'Completed'
+        );
+
+        insert xmNotificationGroup;
+
+        Test.startTest();
+
+        CaseEventNotificationExtension testExtension = new CaseEventNotificationExtension(new ApexPages.StandardController(cNotification));
+        boolean disableGroupOption = testExtension.SendMethodOptions.get(0).getDisabled();
+
+        Test.stopTest();
+
+        System.assertEquals(false, disableGroupOption);
+    }
+
+    static testMethod void TestGroupBatchFailed()
+    {
+        createGroupBatchTestData();
+
+        xmNotificationGroups__c xmNotificationGroup = new xmNotificationGroups__c(
+                Case__c = cNotification.Id,
+                Name = 'test',
+                xmGroupUID__c = 'testID',
+                Status__c = 'Failed'
+        );
+
+        insert xmNotificationGroup;
+
+        Test.startTest();
+
+        CaseEventNotificationExtension testExtension = new CaseEventNotificationExtension(new ApexPages.StandardController(cNotification));
+        boolean disableGroupOption = testExtension.SendMethodOptions.get(0).getDisabled();
+
+        Test.stopTest();
+
+        System.assertEquals(true, disableGroupOption);
+    }
+
+    static testMethod void TestRefreshBatchStatus()
+    {
+        createGroupBatchTestData();
+
+        xmNotificationGroups__c xmNotificationGroup = new xmNotificationGroups__c(
+                Case__c = cNotification.Id,
+                Name = 'test',
+                xmGroupUID__c = 'testID',
+                Status__c = 'New'
+        );
+
+        insert xmNotificationGroup;
+
+        Test.startTest();
+
+        CaseEventNotificationExtension testExtension = new CaseEventNotificationExtension(new ApexPages.StandardController(cNotification));
+        boolean disableGroupOptionNew = testExtension.SendMethodOptions.get(0).getDisabled();
+
+        xmNotificationGroup.Status__c = 'Completed';
+        update xmNotificationGroup;
+        testExtension.RefreshPage();
+        testExtension.refreshBatchStatus();
+
+        Test.stopTest();
+
+        boolean disableGroupOptionCompleted = testExtension.SendMethodOptions.get(0).getDisabled();
+        System.assertEquals(true, disableGroupOptionNew);
+        System.assertEquals(false, disableGroupOptionCompleted);
+    }
+
+    private static void createGroupBatchTestData()
+    {
+        Schema.DescribeSObjectResult d = Schema.SObjectType.Case;
+        Map<String, Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
+        Id eventRecordType = rtMapByName.get('Event').getRecordTypeId();
+
+        //set default assignment rule
+        database.DMLOptions dmo = new database.DMLOptions();
+        dmo.assignmentRuleHeader.useDefaultRule = true;
+
+        cNotification = new Case(
+                RecordTypeId = rtMapByName.get('Maintenance Notification').getRecordTypeId(),
+                Subject = 'Test Maintenance Notification',
+                Description = 'Test Maintenance Notification',
+                Status = 'New',
+                EventType__c = 'Service Disruption',
+                PlatformsImpacted__c = 'C6 - inContact',
+                ProductImpacted__c = 'inContact',
+                InternalEvent__c = false,
+                Priority = 'P1'
+        );
+
+        cNotification.setOptions(dmo);
+
+        insert cNotification;
+
+        EventAccount__c ea = new EventAccount__c(
+                Event__c = cNotification.Id,
+                Excluded__c = true,
+                Account__c = '0013C0000061qctQAA'
+        );
+
+        insert ea;
     }
 
     private static void createSiteConfig(){
@@ -207,6 +363,5 @@ private class CaseEventNotificationExtensionTest {
         sbx.EventResolvedEmails__c = true;
 
         insert sbx;
-
     }
 }

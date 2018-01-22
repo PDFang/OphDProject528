@@ -243,7 +243,7 @@ public class AssetSubscriptionAllocationHelper {
 
         String soql = 'Select Project__c, Project__r.Name, Name, ProjectPhase__c, Percent_Allocation__c, Asset__r.Name, Asset__c, Asset__r.Quantity, Asset__r.Budgeted_Hours__c, '
                 + 'Quantity_Allocation__c, Hours_Allocated__c, Asset__r.Total_Allocated_Quantity__c, Asset__r.Total_Allocated_Hours__c, Implemented__c,  '
-                + 'Asset__r.QuantityonHold__c, Asset__r.QuantityCancelled__c, Asset__r.RemainingQuantity__c '
+                + 'Asset__r.QuantityonHold__c, Asset__r.QuantityCancelled__c, Asset__r.RemainingQuantity__c, Asset__r.Remaning_Percentage__c '
                 + ' from Project_Asset_Allocation__c where ';
 
         if(projectId != null){
@@ -278,7 +278,7 @@ public class AssetSubscriptionAllocationHelper {
         String soql = 'Select Project__c, Project__r.Name, Subscription__r.Subscription__r.SBQQ__Product__r.Name, Subscription__r.Subscription__r.SBQQ__Product__c,' +
                 ' Subscription__c, Subscription__r.Name, Name, ProjectPhase__c, Subscription__r.Quantity__c, Subscription__r.Budgeted_Hours__c, Percent_Allocation__c,'+
                 ' Quantity_Allocation__c, Hours_Allocated__c, Subscription__r.Total_Allocated_Quantity__c, Subscription__r.Total_Allocated_Hours__c,Implemented__c, ' +
-                ' Subscription__r.QuantityonHold__c, Subscription__r.QuantityCancelled__c, Subscription__r.RemainingQuantity__c ' +
+                ' Subscription__r.QuantityonHold__c, Subscription__r.QuantityCancelled__c, Subscription__r.RemainingQuantity__c, Subscription__r.Remaning_Percentage__c ' +
                 ' from Project_Subscription_Allocation__c where ';
         if(projectId != null){
             soql += ' Project__c = \'' + projectId + '\'';
@@ -320,12 +320,11 @@ public class AssetSubscriptionAllocationHelper {
         }
 
 
-
-
         if(ProjectId != null && ProjectId != ''){
             String soql = 'Select Id, Name, Summary__c, ProjectStatus__c, Phase__c , Phase_Status__c ' +
                     + ' from Project__c where ';
             soql += ' ParentProject__c = \'' + ProjectId + '\'';
+            soql += ' AND Id NOT IN(SELECT Project__c FROM Project_' + objType + '_Allocation__c WHERE ' + objType + '__c = \'' + objId + '\')';
             soql += ' and ActualProjectGoLiveDate__c = null order by createddate ';
 
             projects = Database.query(soql);
@@ -378,14 +377,21 @@ public class AssetSubscriptionAllocationHelper {
 
         if(objType == 'Asset'){
             String soql = 'Select Id, Name, Remaning_Percentage__c, Quantity, Budgeted_Hours__c, RemainingQuantity__c, Remaining_Hours__c, QuantityCancelled__c, QuantityonHold__c ' +
-                    + ' from Asset where ';
+                    + ' from Asset where Id NOT IN(SELECT Asset__c FROM Project_Asset_Allocation__c WHERE Project__c = \'' + projId + '\')';
             if(projId != null){
-                soql += ' Parent_Project__c = \'' + thisProject.ParentProject__c + '\'';
+                soql += ' AND Parent_Project__c = \'' + thisProject.ParentProject__c + '\'';
             }
 
             soql += ' and FullyImplemented__c = false  order by createddate ';
 
-            List<Asset> assets = Database.query(soql);
+            List<Asset> assets = new List<Asset>();
+
+            for(Asset ast : Database.query(soql)){
+                if(ast.Quantity == 1 && ast.Remaning_Percentage__c <= 0){
+                    continue;
+                }
+                assets.add(ast);
+            }
 
             if(assets.size() > 0)
                 return JSON.serialize(assets);
@@ -393,14 +399,22 @@ public class AssetSubscriptionAllocationHelper {
         else if(objType == 'Subscription'){
             system.debug('objType - ' + objType);
             String soql = 'Select Id, Name,Budgeted_Hours__c, Quantity__c, Product_Name__c, Remaning_Percentage__c, RemainingQuantity__c, Remaining_Hours__c, QuantityCancelled__c, QuantityonHold__c ' +
-                    + ' from SubscriptionReplica__c where ';
+                    + ' from SubscriptionReplica__c where Id NOT IN(SELECT Subscription__c FROM Project_Subscription_Allocation__c WHERE Project__c = \'' + projId + '\')';
             if(projId != null){
-                soql += ' ParentProject__c = \'' + thisProject.ParentProject__c + '\'';
+                soql += ' AND ParentProject__c = \'' + thisProject.ParentProject__c + '\'';
             }
 
             soql += ' and FullyImplemented__c = false order by createddate ';
 
-            List<SubscriptionReplica__c> subscriptions = Database.query(soql);
+            List<SubscriptionReplica__c> subscriptions = new List<SubscriptionReplica__c>();
+
+            for(SubscriptionReplica__c sub :Database.query(soql)){
+                if(sub.Quantity__c == 1 && sub.Remaning_Percentage__c <= 0){
+                    continue;
+                }
+                subscriptions.add(sub);
+            }
+
             system.debug('subscriptions - ' + subscriptions);
             if(subscriptions.size() > 0)
                 return JSON.serialize(subscriptions);

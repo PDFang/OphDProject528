@@ -375,7 +375,8 @@
              Subscription = new Object(),
              Product = new Object(),
              isManager = {!Manager},
-             disableEdit = false;
+             disableEdit = false,
+             implemented = false;
 
         var windowTemplate = kendo.template($("#windowTemplate").html());
 
@@ -393,7 +394,6 @@
                         console.log('object type ==>' + result);
                         if(result.length > 1){
                             if(result == 'Asset'){
-                              disableEdit = {!Asset.FullyImplemented__c};
                               currentObjectType = result;
                               console.log('results =>' + JSON.stringify(result));
                               $("#subscriptiontAllocationPanel").hide();
@@ -406,6 +406,11 @@
                               Asset.Remaning_Percentage__c = '{!Asset.Remaning_Percentage__c}';
                               Asset.QuantityonHold__c = '{!Asset.QuantityonHold__c}';
                               Asset.QuantityCancelled__c = '{!Asset.QuantityCancelled__c}';
+                              implemented = {!Asset.FullyImplemented__c};
+                              console.log(Asset);
+                              if(implemented || (Asset['Quantity'] == 1 && Asset['Remaning_Percentage__c'] <= 0) ){
+                                  disableEdit = true;
+                              }
                               assetAllocationData(null, '{!currentId}');
 
                               if(disableEdit){
@@ -413,7 +418,6 @@
                               }
                            }
                            else if(result == 'Subscription'){
-                                disableEdit = {!Subscription.FullyImplemented__c};
                                currentObjectType = result;
                                console.log('results =>' + JSON.stringify(result));
                                $("#assetAllocationPanel").hide();
@@ -426,6 +430,11 @@
                               Subscription.Remaning_Percentage__c = '{!Subscription.Remaning_Percentage__c}';
                               Subscription.QuantityonHold__c = '{!Subscription.QuantityonHold__c}';
                               Subscription.QuantityCancelled__c = '{!Subscription.QuantityCancelled__c}';
+                              implemented = {!Subscription.FullyImplemented__c};
+                              console.log(Subscription);
+                              if(implemented || (Subscription['Quantity'] == 1 && Subscription['Remaning_Percentage__c'] <= 0) ){
+                                  disableEdit = true;
+                              }
                               subscriptionAllocationData(null, '{!currentId}');
                               if(disableEdit){
                                    $("a.k-grid-add").hide();
@@ -516,6 +525,18 @@
 
     function closeModal(){
         $('div#ImplementedProducts').modal("hide");
+    }
+
+    function showHideAddButton(allocation){
+
+        if(currentObjectType == 'Asset' || currentObjectType == 'Subscription'){
+            if(implemented || (allocation != '' && allocation['Quantity'] == 1 && allocation['RemainingPercentage'] <= 0) ){
+                $("a.k-grid-add").hide();
+            }else{
+                $("a.k-grid-add").show();
+            }
+        }
+
     }
 
     </script>

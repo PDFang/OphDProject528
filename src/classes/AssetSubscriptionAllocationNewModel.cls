@@ -25,6 +25,7 @@ public class AssetSubscriptionAllocationNewModel {
     public Decimal QuantityOnHold{get;set;}
     public Decimal QuantityCancelled{get;set;}
     public Decimal RemainingQuantity{get;set;}
+    public Decimal RemainingPercentage{get;set;}
 
     public AssetSubscriptionAllocationNewModel(){
 
@@ -47,6 +48,7 @@ public class AssetSubscriptionAllocationNewModel {
         this.QuantityOnHold = allocation.Asset__r.QuantityonHold__c;
         this.QuantityCancelled = allocation.Asset__r.QuantityCancelled__c;
         this.RemainingQuantity = allocation.Asset__r.RemainingQuantity__c;
+        this.RemainingPercentage = allocation.Asset__r.Remaning_Percentage__c;
     }
 
     public AssetSubscriptionAllocationNewModel(Project_Subscription_Allocation__c allocation){
@@ -67,7 +69,7 @@ public class AssetSubscriptionAllocationNewModel {
         this.Implemented = allocation.Implemented__c;
         this.QuantityOnHold = allocation.Subscription__r.QuantityonHold__c;
         this.QuantityCancelled = allocation.Subscription__r.QuantityCancelled__c;
-        this.RemainingQuantity = allocation.Subscription__r.RemainingQuantity__c;
+        this.RemainingPercentage = allocation.Subscription__r.Remaning_Percentage__c;
 
     }
 }
