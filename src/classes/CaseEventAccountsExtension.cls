@@ -57,8 +57,8 @@ public class CaseEventAccountsExtension
                 canBatch = true;
                 enablePoller = true;
                 xmNotificationGroups__c[] xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
-                if (xmGroup.size() <= 0) {
-                    enablePoller = false;
+                if (xmGroup.size() > 0) {
+                    enablePoller = (xmGroup[0].Status__c != 'In Progress' && xmGroup[0].Status__c != 'New') ? false : true;
                 }
         }
     }
@@ -269,7 +269,7 @@ public class CaseEventAccountsExtension
             string displayedBatchStatus = getDisplayedBatchStatus();
             if (!string.isBlank(displayedBatchStatus)){
                 batchStatus = 'Account Batch Status: ' + displayedBatchStatus;
-                enablePoller = true;
+                enablePoller = ( displayedBatchStatus != 'Processing' && displayedBatchStatus != 'New') ? false : true;
             }
             disableBatchAccountButton = (displayedBatchStatus == 'Ready' || displayedBatchStatus == 'Failed' || string.isBlank(displayedBatchStatus)) ? false : true;
         }
