@@ -342,14 +342,6 @@ private class CaseEventNotificationExtensionTest {
         cNotification.setOptions(dmo);
 
         insert cNotification;
-
-        EventAccount__c ea = new EventAccount__c(
-                Event__c = cNotification.Id,
-                Excluded__c = true,
-                Account__c = '0013C0000061qctQAA'
-        );
-
-        insert ea;
     }
 
     private static void createSiteConfig(){

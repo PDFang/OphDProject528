@@ -38,7 +38,15 @@ global class XMNotificationGroupBatch implements Database.Batchable<Sobject>, Da
                         }
                         xmPersonIds.add(c.xmPerson__c);
                     }
-                    catch(Exception ex) {
+                    catch(XMCalloutException ex) {
+                        if(ex.HttpStatusCode == 400 || ex.HttpStatusCode == 403 || ex.HttpStatusCode == 406 || ex.HttpStatusCode == 409 || ex.HttpStatusCode == 415
+                                || ex.HttpStatusCode == 429 || ex.HttpStatusCode == 401) {
+                            //terminate the batch
+                            inContactBaseClass.SendErrorEmail(ex, 'Error in XMNotificationGroupBatch while processing Notification Group ' + notificationGroupId);
+
+                            //abort the batch
+                            system.abortJob(BC.getJobId());
+                        }
                         //ignore the error and move on to the next user
                         system.debug(ex);
                     }
@@ -49,15 +57,17 @@ global class XMNotificationGroupBatch implements Database.Batchable<Sobject>, Da
             System.debug(ex);
             inContactBaseClass.SendErrorEmail(ex, 'Error in XMNotificationGroupBatch while processing Notification Group ' + notificationGroupId);
 
-            //cause the batch to terminate
             throw ex;
         }
     }
 
     global void finish(Database.BatchableContext BC) {
+        //get the actual batch status and number of errors so the group can be set to the correct status
+        AsyncApexJob job = [Select Id, Status, NumberOfErrors From AsyncApexJob Where Id = :BC.getJobId()];
+
         xmNotificationGroups__c notificationGroup = new xmNotificationGroups__c(
                 Id = notificationGroupId,
-                Status__c = 'Completed'
+                Status__c = job.Status == 'Completed' && job.NumberOfErrors == 0 ? 'Completed' : 'Failed'
         );
 
         update notificationGroup;
