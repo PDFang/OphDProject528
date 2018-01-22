@@ -247,10 +247,16 @@ private class CaseEventAccountsExtensionTest {
 
         insert cNotification;
 
+        Account a = inContactBaseClass.CreateAccount('Test');
+        a.Site = 'Test';
+        a.CS_AM__c = UserInfo.getUserId();
+
+        insert a;
+
         EventAccount__c ea = new EventAccount__c(
                 Event__c = cNotification.Id,
                 Excluded__c = true,
-                Account__c = '0013C0000061qctQAA'
+                Account__c = a.Id
         );
 
         insert ea;
