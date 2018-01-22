@@ -12,8 +12,11 @@
                                               if(result != null && result.length > 1){
                                                    options.success(JSON.parse(result));
                                                    console.log('results =>' + JSON.stringify(result));
+                                                   var records = JSON.parse(result);
+                                                   showHideAddButton(records[0]);
                                               }else{
                                                   options.success('');
+                                                  showHideAddButton('');
                                               }
                                           }
                                       },
@@ -598,5 +601,7 @@
           }
           grid.collapseRow(parentRow);
     }
+
+
 
 
