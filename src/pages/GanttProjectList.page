@@ -1,0 +1,236 @@
+<!--
+ - Created by arnab.karsarkar on 2/1/2017.
+ -->
+
+<apex:page id="GanttProjectList" controller="GanttProjectPriotizationListController" sideBar="false" standardStylesheets="false" title="PMO Project Prioritization" setup="false" >
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/GanttProjectListJS.js')}"/>
+
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.common.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.rtl.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/GanttProjectListCSS.css')}"/>
+
+    <apex:form >
+        <div class="demo-section">
+            <div class="modal-backdrop fade in hideDisplay" id="modalbackdrop"></div>
+            <div class="page-header">
+                <h1>PMO Project Prioritization List</h1>
+            </div>
+            <div class="container-fluid">
+                <div class="row" style="margin-bottom:15px;margin-top:15px;">
+                    <div class="col-md-4">
+                        <label style="padding-left: 13px;padding-right:8px">Select a Channel :</label>
+                        <apex:selectList size="1" value="{!SelectValue}" onChange="FilterLists(this)"  styleClass="form-control" id="sel1" style="width:220px;">
+                            <apex:selectOptions value="{!filterOptions}"/>
+                        </apex:selectList>
+                        <apex:outputPanel id="unlock" style="padding-left:5px; text-decoration:underline; font-size:11px;">
+                            <apex:outputPanel rendered="{!showUnlock}">
+                                <apex:outputLink onclick="deleteHistory(this); return false;" styleClass="unlockEditLink">Unlock Edit</apex:outputLink>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                        <apex:actionFunction name="checkAccess" action="{!editAccessCheck}" reRender="editAccess,unlock, none">
+                            <apex:param id="pname" name="programName" value="" />
+                        </apex:actionFunction>
+
+                    </div>
+                    <div class="col-md-8">
+                        <apex:outputLink id="redirect" target="_self" value="/apex/GantChartTFSProjectsPage" style="float:right; padding-right: 20px;text-decoration: underline;"> View Gantt Chart</apex:outputLink>
+                    </div>
+                </div>
+                <div class="listRow">
+                    <div class="row" style="margin-bottom:15px;" id="saveRow">
+                        <apex:outputPanel id="editAccess">
+                            <apex:outputPanel rendered="{!hasEditAccess}">
+                                <div class="mismatchErroClass"></div>
+                                <div class="fixedTop">
+
+                                    <div id="edit" style="margin-left:10px;">
+
+                                        <button data-toggle="tooltip" id="enableEditButton" data-placement="bottom" class="btn button-edit" title="Click here to enable drag & drop items between the two lists below" onclick="enableEdit(this);return false;">
+                                            Enable Sorting
+                                        </button>
+
+
+                                    </div>
+                                    <div id="save" class="hideDisplay" style="padding-left: 21px;">
+                                        <button class="btn button-edit" onclick="saveTODB(this); return false;">
+                                            Save
+                                        </button>
+                                        <button class="btn button-cancel" data-toggle="modal" data-target="#warning" onclick="return false;" id="cancelbtn">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </apex:outputPaneL>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6" >
+                            <div class="row" style="margin-top : 5px;">
+                                <div class="col-md-7"><p id="nonprioritized" style="font-size: 15px;"></p></div>
+                                <div class="col-md-5"> <input class="form-control" id="SearchText" onkeyup="FilterUnprioritized(this.value)" type="text" placeholder="Search Projects"/>
+                                    <span class="glyphicon glyphicon-search" style="font-size: normal"></span></div>
+                            </div>
+                            <div id="listView" class="listTable"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row" style="margin-top : 5px;margin-bottom : 13px;">
+                                <div class="col-md-5"><p id="prioritized" style="font-size: 15px;"></p></div>
+                                <div class="col-md-7"><label></label></div>
+                            </div>
+                            <div id="listView2" class="listTable"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style='display:none'>
+            <div id="ToolTipTemplate">
+                <div class="row tooltipRow">
+                    <div class="col-sm-6" > #ReplaceTitle# </div><div class="col-sm-6"><b>#ReplaceValue#</b></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation Modal -->
+        <div class="modal fade" id="warning" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Warning!!</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" style="font-size:14px;">
+                        Are you sure you want to cancel? All unsaved progress will be lost.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">No</button>
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" onclick="cancelEdit(this);return false;" style="color:black !important;">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Information Modal -->
+        <div class="modal fade" id="info" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="infolabel">Warning!!</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" style="font-size:14px;" id="infoModal">
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Ok</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- loading Modal -->
+        <div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content" style="width:40%; top: 382px;">
+                    <div class="modal-body" style="font-size:14px;">
+                        <div class="spinnerClass">Updating Priorities</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session TimeOut Modal -->
+        <div class="modal fade" id="timeout" tabindex="-1" role="dialog" aria-labelledby="timeout" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">!!Warning!!</h5>
+                    </div>
+                    <div class="modal-body" style="font-size:14px;" id="timeoutModal">
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" onclick="ContinueSession();return false;" >Yes</button>
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" onclick="cancelEdit(this);return false;" style="color:black !important;">No</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </apex:form>
+    <script>
+        var interval = parseInt('{!$Label.SessionTimeOutTime}');
+
+        $(document).ready(function(e){
+            DrawUnprioritized(program);
+            DrawPrioritized(program);
+
+
+             $('[data-toggle="tooltip"]').tooltip(
+                 {
+                     delay : {show : 100, hide : 500}
+                 }
+             );
+             var offset = 90,
+                 delay = 300;
+             $(window).scroll(function() {
+                if (jQuery(this).scrollTop() > offset) {
+                    jQuery('div#saveRow').addClass('fixedRow');
+                    jQuery('.fixedTop').css({'top' : '0', 'right' : '34px'});
+                } else {
+                    jQuery('div#saveRow').removeClass('fixedRow');
+                    jQuery('.fixedTop').css({'top' : '', 'right' : ''});
+                }
+             });
+              var keyCode = e.keyCode || e.which;
+              if (keyCode === 13) {
+                e.preventDefault();
+                return false;
+              }
+            setTimeOutVar(interval);
+            var header = $("#listView2").find("thead.k-grid-header");
+            header.find("[data-field='orderId']").html("<span class='glyphicon glyphicon glyphicon-globe' aria-hidden='true' title ='Global Governance Priority' style='font-size: 1.4em;'></span>");
+            header.find("[data-field='otherPriority']").html("<span class='glyphicon glyphicon-copyright-mark' aria-hidden='true' title ='Channel Governance Priority' style='font-size: 1.4em;'></span>");
+
+             header = $("#listView").find("thead.k-grid-header");
+             header.find("[data-field='orderId']").html("<span class='glyphicon glyphicon glyphicon-globe' aria-hidden='true' title ='Global Governance Priority'  style='font-size: 1.4em;'></span>");
+             header.find("[data-field='otherPriority']").html("<span class='glyphicon glyphicon-copyright-mark' aria-hidden='true' title ='Channel Governance Priority' style='font-size: 1.4em;'> </span>");
+
+
+        });
+
+
+
+
+
+    </script>
+    <style>
+        .spinnerClass {
+            background:url('../../img/loading32.gif') no-repeat;
+            height:32px;
+            margin:20px;
+            padding-left:40px;
+            padding-top:9px;
+            font-size: 0.75em;
+        }
+        .mismatchErroClass{
+            float: left;
+            padding-left: 15px;
+            color: red;
+            font-size: 12px;
+            font-weight: 200;
+    }
+    </style>
+
+
+</apex:page>
