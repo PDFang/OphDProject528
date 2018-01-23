@@ -381,7 +381,7 @@
 
        function gridDataBound(e){
 
-           $("#orderLineItems tbody tr a.k-grid-UpdateStatus").each(function () {
+           $("#orderLineItems tbody tr a.k-grid-UpdateStatus, #orderLineItems tbody tr a.k-grid-UpdatePOPSite").each(function () {
                 var currentDataItem = $("#orderLineItems").data("kendoGrid").dataItem($(this).closest("tr"));
                 if (currentDataItem.ParentLineItem != '') {
                     $(this).remove();
