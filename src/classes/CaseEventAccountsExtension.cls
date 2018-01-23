@@ -259,20 +259,13 @@ public class CaseEventAccountsExtension
     public boolean getDisableBatchAccount() {
         boolean disableBatchAccountButton = true;
 
-        // enable button if the default group has been changed
-        if (isDefaultGroupChanged()) {
-            disableBatchAccountButton = false;
-        }
-
         // enable button in certain status
-        if (!disableBatchAccountButton) {
-            string displayedBatchStatus = getDisplayedBatchStatus();
-            if (!string.isBlank(displayedBatchStatus)){
-                batchStatus = 'Account Batch Status: ' + displayedBatchStatus;
-                enablePoller = ( displayedBatchStatus != 'Processing' && displayedBatchStatus != 'New') ? false : true;
-            }
-            disableBatchAccountButton = (displayedBatchStatus == 'Ready' || displayedBatchStatus == 'Failed' || string.isBlank(displayedBatchStatus)) ? false : true;
+        string displayedBatchStatus = getDisplayedBatchStatus();
+        if (!string.isBlank(displayedBatchStatus)){
+            batchStatus = 'Account Batch Status: ' + displayedBatchStatus;
+            enablePoller = ( displayedBatchStatus != 'Processing' && displayedBatchStatus != 'New') ? false : true;
         }
+        disableBatchAccountButton = (displayedBatchStatus == 'Ready' || displayedBatchStatus == 'Failed' || string.isBlank(displayedBatchStatus)) ? false : true;
 
         // disable button if exceeds maxium running batches
         if (!disableBatchAccountButton) {
