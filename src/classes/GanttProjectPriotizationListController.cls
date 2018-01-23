@@ -9,10 +9,18 @@ public with sharing class GanttProjectPriotizationListController {
     public string selectValue { get;set; }
     public  boolean showUnlock{get; set;}
     public integer sessionTimeoutTime{get;set;}
+    public string projectType{get;set;}
+
+    static final Map<String, String> recordTypeMap = new Map<String, String>{
+            'PMO' => 'PMO Project',
+            'IT' => 'IT Project Request'
+    };
 
     public GanttProjectPriotizationListController(){
 
         sessionTimeoutTime = integer.valueOf(Label.SessionTimeOutTime) / (1000* 60);
+        //projectType = 'PMO';
+        projectType = 'IT';
         checkAccess('Global');
         checkUnlockEdit('Global');
         GetAvailablePrograms();
@@ -95,8 +103,9 @@ public with sharing class GanttProjectPriotizationListController {
     }
 
     @RemoteAction
-    public static string GetUnpriortizedProjects(string priorityType){
+    public static string GetUnpriortizedProjects(string priorityType, string projectType){
 
+        String projectRecordType = recordTypeMap.containsKey(projectType) ? recordTypeMap.get(projectType) : 'NULL';
         list<ProjectListDataFields> dataList = new list<ProjectListDataFields>();
         string priorityField;
 
@@ -106,8 +115,8 @@ public with sharing class GanttProjectPriotizationListController {
                 priorityField = 'Ops_Backlog_Priority__c';
 
         string queryProjects = 'Select Id, Name, ProjectStatus__c,CreatedDate, Ops_Backlog_Priority__c,BattingOrder__c , Summary__c, RequestedDeliveryDate__c, ExpectedDeliveryDate__c, ProjectOwner__r.Name, '
-                + ' ProjectType__c,Complete__c,  Primary_Product__c, Delivery_Channel__c, Request_Channel__c From Project__c where Primary_Product__c != null '
-                + ' and  RecordType.Name = \'PMO Project\'  and ProjectStatus__c not in (\'Completed\',\'Closed\',\'Canceled\') and ProjectType__c != \'Time Keeping\' '
+                + ' ProjectType__c,Complete__c,  Primary_Product__c, Delivery_Channel__c, Request_Channel__c, RecordType.Name From Project__c where Primary_Product__c != null '
+                + ' and  RecordType.Name = \'' + projectRecordType + '\'  and ProjectStatus__c not in (\'Completed\',\'Closed\',\'Canceled\') and ProjectType__c != \'Time Keeping\' '
                 + ' and (' + priorityField + ' = null OR ' +  priorityField + ' = 0)';
 
         if(priorityType != 'Global')
@@ -121,6 +130,7 @@ public with sharing class GanttProjectPriotizationListController {
             ProjectListDataFields childData = new ProjectListDataFields();
             childData.ProjectId = proj.Id;
             childData.ProjectName = proj.Name + ' - ' + proj.Summary__c;
+            childData.RecordTypeName = proj.RecordType.Name;
             childData.ProjectSummary =  proj.Summary__c;
             childData.ProjectStatus = proj.ProjectStatus__c;
             childData.CreatedDate = Date.valueOf(proj.CreatedDate);
@@ -148,8 +158,9 @@ public with sharing class GanttProjectPriotizationListController {
     }
 
     @RemoteAction
-    public static string GetPriortizedProjects(string priorityType){
+    public static string GetPriortizedProjects(string priorityType, string projectType){
 
+        String projectRecordType = recordTypeMap.containsKey(projectType) ? recordTypeMap.get(projectType) : 'NULL';
         list<ProjectListDataFields> dataList = new list<ProjectListDataFields>();
         string priorityField;
 
@@ -159,8 +170,8 @@ public with sharing class GanttProjectPriotizationListController {
                 priorityField = 'Ops_Backlog_Priority__c';
 
         string queryProjects = 'Select Id, Name, ProjectStatus__c, BattingOrder__c, Ops_Backlog_Priority__c, Summary__c, RequestedDeliveryDate__c, ExpectedDeliveryDate__c, ProjectOwner__r.Name, '
-                + ' ProjectType__c,Complete__c, Primary_Product__c,Delivery_Channel__c, Request_Channel__c  From Project__c where Primary_Product__c != null '
-                + ' and  RecordType.Name = \'PMO Project\'  and ProjectStatus__c not in (\'Completed\',\'Closed\',\'Canceled\') and ProjectType__c != \'Time Keeping\' '
+                + ' ProjectType__c,Complete__c, Primary_Product__c,Delivery_Channel__c, Request_Channel__c, RecordType.Name  From Project__c where Primary_Product__c != null '
+                + ' and  RecordType.Name = \'' + projectRecordType + '\'  and ProjectStatus__c not in (\'Completed\',\'Closed\',\'Canceled\') and ProjectType__c != \'Time Keeping\' '
                 + ' and (' + priorityField + ' != null AND ' +  priorityField + ' != 0)';
 
         if(priorityType != 'Global')
@@ -175,6 +186,7 @@ public with sharing class GanttProjectPriotizationListController {
             ProjectListDataFields childData = new ProjectListDataFields();
             childData.ProjectId = proj.Id;
             childData.ProjectName = proj.Name + ' - ' + proj.Summary__c;
+            childData.RecordTypeName = proj.RecordType.Name;
             childData.ProjectSummary =  proj.Summary__c;
             childData.ProjectStatus = proj.ProjectStatus__c;
             if(priorityType == 'Global'){
@@ -298,12 +310,17 @@ public with sharing class GanttProjectPriotizationListController {
                     ChangedProject cp = (ChangedProject)parser.readValueAs(ChangedProject.class);
 
                     Project__c proj = new Project__c(Id = cp.ProjectId);
-                    if(priorityType == 'Global'){
-                        proj.BattingOrder__c = cp.Priority;
+                    if(cp.RecordTypeName == 'PMO Project'){
+                        if(priorityType == 'Global'){
+                            proj.BattingOrder__c = cp.Priority;
+                        }
+                        else{
+                            proj.Ops_Backlog_Priority__c = cp.Priority;
+                        }
+                    } else if(cp.RecordTypeName == 'IT Project Request'){
+                        proj.RoadmapPriority__c = cp.Priority;
                     }
-                    else{
-                        proj.Ops_Backlog_Priority__c = cp.Priority;
-                    }
+
                     updateProjectLists.add(proj);
                 }
             }
@@ -393,6 +410,7 @@ public with sharing class GanttProjectPriotizationListController {
     public class ChangedProject{
         public String ProjectId ;
         public decimal Priority ;
+        public String RecordTypeName;
     }
 
 

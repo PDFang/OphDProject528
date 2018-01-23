@@ -170,6 +170,7 @@
     </apex:form>
     <script>
         var interval = parseInt('{!$Label.SessionTimeOutTime}');
+        var projectType = '{!projectType}';
 
         $(document).ready(function(e){
             DrawUnprioritized(program);

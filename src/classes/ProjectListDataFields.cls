@@ -13,6 +13,7 @@ public with sharing class ProjectListDataFields {
     public string   ProjectStatus{get; set;}
     public string   ProductChannel{get;set;}
     public string   ProjectType{get;set;}
+    public string   RecordTypeName{get;set;}
     public string   ProjectSummary {get; set;}
     public decimal  OtherPriority {get; set;}
     public string   DeliveryChannel {get; set;}
