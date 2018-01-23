@@ -71,7 +71,7 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
                 nCase.IsVisibleInSelfService = true;
                 nCase.Status = 'New';
                 nCase.CustomerOrder__c = CustOrder.Id;
-                nCase.CSO_Resolution_Type__c = 'DID - ADD - Manual Process';
+                nCase.CSO_Resolution_Type__c = 'DID - Add - Manual Process';
                 nCase.setOptions(dmo);
                 CaseList.add(nCase);
 
@@ -370,7 +370,7 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
                nCase.IsVisibleInSelfService =true;
                nCase.Status = 'New';
                nCase.CustomerOrder__c = CustOrder.Id;
-               nCase.CSO_Resolution_Type__c = 'IP Voice - ADD - Error';
+               nCase.CSO_Resolution_Type__c = 'IP Voice - Add - Error';
                nCase.setOptions(dmo);
                CaseList.add(nCase);
             }
