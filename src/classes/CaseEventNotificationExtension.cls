@@ -573,7 +573,7 @@ public class CaseEventNotificationExtension
 
         SendMethodOptions = new List<SelectOption>();
         SendMethodOptions.add(new SelectOption('ByAccounts', 'By Associated Accounts', disableGroupOption));
-        SendMethodOptions.add(new SelectOption('ByProducts', 'By Protucts / Platforms'));
+        SendMethodOptions.add(new SelectOption('ByProducts', 'By Products / Platforms'));
     }
 
     public pagereference sendNotificationViaXmatters(){
