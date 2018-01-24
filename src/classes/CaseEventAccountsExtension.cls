@@ -53,7 +53,8 @@ public class CaseEventAccountsExtension
          
         }
 
-        if(c.RecordType.Name == 'Maintenance Notification'){
+        RecordType r = [Select Name From RecordType where Id = :c.RecordTypeId limit 1];
+        if(r.Name == 'Maintenance Notification'){
                 canBatch = true;
                 enablePoller = true;
                 xmNotificationGroups__c[] xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
