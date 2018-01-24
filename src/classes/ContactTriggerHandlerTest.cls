@@ -100,6 +100,8 @@ public class ContactTriggerHandlerTest {
         );
 
         insert testContact;
+        testContact.xmPerson__c = person.Id;
+        update testContact;
 
         Opportunity o = new Opportunity();
         o.RecordTypeId = inContactBaseClass.SelectRecordTypeIDByName('Historical Products', 'Opportunity');

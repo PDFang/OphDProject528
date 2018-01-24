@@ -306,7 +306,6 @@
 
 
             <apex:pageBlock id="contactList" rendered="{!contactList.size > 0}">
-                <p>Click "Associate" in the Action column below to include accounts and products in your notification options below. </p>
                 <apex:pageBlockSection collapsible="true"  columns="1" showHeader="true" title="Other Associated Accounts" id="duplicateContacts">
 
                     <apex:dataTable value="{!customContactList}" var="con"  styleClass="table table-bordered table-condensed" >
@@ -339,34 +338,11 @@
                             <apex:outputLink value="/{!con.ContactId}" target="_blank"  style="text-decoration:underline">{!con.ContactLastName}</apex:outputLink>
                         </apex:column>
                         <apex:column >
-                            <apex:facet name="header">Action</apex:facet>
-                            <apex:outputPanel rendered="{!AND(isXmPerson, ISBLANK(con.xmPersonId))}">
-                                <apex:actionStatus id="associatePersons" >
-                                    <apex:facet name="stop">
-                                        <apex:commandButton value="Associate" onClick="callAssociateContact('{!con.ContactId}'); return false;"  status="associatePersons"/>
-                                    </apex:facet>
-                                    <apex:facet name="start">
-                                        <apex:outputPanel >
-                                            <apex:image value="/img/loading32.gif" style="height: 15px;"/>
-                                            <apex:commandButton styleClass="k-button"  value="Adding..." status="associatePersons" disabled="true"/>
-                                        </apex:outputPanel>
-                                    </apex:facet>
-                                </apex:actionStatus>
-                            </apex:outputPanel>
-                            <apex:outputPanel rendered="{!!ISBLANK(con.xmPersonId)}">
-                                <apex:actionStatus id="dissociateContact" >
-                                    <apex:facet name="stop">
-                                        <apex:commandButton value="Dissociate" onClick="callDissociateContact('{!con.ContactId}'); return false;"  status="dissociateContact"/>
-                                    </apex:facet>
-                                    <apex:facet name="start">
-                                        <apex:outputPanel >
-                                            <apex:image value="/img/loading32.gif" style="height: 15px;"/>
-                                            <apex:commandButton styleClass="k-button"  value="Removing..." status="dissociateContact" disabled="true"/>
-                                        </apex:outputPanel>
-                                    </apex:facet>
-                                </apex:actionStatus>
-
-                            </apex:outputPanel>
+                            <apex:facet name="header">Status</apex:facet>
+                            <apex:outputText rendered="{!ISBLANK(con.xmPersonId)}" value="Not Associated">
+                            </apex:outputText>
+                            <apex:outputText rendered="{!!ISBLANK(con.xmPersonId)}" value="Associated">
+                            </apex:outputText>
                         </apex:column>
                     </apex:dataTable>
                 </apex:pageBlockSection>

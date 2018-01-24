@@ -88,8 +88,8 @@ public class XMPersonManagementController{
             }
 
             system.debug('xmPersonGuid =>' + xmPersonGuid);
-
-            if(string.isNotBlank(xmPersonGuid) && !isPersonRemoved){
+            //if(string.isNotBlank(xmPersonGuid) && !isPersonRemoved)
+            if(string.isNotBlank(xmPersonGuid)){
                 person = XMPersonManagementHelper.getXmPersonByGuid(xmPersonGuid);
             }else if(currentContact.XmattersUid__c != null){
                 isPersonMatch = true;
@@ -113,10 +113,13 @@ public class XMPersonManagementController{
         if(string.isNotBlank(contactEmail)){
             Map<Id, Contact> contactMap = helper.getContactsByEmail(contactEmail);
             contactMap.remove(contactId);
+            System.debug('contactMap' + contactMap);
             contactList.addAll(contactMap.values());
 
         }
 	    customContactList = helper.getContactsWithProducts(contactList);
+        System.debug('contactList' + contactList);
+        System.debug('customContactList' + customContactList);
 
     }
 
@@ -133,7 +136,13 @@ public class XMPersonManagementController{
         try{
             xmPersonId = helper.createXmPerson(person);
             system.debug('addPerson(): currentContact - '+currentContact);
-            //findDuplicateContacts();
+
+            if(null != contactList){
+                for(Contact cnt: contactList){
+                    helper.associateContact(cnt.Id, xmPersonId);
+                }
+            }
+            findDuplicateContacts();
         }
         catch(Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ex.getMessage()));
@@ -150,9 +159,16 @@ public class XMPersonManagementController{
             if(xmPersonId == null){
                 xmPersonId = [select Id from xmPerson__c where xmPersonUID__c = :currentContact.XmattersUid__c Limit 1].Id;
             }
-            helper.associateContact(contactRowId, xmPersonId);
-            ApexPages.currentPage().getParameters().put('rowId', '');
+            helper.associateContact('', xmPersonId);
+
+            if(null != contactList){
+                for(Contact contact: contactList){
+                    helper.associateContact(contact.Id, xmPersonId);
+                }
+            }
             findDuplicateContacts();
+            ApexPages.currentPage().getParameters().put('rowId', '');
+
         }
         catch(Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ex.getMessage()));
@@ -168,7 +184,12 @@ public class XMPersonManagementController{
             string currentxmPersonGuid = [select xmPerson__r.xmPersonUID__c from Contact where id = :contactRowId Limit 1].xmPerson__r.xmPersonUID__c;
             helper.removeContactAssociation(contactRowId, currentxmPersonGuid);
             ApexPages.currentPage().getParameters().put('removeId', '');
-            isPersonRemoved = true;
+
+            if(null != contactList){
+                for(Contact contact: contactList){
+                    helper.removeContactAssociation(contact.Id, currentxmPersonGuid);
+                }
+            }
             findDuplicateContacts();
             loadContact();
         }
