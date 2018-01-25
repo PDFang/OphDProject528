@@ -2,14 +2,16 @@
  - Created by arnab.karsarkar on 2/1/2017.
  -->
 
-<apex:page id="GanttProjectList" controller="GanttProjectPriotizationListController" sideBar="false" standardStylesheets="false" title="PMO Project Prioritization" setup="false" >
+<apex:page id="GanttProjectList" controller="GanttProjectPriotizationListController" sideBar="false" standardStylesheets="false" title="Project Prioritization" setup="false" >
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap-switch.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/GanttProjectListJS.js')}"/>
 
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-switch.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.common.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.rtl.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
@@ -19,8 +21,11 @@
     <apex:form >
         <div class="demo-section">
             <div class="modal-backdrop fade in hideDisplay" id="modalbackdrop"></div>
-            <div class="page-header">
-                <h1>PMO Project Prioritization List</h1>
+            <div class="container-fluid">
+                <div class="page-header">
+                    <h1><input type="checkbox" data-on-text="PMO" data-off-text="IT" data-off-color="primary" id="projecttype"/>
+                    Project Prioritization List</h1>
+                </div>
             </div>
             <div class="container-fluid">
                 <div class="row" style="margin-bottom:15px;margin-top:15px;">
@@ -36,6 +41,9 @@
                         </apex:outputPanel>
                         <apex:actionFunction name="checkAccess" action="{!editAccessCheck}" reRender="editAccess,unlock, none">
                             <apex:param id="pname" name="programName" value="" />
+                        </apex:actionFunction>
+                        <apex:actionFunction name="buildFilter" action="{!initFilter}" reRender="sel1,editAccess,unlock, none">
+                            <apex:param id="param1" name="projectType" assignTo="{!projectType}" value=""/>
                         </apex:actionFunction>
 
                     </div>
@@ -176,6 +184,13 @@
             DrawUnprioritized(program);
             DrawPrioritized(program);
 
+            if(projectType == 'PMO'){
+                $('#projecttype').bootstrapSwitch('state', true);
+                $('#projecttype').bootstrapSwitch('labelText', 'IT');
+            }else{
+                $('#projecttype').bootstrapSwitch('state', false);
+                $('#projecttype').bootstrapSwitch('labelText', 'PMO');
+            }
 
              $('[data-toggle="tooltip"]').tooltip(
                  {
@@ -210,8 +225,19 @@
 
         });
 
-
-
+        $('#projecttype').on('switchChange.bootstrapSwitch', function(event, state) {
+            if(state){
+                projectType = 'PMO';
+                program = 'Global';
+                $('#projecttype').bootstrapSwitch('labelText', 'IT');
+            }else{
+                projectType = 'IT';
+                program = 'All';
+                $('#projecttype').bootstrapSwitch('labelText', 'PMO');
+            }
+            buildFilter(projectType);
+            buildGridData(program);
+        });
 
 
     </script>
