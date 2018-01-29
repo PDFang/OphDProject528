@@ -498,6 +498,10 @@ public class CaseEventNotificationExtension
                 displayedBatchStatus = 'Processing';
             }
         }
+        else {
+            //no groups created
+            displayedBatchStatus = 'No group created.';
+        }
 
         return displayedBatchStatus;
     }
