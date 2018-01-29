@@ -1,5 +1,5 @@
 <!--
- - Created by Antara Bhattacharya on 1/19/2018.
+ - Created by Arnab KarSarkar on 1/19/2018.
  -->
 
 <apex:page id="xMNotificationHistory" showHeader="false" sideBar="false" standardController="Contact" title="Contact Notification History" extensions="xMNotificationHistoryController" applyBodyTag="false">

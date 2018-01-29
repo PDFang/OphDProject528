@@ -182,6 +182,17 @@ private class XMPersonManagementControllerTest {
         testContact.xmPerson__c = person.Id;
         update testContact;
 
+        Contact testDuplicateContact = new Contact(
+                FirstName = 'XMPersonManagementControllerTest',
+                LastName = 'Duplicate',
+                Email = 'contact1@incontact.com',
+                RecordTypeId = recordTypeMap.get(CUSTOMER_CONTACT).getRecordTypeId(),
+                AccountId = testAccount.Id
+        );
+        //contactList.add(testDuplicateContact);
+
+        insert testDuplicateContact;
+
         test.startTest();
 
         XMRestPeopleMockHttpGenerator xmPersonMock = new XMRestPeopleMockHttpGenerator(200,'Complete','[{"Name": "XMPersonManagementControllerTest"}]',null);
@@ -189,7 +200,7 @@ private class XMPersonManagementControllerTest {
 
         XMPersonManagementController testController = new XMPersonManagementController(new ApexPages.StandardController(testContact));
         system.assertEquals( true, testController.getIsXmPerson(), 'Contact should have an xmPerson.');
-        system.assertEquals( false, testController.isPersonMatch, 'Contact should not have a matching xmPerson.');
+        system.assertEquals( true, testController.isPersonMatch, 'Contact should not have a matching xmPerson.');
 
         XMPersonWrapper personWrapper = testController.person;
         system.assertNotEquals( null, personWrapper, 'xMatters should return an XM Person.');
