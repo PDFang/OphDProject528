@@ -77,107 +77,128 @@
         .message .messageText h4 {
            display: none;
         }
+        .pbSubheader {
+                cursor:pointer !important;
+            }
+            .nav-tabs>li.active>a, .nav-tabs>li.active>a:focus, .nav-tabs>li.active>a:hover{
+                    background-color: #58b6dc;
+                    color:white;
+            }
 
     </style>
+
     <apex:form id="myform">
-        <apex:outputPanel id="detailSection">
-            <apex:pageBlock title="Project Detail" rendered="{!Not(ISNULL(Project))}" id="detailProject">
-                <apex:pageBlockButtons title="" location="bottom">
-                    <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
-                </apex:pageBlockButtons>
-                <apex:pageBlockSection columns="2" >
-                    <apex:repeat value="{!$ObjectType.Project__c.FieldSets.PS_Project_Allocation}" var="f">
-                        <apex:outputfield value="{!Project[f]}" />
-                    </apex:repeat>
-                </apex:pageBlockSection>
-            </apex:pageBlock>
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#detailsSection">Details</a></li>
+            <li id="assetDetailsTab"><a href="#assetAllocationDetails">Asset Allocation Details</a></li>
+            <li id="subscriptionDetailsTab"><a href="#subscriptionAllocationDetails">Subscription Allocation Details</a></li>
+        </ul>
+        <div class="tab-content">
+            <div id="detailsSection" class="tab-pane fade in active">
+                <apex:outputPanel id="detailSection">
+                    <apex:pageBlock title="Project Detail" rendered="{!Not(ISNULL(Project))}" id="detailProject">
+                        <apex:pageBlockButtons title="" location="bottom">
+                            <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
+                        </apex:pageBlockButtons>
+                        <apex:pageBlockSection columns="2" >
+                            <apex:repeat value="{!$ObjectType.Project__c.FieldSets.PS_Project_Allocation}" var="f">
+                                <apex:outputfield value="{!Project[f]}" />
+                            </apex:repeat>
+                        </apex:pageBlockSection>
+                    </apex:pageBlock>
 
-            <apex:pageBlock title="Asset Detail" rendered="{!Not(ISNULL(asset))}" id="detailAsset">
-                <apex:pageBlockButtons title="" location="bottom">
-                    <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
-                    <apex:outputPanel rendered="{!Asset.Quantity > 1 && !Asset.FullyImplemented__c}">
-                        <button title="Edit On Hold/Cancelled Quantity " onClick="openEditCancSuspQuantityModal(); return false;">
-                            Edit On Hold/Cancelled Quantity
-                        </button>
-                    </apex:outputPanel>
-                </apex:pageBlockButtons>
-                <!--<apex:pageBlockSection columns="2">-->
-                    <!--<apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation}" var="f">-->
+                    <apex:pageBlock title="Asset Detail" rendered="{!Not(ISNULL(asset))}" id="detailAsset">
+                        <apex:pageBlockButtons title="" location="bottom">
+                            <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
+                            <apex:outputPanel rendered="{!Asset.Quantity > 1 && !Asset.FullyImplemented__c}">
+                                <button title="Edit On Hold/Cancelled Quantity " onClick="openEditCancSuspQuantityModal(); return false;">
+                                    Edit On Hold/Cancelled Quantity
+                                </button>
+                            </apex:outputPanel>
+                        </apex:pageBlockButtons>
+                        <!--<apex:pageBlockSection columns="2">-->
+                        <!--<apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation}" var="f">-->
                         <!--<apex:outputfield value="{!Asset[f]}" />-->
-                    <!--</apex:repeat>-->
-                <!--</apex:pageBlockSection>-->
-                <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity > 1}">
-                    <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_GrTh1_Fields}" var="f">
-                        <apex:outputfield value="{!Asset[f]}" />
-                    </apex:repeat>
-                </apex:pageBlockSection>
-                <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity <= 1}">
-                    <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Eq1_Fields}" var="f">
-                        <apex:outputfield value="{!Asset[f]}" />
-                    </apex:repeat>
-                </apex:pageBlockSection>
-               <apex:pageBlockSection columns="2" >
-                   <apex:outputfield value="{!Asset.ImplementedProduct__c}" />
-               </apex:pageBlockSection>
-               <div style="float:left; position:relative; top:-24px; left :25%; font-size: 12.12px;">
-                   [<a style="color:blue;cursor:pointer;" data-toggle="modal" data-target="#ImplementedProducts">Select Implemented Product</a>]
-               </div>
-                <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity > 1}" id="cancSuspQuanPBS">
-                    <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Editable_Fields}" var="f">
-                        <apex:outputfield value="{!Asset[f]}" />
-                    </apex:repeat>
-                </apex:pageBlockSection>
-            </apex:pageBlock>
+                        <!--</apex:repeat>-->
+                        <!--</apex:pageBlockSection>-->
+                        <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity > 1}">
+                            <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_GrTh1_Fields}" var="f">
+                                <apex:outputfield value="{!Asset[f]}" />
+                            </apex:repeat>
+                        </apex:pageBlockSection>
+                        <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity <= 1}">
+                            <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Eq1_Fields}" var="f">
+                                <apex:outputfield value="{!Asset[f]}" />
+                            </apex:repeat>
+                        </apex:pageBlockSection>
+                        <apex:pageBlockSection columns="2" >
+                            <apex:outputfield value="{!Asset.ImplementedProduct__c}" />
+                        </apex:pageBlockSection>
+                        <div style="float:left; position:relative; top:-24px; left :25%; font-size: 12.12px;">
+                            [<a style="color:blue;cursor:pointer;" data-toggle="modal" data-target="#ImplementedProducts">Select Implemented Product</a>]
+                        </div>
+                        <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity > 1}" id="cancSuspQuanPBS">
+                            <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Editable_Fields}" var="f">
+                                <apex:outputfield value="{!Asset[f]}" />
+                            </apex:repeat>
+                        </apex:pageBlockSection>
+                    </apex:pageBlock>
 
-            <apex:pageBlock title="Subscription Detail" rendered="{!Not(ISNULL(Subscription))}" id="detailSubscription">
-                <apex:pageBlockButtons title="" location="bottom">
-                    <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
-                    <apex:outputPanel rendered="{!Subscription.Quantity__c > 1 && !Subscription.FullyImplemented__c}">
-                        <button title="Edit On Hold/Cancelled Quantity " onClick="openSubsEditCancSuspQuantityModal(); return false;">
-                            Edit On Hold/Cancelled Quantity
-                        </button>
-                    </apex:outputPanel>
-                </apex:pageBlockButtons>
-                <!--<apex:pageBlockSection columns="2" >-->
-                    <!--<apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation}" var="f">-->
+                    <apex:pageBlock title="Subscription Detail" rendered="{!Not(ISNULL(Subscription))}" id="detailSubscription">
+                        <apex:pageBlockButtons title="" location="bottom">
+                            <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
+                            <apex:outputPanel rendered="{!Subscription.Quantity__c > 1 && !Subscription.FullyImplemented__c}">
+                                <button title="Edit On Hold/Cancelled Quantity " onClick="openSubsEditCancSuspQuantityModal(); return false;">
+                                    Edit On Hold/Cancelled Quantity
+                                </button>
+                            </apex:outputPanel>
+                        </apex:pageBlockButtons>
+                        <!--<apex:pageBlockSection columns="2" >-->
+                        <!--<apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation}" var="f">-->
                         <!--<apex:outputfield value="{!Subscription[f]}" />-->
-                    <!--</apex:repeat>-->
-                <!--</apex:pageBlockSection>-->
-                <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c > 1}">
-                    <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation_GrTh1_Fields}" var="f">
-                        <apex:outputfield value="{!Subscription[f]}" />
-                    </apex:repeat>
-                </apex:pageBlockSection>
-                <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c <= 1}">
-                    <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation_Eq1_Fields}" var="f">
-                        <apex:outputfield value="{!Subscription[f]}" />
-                    </apex:repeat>
-                </apex:pageBlockSection>
-                <apex:pageBlockSection columns="2" >
-                    <apex:outputfield value="{!Subscription.Implemented_Product__c}" />
-                </apex:pageBlockSection>
-                <div style="float:left; position:relative; top:-24px; left :25%; font-size: 12.12px;">
-                    [<a style="color:blue;cursor:pointer;" data-toggle="modal" data-target="#ImplementedProducts">Select Implemented Product</a>]
+                        <!--</apex:repeat>-->
+                        <!--</apex:pageBlockSection>-->
+                        <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c > 1}">
+                            <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation_GrTh1_Fields}" var="f">
+                                <apex:outputfield value="{!Subscription[f]}" />
+                            </apex:repeat>
+                        </apex:pageBlockSection>
+                        <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c <= 1}">
+                            <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation_Eq1_Fields}" var="f">
+                                <apex:outputfield value="{!Subscription[f]}" />
+                            </apex:repeat>
+                        </apex:pageBlockSection>
+                        <apex:pageBlockSection columns="2" >
+                            <apex:outputfield value="{!Subscription.Implemented_Product__c}" />
+                        </apex:pageBlockSection>
+                        <div style="float:left; position:relative; top:-24px; left :25%; font-size: 12.12px;">
+                            [<a style="color:blue;cursor:pointer;" data-toggle="modal" data-target="#ImplementedProducts">Select Implemented Product</a>]
+                        </div>
+                        <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c > 1}" id="subsCancSuspQuanPBS">
+                            <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Alloc_Editable_Fields}" var="f">
+                                <apex:outputfield value="{!Subscription[f]}" />
+                            </apex:repeat>
+                        </apex:pageBlockSection>
+                    </apex:pageBlock>
+                </apex:outputPanel>
+            </div>
+            <div id="assetAllocationDetails" class="tab-pane fade">
+                <div id="assetAllocationPanel">
+                    <apex:pageBlock id="assetAllocationBlock">
+                        <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Asset Allocation"/>
+                        <div id="assetAllocationList"></div>
+                    </apex:pageBlock>
                 </div>
-                <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c > 1}" id="subsCancSuspQuanPBS">
-                    <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Alloc_Editable_Fields}" var="f">
-                        <apex:outputfield value="{!Subscription[f]}" />
-                    </apex:repeat>
-                </apex:pageBlockSection>
-            </apex:pageBlock>
-        </apex:outputPanel>
-        <div id="assetAllocationPanel">
-            <apex:pageBlock id="assetAllocationBlock">
-                <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Asset Allocation"/>
-                <div id="assetAllocationList"></div>
-            </apex:pageBlock>
-        </div>
-        <div id="subscriptiontAllocationPanel">
-            <apex:pageBlock id="subscriptiontAllocationBlock">
-                <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Subscription Allocation"/>
-                <div id="subscriptionAllocationList"></div>
-                <div id="window"></div>
-            </apex:pageBlock>
+            </div>
+            <div id="subscriptionAllocationDetails" class="tab-pane fade">
+                <div id="subscriptiontAllocationPanel">
+                    <apex:pageBlock id="subscriptiontAllocationBlock">
+                        <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Subscription Allocation"/>
+                        <div id="subscriptionAllocationList"></div>
+                        <div id="window"></div>
+                    </apex:pageBlock>
+                </div>
+            </div>
         </div>
         <!-- Confirmation Modal -->
         <div class="modal fade" id="warning" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true">
@@ -346,10 +367,10 @@
                         </div>
                     </div>
                 </div>
-
         </div>
-
     </apex:form>
+
+
     <script type="text/x-kendo-template" id="windowTemplate">
         <p>Delete this Allocation for <strong>#= AssetName == null ? SubscriptionName : AssetName #</strong> ? </p>
         <p>Allocated Quantity = <strong>#= AllocatedQuantity == null ? 0 : AllocatedQuantity #</strong></p>
@@ -366,6 +387,21 @@
 
         $(document).ready(function() {
            getSObjType();
+           $(".nav-tabs a").click(function(){
+                $(this).tab('show');
+            });
+
+           if({!Asset == null}){
+               $("#assetDetailsTab").hide();
+           }
+           if({!Subscription == null}){
+               $("#subscriptionDetailsTab").hide();
+           }
+
+           if({!Project != null}){
+               $("#assetDetailsTab").show();
+               $("#subscriptionDetailsTab").show();
+           }
 
         });
 
