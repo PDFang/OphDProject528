@@ -119,9 +119,9 @@ public with sharing class PriotizationListControllerTest {
         createPermissionSetUser();
         CreateHistoryRecord();
         GanttProjectPriotizationListController gp = new GanttProjectPriotizationListController();
-        Test.setCurrentPageReference(new PageReference('Page.GanttProjectList')); 
-		System.currentPageReference().getParameters().put('programName', 'Global');
-        gp.editAccessCheck();        
+        Test.setCurrentPageReference(new PageReference('Page.GanttProjectList'));
+        System.currentPageReference().getParameters().put('programName', 'Global');
+        gp.editAccessCheck();
         system.assertEquals(true,gp.hasEditAccess);
         system.assertEquals(false,gp.showUnlock);
     }
@@ -137,22 +137,28 @@ public with sharing class PriotizationListControllerTest {
 
     // test picklists
     public static testMethod void  testUnprioritized(){
-       list<ProjectListDataFields> dataList = new list<ProjectListDataFields>();
-       createTestData();
-       string projects =  GanttProjectPriotizationListController.GetUnpriortizedProjects('Global');
-       dataList = (list<ProjectListDataFields>)JSON.deserialize(projects, list<ProjectListDataFields>.Class);
-       system.debug('datalist size =>' + dataList.size());
-       system.assertEquals(1, dataList.size());
+        list<ProjectListDataFields> dataList = new list<ProjectListDataFields>();
+        createTestData();
+        test.startTest();
+        string projects =  GanttProjectPriotizationListController.GetUnpriortizedProjects('Global', 'PMO');
+        dataList = (list<ProjectListDataFields>)JSON.deserialize(projects, list<ProjectListDataFields>.Class);
+        system.debug('datalist size =>' + dataList.size());
+        system.assertEquals(1, dataList.size());
+        GanttProjectPriotizationListController.GetUnpriortizedProjects('All', 'IT');
+        test.stopTest();
     }
 
     // test picklists
     public static testMethod void  testPrioritized(){
         list<ProjectListDataFields> dataList = new list<ProjectListDataFields>();
         createTestData();
-        string projects =  GanttProjectPriotizationListController.GetPriortizedProjects('Global');
+        test.startTest();
+        string projects =  GanttProjectPriotizationListController.GetPriortizedProjects('Global', 'PMO');
         dataList = (list<ProjectListDataFields>)JSON.deserialize(projects, list<ProjectListDataFields>.Class);
         system.debug('datalist size =>' + dataList.size());
         system.assertEquals(5, dataList.size());
+        GanttProjectPriotizationListController.GetPriortizedProjects('All', 'IT');
+        Test.stopTest();
     }
 
     // test validate history record & cancel Edit
@@ -192,7 +198,7 @@ public with sharing class PriotizationListControllerTest {
             Test.stopTest();
             Project__c[] ITProjects = [select Id, RoadMapPriority__c from Project__c where RecordType.Name = :PROJECT_TYPE_IT and ParentProject__c = :PMOProjects[0].Id];
             system.assertEquals(6, ITProjects[0].RoadMapPriority__c);
-          
+
         }
     }
 
