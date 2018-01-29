@@ -1,4 +1,4 @@
-@IsTest()
+@IsTest
 private class CustomerOrderTriggerHandlerTest {
 	static final String ACCOUNT_TYPE = 'Customers';
     static final string CONTACT_TYPE ='Customer-Other';
