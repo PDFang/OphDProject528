@@ -20,4 +20,5 @@ public with sharing class ProjectListDataFields {
     public string   RequestChannel {get; set;}
     public boolean  isPriorityMismatch {get; set;}
     public Date  CreatedDate {get; set;}
+    public string   RequestType{get;set;}
 }

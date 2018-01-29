@@ -61,22 +61,28 @@ public with sharing class GanttProjectPriotizationListController {
 
     private void checkAccess(string priorityType){
         hasEditAccess = false;
-        string CustomPermissionName;
 
-        ProgramChannelPermissionMap__mdt[] mapping = [SELECT CustomPermissions__c, ProgramChannel__c
-        FROM ProgramChannelPermissionMap__mdt
-        WHERE ProgramChannel__c =: priorityType Limit 1];
-        if(mapping.size() > 0)
-            CustomPermissionName = mapping[0].CustomPermissions__c;
+        Set<String> channels = new Set<String>();
+        if(projectType == 'IT'){
+            channels.add('All');
+        }
+        channels.add(priorityType);
 
-        Set<String> customPermissionNames = new Set<String>();
+        Set<String> CustomPermissionNames = new Set<String>();
+
+        for(ProgramChannelPermissionMap__mdt mapping : [SELECT CustomPermissions__c, ProgramChannel__c
+                    FROM ProgramChannelPermissionMap__mdt
+                    WHERE ProgramChannel__c IN :channels
+        ]){
+            CustomPermissionNames.add(mapping.CustomPermissions__c);
+        }
+
         Set<String> customPermissionsForCurrentUser = new Set<String>();
 
         // Query the full set of Custom Permissions for the given namespace
         Map<Id, String> customPermissionNamesById = new Map<Id, String>();
-        List<CustomPermission> customPermissions = [select Id, DeveloperName from CustomPermission];
+        List<CustomPermission> customPermissions = [select Id, DeveloperName from CustomPermission where DeveloperName IN :CustomPermissionNames];
         for(CustomPermission customPermission : customPermissions) {
-            customPermissionNames.add(customPermission.DeveloperName);
             customPermissionNamesById.put(customPermission.Id, customPermission.DeveloperName);
         }
 
@@ -93,9 +99,11 @@ public with sharing class GanttProjectPriotizationListController {
             customPermissionsForCurrentUser.add(customPermissionNamesById.get(setupEntity.SetupEntityId));
         }
 
-        system.debug('original custom permission name =>' + CustomPermissionName);
-        if(customPermissionsForCurrentUser.contains(CustomPermissionName))
-            hasEditAccess = true;
+        system.debug('original custom permission name =>' + CustomPermissionNames);
+        for(String permissionName : CustomPermissionNames){
+            if(customPermissionsForCurrentUser.contains(permissionName))
+                hasEditAccess = true;
+        }
 
     }
 
@@ -158,6 +166,7 @@ public with sharing class GanttProjectPriotizationListController {
             childData.RecordTypeName = proj.RecordType.Name;
             childData.ProjectSummary =  proj.Summary__c;
             childData.ProjectStatus = proj.ProjectStatus__c;
+
             childData.CreatedDate = Date.valueOf(proj.CreatedDate);
             if(projectType == 'PMO' && filterByValue == 'Global'){
                 childData.Priority =  proj.BattingOrder__c;
@@ -212,6 +221,7 @@ public with sharing class GanttProjectPriotizationListController {
             childData.RecordTypeName = proj.RecordType.Name;
             childData.ProjectSummary =  proj.Summary__c;
             childData.ProjectStatus = proj.ProjectStatus__c;
+
             if(projectType == 'PMO' && filterByValue == 'Global'){
                 if(i != proj.BattingOrder__c){
                     childData.Priority =  i;
