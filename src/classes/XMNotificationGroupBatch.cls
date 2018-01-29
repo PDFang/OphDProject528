@@ -24,7 +24,10 @@ global class XMNotificationGroupBatch implements Database.Batchable<Sobject>, Da
             Set<String> xmPersonIds = new Set<String>();
 
             XMRestDeviceService deviceService = new XMRestDeviceService();
+            deviceService.httpRequestTimeout = 60000;
+
             XMRestGroup groupService = new XMRestGroup();
+            groupService.httpRequestTimeout = 60000;
 
             Set<XMDeviceModel> devicesToAdd = new Set<XMDeviceModel>();
 
