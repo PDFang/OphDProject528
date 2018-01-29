@@ -53,12 +53,13 @@ public class CaseEventAccountsExtension
          
         }
 
-        if(c.RecordType.Name == 'Maintenance Notification'){
+        RecordType r = [Select Name From RecordType where Id = :c.RecordTypeId limit 1];
+        if(r.Name == 'Maintenance Notification'){
                 canBatch = true;
                 enablePoller = true;
                 xmNotificationGroups__c[] xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
-                if (xmGroup.size() <= 0) {
-                    enablePoller = false;
+                if (xmGroup.size() > 0) {
+                    enablePoller = (xmGroup[0].Status__c != 'In Progress' && xmGroup[0].Status__c != 'New') ? false : true;
                 }
         }
     }
@@ -259,20 +260,13 @@ public class CaseEventAccountsExtension
     public boolean getDisableBatchAccount() {
         boolean disableBatchAccountButton = true;
 
-        // enable button if the default group has been changed
-        if (isDefaultGroupChanged()) {
-            disableBatchAccountButton = false;
-        }
-
         // enable button in certain status
-        if (!disableBatchAccountButton) {
-            string displayedBatchStatus = getDisplayedBatchStatus();
-            if (!string.isBlank(displayedBatchStatus)){
-                batchStatus = 'Account Batch Status: ' + displayedBatchStatus;
-                enablePoller = true;
-            }
-            disableBatchAccountButton = (displayedBatchStatus == 'Ready' || displayedBatchStatus == 'Failed' || string.isBlank(displayedBatchStatus)) ? false : true;
+        string displayedBatchStatus = getDisplayedBatchStatus();
+        if (!string.isBlank(displayedBatchStatus)){
+            batchStatus = 'Account Batch Status: ' + displayedBatchStatus;
+            enablePoller = ( displayedBatchStatus != 'Processing' && displayedBatchStatus != 'New') ? false : true;
         }
+        disableBatchAccountButton = (displayedBatchStatus == 'Ready' || displayedBatchStatus == 'Failed' || string.isBlank(displayedBatchStatus)) ? false : true;
 
         // disable button if exceeds maxium running batches
         if (!disableBatchAccountButton) {
