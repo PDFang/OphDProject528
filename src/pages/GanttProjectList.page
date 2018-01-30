@@ -34,6 +34,7 @@
                         <apex:selectList size="1" value="{!SelectValue}" onChange="FilterLists(this)"  styleClass="form-control" id="sel1" style="width:220px;">
                             <apex:selectOptions value="{!filterOptions}"/>
                         </apex:selectList>
+                        <apex:inputHidden id="channel" value="{!selectValue}"/>
                         <apex:outputPanel id="unlock" style="padding-left:5px; text-decoration:underline; font-size:11px;">
                             <apex:outputPanel rendered="{!showUnlock}">
                                 <apex:outputLink onclick="deleteHistory(this); return false;" styleClass="unlockEditLink">Unlock Edit</apex:outputLink>
@@ -232,7 +233,7 @@
                 $('#projecttype').bootstrapSwitch('labelText', 'IT');
             }else{
                 projectType = 'IT';
-                program = 'All';
+                program = '{!defaultTeam}';
                 $('#projecttype').bootstrapSwitch('labelText', 'PMO');
             }
             buildFilter(projectType);

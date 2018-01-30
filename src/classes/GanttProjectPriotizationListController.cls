@@ -7,6 +7,7 @@ public with sharing class GanttProjectPriotizationListController {
     public boolean hasEditAccess {get; set;}
     public list<SelectOption> filterOptions {get; set;}
     public string selectValue { get;set; }
+    public string defaultTeam { get;set; }
     public  boolean showUnlock{get; set;}
     public integer sessionTimeoutTime{get;set;}
     public string projectType{get;set;}
@@ -21,6 +22,13 @@ public with sharing class GanttProjectPriotizationListController {
         sessionTimeoutTime = integer.valueOf(Label.SessionTimeOutTime) / (1000* 60);
         projectType = 'PMO';
         //projectType = 'IT';
+        Schema.DescribeFieldResult developmentTeam = Project__c.Development_Team__c.getDescribe();
+        if(developmentTeam.getDefaultValue() != null){
+            defaultTeam = (String)developmentTeam.getDefaultValue();
+        } else{
+            defaultTeam = Project__c.Development_Team__c.getDescribe().getPicklistValues()[0].getValue();
+        }
+
         initFilter();
 
     }
@@ -32,7 +40,7 @@ public with sharing class GanttProjectPriotizationListController {
             selectValue = 'Global';
         } else{
             GetAvailableTeams();
-            selectValue = 'All';
+            selectValue = defaultTeam;
         }
         checkAccess(selectValue);
         checkUnlockEdit(selectValue);
@@ -127,7 +135,6 @@ public with sharing class GanttProjectPriotizationListController {
         Schema.DescribeFieldResult FilterFieldDescription = Project__c.Development_Team__c.getDescribe();
 
         filterOptions = new list<SelectOption>();
-        filterOptions.add(new SelectOption('All', 'All'));
 
         for (Schema.Picklistentry picklistEntry : FilterFieldDescription.getPicklistValues())
         {
@@ -148,7 +155,7 @@ public with sharing class GanttProjectPriotizationListController {
         string filterByField = (projectType == 'PMO') ? 'Primary_Product__c' : 'Development_Team__c';
 
         string queryProjects = 'Select Id, Name, ProjectStatus__c,CreatedDate, Ops_Backlog_Priority__c,BattingOrder__c , Summary__c, RequestedDeliveryDate__c, ExpectedDeliveryDate__c, ProjectOwner__r.Name, '
-                + ' ProjectType__c,Complete__c,  Primary_Product__c, Delivery_Channel__c, Request_Channel__c, RecordType.Name From Project__c where Primary_Product__c != null '
+                + ' ProjectType__c,Complete__c,  Primary_Product__c, Delivery_Channel__c, Request_Channel__c, RecordType.Name, ParentGlobalPriority__c From Project__c where Primary_Product__c != null '
                 + ' and  RecordType.Name = \'' + projectRecordType + '\'  and ProjectStatus__c not in (\'Completed\',\'Closed\',\'Canceled\') and ProjectType__c != \'Time Keeping\' '
                 + ' and (' + priorityField + ' = null OR ' +  priorityField + ' = 0)';
 
@@ -168,14 +175,18 @@ public with sharing class GanttProjectPriotizationListController {
             childData.ProjectStatus = proj.ProjectStatus__c;
 
             childData.CreatedDate = Date.valueOf(proj.CreatedDate);
-            if(projectType == 'PMO' && filterByValue == 'Global'){
-                childData.Priority =  proj.BattingOrder__c;
-                childData.ProductChannel = proj.Primary_Product__c;
-                childData.OtherPriority = proj.Ops_Backlog_Priority__c;
-            }
-            else{
-                childData.Priority =  proj.Ops_Backlog_Priority__c;
-                childData.OtherPriority = proj.BattingOrder__c;
+            if(projectType == 'PMO') {
+                if (filterByValue == 'Global') {
+                    childData.Priority = proj.BattingOrder__c;
+                    childData.ProductChannel = proj.Primary_Product__c;
+                    childData.OtherPriority = proj.Ops_Backlog_Priority__c;
+                } else {
+                    childData.Priority = proj.Ops_Backlog_Priority__c;
+                    childData.OtherPriority = proj.BattingOrder__c;
+                }
+            } else{
+                childData.Priority = proj.Ops_Backlog_Priority__c;
+                childData.OtherPriority = proj.ParentGlobalPriority__c;
             }
             childData.isPriorityMismatch = false;
             childData.ExpectedDeliveryDate = GetformattedDate(proj.ExpectedDeliveryDate__c);
@@ -202,7 +213,7 @@ public with sharing class GanttProjectPriotizationListController {
         string filterByField = (projectType == 'PMO') ? 'Primary_Product__c' : 'Development_Team__c';
 
         string queryProjects = 'Select Id, Name, ProjectStatus__c, BattingOrder__c, Ops_Backlog_Priority__c, Summary__c, RequestedDeliveryDate__c, ExpectedDeliveryDate__c, ProjectOwner__r.Name, '
-                + ' ProjectType__c,Complete__c, Primary_Product__c,Delivery_Channel__c, Request_Channel__c, RecordType.Name  From Project__c where Primary_Product__c != null '
+                + ' ProjectType__c,Complete__c, Primary_Product__c,Delivery_Channel__c, Request_Channel__c, RecordType.Name, ParentGlobalPriority__c  From Project__c where Primary_Product__c != null '
                 + ' and  RecordType.Name = \'' + projectRecordType + '\'  and ProjectStatus__c not in (\'Completed\',\'Closed\',\'Canceled\') and ProjectType__c != \'Time Keeping\' '
                 + ' and (' + priorityField + ' != null AND ' +  priorityField + ' != 0)';
 
@@ -242,7 +253,7 @@ public with sharing class GanttProjectPriotizationListController {
                     childData.Priority =  proj.Ops_Backlog_Priority__c;
                     childData.isPriorityMismatch = false;
                 }
-                childData.OtherPriority =  proj.BattingOrder__c;
+                childData.OtherPriority =  (projectType == 'PMO') ? proj.BattingOrder__c : proj.ParentGlobalPriority__c;
             }
 
             childData.ExpectedDeliveryDate = GetformattedDate(proj.ExpectedDeliveryDate__c);
