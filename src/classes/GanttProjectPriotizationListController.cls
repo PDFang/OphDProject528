@@ -438,7 +438,7 @@ public with sharing class GanttProjectPriotizationListController {
             i++;
 
             proj.RoadmapPriority__c = i;
-
+            proj.SyncToTFS__c = false;
         }
         system.debug('** SortITProject => ' + ITProjects.size());
 
