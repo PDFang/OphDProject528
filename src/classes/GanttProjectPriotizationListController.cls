@@ -427,8 +427,8 @@ public with sharing class GanttProjectPriotizationListController {
         map<Id, Project__c> SortITPrOjects = new map<Id, Project__c>();
         ITProjects = [select Id, RoadMapPriority__c, ParentProject__r.BattingOrder__c, ParentProject__r.Ops_Backlog_Priority__c,PriorityScore__c, CreatedDate
         FROM Project__c
-        Where RecordType.Name = 'IT Project Request' AND ParentProject__r.RecordType.Name = 'PMO Project'
-        AND ParentProject__c != null
+        Where RecordType.Name = 'IT Project Request'
+        AND ParentProject__r.RecordType.Name = 'PMO Project' AND ParentProject__c != null
         AND ProjectStatus__c not in :excludedStatus
         AND ProjectType__c != 'Time Keeping'
         Order By PriorityScore__c,PrioritySortDtFormula__c, CreatedDate
