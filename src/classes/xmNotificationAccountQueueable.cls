@@ -77,6 +77,9 @@ public without sharing class xmNotificationAccountQueueable implements Queueable
             system.debug(associatedCaseList[0]);
             CaseEventClass cec = new CaseEventClass(associatedCaseList[0]);
 
+            //set the list size to get the
+            cec.listSize = 10000;
+
             accountList = cec.AccountIncidentList();
         }
 
