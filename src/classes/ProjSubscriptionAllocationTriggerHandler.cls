@@ -8,6 +8,37 @@ public class ProjSubscriptionAllocationTriggerHandler extends TriggerHandler  {
         AddParentProject();
     }
 
+    public override void beforeDelete(){
+        CheckTimeBeofreDelete();
+    }
+
+    private static void CheckTimeBeofreDelete(){
+        List<Project_Subscription_Allocation__c> allocations = (List<Project_Subscription_Allocation__c>)(trigger.old);
+        Set<Id> allocationIds = new Set<Id>();
+        List<WorkIt2__Timing__c> timingList = new List<WorkIt2__Timing__c>();
+
+        if(allocations.size() > 0){
+            for(Project_Subscription_Allocation__c allocation : allocations){
+                allocationIds.add(allocation.Id);
+            }
+        }
+
+        if(allocationIds.size() > 0) {
+            timingList = [
+                    SELECT Id, Project_Subscription_Allocation__c
+                    from WorkIt2__Timing__c
+                    where Project_Subscription_Allocation__c IN :allocationIds
+            ];
+        }
+
+        if(timingList.size() > 0){
+            for(Project_Subscription_Allocation__c allocation : allocations){
+                allocation.addError('Subscription Allocation can not be deleted as there are time enteries on the allocation. ' +
+                        'Please change the status field');
+            }
+        }
+    }
+
     private static void AddParentProject(){
         List<Project_Subscription_Allocation__c> allocations = (List<Project_Subscription_Allocation__c>)(trigger.new);
         Map<Id, Project_Subscription_Allocation__c> oldAllocations = (Map<Id, Project_Subscription_Allocation__c>)(trigger.oldMap);
