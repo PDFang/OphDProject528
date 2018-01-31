@@ -468,9 +468,15 @@ public class AssetSubscriptionAllocationHelper {
 
 
             System.debug('asset.QuantityonHold__c' + asset.get('QuantityonHold__c'));
-            if(asset.get('QuantityCancelled__c') == null  ||  asset.get('QuantityonHold__c') == null ){
+            if(asset.get('QuantityCancelled__c') == null  &&  asset.get('QuantityonHold__c') == null ){
                 return 'Required fields are missing. Quantity Cancelled and/or Quantity on Hold cannot be blank';
             }
+            if(asset.get('QuantityCancelled__c') == null){
+                asset.QuantityCancelled__c = 0;
+            } else if(asset.get('QuantityonHold__c') == null){
+                asset.QuantityonHold__c = 0;
+            }
+
             decimal quantityCancelled = Decimal.valueOf(string.valueOf(asset.get('QuantityCancelled__c'))) ;
             decimal quantityonHold =  Decimal.valueOf(string.valueOf(asset.get('QuantityonHold__c')));
             decimal totalCanceledOrHold = quantityCancelled + quantityonHold;
