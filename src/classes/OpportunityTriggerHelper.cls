@@ -8,6 +8,7 @@ public class OpportunityTriggerHelper {
             'PS Management'
     };
     private static Map<Id, String> profileMap = null;
+    private static Map<String,Schema.RecordTypeInfo> OpportunityRecordTypes = null;
 
     public static final String OPPORTUNITY_STAGE_ONE = '1 - Identification / Qualification';
     public static final String OPPORTUNITY_STAGE_TWO = '2 - Determining Problem / Impact';
@@ -29,10 +30,18 @@ public class OpportunityTriggerHelper {
         return stageRankMap.containsKey(stageName) ? stageRankMap.get(stageName) : -1;
     }
 
+    private static Id GetOpportunityRecordTypeIdByName(string recordTypeName){
+        if(OpportunityRecordTypes == null){
+            OpportunityRecordTypes = Schema.SObjectType.Opportunity.getRecordTypeInfosByName();
+        }
+
+        return OpportunityRecordTypes.get(recordTypeName).getRecordTypeId();
+    }
+
 
     public static void updateTimeStamps(list<Opportunity> newOppList){
-        String eduOppRT = inContactBaseClass.SelectRecordTypeIDByName('Education Request', 'Opportunity');
-        String saasRT = inContactBaseClass.SelectRecordTypeIDByName('SaaS Request', 'Opportunity');
+        String eduOppRT = GetOpportunityRecordTypeIdByName('Education Request');
+        String saasRT = GetOpportunityRecordTypeIdByName('SaaS Request');
         for(Opportunity o:newOppList)
         {
             if(o.RecordTypeId == saasRT)
@@ -51,7 +60,7 @@ public class OpportunityTriggerHelper {
     // create trip reports for Education request opportunities
     public static void createTripAndProjects(list<Opportunity> newOppList){
         String eduTRRT = inContactBaseClass.SelectRecordTypeIDByName('Education Trip', 'Trip_Report__c');
-        String eduOppRT = inContactBaseClass.SelectRecordTypeIDByName('Education Request', 'Opportunity');
+        String eduOppRT = GetOpportunityRecordTypeIdByName('Education Request');
         String psChangeProj = inContactBaseClass.SelectRecordTypeIDByName('PS Change Request Phase', 'Project__c');
 
         Map<Id,Trip_Report__c> trList = new Map<Id,Trip_Report__c>();
@@ -202,10 +211,10 @@ public class OpportunityTriggerHelper {
     // purchased hours for PS requests
     // if stage changes update the stage timestamp
     public static void performOtherOperations(list<Opportunity> newOppList, map<Id, Opportunity> oldOppMap){
-        string r = inContactBaseClass.SelectRecordTypeIDByName('SaaS Request', 'Opportunity');
-        string rQualified = inContactBaseClass.SelectRecordTypeIDByName('Qualified Opportunity', 'Opportunity');
-        string rNew = inContactBaseClass.SelectRecordTypeIDByName('New Opportunity', 'Opportunity');
-        String psRequestRecordType = inContactBaseClass.SelectRecordTypeIDByName('GSD PS Requests', 'Opportunity');
+        string r = GetOpportunityRecordTypeIdByName('SaaS Request');
+        string rQualified = GetOpportunityRecordTypeIdByName('Qualified Opportunity');
+        string rNew = GetOpportunityRecordTypeIdByName('New Opportunity');
+        String psRequestRecordType = GetOpportunityRecordTypeIdByName('GSD PS Requests');
 
         Set<ID> closedDeals = new Set<Id>();
         Map<Id, List<Opportunity>> psRequestsGoLive = new Map<Id, List<Opportunity>>();
