@@ -49,6 +49,7 @@ public class AssetSubscriptionAllocationHelper {
             'ParentProject__c',
             'ParentProject__r.Name',
             'Project_Phase__c',
+            'Phase_Status__c',
             'ActualProjectGoLiveDate__c'
     };
 
@@ -325,6 +326,7 @@ public class AssetSubscriptionAllocationHelper {
                     + ' from Project__c where ';
             soql += ' ParentProject__c = \'' + ProjectId + '\'';
             soql += ' AND Id NOT IN(SELECT Project__c FROM Project_' + objType + '_Allocation__c WHERE ' + objType + '__c = \'' + objId + '\')';
+            soql += ' And Phase_Status__c NOT IN (\'Cancelled\', \'Closed\', \'Suspended\')';
             soql += ' and ActualProjectGoLiveDate__c = null order by createddate ';
 
             projects = Database.query(soql);
