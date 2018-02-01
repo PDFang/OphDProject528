@@ -40,6 +40,7 @@
         }
         // change the phase status to 'Closed'
         testPhase.Phase_Status__c = 'Closed';
+        testPhase.ActualProjectGoLiveDate__c = system.today();
         update testPhase;
         system.runAs(impManagementUser){
             testOpp.HandedOffToCCCS__c = true;
