@@ -49,9 +49,11 @@
             </table>
             </apex:outputPanel>
             <apex:actionFunction name="refreshTable" action="{!refreshTableEntry}" reRender="tablePanel, timeEntry" onComplete="loadTable();"/>
+            <div style="float:right;">
+                <button type="button" class="btn btn-primary" onclick="saveAll(this);return false;">Save All</button>
+                <button type="button" class="btn" onclick="refreshTable();return false;">Clear All</button>
+            </div>
 
-            <button type="button" class="btn btn-primary" onclick="saveAll(this);return false;">Save All</button>
-            <button type="button" class="btn" onclick="refreshTable();return false;">Clear All</button>
         </div>
 
 
