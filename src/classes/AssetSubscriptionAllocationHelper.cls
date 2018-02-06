@@ -49,6 +49,7 @@ public class AssetSubscriptionAllocationHelper {
             'ParentProject__c',
             'ParentProject__r.Name',
             'Project_Phase__c',
+            'Phase_Status__c',
             'ActualProjectGoLiveDate__c'
     };
 
@@ -325,6 +326,7 @@ public class AssetSubscriptionAllocationHelper {
                     + ' from Project__c where ';
             soql += ' ParentProject__c = \'' + ProjectId + '\'';
             soql += ' AND Id NOT IN(SELECT Project__c FROM Project_' + objType + '_Allocation__c WHERE ' + objType + '__c = \'' + objId + '\')';
+            soql += ' And Phase_Status__c NOT IN (\'Cancelled\', \'Closed\', \'Suspended\')';
             soql += ' and ActualProjectGoLiveDate__c = null order by createddate ';
 
             projects = Database.query(soql);
@@ -468,9 +470,15 @@ public class AssetSubscriptionAllocationHelper {
 
 
             System.debug('asset.QuantityonHold__c' + asset.get('QuantityonHold__c'));
-            if(asset.get('QuantityCancelled__c') == null  ||  asset.get('QuantityonHold__c') == null ){
+            if(asset.get('QuantityCancelled__c') == null  &&  asset.get('QuantityonHold__c') == null ){
                 return 'Required fields are missing. Quantity Cancelled and/or Quantity on Hold cannot be blank';
             }
+            if(asset.get('QuantityCancelled__c') == null){
+                asset.QuantityCancelled__c = 0;
+            } else if(asset.get('QuantityonHold__c') == null){
+                asset.QuantityonHold__c = 0;
+            }
+
             decimal quantityCancelled = Decimal.valueOf(string.valueOf(asset.get('QuantityCancelled__c'))) ;
             decimal quantityonHold =  Decimal.valueOf(string.valueOf(asset.get('QuantityonHold__c')));
             decimal totalCanceledOrHold = quantityCancelled + quantityonHold;

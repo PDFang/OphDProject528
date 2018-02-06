@@ -484,8 +484,12 @@
                               subscriptionAllocationData('{!currentId}', null);
                               assetAllocationData('{!currentId}', null);
                               var projectGoLiveDate = '{!Project.ActualProjectGoLiveDate__c}';
+                              var projectPhaseStatus = '{!Project.Phase_Status__c}';
                               if(projectGoLiveDate != '' && projectGoLiveDate != null){
-                                   $("a.k-grid-add").hide();
+                                   //$("a.k-grid-add").hide();
+                              }
+                              if(projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended'){
+                                  $("a.k-grid-add").hide();
                               }
                            }
                     }

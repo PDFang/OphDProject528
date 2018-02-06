@@ -185,7 +185,7 @@
           editable: "inline",
           scrollable:  true,
           noRecords: true,
-          height:300,
+          height:600,
           edit: addDuplicateRowAsset,
           dataBound : gridDataboundAsset,
           detailInit: loadChildGrid,
