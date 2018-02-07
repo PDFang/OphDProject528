@@ -602,9 +602,16 @@ public class AssetSubscriptionAllocationHelper {
         Boolean manager = isManager();
         try{
             System.debug('subscription.QuantityCancelled__c' + subscription.QuantityCancelled__c);
-            if(subscription.get('QuantityCancelled__c') == null  ||  subscription.get('QuantityonHold__c') == null ){
+            if(subscription.get('QuantityCancelled__c') == null  &&  subscription.get('QuantityonHold__c') == null ){
                 return 'Required fields are missing. Quantity Cancelled and/or Quantity on Hold cannot be blank';
             }
+
+            if(subscription.get('QuantityCancelled__c') == null){
+                subscription.QuantityCancelled__c = 0;
+            } else if(subscription.get('QuantityonHold__c') == null){
+                subscription.QuantityonHold__c = 0;
+            }
+
 
             SubscriptionReplica__c querySubscription = [select QuantityonHold__c, QuantityCancelled__c, Department_Responsible__c,Additional_Detail__c,Root_Cause__c from SubscriptionReplica__c where id =: subscription.Id ];
 
