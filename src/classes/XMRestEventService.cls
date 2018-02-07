@@ -70,6 +70,19 @@ public class XMRestEventService {
             xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c, isMaintenance);
         }
 
+        // add internal distribution as default group
+        string MaintenanceNotificationsInternalDistribution = (config != null) ? config.XM_Maintenance_Notifications_Internal__c : null;
+        string EventNotificationsInternalDistribution = (config != null) ? config.XM_Event_Notifications_Internal__c : null;
+        string defaultGroup = (caseRecordType == 'Maintenance Notification') ? MaintenanceNotificationsInternalDistribution : EventNotificationsInternalDistribution;
+        if (xmeventData.platformGroups == null)
+        {
+            xmeventData.platformGroups = new List<string>();
+        }
+        if (defaultGroup != null)
+        {
+            xmeventData.platformGroups.add(defaultGroup);
+        }
+
         // Build the specific event details needed to process the event.
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();
 
