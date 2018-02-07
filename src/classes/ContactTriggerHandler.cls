@@ -7,7 +7,7 @@ public class ContactTriggerHandler extends TriggerHandler{
 
 
     public override void beforeInsert(){
-        updateXMPersonId((List<Contact>) trigger.new);
+        callXmPerSonIdAsync((List<Contact>) trigger.new);
     }
 
     public override void beforeUpdate(){
@@ -33,12 +33,14 @@ public class ContactTriggerHandler extends TriggerHandler{
         if(oldMap == null)
             return;
         Set<Id> contactIds = new Set<Id>();
-        String emailNew = '';
+        Set<string> contactEmails = new Set<string>();
+        set<Id> dupeContactIds = new set<Id>();
+        //String emailNew = '';
         String emailOld = '';
         Boolean isDeactivated = false;
         for(Contact newContact : newList){
             contactIds.add(newContact.Id);
-            emailNew = newContact.Email;
+            //emailNew = newContact.Email;
         }
 
         Map<id, Contact> personMap = new map<id, Contact>([select Id, xmPerson__r.xmPersonUID__c from Contact where Id in: contactIds]);
@@ -50,47 +52,25 @@ public class ContactTriggerHandler extends TriggerHandler{
                 newContact.XmattersUid__c = personMap.get(newContact.Id).xmPerson__r.xmPersonUID__c;
                 newContact.xmPerson__c = null;
             }
+            if(!isDeactivated && !newContact.email.equalsIgnoreCase(emailOld)){
+                dupeContactIds.add(newContact.Id);
+            }
         }
-
-        if(!emailNew.equalsIgnoreCase(emailOld) && !isDeactivated){
-            System.debug('newList'+ newList);
-            updateXMPersonId(newList);
-        }
-
+        updateXMPersonId(dupeContactIds);
 
     }
 
-    private static void updateXMPersonId(List<Contact> newList){
-
-        if(newList == null)
-            return;
-
-        String email = '';
-
+    private static void callXmPerSonIdAsync(List<Contact> newList){
+        Set<Id> contactIds = new Set<Id>();
         for(Contact newContact : newList){
-            email = newContact.Email;
+            contactIds.add(newContact.Id);
         }
-        if(email == '')
-            return;
-        System.debug('email'+ email);
-        List<Contact> duplicateContactList = new List<Contact>([
-                select FirstName, LastName, Email, MobilePhone, Phone, Id, AccountId,Account.ParentId, Account.CadebillAccountNoText__c,
-                        Account.Name, xmPerson__c, XmattersUid__c, xmPerson__r.PrimaryContact__c, xmPerson__r.xmPersonUID__c
-                from Contact where Email =: email and Deactivated__c = :false
-                and (xmPerson__c != :null OR XmattersUid__c != :null)
-        ]);
 
-        for(Contact newContact : newList){
-            if(duplicateContactList.size() > 0){
-                newContact.xmPerson__c = duplicateContactList[0].xmPerson__c;
-                newContact.XmattersUid__c = duplicateContactList[0].XmattersUid__c;
-            }
-            else{
-                newContact.xmPerson__c = null;
-                newContact.XmattersUid__c = null;
-            }
-        }
+        updateXMPersonId(contactIds);
+
     }
+
+
 
     // validate the contact that is deactivated, disassociated or deleted was the only active contact associated with xMatters person
     private static void validatePersonStatus(List<Contact> newList, List<Contact> oldList, Map<Id, Contact> oldMap){
@@ -261,6 +241,48 @@ public class ContactTriggerHandler extends TriggerHandler{
 
         }
 
+    }
+
+    @Future
+    public static void updateXMPersonId(set<Id> dupeContactIds){
+
+        list<contact> newList = new list<Contact>{[
+           Select Id, Email,xmPerson__c, XmattersUid__c From Contact where id in :dupeContactIds
+        ]};
+        if(newList == null)
+            return;
+
+        set<String> emails = new set<string>();
+
+        for(Contact newContact : newList){
+            emails.add(newContact.Email);
+        }
+
+        if(emails.size() < 1)
+            return;
+
+        map<string, string> contactEmailXmId = new map<string, string>();
+        map<string, string> contactEmailXmUId = new map<string, string>();
+
+        for(Contact con : [select Id, Email, xmPerson__c, xmPerson__r.xmPersonUID__c From Contact where Email in : emails and Deactivated__c =: false and xmPerson__c != :null ]){
+            if(!contactEmailXmId.containsKey(con.Email)){
+                contactEmailXmId.put(con.Email, con.xmPerson__c);
+                contactEmailXmUId.put(con.Email, con.xmPerson__r.xmPersonUID__c);
+            }
+        }
+
+        for(Contact newContact : newList){
+            if(contactEmailXmId.containsKey(newContact.Email)){
+                newContact.xmPerson__c = contactEmailXmId.get(newContact.Email);
+                newContact.XmattersUid__c = null;
+            }
+            else{
+                newContact.xmPerson__c = null;
+                newContact.XmattersUid__c = contactEmailXmUId.get(newContact.Email);
+            }
+        }
+
+        update newList;
     }
 
 }
