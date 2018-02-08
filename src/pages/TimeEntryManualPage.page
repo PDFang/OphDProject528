@@ -16,6 +16,9 @@
 
         <div class="container-fluid" style="margin-bottom:10px;">
             <h2>Add Time Manually</h2>
+            <div>
+                <a href="/{!WorkIt2__Timing__c.Id}"> Back to Timing: {!WorkIt2__Timing__c.Name}</a>
+            </div>
             <div id="success" class=" alert alert-success message-alert" style="margin-left:15px;width:90%; display:none;"></div>
             <apex:outputPanel id="tablePanel">
             <table class="table table-bordered">
@@ -92,6 +95,9 @@
             color: #337ab7;
             font-weight: 100;
         }
+        div.timeslider{
+            width: 100%;
+        }
         .btn-primary {
                     color: #fff !important;
                     background-color: #007bff !important;
@@ -133,6 +139,8 @@
                     loadTable();
                 });
 
+                var templateString = "#= selectionStart # - #= selectionEnd #";
+
                function loadTable(){
                     dateArray = {},
                     timeRangeArray = {},
@@ -158,9 +166,12 @@
                         min: 0,
                         max: mediaLength,
                         smallStep: 1,
-                        largeStep: 60,
+                        largeStep: 15,
                         change: rangeSliderOnSlide,
-                        slide: rangeSliderOnSlide
+                        slide: rangeSliderOnSlide,
+                        tooltip: {
+                          template: kendo.template(templateString)
+                        }
                     });
                     $('input.datePicker').tooltip();
                }
