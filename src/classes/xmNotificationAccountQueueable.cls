@@ -1,4 +1,4 @@
-public without sharing class xmNotificationAccountQueueable implements Queueable {
+public without sharing class xmNotificationAccountQueueable implements Queueable, Database.AllowsCallouts {
     private xmNotificationGroups__c notificationGroup;
 
     public xmNotificationAccountQueueable(xmNotificationGroups__c NotificationGroup) {
@@ -14,26 +14,11 @@ public without sharing class xmNotificationAccountQueueable implements Queueable
             if(accountList.size() > 0) {
                 createNotificationAccounts(accountList);
 
-                //kick off the batch
-                system.debug('triggering the XMNotificationGroupBatch');
-                XMNotificationGroupBatch batch = new XMNotificationGroupBatch(notificationGroup);
-
-                //get the batch size
-                Integer batchSize;
-                AppConfiguration__c config = AppConfiguration__c.getInstance();
-                if (config != null) {
-                    batchSize = (Integer) config.XM_Notification_Group_Batch_Size__c;
-                } else {
-                    batchSize = 50;
-                }
-
-                System.debug('BatchSize = ' + batchSize);
-
                 //update the notification group status
                 notificationGroup.Status__c = 'Accounts Associated';
                 update notificationGroup;
 
-                Database.executeBatch(batch, batchSize);
+                addMembersToGroup(notificationGroup.Id);
             }
             else {
                 notificationGroup.Status__c = 'Failed';
@@ -47,6 +32,26 @@ public without sharing class xmNotificationAccountQueueable implements Queueable
             update notificationGroup;
         }
     }
+
+    @Future(callout=true)
+    private static void addMembersToGroup(String groupId) {
+        try {
+            //kick off the batch
+            system.debug('triggering the XMNotificationGroupBatch');
+
+            XMattersServiceGroup service = new XMattersServiceGroup();
+            String result = service.addMembersToGroup(groupId);
+
+            if(result == null) {
+                throw new XMCalloutException();
+            }
+        }
+        catch(Exception ex) {
+            system.debug(ex);
+            inContactBaseClass.SendErrorEmail(ex, 'Error in xmNotificationAccountQueueable while processing Notification Group ' + groupId);
+        }
+    }
+
 
     //create the Notification Account records for each selected account
     private void createNotificationAccounts(List<CaseEventClass.AccountIncident> accountList) {
