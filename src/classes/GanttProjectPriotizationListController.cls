@@ -155,7 +155,8 @@ public with sharing class GanttProjectPriotizationListController {
         string filterByField = (projectType == 'PMO') ? 'Primary_Product__c' : 'Development_Team__c';
 
         string queryProjects = 'Select Id, Name, ProjectStatus__c,CreatedDate, Ops_Backlog_Priority__c,BattingOrder__c , Summary__c, RequestedDeliveryDate__c, ExpectedDeliveryDate__c, Owner.Name, ProjectOwner__r.Name, '
-                + ' BusinessCollaborator__r.Name, ProjectType__c,Complete__c,  Primary_Product__c, Delivery_Channel__c, Request_Channel__c, RecordType.Name, ParentGlobalPriority__c From Project__c where Primary_Product__c != null '
+                + ' BusinessCollaborator__r.Name, ProjectType__c,Complete__c,  Primary_Product__c, Delivery_Channel__c, Request_Channel__c, RecordType.Name, ParentGlobalPriority__c, T_Shirt__c, RequestType__c '
+                + ' From Project__c where Primary_Product__c != null '
                 + ' and  RecordType.Name = \'' + projectRecordType + '\'  and ProjectStatus__c not in (\'Completed\',\'Closed\',\'Canceled\') and ProjectType__c != \'Time Keeping\' '
                 + ' and (' + priorityField + ' = null OR ' +  priorityField + ' = 0)';
 
@@ -197,6 +198,9 @@ public with sharing class GanttProjectPriotizationListController {
             childData.ProjectType = proj.ProjectType__c;
             childData.DeliveryChannel = proj.Delivery_Channel__c;
             childData.RequestChannel = proj.Request_Channel__c;
+            childData.TshirtSize = proj.T_Shirt__c;
+            childData.RequestType = proj.RequestType__c;
+
             dataList.add(childData);
         }
 
@@ -215,7 +219,8 @@ public with sharing class GanttProjectPriotizationListController {
         string filterByField = (projectType == 'PMO') ? 'Primary_Product__c' : 'Development_Team__c';
 
         string queryProjects = 'Select Id, Name, ProjectStatus__c, BattingOrder__c, Ops_Backlog_Priority__c, Summary__c, RequestedDeliveryDate__c, ExpectedDeliveryDate__c, Owner.Name, ProjectOwner__r.Name, '
-                + ' BusinessCollaborator__r.Name, ProjectType__c,Complete__c, Primary_Product__c,Delivery_Channel__c, Request_Channel__c, RecordType.Name, ParentGlobalPriority__c  From Project__c where Primary_Product__c != null '
+                + ' BusinessCollaborator__r.Name, ProjectType__c,Complete__c, Primary_Product__c,Delivery_Channel__c, Request_Channel__c, RecordType.Name, ParentGlobalPriority__c, T_Shirt__c, RequestType__c '
+                + ' From Project__c where Primary_Product__c != null '
                 + ' and  RecordType.Name = \'' + projectRecordType + '\'  and ProjectStatus__c not in (\'Completed\',\'Closed\',\'Canceled\') and ProjectType__c != \'Time Keeping\' '
                 + ' and (' + priorityField + ' != null AND ' +  priorityField + ' != 0)';
 
@@ -267,6 +272,8 @@ public with sharing class GanttProjectPriotizationListController {
             childData.ProjectType = proj.ProjectType__c;
             childData.DeliveryChannel = proj.Delivery_Channel__c;
             childData.RequestChannel = proj.Request_Channel__c;
+            childData.TshirtSize = proj.T_Shirt__c;
+            childData.RequestType = proj.RequestType__c;
 
             dataList.add(childData);
         }

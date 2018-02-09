@@ -23,4 +23,5 @@ public with sharing class ProjectListDataFields {
     public boolean  isPriorityMismatch {get; set;}
     public Date  CreatedDate {get; set;}
     public string   RequestType{get;set;}
+    public string   TshirtSize{get;set;}
 }
