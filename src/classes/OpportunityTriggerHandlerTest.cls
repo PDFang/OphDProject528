@@ -215,4 +215,25 @@ private class OpportunityTriggerHandlerTest {
 		system.assert(scopes.contains('Workforce Optimization'), 'Portfilio Scope does not contain Workforce Optimization, instead contains:'+objOpp.Portfolio_Scope__c);
 
 	}
+
+	@isTest static void testOpportunityNiceConnection(){
+		list<Opportunity> lstOfOpportunity = OpportunityTriggerHandlerTest.createTestDataOfOpportunity();
+		lstOfOpportunity[0].StageName = '0 - Nice Account';
+		insert lstOfOpportunity;
+
+		Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
+		Account acc = [SELECT Id, RecordTypeId FROM Account WHERE Id = :lstOfOpportunity[0].AccountId];
+		acc.RecordTypeId = accountRecordTypeMap.get('NICE NAMED NON-REC.').getRecordTypeId();
+		update acc;
+
+		lstOfOpportunity[0].StageName = '1 - Nice Account';
+		system.Test.startTest();
+		update lstOfOpportunity[0];
+		system.Test.stopTest();
+
+		Opportunity objOpp = [SELECT Id, Name, ConnectionSentId	FROM Opportunity WHERE Id =: lstOfOpportunity[0].Id];
+
+		//connections don't actually send in test methods
+		//system.assertNotEquals(objOpp.ConnectionSentId, null);
+	}
 }

@@ -246,10 +246,9 @@ public class ContactTriggerHandler extends TriggerHandler{
     @Future
     public static void updateXMPersonId(set<Id> dupeContactIds){
 
-        list<contact> newList = new list<Contact>{[
-           Select Id, Email,xmPerson__c, XmattersUid__c From Contact where id in :dupeContactIds
-        ]};
-        if(newList == null)
+        list<contact> newList = [Select Id, Email,xmPerson__c, XmattersUid__c From Contact where id in :dupeContactIds];
+
+        if(newList.size() == 0)
             return;
 
         set<String> emails = new set<string>();
