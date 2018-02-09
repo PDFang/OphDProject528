@@ -10,6 +10,8 @@ public with sharing class ProjectListDataFields {
     public decimal  Priority{get;set;}
     public decimal  PercentComplete{get;set;}
     public string   ProjectOwner{get; set;}
+    public string   Owner{get; set;}
+    public string   BusinessAnalyst{get; set;}
     public string   ProjectStatus{get; set;}
     public string   ProductChannel{get;set;}
     public string   ProjectType{get;set;}
