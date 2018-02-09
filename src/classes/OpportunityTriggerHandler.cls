@@ -39,6 +39,7 @@ public class OpportunityTriggerHandler extends TriggerHandler{
         new OpportunityShareHelper().addShare((List<Opportunity>)trigger.new, (Map<Id, Opportunity>)trigger.oldMap);
 
         OpportunityTriggerHelper.createTripAndProjects((List<Opportunity>)trigger.new);
+		NiceConnectionOpportunities(trigger.newMap.keySet());
 
     }
 
@@ -49,7 +50,7 @@ public class OpportunityTriggerHandler extends TriggerHandler{
         new OpportunityShareHelper().addShare((List<Opportunity>)trigger.new, (Map<Id, Opportunity>)trigger.oldMap);
 
         OpportunityTriggerHelper.createTripAndProjects((List<Opportunity>)trigger.new);
-
+		NiceConnectionOpportunities(trigger.newMap.keySet());
     }
 
     /**********************************************************************************************
@@ -201,4 +202,38 @@ public class OpportunityTriggerHandler extends TriggerHandler{
     /**********************************************************************************************
      Above methods were created by Simplus for File Connect
     ***********************************************************************************************/
+
+	public void NiceConnectionOpportunities(Set<Id> opportunityIds){
+
+		List<PartnerNetworkRecordConnection> oppConnections =  new  List<PartnerNetworkRecordConnection>();
+
+		for(Opportunity opp:[SELECT Id, AccountId FROM Opportunity WHERE ConnectionSentId = null AND Account.RecordType.Name IN('NICE NAMED NON-REC.','NICE NAMED REC.') AND StageName LIKE '1%' ]){
+			PartnerNetworkRecordConnection newConnection = new PartnerNetworkRecordConnection(
+						ConnectionId = null,
+						LocalRecordId = opp.Id,
+						SendClosedTasks = false,
+						SendOpenTasks = false,
+						SendEmails = false,
+						ParentRecordId = opp.AccountId
+			);
+
+			oppConnections.add(newConnection);
+		}
+
+		if(!oppConnections.isEmpty()){
+			try{
+				PartnerNetworkConnection partnerNetCon = [Select id from PartnerNetworkConnection where connectionStatus = 'Accepted' and connectionName = 'NICE Systems Inc.'];
+				for(PartnerNetworkRecordConnection conn: oppConnections){
+					conn.ConnectionId = partnerNetCon.Id;
+				}
+
+				insert oppConnections;
+
+			}
+			catch(Exception ex) {
+				system.debug(ex);
+				inContactBaseClass.SendErrorEmail(ex, 'Error in OpportunityTriggerHandler while processing NICE Opportunity Connections ');
+			}
+		}
+	}
 }
