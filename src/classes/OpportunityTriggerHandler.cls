@@ -7,6 +7,12 @@
 **/
 public class OpportunityTriggerHandler extends TriggerHandler{
 
+	static final string NICE_CONNECTION_NAME = 'NICE Systems Inc.';
+	static final Set<string> NICE_ACCOUNT_RECORD_TYPES = new Set<string>{
+			'NICE NAMED NON-REC.',
+			'NICE NAMED REC.'
+	};
+
     protected override void beforeInsert(){
 
         updateOrInsertOpportunity((List<Opportunity>)trigger.new);
@@ -207,14 +213,14 @@ public class OpportunityTriggerHandler extends TriggerHandler{
 
 		List<PartnerNetworkRecordConnection> oppConnections =  new  List<PartnerNetworkRecordConnection>();
 
-		for(Opportunity opp:[SELECT Id, AccountId FROM Opportunity WHERE ConnectionSentId = null AND Account.RecordType.Name IN('NICE NAMED NON-REC.','NICE NAMED REC.') AND StageName LIKE '1%' ]){
+		for(Opportunity opp:[SELECT Id, AccountId FROM Opportunity WHERE ConnectionSentId = null AND Account.Matching_NICE_Account__r.RecordType.Name IN :NICE_ACCOUNT_RECORD_TYPES AND StageName LIKE '1%' ]){
 			PartnerNetworkRecordConnection newConnection = new PartnerNetworkRecordConnection(
 						ConnectionId = null,
 						LocalRecordId = opp.Id,
 						SendClosedTasks = false,
 						SendOpenTasks = false,
-						SendEmails = false,
-						ParentRecordId = opp.AccountId
+						SendEmails = false//,
+						//ParentRecordId = opp.AccountId
 			);
 
 			oppConnections.add(newConnection);
@@ -222,7 +228,7 @@ public class OpportunityTriggerHandler extends TriggerHandler{
 
 		if(!oppConnections.isEmpty()){
 			try{
-				PartnerNetworkConnection partnerNetCon = [Select id from PartnerNetworkConnection where connectionStatus = 'Accepted' and connectionName = 'NICE Systems Inc.'];
+				PartnerNetworkConnection partnerNetCon = [Select id from PartnerNetworkConnection where connectionStatus = 'Accepted' and connectionName = :NICE_CONNECTION_NAME];
 				for(PartnerNetworkRecordConnection conn: oppConnections){
 					conn.ConnectionId = partnerNetCon.Id;
 				}
@@ -232,7 +238,7 @@ public class OpportunityTriggerHandler extends TriggerHandler{
 			}
 			catch(Exception ex) {
 				system.debug(ex);
-				inContactBaseClass.SendErrorEmail(ex, 'Error in OpportunityTriggerHandler while processing NICE Opportunity Connections ');
+				inContactBaseClass.SendErrorEmail(ex, 'Error in OpportunityTriggerHandler while processing NICE Opportunity Connections ' + oppConnections[0].LocalRecordId);
 			}
 		}
 	}

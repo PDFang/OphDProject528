@@ -223,7 +223,14 @@ private class OpportunityTriggerHandlerTest {
 
 		Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
 		Account acc = [SELECT Id, RecordTypeId FROM Account WHERE Id = :lstOfOpportunity[0].AccountId];
-		acc.RecordTypeId = accountRecordTypeMap.get('NICE NAMED NON-REC.').getRecordTypeId();
+
+
+        Account niceAccount = new Account();
+        niceAccount.Name = 'NICE Account';
+        niceAccount.RecordTypeId = accountRecordTypeMap.get('NICE NAMED NON-REC.').getRecordTypeId();
+        insert niceAccount;
+
+        acc.Matching_NICE_Account__c = niceAccount.Id;
 		update acc;
 
 		lstOfOpportunity[0].StageName = '1 - Nice Account';
