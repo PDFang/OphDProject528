@@ -5,7 +5,7 @@ private class ProjectAndOpportunityRollupTest {
 
         Project__c parentProject = [
                 Select Id, Account__c, Opportunity__c
-                from Project__c where RecordType.Name = 'PS Parent Project - SaaS'
+                from Project__c where RecordType.Name = 'PS Parent Project - SaaS' LIMIT 1
         ];
 
         test.startTest();
