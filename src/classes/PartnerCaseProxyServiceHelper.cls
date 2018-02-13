@@ -288,6 +288,12 @@ public class PartnerCaseProxyServiceHelper {
         partnerCaseUpdate.TroubleReportStatus = (Integer)sfCase.ETMS_Trouble_Report_Status__c;
         partnerCaseUpdate.UpdateDateTime = sfCase.LastModifiedDate;
         partnerCaseUpdate.CaseNumber = sfCase.CaseNumber;
+
+        //These are hardcoded as of 2/13/18 to look for Closed status updates to Verizon
+        if(sfCase.ETMS_Trouble_Report_State__c == 4 && sfCase.ETMS_Trouble_Report_Status__c == 27) {
+            partnerCaseUpdate.Comment = 'System Closed';
+        }
+
         system.debug('createPartnerCaseUpdate(): partnerCaseUpdate - ' + partnerCaseUpdate);
         return partnerCaseUpdate;
 
