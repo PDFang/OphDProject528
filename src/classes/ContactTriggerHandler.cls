@@ -84,7 +84,7 @@ public class ContactTriggerHandler extends TriggerHandler{
         List<xmChangeRequestHeaderData> requestList = new List<xmChangeRequestHeaderData>();
         list<Contact> deactivatedContacts = new list<Contact>();
         // update
-        if(newList != null){
+        if(trigger.isUpdate){
 
             Set<Id> accountIds = new Set<Id>();
             for(Contact newContact : newList){
@@ -126,7 +126,7 @@ public class ContactTriggerHandler extends TriggerHandler{
 
         }
         // delete
-        else{
+        else if(trigger.isDelete){
 
             for(Contact oldContact : oldList){
 

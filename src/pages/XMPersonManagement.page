@@ -211,12 +211,16 @@
                             </div>
                         </apex:outputPanel>
                     </apex:outputPanel>
-                    <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,alertbuttons, errorMessages,timezone,devicePanel,groupPanel" onComplete="loaddeviceAndGroups();">
+                    <apex:actionFunction name="callAssociateContact" action="{!associateContact}" reRender="contactList,alertmessage,alertbuttons, errorMessages,timezone,devicePanel,groupPanel" onComplete="loaddeviceAndGroups();" status="associateContact">
                         <apex:param id="rowId" name="rowId" value="" />
                     </apex:actionFunction>
 
-                    <apex:actionFunction name="callDissociateContact" action="{!dissociateContact}" reRender="contactList,alertmessage,alertbuttons, errorMessages,timezone,devicePanel,groupPanel" onComplete="loaddeviceAndGroups();" status="dissociatePersonStatus">
+                    <apex:actionFunction name="callDissociateContact" action="{!dissociateContact}" reRender="contactList,alertmessage,alertbuttons, errorMessages,timezone,devicePanel,groupPanel" onComplete="loaddeviceAndGroups(); loadContacts();" status="dissociatePersonStatus">
                         <apex:param id="removeId" name="removeId" value="" />
+                    </apex:actionFunction>
+
+                    <apex:actionFunction name="callgetContacts" action="{!getContacts}" reRender="contactList,alertmessage,alertbuttons, errorMessages,timezone,devicePanel,groupPanel" status="dissociatePersonStatus">
+                        <!--<apex:param id="rowId" name="rowId" value="" />-->
                     </apex:actionFunction>
 
 
@@ -265,7 +269,7 @@
                                             <apex:facet name="start">
                                                 <apex:outputPanel >
                                                     <apex:image value="/img/loading32.gif" style="height: 15px;"/>
-                                                    <apex:commandButton styleClass="k-button"  value="Adding..." status="associateContact" disabled="true"/>
+                                                    <apex:commandButton styleClass="k-button"  value="Enabling..." status="associateContact" disabled="true"/>
                                                 </apex:outputPanel>
                                             </apex:facet>
                                         </apex:actionStatus>
@@ -273,7 +277,7 @@
                                 <apex:outputPanel rendered="{!(IF(isPersonMatch, False, True) && !IsXmPerson)}">
                                         <apex:actionStatus id="addPersonStatus" >
                                             <apex:facet name="stop">
-                                                <apex:commandButton value="Enable" onClick="AddPerson();return false;"  status="addPersonStatus"/>
+                                                <apex:commandButton value="Enable1" onClick="AddPerson();return false;"  status="addPersonStatus"/>
                                             </apex:facet>
                                             <apex:facet name="start">
                                                 <apex:outputPanel >
@@ -491,6 +495,10 @@
         callNotificationManage();
 
        // setupDeviceList();
+    }
+
+    function loadContacts(){
+        callgetContacts();
     }
 
 	function loaddeviceAndGroups(){

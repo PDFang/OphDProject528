@@ -94,11 +94,12 @@ public class XMPersonManagementController{
             }else if(currentContact.XmattersUid__c != null){
                 isPersonMatch = true;
                 xmPersonGuid = currentContact.XmattersUid__c;
+                person = XMPersonManagementHelper.getXmPersonByGuid(xmPersonGuid);
             }
             if(person == null){
                 person = new XMPersonWrapper(currentContact);
             }
-
+            system.debug('person =>' + person);
             //findAssociatedContacts();
         } catch(Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ex.getMessage() + ' at line ' + ex.getLineNumber()));
@@ -190,8 +191,8 @@ public class XMPersonManagementController{
                     helper.removeContactAssociation(contact.Id, currentxmPersonGuid);
                 }
             }
-            findDuplicateContacts();
-            loadContact();
+//            findDuplicateContacts();
+//            loadContact();
         }
         catch(Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ex.getMessage()));
@@ -366,6 +367,13 @@ public class XMPersonManagementController{
         }
 
 
+    }
+
+    // returns various device types
+    public void getContacts()
+    {
+        findDuplicateContacts();
+        loadContact();
     }
 
 }
