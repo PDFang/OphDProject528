@@ -193,7 +193,7 @@ function subscriptionAllocationData(projId, subscriptionId){
           editable: "inline",
           scrollable: true,
           noRecords: true,
-          height:600,
+          //height:600,
           edit:addDuplicateRowSubscription,
           detailInit: loadSubscriptionChildGrid,
           dataBound: gridDataboundSubscription,
@@ -614,7 +614,7 @@ function selectSubscription(e){
             var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">' + dataItem.SubscriptionName +'</a>');
             $(subscriptionCell).html(htmlContentProject);
             var ProductCell = $(parentRow).children().eq(5);
-            $('<a href="#" target="_blank">' + rowData.ProductName +'</a>').appendTo(ProductCell);
+            $(ProductCell).html('<a href="#" target="_blank">' + rowData.ProductName +'</a>');
             calculateRemainingSubscriptionAllocation(rowData, parentRow);
         }
         grid.collapseRow(parentRow);
