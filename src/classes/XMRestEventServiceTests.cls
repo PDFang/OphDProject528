@@ -12,6 +12,8 @@ public class XMRestEventServiceTests {
         // Create Application Configuration
         AppConfiguration__c appConfig = new AppConfiguration__c();
         appConfig.XM_Event_Notification_Inbound_GUID__c  = 'testGuid';
+        appConfig.XM_Event_Notifications_Internal__c =  'testEvent';
+        appConfig.XM_Maintenance_Notifications_Internal__c =  'testMaintenance';
         insert appconfig;
 
         // Create XMNotificationObject
@@ -59,6 +61,8 @@ public class XMRestEventServiceTests {
         // Create Application Configuration
         AppConfiguration__c appConfig = new AppConfiguration__c();
         appConfig.XM_Add_Platform_Inbound_GUID__c =  'testGuid';
+        appConfig.XM_Event_Notifications_Internal__c =  'testEvent';
+        appConfig.XM_Maintenance_Notifications_Internal__c =  'testMaintenance';
         insert appconfig;
 
         // Create XMNotificationObject
@@ -150,6 +154,8 @@ public class XMRestEventServiceTests {
         // Create Application Configuration
         AppConfiguration__c appConfig = new AppConfiguration__c();
         appConfig.XM_Add_Platform_Inbound_GUID__c =  'testGuid';
+        appConfig.XM_Event_Notifications_Internal__c =  'testEvent';
+        appConfig.XM_Maintenance_Notifications_Internal__c =  'testMaintenance';
         insert appconfig;
 
         // Create XMNotificationObject
@@ -202,6 +208,8 @@ public class XMRestEventServiceTests {
         // Create Application Configuration
         AppConfiguration__c appConfig = new AppConfiguration__c();
         appConfig.XM_Add_Platform_Inbound_GUID__c =  'testGuid';
+        appConfig.XM_Event_Notifications_Internal__c =  'testEvent';
+        appConfig.XM_Maintenance_Notifications_Internal__c =  'testMaintenance';
         insert appconfig;
 
         // Create XMNotificationObject
