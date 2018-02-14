@@ -1,12 +1,6 @@
 public class XMRestDeviceService {
     private final String XMDeviceEndpoint = 'devices/';
 
-    public Integer httpRequestTimeout { get; set; }
-
-    public XMRestDeviceService() {
-        httpRequestTimeout = -1;
-    }
-
     public XMDeviceModel createDeviceForPerson(XMDeviceModel deviceModel) {
 
         XMDeviceModel createdDevice = null;
@@ -16,10 +10,6 @@ public class XMRestDeviceService {
         system.debug('createDeviceForPerson(): Attempting to create device' + deviceToCreateJson);
 
         XMRestWrapper wrapper = new XMRestWrapper();
-
-        if(httpRequestTimeout > 0) {
-            wrapper.httpRequestTimeout = httpRequestTimeout;
-        }
 
         String jsonDevice = wrapper.performCallOut(this.XMDeviceEndpoint, 'POST', deviceToCreateJson);
 
@@ -35,10 +25,6 @@ public class XMRestDeviceService {
         List<XMDeviceModel> userDevices = new List<XMDeviceModel>();
 
         XMRestWrapper wrapper = new XMRestWrapper();
-
-        if(httpRequestTimeout > 0) {
-            wrapper.httpRequestTimeout = httpRequestTimeout;
-        }
 
         String deviceEndpoint = '/people/' + userGUid + '/devices?embed=timeframes';
 
@@ -70,10 +56,6 @@ public class XMRestDeviceService {
 
         XMRestWrapper wrapper = new XMRestWrapper();
 
-        if(httpRequestTimeout > 0) {
-            wrapper.httpRequestTimeout = httpRequestTimeout;
-        }
-
         system.debug('updateDeviceInformation(): Attempting to call ' + XMDeviceEndpoint);
 
         String jsonDevice = wrapper.performCallOut(XMDeviceEndpoint, 'POST', serializedDevice);
@@ -85,10 +67,6 @@ public class XMRestDeviceService {
 
     public void deleteDevice(String xMattersDeviceId){
         XMRestWrapper wrapper = new XMRestWrapper();
-
-        if(httpRequestTimeout > 0) {
-            wrapper.httpRequestTimeout = httpRequestTimeout;
-        }
 
         system.debug('deleteDevice(): Attempting to call Delete Endpoint for device id :  ' + xMattersDeviceId);
 
