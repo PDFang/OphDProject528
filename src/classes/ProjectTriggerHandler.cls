@@ -10,6 +10,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
     static Id psProjectParentSaasRecordTypeId, psProjectPhasePremiseRecordTypeId;
     static Id itProjectRecordTypeId;
     static set<Id> allowedRecordTypes;
+    static boolean projectStatusUpdate = false;
 
     static final Set<String> debugProjectFields = new Set<String>{
             'Id',
@@ -635,12 +636,13 @@ public class ProjectTriggerHandler extends TriggerHandler{
             psPhaseProjectIdSet.add(recordTypeNameMap.get(psPhaseProject).recordTypeId);
         }
 
+        System.debug('projectStatusUpdate' + projectStatusUpdate);
         for (Project__c newProject : newList) {
             if (psPhaseProjectIdSet.contains(newProject.RecordTypeId)) {
 
-                if ((newProject.Phase_Status__c == 'Cancelled' && oldMap.get(newProject.Id).Phase_Status__c != 'Cancelled')
-                        || (newProject.Phase_Status__c == 'Suspended' && oldMap.get(newProject.Id).Phase_Status__c != 'Suspended')
-                        || (newProject.Phase_Status__c == 'Open' && oldMap.get(newProject.Id).Phase_Status__c == 'Suspended')) {
+                if ((newProject.Phase_Status__c == 'Cancelled' && oldMap.get(newProject.Id).Phase_Status__c != 'Cancelled' && !projectStatusUpdate)
+                        || (newProject.Phase_Status__c == 'Suspended' && oldMap.get(newProject.Id).Phase_Status__c != 'Suspended' && !projectStatusUpdate)
+                        || (newProject.Phase_Status__c == 'Open' && oldMap.get(newProject.Id).Phase_Status__c == 'Suspended' && !projectStatusUpdate)) {
 
                     if(newProject.Department_Responsible__c == null || newProject.Root_Cause__c == null){
                         newProject.addError('Department Responsible and Root Cause are required, when Phase status is Cancelled or Suspended.');
@@ -648,6 +650,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
                     }
 
                     projectIds.add(newProject.Id);
+                    projectStatusUpdate = true;
+
                 }
             }
         }
@@ -691,12 +695,17 @@ public class ProjectTriggerHandler extends TriggerHandler{
         List<Project_Asset_Allocation__c> deleteProjectAssetAllocationsList = new List<Project_Asset_Allocation__c>();
         Map<Id, Decimal> allocationLoggedHours = new Map<Id, Decimal>();
         Set<Id> assetIds = new Set<Id>();
+        Decimal cancelledQuantity = 0;
         List<Asset> updateAssetList = new List<Asset>();
         for(Project_Asset_Allocation__c projectAssetAllocation: listProjectAssetAllocations){
-            allocationLoggedHours.put(projectAssetAllocation.Id, projectAssetAllocation.Logged_Hours__c);
-            if(newList[0].Project_Phase__c != 'Open') {
+            allocationLoggedHours.put(projectAssetAllocation.Asset__c, projectAssetAllocation.Logged_Hours__c);
+
+            if(newList[0].Phase_Status__c != 'Open') {
                 if (timingMap.size() > 0) {
+                    System.debug('timingMap' + timingMap);
+                    System.debug('projectAssetAllocation.Id' + projectAssetAllocation.Id);
                     if (timingMap.containsKey(projectAssetAllocation.Id)) {
+                        cancelledQuantity += projectAssetAllocation.Quantity_Allocation__c;
                         updateProjectAssetAllocationsList.add(new Project_Asset_Allocation__c(Id = projectAssetAllocation.Id,
                                 Quantity_Allocation__c = 0,
                                 Percent_Allocation__c = 0,
@@ -705,13 +714,21 @@ public class ProjectTriggerHandler extends TriggerHandler{
                                 Implemented__c = false));
                         assetIds.add(projectAssetAllocation.Asset__c);
                     } else {
-                        if(newList[0].Project_Phase__c == 'Cancelled')
+                        System.debug('InElse Deletion');
+                        if(newList[0].Phase_Status__c == 'Cancelled')
                             deleteProjectAssetAllocationsList.add(projectAssetAllocation);
+                            //deleteProjectAssetAllocationsList.add(new Project_Asset_Allocation__c(Id = projectAssetAllocation.Id));
+                        System.debug('deleteProjectAssetAllocationsList In Else' + deleteProjectAssetAllocationsList);
                     }
                 }
             }
         }
 
+        System.debug('allocationLoggedHours' + allocationLoggedHours);
+
+
+
+        System.debug('deleteProjectAssetAllocationsList' + deleteProjectAssetAllocationsList);
 
         updateAssetList = new List<Asset>([SELECT Id, Quantity, Status, Total_Implemented_Quantity__c, QuantityCancelled__c, Total_Allocated_Quantity__c, RemainingQuantity__c, QuantityonHold__c, Canceled_Hours__c,
                 On_Hold_Hours__c, Department_Responsible__c, Root_Cause__c, Logged_Hours__c, FullyImplemented__c from Asset where Id IN : assetIds ]);
@@ -721,7 +738,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
             if(newList[0].Phase_Status__c == 'Cancelled'){
                 if(updateAsset.Quantity > 1){
-                        updateAsset.QuantityCancelled__c += updateAsset.Total_Allocated_Quantity__c;
+                    System.debug('updateAsset.Total_Allocated_Quantity__c' + updateAsset.Total_Allocated_Quantity__c);
+                        updateAsset.QuantityCancelled__c += cancelledQuantity;
 
                 }
 
@@ -730,10 +748,13 @@ public class ProjectTriggerHandler extends TriggerHandler{
                 if(allocationLoggedHours.containsKey(updateAsset.Id)) {
                     updateAsset.Canceled_Hours__c = allocationLoggedHours.get(updateAsset.Id);
                 }
+                System.debug('updateAsset.QuantityCancelled__c' + updateAsset.QuantityCancelled__c);
+                System.debug('updateAsset.Canceled_Hours__c' + updateAsset.Canceled_Hours__c);
+                System.debug('allocationLoggedHours.get(updateAsset.Id)' + allocationLoggedHours.get(updateAsset.Id));
             }
             else if(newList[0].Phase_Status__c == 'Suspended'){
                 if(updateAsset.Quantity > 1){
-                        updateAsset.QuantityonHold__c += updateAsset.Total_Allocated_Quantity__c;
+                        updateAsset.QuantityonHold__c += cancelledQuantity;
                 }
 
                 updateAsset.Department_Responsible__c = newList[0].Department_Responsible__c;
@@ -742,6 +763,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
                 if(allocationLoggedHours.containsKey(updateAsset.Id)) {
                     updateAsset.On_Hold_Hours__c = allocationLoggedHours.get(updateAsset.Id);
                 }
+
+                System.debug('updateAsset.QuantityCancelled__c in suspended' + updateAsset.QuantityCancelled__c);
             }
 
             else if(newList[0].Phase_Status__c == 'Open'){
@@ -752,6 +775,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         }
 
+
+
         if(updateAssetList.size() > 0)
             update updateAssetList;
 
@@ -760,9 +785,6 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         if(deleteProjectAssetAllocationsList.size() > 0)
             delete deleteProjectAssetAllocationsList;
-
-
-
 
 
         List<Project_Subscription_Allocation__c> listProjectSubscriptionAllocations = new List<Project_Subscription_Allocation__c>(
@@ -793,27 +815,30 @@ public class ProjectTriggerHandler extends TriggerHandler{
         }
 
         Set<Id> subscriptionIds = new Set<Id>();
+        cancelledQuantity = 0;
         List<Project_Subscription_Allocation__c> upProjectSubscriptionAllocationsList = new List<Project_Subscription_Allocation__c>();
         List<Project_Subscription_Allocation__c> delProjectSubscriptionAllocationsList = new List<Project_Subscription_Allocation__c>();
 
         for(Project_Subscription_Allocation__c projectSubscriptionAllocation: listProjectSubscriptionAllocations) {
-            allocationLoggedHours.put(projectSubscriptionAllocation.Id, projectSubscriptionAllocation.Logged_Hours__c);
-            if(newList[0].Project_Phase__c != 'Open') {
+            allocationLoggedHours.put(projectSubscriptionAllocation.Subscription__c, projectSubscriptionAllocation.Logged_Hours__c);
+            if(newList[0].Phase_Status__c != 'Open') {
                 if (timingMap.size() > 0) {
                     if (timingMap.containsKey(projectSubscriptionAllocation.Id)) {
+                        cancelledQuantity += projectSubscriptionAllocation.Quantity_Allocation__c;
                         upProjectSubscriptionAllocationsList.add(new Project_Subscription_Allocation__c(Id = projectSubscriptionAllocation.Id,
                                 Quantity_Allocation__c = 0,
                                 Percent_Allocation__c = 0,
                                 Hours_Allocated__c = 0,
                                 Implemented__c = false));
+                        subscriptionIds.add(projectSubscriptionAllocation.Subscription__c);
                     } else {
-                        if(newList[0].Project_Phase__c == 'Cancelled')
+                        if(newList[0].Phase_Status__c == 'Cancelled')
                             delProjectSubscriptionAllocationsList.add(projectSubscriptionAllocation);
                     }
 
-                    if (!subscriptionIds.contains(projectSubscriptionAllocation.Subscription__c)) {
-                        subscriptionIds.add(projectSubscriptionAllocation.Subscription__c);
-                    }
+//                    if (!subscriptionIds.contains(projectSubscriptionAllocation.Subscription__c)) {
+//                        subscriptionIds.add(projectSubscriptionAllocation.Subscription__c);
+//                    }
                 }
             }
         }
@@ -829,7 +854,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
             if(newList[0].Phase_Status__c == 'Cancelled'){
                 if(updateSubscriptionCustom.Quantity__c > 1){
-                        updateSubscriptionCustom.QuantityCancelled__c += updateSubscriptionCustom.Total_Allocated_Quantity__c;
+                        updateSubscriptionCustom.QuantityCancelled__c += cancelledQuantity;
+                    System.debug('updateSubscriptionCustom.Total_Allocated_Quantity__c' + updateSubscriptionCustom.Total_Allocated_Quantity__c);
                 }
 
                 updateSubscriptionCustom.Department_Responsible__c = newList[0].Department_Responsible__c;
@@ -838,10 +864,14 @@ public class ProjectTriggerHandler extends TriggerHandler{
                     updateSubscriptionCustom.Canceled_Hours__c = allocationLoggedHours.get(updateSubscriptionCustom.Id);
                 }
 
+                System.debug('updateSubscriptionCustom.QuantityCancelled__c' + updateSubscriptionCustom.QuantityCancelled__c);
+                System.debug('updateSubscriptionCustom.Canceled_Hours__c' + updateSubscriptionCustom.Canceled_Hours__c);
+                System.debug('allocationLoggedHours.get(updateSubscriptionCustom.Id)' + allocationLoggedHours.get(updateSubscriptionCustom.Id));
+
             }
             else if(newList[0].Phase_Status__c == 'Suspended'){
                 if(updateSubscriptionCustom.Quantity__c > 1){
-                        updateSubscriptionCustom.QuantityonHold__c += updateSubscriptionCustom.Total_Allocated_Quantity__c;
+                        updateSubscriptionCustom.QuantityonHold__c += cancelledQuantity;
                 }
 
                 updateSubscriptionCustom.Department_Responsible__c = newList[0].Department_Responsible__c;
@@ -850,8 +880,10 @@ public class ProjectTriggerHandler extends TriggerHandler{
                 if(allocationLoggedHours.containsKey(updateSubscriptionCustom.Id)) {
                     updateSubscriptionCustom.On_Hold_Hours__c = allocationLoggedHours.get(updateSubscriptionCustom.Id);
                 }
+
+
             }
-            else if(newList[0].Project_Phase__c != 'Open') {
+            else if(newList[0].Phase_Status__c != 'Open') {
                 if(allocationLoggedHours.containsKey(updateSubscriptionCustom.Id)) {
                     updateSubscriptionCustom.On_Hold_Hours__c = 0;
                 }
