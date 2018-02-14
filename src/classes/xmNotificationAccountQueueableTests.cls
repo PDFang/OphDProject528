@@ -29,7 +29,7 @@ private class xmNotificationAccountQueueableTests {
         //check the assertions
         notificationGroup = [select Status__c from xmNotificationGroups__c where Id = :notificationGroup.Id][0];
 
-        system.assertEquals('Completed', notificationGroup.Status__c, 'xmNotificationGroups__c.Status__c was not set correctly');
+        system.assertEquals('Accounts Associated', notificationGroup.Status__c, 'xmNotificationGroups__c.Status__c was not set correctly');
 
         List<xmNotificationAccounts__c> notificationAccounts = [select Account__c from xmNotificationAccounts__c where Notification_Group__c = :notificationGroup.Id];
         system.debug('notificationAccounts ' + notificationAccounts.size());

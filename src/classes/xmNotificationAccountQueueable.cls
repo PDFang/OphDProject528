@@ -34,6 +34,7 @@ public without sharing class xmNotificationAccountQueueable implements Queueable
     }
 
     @Future(callout=true)
+    @TestVisible
     private static void addMembersToGroup(String groupId) {
         try {
             //kick off the batch
