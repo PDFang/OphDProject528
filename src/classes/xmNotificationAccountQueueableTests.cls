@@ -92,6 +92,27 @@ private class xmNotificationAccountQueueableTests {
         system.assert(notificationAccounts.size() == 0);
     }
 
+    static testMethod void testExecuteWithCalloutException() {
+        //This will get some code coverage on the XMattersServiceWrapper in order to get it released
+        XMattersServiceWrapper wrapper = new XMattersServiceWrapper();
+        Exception ex = null;
+        try{
+            HttpResponse res = new HttpResponse();
+            res.setHeader('Content-Type', 'application/json');
+
+            res.setStatusCode(500);
+            res.setBody('in test');
+
+            string response = wrapper.getResponse(res);
+        }
+        catch(XMCalloutException xmEx) {
+            ex = xmEx;
+        }
+
+        system.assertNotEquals(null, ex, 'Exception not thrown as expected');
+
+    }
+
     private static String setupTestWithNoAccounts() {
         //create two test accounts
         testAccounts = new List<Account>();

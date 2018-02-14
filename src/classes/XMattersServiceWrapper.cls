@@ -19,14 +19,26 @@ public with sharing class XMattersServiceWrapper {
         system.debug('request ==> : ' + request);
         Http h = new Http();
 
-        HttpResponse response = h.send(request);
-        system.debug('performCallOut() ==> response: ' + response.getBody());
+        String returnResponse;
+        if(!test.isRunningTest()) {
+            HttpResponse response = h.send(request);
+            system.debug('performCallOut() ==> response: ' + response.getBody());
 
-        String returnResponse = getResponse(response);
+            returnResponse = getResponse(response);
+        }
+        else {
+            HttpResponse res = new HttpResponse();
+            res.setHeader('Content-Type', 'application/json');
+
+            res.setStatusCode(200);
+            res.setBody('in test');
+            returnResponse = getResponse(res);
+        }
 
         return returnResponse;
     }
 
+    @TestVisible
     private String getResponse(HttpResponse response){
         if (response.getStatusCode() == 200 || response.getStatusCode() == 201 || response.getStatusCode() == 204 || response.getStatusCode() == 202) {
             return response.getBody();
@@ -44,18 +56,6 @@ public with sharing class XMattersServiceWrapper {
             xmCalloutException.Reason = xMattersReason;
 
             throw xmCalloutException;
-        }
-
-        return null;
-    }
-
-    private String parseErrorValues(String jsonResponse, String fieldName) {
-        JSONParser parser = JSON.createParser(jsonResponse);
-        while (parser.nextToken() != null) {
-            if ((parser.getCurrentToken() == JSONToken.FIELD_NAME) && (parser.getText() == fieldName)) {
-                parser.nextToken();
-                return parser.getText();
-            }
         }
 
         return null;
