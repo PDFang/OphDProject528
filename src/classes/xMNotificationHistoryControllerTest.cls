@@ -1,7 +1,7 @@
 /**
  * Created by Arnab KarSarkar on 1/22/2018.
  */
-/// THIS IS WORK IN PROGRESS..NOT COMPLETED
+
 @IsTest
 public class xMNotificationHistoryControllerTest {
 
