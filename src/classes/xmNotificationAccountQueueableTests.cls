@@ -210,12 +210,6 @@ private class xmNotificationAccountQueueableTests {
 
         insert eventAccounts;
 
-        AppConfiguration__c config = new AppConfiguration__c(
-                XM_Notification_Group_Batch_Size__c = 50
-        );
-
-        insert config;
-
         //add an Opportunity for each account
         Date oppDate = Date.today().addDays(-10);
         List<Opportunity> opportunities = new List<Opportunity>();
