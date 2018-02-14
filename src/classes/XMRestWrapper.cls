@@ -1,21 +1,11 @@
 public class XMRestWrapper {
 
-    public Integer httpRequestTimeout { get; set; }
-    public XMRestWrapper() {
-        httpRequestTimeout = -1;
-    }
-
     public String performCallOut(String url, String verbType, String body) {
 
         HttpRequest request = new HttpRequest();
 
         if (body != null) {
             request.setBody(body);
-        }
-
-        if(httpRequestTimeout > 0) {
-            //set the timeout to one minute
-            request.setTimeout(httpRequestTimeout);
         }
 
         request.setEndpoint('callout:xMatters_REST_API/' + url);
@@ -44,11 +34,6 @@ public class XMRestWrapper {
 
         if (body != null) {
             request.setBody(body);
-        }
-
-        if(httpRequestTimeout > 0) {
-            //set the timeout to one minute
-            request.setTimeout(httpRequestTimeout);
         }
 
         request.setEndpoint('callout:xMatters_Inbound_integration_Confirmed/' + inboundIntegrationGuid + '/triggers');
@@ -110,11 +95,6 @@ public class XMRestWrapper {
 
         if (body != null) {
             request.setBody(body);
-        }
-
-        if(httpRequestTimeout > 0) {
-            //set the timeout to one minute
-            request.setTimeout(httpRequestTimeout);
         }
 
         request.setEndpoint('callout:xMattersGroupCRInboundIntegration');

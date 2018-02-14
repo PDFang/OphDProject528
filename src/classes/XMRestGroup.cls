@@ -3,20 +3,9 @@ public with sharing class XMRestGroup {
     private final String GroupUrl = 'groups/';
     private final String GroupURLWithSearch = 'groups?search=';
 
-    public Integer httpRequestTimeout { get; set; }
-
-    public XMRestGroup() {
-        httpRequestTimeout = -1;
-    }
-
     public List<XMGroupModel> GetAllGroupsByPrefix(string prefix) {
 
         XMRestWrapper wrapper = new XMRestWrapper();
-
-        if(httpRequestTimeout > 0) {
-            wrapper.httpRequestTimeout = httpRequestTimeout;
-        }
-
         string jsonList;
         if (prefix.length() > 0){
             String encodedPrefix = EncodingUtil.urlEncode(prefix,'UTF-8');
@@ -51,11 +40,6 @@ public with sharing class XMRestGroup {
     //
     public List<XMGroupMemberModel> GetXMPersonGroupsById (string personId, string type){
         XMRestWrapper wrapper = new XMRestWrapper();
-
-        if(httpRequestTimeout > 0) {
-            wrapper.httpRequestTimeout = httpRequestTimeout;
-        }
-
         string jsonList;
 
         string url = 'people/' + personId + '/group-memberships?offset=0&limit=1000';
@@ -106,11 +90,6 @@ public with sharing class XMRestGroup {
         string url;
         string jsonResponse;
         XMRestWrapper wrapper = new XMRestWrapper();
-
-        if(httpRequestTimeout > 0) {
-            wrapper.httpRequestTimeout = httpRequestTimeout;
-        }
-
         //body = '{"id": "'+ PersonId +'", "recipientType": "PERSON"}';
         url = this.GroupUrl +  groupName +  '/members/' + PersonId;
         jsonResponse = wrapper.performCallOut(url, 'DELETE', '');
@@ -126,11 +105,6 @@ public with sharing class XMRestGroup {
         string url;
         string jsonResponse;
         XMRestWrapper wrapper = new XMRestWrapper();
-
-        if(httpRequestTimeout > 0) {
-            wrapper.httpRequestTimeout = httpRequestTimeout;
-        }
-
         body =  '{"position" : 1,"recipient":{"id": "'+ PersonId +'", "recipientType":"' + type +'"}}';
         System.Debug('body = ' + body);
         String encodedgroupName = EncodingUtil.urlEncode(groupName,'UTF-8');
@@ -149,11 +123,6 @@ public with sharing class XMRestGroup {
         System.Debug('body = ' + body);
         System.Debug(url);
         XMRestWrapper wrapper = new XMRestWrapper();
-
-        if(httpRequestTimeout > 0) {
-            wrapper.httpRequestTimeout = httpRequestTimeout;
-        }
-
         jsonResponse = wrapper.performCallOut(url, 'POST', body);
         return true;
     }
@@ -166,11 +135,6 @@ public with sharing class XMRestGroup {
         System.Debug('body = ' + body);
         System.Debug(url);
         XMRestWrapper wrapper = new XMRestWrapper();
-
-        if(httpRequestTimeout > 0) {
-            wrapper.httpRequestTimeout = httpRequestTimeout;
-        }
-
         jsonResponse = wrapper.performCallOut(url, 'POST', body);
         XMGroupModel newGroup = null;
         newGroup = (XMGroupModel) JSON.deserialize(jsonResponse, XMGroupModel.class);
@@ -188,11 +152,6 @@ public with sharing class XMRestGroup {
         System.debug('url = ' + url);
 
         XMRestWrapper wrapper = new XMRestWrapper();
-
-        if(httpRequestTimeout > 0) {
-            wrapper.httpRequestTimeout = httpRequestTimeout;
-        }
-
         jsonResponse = wrapper.performCallOut(url, 'POST', body);
 
         if(jsonResponse != null) {
@@ -208,11 +167,6 @@ public with sharing class XMRestGroup {
         string url;
         string jsonResponse;
         XMRestWrapper wrapper = new XMRestWrapper();
-
-        if(httpRequestTimeout > 0) {
-            wrapper.httpRequestTimeout = httpRequestTimeout;
-        }
-
         url = this.GroupUrl +  groupName;
         jsonResponse = wrapper.performCallOut(url, 'DELETE', '');
         System.Debug(jsonResponse);
