@@ -184,6 +184,7 @@
             DrawUnprioritized(program);
             DrawPrioritized(program);
 
+            $('#projecttype').bootstrapSwitch();
             if(projectType == 'PMO'){
                 $('#projecttype').bootstrapSwitch('state', true);
                 $('#projecttype').bootstrapSwitch('labelText', 'IT');
@@ -228,7 +229,7 @@
         $('#projecttype').on('switchChange.bootstrapSwitch', function(event, state) {
             if(state){
                 projectType = 'PMO';
-                program = 'Global';
+                program = 'Foundation';
                 $('#projecttype').bootstrapSwitch('labelText', 'IT');
             }else{
                 projectType = 'IT';
