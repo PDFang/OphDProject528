@@ -1,0 +1,144 @@
+/* GanttProjectListCSS */
+
+    div{
+        font-size :10px;
+    }
+    .fixedTop{
+        position: relative;
+        top: 2px;
+        z-index: 100001;
+        float: right;
+        right: 12px;
+        margin-top: 2px;
+    }
+    .fixedRow{
+        position: fixed;
+        background-color: white;
+        top: 0;
+        height: 41px;
+        width: 98.7%;
+        z-index: 100002;
+        border-bottom: solid 1px #d5d5d5;
+        left: 28px;
+    }
+    .arrow{
+       font-size: 2.25em !important;
+       line-height: 3 !important;
+       margin-left: 17px;
+    }
+    .placeholder {
+       outline-style: dashed;
+       outline-width: 1px;
+       outline-color: green;
+    }
+    .k-grid > table{
+       border : 1px;
+    }
+    .k-listview:after {
+       content: ".";
+       display: block;
+       height: 0;
+       clear: both;
+       visibility: hidden;
+    }
+    * {
+       -webkit-box-sizing: border-box !important;
+    }
+    .form-control {
+       padding-right: 30px;
+       display: inline;
+    }
+    .form-control + .glyphicon {
+        position: absolute;
+        right: 0;
+        padding: 8px 27px;
+    }
+    .page-header{
+        padding-bottom: 4px !important;
+        margin: 0px 0 1px !important;
+        border-bottom : none;
+    }
+    .page-header h1{
+        font-size: 20px;
+        text-decoration: none;
+        color: #767474;
+        font-family: Segoe UI;
+        font-weight: 300;
+        padding-left: 26px;
+    }
+
+    .listTable{
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    .tooltipRow{
+        border-bottom: 1px solid rgba(128, 128, 128, 0.14);
+        margin-left:2px;
+        padding-top:5px;
+        white-space: normal;
+        text-align : left;
+    }
+    .button-edit{
+        padding: 6px 12px !important;
+        margin-bottom: 0 !important;
+        font-weight: 400;
+        color: #fff !important;
+        background: none !important;
+        background-color: #0275d8 !important;
+        border-color: #2e6da4 !important;
+        font-size: 12px !important;
+        font-weight:200 !importnat;
+
+    }
+    .tooltip.top .tooltip-arrow {
+       bottom: 0;
+       left: 50%;
+       margin-left: -5px;
+       border-top-color: #42719a;
+       border-width: 5px 5px 0;
+
+    }
+    .tooltip-inner {
+      background: #42719a;
+      border: solid 1px #42719a;
+    }
+    .hideDisplay{
+      display : none;
+    }
+    .button-cancel{
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid rgb(216, 221, 230) !important;
+        background-color: rgb(255, 255, 255) !important;
+        color: #0275d8 !important;
+        display: inline-block;
+        height:33px;
+        font-weight:200 !importnat;
+        font-size : 12px !important;
+    }
+    .listRow{
+        z-index: 1040;
+        position: relative;
+        background-color: #fff;
+        margin-top: 10px;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    .k-grid table {
+        table-layout: fixed;
+    }
+    .k-grid td{
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    .spinner {
+        background:url('../../img/loading32.gif') no-repeat;
+        height:32px;
+        margin:20px;
+        padding-left:40px;
+        padding-top:9px;
+        font-size: 0.75em;
+    }

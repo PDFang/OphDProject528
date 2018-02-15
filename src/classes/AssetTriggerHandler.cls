@@ -3,6 +3,11 @@ public class AssetTriggerHandler extends TriggerHandler {
     @TestVisible
     private static String assetRollupQueueableJobID;
 
+    public override void beforeInsert()
+    {
+        UpdateAssetSalesPrice();
+    }
+
     public override void afterUpdate()
     {
         rollupNRRToPhaseProject();
@@ -23,6 +28,27 @@ public class AssetTriggerHandler extends TriggerHandler {
         rollupNRRToPhaseProject();
         ProjectPhaseAssetSummary();
         ProjectParentAssetSummary();
+    }
+
+    //get List Unit Price from the quote line and add it to the asset
+    private static void UpdateAssetSalesPrice(){
+        Set<Id> quoteLineSetIds = new Set<Id>();
+        List<Asset> assets = new List<Asset>();
+
+        for(Asset asst: (List<Asset>)trigger.new){
+            if(asst.SBQQ__QuoteLine__c != null){
+                quoteLineSetIds.add(asst.SBQQ__QuoteLine__c);
+                assets.add(asst);
+            }
+        }
+
+        if(!quoteLineSetIds.isEmpty()){
+            Map<Id, SBQQ__QuoteLine__c> quoteLineMap = new Map<Id, SBQQ__QuoteLine__c>( new List<SBQQ__QuoteLine__c>([SELECT Id, Customer_Net_Unit_Price__c FROM SBQQ__QuoteLine__c WHERE Id IN :quoteLineSetIds]));
+
+            for(Asset asset:assets){
+                asset.Sales_Price__c = quoteLineMap.get(asset.SBQQ__QuoteLine__c).Customer_Net_Unit_Price__c;
+            }
+        }
     }
 
     // roll-up Asset NRR's to related phase project

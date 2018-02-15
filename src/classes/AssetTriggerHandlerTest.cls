@@ -24,7 +24,21 @@ private class AssetTriggerHandlerTest {
     static List<Product2> productList = null;
     static List<Project__c> projectList = null;
     static List<Asset> assetList = null;
+    static SBQQ__QuoteLine__c quoteLine = null;
 
+
+    static testMethod void updateAssetSalesPriceTest(){
+        createTestData();
+        createQuoteLines();
+
+        Test.startTest();
+        createAssets();
+        Test.stopTest();
+
+        SBQQ__QuoteLine__c validateQuoteLine = [SELECT Customer_Net_Unit_Price__c FROM SBQQ__QuoteLine__c WHERE Id = :quoteLine.Id];
+        Asset validateAsset = [SELECT Id, Sales_Price__c FROM Asset WHERE Id = :assetList[0].Id];
+        system.assertEquals(validateAsset.Sales_Price__c, validateQuoteLine.Customer_Net_Unit_Price__c);
+    }
     /**** Validate Project asset totals on asset creation ***/
     static testMethod void addAssetTotalTest()
     {
@@ -407,6 +421,35 @@ private class AssetTriggerHandlerTest {
 
     }
 
+    static void createQuoteLines()
+    {
+
+        Product2 p = new Product2();
+        p.Name     = 'TEST';
+        p.ProductCode ='1234520-000-000-XX';
+        p.Family = 'SOFTWARE MRC PRODUCTS';
+        insert p;
+
+        SBQQ__Quote__c quote = new SBQQ__Quote__c();
+        quote.SBQQ__Primary__c = true;
+        quote.SBQQ__Type__c = 'Quote';
+        //quote.SBQQ__Opportunity2__c = o.Id;
+        quote.Usage_Rate_Type__c = 'Flat Usage Rates';
+        quote.Flat_Usage_Rates__c = '$.0135';
+        insert quote;
+
+        // list of quote lines
+
+        quoteLine = new SBQQ__QuoteLine__c();
+        quoteLine.SBQQ__Product__c = p.Id;
+        quoteLine.SBQQ__Existing__c = false;
+        quoteLine.SBQQ__RegularPrice__c  = 20.00;
+        quoteLine.SBQQ__ListPrice__c = 20;
+        quoteLine.SBQQ__Quantity__c = 5;
+        quoteLine.SBQQ__Quote__c = quote.Id;
+        insert quoteLine;
+    }
+
     static void createAssets()
     {
         assetList = new List<Asset>();
@@ -420,6 +463,10 @@ private class AssetTriggerHandlerTest {
         asset1.Product2Id = productList[0].Id;
         asset1.Quantity = 1;
         asset1.Price = 10.00;
+
+        if(quoteLine != null)
+            asset1.SBQQ__QuoteLine__c = quoteLine.Id;
+
         assetList.add(asset1);
 
         Asset asset2 = new Asset();
