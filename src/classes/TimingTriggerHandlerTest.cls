@@ -87,19 +87,20 @@ public class TimingTriggerHandlerTest {
 
 		Test.stopTest();
 
-		WorkIt2__Timing__c timingTest = [select WorkIt2__Time_In_Hours__c from WorkIt2__Timing__c where Id = : timings[0].Id];
+		WorkIt2__Timing__c timingTest = [select WorkIt2__Time_In_Hours__c from WorkIt2__Timing__c where Id = : timings[1].Id];
+		List<AggregateResult> ar = [SELECT sum(WorkIt2__Time_In_Hours__c) loggedHours FROM WorkIt2__Timing__c];
 
 		SubscriptionReplica__c testSubscription= [select Logged_Hours__c from SubscriptionReplica__c where id = : subscriptionReplica.Id];
 		System.assertEquals(timingTest.WorkIt2__Time_In_Hours__c, testSubscription.Logged_Hours__c, 'Hours Match');
 
 		Project__c phaseProject= [select Phase_Logged_Hours__c from Project__c where id = : projectList[1].Id];
-		System.assertEquals(timingTest.WorkIt2__Time_In_Hours__c, phaseProject.Phase_Logged_Hours__c, 'Phase Project Hours Match');
+		System.assertEquals(ar[0].get('loggedHours'), phaseProject.Phase_Logged_Hours__c, 'Phase Project Hours Match');
 
 		Project__c parentProject= [select Parent_Logged_Hours__c from Project__c where id = : projectList[0].Id];
-		System.assertEquals(timingTest.WorkIt2__Time_In_Hours__c, parentProject.Parent_Logged_Hours__c, 'Parent Project Hours Match');
+		System.assertEquals(ar[0].get('loggedHours'), parentProject.Parent_Logged_Hours__c, 'Parent Project Hours Match');
 
 		Opportunity testOppy= [select Logged_Hours__c from Opportunity where id = : o.Id];
-		System.assertEquals(timingTest.WorkIt2__Time_In_Hours__c, testOppy.Logged_Hours__c, 'Opportunity Hours Match');
+		System.assertEquals(ar[0].get('loggedHours'), testOppy.Logged_Hours__c, 'Opportunity Hours Match');
 
 
 
