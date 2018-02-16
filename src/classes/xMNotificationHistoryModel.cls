@@ -16,15 +16,24 @@ public class xMNotificationHistoryModel {
 
 
     public xMNotificationHistoryModel(xmDelivery__c  delivery ){
-                this.CaseId = delivery.xmNotification__r.Case__c;
+
+        this.NotificationId = delivery.xmNotification__c;
+
+        if(delivery.xmNotification__c != null){
+            this.CaseId = delivery.xmNotification__r.Case__c;
+            this.NotificationName = delivery.xmNotification__r.Name;
+            this.NotificationType = delivery.xmNotification__r.Request_Type__c;
+            this.NotificationDate = delivery.xmNotification__r.Request_Date__c.format();
+            if(delivery.xmNotification__r.Case__c != null){
                 this.CaseNumber = delivery.xmNotification__r.Case__r.CaseNumber;
-                this.NotificationId = delivery.xmNotification__c;
-                this.NotificationName = delivery.xmNotification__r.Name;
                 this.CaseSubject = delivery.xmNotification__r.Case__r.Subject;
-                this.NotificationType = delivery.xmNotification__r.Request_Type__c;
-                this.NotificationDate = delivery.xmNotification__r.Request_Date__c.format();
-                this.NotificationDeviceType = delivery.Device_Type__c;
-                this.NotificationDeliveryDevice = delivery.Device__c;
-                this.NotifcationDeliveryStatus = delivery.DeliveryStatus__c;
+            }
+        }
+
+        this.NotificationDeviceType = delivery.Device_Type__c;
+        this.NotificationDeliveryDevice = delivery.Device__c;
+        this.NotifcationDeliveryStatus = delivery.DeliveryStatus__c;
+
     }
+
 }
