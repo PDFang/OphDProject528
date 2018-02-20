@@ -22,11 +22,11 @@ public class TimingTriggerHandler extends TriggerHandler{
 
             WorkIt2__Timing__c oldTime = oldMap.get(newTime.Id);
 
-            if(newTime.Project_Asset_Allocation__c != null && newTime.Closed_Sessions__c != oldTime.Closed_Sessions__c && newTime.Closed_Sessions__c > 0 ){
+            if(newTime.Project_Asset_Allocation__c != null){// && newTime.Closed_Sessions__c != oldTime.Closed_Sessions__c && newTime.Closed_Sessions__c > 0
                 assetAllocationIds.add(newTime.Project_Asset_Allocation__c);
             }
 
-            if(newTime.Project_Subscription_Allocation__c != null && newTime.Closed_Sessions__c != oldTime.Closed_Sessions__c && newTime.Closed_Sessions__c > 0){
+            if(newTime.Project_Subscription_Allocation__c != null){// && newTime.Closed_Sessions__c != oldTime.Closed_Sessions__c && newTime.Closed_Sessions__c > 0){
                 subscriptionAllocationIds.add(newTime.Project_Subscription_Allocation__c);
             }
 
