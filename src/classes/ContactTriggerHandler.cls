@@ -56,6 +56,7 @@ public class ContactTriggerHandler extends TriggerHandler{
                 dupeContactIds.add(newContact.Id);
             }
         }
+        if(dupeContactIds.size() > 0 && )
         updateXMPersonId(dupeContactIds);
 
     }
@@ -243,10 +244,10 @@ public class ContactTriggerHandler extends TriggerHandler{
 
     }
 
-    @Future
+    @Future(callout=true)
     public static void updateXMPersonId(set<Id> dupeContactIds){
 
-        list<contact> newList = [Select Id, Email,xmPerson__c, XmattersUid__c From Contact where id in :dupeContactIds];
+        list<contact> newList = [Select Id, Email,xmPerson__c,  xmPerson__r.xmPersonUID__c, XmattersUid__c From Contact where id in :dupeContactIds];
 
         if(newList.size() == 0)
             return;
@@ -261,27 +262,31 @@ public class ContactTriggerHandler extends TriggerHandler{
             return;
 
         map<string, string> contactEmailXmId = new map<string, string>();
-        map<string, string> contactEmailXmUId = new map<string, string>();
+
 
         for(Contact con : [select Id, Email, xmPerson__c, xmPerson__r.xmPersonUID__c From Contact where Email in : emails and Deactivated__c =: false and xmPerson__c != :null ]){
             if(!contactEmailXmId.containsKey(con.Email)){
                 contactEmailXmId.put(con.Email, con.xmPerson__c);
-                contactEmailXmUId.put(con.Email, con.xmPerson__r.xmPersonUID__c);
             }
         }
 
         for(Contact newContact : newList){
             if(contactEmailXmId.containsKey(newContact.Email)){
                 newContact.xmPerson__c = contactEmailXmId.get(newContact.Email);
-                newContact.XmattersUid__c = null;
+	            newContact.XmattersUid__c = null;
+
+
             }
             else{
+	            newContact.XmattersUid__c = newContact.xmPerson__r.xmPersonUID__c;
                 newContact.xmPerson__c = null;
-                newContact.XmattersUid__c = contactEmailXmUId.get(newContact.Email);
+
             }
         }
 
         update newList;
     }
+
+//	private static void updateGroupSubscriptions()
 
 }
