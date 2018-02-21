@@ -137,11 +137,6 @@
                                     </button>
                                 </apex:outputPanel>
                             </apex:pageBlockButtons>
-                            <!--<apex:pageBlockSection columns="2">-->
-                            <!--<apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation}" var="f">-->
-                            <!--<apex:outputfield value="{!Asset[f]}" />-->
-                            <!--</apex:repeat>-->
-                            <!--</apex:pageBlockSection>-->
                             <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity > 1}">
                                 <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_GrTh1_Fields}" var="f">
                                     <apex:outputfield value="{!Asset[f]}" />
@@ -173,11 +168,6 @@
                                     </button>
                                 </apex:outputPanel>
                             </apex:pageBlockButtons>
-                            <!--<apex:pageBlockSection columns="2" >-->
-                            <!--<apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation}" var="f">-->
-                            <!--<apex:outputfield value="{!Subscription[f]}" />-->
-                            <!--</apex:repeat>-->
-                            <!--</apex:pageBlockSection>-->
                             <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c > 1}">
                                 <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation_GrTh1_Fields}" var="f">
                                     <apex:outputfield value="{!Subscription[f]}" />
