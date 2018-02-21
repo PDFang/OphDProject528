@@ -397,7 +397,7 @@
                        allocatedQPercentageInput = $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(7)");
 
                   currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
-                  var percentage = 100*(model.AllocatedQuantity / model.Quantity).toFixed(2);
+                      var percentage = (100*(model.AllocatedQuantity / model.Quantity)).toFixed(2);
                   if( model.Quantity == 0)
                     currentValue = 0;
                   $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', true).addClass("k-state-disabled");
@@ -579,8 +579,8 @@
                     dataBound:onAssetDataBound,
                     columns: [
                          {command: { text: "Select", click : selectAsset}, title: "Action", width: "60px" },
-                        { field: "AssetName", title:"Asset", width: "110px" },
-                        { field: "RemainingPercentage", title:"Remaining Percentage", width: "200px" },
+                        { field: "AssetName", title:"Asset", width: "300px" },
+                        { field: "RemainingPercentage", title:"Remaining Percentage", width: "110px" },
                         { field: "RemainingQuantity", title:"Remaining Quantity", width: "110px" },
                         { field: "RemainingHours", title:"Remaining Hours", width: "110px" }
 
