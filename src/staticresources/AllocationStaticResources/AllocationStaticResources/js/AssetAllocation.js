@@ -382,7 +382,7 @@
                 }
             })
 
-
+        $("#assetAllocationList").find('div.k-grid-content').css("height", "520px");
      }
 
 
@@ -475,13 +475,20 @@
                 });
     }
 
-     var wrapper, header;
+     var wrapper, header, parentGrid;
     function onProjDataBound(){
             wrapper = this.wrapper,
             header = wrapper.find(".k-grid-header");
+            parentGrid =  $("#assetAllocationList").find('div.k-grid-content').first();
             resizeFixed();
             $(window).resize(resizeFixed);
-            $("div.k-grid-content").scroll(scrollFixed);
+            parentGrid.scroll(scrollFixed);
+           $(window).scroll(function(){
+              if($(header).hasClass("fixed-header")){
+                 var headerTop = $("#assetAllocationList").find('div.k-grid-content').first().offset().top - $(window).scrollTop();
+                  header.css("top", headerTop);
+              }
+           });
     }
 
      function resizeFixed() {
@@ -490,15 +497,16 @@
     }
 
     function scrollFixed() {
-      var offset = $(this).scrollTop() +  $(this).offset().top,
+      var offset = $(parentGrid).scrollTop() +  $(parentGrid).offset().top,
           tableOffsetTop = wrapper.offset().top,
-          tableOffsetBottom = tableOffsetTop + wrapper.height(),
-          headerTop = $(this).offset().top -  $(window).scrollTop() ;
-      if(offset < tableOffsetTop) {
+          tableOffsetBottom =  tableOffsetTop + wrapper.height() + 430,
+          headerTop = $(parentGrid).offset().top - $(window).scrollTop();
+      if(offset < tableOffsetTop || offset >= tableOffsetBottom) {
         header.removeClass("fixed-header");
         header.css("top", '');
-      } else if(offset >= tableOffsetTop  && !header.hasClass("fixed")) {
-        header.addClass("fixed-header");
+      } else if(offset >= tableOffsetTop && offset < tableOffsetBottom ) {
+         if(!header.hasClass("fixed"))
+            header.addClass("fixed-header");
         header.css("top", headerTop);
       }
     }
@@ -581,9 +589,16 @@
      function onAssetDataBound(){
                 wrapper = this.wrapper,
                 header = wrapper.find(".k-grid-header");
+                parentGrid =  $("#assetAllocationList").find('div.k-grid-content').first();
                 resizeFixed();
                 $(window).resize(resizeFixed);
-                $("div.k-grid-content").scroll(scrollFixed);
+                parentGrid.scroll(scrollFixed);
+                $(window).scroll(function(){
+                  if($(header).hasClass("fixed-header")){
+                     var headerTop = $("#assetAllocationList").find('div.k-grid-content').first().offset().top - $(window).scrollTop();
+                      header.css("top", headerTop);
+                  }
+               });
         }
 
     function selectAsset(e){
