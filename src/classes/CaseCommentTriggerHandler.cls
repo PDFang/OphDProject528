@@ -98,7 +98,7 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
                 and Account.Billing_Group__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
                 and RecordType.Name = 'Incident'
                 and X3rdPartyVendorTicket__c != null
-                and IsClosed = false
+                //and IsClosed = false
         ]);
         system.debug('CallPartnerCaseProxyService(): caseMap - ' + caseMap);
 
