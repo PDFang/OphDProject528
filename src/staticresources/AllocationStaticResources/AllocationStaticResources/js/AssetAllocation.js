@@ -173,7 +173,7 @@
           dataBound : gridDataboundAsset,
           detailInit: loadChildGrid,
           cancel : hideChildProjects,
-
+          resizable: true,
           toolbar: [
               {
                   name: "create",
@@ -190,6 +190,7 @@
                     {
                         field:"AssetName",
                         title:"Asset",
+                        width:350,
                         editor:nonEditorAsset,
                         template: '#{ #<a href="/#: data.Asset #" target="_blank" name="AssetName">#= data.AssetName #</a># } #',
                     },
@@ -209,7 +210,7 @@
                         field:"ProjectPhase",
                         title:"Project Phase",
                         template: '#{ #<a href="/#: data.ProjectNumber #" target="_blank" >#= data.ProjectPhase #</a># } #',
-                         width:300,
+                         width:350,
                         editor:nonEditorAsset
                     },
                     {
@@ -327,7 +328,8 @@
         var allocatedQPercentageCell =  $(row).children().eq(7);
         $(allocatedQPercentageCell).find("input").prop('disabled', true).addClass("k-state-disabled");
         $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
-        $(allocatedHoursCell).find("span.k-select").show();
+        $(allocatedHoursCell).find("span.k-select").hide();
+        $(allocatedQPercentageCell).find("span.k-select").hide();
         var implementedCell =  $(row).children().eq(9);
         $(implementedCell).find("input").prop('disabled', true);
 
