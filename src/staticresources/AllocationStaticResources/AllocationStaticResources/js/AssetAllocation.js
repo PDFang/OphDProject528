@@ -368,18 +368,21 @@
 
      function gridDataboundAsset(e){
         $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
+        var projStatus = '';
+        if(Project)
+            projStatus = Project.Status;
         $("#assetAllocationList tbody tr .k-grid-edit").each(function () {
             var currentDataItem = $("#assetAllocationList").data("kendoGrid").dataItem($(this).closest("tr"));
-            //Check in the current dataItem if the row is editable
-            if (currentDataItem.Implemented == true && isManager == false) {
+            //Check in the current dataItem if the row is editable || projStatus == 'Cancelled' || projStatus == 'Closed' || projStatus == 'Suspended'
+            if ((currentDataItem.Implemented == true && isManager == false) ) {
                 $(this).remove();
             }
         });
          //Selects all delete buttons
          $("#assetAllocationList tbody tr a.k-grid-Delete").each(function () {
                 var currentDataItem = $("#assetAllocationList").data("kendoGrid").dataItem($(this).closest("tr"));
-                //Check in the current dataItem if the row is deletable
-                if (currentDataItem.Implemented == true && isManager == false) {
+                //Check in the current dataItem if the row is deletable || projStatus == 'Cancelled' || projStatus == 'Closed' || projStatus == 'Suspended'
+                if ((currentDataItem.Implemented == true && isManager == false) ) {
                     $(this).remove();
                 }
             })
