@@ -63,8 +63,42 @@ public class UserTriggerHandler extends TriggerHandler{
             addAccountShare(partnerUserList, partnerMap);
         }
         addProjectShare(partnerUserList, partnerMap);
+        addOpportunityShare(partnerUserList, partnerIdSet);
 
     } // end of addShareFuture()
+
+    private static void addOpportunityShare(List<User> partnerUserList, Set<Id> partnerIdSet){
+        List<OpportunityShare> shareList = new List<OpportunityShare>();
+        List<Opportunity> recordList = new List<Opportunity>();
+
+        for(Opportunity opp: [Select Id, Partner_Account__c, iCE_Partner__c, RecordType.Name, Certified_Implementation_Partner__c, Sub_Agent_Account__c from Opportunity
+                where (Partner_Account__c IN :partnerIdSet or iCE_Partner__c IN :partnerIdSet or Sub_Agent_Account__c IN :partnerIdSet or Certified_Implementation_Partner__c IN :partnerIdSet)]){
+
+            for(User userRecord: partnerUserList){
+                if(userRecord.AccountId == opp.Partner_Account__c || userRecord.AccountId == opp.iCE_Partner__c || userRecord.AccountId == opp.Sub_Agent_Account__c || userRecord.AccountId == opp.Certified_Implementation_Partner__c){
+
+                    OpportunityShare share = new OpportunityShare();
+                    share.OpportunityId = opp.Id;
+                    share.UserOrGroupId = userRecord.Id;
+                    share.OpportunityAccessLevel = 'Edit';
+                    shareList.add(share);
+                }
+            }
+        }
+
+        system.debug(' **** addShareFuture() : shareList - '+shareList);
+        if(shareList.isEmpty() == false){
+            Database.saveResult[] resultList=  Database.insert(shareList, false);
+            for(Database.saveResult result : resultList){
+                if(result.isSuccess() == false){
+                    system.debug('**** addShareFuture() : error - '+ result.getErrors()[0]);
+                    throw new UserTriggerHandlerException(result.getErrors()[0].getMessage());
+                }
+            }
+        }
+
+
+    }
 
     /* Share customer account and related cases and opportunities with partner account portal users */
     private static void addAccountShare(List<User> partnerUserList, Map<Id, List<Account_Partner__c>> partnerMap)
