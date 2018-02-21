@@ -135,28 +135,7 @@
                                     from: "AllocatedPercentage",
                                     type:"number",
                                     nullable: true,
-                                    editable:true,
-                                    validation : {
-                                        percentageValidation : function(input){
-                                            var parentRow = $(input).parents("tr:first");
-                                            var grid = $("#assetAllocationList").data("kendoGrid");
-                                            var rowData = grid.dataItem(parentRow);
-                                            if(!rowData){
-                                                input.attr("data-quantityValidation-msg", "Please select an asset");
-                                                return false;
-                                            }
-                                            if(input.val() > 100 && input.is("[name='AllocatedPercentage']")){
-                                                input.attr("data-percentageValidation-msg", " Invalid Percentage");
-                                                return false;
-                                            }
-                                             if(input.val() == 0 && input.is("[name='AllocatedPercentage']") && rowData.Quantity == 1){
-                                                input.attr("data-percentageValidation-msg", " Allocated Hours % cannot be zero");
-                                                return false;
-                                            }
-
-                                        return true;
-                                        }
-                                    }
+                                    editable:true
                                 },
                                 AllocatedHours:{from: "AllocatedHours", type:"number",  nullable: true, editable:true, defaultValue:0},
                                 Quantity :{from:"Quantity", type:"number",defaultValue:0},
@@ -185,7 +164,7 @@
           editable: "inline",
           scrollable:  true,
           noRecords: true,
-          height:500,
+          height:600,
           edit: addDuplicateRowAsset,
           dataBound : gridDataboundAsset,
           detailInit: loadChildGrid,
@@ -236,7 +215,7 @@
                     },
                     {
                         field:"AllocatedPercentage",
-                        title:"Allocated Hours %",
+                        title:"Allocated %",
                         editable:true
                     },
                     {
@@ -311,7 +290,8 @@
                    var firstCell = e.container.contents()[2];
                    $('<a href="/' +  e.model.Asset + '" target="_blank">' + e.model.AssetName +'</a>').appendTo(firstCell);
                    var projectCell = e.container.contents()[5];
-                   $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">Select Projects </a>').appendTo(projectCell);
+                   $('<a style="color:blue;cursor:pointer;" class="projectSelector" onclick="loadDetail(this);">Select Projects </a>').appendTo(projectCell);
+                   loadDetail($("a.projectSelector"));
                    e.model.Quantity = Asset.Quantity;
                    e.model.RemainingQuantity = Asset.RemainingQuantity__c;
                    e.model.QuantityOnHold  = Asset.QuantityonHold__c == '' ? 0 : Asset.QuantityonHold__c;
@@ -327,7 +307,8 @@
                    $('<a href="/' +  e.model.ProjectNumber + '" target="_blank">' + e.model.ProjectPhase +'</a>').appendTo(projectCell);
 
                    var firstCell = e.container.contents()[2];
-                   $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">Select Assets </a>').appendTo(firstCell);
+                   $('<a style="color:blue;cursor:pointer;"  class="assetSelector" onclick="loadDetail(this);">Select Assets </a>').appendTo(firstCell);
+                   loadDetail($("a.assetSelector"));
                }
                 var buttonCell = e.container.contents()[10];
                 $(buttonCell).find("a.k-primary").html('<span class="k-icon k-i-update"></span> Add');
@@ -338,20 +319,13 @@
     }
 
     function enableAllocation(rowData, row){
-         var allocatedHoursCell =  $(row).children().eq(8);
-        if(rowData.Quantity > 1){
-            var allocatedQPercentageCell =  $(row).children().eq(7);
-            $(allocatedQPercentageCell).find("span.k-numerictextbox").hide();
-            $(allocatedHoursCell).find("input").prop('disabled', false).removeClass("k-state-disabled");
-            $(allocatedHoursCell).find("span.k-select").show();
-        }else if(rowData.Quantity == 1){
-            var allocatedQuantityCell =  $(row).children().eq(6);
-            $(allocatedQuantityCell).find("span.k-numerictextbox").hide();
-             $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
-             $(allocatedHoursCell).find("span.k-select").hide();
-        }
-         var implementedCell =  $(row).children().eq(9);
-          $(implementedCell).find("input").prop('disabled', true);
+        var allocatedHoursCell =  $(row).children().eq(8);
+        var allocatedQPercentageCell =  $(row).children().eq(7);
+        $(allocatedQPercentageCell).find("input").prop('disabled', true).addClass("k-state-disabled");
+        $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
+        $(allocatedHoursCell).find("span.k-select").show();
+        var implementedCell =  $(row).children().eq(9);
+        $(implementedCell).find("input").prop('disabled', true);
 
     }
 
@@ -359,32 +333,22 @@
                 var assetGrid = $("#assetAllocationList").data("kendoGrid");;
                 var dataItems = assetGrid.dataItems();
                 var totalQuantity = 0,
-                    totalPercentage = 0;
+                    totalPercentage = 0,
                     allocatedQuantityCell =  $(row).children().eq(6),
                     allocatedQPercentageCell =  $(row).children().eq(7),
                     allocatedHoursCell =  $(row).children().eq(8),
                     hours;
-                if( rowData.Quantity > 1){
-                    //var remainingQuantity = rowData.AllocatedQuantity;
-                    //remainingQuantity = remainingQuantity < 0 ? 0 : remainingQuantity;
-                    $(allocatedQPercentageCell).find("span.k-numerictextbox").hide();
-                    rowData.AllocatedQuantity = rowData.AllocatedQuantity == null ? rowData.RemainingQuantity : rowData.AllocatedQuantity;
-                    $(allocatedQuantityCell).find("span.k-numerictextbox").show();
-                    $(allocatedQuantityCell).find("input").val(rowData.AllocatedQuantity);
-                    hours = rowData.BudgtedHours * (rowData.AllocatedQuantity / rowData.Quantity);
-                    $(allocatedHoursCell).find("input").prop('disabled', false).removeClass("k-state-disabled");
-                    $(allocatedHoursCell).find("span.k-select").show();
 
-                }else if( rowData.Quantity == 1 ){
-                   // var remainingPercentage = 100 -  totalPercentage;
-                    rowData.AllocatedPercentage = rowData.AllocatedPercentage == null ? Asset.Remaning_Percentage__c : rowData.AllocatedPercentage;
-                    $(allocatedQuantityCell).find("span.k-numerictextbox").hide();
-                    $(allocatedQPercentageCell).find("span.k-numerictextbox").show();
-                    $(allocatedQPercentageCell).find("input").val(rowData.AllocatedPercentage);
-                    var hours = rowData.BudgtedHours * (rowData.AllocatedPercentage / 100);
-                    $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
-                    $(allocatedHoursCell).find("span.k-select").hide();
-                }
+                rowData.AllocatedQuantity = rowData.AllocatedQuantity == null ? rowData.RemainingQuantity : rowData.AllocatedQuantity;
+                $(allocatedQuantityCell).find("span.k-numerictextbox").show();
+                $(allocatedQuantityCell).find("input").val(rowData.AllocatedQuantity);
+                hours = rowData.BudgtedHours * (rowData.AllocatedQuantity / rowData.Quantity);
+                $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
+                $(allocatedQPercentageCell).find("input").prop('disabled', true).addClass("k-state-disabled");
+                $(allocatedHoursCell).find("span.k-select").hide();
+                $(allocatedQPercentageCell).find("span.k-select").hide();
+                rowData.AllocatedPercentage = 100 * (rowData.AllocatedQuantity / rowData.Quantity);
+                  $(allocatedQPercentageCell).find("input").val(rowData.AllocatedPercentage);
                 rowData.AllocatedHours = hours.toFixed(2);
                 $(allocatedHoursCell).find("input").val(rowData.AllocatedHours);
                 var implementedCell =  $(row).children().eq(9);
@@ -414,27 +378,28 @@
                 }
             })
 
+
      }
 
 
     function calculateBudgetedHours(e){
-            if (e.action === "itemchange" && (e.field == "AllocatedPercentage" || e.field == "AllocatedQuantity")){
-                    var model = e.items[0],
-                        budgtedHours = model.BudgtedHours,
-                        currentValue;
-                        allocatedHoursInput = $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(8)");
-                  if(model.AllocatedPercentage > 0 ){
-                      currentValue = (budgtedHours * (model.AllocatedPercentage / 100)).toFixed(2);
-                      $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', true).addClass("k-state-disabled");
-                       $(allocatedHoursInput).find("span.k-select").hide();
-                  }else if(model.AllocatedQuantity > 0 ){
-                      currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
-                      if( model.Quantity == 0)
-                        currentValue = 0;
-                      $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', false).removeClass("k-state-disabled");
-                      $(allocatedHoursInput).find("span.k-select").show();
-                  }
+            if (e.action === "itemchange" && e.field == "AllocatedQuantity"){
+                  var model = e.items[0],
+                       budgtedHours = model.BudgtedHours,
+                       currentValue;
+                       allocatedHoursInput = $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(8)"),
+                       allocatedQPercentageInput = $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(7)");
+
+                  currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
+                  var percentage = 100*(model.AllocatedQuantity / model.Quantity);
+                  if( model.Quantity == 0)
+                    currentValue = 0;
+                  $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', true).addClass("k-state-disabled");
+                  $(allocatedQPercentageInput).find("input").val(percentage).prop('disabled', true).addClass("k-state-disabled");
+                  $(allocatedHoursInput).find("span.k-select").hide();
+                  $(allocatedQPercentageInput).find("span.k-select").hide();
                   model.AllocatedHours = currentValue;
+                  model.AllocatedPercentage = percentage;
             }
      }
 
@@ -490,9 +455,11 @@
                             }
                         }
                     },
-                    scrollable: false,
+                    scrollable: true,
+                    height:400,
                     sortable: true,
                     noRecords: true,
+                    dataBound:onProjDataBound,
                     columns: [
                         { command: { text: "Select", click : selectProject}, title: "Action", width: "60px" },
                         { field: "ProjectNumber", title:"Phase Project Number", width: "110px" },
@@ -502,6 +469,34 @@
 
                     ]
                 });
+    }
+
+     var wrapper, header;
+    function onProjDataBound(){
+            wrapper = this.wrapper,
+            header = wrapper.find(".k-grid-header");
+            resizeFixed();
+            $(window).resize(resizeFixed);
+            $("div.k-grid-content").scroll(scrollFixed);
+    }
+
+     function resizeFixed() {
+      var paddingRight = parseInt(header.css("padding-right"));
+      header.css("width", wrapper.width() - paddingRight);
+    }
+
+    function scrollFixed() {
+      var offset = $(this).scrollTop() +  $(this).offset().top,
+          tableOffsetTop = wrapper.offset().top,
+          tableOffsetBottom = tableOffsetTop + wrapper.height(),
+          headerTop = $(this).offset().top -  $(window).scrollTop() ;
+      if(offset < tableOffsetTop || offset > tableOffsetBottom) {
+        header.removeClass("fixed-header");
+        header.css("top", '');
+      } else if(offset >= tableOffsetTop && offset <= tableOffsetBottom && !header.hasClass("fixed")) {
+        header.addClass("fixed-header");
+        header.css("top", headerTop);
+      }
     }
 
     function selectProject(e){
@@ -566,6 +561,7 @@
                     scrollable: false,
                     sortable: true,
                     noRecords: true,
+                    dataBound:onAssetDataBound,
                     columns: [
                          {command: { text: "Select", click : selectAsset}, title: "Action", width: "60px" },
                         { field: "AssetName", title:"Asset", width: "110px" },
@@ -576,6 +572,14 @@
                     ]
                 });
     }
+
+     function onAssetDataBound(){
+                wrapper = this.wrapper,
+                header = wrapper.find(".k-grid-header");
+                resizeFixed();
+                $(window).resize(resizeFixed);
+                $("div.k-grid-content").scroll(scrollFixed);
+        }
 
     function selectAsset(e){
           var dataItem = this.dataItem($(e.currentTarget).closest("tr"));

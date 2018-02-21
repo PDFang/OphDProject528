@@ -80,10 +80,17 @@
         .pbSubheader {
                 cursor:pointer !important;
             }
-            .nav-tabs>li.active>a, .nav-tabs>li.active>a:focus, .nav-tabs>li.active>a:hover{
-                    background-color: #58b6dc;
-                    color:white;
-            }
+        .nav-tabs>li.active>a, .nav-tabs>li.active>a:focus, .nav-tabs>li.active>a:hover{
+                background-color: #58b6dc;
+                color:white;
+        }
+
+        .fixed-header {
+            position:fixed;
+            width:auto;
+            z-index: 1;
+          }
+
 
     </style>
 
