@@ -122,8 +122,12 @@
                                                 input.attr("data-quantityValidation-msg", 'Cannot allocate more than “Contract Quantity” if there is any quantity on hold or cancelled');
                                                 return false;
                                             }
+                                             if(Number(input.val()) > 1 && input.is("[name='AllocatedQuantity']") && rowData.Quantity == 1){
+                                                    input.attr("data-quantityValidation-msg", 'Allocated Quantity cannot be more than 1.');
+                                                    return false;
+                                            }
                                             if(input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && Number(input.val()) % 1 != 0){
-                                                 input.attr("data-quantityValidation-msg", 'Decimal values are not allowed in Allocated Quantity field');
+                                                 input.attr("data-quantityValidation-msg", 'Decimal values are not allowed if the Asset Quantity is greater than 1');
                                                 return false;
                                             }
                                         return true;
@@ -342,14 +346,14 @@
                 rowData.AllocatedQuantity = rowData.AllocatedQuantity == null ? rowData.RemainingQuantity : rowData.AllocatedQuantity;
                 $(allocatedQuantityCell).find("span.k-numerictextbox").show();
                 $(allocatedQuantityCell).find("input").val(rowData.AllocatedQuantity);
-                hours = rowData.BudgtedHours * (rowData.AllocatedQuantity / rowData.Quantity);
+                hours = (rowData.BudgtedHours * (rowData.AllocatedQuantity / rowData.Quantity)).toFixed(2);
                 $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
                 $(allocatedQPercentageCell).find("input").prop('disabled', true).addClass("k-state-disabled");
                 $(allocatedHoursCell).find("span.k-select").hide();
                 $(allocatedQPercentageCell).find("span.k-select").hide();
-                rowData.AllocatedPercentage = 100 * (rowData.AllocatedQuantity / rowData.Quantity);
+                rowData.AllocatedPercentage = (100 * (rowData.AllocatedQuantity / rowData.Quantity)).toFixed(2);
                   $(allocatedQPercentageCell).find("input").val(rowData.AllocatedPercentage);
-                rowData.AllocatedHours = hours.toFixed(2);
+                rowData.AllocatedHours = hours;
                 $(allocatedHoursCell).find("input").val(rowData.AllocatedHours);
                 var implementedCell =  $(row).children().eq(9);
                 $(implementedCell).find("input").prop('disabled', true);
@@ -391,7 +395,7 @@
                        allocatedQPercentageInput = $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(7)");
 
                   currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
-                  var percentage = 100*(model.AllocatedQuantity / model.Quantity);
+                  var percentage = 100*(model.AllocatedQuantity / model.Quantity).toFixed(2);
                   if( model.Quantity == 0)
                     currentValue = 0;
                   $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', true).addClass("k-state-disabled");
@@ -490,10 +494,10 @@
           tableOffsetTop = wrapper.offset().top,
           tableOffsetBottom = tableOffsetTop + wrapper.height(),
           headerTop = $(this).offset().top -  $(window).scrollTop() ;
-      if(offset < tableOffsetTop || offset > tableOffsetBottom) {
+      if(offset < tableOffsetTop) {
         header.removeClass("fixed-header");
         header.css("top", '');
-      } else if(offset >= tableOffsetTop && offset <= tableOffsetBottom && !header.hasClass("fixed")) {
+      } else if(offset >= tableOffsetTop  && !header.hasClass("fixed")) {
         header.addClass("fixed-header");
         header.css("top", headerTop);
       }
@@ -558,7 +562,8 @@
                             }
                         }
                     },
-                    scrollable: false,
+                    scrollable: true,
+                    height:400,
                     sortable: true,
                     noRecords: true,
                     dataBound:onAssetDataBound,
