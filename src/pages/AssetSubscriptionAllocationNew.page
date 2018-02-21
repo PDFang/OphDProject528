@@ -8,7 +8,9 @@
     <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.AllocationStaticResources, '/AllocationStaticResources/js/AssetAllocation.js')}"/>
-    <apex:includeScript value="{!URLFOR($Resource.AllocationStaticResources, '/AllocationStaticResources/js/SubscriptionAllocation.js')}"/>
+    <!--<apex:includeScript value="{!URLFOR($Resource.AllocationStaticResources, '/AllocationStaticResources/js/SubscriptionAllocation.js')}"/>-->
+
+    <apex:includeScript value="{!$Resource.TestAssetSubscrip}"/>
 
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
