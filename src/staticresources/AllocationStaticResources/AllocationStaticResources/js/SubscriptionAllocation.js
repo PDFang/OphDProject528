@@ -233,7 +233,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                     {
                         field:"ProductName",
                         title:"Product",
-                        width:350,
+                        width:300,
                         editor:nonEditorSubscription,
                         template: '#{ #<a href="/#: data.Product #" target="_blank" >#= data.ProductName #</a># } #',
                     },
@@ -514,13 +514,13 @@ function detailSubscriptionProjects(e) {
         function onProjDataBound(){
                 wrapper = this.wrapper,
                 header = wrapper.find(".k-grid-header");
-                parentGrid =  $("#assetAllocationList").find('div.k-grid-content').first();
+                parentGrid =  $("#subscriptionAllocationList").find('div.k-grid-content').first();
                 resizeFixed();
-                $(window).resize(resizeFixed);
-                parentGrid.scroll(scrollFixed);
+                $(window).resize(resizeFixedSubscription);
+                parentGrid.scroll(scrollFixedSubscription);
                $(window).scroll(function(){
                   if($(header).hasClass("fixed-header")){
-                     var headerTop = $("#assetAllocationList").find('div.k-grid-content').first().offset().top - $(window).scrollTop();
+                     var headerTop = $("#subscriptionAllocationList").find('div.k-grid-content').first().offset().top - $(window).scrollTop();
                       header.css("top", headerTop);
                   }
                });
@@ -608,8 +608,8 @@ function detailSubscription(e) {
                         header = wrapper.find(".k-grid-header");
                         parentGrid =  $("#subscriptionAllocationList").find('div.k-grid-content').first();
                         resizeFixed();
-                        $(window).resize(resizeFixed);
-                        parentGrid.scroll(scrollFixed);
+                        $(window).resize(resizeFixedSubscription);
+                        parentGrid.scroll(scrollFixedSubscription);
                         $(window).scroll(function(){
                           if($(header).hasClass("fixed-header")){
                              var headerTop = $("#subscriptionAllocationList").find('div.k-grid-content').first().offset().top - $(window).scrollTop();
@@ -620,12 +620,12 @@ function detailSubscription(e) {
 
 
 
-             function resizeFixed() {
+             function resizeFixedSubscription() {
               var paddingRight = parseInt(header.css("padding-right"));
               header.css("width", wrapper.width() - paddingRight);
             }
 
-            function scrollFixed() {
+            function scrollFixedSubscription() {
               var offset = $(parentGrid).scrollTop() +  $(parentGrid).offset().top,
                   tableOffsetTop = wrapper.offset().top,
                   tableOffsetBottom =  tableOffsetTop + wrapper.height() + 430,
