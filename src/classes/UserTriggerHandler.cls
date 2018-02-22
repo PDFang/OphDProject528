@@ -70,9 +70,9 @@ public class UserTriggerHandler extends TriggerHandler{
     private static void addOpportunityShare(List<User> partnerUserList, Set<Id> partnerIdSet){
         List<OpportunityShare> shareList = new List<OpportunityShare>();
         List<Opportunity> recordList = new List<Opportunity>();
-
+        String closeWon = OpportunityTriggerHelper.OPPORTUNITY_STAGE_CLOSED_WON;
         for(Opportunity opp: [Select Id, Partner_Account__c, iCE_Partner__c, RecordType.Name, Certified_Implementation_Partner__c, Sub_Agent_Account__c from Opportunity
-                where (Partner_Account__c IN :partnerIdSet or iCE_Partner__c IN :partnerIdSet or Sub_Agent_Account__c IN :partnerIdSet or Certified_Implementation_Partner__c IN :partnerIdSet)]){
+                where (Partner_Account__c IN :partnerIdSet or (iCE_Partner__c IN :partnerIdSet AND StageName = :closeWon) or Sub_Agent_Account__c IN :partnerIdSet or Certified_Implementation_Partner__c IN :partnerIdSet)]){
 
             for(User userRecord: partnerUserList){
                 if(userRecord.AccountId == opp.Partner_Account__c || userRecord.AccountId == opp.iCE_Partner__c || userRecord.AccountId == opp.Sub_Agent_Account__c || userRecord.AccountId == opp.Certified_Implementation_Partner__c){
