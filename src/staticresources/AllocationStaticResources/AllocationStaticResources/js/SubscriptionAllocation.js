@@ -139,7 +139,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                                         input.attr("data-quantityValidation-msg", 'Cannot allocate more than “Contract Quantity” if there is any quantity on hold or cancelled');
                                         return false;
                                     }
-                                     if(input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && Number(input.val()) % 1 != 0){
+                                     if(input.is("[name='AllocatedQuantity']") && Number(input.val()) % 1 != 0){
                                          input.attr("data-quantityValidation-msg", 'Decimal values are not allowed in Allocated Quantity field');
                                          return false;
                                     }
@@ -415,7 +415,9 @@ function gridDataboundSubscription(e){
                   if (currentDataItem.Implemented == true && isManager == false) {
                       $(this).remove();
                   }
-              })
+              });
+
+           $("#subscriptionAllocationList").find('div.k-grid-content').css("height", "520px");
       }
 
 function calculateSubscriptionBudgetedHours(e){
@@ -490,8 +492,10 @@ function detailSubscriptionProjects(e) {
                 }
             }
         },
-        scrollable: false,
+        scrollable: true,
+        height: 400,
         sortable: true,
+        dataBound:onProjDataBound,
         noRecords: true,
         columns: [
             { command: { text: "Select", click : selectSubscriptionProject}, title: "Action", width: "60px" },
@@ -502,6 +506,22 @@ function detailSubscriptionProjects(e) {
         ]
     });
     }
+
+    var wrapper, header, parentGrid;
+        function onProjDataBound(){
+                wrapper = this.wrapper,
+                header = wrapper.find(".k-grid-header");
+                parentGrid =  $("#assetAllocationList").find('div.k-grid-content').first();
+                resizeFixed();
+                $(window).resize(resizeFixed);
+                parentGrid.scroll(scrollFixed);
+               $(window).scroll(function(){
+                  if($(header).hasClass("fixed-header")){
+                     var headerTop = $("#assetAllocationList").find('div.k-grid-content').first().offset().top - $(window).scrollTop();
+                      header.css("top", headerTop);
+                  }
+               });
+        }
 
 function selectSubscriptionProject(e){
     var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
@@ -564,9 +584,11 @@ function detailSubscription(e) {
                     }
                 }
             },
-            scrollable: false,
+            scrollable: true,
+            height:400,
             sortable: true,
             noRecords: true,
+            dataBound:onSubscriptionDataBound,
             columns: [
                  {command: { text: "Select", click : selectSubscription}, title: "Action", width: "60px" },
                 { field: "SubscriptionName", title:"Subscription", width: "110px" },
@@ -577,6 +599,43 @@ function detailSubscription(e) {
             ]
             });
         }
+
+             function onSubscriptionDataBound(){
+                        wrapper = this.wrapper,
+                        header = wrapper.find(".k-grid-header");
+                        parentGrid =  $("#subscriptionAllocationList").find('div.k-grid-content').first();
+                        resizeFixed();
+                        $(window).resize(resizeFixed);
+                        parentGrid.scroll(scrollFixed);
+                        $(window).scroll(function(){
+                          if($(header).hasClass("fixed-header")){
+                             var headerTop = $("#subscriptionAllocationList").find('div.k-grid-content').first().offset().top - $(window).scrollTop();
+                              header.css("top", headerTop);
+                          }
+                       });
+                }
+
+
+
+             function resizeFixed() {
+              var paddingRight = parseInt(header.css("padding-right"));
+              header.css("width", wrapper.width() - paddingRight);
+            }
+
+            function scrollFixed() {
+              var offset = $(parentGrid).scrollTop() +  $(parentGrid).offset().top,
+                  tableOffsetTop = wrapper.offset().top,
+                  tableOffsetBottom =  tableOffsetTop + wrapper.height() + 430,
+                  headerTop = $(parentGrid).offset().top - $(window).scrollTop();
+              if(offset < tableOffsetTop || offset >= tableOffsetBottom) {
+                header.removeClass("fixed-header");
+                header.css("top", '');
+              } else if(offset >= tableOffsetTop && offset < tableOffsetBottom ) {
+                 if(!header.hasClass("fixed"))
+                    header.addClass("fixed-header");
+                header.css("top", headerTop);
+              }
+            }
 
 function selectSubscription(e){
         var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
