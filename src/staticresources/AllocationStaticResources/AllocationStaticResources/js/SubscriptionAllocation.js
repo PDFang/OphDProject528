@@ -219,6 +219,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                     },
                     {
                         field:"SubscriptionAllocationName",
+                        width:350,
                         title:"Subscription Allocation",
                         editor:nonEditorSubscription,
                         template: '#{ #<a href="/#: data.Id #" target="_blank" >#= data.SubscriptionAllocationName #</a># } #',
@@ -232,12 +233,14 @@ function subscriptionAllocationData(projId, subscriptionId){
                     {
                         field:"ProductName",
                         title:"Product",
+                        width:350,
                         editor:nonEditorSubscription,
                         template: '#{ #<a href="/#: data.Product #" target="_blank" >#= data.ProductName #</a># } #',
                     },
                     {
                         field:"ProjectPhase",
                         title:"Project Phase",
+                        width:350,
                          template: '#{ #<a href="/#: data.ProjectNumber #" target="_blank" >#= data.ProjectPhase #</a># } #',
                         editor:nonEditorSubscription,
                         filterable:true
@@ -361,7 +364,7 @@ function enableSubscriptionAllocation(rowData, row){
             var allocatedQPercentageCell =  $(row).children().eq(8);
             $(allocatedQPercentageCell).find("input").prop('disabled', true).addClass("k-state-disabled");
             $(allocatedQPercentageCell).find("span.k-select").hide();
-            var implementedCell =  $(row).children().eq(10);
+            var implementedCell =  $(row).children().eq(9);
             $(implementedCell).find("input").prop('disabled', true);
         }
 
@@ -390,7 +393,7 @@ function calculateRemainingSubscriptionAllocation(rowData, row){
 
             rowData.AllocatedHours = hours.toFixed(2);
             $(allocatedHoursCell).find("input").val(rowData.AllocatedHours);
-             var implementedCell =  $(row).children().eq(10);
+             var implementedCell =  $(row).children().eq(9);
              $(implementedCell).find("input").prop('disabled', true);
         }
 
