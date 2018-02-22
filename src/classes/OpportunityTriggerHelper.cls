@@ -9,6 +9,7 @@ public class OpportunityTriggerHelper {
     };
     private static Map<Id, String> profileMap = null;
     private static Map<String,Schema.RecordTypeInfo> OpportunityRecordTypes = null;
+    private static Map<String, Schema.RecordTypeInfo> partnerRecordTypeMap = null;
 
     public static final String OPPORTUNITY_STAGE_ONE = '1 - Identification / Qualification';
     public static final String OPPORTUNITY_STAGE_TWO = '2 - Determining Problem / Impact';
@@ -38,6 +39,15 @@ public class OpportunityTriggerHelper {
         return OpportunityRecordTypes.get(recordTypeName).getRecordTypeId();
     }
 
+    // cache Record Type info
+    private static Map<String, Schema.RecordTypeInfo> getAccountPartnerRecordTypeInfosByName(){
+
+        if (partnerRecordTypeMap == null)
+            partnerRecordTypeMap = Schema.SObjectType.Account_Partner__c.getRecordTypeInfosByName();
+
+        return partnerRecordTypeMap;
+    }
+
 
     public static void updateTimeStamps(list<Opportunity> newOppList){
         String eduOppRT = GetOpportunityRecordTypeIdByName('Education Request');
@@ -56,6 +66,74 @@ public class OpportunityTriggerHelper {
         }
 //        OpportunityTriggerHelper.timestampHelper(newOppList);
     }
+
+    //create account partner if Dev One partner and closed won
+    public static void createAccountPartner(List<Opportunity> oppList, Map<Id, Opportunity> oldMap){
+        system.debug('**** createAccountPartner(): oppList - ' + oppList);
+        Set<Id> partnerIdSet = new Set<Id>();
+        Set<Id> accountIdSet = new Set<Id>();
+        List<Opportunity> processList = new List<Opportunity>();
+
+        for(Opportunity opp : oppList){
+            if(opp.StageName == OPPORTUNITY_STAGE_CLOSED_WON && oldMap.get(opp.Id).StageName != OPPORTUNITY_STAGE_CLOSED_WON
+                    && opp.iCE_Partner__c != null){
+                partnerIdSet.add(opp.iCE_Partner__c);
+                processList.add(opp);
+                accountIdSet.add(opp.AccountId);
+            }
+        }
+
+        if(processList.isEmpty()){
+            return;
+        }
+        system.debug('**** createAccountPartner(): processList - ' + processList);
+
+        // get current account partners
+        Map<Id, Set<Id>> iCEPartnerMap = new Map<Id, Set<Id>>();
+        for(Account_Partner__c partner : [
+                Select Customer__c, Partner__c
+                from Account_Partner__c
+                where Customer__c IN :accountIdSet and Partner_Type__c = :AccountPartnerTriggerHandler.ICE_PARTNER
+        ]){
+            Set<Id> iCEPartnerIds = iCEPartnerMap.get(partner.Customer__c);
+            if(iCEPartnerIds == null){
+                iCEPartnerIds = new Set<Id>();
+                iCEPartnerMap.put(partner.Customer__c, iCEPartnerIds);
+            }
+            iCEPartnerIds.add(partner.Partner__c);
+        }
+
+
+        Map<String, Schema.RecordTypeInfo> recordTypeMap = getAccountPartnerRecordTypeInfosByName();
+        List<Account_Partner__c> partnerList = new List<Account_Partner__c>();
+        for(Opportunity opp : processList){
+            Set<Id> iCEPartners = iCEPartnerMap.get(opp.AccountId);
+            // check already an iCE partner
+            if(iCEPartners != null && iCEPartners.contains(opp.iCE_Partner__c)){
+                continue;
+            }
+            Account_Partner__c newPartner = new Account_Partner__c(
+                    Customer__c =  opp.AccountId,
+                    Partner__c = opp.iCE_Partner__c,
+                    Partner_Type__c = AccountPartnerTriggerHandler.ICE_PARTNER,
+                    RecordTypeId = recordTypeMap.containsKey('Partner Account')
+                            ? recordTypeMap.get('Partner Account').getRecordTypeId() : null
+            );
+            partnerList.add(newPartner);
+        }
+
+        system.debug('**** createAccountPartner(): partnerList - ' + partnerList);
+
+        if(partnerList.size() > 0) {
+            try {
+                insert partnerList;
+            } catch(Exception ex){
+
+                inContactBaseClass.SendErrorEmail(ex, partnerList[0].Partner__c);
+            }
+        }
+
+    } // end of createAccountPartner()
 
     // create trip reports for Education request opportunities
     public static void createTripAndProjects(list<Opportunity> newOppList){
