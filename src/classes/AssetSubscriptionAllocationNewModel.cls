@@ -70,6 +70,7 @@ public class AssetSubscriptionAllocationNewModel {
         this.QuantityOnHold = allocation.Subscription__r.QuantityonHold__c;
         this.QuantityCancelled = allocation.Subscription__r.QuantityCancelled__c;
         this.RemainingPercentage = allocation.Subscription__r.Remaning_Percentage__c;
+        this.RemainingQuantity = allocation.Subscription__r.RemainingQuantity__c;
 
     }
 }
