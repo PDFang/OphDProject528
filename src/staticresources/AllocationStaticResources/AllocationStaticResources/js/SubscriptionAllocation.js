@@ -213,14 +213,14 @@ function subscriptionAllocationData(projId, subscriptionId){
                     {
                         field:"SubscriptionName",
                         title:"Subscription",
-                        width:150,
+                        width:250,
                         editor:nonEditorSubscription,
                         template: '#{ #<a href="/#: data.Subscription #" target="_blank" >#= data.SubscriptionName #</a># } #',
                     },
                     {
                         field:"SubscriptionAllocationName",
                         width:100,
-                        title:"Subscription Allocation",
+                        title:"Allocation",
                         editor:nonEditorSubscription,
                         template: '#{ #<a href="/#: data.Id #" target="_blank" >#= data.SubscriptionAllocationName #</a># } #',
                     },
@@ -232,7 +232,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                     },
                     {
                         field:"ProductName",
-                        title:"Product",
+                        title:"Subscription Name",
                         width:300,
                         editor:nonEditorSubscription,
                         template: '#{ #<a href="/#: data.Product #" target="_blank" >#= data.ProductName #</a># } #',
@@ -262,7 +262,7 @@ function subscriptionAllocationData(projId, subscriptionId){
 //                    },
                     {
                         field:"Implemented",
-                        title:"Implemented",
+                        title:"Imp",
                         template: '<input type="checkbox"  "# if (data.Implemented) { # checked="checked" # } #"  disabled "/>',
                         width:50
 
