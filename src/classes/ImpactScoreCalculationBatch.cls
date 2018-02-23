@@ -12,7 +12,7 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
         this.scoreType = scoreType;
         if (scoreType == ImpactCalculationConstants.ImpactScoreType.AccountNetScore) { // Account object
             this.query = 'Select Id, Social_Media_Presence__c, CustomerSegment__c, Brand_Visibility__c, '
-                    + 'Industry_Leadership_Vocality__c, Risk_of_Leaving__c, GYRStatus__c, '
+                    + 'Industry_Leadership_Vocality__c, Risk_of_Leaving__c, '
                     + 'Age_of_Customer_in_Months__c, IsPartner__c, Referenceable__c, Account_Net_Score__c '
                     + 'from Account where RecordType.Name IN :accountRecordTypes';
 
@@ -25,7 +25,7 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
 
         } else if(scoreType == ImpactCalculationConstants.ImpactScoreType.GainsightNetScore) {  //Customer Info Gainsight
             this.query = 'SELECT Id, JBCXM__Account__c, JBCXM__Account__r.Gainsight_Net_Score__c, JBCXM__CurScoreId__c, JBCXM__CurScoreId__r.JBCXM__Score__c, '
-                    + 'JBCXM__ASV__c, JBCXM_CreatedCases__c, JBCXM_OpenCases__c, JBCXM_Credits__c, '
+                    + 'JBCXM__MRR__c, JBCXM_CreatedCases__c, JBCXM_OpenCases__c, JBCXM_Credits__c, '
                     + 'JBCXM_MTTR_IN_Weeks__c, JBCXM_MTTR_IN_Hours__c '
                     + 'FROM JBCXM__CustomerInfo__c '
                     + 'WHERE JBCXM__Account__r.RecordType.Name in :accountRecordTypes';

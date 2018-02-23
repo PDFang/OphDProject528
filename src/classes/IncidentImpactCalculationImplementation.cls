@@ -10,6 +10,9 @@ public with sharing class IncidentImpactCalculationImplementation implements Inc
         } else if (severity == 's2')
         {
             score = 0.5;
+        } else if (severity == 's3')
+        {
+            score = 0.25;
         } else
         {
             score = 0;
@@ -18,68 +21,28 @@ public with sharing class IncidentImpactCalculationImplementation implements Inc
         return score * multiplier;
     }
 
-    public Double CalculatePercentBusinessImpactedScore(String input, Double multiplier)
-    {
-        Double score;
-        if(input == '>75%')
-        {
-            score = 1;
-        }
-        else if(input == '50-75%')
-        {
-            score = 0.75;
-        }
-        else if(input == '25-50%')
-        {
-            score = .50;
-        }
-        else if(input == '1-25%')
-        {
-            score = .25;
-        }
-        else
-        {
-            score = 0;
-        }
-
-        return score * multiplier;
-    }
-
-    public Double CalculateWorkaroundAvailablePointsScore(String workAround, Double multiplier)
+    public Double CalculateIncidentPriorityScore(String priority, Double multiplier)
     {
         Double score;
 
-        if(workAround == 'yes')
-        {
-            score = 0;
-        }
-        else
+        if (priority == 'p1')
         {
             score = 1;
-        }
-
-        return score * multiplier;
-    }
-
-    public Double CalculateWorkaroundQualityPointsScore(String quality, Double multiplier)
-    {
-        Double score;
-
-        if(quality == 'low')
-        {
-            score = 1;
-        }
-        else if(quality == 'medium')
+        } else if (priority == 'p2')
         {
             score = 0.5;
-        }
-        else
+        } else if (priority == 'p3')
+        {
+            score = 0.25;
+        } else
         {
             score = 0;
         }
 
         return score * multiplier;
     }
+
+
 
     public Double CalculateSecurityIssueScore(String securityIssue, Double multiplier)
     {
@@ -101,6 +64,23 @@ public with sharing class IncidentImpactCalculationImplementation implements Inc
     {
         Double score;
         if(knownIssue == 'yes')
+        {
+            score = 1;
+        }
+        else
+        {
+            score = 0;
+        }
+
+        return score * multiplier;
+    }
+
+
+
+    public Double CalculateRepeatIssueScore(String repeatIssue, Double multiplier)
+    {
+        Double score;
+        if(repeatIssue == 'yes')
         {
             score = 1;
         }

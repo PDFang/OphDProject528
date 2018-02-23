@@ -11,6 +11,7 @@ public without sharing class KnownIssueImpactCalculationClass {
     private map<Id, integer> KnownIssueIncidentAge;
     private map<Id, double> KnownIssueASVMap;
     private set<id> accountIds;
+    private set<Id> KnownIssueSecurityIssues;
 
     public KnownIssueImpactCalculationClass(KnownIssuesImpactCalculationInterface impactCalculator)
     {
@@ -23,6 +24,7 @@ public without sharing class KnownIssueImpactCalculationClass {
         KnownIssueASVMap = new map<Id, double>();
         KnownIssueIncidentMaxPriority = new map<Id, string>();
         accountIds = new set<id>();
+        KnownIssueSecurityIssues = new Set<Id>();
     }
 
     public void CalculateKnownIssueScore(list<Case> knownIssueList){
@@ -74,10 +76,12 @@ public without sharing class KnownIssueImpactCalculationClass {
                 system.debug('netKnownIssueScore 2 =>' + netKnownIssueScore);
                 netKnownIssueScore += KnownIssueIncidentMaxScore.containsKey(KnownIssuCase.Id) ? KnownIssueIncidentMaxScore.get(KnownIssuCase.Id) : 0;
                 system.debug('netKnownIssueScore 3 =>' + netKnownIssueScore);
-                netKnownIssueScore += impactCalculator.CalculateDollarAmountTiedToIssue(newCase.ASVValue__c, GetMultiplierValue('ASVMultiplier'));
+                netKnownIssueScore += impactCalculator.CalculateSecurityIssue(KnownIssueSecurityIssues.contains(newCase.Id), GetMultiplierValue('KI Security Issue'));
                 system.debug('netKnownIssueScore 4 =>' + netKnownIssueScore);
                 netKnownIssueScore += impactCalculator.CalculateRecentReleaseBreak(isBrokenByRelease, GetMultiplierValue('BrokenByRelease'));
                 system.debug('netKnownIssueScore 5 =>' + netKnownIssueScore);
+                netKnownIssueScore += impactCalculator.CalculatePriorityScore(newCase.Priority, GetMultiplierValue('KI Priority'));
+                system.debug('netKnownIssueScore 4 =>' + netKnownIssueScore);
 
                 //track the old value
                 if(system.isBatch()) {
@@ -136,8 +140,12 @@ public without sharing class KnownIssueImpactCalculationClass {
     //
     private map<Id, set<Id>> GetAccountsAssociated(Set<id> KnownIssueIds){
         map<Id, set<Id>> knownIssueAccountIds = new map<Id, set<Id>>();
-        for(Case incidents : [select Id, KnownIssue__c, AccountId from Case where KnownIssue__c in : KnownIssueIds and RecordType.Name = 'Incident']){
+        for(Case incidents : [select Id, KnownIssue__c, AccountId, Security_Issue__c from Case where KnownIssue__c in : KnownIssueIds and RecordType.Name = 'Incident']){
             accountIds.add(incidents.AccountId);
+
+            if(incidents.Security_Issue__c == 'Yes')
+                KnownIssueSecurityIssues.add(incidents.KnownIssue__c);
+
             if(knownIssueAccountIds.containsKey(incidents.KnownIssue__c))
                     knownIssueAccountIds.get(incidents.KnownIssue__c).add(incidents.AccountId);// existing knownissue
             else
