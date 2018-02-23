@@ -190,13 +190,14 @@
                     {
                         field:"AssetName",
                         title:"Asset",
-                        width:350,
+                        width:300,
                         editor:nonEditorAsset,
                         template: '#{ #<a href="/#: data.Asset #" target="_blank" name="AssetName">#= data.AssetName #</a># } #',
                     },
                     {
                         field:"AssetAllocationName",
                         title:"Allocation",
+                        width:150,
                         editor:nonEditorAsset,
                         template: '#{ #<a href="/#: data.Id #" target="_blank" >#= data.AssetAllocationName #</a># } #',
                     },
@@ -210,7 +211,7 @@
                         field:"ProjectPhase",
                         title:"Project Phase",
                         template: '#{ #<a href="/#: data.ProjectNumber #" target="_blank" >#= data.ProjectPhase #</a># } #',
-                         width:350,
+                         width:300,
                         editor:nonEditorAsset
                     },
                     {
@@ -228,10 +229,10 @@
                         title:"Allocated Hours"
                     },
                     {
-                        field:"Implemented",
-                        title:"Implemented",
+                        field:"Impl",
+                        title:"Impl",
                         template: '<input type="checkbox"  "# if (data.Implemented) { # checked="checked" # } #"  disabled "/>',
-                        width:150
+                        width:75
 
                     },
                     {   title:"Action",
