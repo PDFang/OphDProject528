@@ -56,7 +56,7 @@ public class AssetSubscriptionAllocationNewModel {
         this.SubscriptionAllocationId = allocation.Id;
         this.SubscriptionName = allocation.Subscription__r.Name;
         this.SubscriptionAllocationName = allocation.Name;
-        this.ProductName = allocation.Subscription__r.Subscription__r.SBQQ__Product__r.Name;
+        this.ProductName = allocation.Subscription_Name__c;
         this.Product = allocation.Subscription__r.Subscription__r.SBQQ__Product__c;
         this.ProjectNumber = allocation.Project__c;
         this.ProjectName = allocation.Project__r.Name;
@@ -70,6 +70,7 @@ public class AssetSubscriptionAllocationNewModel {
         this.QuantityOnHold = allocation.Subscription__r.QuantityonHold__c;
         this.QuantityCancelled = allocation.Subscription__r.QuantityCancelled__c;
         this.RemainingPercentage = allocation.Subscription__r.Remaning_Percentage__c;
+        this.RemainingQuantity = allocation.Subscription__r.RemainingQuantity__c;
 
     }
 }

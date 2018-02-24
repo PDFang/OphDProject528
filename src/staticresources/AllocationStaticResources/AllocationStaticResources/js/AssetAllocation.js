@@ -173,7 +173,7 @@
           dataBound : gridDataboundAsset,
           detailInit: loadChildGrid,
           cancel : hideChildProjects,
-
+          resizable: true,
           toolbar: [
               {
                   name: "create",
@@ -190,12 +190,14 @@
                     {
                         field:"AssetName",
                         title:"Asset",
+                        width:300,
                         editor:nonEditorAsset,
                         template: '#{ #<a href="/#: data.Asset #" target="_blank" name="AssetName">#= data.AssetName #</a># } #',
                     },
                     {
                         field:"AssetAllocationName",
                         title:"Allocation",
+                        width:150,
                         editor:nonEditorAsset,
                         template: '#{ #<a href="/#: data.Id #" target="_blank" >#= data.AssetAllocationName #</a># } #',
                     },
@@ -227,10 +229,10 @@
                         title:"Allocated Hours"
                     },
                     {
-                        field:"Implemented",
-                        title:"Implemented",
+                        field:"Impl",
+                        title:"Impl",
                         template: '<input type="checkbox"  "# if (data.Implemented) { # checked="checked" # } #"  disabled "/>',
-                        width:150
+                        width:75
 
                     },
                     {   title:"Action",
@@ -327,7 +329,8 @@
         var allocatedQPercentageCell =  $(row).children().eq(7);
         $(allocatedQPercentageCell).find("input").prop('disabled', true).addClass("k-state-disabled");
         $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
-        $(allocatedHoursCell).find("span.k-select").show();
+        $(allocatedHoursCell).find("span.k-select").hide();
+        $(allocatedQPercentageCell).find("span.k-select").hide();
         var implementedCell =  $(row).children().eq(9);
         $(implementedCell).find("input").prop('disabled', true);
 
@@ -366,18 +369,21 @@
 
      function gridDataboundAsset(e){
         $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
+        var projStatus = '';
+        if(Project)
+            projStatus = Project.Status;
         $("#assetAllocationList tbody tr .k-grid-edit").each(function () {
             var currentDataItem = $("#assetAllocationList").data("kendoGrid").dataItem($(this).closest("tr"));
-            //Check in the current dataItem if the row is editable
-            if (currentDataItem.Implemented == true && isManager == false) {
+            //Check in the current dataItem if the row is editable || projStatus == 'Cancelled' || projStatus == 'Closed' || projStatus == 'Suspended'
+            if ((currentDataItem.Implemented == true && isManager == false) ) {
                 $(this).remove();
             }
         });
          //Selects all delete buttons
          $("#assetAllocationList tbody tr a.k-grid-Delete").each(function () {
                 var currentDataItem = $("#assetAllocationList").data("kendoGrid").dataItem($(this).closest("tr"));
-                //Check in the current dataItem if the row is deletable
-                if (currentDataItem.Implemented == true && isManager == false) {
+                //Check in the current dataItem if the row is deletable || projStatus == 'Cancelled' || projStatus == 'Closed' || projStatus == 'Suspended'
+                if ((currentDataItem.Implemented == true && isManager == false) ) {
                     $(this).remove();
                 }
             })
@@ -395,7 +401,7 @@
                        allocatedQPercentageInput = $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(7)");
 
                   currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
-                  var percentage = 100*(model.AllocatedQuantity / model.Quantity).toFixed(2);
+                      var percentage = (100*(model.AllocatedQuantity / model.Quantity)).toFixed(2);
                   if( model.Quantity == 0)
                     currentValue = 0;
                   $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', true).addClass("k-state-disabled");
@@ -577,8 +583,8 @@
                     dataBound:onAssetDataBound,
                     columns: [
                          {command: { text: "Select", click : selectAsset}, title: "Action", width: "60px" },
-                        { field: "AssetName", title:"Asset", width: "110px" },
-                        { field: "RemainingPercentage", title:"Remaining Percentage", width: "200px" },
+                        { field: "AssetName", title:"Asset", width: "300px" },
+                        { field: "RemainingPercentage", title:"Remaining Percentage", width: "110px" },
                         { field: "RemainingQuantity", title:"Remaining Quantity", width: "110px" },
                         { field: "RemainingHours", title:"Remaining Hours", width: "110px" }
 

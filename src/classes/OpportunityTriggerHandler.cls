@@ -56,6 +56,7 @@ public class OpportunityTriggerHandler extends TriggerHandler{
         new OpportunityShareHelper().addShare((List<Opportunity>)trigger.new, (Map<Id, Opportunity>)trigger.oldMap);
 
         OpportunityTriggerHelper.createTripAndProjects((List<Opportunity>)trigger.new);
+		OpportunityTriggerHelper.createAccountPartner((List<Opportunity>)trigger.new, (Map<Id, Opportunity>)trigger.oldMap);
 		NiceConnectionOpportunities(trigger.newMap.keySet());
     }
 
@@ -213,7 +214,7 @@ public class OpportunityTriggerHandler extends TriggerHandler{
 
 		List<PartnerNetworkRecordConnection> oppConnections =  new  List<PartnerNetworkRecordConnection>();
 
-		for(Opportunity opp:[SELECT Id, AccountId FROM Opportunity WHERE ConnectionSentId = null AND Account.Matching_NICE_Account__r.RecordType.Name IN :NICE_ACCOUNT_RECORD_TYPES AND StageName LIKE '1%' ]){
+		for(Opportunity opp:[SELECT Id, AccountId FROM Opportunity WHERE Id IN :opportunityIds AND ConnectionSentId = null AND Account.Matching_NICE_Account__r.RecordType.Name IN :NICE_ACCOUNT_RECORD_TYPES AND StageName LIKE '1%' ]){
 			PartnerNetworkRecordConnection newConnection = new PartnerNetworkRecordConnection(
 						ConnectionId = null,
 						LocalRecordId = opp.Id,

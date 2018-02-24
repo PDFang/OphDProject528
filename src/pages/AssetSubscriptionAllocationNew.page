@@ -10,6 +10,8 @@
     <apex:includeScript value="{!URLFOR($Resource.AllocationStaticResources, '/AllocationStaticResources/js/AssetAllocation.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.AllocationStaticResources, '/AllocationStaticResources/js/SubscriptionAllocation.js')}"/>
 
+    <!--<apex:includeScript value="{!$Resource.TestAssetSubscrip}"/>-->
+
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.common.min.css')}"/>
@@ -17,7 +19,7 @@
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
 
-
+    <apex:includeScript value="/support/console/32.0/integration.js"/>
 
 
     <style>
@@ -101,8 +103,11 @@
     </style>
 
     <apex:form id="myform">
-        <div class="container-fluid">
-            <apex:commandLink title="Go Back" value="<< Go Back To Record" action="{!cancel}" immediate="true" style="text-decoration:underline;"/>
+        <div class="container-fluid" style="font-size:14.14px;">
+            <div id="backtoRecordDiv">
+                <apex:commandLink title="Go Back" value="<< Go Back To Record" action="{!cancel}" immediate="true" style="text-decoration:underline;"/>
+            </div>
+
             <apex:sectionHeader subtitle="{!Asset.Name}" title="Asset Allocation" rendered="{!NOT(ISNULL(Asset))}"/>
             <apex:sectionHeader subtitle="{!Subscription.Name}" title="Subscription Allocation" rendered="{!NOT(ISNULL(Subscription))}"/>
             <apex:sectionHeader subtitle="{!Project.Name}" title="Project Allocation" rendered="{!NOT(ISNULL(Project))}"/>
@@ -132,11 +137,6 @@
                                     </button>
                                 </apex:outputPanel>
                             </apex:pageBlockButtons>
-                            <!--<apex:pageBlockSection columns="2">-->
-                            <!--<apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation}" var="f">-->
-                            <!--<apex:outputfield value="{!Asset[f]}" />-->
-                            <!--</apex:repeat>-->
-                            <!--</apex:pageBlockSection>-->
                             <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity > 1}">
                                 <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_GrTh1_Fields}" var="f">
                                     <apex:outputfield value="{!Asset[f]}" />
@@ -168,11 +168,6 @@
                                     </button>
                                 </apex:outputPanel>
                             </apex:pageBlockButtons>
-                            <!--<apex:pageBlockSection columns="2" >-->
-                            <!--<apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation}" var="f">-->
-                            <!--<apex:outputfield value="{!Subscription[f]}" />-->
-                            <!--</apex:repeat>-->
-                            <!--</apex:pageBlockSection>-->
                             <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c > 1}">
                                 <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation_GrTh1_Fields}" var="f">
                                     <apex:outputfield value="{!Subscription[f]}" />
@@ -411,6 +406,11 @@
                $("#subscriptionDetailsTab").show();
            }
 
+           if(sforce.console.isInConsole()){
+               $("div#backtoRecordDiv").hide();
+           }
+
+
         });
 
         var  currentObjectType,
@@ -489,12 +489,13 @@
                               Project.Id = '{!Project.Id}';
                               Project.Name = '{!Project.Name}';
                               Project.Project_Phase_Allocation__c = '{!Project.Project_Phase_Allocation__c}';
+                              Project.Status = '{!Project.Phase_Status__c}';
                               subscriptionAllocationData('{!currentId}', null);
                               assetAllocationData('{!currentId}', null);
                               var projectGoLiveDate = '{!Project.ActualProjectGoLiveDate__c}';
                               var projectPhaseStatus = '{!Project.Phase_Status__c}';
                               if(projectGoLiveDate != '' && projectGoLiveDate != null){
-                                   //$("a.k-grid-add").hide();
+                                   $("a.k-grid-add").hide();
                               }
                               if(projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended'){
                                   $("a.k-grid-add").hide();
@@ -586,6 +587,7 @@
         }
 
     }
+
 
     </script>
     </apex:outputPanel>

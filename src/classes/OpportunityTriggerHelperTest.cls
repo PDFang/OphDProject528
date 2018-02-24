@@ -150,6 +150,49 @@
 
     } //
 
+    // Verify Account Partner is created
+    static testMethod void createAccountPartnerTest() {
+
+        createTestData();
+        testOpp = new Opportunity(
+                Name = 'ProjectTriggerHandlerTest Opp 1',
+                AccountId = accountList[0].Id,
+                iCE_Partner__c = accountList[1].Id,
+                RecordTypeId = recordTypeMap.get(OPPORTUNITY_TYPE_NEW),
+                StageName = OpportunityTriggerHelper.OPPORTUNITY_STAGE_TWO,
+                CloseDate = Date.today(),
+                LeadSource = 'Partner',
+                Partner_Agent_Company__c = 'Startup',
+                Probability = 25,
+                Partner_Deal__c = 'NO',
+                Contract_Type__c = 'New Customer',
+                inContact__c = 'YES',
+                inContact_Setup_Fee__c = 1000,
+                inContact_Seats__c = 1,
+                inContact_MRC_Min__c = 1000,
+                inContact_Ports__c = 1,
+                inContact_MRC_Exp__c = 1000,
+                ECHO__c = 'NO',
+                eLearning__c = 'NO',
+                Hiring__c = 'NO',
+                WFM__c = 'NO',
+                ownerId = impManagementUser.Id
+        );
+        insert testOpp;
+        test.starttest();
+        testOpp.StageName = OpportunityTriggerHelper.OPPORTUNITY_STAGE_CLOSED_WON;
+        update testOpp;
+
+        test.stopTest();
+
+        List<Account_Partner__c> accountPartnerList = [
+                Select Id from Account_Partner__c
+                where Customer__c = :accountList[0].Id
+                and Partner__c = :accountList[1].Id
+        ];
+        system.assertEquals(1, accountPartnerList.size(), 'Account Partner should be added on Closed/Won ICE Partner deals');
+
+    }
 
     /* Create the test data required to execute the tests successfully */
     static void createTestData(){

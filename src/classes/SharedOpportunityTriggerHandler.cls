@@ -13,7 +13,7 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
     public override void afterUpdate(){
         updateOpportunity((List<Shared_Opportunity__c>) trigger.new, (Map<Id, Shared_Opportunity__c>) trigger.oldMap);
         updateStatusAndRemoveSharing((Map<Id, Shared_Opportunity__c>) trigger.newMap, (Map<Id, Shared_Opportunity__c>) trigger.oldMap);
-        createAccountPartner((List<Shared_Opportunity__c>) trigger.new, (Map<Id, Shared_Opportunity__c>) trigger.oldMap);
+        //createAccountPartner((List<Shared_Opportunity__c>) trigger.new, (Map<Id, Shared_Opportunity__c>) trigger.oldMap);
     }
 
     // create apex sharing
@@ -106,7 +106,7 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
 
     } // end of deleteApexSharingFuture()*/
 
-    // create an account partner record when Shared Opportunity is accepted
+    /*/ create an account partner record when Shared Opportunity is accepted
     private static void createAccountPartner(List<Shared_Opportunity__c> oppList, Map<Id, Shared_Opportunity__c> oldMap){
         system.debug('**** createAccountPartner(): oppList - ' + oppList);
         Set<Id> partnerIdSet = new Set<Id>();
@@ -168,7 +168,7 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
         if(partnerList.size() > 0)
             insert partnerList;
 
-    } // end of createAccountPartner()
+    } // end of createAccountPartner() */
 
     // Update opportunity when Shared Opportunity is accepted
     private static void updateOpportunity(List<Shared_Opportunity__c> oppList, Map<Id, Shared_Opportunity__c> oldMap){
@@ -210,14 +210,14 @@ public class  SharedOpportunityTriggerHandler extends TriggerHandler{
 
     } // end of updateOpportunity()
 
-    // cache Record Type info
+    /*/ cache Record Type info
     private static Map<String, Schema.RecordTypeInfo> getRecordTypeInfosByName(){
 
         if (partnerRecordTypeMap == null)
             partnerRecordTypeMap = Schema.SObjectType.Account_Partner__c.getRecordTypeInfosByName();
 
         return partnerRecordTypeMap;
-    }
+    }*/
 
     // Cache User info
     private static Map<Id, User> getUserInfo(Set<ID> userIdSet){

@@ -1,11 +1,10 @@
 public with sharing class IncidentImpactCalculationStub implements IncidentImpactCalculationInterface
 {
     public Double IncidentIdentityScore { get; set;}
-    public Double PercentBusinessImpactScore { get; set;}
-    public Double WorkaroundAvailablePoints { get; set;}
-    public Double WorkaroundQualityPointsScore { get; set;}
+    public Double IncidentPriorityScore {get; set;}
     public Double SecurityIssueScore { get; set;}
     public Double RelatedKnownIssueScore { get; set;}
+    public Double RepeatIssueScore { get; set;}
 
 
     public Double CalculateIncidentSeverityScore(String severity, Double multiplier)
@@ -13,19 +12,9 @@ public with sharing class IncidentImpactCalculationStub implements IncidentImpac
         return this.IncidentIdentityScore;
     }
 
-    public Double CalculatePercentBusinessImpactedScore(String input, Double multiplier)
+    public Double CalculateIncidentPriorityScore(String priority, Double multiplier)
     {
-        return this.PercentBusinessImpactScore;
-    }
-
-    public Double CalculateWorkaroundAvailablePointsScore(String workAround, Double multiplier)
-    {
-        return this.WorkaroundAvailablePoints;
-    }
-
-    public Double CalculateWorkaroundQualityPointsScore(String quality, Double multiplier)
-    {
-        return this.WorkaroundQualityPointsScore;
+        return this.IncidentPriorityScore;
     }
 
     public Double CalculateSecurityIssueScore(String securityIssue, Double multiplier)
@@ -36,5 +25,10 @@ public with sharing class IncidentImpactCalculationStub implements IncidentImpac
     public Double CalculateRelatedKnownIssueScore(String knownIssue, Double multiplier)
     {
         return this.RelatedKnownIssueScore;
+    }
+
+    public Double CalculateRepeatIssueScore(String repeatIssue, Double multiplier)
+    {
+        return this.RepeatIssueScore;
     }
 }

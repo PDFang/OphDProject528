@@ -18,7 +18,9 @@ private class CaseTriggerHandlerTest {
         insert sbx;
 
         AppConfiguration__c config = new AppConfiguration__c(
-                Turn_Off_Partner_Case_Proxy_Service__c = true
+                Turn_Off_Partner_Case_Proxy_Service__c = true,
+                XM_Maintenance_Notifications_Internal__c = 'test',
+                XM_Event_Notifications_Internal__c = 'test'
         );
         insert config;
 
@@ -95,11 +97,10 @@ private class CaseTriggerHandlerTest {
                 AccountId = testAccount.Id,
                 ContactId = testContact.Id,
                 Severity__c = 'S2',
-                Business_Impacted__c = '25-50%',
-                Quality_of_Workaround__c = 'Medium',
+                Priority = 'P2',
                 Related_to_Previous_Known_Issue__c = 'No',
                 Security_Issue__c = 'No',
-                Workaround_Available__c = 'Yes',
+                RepeatIssue__c = 'Yes',
                 Product_or_Service__c = 'Service Disruption',
                 Request_Type__c = 'Dialer'
         );
@@ -109,48 +110,41 @@ private class CaseTriggerHandlerTest {
         Impact_Score_Multiplier__c[] multipliers = new Impact_Score_Multiplier__c[]{};
         Impact_Score_Multiplier__c severity = new Impact_Score_Multiplier__c(
                 Name = 'Severity',
-                Multiplier__c = 3.0
+                Multiplier__c = 4.0
         );
         multipliers.add(severity);
         Double severityScore = impactCalculator.CalculateIncidentSeverityScore(testIncident.Severity__c, (Double)severity.Multiplier__c);
 
-        Impact_Score_Multiplier__c businessImpacted = new Impact_Score_Multiplier__c(
-                Name = 'Business Impacted',
-                Multiplier__c = 2.0
+        Impact_Score_Multiplier__c incidentPriority = new Impact_Score_Multiplier__c(
+                Name = 'Incident Priority',
+                Multiplier__c = 4.0
         );
-        multipliers.add(businessImpacted);
-        Double businessImpactScore = impactCalculator.CalculatePercentBusinessImpactedScore(testIncident.Business_Impacted__c, (Double)businessImpacted.Multiplier__c);
-
-        Impact_Score_Multiplier__c workaround = new Impact_Score_Multiplier__c(
-                Name = 'workaround',
-                Multiplier__c = 1.0
-        );
-        multipliers.add(workaround);
-        Double workaroundScore = impactCalculator.CalculateWorkaroundAvailablePointsScore(testIncident.Workaround_Available__c, (Double)workaround.Multiplier__c);
-
-        Impact_Score_Multiplier__c workaroundQuality = new Impact_Score_Multiplier__c(
-                Name = 'workaround Quality',
-                Multiplier__c = 1.0
-        );
-        multipliers.add(workaroundQuality);
-        Double workaroundQualityScore = impactCalculator.CalculateWorkaroundQualityPointsScore(testIncident.Quality_of_Workaround__c, (Double)workaroundQuality.Multiplier__c);
+        multipliers.add(incidentPriority);
+        Double priorityScore = impactCalculator.CalculateIncidentPriorityScore(testIncident.Priority, (Double)incidentPriority.Multiplier__c);
 
         Impact_Score_Multiplier__c securityIssue = new Impact_Score_Multiplier__c(
                 Name = 'is security issue',
-                Multiplier__c = 1.0
+                Multiplier__c = 5.0
         );
         multipliers.add(securityIssue);
         Double securityScore = impactCalculator.CalculateSecurityIssueScore(testIncident.Security_Issue__c, (Double)securityIssue.Multiplier__c);
 
         Impact_Score_Multiplier__c knownIssue = new Impact_Score_Multiplier__c(
                 Name = 'is known issue',
-                Multiplier__c = 1.0
+                Multiplier__c = 3.0
         );
         multipliers.add(knownIssue);
         Double knownIssueScore = impactCalculator.CalculateRelatedKnownIssueScore(testIncident.Related_to_Previous_Known_Issue__c, (Double)knownIssue.Multiplier__c);
 
+        Impact_Score_Multiplier__c repeatIssue = new Impact_Score_Multiplier__c(
+                Name = 'Repeat Issue',
+                Multiplier__c = 4.0
+        );
+        multipliers.add(repeatIssue);
+        Double repeatIssueScore = impactCalculator.CalculateRepeatIssueScore(testIncident.RepeatIssue__c, (Double)repeatIssue.Multiplier__c);
+
         // expected result
-        Double netScore = severityScore + businessImpactScore + workaroundScore + workaroundQualityScore + securityScore + knownIssueScore;
+        Double netScore = severityScore + priorityScore + securityScore + knownIssueScore + repeatIssueScore;
         system.debug('CalculateIncidentNetScore(): netScore - ' + netScore);
 
         insert multipliers;
@@ -184,11 +178,10 @@ private class CaseTriggerHandlerTest {
                 AccountId = testAccount.Id,
                 ContactId = testContact.Id,
                 Severity__c = 'S2',
-                Business_Impacted__c = '25-50%',
-                Quality_of_Workaround__c = 'Medium',
+                Priority = 'P2',
+                RepeatIssue__c = 'No',
                 Related_to_Previous_Known_Issue__c = 'No',
                 Security_Issue__c = 'No',
-                Workaround_Available__c = 'Yes',
                 Product_or_Service__c = 'Service Disruption',
                 Request_Type__c = 'Dialer'
         );
@@ -198,13 +191,12 @@ private class CaseTriggerHandlerTest {
         insert testIncident;
 
         // update severity, business impacted and security issue
-        testIncident = [Select Severity__c, Business_Impacted__c, Security_Issue__c, Workaround_Available__c,
-                Quality_of_Workaround__c, Related_to_Previous_Known_Issue__c from Case
+        testIncident = [Select Severity__c, RepeatIssue__c, Priority, Security_Issue__c, Related_to_Previous_Known_Issue__c from Case
                 where Id = :testIncident.Id
 
         ];
         testIncident.Severity__c = 'S1';
-        testIncident.Business_Impacted__c = '>75%';
+        testIncident.Priority = 'P1';
         testIncident.Security_Issue__c = 'Yes';
 
         // create impact score multiplier
@@ -212,48 +204,41 @@ private class CaseTriggerHandlerTest {
         Impact_Score_Multiplier__c[] multipliers = new Impact_Score_Multiplier__c[]{};
         Impact_Score_Multiplier__c severity = new Impact_Score_Multiplier__c(
                 Name = 'Severity',
-                Multiplier__c = 3.0
+                Multiplier__c = 4.0
         );
         multipliers.add(severity);
         Double severityScore = impactCalculator.CalculateIncidentSeverityScore(testIncident.Severity__c, (Double)severity.Multiplier__c);
 
-        Impact_Score_Multiplier__c businessImpacted = new Impact_Score_Multiplier__c(
-                Name = 'Business Impacted',
-                Multiplier__c = 2.0
+        Impact_Score_Multiplier__c incidentPriority = new Impact_Score_Multiplier__c(
+                Name = 'Incident Priority',
+                Multiplier__c = 4.0
         );
-        multipliers.add(businessImpacted);
-        Double businessImpactScore = impactCalculator.CalculatePercentBusinessImpactedScore(testIncident.Business_Impacted__c, (Double)businessImpacted.Multiplier__c);
-
-        Impact_Score_Multiplier__c workaround = new Impact_Score_Multiplier__c(
-                Name = 'workaround',
-                Multiplier__c = 1.0
-        );
-        multipliers.add(workaround);
-        Double workaroundScore = impactCalculator.CalculateWorkaroundAvailablePointsScore(testIncident.Workaround_Available__c, (Double)workaround.Multiplier__c);
-
-        Impact_Score_Multiplier__c workaroundQuality = new Impact_Score_Multiplier__c(
-                Name = 'workaround Quality',
-                Multiplier__c = 1.0
-        );
-        multipliers.add(workaroundQuality);
-        Double workaroundQualityScore = impactCalculator.CalculateWorkaroundQualityPointsScore(testIncident.Quality_of_Workaround__c, (Double)workaroundQuality.Multiplier__c);
+        multipliers.add(incidentPriority);
+        Double priorityScore = impactCalculator.CalculateIncidentPriorityScore(testIncident.Priority, (Double)incidentPriority.Multiplier__c);
 
         Impact_Score_Multiplier__c securityIssue = new Impact_Score_Multiplier__c(
                 Name = 'is security issue',
-                Multiplier__c = 1.0
+                Multiplier__c = 5.0
         );
         multipliers.add(securityIssue);
         Double securityScore = impactCalculator.CalculateSecurityIssueScore(testIncident.Security_Issue__c, (Double)securityIssue.Multiplier__c);
 
         Impact_Score_Multiplier__c knownIssue = new Impact_Score_Multiplier__c(
                 Name = 'is known issue',
-                Multiplier__c = 1.0
+                Multiplier__c = 3.0
         );
         multipliers.add(knownIssue);
         Double knownIssueScore = impactCalculator.CalculateRelatedKnownIssueScore(testIncident.Related_to_Previous_Known_Issue__c, (Double)knownIssue.Multiplier__c);
 
+        Impact_Score_Multiplier__c repeatIssue = new Impact_Score_Multiplier__c(
+                Name = 'Repeat Issue',
+                Multiplier__c = 4.0
+        );
+        multipliers.add(repeatIssue);
+        Double repeatIssueScore = impactCalculator.CalculateRepeatIssueScore(testIncident.RepeatIssue__c, (Double)repeatIssue.Multiplier__c);
+
         // expected result
-        Double netScore = severityScore + businessImpactScore + workaroundScore + workaroundQualityScore + securityScore + knownIssueScore;
+        Double netScore = severityScore + priorityScore + securityScore + knownIssueScore + repeatIssueScore;
         system.debug('CalculateIncidentNetScore(): netScore - ' + netScore);
 
         insert multipliers;
@@ -525,7 +510,9 @@ private class CaseTriggerHandlerTest {
     static testMethod void testxMattersEventNotificationTurnedOff() {
 
         AppConfiguration__c appConfig = new AppConfiguration__c(
-                XM_Turn_Off_Event_Notifications__c = true
+                XM_Turn_Off_Event_Notifications__c = true,
+                XM_Maintenance_Notifications_Internal__c = 'test',
+                XM_Event_Notifications_Internal__c = 'test'
         );
         insert appConfig;
 

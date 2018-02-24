@@ -33,6 +33,8 @@ private class UserTriggerHandlerTest {
     static testMethod void testNewUser() {
 
         createTestData();
+        oppList[0].Partner_Account__c = accountList[1].Id;
+        update oppList[0];
 
         test.startTest();
         Profile profile = [SELECT Id from Profile where Name = 'Partner Community User'];
@@ -97,7 +99,7 @@ private class UserTriggerHandlerTest {
             system.assertEquals(2, cases.size());
 
             List<Opportunity> opportunities = [SELECT Id from Opportunity where AccountId = :accounts[0].Id];
-            system.assertEquals(0, opportunities.size());
+            system.assertEquals(1, opportunities.size());
 
             List<Project__c> projects = [SELECT Id from Project__c where RecordType.Name = :PROJECT_TYPE_PARENT_SAAS];
             system.assertEquals(2, projects.size());

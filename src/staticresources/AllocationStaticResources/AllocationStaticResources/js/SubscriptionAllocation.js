@@ -101,7 +101,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                         "Id": { from: "SubscriptionAllocationId", type: "string",editable:false },
                         "SubscriptionName" : {from:"SubscriptionName", type:"string",editable:false },
                         "SubscriptionAllocationName" : {from:"SubscriptionAllocationName", type:"string",editable:false},
-                        "Product": { from: "Product", type: "string",editable:false },
+                       "Product": { from: "Product", type: "string",editable:false },
                         "ProductName": { from: "ProductName", type: "string",editable:false },
                         "ProjectNumber":{from:"ProjectNumber",type:"string",editable:false},
                         "ProjectName":{from:"ProjectName",type:"string", editable:false},
@@ -116,7 +116,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                         "AllocatedQuantity":{
                             from: "AllocatedQuantity",
                             type:"number",
-                            nullable: true,
+                           nullable: true,
                             editable:true,
                             defaultValue:1,
                             validation : {
@@ -134,17 +134,17 @@ function subscriptionAllocationData(projId, subscriptionId){
                                         input.attr("data-quantityValidation-msg", "Allocated Quantity cannot be zero");
                                         return false;
                                     }
-                                     if(Number(input.val()) > Number(rowData.RemainingQuantity) && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && (rowData.QuantityOnHold > 0 || rowData.QuantityCancelled > 0)){
+                                     if(Number(input.val()) > Number(rowData.RemainingQuantity + rowData.AllocatedQuantity) && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && (rowData.QuantityOnHold > 0 || rowData.QuantityCancelled > 0)){
                                         input.attr("data-quantityValidation-msg", 'Cannot allocate more than “Contract Quantity” if there is any quantity on hold or cancelled');
                                         return false;
                                     }
-                                     if(input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && Number(input.val()) % 1 != 0){
+                                     if(input.is("[name='AllocatedQuantity']") && Number(input.val()) % 1 != 0){
                                          input.attr("data-quantityValidation-msg", 'Decimal values are not allowed in Allocated Quantity field');
                                          return false;
                                     }
                                     return true;
                                 }
-                            }
+                           }
                         },
                         AllocatedPercentage:{
                             from: "AllocatedPercentage",
@@ -182,7 +182,7 @@ function subscriptionAllocationData(projId, subscriptionId){
        var window = $("#window").kendoWindow({
            title: "Are you sure you want to delete this record?",
            visible: false, //the window will not appear before its .open method is called
-           width: "400px",
+          width: "400px",
            height: "200px",
        }).data("kendoWindow");
 
@@ -193,7 +193,7 @@ function subscriptionAllocationData(projId, subscriptionId){
           editable: "inline",
           scrollable: true,
           noRecords: true,
-          //height:600,
+          height:600,
           edit:addDuplicateRowSubscription,
           detailInit: loadSubscriptionChildGrid,
           dataBound: gridDataboundSubscription,
@@ -213,12 +213,14 @@ function subscriptionAllocationData(projId, subscriptionId){
                     {
                         field:"SubscriptionName",
                         title:"Subscription",
+                        width:250,
                         editor:nonEditorSubscription,
                         template: '#{ #<a href="/#: data.Subscription #" target="_blank" >#= data.SubscriptionName #</a># } #',
                     },
                     {
                         field:"SubscriptionAllocationName",
-                        title:"Subscription Allocation",
+                        width:100,
+                        title:"Allocation",
                         editor:nonEditorSubscription,
                         template: '#{ #<a href="/#: data.Id #" target="_blank" >#= data.SubscriptionAllocationName #</a># } #',
                     },
@@ -230,13 +232,15 @@ function subscriptionAllocationData(projId, subscriptionId){
                     },
                     {
                         field:"ProductName",
-                        title:"Product",
+                        title:"Subscription Name",
+                        width:300,
                         editor:nonEditorSubscription,
                         template: '#{ #<a href="/#: data.Product #" target="_blank" >#= data.ProductName #</a># } #',
                     },
                     {
                         field:"ProjectPhase",
                         title:"Project Phase",
+                        width:300,
                          template: '#{ #<a href="/#: data.ProjectNumber #" target="_blank" >#= data.ProjectPhase #</a># } #',
                         editor:nonEditorSubscription,
                         filterable:true
@@ -248,23 +252,23 @@ function subscriptionAllocationData(projId, subscriptionId){
                     },
                     {
                         field:"AllocatedPercentage",
-                        title:"Allocated Hours %",
-                        editable:true
+                        title:"Allocated %",
+                        editable:false
                     },
-                    {
-                        field:"AllocatedHours",
-                        title:"Allocated Hours",
-                        editable:true
-                    },
+//                    {
+//                        field:"AllocatedHours",
+//                        title:"Allocated Hours",
+//                        editable:true
+//                    },
                     {
                         field:"Implemented",
-                        title:"Implemented",
+                        title:"Imp",
                         template: '<input type="checkbox"  "# if (data.Implemented) { # checked="checked" # } #"  disabled "/>',
-                        width:150
+                        width:50
 
                     },
                     {   title:"Action",
-                        command: ["edit",
+                       command: ["edit",
                         {name: "Delete",
                          click: function(e){  //add a click event listener on the delete button
                                  e.preventDefault(); //prevent page scroll reset
@@ -323,7 +327,8 @@ function addDuplicateRowSubscription(e){
                     var firstCell = e.container.contents()[2];
                     $('<a href="/' +  e.model.Subscription + '" target="_blank">' + e.model.SubscriptionName +'</a>').appendTo(firstCell);
                     var projectCell = e.container.contents()[6];
-                    $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">Select Projects </a>').appendTo(projectCell);
+                    $('<a style="color:blue;cursor:pointer;" class="projectSelectorSubs" onClick="loadSubscriptionDetail(this);">Select Projects </a>').appendTo(projectCell);
+                    loadSubscriptionDetail($("a.projectSelectorSubs"));
                     e.model.Quantity = Subscription.Quantity;
                     e.model.BudgtedHours = Subscription.Budgeted_Hours__c == '' ? 0 : Subscription.Budgeted_Hours__c;
                     e.model.RemainingQuantity = Subscription.RemainingQuantity__c;
@@ -340,7 +345,8 @@ function addDuplicateRowSubscription(e){
                     //$('<span>' +  e.model.ProjectPhase + '</span>').appendTo(phaseCell);
 
                     var firstCell = e.container.contents()[2];
-                    $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">Select Subscriptions </a>').appendTo(firstCell);
+                    $('<a style="color:blue;cursor:pointer;" class="subscriptionSelector" onClick="loadSubscriptionDetail(this);">Select Subscriptions </a>').appendTo(firstCell);
+                    loadSubscriptionDetail($("a.subscriptionSelector"));
                 }
 
 
@@ -355,19 +361,11 @@ function addDuplicateRowSubscription(e){
 
 function enableSubscriptionAllocation(rowData, row){
             var allocatedHoursCell =  $(row).children().eq(9);
-            if(rowData.Quantity > 1){
-                var allocatedQPercentageCell =  $(row).children().eq(8);
-                $(allocatedQPercentageCell).find("span.k-numerictextbox").hide();
-                $(allocatedHoursCell).find("input").prop('disabled', false).removeClass("k-state-disabled");
-                $(allocatedHoursCell).find("span.k-select").show();
-            }else if(rowData.Quantity == 1){
-                var allocatedQuantityCell =  $(row).children().eq(7);
-                $(allocatedQuantityCell).find("span.k-numerictextbox").hide();
-                 $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
-                 $(allocatedHoursCell).find("span.k-select").hide();
-            }
-           var implementedCell =  $(row).children().eq(10);
-           $(implementedCell).find("input").prop('disabled', true);
+            var allocatedQPercentageCell =  $(row).children().eq(8);
+            $(allocatedQPercentageCell).find("input").prop('disabled', true).addClass("k-state-disabled");
+            $(allocatedQPercentageCell).find("span.k-select").hide();
+            var implementedCell =  $(row).children().eq(9);
+            $(implementedCell).find("input").prop('disabled', true);
         }
 
 function calculateRemainingSubscriptionAllocation(rowData, row){
@@ -380,8 +378,6 @@ function calculateRemainingSubscriptionAllocation(rowData, row){
             var allocatedHoursCell =  $(row).children().eq(9);
             var hours;
 
-            if(rowData.Quantity > 1 ){
-
                 $(allocatedQPercentageCell).find("span.k-numerictextbox").hide();
                 rowData.AllocatedQuantity = rowData.AllocatedQuantity == null ? rowData.RemainingQuantity : rowData.AllocatedQuantity;
                 $(allocatedQuantityCell).find("span.k-numerictextbox").show();
@@ -389,21 +385,15 @@ function calculateRemainingSubscriptionAllocation(rowData, row){
                 hours = rowData.BudgtedHours * (rowData.AllocatedQuantity / rowData.Quantity);
                 $(allocatedHoursCell).find("input").prop('disabled', false).removeClass("k-state-disabled");
                 $(allocatedHoursCell).find("span.k-select").show();
-
-            }else if(rowData.Quantity == 1 ){
-
-                rowData.AllocatedPercentage = rowData.AllocatedPercentage == null ? Subscription.Remaning_Percentage__c : rowData.AllocatedPercentage;;
-                $(allocatedQuantityCell).find("span.k-numerictextbox").hide();
+                rowData.AllocatedPercentage = rowData.AllocatedPercentage == null ? Subscription.Remaning_Percentage__c : rowData.AllocatedPercentage;
+                $(allocatedQPercentageCell).find("input").prop('disabled', true).addClass("k-state-disabled");
                 $(allocatedQPercentageCell).find("span.k-numerictextbox").show();
                 $(allocatedQPercentageCell).find("input").val(rowData.AllocatedPercentage);
-                var hours = rowData.BudgtedHours * (rowData.AllocatedPercentage / 100);
-                $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
-                $(allocatedHoursCell).find("span.k-select").hide();
+                $(allocatedQPercentageCell).find("span.k-select").hide();
 
-            }
             rowData.AllocatedHours = hours.toFixed(2);
             $(allocatedHoursCell).find("input").val(rowData.AllocatedHours);
-             var implementedCell =  $(row).children().eq(10);
+             var implementedCell =  $(row).children().eq(9);
              $(implementedCell).find("input").prop('disabled', true);
         }
 
@@ -428,7 +418,9 @@ function gridDataboundSubscription(e){
                   if (currentDataItem.Implemented == true && isManager == false) {
                       $(this).remove();
                   }
-              })
+              });
+
+           $("#subscriptionAllocationList").find('div.k-grid-content').css("height", "520px");
       }
 
 function calculateSubscriptionBudgetedHours(e){
@@ -436,23 +428,22 @@ function calculateSubscriptionBudgetedHours(e){
             var model = e.items[0],
                 budgtedHours = model.BudgtedHours,
                 currentValue;
-                allocatedHoursInput = $("#subscriptionAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(9)");
-          if(model.AllocatedPercentage > 0 ){
-              currentValue = (budgtedHours * (model.AllocatedPercentage / 100)).toFixed(2);
-              $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', true).addClass("k-state-disabled");
-               $(allocatedHoursInput).find("span.k-select").hide();
-          }else if(model.AllocatedQuantity > 0 ){
-              currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
-               if( model.Quantity == 0)
-                  currentValue = 0;
-              $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', false).removeClass("k-state-disabled");
-              $(allocatedHoursInput).find("span.k-select").show();
-          }
-          model.AllocatedHours = currentValue;
+                allocatedHoursInput = $("#subscriptionAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(9)"),
+                allocatedSubPercentageInput = $("#subscriptionAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(8)");
+            var percentage = 100*(model.AllocatedQuantity / model.Quantity);
+            currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
+            if( model.Quantity == 0)
+               currentValue = 0;
+
+              $(allocatedSubPercentageInput).find("input").val(percentage).prop('disabled', true).addClass("k-state-disabled");
+              $(allocatedSubPercentageInput).find("span.k-select").hide();
+            console.log('percentage ==>' + percentage);
+            model.AllocatedHours = currentValue;
+            model.AllocatedPercentage = percentage;
     }
 }
 
- function loadSubscriptionDetail(obj){
+function loadSubscriptionDetail(obj){
        var row = $(obj).parent().parent();
        var link = $(row).find("td.k-hierarchy-cell .k-icon");
 
@@ -466,7 +457,7 @@ function loadSubscriptionChildGrid(e){
            detailSubscriptionProjects(e);
         } else if(currentObjectType === 'Project'){
             detailSubscription(e);
-        }
+       }
     }
 
 function detailSubscriptionProjects(e) {
@@ -504,8 +495,10 @@ function detailSubscriptionProjects(e) {
                 }
             }
         },
-        scrollable: false,
+        scrollable: true,
+        height: 400,
         sortable: true,
+        dataBound:onProjSubDataBound,
         noRecords: true,
         columns: [
             { command: { text: "Select", click : selectSubscriptionProject}, title: "Action", width: "60px" },
@@ -516,6 +509,22 @@ function detailSubscriptionProjects(e) {
         ]
     });
     }
+
+    var wrapper, header, parentGrid;
+        function onProjSubDataBound(){
+                wrapper = this.wrapper,
+                header = wrapper.find(".k-grid-header");
+                parentGrid =  $("#subscriptionAllocationList").find('div.k-grid-content').first();
+                resizeFixed();
+                $(window).resize(resizeFixedSubscription);
+                parentGrid.scroll(scrollFixedSubscription);
+               $(window).scroll(function(){
+                  if($(header).hasClass("fixed-header")){
+                     var headerTop = $("#subscriptionAllocationList").find('div.k-grid-content').first().offset().top - $(window).scrollTop();
+                      header.css("top", headerTop);
+                  }
+               });
+        }
 
 function selectSubscriptionProject(e){
     var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
@@ -566,7 +575,7 @@ function detailSubscription(e) {
                         fields: {
                             SubscriptionId: { from: "Id"},
                             SubscriptionName: {from:"Name", type: "string"},
-                            Product: {from:"Product_Name__c", type: "string"},
+                           Product: {from:"Product_Name__c", type: "string"},
                             RemainingPercentage : {from:"Remaning_Percentage__c", type:"string"},
                             RemainingQuantity : {from:"RemainingQuantity__c", type:"string"},
                             RemainingHours : {from:"Remaining_Hours__c", type:"string"},
@@ -578,9 +587,11 @@ function detailSubscription(e) {
                     }
                 }
             },
-            scrollable: false,
+            scrollable: true,
+            height:400,
             sortable: true,
             noRecords: true,
+            dataBound:onSubscriptionDataBound,
             columns: [
                  {command: { text: "Select", click : selectSubscription}, title: "Action", width: "60px" },
                 { field: "SubscriptionName", title:"Subscription", width: "110px" },
@@ -592,11 +603,48 @@ function detailSubscription(e) {
             });
         }
 
+            function onSubscriptionDataBound(){
+                        wrapper = this.wrapper,
+                        header = wrapper.find(".k-grid-header");
+                        parentGrid =  $("#subscriptionAllocationList").find('div.k-grid-content').first();
+                        resizeFixed();
+                        $(window).resize(resizeFixedSubscription);
+                        parentGrid.scroll(scrollFixedSubscription);
+                        $(window).scroll(function(){
+                          if($(header).hasClass("fixed-header")){
+                             var headerTop = $("#subscriptionAllocationList").find('div.k-grid-content').first().offset().top - $(window).scrollTop();
+                              header.css("top", headerTop);
+                          }
+                       });
+                }
+
+
+
+             function resizeFixedSubscription() {
+              var paddingRight = parseInt(header.css("padding-right"));
+              header.css("width", wrapper.width() - paddingRight);
+            }
+
+            function scrollFixedSubscription() {
+              var offset = $(parentGrid).scrollTop() +  $(parentGrid).offset().top,
+                  tableOffsetTop = wrapper.offset().top,
+                  tableOffsetBottom =  tableOffsetTop + wrapper.height() + 430,
+                  headerTop = $(parentGrid).offset().top - $(window).scrollTop();
+              if(offset < tableOffsetTop || offset >= tableOffsetBottom) {
+                header.removeClass("fixed-header");
+                header.css("top", '');
+              } else if(offset >= tableOffsetTop && offset < tableOffsetBottom ) {
+                 if(!header.hasClass("fixed"))
+                    header.addClass("fixed-header");
+                header.css("top", headerTop);
+              }
+            }
+
 function selectSubscription(e){
         var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
         var detailGrid = this.wrapper;
         var parentRow = detailGrid.closest("tr.k-detail-row").prev("tr");
-        var grid = $("#subscriptionAllocationList").data("kendoGrid");
+       var grid = $("#subscriptionAllocationList").data("kendoGrid");
         var rowData = grid.dataItem(parentRow);
         if(rowData){
             rowData.Subscription = dataItem.SubscriptionId;
@@ -608,7 +656,9 @@ function selectSubscription(e){
             rowData.QuantityOnHold = dataItem.QuantityOnHold  == '' ? 0 : dataItem.QuantityOnHold;
             rowData.QuantityCancelled = dataItem.QuantityCancelled  == '' ? 0 : dataItem.QuantityCancelled;
             rowData.RemainingQuantity = dataItem.RemainingQuantity  == '' ? 0 : dataItem.RemainingQuantity;
+            console.log('rowData.RemainingQuantity1 ==>' + rowData.RemainingQuantity);
             rowData.AllocatedQuantity = rowData.RemainingQuantity;
+            console.log('rowData.AllocatedQuantity ==>' + rowData.AllocatedQuantity);
             rowData.ProductName = dataItem.Product;
             var subscriptionCell = $(parentRow).children().eq(2);
             var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">' + dataItem.SubscriptionName +'</a>');
@@ -619,26 +669,4 @@ function selectSubscription(e){
         }
         grid.collapseRow(parentRow);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

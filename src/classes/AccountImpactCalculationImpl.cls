@@ -11,8 +11,11 @@ public class AccountImpactCalculationImpl implements AccountImpactCalculationInt
         else if(months > 3) {
             score = .75;
         }
-        else {               
+        else if(months > 0){
             score = 1;
+        }
+        else {
+            score = 3;
         }
 
         return score * multiplier;
@@ -34,7 +37,7 @@ public class AccountImpactCalculationImpl implements AccountImpactCalculationInt
         return score * multiplier;
     }
 
-    public Double CalculateGYRColor(String score){
+    /*public Double CalculateGYRColor(String score){
         Double calculatedScore;
 
         if(score == 'Red') {
@@ -48,13 +51,16 @@ public class AccountImpactCalculationImpl implements AccountImpactCalculationInt
         }
 
         return calculatedScore;
-    }
+    }*/
 
     public Double CalculateStrategicAccountScore(String strategicAccount, Double multiplier){
         Double score;
 
-        if(strategicAccount == 'Strategic') {
+        if(strategicAccount == 'Strategic' || strategicAccount == 'Enterprise') {
             score = 1;
+        }
+        else if(strategicAccount == 'Large' || strategicAccount == 'Midsize' || strategicAccount == 'Mid-Market') {
+            score = .5;
         }
         else {
             score = 0;
@@ -119,10 +125,10 @@ public class AccountImpactCalculationImpl implements AccountImpactCalculationInt
         Double score;
 
         if(referencable == true) {
-            score = 1;
+            score = 0;
         }
         else {
-            score = 0;
+            score = 1;
         }
 
         return score * multiplier;
