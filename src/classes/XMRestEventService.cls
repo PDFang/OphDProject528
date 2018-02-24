@@ -147,7 +147,7 @@ public class XMRestEventService {
         Map<String, String> propertyMap = addAdditionalSalesforceDataToFormProperties(eventCase, isMaintenance);
         propertyMap.put('xmNotificationId', xmNotificationRecord.Id);
         if((xmNotificationRecord.Request_Type__c == 'Event Platforms Add' || xmNotificationRecord.Request_Type__c == 'Event Initial Confirmation')
-                && eventCase.CaseComments.size() > 0){
+                && !config.XM_Turn_Off_Comment_Notifications__c && eventCase.CaseComments.size() > 0){
             String lastComment = eventCase.CaseComments[0].CommentBody;
             propertyMap.put('comment', lastComment);
         }
