@@ -236,7 +236,7 @@ public class XMRestEventService {
         List<String> fieldList = new List<String>(caseFields);
         system.debug('getCaseFromxmNotification() ===> fieldList: ' + fieldList);
 
-        String caseCommentQuery = ', (select CommentBody, IsPublished from CaseComments where IsPublished = true order by createddate desc limit 1) ';
+        String caseCommentQuery = ', (select CommentBody from CaseComments where IsPublished = true order by createddate desc limit 1) ';
         // Dynamic soql query to get the case object
         String dynamicCaseQuery = 'SELECT ' + String.join(fieldList, ',') + caseCommentQuery
                 + ' FROM Case Where Id = \'' + xmNotification.Case__c + '\'' ;
