@@ -146,6 +146,11 @@ public class XMRestEventService {
         // Build the properties needed to fill out the email template in xMatters
         Map<String, String> propertyMap = addAdditionalSalesforceDataToFormProperties(eventCase, isMaintenance);
         propertyMap.put('xmNotificationId', xmNotificationRecord.Id);
+        if((xmNotificationRecord.Request_Type__c == 'Event Platforms Add' || xmNotificationRecord.Request_Type__c == 'Event Initial Confirmation')
+                && eventCase.CaseComments.size() > 0){
+            String lastComment = eventCase.CaseComments[0].CommentBody;
+            propertyMap.put('comment', lastComment);
+        }
         XMEventData.templateProperties = propertyMap;
 
         // Serialize the event information for processing in xMatters Api
@@ -231,8 +236,10 @@ public class XMRestEventService {
         List<String> fieldList = new List<String>(caseFields);
         system.debug('getCaseFromxmNotification() ===> fieldList: ' + fieldList);
 
+        String caseCommentQuery = ', (select CommentBody, IsPublished from CaseComments order by createddate desc limit 1) ';
         // Dynamic soql query to get the case object
-        String dynamicCaseQuery = 'SELECT ' + String.join(fieldList, ',') + ' FROM Case Where Id = \'' + xmNotification.Case__c + '\'' ;
+        String dynamicCaseQuery = 'SELECT ' + String.join(fieldList, ',') + caseCommentQuery
+                + ' FROM Case Where Id = \'' + xmNotification.Case__c + '\'' ;
         system.debug('getCaseFromxmNotification() ===> Attempting to run SOQL Query to get Case Record: ' + dynamicCaseQuery);
 
 
