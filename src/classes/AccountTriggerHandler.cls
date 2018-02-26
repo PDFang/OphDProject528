@@ -58,7 +58,7 @@ public class AccountTriggerHandler extends TriggerHandler  {
         List<Account> accountList = new List<Account>();
         for(Account accountRecord :[
                 Select Id, RecordType.Name, Social_Media_Presence__c, CustomerSegment__c, Brand_Visibility__c, Industry_Leadership_Vocality__c,
-                        Risk_of_Leaving__c, GYRStatus__c, Age_of_Customer_in_Months__c, IsPartner__c, Referenceable__c,
+                        Risk_of_Leaving__c,  Age_of_Customer_in_Months__c, IsPartner__c, Referenceable__c,
                         Account_Net_Score__c
                 from Account
                 where Id IN :accountIdSet
@@ -75,13 +75,12 @@ public class AccountTriggerHandler extends TriggerHandler  {
 
     private boolean recalculateScore(Account newRecord, Account oldRecord){
         return newRecord.RecordTypeId != oldRecord.RecordTypeId
-                || (newRecord.CustomerSegment__c != oldRecord.CustomerSegment__c && (newRecord.CustomerSegment__c == 'Strategic' || oldRecord.CustomerSegment__c == 'Strategic') )
+                || newRecord.CustomerSegment__c != oldRecord.CustomerSegment__c
                 || newRecord.Brand_Visibility__c != oldRecord.Brand_Visibility__c
                 || newRecord.Industry_Leadership_Vocality__c != oldRecord.Industry_Leadership_Vocality__c
                 || newRecord.Social_Media_Presence__c != oldRecord.Social_Media_Presence__c
                 || newRecord.Risk_of_Leaving__c != oldRecord.Risk_of_Leaving__c
-                || newRecord.Referenceable__c != oldRecord.Referenceable__c
-                || newRecord.GYRStatus__c != oldRecord.GYRStatus__c;
+                || newRecord.Referenceable__c != oldRecord.Referenceable__c;
     }
 
     private void clearXMAccountAssociation(List<Account> newList, Map<Id, Account> oldMap) {

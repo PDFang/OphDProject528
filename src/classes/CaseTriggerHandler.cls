@@ -138,11 +138,10 @@ public class CaseTriggerHandler extends TriggerHandler
 
     private boolean recalculateScore(Case newRecord, Case oldRecord){
         return newRecord.Severity__c != oldRecord.Severity__c
-                || newRecord.Business_Impacted__c != oldRecord.Business_Impacted__c
-                || newRecord.Quality_of_Workaround__c != oldRecord.Quality_of_Workaround__c
+                || newRecord.Priority != oldRecord.Priority
+                || newRecord.RepeatIssue__c != oldRecord.RepeatIssue__c
                 || newRecord.Related_to_Previous_Known_Issue__c != oldRecord.Related_to_Previous_Known_Issue__c
-                || newRecord.Security_Issue__c != oldRecord.Security_Issue__c
-                || newRecord.Workaround_Available__c != oldRecord.Workaround_Available__c;
+                || newRecord.Security_Issue__c != oldRecord.Security_Issue__c;
     }
 
     // Create an xmNotification record when an event is confirmed or resolved

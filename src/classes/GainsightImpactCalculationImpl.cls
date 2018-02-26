@@ -1,6 +1,6 @@
 public with sharing class GainsightImpactCalculationImpl implements GainsightImpactCalculationInterface {
 
-    public Double CalculateOutstandingIncidentCaseScore(Integer openCaseCount, Double multiplier){
+    /*public Double CalculateOutstandingIncidentCaseScore(Integer openCaseCount, Double multiplier){
         Double score;
         if( openCaseCount > 5){
             score = 1;
@@ -67,6 +67,24 @@ public with sharing class GainsightImpactCalculationImpl implements GainsightImp
         }
 
         return score * multiplier;
+    }*/
+
+    public Double CalculateMRRScore(Decimal mrrValue, Double multiplier){
+        Double score;
+
+        if (mrrValue >= 50000) {
+            score = 1;
+        } else if (mrrValue >= 30000) {
+            score = .75;
+        } else if (mrrValue >= 10000) {
+            score = .5;
+        } else if (mrrValue >= 300) {
+            score = .25;
+        } else {
+            score = 0;
+        }
+
+        return score * multiplier;
     }
 
     public Double CalculateCreditGivenLastTwelveMonths(Decimal creditGiven, Double multiplier){
@@ -74,11 +92,11 @@ public with sharing class GainsightImpactCalculationImpl implements GainsightImp
 
         if (creditGiven >= 5000) {
             score = 1;
-        } else if (creditGiven >= 3000) {
+        } else if (creditGiven > 3000) {
             score = .75;
-        } else if (creditGiven >= 2000) {
+        } else if (creditGiven > 2000) {
             score = .5;
-        } else if (creditGiven >= 1) {
+        } else if (creditGiven > 0) {
             score = .25;
         } else {
             score = 0;
@@ -90,9 +108,9 @@ public with sharing class GainsightImpactCalculationImpl implements GainsightImp
     public Double CalculateHealthScore(Integer healthScore, Double multiplier){
         Double score;
 
-        if (healthScore >= 75) {
+        if (healthScore > 85) {
             score = 0;
-        } else if (healthScore >= 50) {
+        } else if (healthScore >= 66) {
             score = .5;
         } else {
             score = 1;
