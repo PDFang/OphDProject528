@@ -27,6 +27,7 @@ public class AssetSubscriptionAllocationHelper {
             'Total_Implemented_Quantity__c',
             'RemainingQuantity__c',
             'Remaning_Percentage__c'
+
     };
 
     static Set<String> subscriptionFields = new Set<String>{
@@ -50,7 +51,8 @@ public class AssetSubscriptionAllocationHelper {
             'ParentProject__r.Name',
             'Project_Phase__c',
             'Phase_Status__c',
-            'ActualProjectGoLiveDate__c'
+            'ActualProjectGoLiveDate__c',
+            'Project_Phase_Allocation__c'
     };
 
     static Set<String> IPFields = new Set<String>{
@@ -384,12 +386,12 @@ public class AssetSubscriptionAllocationHelper {
                 soql += ' AND Parent_Project__c = \'' + thisProject.ParentProject__c + '\'';
             }
 
-            soql += ' and FullyImplemented__c = false  order by createddate ';
+            soql += ' and FullyImplemented__c = false and RemainingQuantity__c > 0 order by createddate ';
 
             List<Asset> assets = new List<Asset>();
 
             for(Asset ast : Database.query(soql)){
-                if(ast.Quantity == 1 && ast.Remaning_Percentage__c <= 0){
+                if(ast.Quantity == 1 && ast.RemainingQuantity__c <= 0){
                     continue;
                 }
                 assets.add(ast);
@@ -400,13 +402,13 @@ public class AssetSubscriptionAllocationHelper {
         }
         else if(objType == 'Subscription'){
             system.debug('objType - ' + objType);
-            String soql = 'Select Id, Name,Budgeted_Hours__c, Quantity__c, Product_Name__c, Remaning_Percentage__c, RemainingQuantity__c, Remaining_Hours__c, QuantityCancelled__c, QuantityonHold__c ' +
+            String soql = 'Select Id, Name,Budgeted_Hours__c, Quantity__c, Subscription_Name__c, Remaning_Percentage__c, RemainingQuantity__c, Remaining_Hours__c, QuantityCancelled__c, QuantityonHold__c ' +
                     + ' from SubscriptionReplica__c where Id NOT IN(SELECT Subscription__c FROM Project_Subscription_Allocation__c WHERE Project__c = \'' + projId + '\')';
             if(projId != null){
                 soql += ' AND ParentProject__c = \'' + thisProject.ParentProject__c + '\'';
             }
 
-            soql += ' and FullyImplemented__c = false order by createddate ';
+            soql += ' and FullyImplemented__c = false and RemainingQuantity__c > 0  order by createddate ';
 
             List<SubscriptionReplica__c> subscriptions = new List<SubscriptionReplica__c>();
 
