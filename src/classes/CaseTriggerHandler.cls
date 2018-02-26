@@ -23,6 +23,7 @@ public class CaseTriggerHandler extends TriggerHandler
     public static boolean createJiraBug = false;
     public static boolean bypassProxyService = false;
     private Static Map<String, ETMS_Trouble_Report_State_Status__mdt> etmsTroubleStateStatusMap;
+    private static boolean isInsertCall = false;
 
 
     public CaseTriggerHandler()
@@ -49,7 +50,8 @@ public class CaseTriggerHandler extends TriggerHandler
     }
 
     protected override void beforeInsert(){
-        CalculateIncidentNetScore((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
+        isInsertCall = true;
+        //CalculateIncidentNetScore((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
         setTroubleReportStateStatus((List<Case>) trigger.new, (Map<Id, Case>)trigger.oldMap);
     }
 
@@ -118,7 +120,7 @@ public class CaseTriggerHandler extends TriggerHandler
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
             // Is new incident
-            if(newCase.RecordTypeId == incidentRecordType && (oldCase == null || recalculateScore(newCase, oldCase)) ){
+            if(newCase.RecordTypeId == incidentRecordType && (oldCase == null || recalculateScore(newCase, oldCase) || isInsertCall) ){
                 processList.add(newCase);
             }
         }

@@ -56,8 +56,8 @@ public class ContactTriggerHandler extends TriggerHandler{
                 dupeContactIds.add(newContact.Id);
             }
         }
-        if(dupeContactIds.size() > 0 && )
-        updateXMPersonId(dupeContactIds);
+        if(dupeContactIds.size() > 0 && !System.isFuture())
+            updateXMPersonId(dupeContactIds);
 
     }
 
@@ -67,7 +67,8 @@ public class ContactTriggerHandler extends TriggerHandler{
             contactIds.add(newContact.Id);
         }
 
-        updateXMPersonId(contactIds);
+        if(contactIds.size() > 0 && !System.isFuture())
+            updateXMPersonId(contactIds);
 
     }
 
@@ -265,7 +266,7 @@ public class ContactTriggerHandler extends TriggerHandler{
 
 
         for(Contact con : [select Id, Email, xmPerson__c, xmPerson__r.xmPersonUID__c From Contact where Email in : emails and Deactivated__c =: false and xmPerson__c != :null ]){
-            if(!contactEmailXmId.containsKey(con.Email)){
+            if(con != null && !contactEmailXmId.containsKey(con.Email)){
                 contactEmailXmId.put(con.Email, con.xmPerson__c);
             }
         }

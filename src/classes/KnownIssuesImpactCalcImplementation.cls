@@ -31,6 +31,8 @@ public with sharing class KnownIssuesImpactCalcImplementation implements KnownIs
     public Decimal CalculatePriorityScore(string priority,  decimal multiplier) {
         //>=$5M=10, $3M-$5M=7, $2M-$3M=4, $1M-$2M=1, <=$0=0.00
 
+
+        system.debug('Priority: ' + priority + ' Multiplier: ' + multiplier);
         if (priority == 'p1' )
             return 1 * multiplier;
         else if (priority == 'p2')
