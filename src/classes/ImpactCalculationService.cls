@@ -51,7 +51,7 @@ public class ImpactCalculationService
             Double priorityScore = caseRecord.Priority == null
                     ? 0
                     : impactCalculator.CalculateIncidentPriorityScore(caseRecord.Priority, GetMultiplierValue('incident priority'));
-            system.debug('CalculateIncidentNetScore(): priorityScore - ' + priorityScore + ' , Severity__c - ' + caseRecord.Priority);
+            system.debug('CalculateIncidentNetScore(): priorityScore - ' + priorityScore + ' , Priority - ' + caseRecord.Priority);
 
             Double securityScore = caseRecord.Security_Issue__c == null
                     ? 0
