@@ -417,6 +417,9 @@ function gridDataboundSubscription(e){
               if (currentDataItem.Implemented == true && isManager == false) {
                   $(this).remove();
               }
+              else if((projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false){
+                  $(this).remove();
+              }
           });
            //Selects all delete buttons
            $("#subscriptionAllocationList tbody tr a.k-grid-Delete").each(function () {
@@ -424,6 +427,9 @@ function gridDataboundSubscription(e){
                   //Check in the current dataItem if the row is deletable
                   if (currentDataItem.Implemented == true && isManager == false) {
                       $(this).remove();
+                  }
+                  else if((projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false){
+                    $(this).remove();
                   }
               });
 

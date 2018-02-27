@@ -39,9 +39,12 @@ public class ContactTriggerHandler extends TriggerHandler{
         String emailOld = '';
         Boolean isDeactivated = false;
         for(Contact newContact : newList){
-            contactIds.add(newContact.Id);
+            if(newContact.Email != null && newContact.Email != '')
+                    contactIds.add(newContact.Id);
             //emailNew = newContact.Email;
         }
+        if(contactIds.isEmpty())
+            return;
 
         Map<id, Contact> personMap = new map<id, Contact>([select Id, xmPerson__r.xmPersonUID__c from Contact where Id in: contactIds]);
         for(Contact newContact : newList){

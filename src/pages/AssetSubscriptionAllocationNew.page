@@ -131,7 +131,7 @@
 
                         <apex:pageBlock title="Asset Detail" rendered="{!Not(ISNULL(asset))}" id="detailAsset">
                             <apex:pageBlockButtons title="" location="bottom">
-                                <apex:outputPanel rendered="{!Asset.Quantity > 1 && !Asset.FullyImplemented__c}">
+                                <apex:outputPanel rendered="{!!Asset.FullyImplemented__c}">
                                     <button title="Edit On Hold/Cancelled Quantity " onClick="openEditCancSuspQuantityModal(); return false;">
                                         Edit On Hold/Cancelled Quantity
                                     </button>
@@ -162,7 +162,7 @@
 
                         <apex:pageBlock title="Subscription Detail" rendered="{!Not(ISNULL(Subscription))}" id="detailSubscription">
                             <apex:pageBlockButtons title="" location="bottom">
-                                <apex:outputPanel rendered="{!Subscription.Quantity__c > 1 && !Subscription.FullyImplemented__c}">
+                                <apex:outputPanel rendered="{!!Subscription.FullyImplemented__c}">
                                     <button title="Edit On Hold/Cancelled Quantity " onClick="openSubsEditCancSuspQuantityModal(); return false;">
                                         Edit On Hold/Cancelled Quantity
                                     </button>
@@ -420,7 +420,9 @@
              Product = new Object(),
              isManager = {!Manager},
              disableEdit = false,
-             implemented = false;
+             implemented = false,
+             projectGoLiveDate = '',
+             projectPhaseStatus = '';
 
         var windowTemplate = kendo.template($("#windowTemplate").html());
 
@@ -452,7 +454,7 @@
                               Asset.QuantityCancelled__c = '{!Asset.QuantityCancelled__c}';
                               implemented = {!Asset.FullyImplemented__c};
                               console.log(Asset);
-                              if(implemented || (Asset['Quantity'] == 1 && Asset['Remaning_Percentage__c'] <= 0) ){
+                              if(implemented && isManager == false ){
                                   disableEdit = true;
                               }
                               assetAllocationData(null, '{!currentId}');
@@ -476,7 +478,7 @@
                               Subscription.QuantityCancelled__c = '{!Subscription.QuantityCancelled__c}';
                               implemented = {!Subscription.FullyImplemented__c};
                               console.log(Subscription);
-                              if(implemented || (Subscription['Quantity'] == 1 && Subscription['Remaning_Percentage__c'] <= 0) ){
+                              if(implemented && isManager == false){
                                   disableEdit = true;
                               }
                               subscriptionAllocationData(null, '{!currentId}');
@@ -492,12 +494,12 @@
                               Project.Status = '{!Project.Phase_Status__c}';
                               subscriptionAllocationData('{!currentId}', null);
                               assetAllocationData('{!currentId}', null);
-                              var projectGoLiveDate = '{!Project.ActualProjectGoLiveDate__c}';
-                              var projectPhaseStatus = '{!Project.Phase_Status__c}';
-                              if(projectGoLiveDate != '' && projectGoLiveDate != null){
+                              projectGoLiveDate = '{!Project.ActualProjectGoLiveDate__c}';
+                              projectPhaseStatus = '{!Project.Phase_Status__c}';
+                              if(projectGoLiveDate != '' && projectGoLiveDate != null && isManager == false){
                                    $("a.k-grid-add").hide();
                               }
-                              if(projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended'){
+                              if((projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false){
                                   $("a.k-grid-add").hide();
                               }
                            }

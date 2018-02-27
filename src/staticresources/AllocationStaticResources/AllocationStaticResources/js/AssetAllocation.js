@@ -379,6 +379,9 @@
             if ((currentDataItem.Implemented == true && isManager == false) ) {
                 $(this).remove();
             }
+            else if((projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false){
+                                $(this).remove();
+            }
         });
          //Selects all delete buttons
          $("#assetAllocationList tbody tr a.k-grid-Delete").each(function () {
@@ -387,6 +390,10 @@
                 if ((currentDataItem.Implemented == true && isManager == false) ) {
                     $(this).remove();
                 }
+                else if((projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false){
+                    $(this).remove();
+                }
+
             })
 
         $("#assetAllocationList").find('div.k-grid-content').css("height", "520px");
