@@ -550,7 +550,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
             updateAssetFullyImplemented(assetIds);
 
         if(!subscriptionIds.isEmpty())
-            updateSubscriptionFullyImplemented(subscriptionIds);
+            updateSubscriptionCustomFullyImplemented(subscriptionIds);
 
     }
 
@@ -575,7 +575,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
             update updateAssetList;
     }
 
-    public static void updateSubscriptionFullyImplemented(set<Id> subscriptionIds){
+    public static void updateSubscriptionCustomFullyImplemented(set<Id> subscriptionIds){
         List<SubscriptionReplica__c> updateSubscriptionCustomList = new List<SubscriptionReplica__c>(
         [SELECT Id, Quantity__c, Status1__c, Total_Implemented_Quantity__c, QuantityCancelled__c, FullyImplemented__c from SubscriptionReplica__c where Id IN : subscriptionIds]);
 
@@ -713,8 +713,6 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
             if(newList[0].Phase_Status__c != 'Open') {
                 if (timingMap.size() > 0) {
-                    System.debug('timingMap' + timingMap);
-                    System.debug('projectAssetAllocation.Id' + projectAssetAllocation.Id);
                     if (timingMap.containsKey(projectAssetAllocation.Id)) {
                         cancelledQuantity += projectAssetAllocation.Quantity_Allocation__c;
                         updateProjectAssetAllocationsList.add(new Project_Asset_Allocation__c(Id = projectAssetAllocation.Id,
@@ -728,18 +726,12 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         System.debug('InElse Deletion');
                         if(newList[0].Phase_Status__c == 'Cancelled')
                             deleteProjectAssetAllocationsList.add(projectAssetAllocation);
-                            //deleteProjectAssetAllocationsList.add(new Project_Asset_Allocation__c(Id = projectAssetAllocation.Id));
-                        System.debug('deleteProjectAssetAllocationsList In Else' + deleteProjectAssetAllocationsList);
                     }
                 }
+                else if(newList[0].Phase_Status__c == 'Cancelled')
+                    deleteProjectAssetAllocationsList.add(projectAssetAllocation);
             }
         }
-
-        System.debug('allocationLoggedHours' + allocationLoggedHours);
-
-
-
-        System.debug('deleteProjectAssetAllocationsList' + deleteProjectAssetAllocationsList);
 
         updateAssetList = new List<Asset>([SELECT Id, Quantity, Status, Total_Implemented_Quantity__c, QuantityCancelled__c, Total_Allocated_Quantity__c, RemainingQuantity__c, QuantityonHold__c, Canceled_Hours__c,
                 On_Hold_Hours__c, Department_Responsible__c, Root_Cause__c, Logged_Hours__c, FullyImplemented__c from Asset where Id IN : assetIds ]);
@@ -749,9 +741,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
             if(newList[0].Phase_Status__c == 'Cancelled'){
                 if(updateAsset.Quantity > 1){
-                    System.debug('updateAsset.Total_Allocated_Quantity__c' + updateAsset.Total_Allocated_Quantity__c);
                         updateAsset.QuantityCancelled__c += cancelledQuantity;
-
                 }
 
                 updateAsset.Department_Responsible__c = newList[0].Department_Responsible__c;
@@ -759,9 +749,6 @@ public class ProjectTriggerHandler extends TriggerHandler{
                 if(allocationLoggedHours.containsKey(updateAsset.Id)) {
                     updateAsset.Canceled_Hours__c = allocationLoggedHours.get(updateAsset.Id);
                 }
-                System.debug('updateAsset.QuantityCancelled__c' + updateAsset.QuantityCancelled__c);
-                System.debug('updateAsset.Canceled_Hours__c' + updateAsset.Canceled_Hours__c);
-                System.debug('allocationLoggedHours.get(updateAsset.Id)' + allocationLoggedHours.get(updateAsset.Id));
             }
             else if(newList[0].Phase_Status__c == 'Suspended'){
                 if(updateAsset.Quantity > 1){
@@ -774,8 +761,6 @@ public class ProjectTriggerHandler extends TriggerHandler{
                 if(allocationLoggedHours.containsKey(updateAsset.Id)) {
                     updateAsset.On_Hold_Hours__c = allocationLoggedHours.get(updateAsset.Id);
                 }
-
-                System.debug('updateAsset.QuantityCancelled__c in suspended' + updateAsset.QuantityCancelled__c);
             }
 
             else if(newList[0].Phase_Status__c == 'Open'){
@@ -846,11 +831,9 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         if(newList[0].Phase_Status__c == 'Cancelled')
                             delProjectSubscriptionAllocationsList.add(projectSubscriptionAllocation);
                     }
-
-//                    if (!subscriptionIds.contains(projectSubscriptionAllocation.Subscription__c)) {
-//                        subscriptionIds.add(projectSubscriptionAllocation.Subscription__c);
-//                    }
                 }
+                else if(newList[0].Phase_Status__c == 'Cancelled')
+                    delProjectSubscriptionAllocationsList.add(projectSubscriptionAllocation);
             }
         }
 
@@ -861,12 +844,9 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
 
         for(SubscriptionReplica__c updateSubscriptionCustom: updateSubscriptionCustomList){
-            //System.debug('updateSubscriptionCustom' + updateSubscriptionCustom);
-
             if(newList[0].Phase_Status__c == 'Cancelled'){
                 if(updateSubscriptionCustom.Quantity__c > 1){
                         updateSubscriptionCustom.QuantityCancelled__c += cancelledQuantity;
-                    System.debug('updateSubscriptionCustom.Total_Allocated_Quantity__c' + updateSubscriptionCustom.Total_Allocated_Quantity__c);
                 }
 
                 updateSubscriptionCustom.Department_Responsible__c = newList[0].Department_Responsible__c;
@@ -874,10 +854,6 @@ public class ProjectTriggerHandler extends TriggerHandler{
                 if(allocationLoggedHours.containsKey(updateSubscriptionCustom.Id)) {
                     updateSubscriptionCustom.Canceled_Hours__c = allocationLoggedHours.get(updateSubscriptionCustom.Id);
                 }
-
-                System.debug('updateSubscriptionCustom.QuantityCancelled__c' + updateSubscriptionCustom.QuantityCancelled__c);
-                System.debug('updateSubscriptionCustom.Canceled_Hours__c' + updateSubscriptionCustom.Canceled_Hours__c);
-                System.debug('allocationLoggedHours.get(updateSubscriptionCustom.Id)' + allocationLoggedHours.get(updateSubscriptionCustom.Id));
 
             }
             else if(newList[0].Phase_Status__c == 'Suspended'){
