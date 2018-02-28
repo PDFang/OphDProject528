@@ -563,9 +563,10 @@ public class ProjectTriggerHandler extends TriggerHandler{
             if(updateAsset.QuantityCancelled__c != null)
                 cancelledQuantity = updateAsset.QuantityCancelled__c;
 
-            updateAsset.Status = '4 - Delivered';
+
 
             if((updateAsset.Total_Implemented_Quantity__c + cancelledQuantity >= updateAsset.Quantity)){
+                updateAsset.Status = '4 - Delivered';
                 updateAsset.FullyImplemented__c = true;
             }
         }
