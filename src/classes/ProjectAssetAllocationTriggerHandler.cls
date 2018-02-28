@@ -12,6 +12,12 @@ public class ProjectAssetAllocationTriggerHandler extends TriggerHandler{
         CheckTimeBeofreDelete();
     }
 
+    static set<string> closedProjectStatus = new set<String>{
+            'Closed',
+            'Cancelled',
+            'Suspended'
+    };
+
     private static void CheckTimeBeofreDelete(){
         List<Project_Asset_Allocation__c> allocations = (List<Project_Asset_Allocation__c>)(trigger.old);
         Set<Id> allocationIds = new Set<Id>();
@@ -33,8 +39,7 @@ public class ProjectAssetAllocationTriggerHandler extends TriggerHandler{
 
         if(timingList.size() > 0){
             for(Project_Asset_Allocation__c allocation : allocations){
-                allocation.addError('Asset Allocation can not be deleted as there are time enteries on the allocation. ' +
-                        'Please change the status field');
+                allocation.addError('Asset Allocation can not be deleted as there are time enteries on the allocation. ');
             }
         }
     }
@@ -44,24 +49,46 @@ public class ProjectAssetAllocationTriggerHandler extends TriggerHandler{
         Map<Id, Project_Asset_Allocation__c> oldAllocations = (Map<Id, Project_Asset_Allocation__c>)(trigger.oldMap);
         Map<Id, Id> phaseIds = new Map<Id, Id>();
         List<Project__c> parentProjects = new List<Project__c>();
+        set<Id> closedProjectIds = new set<Id>();
+        set<Id> assetIds = new set<Id>();
 
 
         for(Project_Asset_Allocation__c allocation:allocations){
-            if(allocation.Project__c != null && (allocation.ParentProjectId__c == null || allocation.Project__c != oldAllocations.get(allocation.Id).Project__c)){
+            if(allocation.Project__c != null){
                 phaseIds.put(allocation.Project__c,null);
             }
         }
 
         if(!phaseIds.isEmpty()) {
-            for (Project__c phaseProject : [SELECT Id, ParentProject__c FROM Project__c WHERE ID IN :phaseIds.keySet()]) {
+            for (Project__c phaseProject : [SELECT Id, ParentProject__c, Phase_Status__c, ActualProjectGoLiveDate__c FROM Project__c WHERE ID IN :phaseIds.keySet()]) {
                 if(phaseProject.ParentProject__c != null) {
                     phaseIds.put(phaseProject.Id, phaseProject.ParentProject__c);
+                }
+                if(closedProjectStatus.contains(phaseProject.Phase_Status__c) || phaseProject.ActualProjectGoLiveDate__c != null){
+                    closedProjectIds.add(phaseProject.Id);
                 }
             }
 
             for (Project_Asset_Allocation__c allocation : allocations) {
                 allocation.ParentProjectId__c = phaseIds.get(allocation.Project__c);
+                if(closedProjectIds.contains(allocation.Project__c)){
+                        allocation.Implemented__c = true;
+                        allocation.Phase_Implemented_Quantity__c = allocation.Quantity_Allocation__c;
+                        allocation.Phase_Implemented__c = allocation.Percent_Allocation__c;
+                        assetIds.add(allocation.Asset__c);
+                }
             }
         }
+
+        if(!assetIds.isEmpty() && !system.isFuture()){
+            UpdateAsset(assetIds);
+        }
+
+    }
+
+    @Future
+    public static void UpdateAsset(set<Id> assetIds){
+            ProjectTriggerHandler.updateSubscriptionFullyImplemented(assetIds);
     }
 }
+

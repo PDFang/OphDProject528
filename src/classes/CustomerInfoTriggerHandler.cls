@@ -28,6 +28,8 @@ public class CustomerInfoTriggerHandler extends TriggerHandler {
     }
 
     private boolean recalculateScore(JBCXM__CustomerInfo__c newRecord, JBCXM__CustomerInfo__c oldRecord){
+        system.debug('New MRR' + newRecord.JBCXM__MRR__c + ' Old MRR: ' + oldRecord.JBCXM__MRR__c);
+
         return newRecord.JBCXM__CurScoreId__c != oldRecord.JBCXM__CurScoreId__c
                 || newRecord.JBCXM__MRR__c != oldRecord.JBCXM__MRR__c
                 || newRecord.JBCXM_Credits__c != oldRecord.JBCXM_Credits__c;

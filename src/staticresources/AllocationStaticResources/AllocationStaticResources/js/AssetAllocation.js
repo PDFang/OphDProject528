@@ -103,12 +103,13 @@
                                     type:"number",
                                     nullable: true,
                                     editable:true,
-                                    defaultValue:1,
+                                    defaultValue:0,
                                      validation : {
                                         quantityValidation : function(input){
                                             var parentRow = $(input).parents("tr:first");
                                             var grid = $("#assetAllocationList").data("kendoGrid");
-                                            var rowData = grid.dataItem(parentRow);
+                                            var rowData = grid.dataItem(parentRow),
+                                                allocatedQuantityVal = rowData.AssetAllocationName == '' ? 0 : rowData.AllocatedQuantity;
 
                                              if(!rowData){
                                                  input.attr("data-quantityValidation-msg", "Please select an asset");
@@ -118,12 +119,12 @@
                                                 input.attr("data-quantityValidation-msg", "Allocated Quantity cannot be zero");
                                                 return false;
                                             }
-                                             if(Number(input.val()) > Number(rowData.RemainingQuantity) && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && (rowData.QuantityOnHold > 0 || rowData.QuantityCancelled > 0)){
-                                                input.attr("data-quantityValidation-msg", 'Cannot allocate more than “Contract Quantity” if there is any quantity on hold or cancelled');
+                                             if(Number(input.val()) > (Number(rowData.RemainingQuantity) + Number(allocatedQuantityVal)) && input.is("[name='AllocatedQuantity']")){
+                                                input.attr("data-quantityValidation-msg", 'Cannot allocate more than “Contract Quantity”');
                                                 return false;
                                             }
                                              if(Number(input.val()) > 1 && input.is("[name='AllocatedQuantity']") && rowData.Quantity == 1){
-                                                    input.attr("data-quantityValidation-msg", 'Allocated Quantity cannot be more than 1.');
+                                                    input.attr("data-quantityValidation-msg", 'Allocated Quantity cannot be more than 1');
                                                     return false;
                                             }
                                             if(input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && Number(input.val()) % 1 != 0){
@@ -258,13 +259,13 @@
                                            function(result,event){
                                                if (event.status) {
                                                   var returnResult = result;
-                                                  if(result != 'Failed'){
+                                                  if(result == 'success'){
                                                        grid.dataSource.remove(data);
                                                        reloadDetails();
                                                        //  getSObjType();
                                                        $('#loading').modal('hide');
                                                     }else{
-                                                    displayError('Delete Unsuccessful.');
+                                                    displayError(result);
                                                      $('#loading').modal('hide');
                                                   }
                                                }else{
@@ -378,6 +379,9 @@
             if ((currentDataItem.Implemented == true && isManager == false) ) {
                 $(this).remove();
             }
+            else if((projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false){
+                                $(this).remove();
+            }
         });
          //Selects all delete buttons
          $("#assetAllocationList tbody tr a.k-grid-Delete").each(function () {
@@ -386,6 +390,10 @@
                 if ((currentDataItem.Implemented == true && isManager == false) ) {
                     $(this).remove();
                 }
+                else if((projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false){
+                    $(this).remove();
+                }
+
             })
 
         $("#assetAllocationList").find('div.k-grid-content').css("height", "520px");
@@ -584,8 +592,8 @@
                     columns: [
                          {command: { text: "Select", click : selectAsset}, title: "Action", width: "60px" },
                         { field: "AssetName", title:"Asset", width: "300px" },
+                         { field: "RemainingQuantity", title:"Remaining Quantity", width: "110px" },
                         { field: "RemainingPercentage", title:"Remaining Percentage", width: "110px" },
-                        { field: "RemainingQuantity", title:"Remaining Quantity", width: "110px" },
                         { field: "RemainingHours", title:"Remaining Hours", width: "110px" }
 
                     ]

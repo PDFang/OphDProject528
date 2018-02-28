@@ -504,7 +504,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         List<Project_Asset_Allocation__c> updateProjectAssetAllocationsList = new List<Project_Asset_Allocation__c>();
         Set<Id> assetIds = new Set<Id>();
-        List<Asset> updateAssetList = new List<Asset>();
+
 
         for(Project_Asset_Allocation__c projectAssetAllocation: listProjectAssetAllocations){
             updateProjectAssetAllocationsList.add(new Project_Asset_Allocation__c(Id = projectAssetAllocation.Id,
@@ -546,8 +546,16 @@ public class ProjectTriggerHandler extends TriggerHandler{
         if(updateSubscriptionList.size() > 0)
             update updateSubscriptionList;
 
+        if(!assetIds.isEmpty())
+            updateAssetFullyImplemented(assetIds);
 
-        updateAssetList = new List<Asset>([SELECT Id, Quantity, Status, Total_Implemented_Quantity__c, QuantityCancelled__c, FullyImplemented__c from Asset where Id IN : assetIds ]);
+        if(!subscriptionIds.isEmpty())
+            updateSubscriptionFullyImplemented(subscriptionIds);
+
+    }
+
+    public static void updateAssetFullyImplemented(set<Id> assetIds){
+        List<Asset> updateAssetList = new List<Asset>([SELECT Id, Quantity, Status, Total_Implemented_Quantity__c, QuantityCancelled__c, FullyImplemented__c from Asset where Id IN : assetIds ]);
 
         for(Asset updateAsset: updateAssetList){
             System.debug('updateAsset' + updateAsset);
@@ -564,7 +572,9 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         if(updateAssetList.size() > 0)
             update updateAssetList;
+    }
 
+    public static void updateSubscriptionFullyImplemented(set<Id> subscriptionIds){
         List<SubscriptionReplica__c> updateSubscriptionCustomList = new List<SubscriptionReplica__c>(
         [SELECT Id, Quantity__c, Status1__c, Total_Implemented_Quantity__c, QuantityCancelled__c, FullyImplemented__c from SubscriptionReplica__c where Id IN : subscriptionIds]);
 
@@ -581,8 +591,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
         if(updateSubscriptionCustomList.size() > 0)
             update updateSubscriptionCustomList;
-
     }
+
 
     // establish automatic link between IT Project and PMO project
     private static void relateITAndPMOProject() {

@@ -80,8 +80,8 @@ public without sharing class KnownIssueImpactCalculationClass {
                 system.debug('netKnownIssueScore 4 =>' + netKnownIssueScore);
                 netKnownIssueScore += impactCalculator.CalculateRecentReleaseBreak(isBrokenByRelease, GetMultiplierValue('BrokenByRelease'));
                 system.debug('netKnownIssueScore 5 =>' + netKnownIssueScore);
-                netKnownIssueScore += impactCalculator.CalculatePriorityScore(newCase.Priority, GetMultiplierValue('KI Priority'));
-                system.debug('netKnownIssueScore 4 =>' + netKnownIssueScore);
+                netKnownIssueScore += impactCalculator.CalculatePriorityScore(KnownIssuCase.Priority, GetMultiplierValue('KI Priority'));
+                system.debug('netKnownIssueScore 6 =>' + netKnownIssueScore);
 
                 //track the old value
                 if(system.isBatch()) {
