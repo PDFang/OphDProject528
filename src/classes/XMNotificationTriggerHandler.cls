@@ -1,5 +1,7 @@
 public class XMNotificationTriggerHandler extends TriggerHandler{
 
+    Static Integer eventServiceCounter = 0;
+
     protected override void afterInsert(){
 
         callXMRestEventService(trigger.new);
@@ -78,8 +80,10 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
             if(xmNotification.Status__c == 'New')
                 notificationIdSet.add(xmNotification.Id);
         }
-        if(notificationIdSet.size() > 0)
+        if(notificationIdSet.size() > 0 && eventServiceCounter == 0 && !system.isFuture() && !system.isBatch()){
             callXMRestEventServiceFuture(notificationIdSet);
+            eventServiceCounter++;
+        }
 
     }
 
