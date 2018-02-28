@@ -144,10 +144,17 @@ public with sharing class AssetSubscriptionAllocationNewController {
     public static String DeleteAllocation(String allocationId, String objType){
         String result;
         try{
-            AssetSubscriptionAllocationHelper.DeleteAllocation(allocationId, objType);
-            result = 'Success';
+            result = AssetSubscriptionAllocationHelper.DeleteAllocation(allocationId, objType);
+            Integer occurence;
+            if (result.contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
+                occurence = result.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
+                result = result.mid(occurence, result.length());
+                occurence = result.lastIndexOf(':');
+                result = result.mid(0, occurence);
+            }
+
         }catch (Exception ex){
-            result = 'Failed';
+            result = 'Failed' + ex.getMessage();
         }
 
         return result;

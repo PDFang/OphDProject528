@@ -297,13 +297,13 @@ function subscriptionAllocationData(projId, subscriptionId){
                                            function(result,event){
                                                if (event.status) {
                                                   var returnResult = result;
-                                                  if(result != 'Failed'){
+                                                  if(result == 'success'){
                                                        grid.dataSource.remove(data);
                                                         reloadDetails();
                                                        $('#loading').modal('hide');
                                                     }else{
                                                     $('#loading').modal('hide');
-                                                    displayError('Delete Unsuccessful.');
+                                                    displayError(result);
 
                                                   }
                                                }else{
@@ -443,7 +443,7 @@ function calculateSubscriptionBudgetedHours(e){
                 currentValue;
                 allocatedHoursInput = $("#subscriptionAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(9)"),
                 allocatedSubPercentageInput = $("#subscriptionAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(8)");
-            var percentage = 100*(model.AllocatedQuantity / model.Quantity);
+            var percentage = (100*(model.AllocatedQuantity / model.Quantity)).toFixed(2);
             currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
             if( model.Quantity == 0)
                currentValue = 0;

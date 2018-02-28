@@ -259,13 +259,13 @@
                                            function(result,event){
                                                if (event.status) {
                                                   var returnResult = result;
-                                                  if(result != 'Failed'){
+                                                  if(result == 'success'){
                                                        grid.dataSource.remove(data);
                                                        reloadDetails();
                                                        //  getSObjType();
                                                        $('#loading').modal('hide');
                                                     }else{
-                                                    displayError('Delete Unsuccessful.');
+                                                    displayError(result);
                                                      $('#loading').modal('hide');
                                                   }
                                                }else{

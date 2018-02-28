@@ -431,7 +431,7 @@ public class AssetSubscriptionAllocationHelper {
 
     }
 
-    public static void DeleteAllocation(String allocationId, String objType){
+    public static string DeleteAllocation(String allocationId, String objType){
         try{
             if(objType == 'Asset'){
 
@@ -458,8 +458,11 @@ public class AssetSubscriptionAllocationHelper {
                 if(subscriptionAllocation.size() > 0)
                     delete subscriptionAllocation;
             }
-        }catch (Exception ex){
 
+            return 'success';
+
+        }catch (Exception ex){
+            return ex.getMessage();
         }
     }
 
