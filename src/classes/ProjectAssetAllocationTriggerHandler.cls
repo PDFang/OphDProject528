@@ -88,7 +88,7 @@ public class ProjectAssetAllocationTriggerHandler extends TriggerHandler{
 
     @Future
     public static void UpdateAsset(set<Id> assetIds){
-            ProjectTriggerHandler.updateSubscriptionFullyImplemented(assetIds);
+            ProjectTriggerHandler.updateAssetFullyImplemented(assetIds);
     }
 }
 
