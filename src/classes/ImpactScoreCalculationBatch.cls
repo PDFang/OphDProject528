@@ -12,7 +12,7 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
         this.scoreType = scoreType;
         if (scoreType == ImpactCalculationConstants.ImpactScoreType.AccountNetScore) { // Account object
             this.query = 'Select Id, Social_Media_Presence__c, CustomerSegment__c, Brand_Visibility__c, '
-                    + 'Industry_Leadership_Vocality__c, Risk_of_Leaving__c, '
+                    + 'Industry_Leadership_Vocality__c, Risk_of_Leaving__c, RecordType.Name,'
                     + 'Age_of_Customer_in_Months__c, IsPartner__c, Referenceable__c, Account_Net_Score__c '
                     + 'from Account where RecordType.Name IN :accountRecordTypes';
 
