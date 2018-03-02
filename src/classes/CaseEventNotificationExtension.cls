@@ -560,7 +560,7 @@ public class CaseEventNotificationExtension
         xMattersForms = new List<SelectOption>();
         xMattersForms.add(new SelectOption('', '- Choose a template -'));
 
-        for(xMatters_Forms__mdt mdt : [Select Form_Name__c from xMatters_Forms__mdt where Event__c = false order by Form_Name__c]){
+        for(xMatters_Forms__mdt mdt : [Select Form_Name__c from xMatters_Forms__mdt order by Form_Name__c]){
             xMattersForms.add(new SelectOption(mdt.Form_Name__c, mdt.Form_Name__c));
         }
 
