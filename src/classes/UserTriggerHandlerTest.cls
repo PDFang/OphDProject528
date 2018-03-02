@@ -96,7 +96,7 @@ private class UserTriggerHandlerTest {
             system.assertEquals(1, Contacts.size());
 
             List<Case> cases = [SELECT Id from Case where AccountId = :accounts[0].Id];
-            system.assertEquals(2, cases.size());
+            system.assertEquals(1, cases.size());
 
             List<Opportunity> opportunities = [SELECT Id from Opportunity where AccountId = :accounts[0].Id];
             system.assertEquals(1, opportunities.size());
@@ -116,7 +116,7 @@ private class UserTriggerHandlerTest {
             system.assertEquals(1, Contacts.size());
 
             List<Case> cases = [SELECT Id from Case where AccountId = :accounts[0].Id];
-            system.assertEquals(2, cases.size());
+            system.assertEquals(1, cases.size());
 
             List<Opportunity> opportunities = [SELECT Id from Opportunity where AccountId = :accounts[0].Id];
             system.assertEquals(0, opportunities.size());
@@ -201,7 +201,7 @@ private class UserTriggerHandlerTest {
             system.assertEquals(1, Contacts.size());
 
             List<Case> cases = [SELECT Id from Case where AccountId = :accounts[0].Id];
-            system.assertEquals(2, cases.size());
+            system.assertEquals(1, cases.size());
 
             List<Opportunity> opportunities = [SELECT Id from Opportunity where AccountId = :accounts[0].Id];
             system.assertEquals(0, opportunities.size());
@@ -370,15 +370,6 @@ private class UserTriggerHandlerTest {
         insert parentCase;
         caseList.add(parentCase);
 
-        Case childCase = new Case(
-                ParentId = parentCase.Id,
-                Subject = parentCase.Subject,
-                AccountId = accountList[0].Id,
-                RecordTypeId = recordTypeMap.get(CASE_TYPE_INCIDENT)
-        );
-        childCase.setOptions(dmo);
-        insert childCase;
-        caseList.add(childCase);
 
     } // end of createCases()
 
