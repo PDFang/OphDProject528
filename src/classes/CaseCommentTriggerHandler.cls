@@ -6,6 +6,7 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
 
     private static boolean staticValuesSet = false;
     private static boolean isProxyServiceTurnedOff = false;
+    private static boolean isXMCommentNotificationTurnedOff = false;
     //private static boolean isSetCommentDuringUpdate = false;
 
     public static boolean alreadyCopiedComments = false;
@@ -19,17 +20,30 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
             AppConfiguration__c config = AppConfiguration__c.getInstance();
             if(config != null) {
                 isProxyServiceTurnedOff = config.Turn_Off_Partner_Case_Proxy_Service__c;
+                isXMCommentNotificationTurnedOff = config.XM_Turn_Off_Comment_Notifications__c;
             }
         }
     }
 
     protected override void afterInsert(){
+
+        if(!isXMCommentNotificationTurnedOff){
+            createXMNotification((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
+        }
         if(!isProxyServiceTurnedOff && !bypassProxyService){
             CallPartnerCaseProxyService((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
         }
         if (AllCommentTriggerHelper.hasAlreadyCreatedComments() == false){
             AllCommentTriggerHelper.setAlreadyCreatedComments();
             CopyCustomComments ((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
+        }
+
+    }
+
+    protected override void afterUpdate() {
+
+        if (!isXMCommentNotificationTurnedOff) {
+            createXMNotification((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
         }
 
     }
@@ -124,6 +138,50 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
     private static void CallPartnerCaseProxyServiceFuture(Set<Id> commentIds){
 
         PartnerCaseProxyServiceHelper.PushCaseCommentToProxyService(commentIds);
+    }
+
+    // Create an xmNotification record when new comment is added or existing comment is published
+    private void createXmNotification(List<CaseComment> newList, Map<Id, CaseComment> oldMap){
+
+        List<CaseComment> processList = new List<CaseComment>();
+
+        // new comment is added or existing comment is published
+        for(CaseComment comment : newList) {
+            CaseComment oldComment = (oldMap != null && oldMap.containsKey(comment.Id)) ? oldMap.get(comment.Id) : null;
+            if(oldComment == null || (comment.IsPublished && comment.IsPublished != oldComment.IsPublished) ){
+                processList.add(comment);
+            }
+        }
+
+        system.debug('createXmNotification(): processList - ' + processList);
+
+        if(processList.isEmpty()){
+            return;
+        }
+
+        List<xmNotification__c> notificationList = new List<xmNotification__c>();
+
+        for(CaseComment comment : processList){
+            xmNotification__c xmNotification = new xmNotification__c(
+                    Case__c = comment.ParentId,
+                    Request_Date__c = system.now(),
+                    Request_Type__c = XMNotificationTriggerHandler.REQUEST_TYPE_COMMENT
+            );
+            notificationList.add(xmNotification);
+        }
+
+        system.debug('createXmNotification(): notificationList - ' + notificationList);
+
+        try{
+            insert notificationList;
+        }catch(Exception ex){
+            system.debug('createXmNotification(): Exception - ' + ex);
+            inContactBaseClass.SendErrorEmail(ex, processList[0].Id + ' - Failed to create xMatters notification request');
+        }finally {
+            // avoid recursion
+            isXMCommentNotificationTurnedOff = true;
+        }
+
     }
 
 }
