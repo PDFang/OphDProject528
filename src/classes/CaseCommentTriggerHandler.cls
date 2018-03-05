@@ -171,10 +171,14 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
 
         List<xmNotification__c> notificationList = new List<xmNotification__c>();
 
+        CaseTriggerHandler caseHandler = new CaseTriggerHandler();
+
         for(CaseComment comment : processList){
 
             Case parentCase = caseMap.get(comment.ParentId);
-            if(parentCase == null || !CaseTriggerHandler.isQualifiedEvent(parentCase)){
+            system.debug('createXmNotification(): parentCase - ' + parentCase);
+
+            if(parentCase == null || !caseHandler.isQualifiedEvent(parentCase)){
                 continue;
             }
             xmNotification__c xmNotification = new xmNotification__c(

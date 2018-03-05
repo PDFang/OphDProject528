@@ -267,8 +267,9 @@ public class CaseTriggerHandler extends TriggerHandler
 
     }
 
-    public static boolean isQualifiedEvent(Case newCase){
+    public boolean isQualifiedEvent(Case newCase){
 
+        system.debug('isQualifiedEvent(): eventRecordType - ' + eventRecordType);
         return newCase.RecordTypeId == eventRecordType && !newCase.InternalEvent__c && !newCase.NonEvent__c
             && xmEventNotificationPriorities.containsIgnoreCase(newCase.Priority);
 
