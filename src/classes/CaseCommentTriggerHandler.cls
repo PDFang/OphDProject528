@@ -83,8 +83,10 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
         comment.ParentId__c = NewComment.ParentId;
         comment.CommentBody__c = NewComment.CommentBody;
         comment.CommentCreatedDate__c = NewComment.CreatedDate;
-        if (NewComment.CreatedById !=null){
-            comment.CreatorName__c = GetUserById(NewComment.CreatedById);
+        if (NewComment.ConnectionReceivedId != null){
+            comment.CreatorName__c = 'Connection User';
+        } else{
+            comment.CreatorName__c = userInfo.getFirstName() + ' ' + userInfo.getLastName(); //GetUserById(NewComment.CreatedById);
         }
         comment.IsDeleted__c = NewComment.IsDeleted;
         comment.IsPublished__c = newComment.IsPublished;
