@@ -18,8 +18,8 @@ global class ImpactScoreCalculationBatch implements Database.Batchable<Sobject>,
 
         } else if(scoreType == ImpactCalculationConstants.ImpactScoreType.IncidentNetScore) { // Case Object
             this.query = 'Select Id, Severity__c, Business_Impacted__c, Quality_of_Workaround__c, '
-                    + 'Related_to_Previous_Known_Issue__c, Security_Issue__c, Workaround_Available__c '
-                    + 'From Case '
+                    + 'Related_to_Previous_Known_Issue__c, Security_Issue__c, Workaround_Available__c, '
+                    + 'Priority, RepeatIssue__c From Case '
                     + 'Where RecordType.Name = \'Incident\' and (Status = \'Assigned to Known Issue\''
                     + 'OR IsClosed = false)';
 
