@@ -2,6 +2,8 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
 
     Static Integer eventServiceCounter = 0;
 
+    public static final String REQUEST_TYPE_COMMENT = 'Public Comment';
+
     protected override void afterInsert(){
 
         callXMRestEventService(trigger.new);

@@ -54,7 +54,8 @@ public class XMRestEventService {
         } else if (xmNotificationRecord.Request_Type__c == 'Maintenance Notification'
                 || xmNotificationRecord.Request_Type__c == 'Event Initial Confirmation'
                 || xmNotificationRecord.Request_Type__c == 'Event Resolved'
-                || xmNotificationRecord.Request_Type__c == 'Maintenance Preview'){
+                || xmNotificationRecord.Request_Type__c == 'Maintenance Preview'
+                || xmNotificationRecord.Request_Type__c == XMNotificationTriggerHandler.REQUEST_TYPE_COMMENT){
             platformsAffected = eventCase.PlatformsImpacted__c;
             inboundIntegrationGuid = (config != null) ? config.XM_Event_Notification_Inbound_GUID__c : null;
         }
@@ -146,8 +147,8 @@ public class XMRestEventService {
         // Build the properties needed to fill out the email template in xMatters
         Map<String, String> propertyMap = addAdditionalSalesforceDataToFormProperties(eventCase, isMaintenance);
         propertyMap.put('xmNotificationId', xmNotificationRecord.Id);
-        if((xmNotificationRecord.Request_Type__c == 'Event Platforms Add' || xmNotificationRecord.Request_Type__c == 'Event Initial Confirmation')
-                && eventCase.CaseComments.size() > 0){
+        if((xmNotificationRecord.Request_Type__c == 'Event Platforms Add' || xmNotificationRecord.Request_Type__c == 'Event Initial Confirmation'
+            || xmNotificationRecord.Request_Type__c == XMNotificationTriggerHandler.REQUEST_TYPE_COMMENT) && eventCase.CaseComments.size() > 0){
             String lastComment = eventCase.CaseComments[0].CommentBody;
             propertyMap.put('comment', lastComment);
         }
