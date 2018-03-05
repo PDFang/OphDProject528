@@ -148,7 +148,8 @@
                                 Implemented : {from:"Implemented", type:"boolean"},
                                 QuantityOnHold : {from:"QuantityOnHold", type:"number", defaultValue:0},
                                 QuantityCancelled : {from:"QuantityCancelled", type:"number", defaultValue:0},
-                                RemainingQuantity : {from:"RemainingQuantity", type:"number", defaultValue:0}
+                                RemainingQuantity : {from:"RemainingQuantity", type:"number", defaultValue:0},
+                                OnHold : {from:"OnHold", type:"boolean"}
 
                             }
                         }
@@ -230,9 +231,16 @@
                         title:"Allocated Hours"
                     },
                     {
-                        field:"Impl",
+                        field:"Implemented",
                         title:"Impl",
                         template: '<input type="checkbox"  "# if (data.Implemented) { # checked="checked" # } #"  disabled "/>',
+                        width:75
+
+                    },
+                    {
+                        field:"OnHold",
+                        title:"On Hold",
+                        template: '<input type="checkbox"  "# if (data.OnHold) { # checked="checked" # } #" disabled="true" "/>',
                         width:75
 
                     },
@@ -285,6 +293,8 @@
 
                   ]
               });
+
+
        }
 
     function addDuplicateRowAsset(e){
@@ -312,12 +322,14 @@
                    e.model.ProjectPhase = Project.Project_Phase_Allocation__c;
                    var projectCell = e.container.contents()[5];
                    $('<a href="/' +  e.model.ProjectNumber + '" target="_blank">' + e.model.ProjectPhase +'</a>').appendTo(projectCell);
+                   var implementedCell = e.container.contents()[9];
+                   $(implementedCell).find("input").prop('disabled', true);
 
                    var firstCell = e.container.contents()[2];
                    $('<a style="color:blue;cursor:pointer;"  class="assetSelector" onclick="loadDetail(this);">Select Assets </a>').appendTo(firstCell);
                    loadDetail($("a.assetSelector"));
                }
-                var buttonCell = e.container.contents()[10];
+                var buttonCell = e.container.contents()[11];
                 $(buttonCell).find("a.k-primary").html('<span class="k-icon k-i-update"></span> Add');
            }else{
                enableAllocation(e.model, e.container);
@@ -546,7 +558,7 @@
     }
 
     function detailAssets(e) {
-         $("<div id='detailTable'/>").appendTo(e.detailCell).kendoGrid({
+        $("<div id='detailTable'/>").appendTo(e.detailCell).kendoGrid({
                     dataSource: {
                         autosync:true,
                         transport: {
@@ -589,7 +601,20 @@
                     sortable: true,
                     noRecords: true,
                     dataBound:onAssetDataBound,
+                    toolbar:[
+                        {
+                            template : '<a class="k-button" href="\\#" onclick="return updateAllocation();">Allocate Selected</a>'
+                        }
+                    ],
                     columns: [
+                         {
+                            title: 'Select All',
+                            headerTemplate: "<input type='checkbox' id='asset-header-chb' class='k-checkbox header-checkbox'><label class='k-checkbox-label' for='asset-header-chb' style='top:-10px;'></label>",
+                            template: function (dataItem) {
+                                return "<input type='checkbox' id='" + dataItem.AssetId + "' class='k-checkbox row-checkbox'><label class='k-checkbox-label' for='" + dataItem.AssetId + "'></label>";
+                            },
+                            width: 80
+                        },
                          {command: { text: "Select", click : selectAsset}, title: "Action", width: "60px" },
                         { field: "AssetName", title:"Asset", width: "300px" },
                          { field: "RemainingQuantity", title:"Remaining Quantity", width: "110px" },
@@ -598,6 +623,104 @@
 
                     ]
                 });
+
+        var assetGrid = $("#detailTable").data("kendoGrid");
+        //bind click event to the checkbox
+        assetGrid.table.on("click", ".row-checkbox", selectRow);
+
+        $('#asset-header-chb').change(function (ev) {
+            var checked = ev.target.checked;
+            $('.row-checkbox').each(function (idx, item) {
+                if (checked) {
+                    if (!($(item).closest('tr').is('.k-state-selected'))) {
+                        $(item).click();
+                    }
+                } else {
+                    if ($(item).closest('tr').is('.k-state-selected')) {
+                        $(item).click();
+                    }
+                }
+            });
+        });
+
+    }
+
+
+    var checkedIds = {};
+
+    //on click of the checkbox:
+    function selectRow() {
+        var checked = this.checked,
+            row = $(this).closest("tr"),
+            grid = $("#detailTable").data("kendoGrid"),
+            dataItem = grid.dataItem(row);
+
+        checkedIds[dataItem.id] = checked;
+
+        if (checked) {
+            //-select the row
+            row.addClass("k-state-selected");
+
+            var checkHeader = true;
+
+            $.each(grid.items(), function (index, item) {
+                if (!($(item).hasClass("k-state-selected"))) {
+                    checkHeader = false;
+                }
+            });
+
+            $("#asset-header-chb")[0].checked = checkHeader;
+        } else {
+            //-remove selection
+            row.removeClass("k-state-selected");
+            $("#asset-header-chb")[0].checked = false;
+        }
+    }
+
+    function updateAllocation(){
+        $('#loading').modal({
+             backdrop: 'static',
+             keyboard: false
+        });
+        $('#loading').modal('show');
+        var checked = [];
+        for (var i in checkedIds) {
+            if (checkedIds[i]) {
+                checked.push(i);
+            }
+        }
+
+        if(checked.length > 0){
+            AssetSubscriptionAllocationNewController.SaveAllAllocation(
+                  JSON.stringify(checked),
+                  null ,
+                  Project.Id,
+                  function(result,event){
+                    if (event.status) {
+                       //var returnResult = JSON.parse(result);
+                       if(result == 'Success'){
+                            $('#loading').modal('hide');
+                             $("#assetAllocationList").data("kendoGrid").destroy();
+                             reloadDetails();
+                             hideError();
+                            }else{
+                            $('#loading').modal('hide');
+                            displayError(result);
+                          }
+                       }else{
+
+                           $('#loading').modal('hide');
+                           displayError(event.message);
+                       }
+                      },
+                      {escape: false}
+              );
+        }else{
+            $('#loading').modal('hide');
+            displayError('Please check at least one checkbox to add allocation');
+        }
+
+        console.log(checked);
     }
 
      function onAssetDataBound(){
@@ -613,6 +736,16 @@
                       header.css("top", headerTop);
                   }
                });
+
+            var view = this.dataSource.view();
+           for (var i = 0; i < view.length; i++) {
+               if (checkedIds[view[i].id]) {
+                   this.tbody.find("tr[data-uid='" + view[i].uid + "']")
+                       .addClass("k-state-selected")
+                       .find(".k-checkbox")
+                       .attr("checked", "checked");
+               }
+           }
         }
 
     function selectAsset(e){

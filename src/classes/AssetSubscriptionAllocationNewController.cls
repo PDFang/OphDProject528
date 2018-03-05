@@ -160,6 +160,27 @@ public with sharing class AssetSubscriptionAllocationNewController {
         return result;
     }
 
+	@RemoteAction
+	public static string SaveAllAllocation(string assetIdList,string subscriptionIdList, string projectId){
+		String result;
+		list<string> assetIds = new list<string>();
+		list<string> subscriptionIds = new list<string>();
+		if(assetIdList != null)
+			assetIds =  (List<string>)System.JSON.deserialize(assetIdList, List<string>.class);
+		if(subscriptionIdList != null)
+			subscriptionIds =  (List<string>)JSON.deserialize(subscriptionIdList, List<string>.class);
+		result = AssetSubscriptionAllocationHelper.SaveAllAllocations(assetIds,subscriptionIds,projectId);
+		Integer occurence;
+		if (result.contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
+			occurence = result.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
+			result = result.mid(occurence, result.length());
+			occurence = result.lastIndexOf(':');
+			result = result.mid(0, occurence);
+		}
+
+		return result;
+	}
+
     public void SaveCancSuspQuantity(){
         try{
             String message =  helper.SaveCancSuspQuantity(Asset);
@@ -211,10 +232,24 @@ public with sharing class AssetSubscriptionAllocationNewController {
 
     public void deleteAssetAllocation(){
         try{
-            helper.deleteNonImplementedAssetAllocations(Asset.Id);
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Allocations were deleted successfully.'));
-            showdeleteButton = false;
-            reloadDetails();
+           string result = helper.deleteNonImplementedAssetAllocations(Asset.Id);
+            Integer occurence;
+            if (result.contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
+                occurence = result.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
+                result = result.mid(occurence, result.length());
+                occurence = result.lastIndexOf(':');
+                result = result.mid(0, occurence);
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, result));
+            }else if(result != 'success'){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, result));
+            }
+
+            if(result == 'success'){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Allocations were deleted successfully.'));
+                showdeleteButton = false;
+                reloadDetails();
+            }
+
         }catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
             saveSuccess = false;
@@ -222,16 +257,23 @@ public with sharing class AssetSubscriptionAllocationNewController {
     }
 
     public void deleteSubsAllocation(){
-        try{
-            helper.deleteNonImplementedSubsAllocations(Subscription.Id);
+        string result = helper.deleteNonImplementedSubsAllocations(Asset.Id);
+        Integer occurence;
+        if (result.contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
+            occurence = result.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
+            result = result.mid(occurence, result.length());
+            occurence = result.lastIndexOf(':');
+            result = result.mid(0, occurence);
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, result));
+        }else if(result != 'success'){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, result));
+        }
+
+        if(result == 'success'){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Allocations were deleted successfully.'));
             showdeleteButton = false;
             reloadDetails();
-        }catch (Exception ex){
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
-            saveSuccess = false;
         }
-
     }
 
 
