@@ -468,6 +468,11 @@ private class CaseTriggerHandlerTest {
     // test XMNotification record is created when an Event is confirmed
     static testMethod void testEventInitialConfirmationNotification() {
 
+        AppConfiguration__c appConfig = new AppConfiguration__c(
+                XM_Turn_Off_Comment_Notifications__c = true
+        );
+        insert appConfig;
+
         // create an event
         Map<String,Schema.RecordTypeInfo> testIncidentTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
         Case testEvent = new Case(
@@ -511,6 +516,7 @@ private class CaseTriggerHandlerTest {
 
         AppConfiguration__c appConfig = new AppConfiguration__c(
                 XM_Turn_Off_Event_Notifications__c = true,
+                XM_Turn_Off_Comment_Notifications__c = true,
                 XM_Maintenance_Notifications_Internal__c = 'test',
                 XM_Event_Notifications_Internal__c = 'test'
         );

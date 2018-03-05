@@ -37,7 +37,7 @@ public class CaseTriggerHandler extends TriggerHandler
             if(config != null) {
                 isProxyServiceTurnedOff = config.Turn_Off_Partner_Case_Proxy_Service__c;
                 isxMattersNotificationsTurnedOff = config.XM_Turn_Off_Event_Notifications__c;
-                xmEventNotificationPriorities = config.XM_Event_Notification_Priorities__c;
+                xmEventNotificationPriorities = String.isNotBlank(config.XM_Event_Notification_Priorities__c) ? config.XM_Event_Notification_Priorities__c : xmEventNotificationPriorities;
             }
             etmsTroubleStateStatusMap = new Map<String, ETMS_Trouble_Report_State_Status__mdt>();
             for(ETMS_Trouble_Report_State_Status__mdt mdt : [
@@ -182,15 +182,12 @@ public class CaseTriggerHandler extends TriggerHandler
             //ensure the case is an Event, and it was not just created (oldCase is not null), and
             //that it was not internal
             //and that the non event checkbox is unchecked
-            if(newCase.RecordTypeId == eventRecordType && oldCase != null && !newCase.InternalEvent__c && !newCase.NonEvent__c)
+            //the Priority of the case must be in the list of xmEventNotificationPriorities or don't send
+            if(oldCase != null && isQualifiedEvent(newCase))
             {
-                //the Priority of the case must be in the list of xmEventNotificationPriorities or don't send
-                if(String.isNotBlank(xmEventNotificationPriorities) && !xmEventNotificationPriorities.containsIgnoreCase(newCase.Priority)){
-                    continue;
-                }
 
                 //status is equal to Confirmed or Being Worked and no Event Confirmation notification has been sent
-                if((newCase.Status == 'Confirmed' || newCase.Status == 'Being Worked') //status is Confirmed or Being Worked
+                if((newCase.Status == 'Confirmed' || newCase.Status == 'Being Worked')  //status is Confirmed or Being Worked
                         && !newCase.xmEvent_Notification_Sent__c) { //no notification has been sent
                     System.debug('Initial event');
                     processList.add(newCase);
@@ -234,6 +231,16 @@ public class CaseTriggerHandler extends TriggerHandler
             return;
         }
 
+        Map<Id, CaseComment> caseCommentMap = new Map<Id, CaseComment>();
+
+        for(CaseComment comment : [
+                Select Id, ParentId, CommentBody from CaseComment
+                where ParentId IN :processList and IsPublished = true
+                order by ParentId asc, createddate desc
+        ]){
+            caseCommentMap.put(comment.ParentId, comment);
+        }
+
         List<xmNotification__c> notificationList = new List<xmNotification__c>();
 
         for(Case newCase :processList){
@@ -241,7 +248,8 @@ public class CaseTriggerHandler extends TriggerHandler
                     Case__c = newCase.Id,
                     Request_Date__c = system.now(),
                     Request_Type__c = requestType == '' ? getXmNotificationRequestType(newCase) : requestType,
-                    AddedPlatforms__c = platformsAdded
+                    AddedPlatforms__c = platformsAdded,
+                    Public_Comment__c = caseCommentMap.containsKey(newCase.Id) ? caseCommentMap.get(newCase.Id).CommentBody : null
             );
             notificationList.add(xmNotification);
         }
@@ -256,6 +264,13 @@ public class CaseTriggerHandler extends TriggerHandler
             // avoid recursion
             isxMattersNotificationsTurnedOff = true;
         }
+
+    }
+
+    public static boolean isQualifiedEvent(Case newCase){
+
+        return newCase.RecordTypeId == eventRecordType && !newCase.InternalEvent__c && !newCase.NonEvent__c
+            && xmEventNotificationPriorities.containsIgnoreCase(newCase.Priority);
 
     }
 
