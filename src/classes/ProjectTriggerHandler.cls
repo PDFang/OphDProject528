@@ -655,8 +655,14 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         || (newProject.Phase_Status__c == 'Suspended' && oldMap.get(newProject.Id).Phase_Status__c != 'Suspended' && !projectStatusUpdate)
                         || (newProject.Phase_Status__c == 'Open' && oldMap.get(newProject.Id).Phase_Status__c == 'Suspended' && !projectStatusUpdate)) {
 
+
                     if(newProject.Department_Responsible__c == null || newProject.Root_Cause__c == null){
                         newProject.addError('Department Responsible and Root Cause are required, when Phase status is Cancelled or Suspended.');
+                        return;
+                    }
+
+                    if(newProject.Asset_Allocation_Count__c > 0 || newProject.Subscription_Allocation_Count__c > 0){
+                        newProject.addError('Please remove all the asset/subscription allocations before cancelling/suspending the phase project, on manage allocations page.');
                         return;
                     }
 
@@ -672,219 +678,248 @@ public class ProjectTriggerHandler extends TriggerHandler{
             return;
         }
 
-        Map<Id, String> timingMap = new Map<Id, String>();
-        List<WorkIt2__Timing__c> timingList = new List<WorkIt2__Timing__c>();
-        Set<Id> allocationIds = new Set<Id>();
-        List<Project_Asset_Allocation__c> listProjectAssetAllocations = new List<Project_Asset_Allocation__c>(
-        [Select Id, Asset__c, Percent_Allocation__c, Implemented__c, Phase_Implemented__c, PhaseImplemented__c, Phase_Implemented_Quantity__c,
-                Logged_Hours__c, Quantity_Allocation__c from  Project_Asset_Allocation__c where Project__c IN : projectIds]);
-
-        List<Project_Asset_Allocation__c> allocations = new List<Project_Asset_Allocation__c>();
-
-        if(listProjectAssetAllocations.size() > 0){
-            for(Project_Asset_Allocation__c allocation : listProjectAssetAllocations){
-                allocationIds.add(allocation.Id);
-            }
-        }
-
-        if(allocationIds.size() > 0) {
-            timingList = [
-                    SELECT Id, Project_Asset_Allocation__c, WorkIt2__Time__c
-                    from WorkIt2__Timing__c
-                    where Project_Asset_Allocation__c IN :allocationIds
-            ];
-
-        }
-
-        if(timingList.size() > 0){
-            for(WorkIt2__Timing__c allocatedTime : timingList){
-                timingMap.put(allocatedTime.Project_Asset_Allocation__c, allocatedTime.WorkIt2__Time__c);
-            }
-        }
-
-        List<Project_Asset_Allocation__c> updateProjectAssetAllocationsList = new List<Project_Asset_Allocation__c>();
-        List<Project_Asset_Allocation__c> deleteProjectAssetAllocationsList = new List<Project_Asset_Allocation__c>();
-        Map<Id, Decimal> allocationLoggedHours = new Map<Id, Decimal>();
-        Set<Id> assetIds = new Set<Id>();
-        Decimal cancelledQuantity = 0;
-        List<Asset> updateAssetList = new List<Asset>();
-        for(Project_Asset_Allocation__c projectAssetAllocation: listProjectAssetAllocations){
-            allocationLoggedHours.put(projectAssetAllocation.Asset__c, projectAssetAllocation.Logged_Hours__c);
-
-            if(newList[0].Phase_Status__c != 'Open') {
-                if (timingMap.size() > 0) {
-                    if (timingMap.containsKey(projectAssetAllocation.Id)) {
-                        cancelledQuantity += projectAssetAllocation.Quantity_Allocation__c;
-                        updateProjectAssetAllocationsList.add(new Project_Asset_Allocation__c(Id = projectAssetAllocation.Id,
-                                Quantity_Allocation__c = 0,
-                                Percent_Allocation__c = 0,
-                                Hours_Allocated__c = 0,
-                                Logged_Hours__c = 0,
-                                Implemented__c = false));
-                        assetIds.add(projectAssetAllocation.Asset__c);
-                    } else {
-                        System.debug('InElse Deletion');
-                        if(newList[0].Phase_Status__c == 'Cancelled')
-                            deleteProjectAssetAllocationsList.add(projectAssetAllocation);
-                    }
-                }
-                else if(newList[0].Phase_Status__c == 'Cancelled')
-                    deleteProjectAssetAllocationsList.add(projectAssetAllocation);
-            }
-        }
-
-        updateAssetList = new List<Asset>([SELECT Id, Quantity, Status, Total_Implemented_Quantity__c, QuantityCancelled__c, Total_Allocated_Quantity__c, RemainingQuantity__c, QuantityonHold__c, Canceled_Hours__c,
-                On_Hold_Hours__c, Department_Responsible__c, Root_Cause__c, Logged_Hours__c, FullyImplemented__c from Asset where Id IN : assetIds ]);
-
-
-        for(Asset updateAsset: updateAssetList){
-
-            if(newList[0].Phase_Status__c == 'Cancelled'){
-                if(updateAsset.Quantity > 1){
-                        updateAsset.QuantityCancelled__c += cancelledQuantity;
-                }
-
-                updateAsset.Department_Responsible__c = newList[0].Department_Responsible__c;
-                updateAsset.Root_Cause__c = newList[0].Root_Cause__c;
-                if(allocationLoggedHours.containsKey(updateAsset.Id)) {
-                    updateAsset.Canceled_Hours__c = allocationLoggedHours.get(updateAsset.Id);
-                }
-            }
-            else if(newList[0].Phase_Status__c == 'Suspended'){
-                if(updateAsset.Quantity > 1){
-                        updateAsset.QuantityonHold__c += cancelledQuantity;
-                }
-
-                updateAsset.Department_Responsible__c = newList[0].Department_Responsible__c;
-                updateAsset.Root_Cause__c = newList[0].Root_Cause__c;
-
-                if(allocationLoggedHours.containsKey(updateAsset.Id)) {
-                    updateAsset.On_Hold_Hours__c = allocationLoggedHours.get(updateAsset.Id);
-                }
-            }
-
-            else if(newList[0].Phase_Status__c == 'Open'){
-                if(allocationLoggedHours.containsKey(updateAsset.Id)) {
-                    updateAsset.On_Hold_Hours__c = 0;
-                }
-            }
-
-        }
+//        List<Project__c> projectDetails = [SELECT ID, Project_Phase__c, Name from Project__c where Id IN: projectIds];
+////
+////        Map<Id, String> timingMap = new Map<Id, String>();
+////        List<WorkIt2__Timing__c> timingList = new List<WorkIt2__Timing__c>();
+////        Set<Id> allocationIds = new Set<Id>();
+//        List<Project_Asset_Allocation__c> listProjectAssetAllocations = new List<Project_Asset_Allocation__c>(
+//        [Select Id, Asset__c, Percent_Allocation__c, Implemented__c, Phase_Implemented__c, PhaseImplemented__c, Phase_Implemented_Quantity__c,
+//                Logged_Hours__c, Quantity_Allocation__c from  Project_Asset_Allocation__c where Project__c IN : projectIds]);
+//
+//        List<Project_Asset_Allocation__c> allocations = new List<Project_Asset_Allocation__c>();
+//
+//        if(listProjectAssetAllocations.size() > 0){
+//            if(!projectDetails.isEmpty()) {
+//                for (Project__c project : projectDetails) {
+//                    project.addError('Please remove all the asset/subscription allocations before cancelling/suspending the project, on manage allocation page.');
+//                    return;
+////            for(Project_Asset_Allocation__c allocation : listProjectAssetAllocations){
+////                allocationIds.add(allocation.Id);
+////            }
+//                }
+//            }
+//        }
+//
+//        List<Project_Subscription_Allocation__c> listProjectSubscriptionAllocations = new List<Project_Subscription_Allocation__c>(
+//        [Select Id, Subscription__c, Phase_Implemented_Quantity__c, Phase_Implemented__c, Subscription__r.Subscription__c,
+//                Logged_Hours__c, Percent_Allocation__c, PhaseImplemented__c, Quantity_Allocation__c from  Project_Subscription_Allocation__c where Project__c IN : projectIds]);
+//
+////        Set<Id> allocationSubIds = new Set<Id>();
+//
+//        if(listProjectSubscriptionAllocations.size() > 0){
+//            if(!projectDetails.isEmpty()) {
+//                for (Project__c project : projectDetails) {
+//                    project.addError('Please remove all the asset/subscription allocations before cancelling/suspending the phase project, on manage allocation page.');
+//                    return;
+////            for(Project_Subscription_Allocation__c allocation : listProjectSubscriptionAllocations){
+////                allocationSubIds.add(allocation.Id);
+////            }
+//                }
+//            }
+//        }
 
 
 
-        if(updateAssetList.size() > 0)
-            update updateAssetList;
+//        if(allocationIds.size() > 0) {
+//            timingList = [
+//                    SELECT Id, Project_Asset_Allocation__c, WorkIt2__Time__c
+//                    from WorkIt2__Timing__c
+//                    where Project_Asset_Allocation__c IN :allocationIds
+//            ];
+//
+//        }
+//
+//        if(timingList.size() > 0){
+//            for(WorkIt2__Timing__c allocatedTime : timingList){
+//                timingMap.put(allocatedTime.Project_Asset_Allocation__c, allocatedTime.WorkIt2__Time__c);
+//            }
+//        }
 
-        if(updateProjectAssetAllocationsList.size() > 0)
-            update updateProjectAssetAllocationsList;
-
-        if(deleteProjectAssetAllocationsList.size() > 0)
-            delete deleteProjectAssetAllocationsList;
-
-
-        List<Project_Subscription_Allocation__c> listProjectSubscriptionAllocations = new List<Project_Subscription_Allocation__c>(
-        [Select Id, Subscription__c, Phase_Implemented_Quantity__c, Phase_Implemented__c, Subscription__r.Subscription__c,
-                Logged_Hours__c, Percent_Allocation__c, PhaseImplemented__c, Quantity_Allocation__c from  Project_Subscription_Allocation__c where Project__c IN : projectIds]);
-
-        Set<Id> allocationSubIds = new Set<Id>();
-
-        if(listProjectSubscriptionAllocations.size() > 0){
-            for(Project_Subscription_Allocation__c allocation : listProjectSubscriptionAllocations){
-                allocationSubIds.add(allocation.Id);
-            }
-        }
-
-        if(allocationSubIds.size() > 0) {
-            timingList = [
-                    SELECT Id, Project_Subscription_Allocation__c, WorkIt2__Time__c
-                    from WorkIt2__Timing__c
-                    where Project_Subscription_Allocation__c IN :allocationSubIds
-            ];
-
-        }
-
-        if(timingList.size() > 0){
-            for(WorkIt2__Timing__c allocatedTime : timingList){
-                timingMap.put(allocatedTime.Project_Subscription_Allocation__c, allocatedTime.WorkIt2__Time__c);
-            }
-        }
-
-        Set<Id> subscriptionIds = new Set<Id>();
-        cancelledQuantity = 0;
-        List<Project_Subscription_Allocation__c> upProjectSubscriptionAllocationsList = new List<Project_Subscription_Allocation__c>();
-        List<Project_Subscription_Allocation__c> delProjectSubscriptionAllocationsList = new List<Project_Subscription_Allocation__c>();
-
-        for(Project_Subscription_Allocation__c projectSubscriptionAllocation: listProjectSubscriptionAllocations) {
-            allocationLoggedHours.put(projectSubscriptionAllocation.Subscription__c, projectSubscriptionAllocation.Logged_Hours__c);
-            if(newList[0].Phase_Status__c != 'Open') {
-                if (timingMap.size() > 0) {
-                    if (timingMap.containsKey(projectSubscriptionAllocation.Id)) {
-                        cancelledQuantity += projectSubscriptionAllocation.Quantity_Allocation__c;
-                        upProjectSubscriptionAllocationsList.add(new Project_Subscription_Allocation__c(Id = projectSubscriptionAllocation.Id,
-                                Quantity_Allocation__c = 0,
-                                Percent_Allocation__c = 0,
-                                Hours_Allocated__c = 0,
-                                Implemented__c = false));
-                        subscriptionIds.add(projectSubscriptionAllocation.Subscription__c);
-                    } else {
-                        if(newList[0].Phase_Status__c == 'Cancelled')
-                            delProjectSubscriptionAllocationsList.add(projectSubscriptionAllocation);
-                    }
-                }
-                else if(newList[0].Phase_Status__c == 'Cancelled')
-                    delProjectSubscriptionAllocationsList.add(projectSubscriptionAllocation);
-            }
-        }
-
-
-        List<SubscriptionReplica__c> updateSubscriptionCustomList = new List<SubscriptionReplica__c>(
-        [SELECT Id, Quantity__c, Status1__c, Total_Implemented_Quantity__c, QuantityCancelled__c, Total_Allocated_Quantity__c, RemainingQuantity__c, QuantityonHold__c, On_Hold_Hours__c,
-                Canceled_Hours__c, Department_Responsible__c, Root_Cause__c, Logged_Hours__c, FullyImplemented__c from SubscriptionReplica__c where Id IN : subscriptionIds]);
-
-
-        for(SubscriptionReplica__c updateSubscriptionCustom: updateSubscriptionCustomList){
-            if(newList[0].Phase_Status__c == 'Cancelled'){
-                if(updateSubscriptionCustom.Quantity__c > 1){
-                        updateSubscriptionCustom.QuantityCancelled__c += cancelledQuantity;
-                }
-
-                updateSubscriptionCustom.Department_Responsible__c = newList[0].Department_Responsible__c;
-                updateSubscriptionCustom.Root_Cause__c = newList[0].Root_Cause__c;
-                if(allocationLoggedHours.containsKey(updateSubscriptionCustom.Id)) {
-                    updateSubscriptionCustom.Canceled_Hours__c = allocationLoggedHours.get(updateSubscriptionCustom.Id);
-                }
-
-            }
-            else if(newList[0].Phase_Status__c == 'Suspended'){
-                if(updateSubscriptionCustom.Quantity__c > 1){
-                        updateSubscriptionCustom.QuantityonHold__c += cancelledQuantity;
-                }
-
-                updateSubscriptionCustom.Department_Responsible__c = newList[0].Department_Responsible__c;
-                updateSubscriptionCustom.Root_Cause__c = newList[0].Root_Cause__c;
-
-                if(allocationLoggedHours.containsKey(updateSubscriptionCustom.Id)) {
-                    updateSubscriptionCustom.On_Hold_Hours__c = allocationLoggedHours.get(updateSubscriptionCustom.Id);
-                }
-
-
-            }
-            else if(newList[0].Phase_Status__c != 'Open') {
-                if(allocationLoggedHours.containsKey(updateSubscriptionCustom.Id)) {
-                    updateSubscriptionCustom.On_Hold_Hours__c = 0;
-                }
-            }
-        }
-
-        if(updateSubscriptionCustomList.size() > 0)
-            update updateSubscriptionCustomList;
-
-        if(upProjectSubscriptionAllocationsList.size() > 0)
-            update upProjectSubscriptionAllocationsList;
-
-        if(delProjectSubscriptionAllocationsList.size() > 0)
-            delete delProjectSubscriptionAllocationsList;
+//        List<Project_Asset_Allocation__c> updateProjectAssetAllocationsList = new List<Project_Asset_Allocation__c>();
+//        List<Project_Asset_Allocation__c> deleteProjectAssetAllocationsList = new List<Project_Asset_Allocation__c>();
+//        Map<Id, Decimal> allocationLoggedHours = new Map<Id, Decimal>();
+//        Set<Id> assetIds = new Set<Id>();
+//        Decimal cancelledQuantity = 0;
+//        List<Asset> updateAssetList = new List<Asset>();
+//
+//        if(!projectDetails.isEmpty()){
+//            for(Project__c projectDet: projectDetails){
+//                for(Project_Asset_Allocation__c projectAssetAllocation: listProjectAssetAllocations){
+//                    allocationLoggedHours.put(projectAssetAllocation.Asset__c, projectAssetAllocation.Logged_Hours__c);
+//                    if(projectDet.Phase_Status__c != 'Open') {
+//                        if (timingMap.size() > 0) {
+//                            if (timingMap.containsKey(projectAssetAllocation.Id)) {
+//                                cancelledQuantity += projectAssetAllocation.Quantity_Allocation__c;
+//                                updateProjectAssetAllocationsList.add(new Project_Asset_Allocation__c(Id = projectAssetAllocation.Id,
+//                                        Quantity_Allocation__c = 0,
+//                                        Percent_Allocation__c = 0,
+//                                        Hours_Allocated__c = 0,
+//                                        Logged_Hours__c = 0,
+//                                        Implemented__c = false));
+//                                assetIds.add(projectAssetAllocation.Asset__c);
+//                            } else {
+//                                if(projectDet.Phase_Status__c == 'Cancelled')
+//                                    deleteProjectAssetAllocationsList.add(projectAssetAllocation);
+//                            }
+//                        }
+//                        else if(projectDet.Phase_Status__c == 'Cancelled')
+//                            deleteProjectAssetAllocationsList.add(projectAssetAllocation);
+//                    }
+//                }
+//            }
+//
+//        }
+//
+//
+//        updateAssetList = new List<Asset>([SELECT Id, Quantity, Status, Total_Implemented_Quantity__c, QuantityCancelled__c, Total_Allocated_Quantity__c, RemainingQuantity__c, QuantityonHold__c, Canceled_Hours__c,
+//                On_Hold_Hours__c, Department_Responsible__c, Root_Cause__c, Logged_Hours__c, FullyImplemented__c from Asset where Id IN : assetIds ]);
+//
+//        if(!projectDetails.isEmpty()) {
+//            for (Project__c projectDet: projectDetails) {
+//                for (Asset updateAsset: updateAssetList) {
+//
+//                    if (projectDet.Phase_Status__c == 'Cancelled') {
+//                        if (updateAsset.Quantity > 1) {
+//                            updateAsset.QuantityCancelled__c += cancelledQuantity;
+//                        }
+//
+//                        updateAsset.Department_Responsible__c = projectDet.Department_Responsible__c;
+//                        updateAsset.Root_Cause__c = projectDet.Root_Cause__c;
+//                        if (allocationLoggedHours.containsKey(updateAsset.Id)) {
+//                            updateAsset.Canceled_Hours__c = allocationLoggedHours.get(updateAsset.Id);
+//                        }
+//                    } else if (projectDet.Phase_Status__c == 'Suspended') {
+//                        if (updateAsset.Quantity > 1) {
+//                            updateAsset.QuantityonHold__c += cancelledQuantity;
+//                        }
+//
+//                        updateAsset.Department_Responsible__c = projectDet.Department_Responsible__c;
+//                        updateAsset.Root_Cause__c = projectDet.Root_Cause__c;
+//
+//                        if (allocationLoggedHours.containsKey(updateAsset.Id)) {
+//                            updateAsset.On_Hold_Hours__c = allocationLoggedHours.get(updateAsset.Id);
+//                        }
+//                    }
+//
+//                    else if (projectDet.Phase_Status__c == 'Open') {
+//                        if (allocationLoggedHours.containsKey(updateAsset.Id)) {
+//                            updateAsset.On_Hold_Hours__c = 0;
+//                        }
+//                    }
+//
+//                }
+//            }
+//        }
+//
+//
+//
+//
+//        if(updateAssetList.size() > 0)
+//            update updateAssetList;
+//
+//        if(updateProjectAssetAllocationsList.size() > 0)
+//            update updateProjectAssetAllocationsList;
+//
+//        if(deleteProjectAssetAllocationsList.size() > 0)
+//            delete deleteProjectAssetAllocationsList;
+//
+//
+//
+//
+//        if(allocationSubIds.size() > 0) {
+//            timingList = [
+//                    SELECT Id, Project_Subscription_Allocation__c, WorkIt2__Time__c
+//                    from WorkIt2__Timing__c
+//                    where Project_Subscription_Allocation__c IN :allocationSubIds
+//            ];
+//
+//        }
+//
+//        if(timingList.size() > 0){
+//            for(WorkIt2__Timing__c allocatedTime : timingList){
+//                timingMap.put(allocatedTime.Project_Subscription_Allocation__c, allocatedTime.WorkIt2__Time__c);
+//            }
+//        }
+//
+//        Set<Id> subscriptionIds = new Set<Id>();
+//        cancelledQuantity = 0;
+//        List<Project_Subscription_Allocation__c> upProjectSubscriptionAllocationsList = new List<Project_Subscription_Allocation__c>();
+//        List<Project_Subscription_Allocation__c> delProjectSubscriptionAllocationsList = new List<Project_Subscription_Allocation__c>();
+//
+//        if(!projectDetails.isEmpty()) {
+//            for (Project__c projectDet: projectDetails) {
+//                for (Project_Subscription_Allocation__c projectSubscriptionAllocation: listProjectSubscriptionAllocations) {
+//                    allocationLoggedHours.put(projectSubscriptionAllocation.Subscription__c, projectSubscriptionAllocation.Logged_Hours__c);
+//                    if (projectDet.Phase_Status__c != 'Open') {
+//                        if (timingMap.size() > 0) {
+//                            if (timingMap.containsKey(projectSubscriptionAllocation.Id)) {
+//                                cancelledQuantity += projectSubscriptionAllocation.Quantity_Allocation__c;
+//                                upProjectSubscriptionAllocationsList.add(new Project_Subscription_Allocation__c(Id = projectSubscriptionAllocation.Id,
+//                                        Quantity_Allocation__c = 0,
+//                                        Percent_Allocation__c = 0,
+//                                        Hours_Allocated__c = 0,
+//                                        Implemented__c = false));
+//                                subscriptionIds.add(projectSubscriptionAllocation.Subscription__c);
+//                            } else {
+//                                if (projectDet.Phase_Status__c == 'Cancelled')
+//                                    delProjectSubscriptionAllocationsList.add(projectSubscriptionAllocation);
+//                            }
+//                        } else if (projectDet.Phase_Status__c == 'Cancelled')
+//                            delProjectSubscriptionAllocationsList.add(projectSubscriptionAllocation);
+//                    }
+//                }
+//            }
+//        }
+//
+//        List<SubscriptionReplica__c> updateSubscriptionCustomList = new List<SubscriptionReplica__c>(
+//        [SELECT Id, Quantity__c, Status1__c, Total_Implemented_Quantity__c, QuantityCancelled__c, Total_Allocated_Quantity__c, RemainingQuantity__c, QuantityonHold__c, On_Hold_Hours__c,
+//                Canceled_Hours__c, Department_Responsible__c, Root_Cause__c, Logged_Hours__c, FullyImplemented__c from SubscriptionReplica__c where Id IN : subscriptionIds]);
+//
+//        if(!projectDetails.isEmpty()) {
+//            for (Project__c projectDet: projectDetails) {
+//                for (SubscriptionReplica__c updateSubscriptionCustom: updateSubscriptionCustomList) {
+//                    if (projectDet.Phase_Status__c == 'Cancelled') {
+//                        if (updateSubscriptionCustom.Quantity__c > 1) {
+//                            updateSubscriptionCustom.QuantityCancelled__c += cancelledQuantity;
+//                        }
+//
+//                        updateSubscriptionCustom.Department_Responsible__c = newList[0].Department_Responsible__c;
+//                        updateSubscriptionCustom.Root_Cause__c = projectDet.Root_Cause__c;
+//                        if (allocationLoggedHours.containsKey(updateSubscriptionCustom.Id)) {
+//                            updateSubscriptionCustom.Canceled_Hours__c = allocationLoggedHours.get(updateSubscriptionCustom.Id);
+//                        }
+//
+//                    } else if (projectDet.Phase_Status__c == 'Suspended') {
+//                        if (updateSubscriptionCustom.Quantity__c > 1) {
+//                            updateSubscriptionCustom.QuantityonHold__c += cancelledQuantity;
+//                        }
+//
+//                        updateSubscriptionCustom.Department_Responsible__c = projectDet.Department_Responsible__c;
+//                        updateSubscriptionCustom.Root_Cause__c = projectDet.Root_Cause__c;
+//
+//                        if (allocationLoggedHours.containsKey(updateSubscriptionCustom.Id)) {
+//                            updateSubscriptionCustom.On_Hold_Hours__c = allocationLoggedHours.get(updateSubscriptionCustom.Id);
+//                        }
+//
+//
+//                    } else if (projectDet.Phase_Status__c != 'Open') {
+//                        if (allocationLoggedHours.containsKey(updateSubscriptionCustom.Id)) {
+//                            updateSubscriptionCustom.On_Hold_Hours__c = 0;
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        if(updateSubscriptionCustomList.size() > 0)
+//            update updateSubscriptionCustomList;
+//
+//        if(upProjectSubscriptionAllocationsList.size() > 0)
+//            update upProjectSubscriptionAllocationsList;
+//
+//        if(delProjectSubscriptionAllocationsList.size() > 0)
+//            delete delProjectSubscriptionAllocationsList;
 
     }
 }
