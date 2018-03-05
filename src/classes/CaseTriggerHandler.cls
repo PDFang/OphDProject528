@@ -236,7 +236,7 @@ public class CaseTriggerHandler extends TriggerHandler
         for(CaseComment comment : [
                 Select Id, ParentId, CommentBody from CaseComment
                 where ParentId IN :processList and IsPublished = true
-                order by ParentId asc, createddate desc
+                order by ParentId, createddate
         ]){
             caseCommentMap.put(comment.ParentId, comment);
         }
