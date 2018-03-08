@@ -147,10 +147,9 @@ public class XMRestEventService {
         // Build the properties needed to fill out the email template in xMatters
         Map<String, String> propertyMap = addAdditionalSalesforceDataToFormProperties(eventCase, isMaintenance);
         propertyMap.put('xmNotificationId', xmNotificationRecord.Id);
-        if((xmNotificationRecord.Request_Type__c == 'Event Platforms Add' || xmNotificationRecord.Request_Type__c == 'Event Initial Confirmation'
-            || xmNotificationRecord.Request_Type__c == XMNotificationTriggerHandler.REQUEST_TYPE_COMMENT) && eventCase.CaseComments.size() > 0){
-            String lastComment = eventCase.CaseComments[0].CommentBody;
-            propertyMap.put('comment', lastComment);
+        if(xmNotificationRecord.Request_Type__c == 'Event Platforms Add' || xmNotificationRecord.Request_Type__c == 'Event Initial Confirmation'
+            || xmNotificationRecord.Request_Type__c == XMNotificationTriggerHandler.REQUEST_TYPE_COMMENT){
+            propertyMap.put('comment', xmNotificationRecord.Public_Comment__c);
         }
         XMEventData.templateProperties = propertyMap;
 

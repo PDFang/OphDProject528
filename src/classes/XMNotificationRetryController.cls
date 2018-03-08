@@ -49,7 +49,7 @@ public without sharing class XMNotificationRetryController {
         notificationMap = new Map<Id, xmNotification__c>();
 
         for(xmNotification__c notification : [
-                Select Id, AddedPlatforms__c, Case__c, Request_Date__c, Request_Type__c, xMatters_Form__c, Status__c, CreatedBy.Name, CreatedDate
+                Select Id, AddedPlatforms__c, Case__c, Request_Date__c, Request_Type__c, xMatters_Form__c, Status__c, CreatedBy.Name, CreatedDate, Public_Comment__c
                 from xmNotification__c
                 where Case__c = :caseId and Status__c = 'Failed'
         ]){
@@ -82,7 +82,8 @@ public without sharing class XMNotificationRetryController {
                     xMatters_Form__c = notification.xMatters_Form__c,
                     AddedPlatforms__c = notification.AddedPlatforms__c,
                     Status__c = 'New',
-                    Related_Notification__c = notification.Id
+                    Related_Notification__c = notification.Id,
+                    Public_Comment__c = notification.Public_Comment__c
             );
             insert newNotification;
 

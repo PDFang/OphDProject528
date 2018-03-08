@@ -83,8 +83,10 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
         comment.ParentId__c = NewComment.ParentId;
         comment.CommentBody__c = NewComment.CommentBody;
         comment.CommentCreatedDate__c = NewComment.CreatedDate;
-        if (NewComment.CreatedById !=null){
-            comment.CreatorName__c = GetUserById(NewComment.CreatedById);
+        if (NewComment.ConnectionReceivedId != null){
+            comment.CreatorName__c = 'Connection User';
+        } else{
+            comment.CreatorName__c = userInfo.getFirstName() + ' ' + userInfo.getLastName(); //GetUserById(NewComment.CreatedById);
         }
         comment.IsDeleted__c = NewComment.IsDeleted;
         comment.IsPublished__c = newComment.IsPublished;
@@ -144,12 +146,14 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
     private void createXmNotification(List<CaseComment> newList, Map<Id, CaseComment> oldMap){
 
         List<CaseComment> processList = new List<CaseComment>();
+        Set<Id> caseIdSet = new Set<Id>();
 
         // new comment is added or existing comment is published
         for(CaseComment comment : newList) {
             CaseComment oldComment = (oldMap != null && oldMap.containsKey(comment.Id)) ? oldMap.get(comment.Id) : null;
-            if(oldComment == null || (comment.IsPublished && comment.IsPublished != oldComment.IsPublished) ){
+            if(comment.IsPublished && (oldComment == null || comment.IsPublished != oldComment.IsPublished) ){
                 processList.add(comment);
+                caseIdSet.add(comment.ParentId);
             }
         }
 
@@ -159,18 +163,37 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
             return;
         }
 
+        Map<Id, Case> caseMap = new Map<Id, Case>([
+                Select Id, Priority, RecordTypeId, InternalEvent__c, NonEvent__c from Case
+                where Id IN :caseIdSet and Status IN ('Confirmed', 'Being Worked')
+        ]);
+        system.debug('createXmNotification(): caseMap - ' + caseMap);
+
         List<xmNotification__c> notificationList = new List<xmNotification__c>();
 
+        CaseTriggerHandler caseHandler = new CaseTriggerHandler();
+
         for(CaseComment comment : processList){
+
+            Case parentCase = caseMap.get(comment.ParentId);
+            system.debug('createXmNotification(): parentCase - ' + parentCase);
+
+            if(parentCase == null || !caseHandler.isQualifiedEvent(parentCase)){
+                continue;
+            }
             xmNotification__c xmNotification = new xmNotification__c(
                     Case__c = comment.ParentId,
                     Request_Date__c = system.now(),
-                    Request_Type__c = XMNotificationTriggerHandler.REQUEST_TYPE_COMMENT
+                    Request_Type__c = XMNotificationTriggerHandler.REQUEST_TYPE_COMMENT,
+                    Public_Comment__c = comment.CommentBody
             );
             notificationList.add(xmNotification);
         }
 
         system.debug('createXmNotification(): notificationList - ' + notificationList);
+
+        if(notificationList.isEmpty())
+            return;
 
         try{
             insert notificationList;

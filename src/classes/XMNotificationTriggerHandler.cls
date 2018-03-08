@@ -94,7 +94,7 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
 
         List<xmNotification__c> notificationList = [
                 Select Id, Case__c, Request_Date__c, Request_Type__c, xMatters_Form__c, Status__c,AddedPlatforms__c,
-                        Notification_Group__r.xmGroupUID__c
+                        Notification_Group__r.xmGroupUID__c, Public_Comment__c
                 From xmNotification__c
                 Where Id IN :notificationIdSet
         ];

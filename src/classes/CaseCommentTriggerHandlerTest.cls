@@ -25,6 +25,41 @@ private class CaseCommentTriggerHandlerTest {
 
     } // end of testCallPartnerCaseProxyService()
 
+    // test XMNotification record is created when a public comment is added
+    static testMethod void testPublicCommentNotification() {
+
+        // create an event
+        Case testEvent = [Select Id from Case where RecordType.Name = 'Event' LIMIT 1];
+
+        // confirm event
+        testEvent.status = 'Confirmed';
+        testEvent.InternalEvent__c = false;
+        testEvent.IgnoreEventStatusLock__c = true;
+        update testEvent;
+
+        test.startTest();
+
+        CaseComment newComment = new CaseComment(
+                ParentId = testEvent.Id,
+                commentBody = 'New comment added',
+                isPublished = true
+        );
+
+        insert newComment;
+
+        test.stopTest();
+
+        xmNotification__c[] notifications = [
+                Select Request_Type__c, Public_Comment__c
+                from xmNotification__c
+                where Case__c = :testEvent.Id
+                and Request_Type__c = :XMNotificationTriggerHandler.REQUEST_TYPE_COMMENT
+        ];
+
+        system.assertEquals(1, notifications.size(), 'One xmNotification record should be created.');
+        system.assertEquals(newComment.CommentBody, notifications[0].Public_Comment__c);
+
+    }
 
     @TestSetup
     private static void createTestData(){
@@ -38,6 +73,17 @@ private class CaseCommentTriggerHandlerTest {
                 ETMS_Trouble_Type_Description__c = 'Unit Test'
         );
         insert etmsCode;
+
+        SiteConfiguration__c siteConfig = new SiteConfiguration__c();
+        siteConfig.Name = inContactBaseClass.OrgId15Digit; //UserInfo.getOrganizationId();
+        siteConfig.AutoEventEmails__c = false;
+        siteConfig.DaysToDisplayKnownIssues__c = 30;
+        siteConfig.OrgId__c =  inContactBaseClass.OrgId15Digit; //UserInfo.getOrganizationId();
+        siteConfig.EventResolvedPriorities__c = 'P1;P2;';
+        siteConfig.EventResolvedEmails__c = false;
+
+        insert siteConfig;
+
 
         Map<String,Schema.RecordTypeInfo> accountRecordTypeMap = Schema.SObjectType.Account.getRecordTypeInfosByName();
         Account verizonAccount = new Account(
@@ -60,6 +106,8 @@ private class CaseCommentTriggerHandlerTest {
 
         insert verizonContact;
 
+        Case[] cases = new Case[]{};
+
         // create an incident
         Map<String,Schema.RecordTypeInfo> caseRecordTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
         Case testIncident = new Case(
@@ -77,7 +125,25 @@ private class CaseCommentTriggerHandlerTest {
         Database.DMLOptions dmo = new Database.DMLOptions();
         dmo.AssignmentRuleHeader.useDefaultRule = true;
         testIncident.setOptions(dmo);
-        insert testIncident;
+        cases.add(testIncident);
+
+        Case testEvent = new Case(
+                RecordTypeId = caseRecordTypeMap.get('Event').getRecordTypeId(),
+                Subject = 'testPublicCommentNotification Event',
+                Description = 'testPublicCommentNotification',
+                Status = 'New',
+                EventType__c = 'Service Disruption',
+                PlatformsImpacted__c = 'C6 - inContact',
+                ProductImpacted__c = 'Test Product',
+                InternalEvent__c = false,
+                Priority = 'P1'
+        );
+
+        dmo.assignmentRuleHeader.useDefaultRule = true;
+        testEvent.setOptions(dmo);
+        cases.add(testEvent);
+
+        insert cases;
 
     } // createTestData()
 

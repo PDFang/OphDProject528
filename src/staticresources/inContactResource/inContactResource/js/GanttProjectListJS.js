@@ -150,6 +150,9 @@
 							replace =  template.replace("#ReplaceTitle#", "Primary Program");
 							replace =  replace.replace("#ReplaceValue#", dataItem.channel == null ? '': dataItem.channel );
 							content = content + replace;
+							replace =  template.replace("#ReplaceTitle#", "Created Date");
+                            replace =  replace.replace("#ReplaceValue#", dataItem.CreatedDate == null ? '' : kendo.toString(dataItem.CreatedDate, "MM/dd/yyyy"));
+                            content = content + replace;
 						}
 						return content;
                     }
@@ -204,7 +207,8 @@
                                     otherPriority: { from: "OtherPriority", type: "number" },
                                     DeliveryChannel: {from: "DeliveryChannel",defaultValue: "", type:"string"},
                                 	RequestChannel: {from: "RequestChannel",defaultValue: "",  type:"string"},
-                                	PriorityMisMatch :{from: "isPriorityMismatch", type:"boolean"}
+                                	PriorityMisMatch :{from: "isPriorityMismatch", type:"boolean"},
+                                    CreatedDate:{from:"CreatedDate", type:"date"}
                                  }
                                }
                            }
@@ -280,6 +284,9 @@
 						replace =  template.replace("#ReplaceTitle#", "Primary Program");
 						replace =  replace.replace("#ReplaceValue#", dataItem.channel == null ? '': dataItem.channel );
 						content = content + replace;
+                        replace =  template.replace("#ReplaceTitle#", "Created Date");
+                        replace =  replace.replace("#ReplaceValue#", dataItem.CreatedDate == null ? '' : kendo.toString(dataItem.CreatedDate, "MM/dd/yyyy"));
+                        content = content + replace;
 					}
                     return content;
                  }
