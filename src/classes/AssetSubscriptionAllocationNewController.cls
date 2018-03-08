@@ -289,6 +289,23 @@ public with sharing class AssetSubscriptionAllocationNewController {
         reloadDetails();
     }
 
+	@RemoteAction
+	public static string CancelAllocations(string projectId){
+		if(projectId != null){
+			string message = AssetSubscriptionAllocationHelper.CancelAllAllocations(projectId);
+			return message;
+		}
+		return null;
+	}
+
+	@RemoteAction
+    public static string ManageOnHoldAllocations(string projectId, boolean onHold){
+        if(projectId != null){
+            string message = AssetSubscriptionAllocationHelper.updateOnHoldAllocations(projectId, onHold);
+            return message;
+        }
+        return null;
+    }
 
     public pagereference cancel(){
         return new PageReference('/'+currentId).setRedirect(true);
@@ -302,5 +319,6 @@ public with sharing class AssetSubscriptionAllocationNewController {
         return generator.getAsString();
 
     }
+
 
 }

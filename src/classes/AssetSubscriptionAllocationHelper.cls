@@ -709,4 +709,132 @@ public class AssetSubscriptionAllocationHelper {
 		}
 
 	}
+
+    public static string CancelAllAllocations(string phaseId){
+
+        Map<Id, String> timingMap = new Map<Id, String>();
+        Set<Id> allocationIds = new Set<Id>();
+        string returnMessage = '';
+        try{
+            List<Project_Asset_Allocation__c> listProjectAssetAllocations = new List<Project_Asset_Allocation__c>(
+            [Select Id, Asset__c,Allocated_NRR__c, Percent_Allocation__c, Implemented__c, Phase_Implemented__c, PhaseImplemented__c, Phase_Implemented_Quantity__c,
+                    Logged_Hours__c, Quantity_Allocation__c from  Project_Asset_Allocation__c where Project__c = :phaseId]);
+
+            List<Project_Subscription_Allocation__c> listProjectSubscriptionAllocations = new List<Project_Subscription_Allocation__c>(
+            [Select Id, Subscription__c,Allocated_MRR__c, Phase_Implemented_Quantity__c, Phase_Implemented__c, Subscription__r.Subscription__c,
+                    Logged_Hours__c, Percent_Allocation__c, PhaseImplemented__c, Quantity_Allocation__c from  Project_Subscription_Allocation__c where Project__c = :phaseId]);
+
+            List<Project_Asset_Allocation__c> updateProjectAssetAllocationsList = new List<Project_Asset_Allocation__c>();
+            List<Project_Asset_Allocation__c> deleteProjectAssetAllocationsList = new List<Project_Asset_Allocation__c>();
+            decimal totalCanceledNRR = 0.0;
+
+            if(!listProjectAssetAllocations.isEmpty()){
+                for(Project_Asset_Allocation__c projectAssetAllocation: listProjectAssetAllocations){
+                    if (projectAssetAllocation.Logged_Hours__c > 0) {
+                        updateProjectAssetAllocationsList.add(new Project_Asset_Allocation__c(Id = projectAssetAllocation.Id,
+                                Quantity_Allocation__c = 0,
+                                Percent_Allocation__c = 0,
+                                Hours_Allocated__c = 0,
+                                Implemented__c = false));
+                    } else {
+                        deleteProjectAssetAllocationsList.add(projectAssetAllocation);
+                    }
+                    totalCanceledNRR += projectAssetAllocation.Allocated_NRR__c;
+
+                }
+            }
+
+
+            if(updateProjectAssetAllocationsList.size() > 0){
+                update updateProjectAssetAllocationsList;
+                returnMessage += 'Successfully updated - ' + updateProjectAssetAllocationsList.size() + ' asset(s). ';
+            }
+
+
+            if(deleteProjectAssetAllocationsList.size() > 0){
+                delete deleteProjectAssetAllocationsList;
+                returnMessage += 'Successfully deleted - ' + deleteProjectAssetAllocationsList.size() + ' asset(s). ';
+            }
+
+
+            List<Project_Subscription_Allocation__c> upProjectSubscriptionAllocationsList = new List<Project_Subscription_Allocation__c>();
+            List<Project_Subscription_Allocation__c> delProjectSubscriptionAllocationsList = new List<Project_Subscription_Allocation__c>();
+            decimal totalCanceledMRR = 0.0;
+            if(!listProjectAssetAllocations.isEmpty()) {
+                for (Project_Subscription_Allocation__c projectSubscriptionAllocation: listProjectSubscriptionAllocations) {
+                    if (projectSubscriptionAllocation.Logged_Hours__c > 0) {
+                        upProjectSubscriptionAllocationsList.add(new Project_Subscription_Allocation__c(Id = projectSubscriptionAllocation.Id,
+                                Quantity_Allocation__c = 0,
+                                Percent_Allocation__c = 0,
+                                Hours_Allocated__c = 0,
+                                Implemented__c = false));
+                    }else {
+                        delProjectSubscriptionAllocationsList.add(projectSubscriptionAllocation);
+                    }
+
+                    totalCanceledMRR += projectSubscriptionAllocation.Allocated_MRR__c;
+                }
+            }
+
+            if(totalCanceledMRR > 0 || totalCanceledNRR > 0){
+                update new Project__c(Id = phaseId,Cancelled_Phase_NRR__c=totalCanceledNRR,Cancelled_Phase_MRR__c=totalCanceledMRR);
+            }
+
+            if(upProjectSubscriptionAllocationsList.size() > 0){
+                update upProjectSubscriptionAllocationsList;
+                returnMessage += 'Successfully updated - ' + upProjectSubscriptionAllocationsList.size() + ' subscription(s). ';
+            }
+
+
+            if(delProjectSubscriptionAllocationsList.size() > 0){
+                delete delProjectSubscriptionAllocationsList;
+                returnMessage += 'Successfully deleted - ' + delProjectSubscriptionAllocationsList.size() + ' subscription(s). ';
+            }
+
+            return returnMessage;
+
+        }catch(Exception ex){
+            returnMessage = 'Error occured while cancelling - ' + ex.getMessage();
+            return returnMessage;
+        }
+
+    }
+
+    public static string updateOnHoldAllocations(string projectId, boolean onHold){
+        Set<Id> allocationIds = new Set<Id>();
+        string returnMessage = '';
+        try{
+            List<Project_Asset_Allocation__c> updateProjectAssetAllocationsList = new List<Project_Asset_Allocation__c>();
+            List<Project_Subscription_Allocation__c> upProjectSubscriptionAllocationsList = new List<Project_Subscription_Allocation__c>();
+
+            for(Project_Asset_Allocation__c projectAssetAllocation:  [Select Id, On_Hold__c from  Project_Asset_Allocation__c where Project__c = :projectId]){
+                    updateProjectAssetAllocationsList.add(new Project_Asset_Allocation__c(Id = projectAssetAllocation.Id,
+                            On_Hold__c = onHold));
+                }
+
+
+            if(updateProjectAssetAllocationsList.size() > 0){
+                update updateProjectAssetAllocationsList;
+                returnMessage += 'Successfully updated - ' + updateProjectAssetAllocationsList.size() + ' asset(s). ';
+            }
+
+            for (Project_Subscription_Allocation__c projectSubscriptionAllocation: [Select Id,On_Hold__c from  Project_Subscription_Allocation__c where Project__c = :projectId]) {
+                    upProjectSubscriptionAllocationsList.add(
+                            new Project_Subscription_Allocation__c(Id = projectSubscriptionAllocation.Id,
+                            On_Hold__c = onHold)
+                    );
+            }
+
+            if(upProjectSubscriptionAllocationsList.size() > 0){
+                update upProjectSubscriptionAllocationsList;
+                returnMessage += 'Successfully updated - ' + upProjectSubscriptionAllocationsList.size() + ' subscription(s). ';
+            }
+
+            return returnMessage;
+        }catch(Exception ex){
+            returnMessage = 'Error occured while putting allocations on hold - ' + ex.getMessage();
+            return returnMessage;
+        }
+    }
+
 }

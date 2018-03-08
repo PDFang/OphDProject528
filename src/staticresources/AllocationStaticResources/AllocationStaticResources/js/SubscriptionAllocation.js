@@ -426,7 +426,7 @@ function gridDataboundSubscription(e){
               if (currentDataItem.Implemented == true && isManager == false) {
                   $(this).remove();
               }
-              else if((projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false){
+              else if(projectPhaseStatus == 'Cancelled' || ((projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false)){
                   $(this).remove();
               }
           });
@@ -437,7 +437,7 @@ function gridDataboundSubscription(e){
                   if (currentDataItem.Implemented == true && isManager == false) {
                       $(this).remove();
                   }
-                  else if((projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false){
+                  else if(projectPhaseStatus == 'Cancelled' || ((projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false)){
                     $(this).remove();
                   }
               });

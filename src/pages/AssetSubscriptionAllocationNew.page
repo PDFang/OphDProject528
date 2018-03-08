@@ -2,7 +2,7 @@
  - Created by ravish.chawla on 10/12/2017.
  -->
 
-<apex:page id="AssetSubscriptionAllocationNew" sideBar="false" controller="AssetSubscriptionAllocationNewController" title="Asset/Subscription Allocation" tabStyle="Project__c">
+<apex:page id="AssetSubscriptionAllocationNew" sideBar="false" controller="AssetSubscriptionAllocationNewController" title="Asset/Subscription Allocation" tabStyle="Project__c" standardStylesheets="false" >
 
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
@@ -119,7 +119,9 @@
             </ul>
             <div class="tab-content">
                 <div id="detailsSection" class="tab-pane fade in active">
+
                     <apex:outputPanel id="detailSection">
+
                         <apex:pageBlock title="Project Detail" rendered="{!Not(ISNULL(Project))}" id="detailProject">
 
                             <apex:pageBlockSection columns="2" >
@@ -127,6 +129,15 @@
                                     <apex:outputfield value="{!Project[f]}" />
                                 </apex:repeat>
                             </apex:pageBlockSection>
+                            <div class="row">
+                                <div class="col-md-4 col-lg-4 col-sm-4"></div>
+                                <div class="col-md-8 col-lg-8 col-sm-8">
+                                    <button type="button" class="btn btn-primary" id="CancelPhase" onclick="return confirmCancelation();">Cancel All Allocations</button>
+                                    <apex:outputPanel rendered="{!IF(Project.Phase_Status__c != 'Suspended', true, false)}"> <button type="button" class="btn btn-primary" id="onHoldButton" onclick="return onHoldAllocation();">Hold All Allocations</button></apex:outputPanel>
+                                    <apex:outputPanel rendered="{!IF(Project.Phase_Status__c == 'Suspended', true, false)}"> <button type="button" class="btn btn-primary" id="releaseHoldButton" onclick="return releaseHoldAllocation();">Release On Hold Allocations</button></apex:outputPanel>
+                                </div>
+                            </div>
+                              <div id="cancelWindow"></div>
                         </apex:pageBlock>
 
                         <apex:pageBlock title="Asset Detail" rendered="{!Not(ISNULL(asset))}" id="detailAsset">
@@ -191,6 +202,7 @@
                             </apex:pageBlockSection>
                         </apex:pageBlock>
                     </apex:outputPanel>
+                    <div id="projectMessage" class="alert alert-success" style="display:none; width:70%"/>
                 </div>
                 <div id="assetAllocationDetails" class="tab-pane fade" style="border-top: solid 2px #6689cc;">
                         <div id="assetAllocationList"></div>
@@ -235,7 +247,6 @@
                             <div class="modal-body" style="font-size:14px;">
                                 <apex:pageBlock id="cancSuspPageBlck" >
                                     <apex:pageMessages id="messages" />
-
                                     <apex:pageBlockSection columns="2" >
                                         <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Editable_Fields}" var="f">
                                             <apex:inputField value="{!Asset[f.fieldPath]}"/>
@@ -380,14 +391,23 @@
         <p>Allocated Hours % = <strong>#= AllocatedPercentage == null ? 0 : AllocatedPercentage #</strong></p>
         <p>Allocated Hours = <strong>#= AllocatedHours #</strong> </p>
         <div class="modal-footer">
-            <button class="k-button" id="yesButton">Yes</button>
+            <button class="k-button" id="yesButton" >Yes</button>
             <button class="k-button" id="noButton"> Cancel</button>
         </div>
     </script>
+
+    <script type="text/x-kendo-template" id="cancelWindow">
+        <p>Are you sure you want to Cancel?</p>
+        <div class="modal-footer">
+            <button class="k-button" id="confirmCancel" onclick="return CancelAllocation();">Yes</button>
+            <button class="k-button" id="denyCancel" onclick="return closeCancelWindow();"> Cancel</button>
+        </div>
+    </script>
+
     <apex:outputPanel id="refreshScript">
     <script>
 
-
+        var cancelKendoWindow;
         $(document).ready(function() {
            getSObjType();
            $(".nav-tabs a").click(function(){
@@ -404,6 +424,13 @@
            if({!Project != null}){
                $("#assetDetailsTab").show();
                $("#subscriptionDetailsTab").show();
+               cancelKendoWindow = $("#cancelWindow").kendoWindow({
+                    width: "350px",
+                    height: "150px",
+                    title: "Confirm Cancel",
+                    actions: ["Close"],
+                    visible: false
+               }).data("kendoWindow");
            }
 
            if(sforce.console.isInConsole()){
@@ -497,7 +524,7 @@
                               if(projectGoLiveDate != '' && projectGoLiveDate != null && isManager == false){
                                    $("a.k-grid-add").hide();
                               }
-                              if((projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false){
+                              if(projectPhaseStatus == 'Cancelled' || ((projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false)){
                                   $("a.k-grid-add").hide();
                               }
                            }
@@ -588,6 +615,117 @@
             }
         }
 
+    }
+
+    function confirmCancelation(){
+         if(((projectGoLiveDate != '' && projectGoLiveDate != null) || (projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended'))&& isManager == false){
+                       displayError('Only Managers can cancel an Implemented Phase.');
+                       return;
+         }
+         if(projectPhaseStatus == 'Cancelled'){
+          displayError('You are not allowed to cancel a cancelled phase.');
+           return;
+         }
+
+        var cancelTemplate = kendo.template($("#cancelWindow").html());
+         cancelKendoWindow.content(cancelTemplate); //send the row data object to the template and render it
+         cancelKendoWindow.center().open();
+    }
+
+
+    function CancelAllocation(){
+           cancelKendoWindow.close();
+           $('#loading').modal({
+                  backdrop: 'static',
+                  keyboard: false
+           });
+           $('#loading').modal('show');
+           AssetSubscriptionAllocationNewController.CancelAllocations(
+               Project.Id,
+               function(result,event){
+                   if (event.status) {
+                      if(result.indexOf('Successfully') > -1){
+                           reloadDetails();
+                           $('#loading').modal('hide');
+                           $('#projectMessage').show();
+                           $('#projectMessage').html(result);
+                        }else{
+                             displayError(result);
+                         $('#loading').modal('hide');
+                      }
+                   }else{
+                       displayError(event.message);
+                   }
+               },
+               {escape: false}
+           );
+    }
+
+    function closeCancelWindow(){
+        cancelKendoWindow.close();
+    }
+
+
+
+    function onHoldAllocation(){
+         if(((projectGoLiveDate != '' && projectGoLiveDate != null) || (projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended'))&& isManager == false){
+              displayError('Only Managers can put this phase project on Hold.');
+              return;
+         }
+
+         $('#loading').modal({
+              backdrop: 'static',
+              keyboard: false
+         });
+         $('#loading').modal('show');
+         AssetSubscriptionAllocationNewController.ManageOnHoldAllocations(
+           Project.Id,
+           true,
+           function(result,event){
+               if (event.status) {
+                  if(result.indexOf('Successfully') > -1){
+                       reloadDetails();
+                       $('#loading').modal('hide');
+                       $('#projectMessage').show();
+                       $('#projectMessage').html(result);
+                    }else{
+                         displayError(result);
+                     $('#loading').modal('hide');
+                  }
+               }else{
+                   displayError(event.message);
+               }
+           },
+           {escape: false}
+         );
+    }
+
+    function releaseHoldAllocation(){
+         $('#loading').modal({
+              backdrop: 'static',
+              keyboard: false
+         });
+         $('#loading').modal('show');
+         AssetSubscriptionAllocationNewController.ManageOnHoldAllocations(
+           Project.Id,
+           false,
+           function(result,event){
+               if (event.status) {
+                  if(result.indexOf('Successfully') > -1){
+                       reloadDetails();
+                       $('#loading').modal('hide');
+                       $('#projectMessage').show();
+                       $('#projectMessage').html(result);
+                    }else{
+                         displayError(result);
+                     $('#loading').modal('hide');
+                  }
+               }else{
+                   displayError(event.message);
+               }
+           },
+           {escape: false}
+         );
     }
 
 
