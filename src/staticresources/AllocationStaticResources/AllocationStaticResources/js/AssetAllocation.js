@@ -655,6 +655,8 @@
             grid = $("#detailTable").data("kendoGrid"),
             dataItem = grid.dataItem(row);
 
+        checkedIds = {};
+
         checkedIds[dataItem.id] = checked;
 
         if (checked) {

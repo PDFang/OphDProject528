@@ -666,6 +666,7 @@ function detailSubscription(e) {
             row = $(this).closest("tr"),
             grid = $("#detailSubscriptionTable").data("kendoGrid"),
             dataItem = grid.dataItem(row);
+            subscheckedIds = {};
 
             subscheckedIds[dataItem.SubscriptionId] = checked;
 
