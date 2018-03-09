@@ -373,9 +373,8 @@ trigger CaseBeforeUpdate on Case (before update)
     if(!closedCasesForEntitlements.isEmpty())
     {
         //close out any remaining first response milestones first.
-        CaseAssignmentClass.CompleteMilestone(closedCasesForEntitlements, 'First Response', system.now());
-        CaseAssignmentClass.CompleteMilestone(closedCasesForEntitlements, 'Status Update', system.now());
-        CaseAssignmentClass.CompleteMilestone(closedCasesForEntitlements, 'SLA', system.now());
+        List<String> entitlementsToClose = new List<String>{'First Response','Status Update','SLA'};
+        CaseAssignmentClass.CompleteMilestone(closedCasesForEntitlements, entitlementsToClose, system.now());
     }
 
     if(!System.isFuture() && !attachedToKnownIssue.isEmpty() && !system.isBatch()){

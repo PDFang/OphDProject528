@@ -179,11 +179,11 @@ public class CaseAssignmentClass
 	}
 	
 
-	public static void CompleteMilestone(List<Id> caseIds, String milestoneName, DateTime complDate) 
+	public static void CompleteMilestone(List<Id> caseIds, String milestoneName, DateTime complDate)
 	{
 		List<CaseMilestone> cmsToUpdate = [select Id, completionDate, case.SlaExitDate from CaseMilestone
                        where caseId in :caseIds and MilestoneType.Name=:milestoneName and completionDate = null];
-                       
+
 	    if (cmsToUpdate.isEmpty() == false)
 	    {
 	      for (CaseMilestone cm : cmsToUpdate)
@@ -196,6 +196,24 @@ public class CaseAssignmentClass
 	      update cmsToUpdate;
 	    } // end if
  	 }
+
+	public static void CompleteMilestone(List<Id> caseIds, List<String> milestoneNames, DateTime complDate)
+	{
+		List<CaseMilestone> cmsToUpdate = [select Id, completionDate, case.SlaExitDate from CaseMilestone
+		where caseId in :caseIds and MilestoneType.Name IN :milestoneNames and completionDate = null];
+
+		if (cmsToUpdate.isEmpty() == false)
+		{
+			for (CaseMilestone cm : cmsToUpdate)
+			{
+				if(cm.case.SlaExitDate == null)
+				{
+					cm.completionDate = complDate;
+				}
+			}
+			update cmsToUpdate;
+		} // end if
+	}
  	 
  	 public static void ResetStatusUpdateMilestone(List<Id> caseIds)
  	 {
