@@ -21,9 +21,8 @@ trigger CaseCommentFirstResponse on CaseComment (before insert)
 	
 		if(!caseIds.isEmpty())
 		{
-			CaseAssignmentClass.CompleteMilestone(caseIds, 'First Response', system.now());
-			CaseAssignmentClass.CompleteMilestone(caseIds, 'Status Update', system.now());
-			CaseAssignmentClass.CompleteMilestone(caseIds, '1st Response - Non-Emergency', system.now());
+			List<String> entitlementsToClose = new List<String>{'First Response','Status Update','1st Response - Non-Emergency'};
+			CaseAssignmentClass.CompleteMilestone(caseIds, entitlementsToClose, system.now());
 			//CaseAssignmentClass.ResetStatusUpdateMilestone(caseIds);
 		}
 	}

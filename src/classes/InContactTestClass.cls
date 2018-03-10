@@ -951,28 +951,6 @@ private class InContactTestClass
         extension.redirect();
     }
 
-    static testmethod void TestCorporateItFeatureSync()
-    {
-        //set mock for creating TFS Item
-        /**Test.setMock(WebServiceMock.class, new ICorporateItTfsService());
-
-        Project__c project = new Project__c
-        (
-            Summary__c = 'Test',
-            ProjectStatus__c = 'New'
-        );
-
-        insert project;
-        Test.startTest();
-        ApexPages.StandardController controller = new ApexPages.StandardController(project);
-        FeatureCreateFromProject featureExt = new FeatureCreateFromProject(controller);
-
-        boolean hasFeature = featureExt.HasFeature;
-        string featureId = FeatureCreateFromProject.InsertNewFeature(featureExt.feature.Title__c, featureExt.feature.Details__c, project.Id);
-        FeatureCreateFromProject.InsertTfsFeature(featureId);
-        Test.stopTest();**/
-    }
-
     static testmethod void TestCorporateItFeatureCommentSync()
     {
         //set mock for creating TFS Item
