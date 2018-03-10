@@ -137,7 +137,7 @@
                                     <apex:outputPanel rendered="{!IF(Project.Phase_Status__c == 'Suspended', true, false)}"> <button type="button" class="btn btn-primary" id="releaseHoldButton" onclick="return releaseHoldAllocation();">Release On Hold Allocations</button></apex:outputPanel>
                                 </div>
                             </div>
-                              <div id="cancelWindow"></div>
+                            <div id="cancelWindow"></div>
                         </apex:pageBlock>
 
                         <apex:pageBlock title="Asset Detail" rendered="{!Not(ISNULL(asset))}" id="detailAsset">
@@ -205,11 +205,11 @@
                     <div id="projectMessage" class="alert alert-success" style="display:none; width:70%"/>
                 </div>
                 <div id="assetAllocationDetails" class="tab-pane fade" style="border-top: solid 2px #6689cc;">
-                        <div id="assetAllocationList"></div>
+                    <div id="assetAllocationList"></div>
                 </div>
                 <div id="subscriptionAllocationDetails" class="tab-pane fade" style="border-top: solid 2px #6689cc;">
-                            <div id="subscriptionAllocationList"></div>
-                            <div id="window"></div>
+                    <div id="subscriptionAllocationList"></div>
+                    <div id="window"></div>
                 </div>
             </div>
             <!-- Confirmation Modal -->
@@ -405,7 +405,7 @@
     </script>
 
     <apex:outputPanel id="refreshScript">
-    <script>
+        <script>
 
         var cancelKendoWindow;
         $(document).ready(function() {
@@ -645,16 +645,19 @@
                function(result,event){
                    if (event.status) {
                       if(result.indexOf('Successfully') > -1){
+
                            reloadDetails();
                            $('#loading').modal('hide');
                            $('#projectMessage').show();
                            $('#projectMessage').html(result);
                         }else{
-                             displayError(result);
+                         result = result == '' ? "No allocations were found to delete" : result;
+                         displayError(result);
                          $('#loading').modal('hide');
                       }
                    }else{
                        displayError(event.message);
+                       $('#loading').modal('hide');
                    }
                },
                {escape: false}
@@ -689,6 +692,7 @@
                        $('#projectMessage').show();
                        $('#projectMessage').html(result);
                     }else{
+                        result = result == '' ? "No allocations were found to put on hold" : result;
                          displayError(result);
                      $('#loading').modal('hide');
                   }
@@ -717,11 +721,13 @@
                        $('#projectMessage').show();
                        $('#projectMessage').html(result);
                     }else{
-                         displayError(result);
+                     result = result == '' ? "No allocations were found to release from hold" : result;
+                     displayError(result);
                      $('#loading').modal('hide');
                   }
                }else{
                    displayError(event.message);
+                   $('#loading').modal('hide');
                }
            },
            {escape: false}

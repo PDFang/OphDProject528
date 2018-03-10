@@ -108,13 +108,14 @@ public class ProjectAssetAllocationTriggerHandler extends TriggerHandler{
             }
         }
 
+        System.debug('rollupNRRToPhase => projectIdsets ==>' + projectIdsets );
 
         if(projectIdsets.size() > 0 && assetRollupQueueableJobID == null && RollupUtility.isRollupEnabled){
             if(limits.getQueueableJobs() < limits.getLimitQueueableJobs()) {
                 AssetRollupQueueable queueable = new AssetRollupQueueable();
                 queueable.projectIds = projectIdsets;
                 assetRollupQueueableJobID = System.enqueueJob(queueable);
-                system.debug('**** rollupNRRToPhaseProject(): assetRollupQueueableJobID - ' + assetRollupQueueableJobID);
+                system.debug('**** rollupNRRToPhase(): assetRollupQueueableJobID - ' + assetRollupQueueableJobID);
             }
         }
 
