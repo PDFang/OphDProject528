@@ -104,6 +104,9 @@ private class CaseAssignmentTestClass {
 		c1.Reason = 'Other';
 		c1.WorkDuration__c = 10;
 		c1.PublicComment__c = 'Test';
+		c1.StatusDetails__c = 'Test';
+		c1.FirstResponseViolated__c = true;
+		c1.SLAViolated__c = true;
 		
 		update c1;
         

@@ -14,6 +14,9 @@ public class ProjSubscriptionAllocationTriggerHandler extends TriggerHandler  {
         AddParentProject();
     }
 
+    @TestVisible
+    private static String SubstRollupQueueableJobID;
+
     public override void beforeDelete(){
         CheckTimeBeofreDelete();
     }
@@ -91,5 +94,26 @@ public class ProjSubscriptionAllocationTriggerHandler extends TriggerHandler  {
     @Future
     public static void UpdateSubscriptionCustom(set<Id> subscriptionCustomIds){
         ProjectTriggerHandler.updateSubscriptionCustomFullyImplemented(subscriptionCustomIds);
+    }
+
+    private static void rollupMRRToPhase(){
+        List<Project_Subscription_Allocation__c> lstallocations = (List<Project_Subscription_Allocation__c>)(trigger.old);
+        set<id> projectIdsets = new set<Id>();
+        for(Project_Subscription_Allocation__c allocation : lstallocations){
+            if(allocation.Project__c != null){
+                projectIdsets.add(allocation.Project__c);
+            }
+        }
+
+
+        if(projectIdsets.size() > 0 && SubstRollupQueueableJobID == null && RollupUtility.isRollupEnabled){
+            if(limits.getQueueableJobs() < limits.getLimitQueueableJobs()) {
+                SubscriptionRollupQueueable queueable = new SubscriptionRollupQueueable();
+                queueable.projectIds = projectIdsets;
+                SubstRollupQueueableJobID = System.enqueueJob(queueable);
+                system.debug('**** rollupNRRToPhaseProject(): assetRollupQueueableJobID - ' + SubstRollupQueueableJobID);
+            }
+        }
+
     }
 }

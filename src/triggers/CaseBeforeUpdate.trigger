@@ -51,7 +51,6 @@ trigger CaseBeforeUpdate on Case (before update)
     Set<Id> attachedToKnownIssue = new Set<Id>();
     Set<Id> closedCaseHD = new Set<Id>();
 
-    Id[] itCaseIds = new Id[]{};
 
     //get all closed statuses
     for(CaseStatus cs:[SELECT MasterLabel FROM CaseStatus WHERE IsClosed = true])
@@ -120,16 +119,12 @@ trigger CaseBeforeUpdate on Case (before update)
             cn.SLAViolationQueue__c =   allqueues.get(co.OwnerId).Name;
         }
 
+        /* NOC View field has not been filled out since 2016
         if(co.NOC__c != cn.NOC__c && cn.Status != 'Closed')
         {
             cn.Status = 'Acknowledged';
-        }
+        }*/
 
-        //find cases assigned to IT for following
-        if(co.OwnerId != cn.OwnerId && cn.OwnerId == '00G70000001ciRp' /*IT Development Queue*/)
-        {
-            itCaseIds.Add(cn.Id);
-        }
 
         //Set Case Priority
         if(cn.RecordTypeId == incidentRecordType || cn.RecordTypeId == problemRecordType)
@@ -214,7 +209,7 @@ trigger CaseBeforeUpdate on Case (before update)
                     cn.Acknowledge_By__c = System.now().addHours(2);
                     cn.Transferred_By__c = UserInfo.getUserId();
 
-                    if(cn.RecordTypeId != '01270000000MHOw' && cn.KnownIssue__c == NULL)//Corp IT
+                    if(cn.RecordTypeId != '01270000000MHOw' && cn.KnownIssue__c == NULL && cn.Status != 'Case Rejected')//Corp IT
                     {
                         cn.Status = 'Transferred';
                     }
@@ -327,20 +322,6 @@ trigger CaseBeforeUpdate on Case (before update)
             }
         }
 
-        //maintenance time zone conversion
-        if(cn.RecordTypeId == maintenanceRecordType && cn.TimeZone__c == 'UTC/GMT')
-        {
-            if(co.EventStartDateTime__c != cn.EventStartDateTime__c)
-            {
-                datetime sd = cn.EventStartDateTime__c;
-                cn.EventStartDateTime__c = datetime.newInstanceGmt(sd.year(),sd.month(),sd.day(),sd.hour(),sd.minute(),sd.second());
-            }
-            if(co.EventEndDateTime__c != cn.EventEndDateTime__c)
-            {
-                datetime ed = cn.EventEndDateTime__c;
-                cn.EventEndDateTime__c = datetime.newInstanceGmt(ed.year(),ed.month(),ed.day(),ed.hour(),ed.minute(),ed.second());
-            }
-        }
 
         //get all newly closed cases for sla Entitlements
 		//Modified for Jonah entitlement project 5/19/17 to not close on resolve
@@ -392,14 +373,8 @@ trigger CaseBeforeUpdate on Case (before update)
     if(!closedCasesForEntitlements.isEmpty())
     {
         //close out any remaining first response milestones first.
-        CaseAssignmentClass.CompleteMilestone(closedCasesForEntitlements, 'First Response', system.now());
-        CaseAssignmentClass.CompleteMilestone(closedCasesForEntitlements, 'Status Update', system.now());
-        CaseAssignmentClass.CompleteMilestone(closedCasesForEntitlements, 'SLA', system.now());
-    }
-
-    if(!itCaseIds.isEmpty())
-    {
-        ChatterUpdates.ChatterFollowITDevelopment(itCaseIds);
+        List<String> entitlementsToClose = new List<String>{'First Response','Status Update','SLA'};
+        CaseAssignmentClass.CompleteMilestone(closedCasesForEntitlements, entitlementsToClose, system.now());
     }
 
     if(!System.isFuture() && !attachedToKnownIssue.isEmpty() && !system.isBatch()){

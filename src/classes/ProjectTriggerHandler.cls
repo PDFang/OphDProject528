@@ -285,7 +285,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         || newProject.Asset_Logged_Hours__c > 0
                         || newProject.Subscription_Logged_Hours__c > 0
                         || newProject.Asset_Allocated_Hours__c > 0
-                        || newProject.Subscription_Allocated_Hours__c > 0))
+                        || newProject.Subscription_Allocated_Hours__c > 0
+                        || newProject.On_Hold_NRR__c > 0))
                 {
                     system.debug('**** setParentProjectGoLiveDates(): created Phase Project ');
                     parentProjectIdSet.add(newProject.ParentProject__c);
@@ -300,7 +301,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         || newProject.Asset_Allocated_Hours__c != oldProject.Asset_Allocated_Hours__c
                         || newProject.Subscription_Allocated_Hours__c != oldProject.Subscription_Allocated_Hours__c
                         || newProject.Actual_MRR__c != oldProject.Actual_MRR__c
-                        || newProject.Contracted_MRR__c != oldProject.Contracted_MRR__c) )
+                        || newProject.Contracted_MRR__c != oldProject.Contracted_MRR__c
+                        || newProject.On_Hold_NRR__c != oldProject.On_Hold_NRR__c))
                 {
                     system.debug('**** setParentProjectGoLiveDates(): updated Phase Project ');
                     parentProjectIdSet.add(newProject.ParentProject__c);
@@ -653,16 +655,25 @@ public class ProjectTriggerHandler extends TriggerHandler{
 
                 if ((newProject.Phase_Status__c == 'Cancelled' && oldMap.get(newProject.Id).Phase_Status__c != 'Cancelled' && !projectStatusUpdate)
                         || (newProject.Phase_Status__c == 'Suspended' && oldMap.get(newProject.Id).Phase_Status__c != 'Suspended' && !projectStatusUpdate)
-                        || (newProject.Phase_Status__c == 'Open' && oldMap.get(newProject.Id).Phase_Status__c == 'Suspended' && !projectStatusUpdate)) {
+                        || (newProject.Phase_Status__c != 'Suspended' && oldMap.get(newProject.Id).Phase_Status__c == 'Suspended' && !projectStatusUpdate)) {
 
 
-                    if(newProject.Department_Responsible__c == null || newProject.Root_Cause__c == null){
+                    if((newProject.Department_Responsible__c == null || newProject.Root_Cause__c == null) && (newProject.Phase_Status__c == 'Suspended' || newProject.Phase_Status__c == 'Cancelled')){
                         newProject.addError('Department Responsible and Root Cause are required, when Phase status is Cancelled or Suspended.');
                         return;
                     }
 
-                    if(newProject.Asset_Allocation_Count__c > 0 || newProject.Subscription_Allocation_Count__c > 0){
-                        newProject.addError('Please remove all the asset/subscription allocations before cancelling/suspending the phase project, on manage allocations page.');
+                    if((newProject.Asset_Allocation_Count__c > 0 || newProject.Subscription_Allocation_Count__c > 0) && newProject.Phase_Status__c == 'Cancelled'){
+                        newProject.addError('Please remove all the asset/subscription allocations from manage allocations page before cancelling the phase project.');
+                        return;
+                    }
+
+                    if((newProject.Asset_On_Hold__c != newProject.Asset_Allocations__c || newProject.Subscription_On_Hold__c != newProject.Subscription_Allocations__c)&& newProject.Phase_Status__c == 'Suspended'){
+                        newProject.addError('Please use the Manage Allocations page to put all allocations on Hold before sunpending the phase project.');
+                        return;
+                    }
+                    if((newProject.Asset_On_Hold__c != newProject.Asset_Allocations__c || newProject.Subscription_On_Hold__c != newProject.Subscription_Allocations__c)&& oldMap.get(newProject.Id).Phase_Status__c == 'Suspended'){
+                        newProject.addError('Please use the Manage Allocations page to release all allocations from Hold before changing the phase project status.');
                         return;
                     }
 

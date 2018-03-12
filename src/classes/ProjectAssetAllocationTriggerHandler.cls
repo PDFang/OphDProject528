@@ -12,11 +12,19 @@ public class ProjectAssetAllocationTriggerHandler extends TriggerHandler{
         CheckTimeBeofreDelete();
     }
 
+    public override void afterDelete(){
+        rollupNRRToPhase();
+    }
+
     static set<string> closedProjectStatus = new set<String>{
             'Closed',
             'Cancelled',
             'Suspended'
     };
+
+    @TestVisible
+    private static String assetRollupQueueableJobID;
+
 
     private static void CheckTimeBeofreDelete(){
         List<Project_Asset_Allocation__c> allocations = (List<Project_Asset_Allocation__c>)(trigger.old);
@@ -90,5 +98,27 @@ public class ProjectAssetAllocationTriggerHandler extends TriggerHandler{
     public static void UpdateAsset(set<Id> assetIds){
             ProjectTriggerHandler.updateAssetFullyImplemented(assetIds);
     }
+
+    private static void rollupNRRToPhase(){
+        List<Project_Asset_Allocation__c> lstallocations = (List<Project_Asset_Allocation__c>)(trigger.old);
+        set<id> projectIdsets = new set<Id>();
+        for(Project_Asset_Allocation__c allocation : lstallocations){
+            if(allocation.Project__c != null){
+                projectIdsets.add(allocation.Project__c);
+            }
+        }
+
+
+        if(projectIdsets.size() > 0 && assetRollupQueueableJobID == null && RollupUtility.isRollupEnabled){
+            if(limits.getQueueableJobs() < limits.getLimitQueueableJobs()) {
+                AssetRollupQueueable queueable = new AssetRollupQueueable();
+                queueable.projectIds = projectIdsets;
+                assetRollupQueueableJobID = System.enqueueJob(queueable);
+                system.debug('**** rollupNRRToPhaseProject(): assetRollupQueueableJobID - ' + assetRollupQueueableJobID);
+            }
+        }
+
+    }
+
 }
 

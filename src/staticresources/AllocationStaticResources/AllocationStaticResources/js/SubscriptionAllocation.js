@@ -426,7 +426,7 @@ function gridDataboundSubscription(e){
               if (currentDataItem.Implemented == true && isManager == false) {
                   $(this).remove();
               }
-              else if((projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false){
+              else if(projectPhaseStatus == 'Cancelled' || ((projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false)){
                   $(this).remove();
               }
           });
@@ -437,7 +437,7 @@ function gridDataboundSubscription(e){
                   if (currentDataItem.Implemented == true && isManager == false) {
                       $(this).remove();
                   }
-                  else if((projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false){
+                  else if(projectPhaseStatus == 'Cancelled' || ((projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false)){
                     $(this).remove();
                   }
               });
@@ -666,6 +666,7 @@ function detailSubscription(e) {
             row = $(this).closest("tr"),
             grid = $("#detailSubscriptionTable").data("kendoGrid"),
             dataItem = grid.dataItem(row);
+            subscheckedIds = {};
 
             subscheckedIds[dataItem.SubscriptionId] = checked;
 

@@ -20,38 +20,7 @@ public class ChatterUpdates
 		insert cgms;
 	} 
 	
-	public static void ChatterFollowITDevelopment(Id[] caseIds)
-	{
-		List<CollaborationGroupMember> cgmList = new List<CollaborationGroupMember>();
-		cgmList = [SELECT MemberId FROM CollaborationGroupMember WHERE CollaborationGroupId IN (SELECT Id FROM CollaborationGroup WHERE Name = 'IT Developers' OR Name = 'IT Development')];
-		
-		List<EntitySubscription> esList = new List<EntitySubscription>();
-		
-		for(Id c:caseIds)
-		{
-			for(CollaborationGroupMember cgm: cgmList)
-			{
-				EntitySubscription es = new EntitySubscription();
-				es.ParentId = c;
-				es.SubscriberId = cgm.MemberId;
-				
-				esList.Add(es);
-				
-			}
-		}
-		
-		if(!esList.IsEmpty())
-		{
-			try
-			{
-				insert esList;
-			} 
-			catch (DmlException e) 
-			{
-				//will error if record already exists 
-			}
-		}
-	}
+
 	
 	public static void ChatterFollowEvents(Map<Id,String> caseIds)
 	{

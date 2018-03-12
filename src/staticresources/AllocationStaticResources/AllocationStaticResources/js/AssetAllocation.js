@@ -391,7 +391,7 @@
             if ((currentDataItem.Implemented == true && isManager == false) ) {
                 $(this).remove();
             }
-            else if((projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false){
+            else if(projectPhaseStatus == 'Cancelled' || ((projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false)){
                                 $(this).remove();
             }
         });
@@ -402,7 +402,7 @@
                 if ((currentDataItem.Implemented == true && isManager == false) ) {
                     $(this).remove();
                 }
-                else if((projectPhaseStatus == 'Cancelled' || projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false){
+                else if(projectPhaseStatus == 'Cancelled' || ((projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false)){
                     $(this).remove();
                 }
 
@@ -654,6 +654,8 @@
             row = $(this).closest("tr"),
             grid = $("#detailTable").data("kendoGrid"),
             dataItem = grid.dataItem(row);
+
+        checkedIds = {};
 
         checkedIds[dataItem.id] = checked;
 
