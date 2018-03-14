@@ -226,7 +226,7 @@ trigger CaseBeforeUpdate on Case (before update)
             {
                 if(queueUsers.containsKey(cn.OwnerID))
                 {
-                    if(cn.Assigned_To__c != null && co.Assigned_To__c != cn.Assigned_To__c && cn.IsClosed == False)
+                    if(cn.Assigned_To__c != null && co.Assigned_To__c != cn.Assigned_To__c && cn.IsClosed == False && cn.Status != 'Case Rejected')
                     {
                         if(queueUsers.get(cn.OwnerID).contains(cn.Assigned_To__c))
                         {
