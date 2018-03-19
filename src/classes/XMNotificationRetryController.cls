@@ -83,7 +83,8 @@ public without sharing class XMNotificationRetryController {
                     AddedPlatforms__c = notification.AddedPlatforms__c,
                     Status__c = 'New',
                     Related_Notification__c = notification.Id,
-                    Public_Comment__c = notification.Public_Comment__c
+                    Public_Comment__c = notification.Public_Comment__c,
+                    CommentId__c = notification.CommentId__c
             );
             insert newNotification;
 

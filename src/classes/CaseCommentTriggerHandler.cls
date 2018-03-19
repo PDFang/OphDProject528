@@ -169,10 +169,12 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
         ]);
         system.debug('createXmNotification(): caseMap - ' + caseMap);
 
+        // ignore if the notification was already sent out for a comment
         for(xmNotification__c notification : [
                 Select Case__c, CommentId__c
                 from xmNotification__c
                 where Case__c IN :caseIdSet and Request_Type__c = :XMNotificationTriggerHandler.REQUEST_TYPE_COMMENT
+                and Status__c IN ('Processed', 'Completed')
         ]){
             CaseComment commentIgnored = processMap.containsKey(notification.CommentId__c) ? processMap.remove(notification.CommentId__c) : null;
             system.debug('createXmNotification(): commentIgnored - ' + commentIgnored);
@@ -187,6 +189,7 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
             Case parentCase = caseMap.get(comment.ParentId);
             system.debug('createXmNotification(): parentCase - ' + parentCase);
 
+            // is qualified event?
             if(parentCase == null || !caseHandler.isQualifiedEvent(parentCase)){
                 continue;
             }
