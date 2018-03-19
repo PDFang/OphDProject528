@@ -244,12 +244,16 @@ public class CaseTriggerHandler extends TriggerHandler
         List<xmNotification__c> notificationList = new List<xmNotification__c>();
 
         for(Case newCase :processList){
+
+            CaseComment lastComment = caseCommentMap.containsKey(newCase.Id) ? caseCommentMap.get(newCase.Id) : null;
+
             xmNotification__c xmNotification = new xmNotification__c(
                     Case__c = newCase.Id,
                     Request_Date__c = system.now(),
                     Request_Type__c = requestType == '' ? getXmNotificationRequestType(newCase) : requestType,
                     AddedPlatforms__c = platformsAdded,
-                    Public_Comment__c = caseCommentMap.containsKey(newCase.Id) ? caseCommentMap.get(newCase.Id).CommentBody : null
+                    Public_Comment__c = lastComment != null ? lastComment.CommentBody : null,
+                    CommentId__c = lastComment != null ? lastComment.Id : null
             );
             notificationList.add(xmNotification);
         }
