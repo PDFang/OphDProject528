@@ -47,7 +47,7 @@ public class ProjectAssetAllocationTriggerHandler extends TriggerHandler{
 
         if(timingList.size() > 0){
             for(Project_Asset_Allocation__c allocation : allocations){
-                allocation.addError('Asset Allocation can not be deleted as there are time enteries on the allocation. ');
+                allocation.addError('Asset Allocation can not be deleted as there are time enteries on the allocation. Please update the allocation quantity to Zero instead. ');
             }
         }
     }

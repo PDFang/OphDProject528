@@ -674,7 +674,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         newProject.addError('Please use the Manage Allocations page to put all allocations on Hold before sunpending the phase project.');
                         return;
                     }
-                    if((newProject.Asset_On_Hold__c != newProject.Asset_Allocations__c || newProject.Subscription_On_Hold__c != newProject.Subscription_Allocations__c)&& oldMap.get(newProject.Id).Phase_Status__c == 'Suspended'){
+                    if((newProject.Asset_On_Hold__c == newProject.Asset_Allocations__c || newProject.Subscription_On_Hold__c == newProject.Subscription_Allocations__c)&& oldMap.get(newProject.Id).Phase_Status__c == 'Suspended'){
                         newProject.addError('Please use the Manage Allocations page to release all allocations from Hold before changing the phase project status.');
                         return;
                     }

@@ -380,10 +380,11 @@ function addDuplicateRowSubscription(e){
 }
 
 function enableSubscriptionAllocation(rowData, row){
-            var allocatedHoursCell =  $(row).children().eq(9);
+
             var allocatedQPercentageCell =  $(row).children().eq(8);
             $(allocatedQPercentageCell).find("input").prop('disabled', true).addClass("k-state-disabled");
             $(allocatedQPercentageCell).find("span.k-select").hide();
+           $(row).children().eq(7).find("input").focus();
             var implementedCell =  $(row).children().eq(9);
             $(implementedCell).find("input").prop('disabled', true);
         }

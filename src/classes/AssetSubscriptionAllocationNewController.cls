@@ -118,12 +118,9 @@ public with sharing class AssetSubscriptionAllocationNewController {
         catch (DmlException ex){
             result = 'Failed';
             message = ex.getMessage();
-            Integer occurence;
+
             if (ex.getMessage().contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
-                occurence = message.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
-                message = message.mid(occurence, message.length());
-                occurence = message.lastIndexOf(':');
-                message = message.mid(0, occurence);
+	            message = simplyfyErrorMessage(message);
             }
             else {
                 message = ex.getMessage();
@@ -145,12 +142,9 @@ public with sharing class AssetSubscriptionAllocationNewController {
         String result;
         try{
             result = AssetSubscriptionAllocationHelper.DeleteAllocation(allocationId, objType);
-            Integer occurence;
+
             if (result.contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
-                occurence = result.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
-                result = result.mid(occurence, result.length());
-                occurence = result.lastIndexOf(':');
-                result = result.mid(0, occurence);
+
             }
 
         }catch (Exception ex){
@@ -170,12 +164,9 @@ public with sharing class AssetSubscriptionAllocationNewController {
 		if(subscriptionIdList != null)
 			subscriptionIds =  (List<string>)JSON.deserialize(subscriptionIdList, List<string>.class);
 		result = AssetSubscriptionAllocationHelper.SaveAllAllocations(assetIds,subscriptionIds,projectId);
-		Integer occurence;
+
 		if (result.contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
-			occurence = result.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
-			result = result.mid(occurence, result.length());
-			occurence = result.lastIndexOf(':');
-			result = result.mid(0, occurence);
+			result = simplyfyErrorMessage(result);
 		}
 
 		return result;
@@ -233,12 +224,9 @@ public with sharing class AssetSubscriptionAllocationNewController {
     public void deleteAssetAllocation(){
         try{
            string result = helper.deleteNonImplementedAssetAllocations(Asset.Id);
-            Integer occurence;
+
             if (result.contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
-                occurence = result.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
-                result = result.mid(occurence, result.length());
-                occurence = result.lastIndexOf(':');
-                result = result.mid(0, occurence);
+	            result = AssetSubscriptionAllocationNewController.simplyfyErrorMessage(result);
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, result));
             }else if(result != 'success'){
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, result));
@@ -257,13 +245,9 @@ public with sharing class AssetSubscriptionAllocationNewController {
     }
 
     public void deleteSubsAllocation(){
-        string result = helper.deleteNonImplementedSubsAllocations(Asset.Id);
-        Integer occurence;
+        string result = helper.deleteNonImplementedSubsAllocations(Subscription.Id);
         if (result.contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
-            occurence = result.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
-            result = result.mid(occurence, result.length());
-            occurence = result.lastIndexOf(':');
-            result = result.mid(0, occurence);
+            result = AssetSubscriptionAllocationNewController.simplyfyErrorMessage(result);
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, result));
         }else if(result != 'success'){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, result));
@@ -320,5 +304,13 @@ public with sharing class AssetSubscriptionAllocationNewController {
 
     }
 
+    private static string simplyfyErrorMessage(string result){
+        Integer occurence;
+        occurence = result.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
+        result = result.mid(occurence, result.length());
+        occurence = result.lastIndexOf(':');
+        result = result.mid(0, occurence);
+        return result;
+    }
 
 }

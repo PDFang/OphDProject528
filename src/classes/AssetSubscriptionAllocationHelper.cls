@@ -254,7 +254,7 @@ public class AssetSubscriptionAllocationHelper {
 		} else{
 			soql += ' Asset__c = \'' + assetId + '\'';
 		}
-		soql += ' order by createddate DESC ';
+		soql += ' order by Quantity_Allocation__c DESC ';
 
 		List<Project_Asset_Allocation__c> allocations = Database.query(soql);
 
@@ -288,7 +288,7 @@ public class AssetSubscriptionAllocationHelper {
 		} else{
 			soql += ' Subscription__c = \'' + subscriptionId + '\'';
 		}
-		soql += ' order by createddate DESC ';
+		soql += ' order by Quantity_Allocation__c DESC ';
 
 		List<Project_Subscription_Allocation__c> allocations = Database.query(soql);
 		for(Project_Subscription_Allocation__c allocation : allocations){

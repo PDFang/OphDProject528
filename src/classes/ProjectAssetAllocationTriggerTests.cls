@@ -26,15 +26,60 @@ private class ProjectAssetAllocationTriggerTests {
     static List<Project__c> projectList = null;
     static List<Asset> assetList = null;
     static Project_Asset_Allocation__c projectAssetAllocation = null;
+    static WorkIt2__Session_Type__c session_type;
+    static list<WorkIt2__Time_Entry__c> timeEntryList;
+    static list<WorkIt2__Timing__c> timings;
 
     static testMethod void AddParentProjectTest() {
 
         createTestData();
         createAssets();
 
-        Project_Asset_Allocation__c savedAllocation = [SELECT Id, ParentProjectId__c FROM Project_Asset_Allocation__c WHERE Id = :projectAssetAllocation.Id];
-        system.assertEquals(savedAllocation.ParentProjectId__c, projectList[0].Id);
+        Project_Asset_Allocation__c projectAssetAllocation2 = new Project_Asset_Allocation__c(
+                Project__c = projectList[2].id,
+                Asset__c = assetList[0].Id,
+                Quantity_Allocation__c = 2
+        );
+
+        Test.startTest();
+            Project_Asset_Allocation__c savedAllocation = [SELECT Id, ParentProjectId__c FROM Project_Asset_Allocation__c WHERE Id = :projectAssetAllocation.Id];
+            system.assertEquals(savedAllocation.ParentProjectId__c, projectList[0].Id);
+
+            insert projectAssetAllocation2;
+
+        Project_Asset_Allocation__c implementedAllocation = [SELECT Id, Implemented__c FROM Project_Asset_Allocation__c WHERE Id = :projectAssetAllocation2.Id];
+            system.assertEquals(implementedAllocation.Implemented__c, true);
+        Test.StopTest();
     }
+
+    static testMethod  void TestTimingError(){
+        createTestData();
+        createAssets();
+        createTimingData();
+        try{
+
+            delete projectAssetAllocation;
+
+        }catch (Exception ex){
+            Boolean expectedExceptionThrown =  ex.getMessage().contains('Asset Allocation can not be deleted as there are time enteries') ? true : false;
+            System.AssertEquals(expectedExceptionThrown, true);
+        }
+    }
+
+    static testMethod void TestRollup(){
+        createTestData();
+        createAssets();
+        Test.startTest();
+            string localProjectId = projectAssetAllocation.Project__c;
+            Project__c projBeforeDelete = [select Contracted_NRR__c from Project__c where Id = :localProjectId];
+            System.debug('actual NRR before delete ==> ' + projBeforeDelete.Contracted_NRR__c);
+            delete projectAssetAllocation;
+        Test.StopTest();
+        Project__c projafterDelete = [select Contracted_NRR__c from Project__c where Id = :localProjectId];
+        System.debug('actual NRR before delete ==> ' + projBeforeDelete.Contracted_NRR__c);
+        system.assertEquals(projafterDelete.Contracted_NRR__c, 0);
+    }
+
 
     static void createTestData()
     {
@@ -119,6 +164,7 @@ private class ProjectAssetAllocationTriggerTests {
         Project__c phase2 = new Project__c();
         phase2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PHASE_SAAS);
         phase2.ProjectManager__c = '00539000005M7TO';
+        phase2.Phase_Status__c = 'Closed';
         //phase1.Projected_Deadline__c = system.today() + 30;
         projectList.add(phase2);
 
@@ -167,14 +213,44 @@ private class ProjectAssetAllocationTriggerTests {
 
         projectAssetAllocation = new Project_Asset_Allocation__c(
                 Asset__c = assetList[0].Id,
-                Project__c = assetList[0].Project_Phase__c,
+                Project__c = projectList[1].id,
                 Quantity_Allocation__c = 2
 
         );
 
         insert  projectAssetAllocation;
         System.debug('projectAssetAllocation =>' + projectAssetAllocation);
+    }
 
+    static void createTimingData(){
+        session_type = new WorkIt2__Session_Type__c(
+                Name = 'Reviewing Details Test',
+                WorkIt2__Priority__c = 50
+        );
+
+        insert session_type;
+
+        timings = new list<WorkIt2__Timing__c>();
+
+        WorkIt2__Timing__c subscription_timing = new WorkIt2__Timing__c(
+                Project_Asset_Allocation__c = projectAssetAllocation.Id
+        );
+
+        timings.add(subscription_timing);
+
+        insert timings;
+
+        timeEntryList = new list<WorkIt2__Time_Entry__c>();
+
+        WorkIt2__Time_Entry__c time_entry1 = new WorkIt2__Time_Entry__c(
+                WorkIt2__Session_Type__c = session_type.Id,
+                WorkIt2__Start__c = System.now().addHours(-1),
+                WorkIt2__Timing__c = timings[0].Id
+        );
+        timeEntryList.add(time_entry1);
+
+
+        insert timeEntryList;
 
     }
 }

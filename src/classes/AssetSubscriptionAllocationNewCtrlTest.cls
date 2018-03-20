@@ -75,7 +75,6 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         //System.debug('assetSubsResponseFromProj =>' + assetSubsResponseFromProj);
         System.assertNotEquals(null, assetSubsResponseFromProj);
 
-
         asstSubsAlloCont.Asset.QuantityCancelled__c = 2;
 	    asstSubsAlloCont.Asset.QuantityonHold__c = 0;
         asstSubsAlloCont.SaveCancSuspQuantity();
@@ -245,7 +244,6 @@ private class AssetSubscriptionAllocationNewCtrlTest {
         System.debug('assetSubsResponseFromProj =>' + assetSubsResponseFromProj);
         System.assertNotEquals(null, assetSubsResponseFromProj);
 
-
         asstSubsAlloCont.cancel();
         asstSubsAlloCont.reloadDetails();
 
@@ -387,6 +385,33 @@ private class AssetSubscriptionAllocationNewCtrlTest {
 	    Test.stopTest();
 
     }
+
+
+	static testMethod void PhaseProjectNewControllerTest(){
+		createTestData();
+		createSubscription();
+		createAssets();
+		Test.startTest();
+			ApexPages.currentPage().getParameters().put('id', projectList[1].Id);
+		    asstSubsAlloCont = new AssetSubscriptionAllocationNewController();
+
+			string message = AssetSubscriptionAllocationNewController.CancelAllocations(projectList[1].Id);
+			System.assertEquals(true, message.containsIgnoreCase('Successfully'));
+
+			string holdMessage = AssetSubscriptionAllocationNewController.ManageOnHoldAllocations(projectList[1].Id, true);
+			System.assertEquals(true, holdMessage.containsIgnoreCase('Successfully'));
+
+			set<id> assetIds = new set<id>{assetList[0].Id};
+			set<id> subscriptionIds = new set<id>{subscriptionReplica.Id};
+
+			string assetIdString = JSON.serialize(assetIds);
+			string subscriptionIdString = JSON.serialize(assetIds);
+
+			string saveMessage = AssetSubscriptionAllocationNewController.SaveAllAllocation(assetIdString, subscriptionIdString,projectList[1].Id);
+			//System.assertEquals(true, saveMessage.containsIgnoreCase('Success'));
+
+		Test.stopTest();
+	}
 
 
     static void createTestData()
