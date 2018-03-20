@@ -164,7 +164,7 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
         }
 
         Map<Id, Case> caseMap = new Map<Id, Case>([
-                Select Id, Priority, RecordTypeId, InternalEvent__c, NonEvent__c from Case
+                Select Id, Priority, RecordTypeId, InternalEvent__c, NonEvent__c, LastPublicCommentDateTime__c from Case
                 where Id IN :caseIdSet and Status IN ('Confirmed', 'Being Worked')
         ]);
         system.debug('createXmNotification(): caseMap - ' + caseMap);
@@ -189,8 +189,8 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
             Case parentCase = caseMap.get(comment.ParentId);
             system.debug('createXmNotification(): parentCase - ' + parentCase);
 
-            // is qualified event?
-            if(parentCase == null || !caseHandler.isQualifiedEvent(parentCase)){
+            // is qualified event?, is the most recently posted public comment on the case?
+            if(parentCase == null || !caseHandler.isQualifiedEvent(parentCase) || comment.CreatedDate < parentCase.LastPublicCommentDateTime__c){
                 continue;
             }
             xmNotification__c xmNotification = new xmNotification__c(
