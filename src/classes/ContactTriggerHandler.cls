@@ -55,7 +55,7 @@ public class ContactTriggerHandler extends TriggerHandler{
                 newContact.XmattersUid__c = personMap.get(newContact.Id).xmPerson__r.xmPersonUID__c;
                 newContact.xmPerson__c = null;
             }
-            if(!isDeactivated && !newContact.email.equalsIgnoreCase(emailOld)){
+            if(!isDeactivated && String.isNotBlank(newContact.Email) && !newContact.email.equalsIgnoreCase(emailOld)){
                 dupeContactIds.add(newContact.Id);
             }
         }

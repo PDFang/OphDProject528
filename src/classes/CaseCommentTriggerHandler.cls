@@ -145,47 +145,60 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
     // Create an xmNotification record when new comment is added or existing comment is published
     private void createXmNotification(List<CaseComment> newList, Map<Id, CaseComment> oldMap){
 
-        List<CaseComment> processList = new List<CaseComment>();
+        Map<Id, CaseComment> processMap = new Map<Id, CaseComment>();
         Set<Id> caseIdSet = new Set<Id>();
 
         // new comment is added or existing comment is published
         for(CaseComment comment : newList) {
             CaseComment oldComment = (oldMap != null && oldMap.containsKey(comment.Id)) ? oldMap.get(comment.Id) : null;
             if(comment.IsPublished && (oldComment == null || comment.IsPublished != oldComment.IsPublished) ){
-                processList.add(comment);
+                processMap.put(comment.Id, comment);
                 caseIdSet.add(comment.ParentId);
             }
         }
 
-        system.debug('createXmNotification(): processList - ' + processList);
+        system.debug('createXmNotification(): processMap - ' + processMap);
 
-        if(processList.isEmpty()){
+        if(processMap.isEmpty()){
             return;
         }
 
         Map<Id, Case> caseMap = new Map<Id, Case>([
-                Select Id, Priority, RecordTypeId, InternalEvent__c, NonEvent__c from Case
+                Select Id, Priority, RecordTypeId, InternalEvent__c, NonEvent__c, LastPublicCommentDateTime__c from Case
                 where Id IN :caseIdSet and Status IN ('Confirmed', 'Being Worked')
         ]);
         system.debug('createXmNotification(): caseMap - ' + caseMap);
+
+        // ignore if the notification was already sent out for a comment
+        for(xmNotification__c notification : [
+                Select Case__c, CommentId__c
+                from xmNotification__c
+                where Case__c IN :caseIdSet and Request_Type__c = :XMNotificationTriggerHandler.REQUEST_TYPE_COMMENT
+                and Status__c IN ('Processed', 'Completed')
+        ]){
+            CaseComment commentIgnored = processMap.containsKey(notification.CommentId__c) ? processMap.remove(notification.CommentId__c) : null;
+            system.debug('createXmNotification(): commentIgnored - ' + commentIgnored);
+        }
 
         List<xmNotification__c> notificationList = new List<xmNotification__c>();
 
         CaseTriggerHandler caseHandler = new CaseTriggerHandler();
 
-        for(CaseComment comment : processList){
+        for(CaseComment comment : processMap.values()){
 
             Case parentCase = caseMap.get(comment.ParentId);
             system.debug('createXmNotification(): parentCase - ' + parentCase);
 
-            if(parentCase == null || !caseHandler.isQualifiedEvent(parentCase)){
+            // is qualified event?, is the most recently posted public comment on the case?
+            if(parentCase == null || !caseHandler.isQualifiedEvent(parentCase) || comment.CreatedDate < parentCase.LastPublicCommentDateTime__c){
                 continue;
             }
             xmNotification__c xmNotification = new xmNotification__c(
                     Case__c = comment.ParentId,
                     Request_Date__c = system.now(),
                     Request_Type__c = XMNotificationTriggerHandler.REQUEST_TYPE_COMMENT,
-                    Public_Comment__c = comment.CommentBody
+                    Public_Comment__c = comment.CommentBody,
+                    CommentId__c = comment.Id
             );
             notificationList.add(xmNotification);
         }
@@ -199,7 +212,7 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
             insert notificationList;
         }catch(Exception ex){
             system.debug('createXmNotification(): Exception - ' + ex);
-            inContactBaseClass.SendErrorEmail(ex, processList[0].Id + ' - Failed to create xMatters notification request');
+            inContactBaseClass.SendErrorEmail(ex, notificationList[0].CommentId__c + ' - Failed to create xMatters notification request');
         }finally {
             // avoid recursion
             isXMCommentNotificationTurnedOff = true;

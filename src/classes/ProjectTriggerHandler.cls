@@ -653,6 +653,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
         for (Project__c newProject : newList) {
             if (psPhaseProjectIdSet.contains(newProject.RecordTypeId)) {
 
+                System.debug('UDEBUG: newProject - ' + newProject);
+
                 if ((newProject.Phase_Status__c == 'Cancelled' && oldMap.get(newProject.Id).Phase_Status__c != 'Cancelled' && !projectStatusUpdate)
                         || (newProject.Phase_Status__c == 'Suspended' && oldMap.get(newProject.Id).Phase_Status__c != 'Suspended' && !projectStatusUpdate)
                         || (newProject.Phase_Status__c != 'Suspended' && oldMap.get(newProject.Id).Phase_Status__c == 'Suspended' && !projectStatusUpdate)
@@ -664,7 +666,6 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         return;
                     }
 
-
                     if((newProject.Asset_Allocation_Count__c > 0 || newProject.Subscription_Allocation_Count__c > 0) && newProject.Phase_Status__c == 'Cancelled'){
                         newProject.addError('Please remove all the asset/subscription allocations from manage allocations page before cancelling the phase project.');
                         return;
@@ -674,7 +675,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         newProject.addError('Please use the Manage Allocations page to put all allocations on Hold before sunpending the phase project.');
                         return;
                     }
-                    if((newProject.Asset_On_Hold__c == newProject.Asset_Allocations__c || newProject.Subscription_On_Hold__c == newProject.Subscription_Allocations__c)&& oldMap.get(newProject.Id).Phase_Status__c == 'Suspended'){
+                    //if((newProject.Asset_On_Hold__c == newProject.Asset_Allocations__c || newProject.Subscription_On_Hold__c == newProject.Subscription_Allocations__c)&& oldMap.get(newProject.Id).Phase_Status__c == 'Suspended'){
+                    if((newProject.Asset_On_Hold__c > 0 || newProject.Subscription_On_Hold__c > 0)&& oldMap.get(newProject.Id).Phase_Status__c == 'Suspended'){
                         newProject.addError('Please use the Manage Allocations page to release all allocations from Hold before changing the phase project status.');
                         return;
                     }

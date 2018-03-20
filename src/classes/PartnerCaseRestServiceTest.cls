@@ -3,28 +3,8 @@ private class PartnerCaseRestServiceTest {
 
     static testMethod void updateIncidentTest(){
 
-        Account verizonAccount = [Select Id from Account where Billing_Group__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON LIMIT 1];
-        Contact verizonContact = [Select Id from Contact where AccountId = :verizonAccount.Id LIMIT 1];
-
-        // create an incident
-        Map<String,Schema.RecordTypeInfo> testIncidentTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
-        Case testIncident = new Case(
-                RecordTypeId = testIncidentTypeMap.get('Incident').getRecordTypeId(),
-                Subject = 'Verizon Test',
-                Status = 'New',
-                AccountId = verizonAccount.Id,
-                ContactId = verizonContact.Id,
-                Request_Type__c = 'Connectivity',
-                Product_or_Service__c = 'Local',
-                X3rdPartyVendorTicket__c = '20170925'
-        );
-
-        Database.DMLOptions dmo = new Database.DMLOptions();
-        dmo.AssignmentRuleHeader.useDefaultRule = true;
-        testIncident.setOptions(dmo);
-        insert testIncident;
-
-        String caseNumber = [Select Id, CaseNumber from Case Where Id = :testIncident.Id].CaseNumber;
+        Case testIncident = [Select Id, CaseNumber from Case Limit 1];
+        String caseNumber = testIncident.CaseNumber;
 
         ETMS_Trouble_Report_State_Status__mdt[] mdtList = [
                 Select Case_Status__c, Trouble_Report_State__c, Trouble_Report_Status__c
@@ -72,6 +52,47 @@ private class PartnerCaseRestServiceTest {
 
     }
 
+    static testMethod void longCommentTest(){
+
+        Case testIncident = [Select Id, CaseNumber from Case Limit 1];
+        String caseNumber = testIncident.CaseNumber;
+
+        Integer commentMaxLength = CaseComment.CommentBody.getDescribe().getLength();
+
+        String longComment = 'This comment is too long for Salesforce to handle';
+
+        do{
+            longComment = longComment + longComment;
+        } while (longComment.length() <= commentMaxLength);
+
+        PartnerCaseRestService.UpdateRequest updateRequest = new PartnerCaseRestService.UpdateRequest();
+        updateRequest.troubleReportId = caseNumber;
+        updateRequest.comments = new String[]{longComment};
+
+        test.startTest();
+
+        RestRequest request = new RestRequest();
+        request.requestURI = '/PartnerCase';
+        request.requestBody = Blob.valueOf(JSON.serialize(updateRequest));
+        request.headers.put('Content-Type', 'application/json');
+        request.httpMethod = 'POST';
+        RestContext.request = request;
+
+        RestResponse response = new RestResponse();
+        RestContext.response = response;
+
+        PartnerCaseRestService.updateIncident();
+
+        test.stopTest();
+
+        system.assertEquals(200, response.statusCode);
+        system.assertEquals('SUCCESS', response.responseBody.toString());
+
+        CaseComment[] comments = [Select Id from CaseComment where ParentId = :testIncident.Id];
+        system.assertEquals(updateRequest.comments.size(), comments.size(), 'Case comment update failed.');
+
+    }
+
     static testMethod void invalidTroubleReportIdTest(){
 
         test.startTest();
@@ -101,28 +122,8 @@ private class PartnerCaseRestServiceTest {
 
     static testMethod void invalidTroubleReportStateTest(){
 
-        Account verizonAccount = [Select Id from Account where Billing_Group__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON LIMIT 1];
-        Contact verizonContact = [Select Id from Contact where AccountId = :verizonAccount.Id LIMIT 1];
-
-        // create an incident
-        Map<String,Schema.RecordTypeInfo> testIncidentTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
-        Case testIncident = new Case(
-                RecordTypeId = testIncidentTypeMap.get('Incident').getRecordTypeId(),
-                Subject = 'Verizon Test',
-                Status = 'New',
-                AccountId = verizonAccount.Id,
-                ContactId = verizonContact.Id,
-                Request_Type__c = 'Connectivity',
-                Product_or_Service__c = 'Local',
-                X3rdPartyVendorTicket__c = '20170925'
-        );
-
-        Database.DMLOptions dmo = new Database.DMLOptions();
-        dmo.AssignmentRuleHeader.useDefaultRule = true;
-        testIncident.setOptions(dmo);
-        insert testIncident;
-
-        String caseNumber = [Select Id, CaseNumber from Case Where Id = :testIncident.Id].CaseNumber;
+        Case testIncident = [Select Id, CaseNumber from Case Limit 1];
+        String caseNumber = testIncident.CaseNumber;
 
         test.startTest();
 
@@ -209,6 +210,24 @@ private class PartnerCaseRestServiceTest {
         );
 
         insert verizonContact;
+
+        // create an incident
+        Map<String,Schema.RecordTypeInfo> testIncidentTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
+        Case testIncident = new Case(
+                RecordTypeId = testIncidentTypeMap.get('Incident').getRecordTypeId(),
+                Subject = 'Verizon Test',
+                Status = 'New',
+                AccountId = verizonAccount.Id,
+                ContactId = verizonContact.Id,
+                Request_Type__c = 'Connectivity',
+                Product_or_Service__c = 'Local',
+                X3rdPartyVendorTicket__c = '20170925'
+        );
+
+        Database.DMLOptions dmo = new Database.DMLOptions();
+        dmo.AssignmentRuleHeader.useDefaultRule = true;
+        testIncident.setOptions(dmo);
+        insert testIncident;
 
     }
 

@@ -107,7 +107,12 @@ global with sharing class PartnerCaseRestService {
 
                 CaseComment[] commentList = new CaseComment[]{};
 
+                Integer commentMaxLength = CaseComment.CommentBody.getDescribe().getLength();
+
                 for(String comment : request.comments){
+
+                    comment = (String.isNotBlank(comment) && comment.length() > commentMaxLength)
+                            ? comment.left(commentMaxLength) : comment;
                     CaseComment newCaseComment = new CaseComment(
                             CommentBody = comment,
                             IsPublished = false,
