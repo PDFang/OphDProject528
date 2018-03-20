@@ -164,7 +164,6 @@
             width: "400px",
             height: "200px",
         }).data("kendoWindow");
-
       $("#assetAllocationList").kendoGrid({
           dataSource: assetAllocationData,
           editable: "inline",
@@ -176,6 +175,7 @@
           detailInit: loadChildGrid,
           cancel : hideChildProjects,
           resizable: true,
+          sortable:true,
           toolbar: [
               {
                   name: "create",
@@ -233,6 +233,7 @@
                     {
                         field:"Implemented",
                         title:"Impl",
+                        sortable:false,
                         template: '<input type="checkbox"  "# if (data.Implemented) { # checked="checked" # } #"  disabled "/>',
                         width:75
 
@@ -240,11 +241,13 @@
                     {
                         field:"OnHold",
                         title:"On Hold",
+                        sortable:false,
                         template: '<input type="checkbox"  "# if (data.OnHold) { # checked="checked" # } #" disabled="true" "/>',
                         width:75
 
                     },
                     {   title:"Action",
+                        sortable:false,
                         command: ["edit",
                         {name: "Delete",
                          click: function(e){  //add a click event listener on the delete button
@@ -295,12 +298,14 @@
               });
 
 
+
        }
+
 
     function addDuplicateRowAsset(e){
            var assetGrid = $("#assetAllocationList").data("kendoGrid");
            var dataItems = assetGrid.dataItems();
-           if(e.model.isNew() && !e.model.dirty ){
+            if(e.model.isNew() && !e.model.dirty ){
                if(currentObjectType == 'Asset'){
                    e.model.Asset = Asset.Id;
                    e.model.AssetName =Asset.Name;
@@ -603,13 +608,13 @@
                     dataBound:onAssetDataBound,
                     toolbar:[
                         {
-                            template : '<a class="k-button" href="\\#" onclick="return updateAllocation();">Allocate Selected</a>'
+                            template : '<a class="k-button k-primary" href="\\#"  onclick="return updateAllocation();">Allocate Selected</a>'
                         }
                     ],
                     columns: [
                          {
                             title: 'Select All',
-                            headerTemplate: "<input type='checkbox' id='asset-header-chb' class='k-checkbox header-checkbox'><label class='k-checkbox-label' for='asset-header-chb' style='top:-10px;'></label>",
+                            headerTemplate: "<input type='checkbox' id='asset-header-chb' class='k-checkbox header-checkbox'><label class='k-checkbox-label' for='asset-header-chb'>Select All</label>",
                             template: function (dataItem) {
                                 return "<input type='checkbox' id='" + dataItem.AssetId + "' class='k-checkbox row-checkbox'><label class='k-checkbox-label' for='" + dataItem.AssetId + "'></label>";
                             },
@@ -623,7 +628,7 @@
 
                     ]
                 });
-
+        checkedIds = {};
         var assetGrid = $("#detailTable").data("kendoGrid");
         //bind click event to the checkbox
         assetGrid.table.on("click", ".row-checkbox", selectRow);
@@ -654,8 +659,6 @@
             row = $(this).closest("tr"),
             grid = $("#detailTable").data("kendoGrid"),
             dataItem = grid.dataItem(row);
-
-        checkedIds = {};
 
         checkedIds[dataItem.id] = checked;
 

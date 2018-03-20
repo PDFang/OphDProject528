@@ -47,7 +47,7 @@ public class ProjectAssetAllocationTriggerHandler extends TriggerHandler{
 
         if(timingList.size() > 0){
             for(Project_Asset_Allocation__c allocation : allocations){
-                allocation.addError('Asset Allocation can not be deleted as there are time enteries on the allocation. ');
+                allocation.addError('Asset Allocation can not be deleted as there are time enteries on the allocation. Please update the allocation quantity to Zero instead. ');
             }
         }
     }
@@ -108,13 +108,14 @@ public class ProjectAssetAllocationTriggerHandler extends TriggerHandler{
             }
         }
 
+        System.debug('rollupNRRToPhase => projectIdsets ==>' + projectIdsets );
 
         if(projectIdsets.size() > 0 && assetRollupQueueableJobID == null && RollupUtility.isRollupEnabled){
             if(limits.getQueueableJobs() < limits.getLimitQueueableJobs()) {
                 AssetRollupQueueable queueable = new AssetRollupQueueable();
                 queueable.projectIds = projectIdsets;
                 assetRollupQueueableJobID = System.enqueueJob(queueable);
-                system.debug('**** rollupNRRToPhaseProject(): assetRollupQueueableJobID - ' + assetRollupQueueableJobID);
+                system.debug('**** rollupNRRToPhase(): assetRollupQueueableJobID - ' + assetRollupQueueableJobID);
             }
         }
 

@@ -666,7 +666,6 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         return;
                     }
 
-
                     if((newProject.Asset_Allocation_Count__c > 0 || newProject.Subscription_Allocation_Count__c > 0) && newProject.Phase_Status__c == 'Cancelled'){
                         newProject.addError('Please remove all the asset/subscription allocations from manage allocations page before cancelling the phase project.');
                         return;

@@ -191,8 +191,7 @@ public class ProjectRollupQueueable implements Queueable{
 
 
         for (AggregateResult ar : [
-                Select sum(Actual_NRR__c) totalActualNRR, sum(Contracted_NRR__c) totalContractedNRR,
-                        sum(Actual_MRR__c) totalActualMRR, sum(Contracted_MRR__c) totalContractedMRR, sum(On_Hold_NRR__c) totalOnHoldNRR,sum(On_Hold_MRR__c) totalOnHoldMRR,
+                Select sum(Actual_NRR__c) totalDeliveredNRR, sum(Contracted_NRR__c) totalAllocatedNRR,sum(Actual_MRR__c) totalDeliveredMRR, sum(Contracted_MRR__c) totalAllocatedMRR,sum(On_Hold_NRR__c) totalOnHoldNRR,sum(On_Hold_MRR__c) totalOnHoldMRR,
                         sum(Phase_Allocated_Hours__c) allocatedHours, sum(Phase_Logged_Hours__c) loggedHours, ParentProject__c
                 from Project__c
                 where ParentProject__c IN :projectCache.keySet() and RecordTypeId = :psProjectPhaseRecordTypeIds
@@ -211,12 +210,12 @@ public class ProjectRollupQueueable implements Queueable{
                 );
             }
 
-            parentProject.Actual_NRR__c = ar.get('totalActualNRR') != null ? (Decimal)ar.get('totalActualNRR') : 0;
-            parentProject.Contracted_NRR__c = ar.get('totalContractedNRR') != null ? (Decimal)ar.get('totalContractedNRR') : 0;
+            parentProject.Actual_NRR__c = ar.get('totalDeliveredNRR') != null ? (Decimal)ar.get('totalDeliveredNRR') : 0;
+            parentProject.Contracted_NRR__c = ar.get('totalAllocatedNRR') != null ? (Decimal)ar.get('totalAllocatedNRR') : 0;
             parentProject.Parent_Logged_Hours__c = ar.get('loggedHours') != null ? (Decimal)ar.get('loggedHours') : 0;
             parentProject.Parent_Allocated_Hours__c = ar.get('allocatedHours') != null ? (Decimal)ar.get('allocatedHours') : 0;
-            parentProject.Actual_MRR__c = ar.get('totalActualMRR') != null ? (Decimal)ar.get('totalActualMRR') : 0;
-            parentProject.Contracted_MRR__c = ar.get('totalContractedMRR') != null ? (Decimal)ar.get('totalContractedMRR') : 0;
+            parentProject.Actual_MRR__c = ar.get('totalDeliveredMRR') != null ? (Decimal)ar.get('totalDeliveredMRR') : 0;
+            parentProject.Contracted_MRR__c = ar.get('totalAllocatedMRR') != null ? (Decimal)ar.get('totalAllocatedMRR') : 0;
             parentProject.On_Hold_NRR__c = ar.get('totalOnHoldNRR') != null ? (Decimal)ar.get('totalOnHoldNRR') : 0;
 	        parentProject.On_Hold_MRR__c = ar.get('totalOnHoldMRR') != null ? (Decimal)ar.get('totalOnHoldMRR') : 0;
 

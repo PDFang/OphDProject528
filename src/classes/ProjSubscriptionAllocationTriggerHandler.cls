@@ -21,6 +21,10 @@ public class ProjSubscriptionAllocationTriggerHandler extends TriggerHandler  {
         CheckTimeBeofreDelete();
     }
 
+    public override void afterDelete(){
+        rollupMRRToPhase();
+    }
+
     private static void CheckTimeBeofreDelete(){
         List<Project_Subscription_Allocation__c> allocations = (List<Project_Subscription_Allocation__c>)(trigger.old);
         Set<Id> allocationIds = new Set<Id>();
@@ -28,7 +32,7 @@ public class ProjSubscriptionAllocationTriggerHandler extends TriggerHandler  {
 
         if(allocations.size() > 0){
             for(Project_Subscription_Allocation__c allocation : allocations){
-                allocationIds.add(allocation.Id);
+                        allocationIds.add(allocation.Id);
             }
         }
 
@@ -42,8 +46,7 @@ public class ProjSubscriptionAllocationTriggerHandler extends TriggerHandler  {
 
         if(timingList.size() > 0){
             for(Project_Subscription_Allocation__c allocation : allocations){
-                allocation.addError('Subscription Allocation can not be deleted as there are time enteries on the allocation. ' +
-                        'Please change the status field');
+                allocation.addError('Subscription Allocation can not be deleted as there are time enteries on the allocation. Please update the allocatation quantity to Zero instead.');
             }
         }
     }
@@ -111,7 +114,7 @@ public class ProjSubscriptionAllocationTriggerHandler extends TriggerHandler  {
                 SubscriptionRollupQueueable queueable = new SubscriptionRollupQueueable();
                 queueable.projectIds = projectIdsets;
                 SubstRollupQueueableJobID = System.enqueueJob(queueable);
-                system.debug('**** rollupNRRToPhaseProject(): assetRollupQueueableJobID - ' + SubstRollupQueueableJobID);
+                system.debug('**** rollupNRRToPhase(): SubstRollupQueueableJobID - ' + SubstRollupQueueableJobID);
             }
         }
 

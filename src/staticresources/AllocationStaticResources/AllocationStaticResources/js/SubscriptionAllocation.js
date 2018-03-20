@@ -204,6 +204,7 @@ function subscriptionAllocationData(projId, subscriptionId){
           detailInit: loadSubscriptionChildGrid,
           dataBound: gridDataboundSubscription,
           cancel : hideChildProjects,
+          sortable:true,
           toolbar: [
               {
                   name: "create",
@@ -272,6 +273,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                     {
                         field:"Implemented",
                         title:"Imp",
+                        sortable:false,
                         template: '<input type="checkbox"  "# if (data.Implemented) { # checked="checked" # } #"  disabled "/>',
                         width:50
 
@@ -279,12 +281,14 @@ function subscriptionAllocationData(projId, subscriptionId){
                     {
                         field:"OnHold",
                         title:"On Hold",
+                        sortable:false,
                         template: '<input type="checkbox"  "# if (data.OnHold) { # checked="checked" # } #"  disabled "/>',
                         width:50
 
                     },
                     {   title:"Action",
-                       command: ["edit",
+                        sortable:false,
+                        command: ["edit",
                         {name: "Delete",
                          click: function(e){  //add a click event listener on the delete button
                                  e.preventDefault(); //prevent page scroll reset
@@ -376,10 +380,11 @@ function addDuplicateRowSubscription(e){
 }
 
 function enableSubscriptionAllocation(rowData, row){
-            var allocatedHoursCell =  $(row).children().eq(9);
+
             var allocatedQPercentageCell =  $(row).children().eq(8);
             $(allocatedQPercentageCell).find("input").prop('disabled', true).addClass("k-state-disabled");
             $(allocatedQPercentageCell).find("span.k-select").hide();
+           $(row).children().eq(7).find("input").focus();
             var implementedCell =  $(row).children().eq(9);
             $(implementedCell).find("input").prop('disabled', true);
         }
@@ -533,20 +538,20 @@ function detailSubscriptionProjects(e) {
     }
 
     var wrapper, header, parentGrid;
-        function onProjSubDataBound(){
-                wrapper = this.wrapper,
-                header = wrapper.find(".k-grid-header");
-                parentGrid =  $("#subscriptionAllocationList").find('div.k-grid-content').first();
-                resizeFixed();
-                $(window).resize(resizeFixedSubscription);
-                parentGrid.scroll(scrollFixedSubscription);
-               $(window).scroll(function(){
-                  if($(header).hasClass("fixed-header")){
-                     var headerTop = $("#subscriptionAllocationList").find('div.k-grid-content').first().offset().top - $(window).scrollTop();
-                      header.css("top", headerTop);
-                  }
-               });
-        }
+    function onProjSubDataBound(){
+            wrapper = this.wrapper,
+            header = wrapper.find(".k-grid-header");
+            parentGrid =  $("#subscriptionAllocationList").find('div.k-grid-content').first();
+            resizeFixed();
+            $(window).resize(resizeFixedSubscription);
+            parentGrid.scroll(scrollFixedSubscription);
+           $(window).scroll(function(){
+              if($(header).hasClass("fixed-header")){
+                 var headerTop = $("#subscriptionAllocationList").find('div.k-grid-content').first().offset().top - $(window).scrollTop();
+                  header.css("top", headerTop);
+              }
+           });
+    }
 
 function selectSubscriptionProject(e){
     var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
@@ -561,9 +566,9 @@ function selectSubscriptionProject(e){
       rowData.ProjectPhase = dataItem.ProjectNumber + ' - ' + dataItem.Summary +  ' - ' + dataItem.PhaseNumber;
       //grid.dataSource.sync();
 
-       var projectPhaseCell = $(parentRow).children().eq(6);
-      var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">' +  rowData.ProjectPhase +'</a>');
-      $(projectPhaseCell).html(htmlContentProject);
+     var projectPhaseCell = $(parentRow).children().eq(6);
+     var htmlContentProject = $('<a style="color:blue;cursor:pointer;" onClick="loadSubscriptionDetail(this);">' +  rowData.ProjectPhase +'</a>');
+     $(projectPhaseCell).html(htmlContentProject);
     }
     grid.collapseRow(parentRow);
 
@@ -597,7 +602,7 @@ function detailSubscription(e) {
                         fields: {
                             SubscriptionId: { from: "Id"},
                             SubscriptionName: {from:"Name", type: "string"},
-                           Product: {from:"Subscription_Name__c", type: "string"},
+                            Product: {from:"Subscription_Name__c", type: "string"},
                             RemainingPercentage : {from:"Remaning_Percentage__c", type:"string"},
                             RemainingQuantity : {from:"RemainingQuantity__c", type:"string"},
                             RemainingHours : {from:"Remaining_Hours__c", type:"string"},
@@ -617,13 +622,13 @@ function detailSubscription(e) {
 
                 toolbar:[
                     {
-                       template : '<a class="k-button" href="\\#" onclick="return updateSubsAllocation();">Allocate Selected</a>'
+                       template : '<a class="k-button k-primary" href="\\#" onclick="return updateSubsAllocation();">Allocate Selected</a>'
                     }
                 ],
                 columns: [
                     {
                        title: 'Select All',
-                       headerTemplate: "<input type='checkbox' id='subs-header-chb' class='k-checkbox header-checkbox'><label class='k-checkbox-label' for='subs-header-chb' style='top:-10px;'></label>",
+                       headerTemplate: "<input type='checkbox' id='subs-header-chb' class='k-checkbox header-checkbox'><label class='k-checkbox-label' for='subs-header-chb'>Select All</label>",
                                                                              template: function (dataItem) {
                            return "<input type='checkbox' id='" + dataItem.SubscriptionId + "' class='k-checkbox row-checkbox'><label class='k-checkbox-label' for='" + dataItem.SubscriptionId + "'></label>";
                        },
@@ -639,6 +644,7 @@ function detailSubscription(e) {
             });
 
 
+             subscheckedIds = {};
              var subscriptionGrid = $("#detailSubscriptionTable").data("kendoGrid");
              //bind click event to the checkbox
              subscriptionGrid.table.on("click", ".row-checkbox", selectRowSubs);
@@ -666,7 +672,7 @@ function detailSubscription(e) {
             row = $(this).closest("tr"),
             grid = $("#detailSubscriptionTable").data("kendoGrid"),
             dataItem = grid.dataItem(row);
-            subscheckedIds = {};
+
 
             subscheckedIds[dataItem.SubscriptionId] = checked;
 
