@@ -52,7 +52,7 @@ public class CreateMaintenanceNotificationController {
         string maintenanceRecordType = rtMapByName.get('Maintenance Notification').getRecordTypeId();
 
         ccr = [select RF_Summary__c,Name, RF_Cluster_s__c, BMCServiceDesk__Change_Description__c, RF_Maint_Window_Start_Time__c, RF_Maint_Window_End_Time__c, RF_Release_Date__c,
-                BMCServiceDesk__Change_Type__c, RF_Customer_Impact_Analysis__c
+                BMCServiceDesk__Change_Type__c, RF_Customer_Impact_Analysis__c, RF_Contingency_Plan__c, RF_Customer_Action__c
         from  BMCServiceDesk__Change_Request__c where Id =:ccr.id ];
 
         if(ccr.RF_Cluster_s__c != null)
@@ -66,6 +66,8 @@ public class CreateMaintenanceNotificationController {
                 ProductImpacted__c = null,
                 PlatformsImpacted__c = null,
                 CustomerAnalysis__c = ccr.RF_Customer_Impact_Analysis__c,
+                Contingency_Plan__c = ccr.RF_Contingency_Plan__c,
+                CustomerAction__c = ccr.RF_Customer_Action__c,
                 EventType__c = 'Platform/Software Updates'
         );
 
