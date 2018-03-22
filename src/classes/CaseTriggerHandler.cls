@@ -162,16 +162,21 @@ public class CaseTriggerHandler extends TriggerHandler
             }
         }
 
-        //retrieve the newest resolved notification, if there is one, for the cases in the set
-        List<AggregateResult> resolvedNotifications = [Select Case__c
-                                                         from xmNotification__c
-                                                         where Status__c = 'Completed' and Request_Type__c = 'Event Resolved'
-                                                            and Case__c in :caseIds
-                                                         group by Request_Type__c, Case__c];
-        caseIds.clear();
-        for(AggregateResult notification : resolvedNotifications) {
-            caseIds.add((Id)notification.get('Case__c'));
+        if(caseIds.size() > 0){
+            //retrieve the newest resolved notification, if there is one, for the cases in the set
+            List<AggregateResult> resolvedNotifications = [
+                    Select Case__c
+                                from xmNotification__c
+                                where Status__c = 'Completed' and Request_Type__c = 'Event Resolved'
+                                and Case__c in :caseIds
+                                group by Request_Type__c, Case__c
+            ];
+            caseIds.clear();
+            for(AggregateResult notification : resolvedNotifications) {
+                caseIds.add((Id)notification.get('Case__c'));
+            }
         }
+
 
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;

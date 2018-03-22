@@ -121,7 +121,8 @@ public class OpportunityShareHelper {
             for(Database.saveResult result : resultList){
                 if(result.isSuccess() == false){
                     system.debug('**** addShareFuture() : error - '+ result.getErrors()[0]);
-                    throw new OpportunityShareHelperException(result.getErrors()[0].getMessage());
+                    inContactBaseClass.SendErrorEmail( String.valueOf(result.getErrors()[0]), 'Class.OpportunityShareHelper.addShareFuture');
+                    //throw new OpportunityShareHelperException(result.getErrors()[0].getMessage());
                 }
             }
         }
@@ -192,7 +193,8 @@ public class OpportunityShareHelper {
                 if(result.isSuccess() == false){
                     system.debug('**** deleteShare() : id - '+ result.getId());
                     system.debug('**** deleteShare() : error - '+ result.getErrors()[0]);
-                    throw new OpportunityShareHelperException(result.getErrors()[0].getMessage());
+                    inContactBaseClass.SendErrorEmail( String.valueOf(result.getErrors()[0]), 'Class.OpportunityShareHelper.deleteShare');
+                    //throw new OpportunityShareHelperException(result.getErrors()[0].getMessage());
                 }
             }
         }
