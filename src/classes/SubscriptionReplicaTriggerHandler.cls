@@ -85,7 +85,7 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
         list<SBQQ__Subscription__c> lstUpdateSubscriptions = new list<SBQQ__Subscription__c>();
         list<ImplementedProduct__c> lstUpdateImplementedProducts = new list<ImplementedProduct__c>();
         Map<Id, Date> ImplementationProductDates  = new Map<Id, Date>();
-
+	    set<id> subscriptionIds = new set<Id>();
         //update certain fields in Subscription table
         for ( SubscriptionReplica__c subscriptionReplica : lstSubscriptionReplicas) {
 
@@ -95,49 +95,30 @@ public with sharing class SubscriptionReplicaTriggerHandler extends TriggerHandl
             }
             if (oldSubscriptionReplica != null)
             {
-                SBQQ__Subscription__c subscription = new SBQQ__Subscription__c(Id = subscriptionReplica.Subscription__c);
-                subscription.Total_Allocated_Quantity__c = subscriptionReplica.Total_Allocated_Quantity__c;
-                subscription.Total_Implemented_Quantity__c = subscriptionReplica.Total_Implemented_Quantity__c;
-                subscription.Logged_Hours__c = subscriptionReplica.Logged_Hours__c;
-                subscription.Allocated_Hours__c = subscriptionReplica.Total_Allocated_Hours__c;
 
-                // add changed Subscriptions to update list
-                lstUpdateSubscriptions.add(subscription);
+                if(!subscriptionIds.contains(subscriptionReplica.Subscription__c)){
+                    SBQQ__Subscription__c subscription = new SBQQ__Subscription__c(Id = subscriptionReplica.Subscription__c);
+                    subscription.Total_Allocated_Quantity__c = subscriptionReplica.Total_Allocated_Quantity__c;
+                    subscription.Total_Implemented_Quantity__c = subscriptionReplica.Total_Implemented_Quantity__c;
+                    subscription.Logged_Hours__c = subscriptionReplica.Logged_Hours__c;
+                    subscription.Allocated_Hours__c = subscriptionReplica.Total_Allocated_Hours__c;
 
-                // do not update back to subscription table if it ever set to '4 - Delivered'
-                if (oldSubscriptionReplica.Delivered__c != true) {
+                    // add changed Subscriptions to update list
+                    lstUpdateSubscriptions.add(subscription);
 
-                    subscription.Status__c = subscriptionReplica.Status1__c;
-                    subscription.Install_Date__c = subscriptionReplica.Install_Date__c;
-                    subscription.Implemented_Product__c = subscriptionReplica.Implemented_Product__c;
+                    // do not update back to subscription table if it ever set to '4 - Delivered'
+                    if (oldSubscriptionReplica.Delivered__c != true) {
 
-                    /*
-                    // only update implemented product when first time the subscription status set to '4 - Delivered'
-                    if (subscriptionReplica.Implemented_Product__c != null && subscriptionReplica.Install_Date__c != null) {
-                        if (subscriptionReplica.Status1__c == '4 - Delivered' && oldSubscriptionReplica.Delivered__c != true) {
-                            if (!ImplementationProductDates.containsKey(subscriptionReplica.Implemented_Product__c)) {
-                                ImplementationProductDates.put(subscriptionReplica.Implemented_Product__c, subscriptionReplica.Install_Date__c);
-                            }
-                        }
-                    }*/
+                        subscription.Status__c = subscriptionReplica.Status1__c;
+                        subscription.Install_Date__c = subscriptionReplica.Install_Date__c;
+                        subscription.Implemented_Product__c = subscriptionReplica.Implemented_Product__c;
+
+                    }
+                    subscriptionIds.add(subscriptionReplica.Subscription__c);
                 }
+
             }
         }
-
-        /*/update certain fields in Implemented Product table
-        for ( ImplementedProduct__c implementedProduct : [
-                SELECT Id, Status__c, GoLiveDate__c FROM ImplementedProduct__c
-                WHERE Id IN : ImplementationProductDates.keyset()
-        ]){
-
-
-            Date installDate = ImplementationProductDates.get(implementedProduct.Id);
-            implementedProduct.GoLiveDate__c = installDate;
-            implementedProduct.Status__c = 'Implemented';
-
-            // add changed implementedProduct to update list
-            lstUpdateImplementedProducts.add(implementedProduct);
-        }*/
 
         if(lstUpdateSubscriptions.size() > 0){
             update lstUpdateSubscriptions;
