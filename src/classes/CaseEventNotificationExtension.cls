@@ -84,16 +84,9 @@ public class CaseEventNotificationExtension
             }
             System.debug('CaseEventNotificationExtension(): isxMattersMaintenanceNotificationsTurnedOff - ' + isxMattersMaintenanceNotificationsTurnedOff);
 
-            Map<String, ProductEventMap__c> productEventMap = ProductEventMap__c.getAll();
-
-            ProductEventMap__c productEventInfo = productEventMap.get(c.ProductImpacted__c);
-            System.debug('CaseEventNotificationExtension(): productEventInfo - ' + productEventInfo);
-
             // Record Type - Maintenance Notification
-            // Product Impacted - Not for Select Customers
             // xMatters Maintenance Notification turned on
-            if(recordTypeName == 'Maintenance Notification' && productEventInfo != null && !productEventInfo.SelectCustomers__c
-                    && !isxMattersMaintenanceNotificationsTurnedOff)
+            if(recordTypeName == 'Maintenance Notification' && !isxMattersMaintenanceNotificationsTurnedOff)
             {
                 enableXmatters = true;
                 xMattersFieldMapping = getxMattersFieldMapping();
