@@ -34,11 +34,11 @@ public class OpportunityShareHelper {
                 recordIdSet.add(record.Id);
             }
             // iCE Partner account
-            else if(record.iCE_Partner__c != null && record.iCE_Partner_Status__c == 'Accepted' && record.StageName == OpportunityTriggerHelper.OPPORTUNITY_STAGE_CLOSED_WON && ( oldRecord == null || oldRecord.iCE_Partner__c != record.iCE_Partner__c || oldRecord.StageName != OpportunityTriggerHelper.OPPORTUNITY_STAGE_CLOSED_WON ) ){
+            else if(record.iCE_Partner__c != null && record.iCE_Partner_Status__c == 'Accepted' && ( oldRecord == null || oldRecord.iCE_Partner__c != record.iCE_Partner__c) ){
                 recordIdSet.add(record.Id);
             }
             // owner change
-            else if(oldRecord != null && oldRecord.OwnerId != record.OwnerId && (record.Partner_Account__c != null || (record.iCE_Partner__c != null && record.iCE_Partner_Status__c == 'Accepted' && record.StageName == OpportunityTriggerHelper.OPPORTUNITY_STAGE_CLOSED_WON )) ){
+            else if(oldRecord != null && oldRecord.OwnerId != record.OwnerId && (record.Partner_Account__c != null || (record.iCE_Partner__c != null && record.iCE_Partner_Status__c == 'Accepted')) ){
                 recordIdSet.add(record.Id);
             }
         }
