@@ -165,6 +165,7 @@ public class CancelAssetsSubsController {
 
 	}
 
+	@TestVisible
 	private static string simplyfyErrorMessage(string result){
 		Integer occurence;
 		occurence = result.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
