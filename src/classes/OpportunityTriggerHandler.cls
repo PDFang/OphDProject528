@@ -58,6 +58,10 @@ public class OpportunityTriggerHandler extends TriggerHandler{
         OpportunityTriggerHelper.createTripAndProjects((List<Opportunity>)trigger.new);
 		OpportunityTriggerHelper.createAccountPartner((List<Opportunity>)trigger.new, (Map<Id, Opportunity>)trigger.oldMap);
 		NiceConnectionOpportunities(trigger.newMap.keySet());
+
+		/*if(System.IsBatch() == false && System.isFuture() == false) {
+			OpportunityTriggerHelper.getPrimaryCampaignSource(((Map<Id, Opportunity>) trigger.newMap).keySet());
+		}*/
     }
 
     /**********************************************************************************************
