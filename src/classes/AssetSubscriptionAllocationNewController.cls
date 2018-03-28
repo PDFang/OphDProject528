@@ -172,6 +172,19 @@ public with sharing class AssetSubscriptionAllocationNewController {
 		return result;
 	}
 
+    @RemoteAction
+    public static String SearchUsers(String searchString){
+
+        try{
+
+            return AssetSubscriptionAllocationHelper.getUser(searchString);
+
+        }catch (Exception ex){
+           return 'Failed' + ex.getMessage();
+        }
+
+    }
+
     public void SaveCancSuspQuantity(){
         try{
             String message =  helper.SaveCancSuspQuantity(Asset);

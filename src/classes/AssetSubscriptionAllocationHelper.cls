@@ -244,9 +244,9 @@ public class AssetSubscriptionAllocationHelper {
 
 		List<AssetSubscriptionAllocationNewModel> assetAllocations = new List<AssetSubscriptionAllocationNewModel>();
 
-		String soql = 'Select Project__c, Project__r.Name, Name, ProjectPhase__c, Percent_Allocation__c, Asset__r.Name, Asset__c, Asset__r.Quantity, Asset__r.Budgeted_Hours__c, '
+		String soql = 'Select Project__c,  Project__r.Name, Name, ProjectPhase__c, Percent_Allocation__c, Asset__r.Name, Asset__c, Asset__r.Quantity, Asset__r.Budgeted_Hours__c, '
 				+ 'Quantity_Allocation__c, Hours_Allocated__c, Asset__r.Total_Allocated_Quantity__c, Asset__r.Total_Allocated_Hours__c, Implemented__c,  '
-				+ 'Asset__r.QuantityonHold__c, Asset__r.QuantityCancelled__c, Asset__r.RemainingQuantity__c, Asset__r.Remaning_Percentage__c,On_Hold__c '
+				+ 'Asset__r.QuantityonHold__c, Asset__r.QuantityCancelled__c, Asset__r.RemainingQuantity__c, Asset__r.Remaning_Percentage__c,On_Hold__c, Assigned_User__c, Assigned_User__r.Name '
 				+ ' from Project_Asset_Allocation__c where ';
 
 		if(projectId != null){
@@ -281,7 +281,7 @@ public class AssetSubscriptionAllocationHelper {
 		String soql = 'Select Project__c, Project__r.Name, Subscription__r.Subscription__r.SBQQ__Product__r.Name, Subscription__r.Subscription__r.SBQQ__Product__c,' +
 				' Subscription__c, Subscription_Name__c, Subscription__r.Name, Name, ProjectPhase__c, Subscription__r.Quantity__c, Subscription__r.Budgeted_Hours__c, Percent_Allocation__c,'+
 				' Quantity_Allocation__c, Hours_Allocated__c, Subscription__r.Total_Allocated_Quantity__c, Subscription__r.Total_Allocated_Hours__c,Implemented__c, ' +
-				' Subscription__r.QuantityonHold__c, Subscription__r.QuantityCancelled__c, Subscription__r.RemainingQuantity__c, Subscription__r.Remaning_Percentage__c,On_Hold__c ' +
+				' Subscription__r.QuantityonHold__c, Subscription__r.QuantityCancelled__c, Subscription__r.RemainingQuantity__c, Subscription__r.Remaning_Percentage__c,On_Hold__c, Assigned_User__c, Assigned_User__r.Name  ' +
 				' from Project_Subscription_Allocation__c where ';
 		if(projectId != null){
 			soql += ' Project__c = \'' + projectId + '\'';
@@ -352,7 +352,8 @@ public class AssetSubscriptionAllocationHelper {
 						Quantity_Allocation__c = assetSubscriptionAllocation.AllocatedQuantity,
 						Percent_Allocation__c = assetSubscriptionAllocation.AllocatedPercentage,
 						Hours_Allocated__c = assetSubscriptionAllocation.AllocatedHours,
-						On_Hold__c = assetSubscriptionAllocation.OnHold
+						On_Hold__c = assetSubscriptionAllocation.OnHold,
+						Assigned_User__c = assetSubscriptionAllocation.AssignToName == '' ? UserInfo.getUserId() : assetSubscriptionAllocation.AssignToName
 				);
 
 				upsert projectAssetAllocation;
@@ -365,7 +366,8 @@ public class AssetSubscriptionAllocationHelper {
 						Quantity_Allocation__c = assetSubscriptionAllocation.AllocatedQuantity,
 						Percent_Allocation__c = assetSubscriptionAllocation.AllocatedPercentage,
 						Hours_Allocated__c = assetSubscriptionAllocation.AllocatedHours,
-						On_Hold__c = assetSubscriptionAllocation.OnHold
+						On_Hold__c = assetSubscriptionAllocation.OnHold,
+						Assigned_User__c = assetSubscriptionAllocation.AssignToName == '' ? UserInfo.getUserId() : assetSubscriptionAllocation.AssignToName
 				);
 
 				upsert projectSubscriptionAllocation;
@@ -675,7 +677,8 @@ public class AssetSubscriptionAllocationHelper {
 									Project__c = projectId,
 									Quantity_Allocation__c = a.RemainingQuantity__c,
 									Percent_Allocation__c = a.Remaning_Percentage__c,
-									Hours_Allocated__c = a.Remaining_Hours__c
+									Hours_Allocated__c = a.Remaining_Hours__c,
+									Assigned_User__c = UserInfo.getUserId()
 							)
 					);
 				}
@@ -694,7 +697,8 @@ public class AssetSubscriptionAllocationHelper {
 									Project__c = projectId,
 									Quantity_Allocation__c = subs.RemainingQuantity__c,
 									Percent_Allocation__c = subs.Remaning_Percentage__c,
-									Hours_Allocated__c = subs.Remaining_Hours__c
+									Hours_Allocated__c = subs.Remaining_Hours__c,
+									Assigned_User__c = UserInfo.getUserId()
 							)
 					);
 				}
@@ -836,6 +840,37 @@ public class AssetSubscriptionAllocationHelper {
 		}catch(Exception ex){
 			returnMessage = 'Error occured while putting allocations on hold - ' + ex.getMessage();
 			return returnMessage;
+		}
+	}
+
+	public static string getUser(string searchString){
+		list<User> users = new list<User>();
+		List<DropDown> options = new List<DropDown>();
+		if(searchString != '' && searchString != null){
+			List<List<SObject>> searchList = [FIND :searchString IN ALL FIELDS
+					RETURNING User (Id,Name WHERE IsActive = true and UserType = 'Standard')
+					LIMIT 20];
+			users = (User[])searchList[0];
+			for(User u:users)
+			{
+				options.add(new DropDown(u.Id, u.Name));
+
+			}
+			return JSON.serialize(options);
+		}
+		return null;
+	}
+
+
+	public Class DropDown
+	{
+		public string label;
+		public string value;
+
+		public DropDown(string valueString, string labelString)
+		{
+			label = labelString;
+			value = valueString;
 		}
 	}
 

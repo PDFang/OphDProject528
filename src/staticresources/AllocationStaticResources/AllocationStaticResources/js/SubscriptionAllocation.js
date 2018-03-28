@@ -114,6 +114,8 @@ function subscriptionAllocationData(projId, subscriptionId){
                         QuantityOnHold : {from:"QuantityOnHold", type:"number", defaultValue:0},
                         QuantityCancelled : {from:"QuantityCancelled", type:"number", defaultValue:0},
                         RemainingQuantity : {from:"RemainingQuantity", type:"number", defaultValue:0},
+                        AssignToName:{from :"AssignToName", type:"string"},
+                        AssignToId:{from :"AssignToId", type:"string"},
                         "AllocatedQuantity":{
                             from: "AllocatedQuantity",
                             type:"number",
@@ -249,7 +251,7 @@ function subscriptionAllocationData(projId, subscriptionId){
                     {
                         field:"ProjectPhase",
                         title:"Project Phase",
-                        width:300,
+                        width:250,
                          template: '#{ #<a href="/#: data.ProjectNumber #" target="_blank" >#= data.ProjectPhase #</a># } #',
                         editor:nonEditorSubscription,
                         filterable:true
@@ -283,9 +285,16 @@ function subscriptionAllocationData(projId, subscriptionId){
                         title:"On Hold",
                         sortable:false,
                         template: '<input type="checkbox"  "# if (data.OnHold) { # checked="checked" # } #"  disabled "/>',
-                        width:50
+                        width:80
 
                     },
+                    {
+                        field:"AssignToName",
+                        title:"Owner",
+                        width:200,
+                        editor:userSearchDropdownEditorSubs
+                    },
+
                     {   title:"Action",
                         sortable:false,
                         command: ["edit",
@@ -469,6 +478,60 @@ function calculateSubscriptionBudgetedHours(e){
             model.AllocatedPercentage = percentage;
     }
 }
+
+ function userSearchDropdownEditorSubs(container, options) {
+            $('<input style="width:95%"  id="AssignToNameSubs" name="AssignToNameSubs" data-text-field="label" data-value-field="value" data-bind="value:' + options.field + '"/>')
+                    .appendTo(container)
+                    .kendoComboBox({
+                        autobind: false,
+                        dataTextField: "label",
+                        dataValueField: "value",
+                        placeholder: currentUser,
+                        minLength: 2,
+                        filter:"contains",
+                        dataSource: {
+                            serverFiltering:true,
+                            transport:{
+                          read: function(e){
+                                    console.log('came here ==>');
+                                    AssetSubscriptionAllocationNewController.SearchUsers(
+                                          $("#AssignToNameSubs").data("kendoComboBox").text(),
+                                          function(result,event)
+                                          {
+
+                                              if (event.status) {
+                                                  if(result != null){
+                                                   console.log('came here success ==> + ' + result);
+                                                   e.success(JSON.parse(result));
+                                                  }else{
+                                                      e.success('');
+                                                  }
+
+                                                } else if (event.type === 'exception') {
+                                                     displayError(event.message);
+                                                } else {
+                                                    displayError(event.message);
+                                                }
+                                          },
+                                          {escape: false}
+                                   );
+                                }
+                            },
+
+                        schema: {
+                            model: {
+                                id: "UserId",
+                                fields: {
+                                    value: {type: "string"},
+                                    label: {type: "string", editable: false, nullable: false, validation: { required: true } }
+                                }
+                            }
+                        }
+                        }
+                    } );
+                    $('<span class="k-invalid-msg" data-for="AssignToNameSubs"></span>').appendTo(container);
+                }
+
 
 function loadSubscriptionDetail(obj){
        var row = $(obj).parent().parent();
