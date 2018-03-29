@@ -344,7 +344,16 @@ public class AssetSubscriptionAllocationHelper {
 
 	public static void SaveAssetSubscriptionAllocation(String objType, AssetSubscriptionAllocationNewModel assetSubscriptionAllocation){
 		try{
+			string assigntoId;
+			if(assetSubscriptionAllocation.AssignToName.startsWith('005'))
+					assigntoId = assetSubscriptionAllocation.AssignToName;
+			else if(assetSubscriptionAllocation.AssignToName == '' || assetSubscriptionAllocation.AssignToName == null)
+					assigntoId = UserInfo.getUserId();
+			else
+					assigntoId = assetSubscriptionAllocation.AssignToId;
+
 			if(objType == 'Asset'){
+
 				Project_Asset_Allocation__c projectAssetAllocation = new Project_Asset_Allocation__c(
 						Asset__c = assetSubscriptionAllocation.Asset,
 						Id = assetSubscriptionAllocation.AssetAllocationId == '' ? null : assetSubscriptionAllocation.AssetAllocationId,
@@ -353,7 +362,7 @@ public class AssetSubscriptionAllocationHelper {
 						Percent_Allocation__c = assetSubscriptionAllocation.AllocatedPercentage,
 						Hours_Allocated__c = assetSubscriptionAllocation.AllocatedHours,
 						On_Hold__c = assetSubscriptionAllocation.OnHold,
-						Assigned_User__c = assetSubscriptionAllocation.AssignToName == '' ? UserInfo.getUserId() : assetSubscriptionAllocation.AssignToName
+						Assigned_User__c = assigntoId
 				);
 
 				upsert projectAssetAllocation;
@@ -367,7 +376,7 @@ public class AssetSubscriptionAllocationHelper {
 						Percent_Allocation__c = assetSubscriptionAllocation.AllocatedPercentage,
 						Hours_Allocated__c = assetSubscriptionAllocation.AllocatedHours,
 						On_Hold__c = assetSubscriptionAllocation.OnHold,
-						Assigned_User__c = assetSubscriptionAllocation.AssignToName == '' ? UserInfo.getUserId() : assetSubscriptionAllocation.AssignToName
+						Assigned_User__c = assigntoId
 				);
 
 				upsert projectSubscriptionAllocation;

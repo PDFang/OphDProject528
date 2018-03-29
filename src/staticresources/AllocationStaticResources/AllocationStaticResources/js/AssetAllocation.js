@@ -252,7 +252,7 @@
                     },
                     {
                         field:"AssignToName",
-                        title:"Owner",
+                        title:"Assign To",
                          width:200,
                         editor:userSearchDropdownEditor
                     },
