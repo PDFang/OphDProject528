@@ -80,6 +80,15 @@ private class SandboxPostCopyImplementationTest {
         siteConfig.OrgId__c = userInfo.getOrganizationName();
         insert siteConfig;
 
+        AppConfiguration__c appConfig = new AppConfiguration__c();
+        appConfig.Turn_Off_JIRA_Integration__c = false;
+        appConfig.Turn_Off_Partner_Case_Proxy_Service__c = false;
+        appConfig.XM_Turn_Off_Comment_Notifications__c = false;
+        appConfig.XM_Turn_Off_Event_Notifications__c = false;
+        appConfig.XM_Turn_Off_Maintenance_Notifications__c = false;
+
+        insert appConfig;
+
 //        Profile sysAdmin = [SELECT Id from Profile where Name = 'System Administrator'];
 //        user adminUser = new User(
 //                FirstName = 'Test System',
