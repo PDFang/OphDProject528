@@ -449,7 +449,8 @@
              disableEdit = false,
              implemented = false,
              projectGoLiveDate = '',
-             projectPhaseStatus = '';
+             projectPhaseStatus = '',
+             currentUser = "{!$User.FirstName}" + ' ' + "{!$User.LastName}";
 
         var windowTemplate = kendo.template($("#windowTemplate").html());
 

@@ -463,5 +463,49 @@ public class OpportunityTriggerHelper {
         }
 
     } // end of isAvailableForCCHandOff()
+    /*
+    @future
+    public static void getPrimaryCampaignSource(Set<Id> opportunityIds){
 
+        List<Opportunity> opps = [SELECT CreatedDate, CampaignId, (SELECT ContactId FROM OpportunityContactRoles) FROM Opportunity WHERE Id IN :opportunityIds];
+        OpportunityContactRole[] contactRoles = [SELECT ContactId, OpportunityId FROM OpportunityContactRole WHERE OpportunityId IN :opportunityIds];
+        Map<Id,Map<Id,Datetime>> opportunityLastCampaign = new Map<Id,Map<Id,Datetime>>();
+
+        if(!contactRoles.isEmpty()){
+            Set<Id> contacts = new Set<Id>();
+            for(OpportunityContactRole ocr: contactRoles){
+                contacts.add(ocr.ContactId);
+            }
+
+            for(CampaignMember cm:[SELECT ContactId, CampaignId, CreatedDate FROM CampaignMember WHERE ContactId IN :contacts]){
+                for(Opportunity opp:opps){
+
+                    for(OpportunityContactRole ocr:opp.OpportunityContactRoles){
+                        if(cm.ContactId == ocr.ContactId && cm.CreatedDate < opp.CreatedDate){
+                            Map<Id, Datetime> camp = new Map<Id, Datetime>();
+                            camp.put(cm.CampaignId, cm.CreatedDate);
+                            if(!opportunityLastCampaign.containsKey(opp.Id)){
+                                opportunityLastCampaign.put(opp.Id, camp);
+                            } else if(opportunityLastCampaign.get(opp.Id).values()[0] < cm.CreatedDate){
+                                opportunityLastCampaign.put(opp.Id, camp);
+                            }
+                        }
+                    }
+                }
+            }
+            system.debug('Found Campaigns');
+            if(!opportunityLastCampaign.isEmpty()){
+                List<Opportunity> oppsToUpdate = new List<Opportunity>();
+
+                for(Id oppId:opportunityLastCampaign.keySet()){
+                    Opportunity opp = new Opportunity();
+                    opp.Id = oppId;
+                    opp.CampaignId = (new List<Id>(opportunityLastCampaign.get(oppId).keySet())[0]);
+                    oppsToUpdate.add(opp);
+                }
+
+                update oppsToUpdate;
+            }
+        }
+    } */
 }

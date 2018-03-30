@@ -1,3 +1,4 @@
+
     function assetAllocationData(projId, assetId){
                var assetAllocationData = new kendo.data.DataSource({
                     autosync:true,
@@ -149,7 +150,9 @@
                                 QuantityOnHold : {from:"QuantityOnHold", type:"number", defaultValue:0},
                                 QuantityCancelled : {from:"QuantityCancelled", type:"number", defaultValue:0},
                                 RemainingQuantity : {from:"RemainingQuantity", type:"number", defaultValue:0},
-                                OnHold : {from:"OnHold", type:"boolean"}
+                                OnHold : {from:"OnHold", type:"boolean"},
+                                AssignToName:{from :"AssignToName", type:"string"},
+                                AssignToId:{from :"AssignToId", type:"string"}
 
                             }
                         }
@@ -213,9 +216,10 @@
                         field:"ProjectPhase",
                         title:"Project Phase",
                         template: '#{ #<a href="/#: data.ProjectNumber #" target="_blank" >#= data.ProjectPhase #</a># } #',
-                         width:300,
+                         width:250,
                         editor:nonEditorAsset
                     },
+
                     {
                         field:"AllocatedQuantity",
                         title:"Allocated Quantity",
@@ -245,6 +249,12 @@
                         template: '<input type="checkbox"  "# if (data.OnHold) { # checked="checked" # } #" disabled="true" "/>',
                         width:75
 
+                    },
+                    {
+                        field:"AssignToName",
+                        title:"Assign To",
+                         width:200,
+                        editor:userSearchDropdownEditor
                     },
                     {   title:"Action",
                         sortable:false,
@@ -334,7 +344,7 @@
                    $('<a style="color:blue;cursor:pointer;"  class="assetSelector" onclick="loadDetail(this);">Select Assets </a>').appendTo(firstCell);
                    loadDetail($("a.assetSelector"));
                }
-                var buttonCell = e.container.contents()[11];
+                var buttonCell = e.container.contents()[12];
                 $(buttonCell).find("a.k-primary").html('<span class="k-icon k-i-update"></span> Add');
            }else{
                enableAllocation(e.model, e.container);
@@ -403,7 +413,6 @@
          //Selects all delete buttons
          $("#assetAllocationList tbody tr a.k-grid-Delete").each(function () {
                 var currentDataItem = $("#assetAllocationList").data("kendoGrid").dataItem($(this).closest("tr"));
-                //Check in the current dataItem if the row is deletable || projStatus == 'Cancelled' || projStatus == 'Closed' || projStatus == 'Suspended'
                 if ((currentDataItem.Implemented == true && isManager == false) ) {
                     $(this).remove();
                 }
@@ -437,6 +446,60 @@
                   model.AllocatedPercentage = percentage;
             }
      }
+
+    function userSearchDropdownEditor(container, options) {
+            $('<input style="width:95%"  id="AssignToName" name="AssignToName" data-text-field="label" data-value-field="value" data-bind="value:' + options.field + '"/>')
+                    .appendTo(container)
+                    .kendoComboBox({
+                        autobind: false,
+                        dataTextField: "label",
+                        dataValueField: "value",
+                        placeholder: currentUser,
+                        minLength: 2,
+                        filter:"contains",
+                        dataSource: {
+                            serverFiltering:true,
+                            transport:{
+                          read: function(e){
+                                    console.log('came here ==>');
+                                    AssetSubscriptionAllocationNewController.SearchUsers(
+                                          $("#AssignToName").data("kendoComboBox").text(),
+                                          function(result,event)
+                                          {
+
+                                              if (event.status) {
+                                                  if(result != null){
+                                                   console.log('came here success ==> + ' + result);
+                                                   e.success(JSON.parse(result));
+                                                  }else{
+                                                      e.success('');
+                                                  }
+
+                                                } else if (event.type === 'exception') {
+                                                     displayError(event.message);
+                                                } else {
+                                                    displayError(event.message);
+                                                }
+                                          },
+                                          {escape: false}
+                                   );
+                                }
+                            },
+
+                        schema: {
+                            model: {
+                                id: "UserId",
+                                fields: {
+                                    value: {type: "string"},
+                                    label: {type: "string", editable: false, nullable: false, validation: { required: true } }
+                                }
+                            }
+                        }
+                        }
+                    } );
+                    $('<span class="k-invalid-msg" data-for="AssignToName"></span>').appendTo(container);
+                }
+
 
     function loadDetail(obj){
         var row = $(obj).parent().parent();
