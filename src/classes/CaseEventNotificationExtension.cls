@@ -86,7 +86,7 @@ public class CaseEventNotificationExtension
 
             // Record Type - Maintenance Notification
             // xMatters Maintenance Notification turned on
-            if(recordTypeName == 'Maintenance Notification' && !isxMattersMaintenanceNotificationsTurnedOff)
+            if(recordTypeName == 'Maintenance Notification' && c.ProductImpacted__c != 'Carrier Notification' && !isxMattersMaintenanceNotificationsTurnedOff)
             {
                 enableXmatters = true;
                 xMattersFieldMapping = getxMattersFieldMapping();

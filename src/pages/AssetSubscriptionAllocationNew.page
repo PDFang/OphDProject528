@@ -132,7 +132,7 @@
                             <div class="row">
                                 <div class="col-md-4 col-lg-4 col-sm-4"></div>
                                 <div class="col-md-8 col-lg-8 col-sm-8">
-                                    <button type="button" class="btn btn-primary" id="CancelPhase" onclick="return confirmCancelation();">Cancel All Allocations</button>
+                                    <button type="button" class="btn btn-primary" id="CancelPhase" onclick="return confirmCancelation();">Remove All Allocations</button>
                                     <apex:outputPanel rendered="{!IF(Project.Phase_Status__c != 'Suspended', true, false)}"> <button type="button" class="btn btn-primary" id="onHoldButton" onclick="return onHoldAllocation();">Hold All Allocations</button></apex:outputPanel>
                                     <apex:outputPanel rendered="{!IF(Project.Phase_Status__c == 'Suspended', true, false)}"> <button type="button" class="btn btn-primary" id="releaseHoldButton" onclick="return releaseHoldAllocation();">Release On Hold Allocations</button></apex:outputPanel>
                                 </div>
