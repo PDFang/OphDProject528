@@ -397,7 +397,7 @@
     </script>
 
     <script type="text/x-kendo-template" id="cancelWindow">
-        <p>Are you sure you want to Cancel?</p>
+        <p>Are you sure you want to remove all allocations?</p>
         <div class="modal-footer">
             <button class="k-button" id="confirmCancel" onclick="return CancelAllocation();">Yes</button>
             <button class="k-button" id="denyCancel" onclick="return closeCancelWindow();"> Cancel</button>
