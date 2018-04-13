@@ -2,6 +2,7 @@
 private class AssetTriggerHandlerTest {
 
     static final String ACCOUNT_TYPE_CUSTOMERS = 'Customers';
+    static final String OPPORTUNITY_TYPE_PM_STANDARD = 'PM-Standard';
     static final String PROJECT_TYPE_PARENT_SAAS = 'PS Parent Project - SaaS';
     static final String PROJECT_TYPE_PHASE_SAAS = 'PS Project Phase SaaS';
     static final String ASSET_TYPE_PREMISE = 'Premise Asset';
@@ -10,6 +11,7 @@ private class AssetTriggerHandlerTest {
     static final Set<String> recordTypeSet = new Set<String>
     {
             ACCOUNT_TYPE_CUSTOMERS,
+            OPPORTUNITY_TYPE_PM_STANDARD,
             PROJECT_TYPE_PARENT_SAAS,
             PROJECT_TYPE_PHASE_SAAS,
             ASSET_TYPE_PREMISE,
@@ -18,10 +20,25 @@ private class AssetTriggerHandlerTest {
 
     static Map<String, Id> recordTypeMap = null;
     static Account acct = null;
+    static Opportunity testOpportunity = null;
     static List<Product2> productList = null;
     static List<Project__c> projectList = null;
     static List<Asset> assetList = null;
+    static SBQQ__QuoteLine__c quoteLine = null;
 
+
+    static testMethod void updateAssetSalesPriceTest(){
+        createTestData();
+        createQuoteLines();
+
+        Test.startTest();
+        createAssets();
+        Test.stopTest();
+
+        SBQQ__QuoteLine__c validateQuoteLine = [SELECT Customer_Net_Unit_Price__c FROM SBQQ__QuoteLine__c WHERE Id = :quoteLine.Id];
+        Asset validateAsset = [SELECT Id, Sales_Price__c FROM Asset WHERE Id = :assetList[0].Id];
+        system.assertEquals(validateAsset.Sales_Price__c, validateQuoteLine.Customer_Net_Unit_Price__c);
+    }
     /**** Validate Project asset totals on asset creation ***/
     static testMethod void addAssetTotalTest()
     {
@@ -291,7 +308,18 @@ private class AssetTriggerHandlerTest {
 
     } // end of deleteAssetTotalTest()
 
+    static testMethod void scheduleAssetRollupTest() {
 
+        createTestData();
+        createAssets();
+
+        Test.startTest();
+
+        AssetTriggerHandler.scheduleAssetRollup(new Set<Id>{[Select Id From Asset Limit 1].Id});
+
+        Test.stopTest();
+
+    }
     /**** Following methods create test data ******/
 
     static void createTestData()
@@ -305,6 +333,7 @@ private class AssetTriggerHandlerTest {
         }
 
         createAccount();
+        createOpportunity();
         createProducts();
         createProjects();
         //createAssets();
@@ -318,6 +347,23 @@ private class AssetTriggerHandlerTest {
                 RecordTypeId = recordTypeMap.get(ACCOUNT_TYPE_CUSTOMERS)
         );
         insert acct;
+    }
+
+    static void createOpportunity(){
+
+        testOpportunity = new Opportunity(
+                Name = 'AssetTriggerHandlerTest Opp 1',
+                AccountId = acct.Id,
+                RecordTypeId = recordTypeMap.get(OPPORTUNITY_TYPE_PM_STANDARD),
+                StageName = 'Prospecting',
+                CloseDate = Date.today(),
+                Probability = 25,
+                Partner_Deal__c = 'NO',
+                Contract_Type__c = 'New Customer'
+        );
+
+        insert testOpportunity;
+
     }
 
     static void createProducts()
@@ -347,11 +393,13 @@ private class AssetTriggerHandlerTest {
         Project__c project1 = new Project__c();
         project1.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
         project1.Projected_Deadline__c = system.today() + 30;
+        project1.Opportunity__c = testOpportunity.Id;
         projectList.add(project1);
 
         Project__c project2 = new Project__c();
         project2.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
         project2.Projected_Deadline__c = system.today() + 30;
+        project2.Opportunity__c = testOpportunity.Id;
         projectList.add(project2);
 
         Project__c phase1 = new Project__c();
@@ -366,10 +414,40 @@ private class AssetTriggerHandlerTest {
 
         insert projectList;
 
-        phase1.ParentProject__c = project1.Id;
-        phase1.Phase_Status__c = 'Closed';
-        update phase1;
+//        phase1.ParentProject__c = project1.Id;
+//        phase1.Phase_Status__c = 'Closed';
+//        phase1.ActualProjectGoLiveDate__c = system.today();
+//        update phase1;
 
+    }
+
+    static void createQuoteLines()
+    {
+
+        Product2 p = new Product2();
+        p.Name     = 'TEST';
+        p.ProductCode ='1234520-000-000-XX';
+        p.Family = 'SOFTWARE MRC PRODUCTS';
+        insert p;
+
+        SBQQ__Quote__c quote = new SBQQ__Quote__c();
+        quote.SBQQ__Primary__c = true;
+        quote.SBQQ__Type__c = 'Quote';
+        //quote.SBQQ__Opportunity2__c = o.Id;
+        quote.Usage_Rate_Type__c = 'Flat Usage Rates';
+        quote.Flat_Usage_Rates__c = '$.0135';
+        insert quote;
+
+        // list of quote lines
+
+        quoteLine = new SBQQ__QuoteLine__c();
+        quoteLine.SBQQ__Product__c = p.Id;
+        quoteLine.SBQQ__Existing__c = false;
+        quoteLine.SBQQ__RegularPrice__c  = 20.00;
+        quoteLine.SBQQ__ListPrice__c = 20;
+        quoteLine.SBQQ__Quantity__c = 5;
+        quoteLine.SBQQ__Quote__c = quote.Id;
+        insert quoteLine;
     }
 
     static void createAssets()
@@ -385,6 +463,10 @@ private class AssetTriggerHandlerTest {
         asset1.Product2Id = productList[0].Id;
         asset1.Quantity = 1;
         asset1.Price = 10.00;
+
+        if(quoteLine != null)
+            asset1.SBQQ__QuoteLine__c = quoteLine.Id;
+
         assetList.add(asset1);
 
         Asset asset2 = new Asset();

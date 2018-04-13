@@ -47,9 +47,9 @@ public class ProjectRollupQueueable implements Queueable{
             // parent project record type must be 'PS Parent Project - SaaS' or 'PS Project Phase Premise WFO'
             Map<Id, Project__c> projectCache = new Map<Id, Project__c>([
                     Select Id, RecordTypeId, Original_Forecasted_Initial_Go_Live_Date__c, Estimated_Project_Initial_Go_Live_Date__c,
-                            Estimated_Project_End__c, Times_All_Phases_Go_Live_Date_Changed__c, Opportunity__c,
+                            Estimated_Project_End__c, Times_All_Phases_Go_Live_Date_Changed__c, Opportunity__c,On_Hold_NRR__c,On_Hold_MRR__c,
                             Actual_Initial_Phase_Go_Live__c, Actual_Latest_Go_Live_Date__c, Number_of_Open_Phases__c,
-                            Contracted_NRR__c, Actual_NRR__c, Contracted_MRR__c, Actual_MRR__c
+                            Contracted_NRR__c, Actual_NRR__c, Contracted_MRR__c, Actual_MRR__c, Parent_Logged_Hours__c, Parent_Allocated_Hours__c
                     from Project__c
                     where Id IN :parentProjectIds and RecordTypeId = :psProjectParentRecordTypeIds
             ]);
@@ -191,8 +191,8 @@ public class ProjectRollupQueueable implements Queueable{
 
 
         for (AggregateResult ar : [
-                Select sum(Actual_NRR__c) totalActualNRR, sum(Contracted_NRR__c) totalContractedNRR,
-                        sum(Actual_MRR__c) totalActualMRR, sum(Contracted_MRR__c) totalContractedMRR, ParentProject__c
+                Select sum(Actual_NRR__c) totalDeliveredNRR, sum(Contracted_NRR__c) totalAllocatedNRR,sum(Actual_MRR__c) totalDeliveredMRR, sum(Contracted_MRR__c) totalAllocatedMRR,sum(On_Hold_NRR__c) totalOnHoldNRR,sum(On_Hold_MRR__c) totalOnHoldMRR,
+                        sum(Phase_Allocated_Hours__c) allocatedHours, sum(Phase_Logged_Hours__c) loggedHours, ParentProject__c
                 from Project__c
                 where ParentProject__c IN :projectCache.keySet() and RecordTypeId = :psProjectPhaseRecordTypeIds
                 group by ParentProject__c
@@ -210,10 +210,14 @@ public class ProjectRollupQueueable implements Queueable{
                 );
             }
 
-            parentProject.Actual_NRR__c = ar.get('totalActualNRR') != null ? (Decimal)ar.get('totalActualNRR') : 0;
-            parentProject.Contracted_NRR__c = ar.get('totalContractedNRR') != null ? (Decimal)ar.get('totalContractedNRR') : 0;
-            parentProject.Actual_MRR__c = ar.get('totalActualMRR') != null ? (Decimal)ar.get('totalActualMRR') : 0;
-            parentProject.Contracted_MRR__c = ar.get('totalContractedMRR') != null ? (Decimal)ar.get('totalContractedMRR') : 0;
+            parentProject.Actual_NRR__c = ar.get('totalDeliveredNRR') != null ? (Decimal)ar.get('totalDeliveredNRR') : 0;
+            parentProject.Contracted_NRR__c = ar.get('totalAllocatedNRR') != null ? (Decimal)ar.get('totalAllocatedNRR') : 0;
+            parentProject.Parent_Logged_Hours__c = ar.get('loggedHours') != null ? (Decimal)ar.get('loggedHours') : 0;
+            parentProject.Parent_Allocated_Hours__c = ar.get('allocatedHours') != null ? (Decimal)ar.get('allocatedHours') : 0;
+            parentProject.Actual_MRR__c = ar.get('totalDeliveredMRR') != null ? (Decimal)ar.get('totalDeliveredMRR') : 0;
+            parentProject.Contracted_MRR__c = ar.get('totalAllocatedMRR') != null ? (Decimal)ar.get('totalAllocatedMRR') : 0;
+            parentProject.On_Hold_NRR__c = ar.get('totalOnHoldNRR') != null ? (Decimal)ar.get('totalOnHoldNRR') : 0;
+	        parentProject.On_Hold_MRR__c = ar.get('totalOnHoldMRR') != null ? (Decimal)ar.get('totalOnHoldMRR') : 0;
 
             system.debug('**** rollupFinancials(): parentProject - ' + parentProject);
 
@@ -222,8 +226,12 @@ public class ProjectRollupQueueable implements Queueable{
 
             if(parentProject.Actual_NRR__c != parentProjectOld.Actual_NRR__c
                     || parentProject.Contracted_NRR__c != parentProjectOld.Contracted_NRR__c
+                    || parentProject.Parent_Logged_Hours__c != parentProjectOld.Parent_Logged_Hours__c
+                    || parentProject.Parent_Allocated_Hours__c != parentProjectOld.Parent_Allocated_Hours__c
                     || parentProject.Actual_MRR__c != parentProjectOld.Actual_MRR__c
-                    || parentProject.Contracted_MRR__c != parentProjectOld.Contracted_MRR__c)
+                    || parentProject.Contracted_MRR__c != parentProjectOld.Contracted_MRR__c
+                    || parentProject.On_Hold_NRR__c != parentProjectOld.On_Hold_NRR__c
+                    || parentProject.On_Hold_MRR__c != parentProjectOld.On_Hold_MRR__c)
             {
                 system.debug('**** rollupFinancials(): one or more fields value have changed');
                 parentProjects.put(parentProject.Id, parentProject);

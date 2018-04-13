@@ -33,6 +33,8 @@ public with sharing class KnownIssueViewHelper {
             dataItem.KIJIRAIteration = ki.JIRA_Sprint__c;
             dataItem.KIJIRATeam = ki.JIRA_Team__c;
             dataItem.KIJIRAStatus = ki.JIRA_Status__c;
+            dataItem.KIProductImpacted = ki.ProductImpacted__c;
+            dataItem.KIFixedVersion = ki.JIRA_Fix_Versions__c;
             dataItem.KIAge = date.valueOf(ki.CreatedDate).daysBetween(system.today());
             dataItem.KIFormattedCreatedDt = GetformattedDate(date.valueOf(ki.CreatedDate));
             dataItem.KIScoreChange = ki.KIImpactScore__c > ki.KIImpactScoreHistorical__c ? 'Up'
@@ -104,7 +106,7 @@ public with sharing class KnownIssueViewHelper {
 
         string knownIssueQuery = 'Select Id,Broken_by_Recent_Release__c, CaseNumber, KIImpactScore__c,NumberOfIncidents__c,ASVValue__c,  '
                 + ' KIImpactScoreHistorical__c, Status, Subject,Priority, CreatedDate,JIRA_Sprint__c, JIRA_Bug_Link__c, '
-                + ' JIRA_Key__c, JIRA_Team__c, JIRA_Status__c'
+                + ' JIRA_Key__c, JIRA_Team__c, JIRA_Status__c, JIRA_Fix_Versions__c, ProductImpacted__c'
                 + ' From Case ';
 
                 knownIssueQuery += FormQueryString(new map<string, string>());
@@ -152,6 +154,10 @@ public with sharing class KnownIssueViewHelper {
             return 'JIRA_Status__c';
         if(fieldName == 'Iteration')
             return 'JIRA_Sprint__c';
+        if(fieldName == 'Product Impacted')
+            return 'ProductImpacted__c';
+        if(fieldName == 'JIRA Fixed Version')
+            return 'JIRA_Fix_Versions__c';
 
         return fieldName;
     }

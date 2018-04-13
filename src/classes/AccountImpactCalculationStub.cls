@@ -1,7 +1,6 @@
 public with sharing class AccountImpactCalculationStub implements AccountImpactCalculationInterface {
     public Double AgeOfCustomerInMonthsScore { get; set; }
     public Double RiskOfLeavingScore { get; set; }
-    public Double GRYColor { get; set; }
     public Double StrategicAccountScore { get; set; }
     public Double PartnerAccountScore { get; set; }
     public Double BrandVisibilityScore { get; set; }
@@ -15,10 +14,6 @@ public with sharing class AccountImpactCalculationStub implements AccountImpactC
 
     public Double CalculateRiskOfLeavingScore(String risk, Double multiplier){
         return RiskOfLeavingScore;
-    }
-
-    public Double CalculateGYRColor(String score){
-        return GRYColor;
     }
 
     public Double CalculateStrategicAccountScore(String strategicAccount, Double multiplier){

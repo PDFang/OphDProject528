@@ -28,12 +28,11 @@ public class CustomerInfoTriggerHandler extends TriggerHandler {
     }
 
     private boolean recalculateScore(JBCXM__CustomerInfo__c newRecord, JBCXM__CustomerInfo__c oldRecord){
+        system.debug('New MRR' + newRecord.JBCXM__MRR__c + ' Old MRR: ' + oldRecord.JBCXM__MRR__c);
+
         return newRecord.JBCXM__CurScoreId__c != oldRecord.JBCXM__CurScoreId__c
-                || newRecord.JBCXM__ASV__c != oldRecord.JBCXM__ASV__c
-                || newRecord.JBCXM_CreatedCases__c != oldRecord.JBCXM_CreatedCases__c
-                || newRecord.JBCXM_OpenCases__c != oldRecord.JBCXM_OpenCases__c
-                || newRecord.JBCXM_Credits__c != oldRecord.JBCXM_Credits__c
-                || newRecord.JBCXM_MTTR_IN_Hours__c != oldRecord.JBCXM_MTTR_IN_Hours__c;
+                || newRecord.JBCXM__MRR__c != oldRecord.JBCXM__MRR__c
+                || newRecord.JBCXM_Credits__c != oldRecord.JBCXM_Credits__c;
     }
 
     @Future
@@ -44,7 +43,7 @@ public class CustomerInfoTriggerHandler extends TriggerHandler {
                 SELECT Id, JBCXM__Account__c, JBCXM__Account__r.Gainsight_Net_Score__c,
                         JBCXM__CurScoreId__c, JBCXM__CurScoreId__r.JBCXM__Score__c,
                         JBCXM__ASV__c, JBCXM_CreatedCases__c, JBCXM_OpenCases__c, JBCXM_Credits__c,
-                        JBCXM_MTTR_IN_Weeks__c, JBCXM_MTTR_IN_Hours__c
+                        JBCXM_MTTR_IN_Weeks__c, JBCXM_MTTR_IN_Hours__c, JBCXM__MRR__c
                 FROM JBCXM__CustomerInfo__c
                 where Id IN :custInfoIdSet
         ]){

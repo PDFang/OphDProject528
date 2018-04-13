@@ -34,7 +34,7 @@ public class OpportunityShareHelper {
                 recordIdSet.add(record.Id);
             }
             // iCE Partner account
-            else if(record.iCE_Partner__c != null && record.iCE_Partner_Status__c == 'Accepted' && ( oldRecord == null || oldRecord.iCE_Partner__c != record.iCE_Partner__c ) ){
+            else if(record.iCE_Partner__c != null && record.iCE_Partner_Status__c == 'Accepted' && ( oldRecord == null || oldRecord.iCE_Partner__c != record.iCE_Partner__c) ){
                 recordIdSet.add(record.Id);
             }
             // owner change
@@ -121,7 +121,8 @@ public class OpportunityShareHelper {
             for(Database.saveResult result : resultList){
                 if(result.isSuccess() == false){
                     system.debug('**** addShareFuture() : error - '+ result.getErrors()[0]);
-                    throw new OpportunityShareHelperException(result.getErrors()[0].getMessage());
+                    inContactBaseClass.SendErrorEmail( String.valueOf(result.getErrors()[0]), 'Class.OpportunityShareHelper.addShareFuture');
+                    //throw new OpportunityShareHelperException(result.getErrors()[0].getMessage());
                 }
             }
         }
@@ -192,7 +193,8 @@ public class OpportunityShareHelper {
                 if(result.isSuccess() == false){
                     system.debug('**** deleteShare() : id - '+ result.getId());
                     system.debug('**** deleteShare() : error - '+ result.getErrors()[0]);
-                    throw new OpportunityShareHelperException(result.getErrors()[0].getMessage());
+                    inContactBaseClass.SendErrorEmail( String.valueOf(result.getErrors()[0]), 'Class.OpportunityShareHelper.deleteShare');
+                    //throw new OpportunityShareHelperException(result.getErrors()[0].getMessage());
                 }
             }
         }

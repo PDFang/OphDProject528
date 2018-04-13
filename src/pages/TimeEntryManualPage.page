@@ -1,0 +1,293 @@
+<!--
+ - Created by Arnab on 2/1/2018.
+ -->
+
+<apex:page id="TimeEntryManualPage" applyBodyTag="false" sideBar="false" standardStylesheets="false" extensions="TimeEntryManualController" standardController="WorkIt2__Timing__c" docType="html-5.0">
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.common.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.mobile.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
+    <apex:form>
+
+        <div class="container-fluid" style="margin-bottom:10px;">
+            <h2>Add Time Manually</h2>
+            <div>
+                <a href="/{!WorkIt2__Timing__c.Id}"> Back to Timing: {!WorkIt2__Timing__c.Name}</a>
+            </div>
+            <div id="success" class=" alert alert-success message-alert" style="margin-left:15px;width:90%; display:none;"></div>
+            <apex:outputPanel id="tablePanel">
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>Select Date</th>
+                    <th>Select Time</th>
+                    <th>Comment</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                <apex:repeat value="{!TimeEntryList}" var="row">
+                    <tr>
+                        <td style="width:250px;"><input style="width:95%" class="datePicker" onchange="getDateValue(this, {!row.RowId});" title="Future dates cannot be selected."/></td>
+                        <td style="width:400px;">
+                            <div style="width:400px;">
+                                <label class="timeRange" style="">Range <span class="slider-time">12:00 AM </span> - <span class="slider-time2">12:00 AM</span> (Hours Spent - <span class="hoursSpent">24 hrs 0 mins</span>)</label>
+                                <div id="rangeslider" class="timeslider" style="float:left;">
+
+                                    <input />
+                                    <input />
+                                </div>
+                            </div>
+                            <apex:inputHidden value="{!row.RowId}" id="hiddenRowId"/>
+                        </td>
+                        <td style="width:600px;"><apex:inputTextarea value="{!row.Comment}" style="width:60%" onChange="getCommentValue(this, {!row.RowId});"/></td>
+                    </tr>
+                </apex:repeat>
+                </tbody>
+            </table>
+            </apex:outputPanel>
+            <apex:actionFunction name="refreshTable" action="{!refreshTableEntry}" reRender="tablePanel, timeEntry" onComplete="loadTable();"/>
+            <div style="float:right;">
+                <button type="button" class="btn btn-primary" onclick="saveAll(this);return false;">Save All</button>
+                <button type="button" class="btn" onclick="refreshTable();return false;">Clear All</button>
+            </div>
+
+        </div>
+
+
+        <!-- Confirmation Modal -->
+        <div class="modal fade" id="warning" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel" style="font-weight:bold">Alert</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" style="font-size:14px;">
+                        <div id="java-errors" class=" alert alert-danger message-alert" style="margin-left:15px;width:90%; display:none;"></div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </apex:form>
+    <apex:relatedList list="WorkIt2__Time_Entries__r" id="timeEntry">
+        <apex:facet name="header"><label>Existing Time Entries</label></apex:facet>
+    </apex:relatedList>
+
+    <style>
+        span.k-select{
+            z-index: 9999 !important;
+        }
+        .timeRange{
+            float:left;
+            text-align:center;
+            color: #337ab7;
+            font-weight: 100;
+        }
+        div.timeslider{
+            width: 100%;
+        }
+        .btn-primary {
+                    color: #fff !important;
+                    background-color: #007bff !important;
+                    border-color: #007bff !important;
+        }
+
+        .btn {
+
+                padding: 6px 12px !important;
+                margin-bottom: 0 !important;
+                font-size: 14px !important;
+                font-weight: 400 !important;
+                line-height: 1.42857143 !important;
+                text-align: center !important;
+                white-space: nowrap !important;
+                vertical-align: middle !important;
+                -ms-touch-action: manipulation !important;
+                touch-action: manipulation !important;
+                cursor: pointer !important;
+                -webkit-user-select: none !important;
+                -moz-user-select: none !important;
+                -ms-user-select: none !important;
+                user-select: none !important;
+                background-image: none !important;
+                border: 1px solid transparent !important;
+                border-radius: 4px !important;
+        }
+    </style>
+    <script>
+
+                var text = [];
+                var mediaLength = 1440; //03:49
+                var tableData = [];
+                var dateArray = {},
+                    timeRangeArray = {},
+                    commentArray = [];
+
+                $(document).ready(function() {
+                    loadTable();
+                });
+
+                var templateString = "#= selectionStart # - #= selectionEnd #";
+
+               function loadTable(){
+                    dateArray = {},
+                    timeRangeArray = {},
+                    commentArray = [];
+                    var i = 0;
+                    while (i <= mediaLength) {
+                        var date = new Date(null);
+                        date.setHours(0);
+                        date.setMinutes(i);
+                        var minutesSeconds = kendo.toString(date, "h:mm tt");
+                        text.push(minutesSeconds);
+                        i++;
+                    }
+
+                     $('.datePicker').kendoDatePicker({
+                         format: "MM/dd/yyyy",
+                         parseFormats: ["MMMM yyyy"],
+                         disableDates: function (date) {
+                            return date > new Date();
+                            }
+                         });
+                     $('.timeslider').kendoRangeSlider({
+                        min: 0,
+                        max: mediaLength,
+                        smallStep: 1,
+                        largeStep: 15,
+                        change: rangeSliderOnSlide,
+                        slide: rangeSliderOnSlide,
+                        tooltip: {
+                          template: kendo.template(templateString)
+                        }
+                    });
+                    $('input.datePicker').tooltip();
+               }
+
+                function getDateValue(obj, rowId){
+                    console.log('this value == >' + $(obj).val());
+                    dateArray[rowId] = $(obj).val();
+
+                }
+
+                function rangeSliderOnSlide(e){
+                     var startTime = e.value.toString().substring(0, e.value.toString().indexOf(','));
+                     var endTime = e.value.toString().substring( e.value.toString().indexOf(',') + 1, e.value.toString().length);
+                     var valuestart = formatToMinutesSeconds(startTime);
+                     var valuestop = formatToMinutesSeconds(endTime);
+                     var timeStart = new Date("01/01/2007 " + valuestart);
+                     var timeEnd = new Date("01/01/2007 " + valuestop);
+                     if(valuestop == "12:00 AM"){
+                         timeEnd.setDate(timeEnd.getDate() + 1);
+                     }
+                     var difference = timeEnd - timeStart;
+                     var hours = Math.floor(difference / 60 / 60 / 1000);
+                     var minutes = Math.floor((difference % 3600000)/60000);
+
+                     $(e.sender.element).closest("td").find('label.timeRange').find('.slider-time').html(valuestart);
+                     $(e.sender.element).closest("td").find('label.timeRange').find('.slider-time2').html(valuestop);
+                     $(e.sender.element).closest("td").find('label.timeRange').find('.hoursSpent').html(hours + ' hrs ' + minutes + ' mins ');
+                     var rowId = $(e.sender.element).closest("td").find('input[id$=hiddenRowId]').val();
+                     timeRangeArray[rowId] = valuestart + '~' + valuestop;
+
+                }
+
+                function formatToMinutesSeconds(val) {
+                       return text[val];
+                }
+
+                function saveAll(obj){
+                      $("div#success").hide();
+                    var tableDataArray = [];
+                    var len = $.map(dateArray, function(n, i) { return i; }).length;
+                    for(var i = 0; i < len; i++){
+                        var timeRange = timeRangeArray[i] ? timeRangeArray[i] : '12:00 AM~11:59 PM';
+                        var comment = commentArray[i] ? commentArray[i] : '';
+                        tableDataArray.push({
+                            RowId : i,
+                            EntryDate : dateArray[i],
+                            TimeRange: timeRange,
+                            Comment : comment
+                        });
+                    }
+
+                    if(tableDataArray.length < 1){
+                        displayError('Please select a date before saving.');
+                        return;
+                    }
+
+                    console.log('Array data = > ' + JSON.stringify(tableDataArray));
+                    $(obj).prop("disabled", true);
+                    $(obj).text("Saving...");
+
+                    TimeEntryManualController.SaveTime(
+                       tableDataArray,
+                        '{!currentId}',
+                        function(result,event){
+                          if (event.status){
+                              if(result == 'Success'){
+                                $(obj).prop("disabled", false);
+                                $(obj).text("Save");
+                               // console.log('success ==> ' + result);
+                                displaySuccess('Successfully added time');
+                              }else{
+                                   $(obj).prop("disabled", false);
+                                   $(obj).text("Save");
+                                   displayError(result);
+                              }
+                          }else{
+                                 console.log('Error ==> ' + event.message);
+                                 displayError(event.message);
+                          }
+                        },
+                        {escape: false}
+                    );
+
+                }
+
+                function getCommentValue(obj, rowId){
+                    console.log('comment value == >' + $(obj).val());
+                    commentArray[rowId] = $(obj).val();
+                }
+
+
+                function displayError(message){
+                     $("div#success").empty();
+                     $("div#success").hide();
+                     $("div#java-errors").css("display", "block");
+                     document.getElementById("java-errors").innerHTML =  message;
+                      $('#warning').modal('show');
+                     console.log('error =>' + message);
+                }
+
+                function hideError(){
+                     $("div#java-errors").css("display", "none");
+                     document.getElementById("java-errors").innerHTML = ' ';
+                }
+                 function displaySuccess(message){
+                     $("div#java-errors").empty();
+                     $("div#java-errors").hide();
+                     $("div#success").css("display", "block");
+                     document.getElementById("success").innerHTML =  message;
+
+                     console.log('success =>' + message);
+                     refreshTable();
+
+                }
+
+
+            </script>
+
+</apex:page>

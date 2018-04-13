@@ -15,13 +15,13 @@ global class CaseUpdateBatch implements Database.Batchable<sObject>, Database.St
         'Incident',
         'Incident - Premise',
         'Work Orders',
-        'Service Request'
+        'Service Request',
+        'Known Issue'
     };
 
     public static final String NO_ARTICLE = 'N/A';
     public static final String NEW_ARTICLE = 'New';
     public static final String KNOWN_ARTICLE = 'Known';
-
 
     global CaseUpdateBatch(String query)
     {
@@ -168,7 +168,8 @@ global class CaseUpdateBatch implements Database.Batchable<sObject>, Database.St
 
     } // end of readKnowledgeArticleVersions()
 
-    private void sendErrorEmail(Map<Id,String> errorDetails){
+
+    @TestVisible private void sendErrorEmail(Map<Id,String> errorDetails){
         string subject = 'Case KB Update Batch Errors' ;
         Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
         String[] toAddresses = new String[]{};

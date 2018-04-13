@@ -94,17 +94,18 @@ public class AccountHighlightComponentController
             }
             
             
-            if(acct.Health_Score__c <= 100)
+
+            if(acct.Health_Score__c <= 65)
             {
-                healthScoreImage = 'Happy';
+                healthScoreImage = 'Mad';
             }
             else if(acct.Health_Score__c <= 84)
             {
                 healthScoreImage = 'Meh';
             }
-            else if(acct.Health_Score__c <= 65)
+            else if(acct.Health_Score__c <= 100)
             {
-                healthScoreImage = 'Mad';
+                healthScoreImage = 'Happy';
             }
             else
             {

@@ -118,12 +118,9 @@ public with sharing class AssetSubscriptionAllocationNewController {
         catch (DmlException ex){
             result = 'Failed';
             message = ex.getMessage();
-            Integer occurence;
+
             if (ex.getMessage().contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
-                occurence = message.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
-                message = message.mid(occurence, message.length());
-                occurence = message.lastIndexOf(':');
-                message = message.mid(0, occurence);
+	            message = simplyfyErrorMessage(message);
             }
             else {
                 message = ex.getMessage();
@@ -144,13 +141,48 @@ public with sharing class AssetSubscriptionAllocationNewController {
     public static String DeleteAllocation(String allocationId, String objType){
         String result;
         try{
-            AssetSubscriptionAllocationHelper.DeleteAllocation(allocationId, objType);
-            result = 'Success';
+            result = AssetSubscriptionAllocationHelper.DeleteAllocation(allocationId, objType);
+
+            if (result.contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
+
+            }
+
         }catch (Exception ex){
-            result = 'Failed';
+            result = 'Failed' + ex.getMessage();
         }
 
         return result;
+    }
+
+	@RemoteAction
+	public static string SaveAllAllocation(string assetIdList,string subscriptionIdList, string projectId){
+		String result;
+		list<string> assetIds = new list<string>();
+		list<string> subscriptionIds = new list<string>();
+		if(assetIdList != null)
+			assetIds =  (List<string>)System.JSON.deserialize(assetIdList, List<string>.class);
+		if(subscriptionIdList != null)
+			subscriptionIds =  (List<string>)JSON.deserialize(subscriptionIdList, List<string>.class);
+		result = AssetSubscriptionAllocationHelper.SaveAllAllocations(assetIds,subscriptionIds,projectId);
+
+		if (result.contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
+			result = simplyfyErrorMessage(result);
+		}
+
+		return result;
+	}
+
+    @RemoteAction
+    public static String SearchUsers(String searchString){
+
+        try{
+
+            return AssetSubscriptionAllocationHelper.getUser(searchString);
+
+        }catch (Exception ex){
+           return 'Failed' + ex.getMessage();
+        }
+
     }
 
     public void SaveCancSuspQuantity(){
@@ -204,10 +236,21 @@ public with sharing class AssetSubscriptionAllocationNewController {
 
     public void deleteAssetAllocation(){
         try{
-            helper.deleteNonImplementedAssetAllocations(Asset.Id);
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Allocations were deleted successfully.'));
-            showdeleteButton = false;
-            reloadDetails();
+           string result = helper.deleteNonImplementedAssetAllocations(Asset.Id);
+
+            if (result.contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
+	            result = AssetSubscriptionAllocationNewController.simplyfyErrorMessage(result);
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, result));
+            }else if(result != 'success'){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, result));
+            }
+
+            if(result == 'success'){
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Allocations were deleted successfully.'));
+                showdeleteButton = false;
+                reloadDetails();
+            }
+
         }catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
             saveSuccess = false;
@@ -215,16 +258,19 @@ public with sharing class AssetSubscriptionAllocationNewController {
     }
 
     public void deleteSubsAllocation(){
-        try{
-            helper.deleteNonImplementedSubsAllocations(Subscription.Id);
+        string result = helper.deleteNonImplementedSubsAllocations(Subscription.Id);
+        if (result.contains('FIELD_CUSTOM_VALIDATION_EXCEPTION')){
+            result = AssetSubscriptionAllocationNewController.simplyfyErrorMessage(result);
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, result));
+        }else if(result != 'success'){
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, result));
+        }
+
+        if(result == 'success'){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Allocations were deleted successfully.'));
             showdeleteButton = false;
             reloadDetails();
-        }catch (Exception ex){
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
-            saveSuccess = false;
         }
-
     }
 
 
@@ -240,6 +286,23 @@ public with sharing class AssetSubscriptionAllocationNewController {
         reloadDetails();
     }
 
+	@RemoteAction
+	public static string CancelAllocations(string projectId){
+		if(projectId != null){
+			string message = AssetSubscriptionAllocationHelper.CancelAllAllocations(projectId);
+			return message;
+		}
+		return null;
+	}
+
+	@RemoteAction
+    public static string ManageOnHoldAllocations(string projectId, boolean onHold){
+        if(projectId != null){
+            string message = AssetSubscriptionAllocationHelper.updateOnHoldAllocations(projectId, onHold);
+            return message;
+        }
+        return null;
+    }
 
     public pagereference cancel(){
         return new PageReference('/'+currentId).setRedirect(true);
@@ -252,6 +315,15 @@ public with sharing class AssetSubscriptionAllocationNewController {
         generator.writeStringField('message', message);
         return generator.getAsString();
 
+    }
+
+    private static string simplyfyErrorMessage(string result){
+        Integer occurence;
+        occurence = result.indexOf('FIELD_CUSTOM_VALIDATION_EXCEPTION,') + 34;
+        result = result.mid(occurence, result.length());
+        occurence = result.lastIndexOf(':');
+        result = result.mid(0, occurence);
+        return result;
     }
 
 }

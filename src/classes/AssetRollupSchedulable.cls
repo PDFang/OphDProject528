@@ -4,13 +4,21 @@
 
 global class AssetRollupSchedulable implements Schedulable, Database.Batchable<sObject>{
 
-    public Integer batchSize;
-    public String query;
+    private Integer batchSize = 200;
+    private String query;
+    Set<Id> assetIds;
 
     public AssetRollupSchedulable(Integer recordsPerBatch){
 
         batchSize = recordsPerBatch;
         query = 'Select Id from Asset';
+
+    }
+
+    public AssetRollupSchedulable(Set<Id> assetIdSet){
+
+        assetIds = assetIdSet;
+        query = 'Select Id from Asset where Id IN :assetIds';
 
     }
 
@@ -51,6 +59,12 @@ global class AssetRollupSchedulable implements Schedulable, Database.Batchable<s
     }
 
     global void finish(Database.BatchableContext bc){
+
+        Profile userProfile = [Select Name from Profile where Id = :userinfo.getProfileId()];
+
+        if(userProfile.Name.containsIgnoreCase('System Administrator') == false){
+            return;
+        }
 
         AsyncApexJob a = [
                 SELECT Id, Status, NumberOfErrors, JobItemsProcessed,

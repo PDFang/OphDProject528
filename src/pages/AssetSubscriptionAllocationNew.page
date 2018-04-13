@@ -2,13 +2,15 @@
  - Created by ravish.chawla on 10/12/2017.
  -->
 
-<apex:page id="AssetSubscriptionAllocationNew" sideBar="false" controller="AssetSubscriptionAllocationNewController" title="Asset/Subscription Allocation" tabStyle="Project__c">
+<apex:page id="AssetSubscriptionAllocationNew" sideBar="false" controller="AssetSubscriptionAllocationNewController" title="Asset/Subscription Allocation" tabStyle="Project__c" standardStylesheets="false" >
 
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.AllocationStaticResources, '/AllocationStaticResources/js/AssetAllocation.js')}"/>
     <apex:includeScript value="{!URLFOR($Resource.AllocationStaticResources, '/AllocationStaticResources/js/SubscriptionAllocation.js')}"/>
+
+    <!--<apex:includeScript value="{!$Resource.TestAssetSubscrip}"/>-->
 
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
@@ -17,11 +19,7 @@
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
     <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
 
-    <apex:sectionHeader subtitle="{!Asset.Name}" title="Asset Allocation" rendered="{!NOT(ISNULL(Asset))}"/>
-
-    <apex:sectionHeader subtitle="{!Subscription.Name}" title="Subscription Allocation" rendered="{!NOT(ISNULL(Subscription))}"/>
-
-    <apex:sectionHeader subtitle="{!Project.Name}" title="Project Allocation" rendered="{!NOT(ISNULL(Project))}"/>
+    <apex:includeScript value="/support/console/32.0/integration.js"/>
 
 
     <style>
@@ -77,241 +75,276 @@
         .message .messageText h4 {
            display: none;
         }
+        .pbSubheader {
+                cursor:pointer !important;
+            }
+        .nav-tabs>li.active>a, .nav-tabs>li.active>a:focus, .nav-tabs>li.active>a:hover{
+                background-color: #58b6dc;
+                color:white;
+        }
+
+        .fixed-header {
+            position:fixed;
+            width:auto;
+            z-index: 1;
+          }
+
+      .pbBody, .pbBody a, .lbBody a, .lbBodyDescription, .list {
+          color: #337ab7 !important;
+       }
+
+       .applyborder{
+           border: solid 1px #6689cc;
+            border-bottom: 0;
+            border-radius: 6px 6px 2px 2px;
+       }
+
 
     </style>
+
     <apex:form id="myform">
-        <apex:outputPanel id="detailSection">
-            <apex:pageBlock title="Project Detail" rendered="{!Not(ISNULL(Project))}" id="detailProject">
-                <apex:pageBlockButtons title="" location="bottom">
-                    <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
-                </apex:pageBlockButtons>
-                <apex:pageBlockSection columns="2" >
-                    <apex:repeat value="{!$ObjectType.Project__c.FieldSets.PS_Project_Allocation}" var="f">
-                        <apex:outputfield value="{!Project[f]}" />
-                    </apex:repeat>
-                </apex:pageBlockSection>
-            </apex:pageBlock>
+        <div class="container-fluid" style="font-size:14.14px;">
+            <div id="backtoRecordDiv">
+                <apex:commandLink title="Go Back" value="<< Go Back To Record" action="{!cancel}" immediate="true" style="text-decoration:underline;"/>
+            </div>
 
-            <apex:pageBlock title="Asset Detail" rendered="{!Not(ISNULL(asset))}" id="detailAsset">
-                <apex:pageBlockButtons title="" location="bottom">
-                    <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
-                    <apex:outputPanel rendered="{!Asset.Quantity > 1 && !Asset.FullyImplemented__c}">
-                        <button title="Edit On Hold/Cancelled Quantity " onClick="openEditCancSuspQuantityModal(); return false;">
-                            Edit On Hold/Cancelled Quantity
-                        </button>
-                    </apex:outputPanel>
-                </apex:pageBlockButtons>
-                <!--<apex:pageBlockSection columns="2">-->
-                    <!--<apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation}" var="f">-->
-                        <!--<apex:outputfield value="{!Asset[f]}" />-->
-                    <!--</apex:repeat>-->
-                <!--</apex:pageBlockSection>-->
-                <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity > 1}">
-                    <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_GrTh1_Fields}" var="f">
-                        <apex:outputfield value="{!Asset[f]}" />
-                    </apex:repeat>
-                </apex:pageBlockSection>
-                <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity <= 1}">
-                    <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Eq1_Fields}" var="f">
-                        <apex:outputfield value="{!Asset[f]}" />
-                    </apex:repeat>
-                </apex:pageBlockSection>
-               <apex:pageBlockSection columns="2" >
-                   <apex:outputfield value="{!Asset.ImplementedProduct__c}" />
-               </apex:pageBlockSection>
-               <div style="float:left; position:relative; top:-24px; left :25%; font-size: 12.12px;">
-                   [<a style="color:blue;cursor:pointer;" data-toggle="modal" data-target="#ImplementedProducts">Select Implemented Product</a>]
-               </div>
-                <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity > 1}" id="cancSuspQuanPBS">
-                    <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Editable_Fields}" var="f">
-                        <apex:outputfield value="{!Asset[f]}" />
-                    </apex:repeat>
-                </apex:pageBlockSection>
-            </apex:pageBlock>
+            <apex:sectionHeader subtitle="{!Asset.Name}" title="Asset Allocation" rendered="{!NOT(ISNULL(Asset))}"/>
+            <apex:sectionHeader subtitle="{!Subscription.Name}" title="Subscription Allocation" rendered="{!NOT(ISNULL(Subscription))}"/>
+            <apex:sectionHeader subtitle="{!Project.Name}" title="Project Allocation" rendered="{!NOT(ISNULL(Project))}"/>
 
-            <apex:pageBlock title="Subscription Detail" rendered="{!Not(ISNULL(Subscription))}" id="detailSubscription">
-                <apex:pageBlockButtons title="" location="bottom">
-                    <apex:commandButton title="Back" value="Back" action="{!cancel}" immediate="true"/>
-                    <apex:outputPanel rendered="{!Subscription.Quantity__c > 1 && !Subscription.FullyImplemented__c}">
-                        <button title="Edit On Hold/Cancelled Quantity " onClick="openSubsEditCancSuspQuantityModal(); return false;">
-                            Edit On Hold/Cancelled Quantity
-                        </button>
+            <ul class="nav nav-pills mb-4">
+                <li class="nav-item active applyborder"><a href="#detailsSection" class="nav-link " data-toggle="pill" role="tab"  aria-selected="true">Details</a></li>
+                <li class="nav-item applyborder" id="assetDetailsTab"><a href="#assetAllocationDetails" class="nav-link" data-toggle="pill" >Asset Allocation Details</a></li>
+                <li class="nav-item applyborder" id="subscriptionDetailsTab"><a class="nav-link" href="#subscriptionAllocationDetails"  data-toggle="pill">Subscription Allocation Details</a></li>
+            </ul>
+            <div class="tab-content">
+                <div id="detailsSection" class="tab-pane fade in active">
+
+                    <apex:outputPanel id="detailSection">
+
+                        <apex:pageBlock title="Project Detail" rendered="{!Not(ISNULL(Project))}" id="detailProject">
+
+                            <apex:pageBlockSection columns="2" >
+                                <apex:repeat value="{!$ObjectType.Project__c.FieldSets.PS_Project_Allocation}" var="f">
+                                    <apex:outputfield value="{!Project[f]}" />
+                                </apex:repeat>
+                            </apex:pageBlockSection>
+                            <div class="row">
+                                <div class="col-md-4 col-lg-4 col-sm-4"></div>
+                                <div class="col-md-8 col-lg-8 col-sm-8">
+                                    <button type="button" class="btn btn-primary" id="CancelPhase" onclick="return confirmCancelation();">Remove All Allocations</button>
+                                    <apex:outputPanel rendered="{!IF(Project.Phase_Status__c != 'Suspended', true, false)}"> <button type="button" class="btn btn-primary" id="onHoldButton" onclick="return onHoldAllocation();">Hold All Allocations</button></apex:outputPanel>
+                                    <apex:outputPanel rendered="{!IF(Project.Phase_Status__c == 'Suspended', true, false)}"> <button type="button" class="btn btn-primary" id="releaseHoldButton" onclick="return releaseHoldAllocation();">Release On Hold Allocations</button></apex:outputPanel>
+                                </div>
+                            </div>
+                            <div id="cancelWindow"></div>
+                        </apex:pageBlock>
+
+                        <apex:pageBlock title="Asset Detail" rendered="{!Not(ISNULL(asset))}" id="detailAsset">
+                            <apex:pageBlockButtons title="" location="bottom">
+                                <apex:outputPanel rendered="{!!Asset.FullyImplemented__c}">
+                                    <button title="Manage Cancelled Quantity " onClick="openEditCancSuspQuantityModal(); return false;">
+                                        Manage Cancelled Quantity
+                                    </button>
+                                </apex:outputPanel>
+                            </apex:pageBlockButtons>
+                            <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity > 1}">
+                                <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_GrTh1_Fields}" var="f">
+                                    <apex:outputfield value="{!Asset[f]}" />
+                                </apex:repeat>
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity <= 1}">
+                                <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Eq1_Fields}" var="f">
+                                    <apex:outputfield value="{!Asset[f]}" />
+                                </apex:repeat>
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection columns="2" >
+                                <apex:outputfield value="{!Asset.ImplementedProduct__c}" />
+                            </apex:pageBlockSection>
+                            <div style="float:left; position:relative; top:-24px; left :25%; font-size: 12.12px;">
+                                [<a style="color:blue;cursor:pointer;" data-toggle="modal" data-target="#ImplementedProducts">Select Implemented Product</a>]
+                            </div>
+                            <apex:pageBlockSection columns="2" rendered="{!Asset.Quantity > 1}" id="cancSuspQuanPBS">
+                                <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Editable_Fields}" var="f">
+                                    <apex:outputfield value="{!Asset[f]}" />
+                                </apex:repeat>
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>
+
+                        <apex:pageBlock title="Subscription Detail" rendered="{!Not(ISNULL(Subscription))}" id="detailSubscription">
+                            <apex:pageBlockButtons title="" location="bottom">
+                                <apex:outputPanel rendered="{!!Subscription.FullyImplemented__c}">
+                                    <button title="Manage Cancelled Quantity " onClick="openSubsEditCancSuspQuantityModal(); return false;">
+                                        Manage Cancelled Quantity
+                                    </button>
+                                </apex:outputPanel>
+                            </apex:pageBlockButtons>
+                            <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c > 1}">
+                                <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation_GrTh1_Fields}" var="f">
+                                    <apex:outputfield value="{!Subscription[f]}" />
+                                </apex:repeat>
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c <= 1}">
+                                <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation_Eq1_Fields}" var="f">
+                                    <apex:outputfield value="{!Subscription[f]}" />
+                                </apex:repeat>
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection columns="2" >
+                                <apex:outputfield value="{!Subscription.Implemented_Product__c}" />
+                            </apex:pageBlockSection>
+                            <div style="float:left; position:relative; top:-24px; left :25%; font-size: 12.12px;">
+                                [<a style="color:blue;cursor:pointer;" data-toggle="modal" data-target="#ImplementedProducts">Select Implemented Product</a>]
+                            </div>
+                            <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c > 1}" id="subsCancSuspQuanPBS">
+                                <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Alloc_Editable_Fields}" var="f">
+                                    <apex:outputfield value="{!Subscription[f]}" />
+                                </apex:repeat>
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>
                     </apex:outputPanel>
-                </apex:pageBlockButtons>
-                <!--<apex:pageBlockSection columns="2" >-->
-                    <!--<apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation}" var="f">-->
-                        <!--<apex:outputfield value="{!Subscription[f]}" />-->
-                    <!--</apex:repeat>-->
-                <!--</apex:pageBlockSection>-->
-                <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c > 1}">
-                    <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation_GrTh1_Fields}" var="f">
-                        <apex:outputfield value="{!Subscription[f]}" />
-                    </apex:repeat>
-                </apex:pageBlockSection>
-                <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c <= 1}">
-                    <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Allocation_Eq1_Fields}" var="f">
-                        <apex:outputfield value="{!Subscription[f]}" />
-                    </apex:repeat>
-                </apex:pageBlockSection>
-                <apex:pageBlockSection columns="2" >
-                    <apex:outputfield value="{!Subscription.Implemented_Product__c}" />
-                </apex:pageBlockSection>
-                <div style="float:left; position:relative; top:-24px; left :25%; font-size: 12.12px;">
-                    [<a style="color:blue;cursor:pointer;" data-toggle="modal" data-target="#ImplementedProducts">Select Implemented Product</a>]
+                    <div id="projectMessage" class="alert alert-success" style="display:none; width:70%"/>
                 </div>
-                <apex:pageBlockSection columns="2" rendered="{!Subscription.Quantity__c > 1}" id="subsCancSuspQuanPBS">
-                    <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Alloc_Editable_Fields}" var="f">
-                        <apex:outputfield value="{!Subscription[f]}" />
-                    </apex:repeat>
-                </apex:pageBlockSection>
-            </apex:pageBlock>
-        </apex:outputPanel>
-        <div id="assetAllocationPanel">
-            <apex:pageBlock id="assetAllocationBlock">
-                <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Asset Allocation"/>
-                <div id="assetAllocationList"></div>
-            </apex:pageBlock>
-        </div>
-        <div id="subscriptiontAllocationPanel">
-            <apex:pageBlock id="subscriptiontAllocationBlock">
-                <apex:pageBlockSection collapsible="false"  columns="1" showHeader="true" title="Subscription Allocation"/>
-                <div id="subscriptionAllocationList"></div>
-                <div id="window"></div>
-            </apex:pageBlock>
-        </div>
-        <!-- Confirmation Modal -->
-        <div class="modal fade" id="warning" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel" style="font-weight:bold">Alert</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body" style="font-size:14px;">
-                        <div id="java-errors" class=" alert alert-danger message-alert" style="margin-left:15px;width:90%; display:none;"></div>
-                        <div id="success" class=" alert alert-success message-alert" style="margin-left:15px;width:90%; display:none;"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">OK</button>
-                    </div>
+                <div id="assetAllocationDetails" class="tab-pane fade" style="border-top: solid 2px #6689cc;">
+                    <div id="assetAllocationList"></div>
+                </div>
+                <div id="subscriptionAllocationDetails" class="tab-pane fade" style="border-top: solid 2px #6689cc;">
+                    <div id="subscriptionAllocationList"></div>
+                    <div id="window"></div>
                 </div>
             </div>
-        </div>
-
-        <!--Asset Cancelled and Suspended Quantity-->
-        <div class="modal fade" id="assetCanSuspQuanMod" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true">
-            <apex:outputPanel rendered="{!Not(ISNULL(asset))}">
-                <div class="modal-dialog" role="document" style="width:60%;">
+            <!-- Confirmation Modal -->
+            <div class="modal fade" id="warning" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true">
+                <div class="modal-dialog" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="cancSuspModalLabel" style="font-weight:bold">Edit On Hold/Cancelled Quantity </h5>
+                            <h5 class="modal-title" id="exampleModalLabel" style="font-weight:bold">Alert</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
                         <div class="modal-body" style="font-size:14px;">
-                            <apex:pageBlock id="cancSuspPageBlck" >
-                                <apex:pageMessages id="messages" />
-
-                                <apex:pageBlockSection columns="2" >
-                                    <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Editable_Fields}" var="f">
-                                        <apex:inputField value="{!Asset[f.fieldPath]}"/>
-                                    </apex:repeat>
-                                </apex:pageBlockSection>
-                            </apex:pageBlock>
+                            <div id="java-errors" class=" alert alert-danger message-alert" style="margin-left:15px;width:90%; display:none;"></div>
+                            <div id="success" class=" alert alert-success message-alert" style="margin-left:15px;width:90%; display:none;"></div>
                         </div>
                         <div class="modal-footer">
-                            <apex:outputPanel id="deleteAllocationSection" style="float:left;" >
-                                <apex:actionStatus id="deleteAllocationAsset" >
-                                    <apex:facet name="stop">
-                                        <apex:commandButton value="Delete All Non-Implemented Allocations" reRender="messages" status="deleteAllocationAsset" rendered="{!showdeleteButton}" action="{!deleteAssetAllocation}" onComplete="overridePageMessages('delete');"/>
-                                    </apex:facet>
-                                    <apex:facet name="start">
-                                        <apex:outputPanel >
-                                            <apex:image value="/img/loading32.gif" style="height: 15px;"/>
-                                            <apex:commandButton styleClass="k-button"  value="Deleting..." status="deleteAllocationAsset" disabled="true"/>
-                                        </apex:outputPanel>
-                                    </apex:facet>
-                                </apex:actionStatus>
-                            </apex:outputPanel>
-                            <!--<apex:commandButton reRender="cancSuspPageBlck, cancSuspQuanPBS" title="Cancel" value="Cancel" action="{!cancel}" immediate="true"/>-->
-                            <apex:commandButton value="Save" action="{!SaveCancSuspQuantity}" reRender="cancSuspPageBlck, cancSuspQuanPBS, deleteAllocationSection"  style="color:black !important;" onComplete="overridePageMessages('save');"></apex:commandButton>
-                            <apex:commandButton value="Save and Close" action="{!SaveCancSuspQuantity}" reRender="cancSuspPageBlck, cancSuspQuanPBS, refreshAfterSave, deleteAllocationSection"  style="color:black !important;" onComplete="overridePageMessages('saveClose');"></apex:commandButton>
-                            <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>
+                            <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">OK</button>
                         </div>
-                    </div>
-                </div>
-            </apex:outputPanel>
-        </div>
-
-        <apex:outputPanel id="refreshAfterSave">
-            <script>
-                 var saveSuccess = {!saveSuccess};
-            </script>
-        </apex:outputPanel>
-
-        <!--Subscription Cancelled and Suspended Quantity-->
-        <div class="modal fade" id="subsCanSuspQuanMod" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true" >
-            <apex:outputPanel rendered="{!Not(ISNULL(Subscription))}">
-                <div class="modal-dialog" role="document" style="width:56%;">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="subsCancSuspModalLabel" style="font-weight:bold">Edit On Hold/Cancelled Quantity</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"  onclick="reloadDetails();">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body" style="font-size:14px;">
-                            <apex:pageBlock id="subsCancSuspPageBlck" >
-                                <apex:pageMessages id="messagesSubs" />
-                                <apex:pageBlockSection columns="2" >
-                                    <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Alloc_Editable_Fields}" var="f">
-                                        <apex:inputField value="{!Subscription[f.fieldPath]}"/>
-                                    </apex:repeat>
-                                </apex:pageBlockSection>
-                            </apex:pageBlock>
-                        </div>
-                        <div class="modal-footer">
-                            <apex:outputPanel id="deleteAllocationSectionSubs" style="float:left;" >
-                                <apex:actionStatus id="deleteSubsAllocation" >
-                                    <apex:facet name="stop">
-                                        <apex:commandButton value="Delete All Non-Implemented Allocations" reRender="messagesSubs" status="deleteSubsAllocation" rendered="{!showdeleteButton}" action="{!deleteSubsAllocation}" onComplete="overridePageMessages('delete');"/>
-                                    </apex:facet>
-                                    <apex:facet name="start">
-                                        <apex:outputPanel >
-                                            <apex:image value="/img/loading32.gif" style="height: 15px;"/>
-                                            <apex:commandButton styleClass="k-button"  value="Deleting..." status="deleteSubsAllocation" disabled="true"/>
-                                        </apex:outputPanel>
-                                    </apex:facet>
-                                </apex:actionStatus>
-                            </apex:outputPanel>
-                            <apex:commandButton value="Save" action="{!SaveCancSuspQuantitySubs}" reRender="subsCancSuspPageBlck, subsCancSuspQuanPBS, deleteAllocationSectionSubs"  style="color:black !important;" onComplete="overridePageMessages('save');"></apex:commandButton>
-                            <apex:commandButton value="Save and Close" action="{!SaveCancSuspQuantitySubs}" reRender="subsCancSuspPageBlck, subsCancSuspQuanPBS, refreshAfterSave, deleteAllocationSectionSubs"  style="color:black !important;" onComplete="overridePageMessages('saveClose');"></apex:commandButton>
-                            <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" onclick="reloadDetails();">Cancel</button>
-                        </div>
-                    </div>
-                </div>
-            </apex:outputPanel>
-
-        </div>
-
-
-        <!-- loading Modal -->
-        <div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content" style="width:40%; top: 182px;">
-                    <div class="modal-body" style="font-size:14px;">
-                        <div class="spinnerClass">Please wait</div>
                     </div>
                 </div>
             </div>
-        </div>
-        <apex:actionFunction name="reloadDetails" action="{!reloadDetails}" reRender="detailSection,detailSubscription,detailAsset,detailProject, refreshScript, deleteAllocationSection, deleteAllocationSectionSubs" immediate="true"/>
 
-        <!--Implemented Product lists-->
-        <div class="modal fade" id="ImplementedProducts" tabindex="-1" role="dialog" aria-labelledby="ImplementedProductslabel" aria-hidden="true" >
+            <!--Asset Cancelled and Suspended Quantity-->
+            <div class="modal fade" id="assetCanSuspQuanMod" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true">
+                <apex:outputPanel rendered="{!Not(ISNULL(asset))}">
+                    <div class="modal-dialog" role="document" style="width:60%;">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="cancSuspModalLabel" style="font-weight:bold">Manage Cancelled Quantity </h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body" style="font-size:14px;">
+                                <apex:pageBlock id="cancSuspPageBlck" >
+                                    <apex:pageMessages id="messages" />
+                                    <apex:pageBlockSection columns="2" >
+                                        <apex:repeat value="{!$ObjectType.Asset.FieldSets.PS_Asset_Allocation_Editable_Fields}" var="f">
+                                            <apex:inputField value="{!Asset[f.fieldPath]}"/>
+                                        </apex:repeat>
+                                    </apex:pageBlockSection>
+                                </apex:pageBlock>
+                            </div>
+                            <div class="modal-footer">
+                                <apex:outputPanel id="deleteAllocationSection" style="float:left;" >
+                                    <apex:actionStatus id="deleteAllocationAsset" >
+                                        <apex:facet name="stop">
+                                            <apex:commandButton value="Delete All Non-Implemented Allocations" reRender="messages" status="deleteAllocationAsset" rendered="{!showdeleteButton}" action="{!deleteAssetAllocation}" onComplete="overridePageMessages('delete');"/>
+                                        </apex:facet>
+                                        <apex:facet name="start">
+                                            <apex:outputPanel >
+                                                <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                                                <apex:commandButton styleClass="k-button"  value="Deleting..." status="deleteAllocationAsset" disabled="true"/>
+                                            </apex:outputPanel>
+                                        </apex:facet>
+                                    </apex:actionStatus>
+                                </apex:outputPanel>
+                                <!--<apex:commandButton reRender="cancSuspPageBlck, cancSuspQuanPBS" title="Cancel" value="Cancel" action="{!cancel}" immediate="true"/>-->
+                                <apex:commandButton value="Save" action="{!SaveCancSuspQuantity}" reRender="cancSuspPageBlck, cancSuspQuanPBS, deleteAllocationSection"  style="color:black !important;" onComplete="overridePageMessages('save');"></apex:commandButton>
+                                <apex:commandButton value="Save and Close" action="{!SaveCancSuspQuantity}" reRender="cancSuspPageBlck, cancSuspQuanPBS, refreshAfterSave, deleteAllocationSection"  style="color:black !important;" onComplete="overridePageMessages('saveClose');"></apex:commandButton>
+                                <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </apex:outputPanel>
+            </div>
+
+            <apex:outputPanel id="refreshAfterSave">
+                <script>
+                 var saveSuccess = {!saveSuccess};
+            </script>
+            </apex:outputPanel>
+
+            <!--Subscription Cancelled and Suspended Quantity-->
+            <div class="modal fade" id="subsCanSuspQuanMod" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true" >
+                <apex:outputPanel rendered="{!Not(ISNULL(Subscription))}">
+                    <div class="modal-dialog" role="document" style="width:56%;">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="subsCancSuspModalLabel" style="font-weight:bold">Manage Cancelled Quantity</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"  onclick="reloadDetails();">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body" style="font-size:14px;">
+                                <apex:pageBlock id="subsCancSuspPageBlck" >
+                                    <apex:pageMessages id="messagesSubs" />
+                                    <apex:pageBlockSection columns="2" >
+                                        <apex:repeat value="{!$ObjectType.SubscriptionReplica__c.FieldSets.PS_Subscription_Alloc_Editable_Fields}" var="f">
+                                            <apex:inputField value="{!Subscription[f.fieldPath]}"/>
+                                        </apex:repeat>
+                                    </apex:pageBlockSection>
+                                </apex:pageBlock>
+                            </div>
+                            <div class="modal-footer">
+                                <apex:outputPanel id="deleteAllocationSectionSubs" style="float:left;" >
+                                    <apex:actionStatus id="deleteSubsAllocation" >
+                                        <apex:facet name="stop">
+                                            <apex:commandButton value="Delete All Non-Implemented Allocations" reRender="messagesSubs" status="deleteSubsAllocation" rendered="{!showdeleteButton}" action="{!deleteSubsAllocation}" onComplete="overridePageMessages('delete');"/>
+                                        </apex:facet>
+                                        <apex:facet name="start">
+                                            <apex:outputPanel >
+                                                <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                                                <apex:commandButton styleClass="k-button"  value="Deleting..." status="deleteSubsAllocation" disabled="true"/>
+                                            </apex:outputPanel>
+                                        </apex:facet>
+                                    </apex:actionStatus>
+                                </apex:outputPanel>
+                                <apex:commandButton value="Save" action="{!SaveCancSuspQuantitySubs}" reRender="subsCancSuspPageBlck, subsCancSuspQuanPBS, deleteAllocationSectionSubs"  style="color:black !important;" onComplete="overridePageMessages('save');"></apex:commandButton>
+                                <apex:commandButton value="Save and Close" action="{!SaveCancSuspQuantitySubs}" reRender="subsCancSuspPageBlck, subsCancSuspQuanPBS, refreshAfterSave, deleteAllocationSectionSubs"  style="color:black !important;" onComplete="overridePageMessages('saveClose');"></apex:commandButton>
+                                <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;" onclick="reloadDetails();">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </apex:outputPanel>
+
+            </div>
+
+
+            <!-- loading Modal -->
+            <div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content" style="width:40%; top: 182px;">
+                        <div class="modal-body" style="font-size:14px;">
+                            <div class="spinnerClass">Please wait</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <apex:actionFunction name="reloadDetails" action="{!reloadDetails}" reRender="detailSection,detailSubscription,detailAsset,detailProject, refreshScript, deleteAllocationSection, deleteAllocationSectionSubs" immediate="true"/>
+            <apex:actionFunction name="reloadModal" action="{!reloadDetails}" reRender="subsCancSuspPageBlck,cancSuspPageBlck" immediate="true"/>
+
+            <!--Implemented Product lists-->
+            <div class="modal fade" id="ImplementedProducts" tabindex="-1" role="dialog" aria-labelledby="ImplementedProductslabel" aria-hidden="true" >
                 <div class="modal-dialog" role="document" style="width:56%;">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -323,48 +356,87 @@
                         </div>
                         <div class="modal-body" style="font-size:14px;">
                             <apex:pageBlock>
-                           <apex:pageBlockTable value="{!ImplementedProducts}" var="ip">
-                               <apex:column>
-                                   <apex:commandButton  value="Select" action="{!saveImplementedProduct}" rerender="detailAsset, detailSubscription" onComplete="closeModal();">
-                                       <apex:param name="rowid" value="{!ip.Id}" assignTo="{!SelectedRowId}"/>
-                                   </apex:commandButton>
-                               </apex:column>
-                               <apex:column headerValue="Name">
-                                <apex:outputText value="{!ip.Name}"/>
-                               </apex:column>
-                               <apex:column value="{!ip.Account__c}" headerValue="Account"/>
-                               <apex:column value="{!ip.Product__c}" headerValue="Product"/>
-                               <apex:column value="{!ip.Status__c}" headerValue="Status"/>
-                               <apex:column value="{!ip.GoLiveDate__c}" headerValue="Go Live Date"/>
-                               <apex:column value="{!ip.EstimatedGoLiveDate__c}" headerValue="Estimated Go Live Date"/>
-                           </apex:pageBlockTable>
+                                <apex:pageBlockTable value="{!ImplementedProducts}" var="ip">
+                                    <apex:column>
+                                        <apex:commandButton  value="Select" action="{!saveImplementedProduct}" rerender="detailAsset, detailSubscription" onComplete="closeModal();">
+                                            <apex:param name="rowid" value="{!ip.Id}" assignTo="{!SelectedRowId}"/>
+                                        </apex:commandButton>
+                                    </apex:column>
+                                    <apex:column headerValue="Name">
+                                        <apex:outputText value="{!ip.Name}"/>
+                                    </apex:column>
+                                    <apex:column value="{!ip.Account__c}" headerValue="Account"/>
+                                    <apex:column value="{!ip.Product__c}" headerValue="Product"/>
+                                    <apex:column value="{!ip.Status__c}" headerValue="Status"/>
+                                    <apex:column value="{!ip.GoLiveDate__c}" headerValue="Go Live Date"/>
+                                    <apex:column value="{!ip.EstimatedGoLiveDate__c}" headerValue="Estimated Go Live Date"/>
+                                </apex:pageBlockTable>
                             </apex:pageBlock>
                         </div>
                         <div class="modal-footer">
-                           <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Close</button>
+                            <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">Close</button>
                         </div>
                     </div>
                 </div>
+            </div>
 
         </div>
 
     </apex:form>
+
+
     <script type="text/x-kendo-template" id="windowTemplate">
         <p>Delete this Allocation for <strong>#= AssetName == null ? SubscriptionName : AssetName #</strong> ? </p>
         <p>Allocated Quantity = <strong>#= AllocatedQuantity == null ? 0 : AllocatedQuantity #</strong></p>
-        <p>Allocated Percentage = <strong>#= AllocatedPercentage == null ? 0 : AllocatedPercentage #</strong></p>
+        <p>Allocated Hours % = <strong>#= AllocatedPercentage == null ? 0 : AllocatedPercentage #</strong></p>
         <p>Allocated Hours = <strong>#= AllocatedHours #</strong> </p>
         <div class="modal-footer">
-            <button class="k-button" id="yesButton">Yes</button>
+            <button class="k-button" id="yesButton" >Yes</button>
             <button class="k-button" id="noButton"> Cancel</button>
         </div>
     </script>
+
+    <script type="text/x-kendo-template" id="cancelWindow">
+        <p>Are you sure you want to remove all allocations?</p>
+        <div class="modal-footer">
+            <button class="k-button" id="confirmCancel" onclick="return CancelAllocation();">Yes</button>
+            <button class="k-button" id="denyCancel" onclick="return closeCancelWindow();"> Cancel</button>
+        </div>
+    </script>
+
     <apex:outputPanel id="refreshScript">
-    <script>
+        <script>
 
-
+        var cancelKendoWindow;
         $(document).ready(function() {
            getSObjType();
+           $(".nav-tabs a").click(function(){
+                $(this).tab('show');
+            });
+
+           if({!Asset == null}){
+               $("#assetDetailsTab").hide();
+           }
+           if({!Subscription == null}){
+               $("#subscriptionDetailsTab").hide();
+           }
+
+           if({!Project != null}){
+               $("#assetDetailsTab").show();
+               $("#subscriptionDetailsTab").show();
+               cancelKendoWindow = $("#cancelWindow").kendoWindow({
+                    width: "350px",
+                    height: "150px",
+                    title: "Confirm Cancel",
+                    actions: ["Close"],
+                    visible: false
+               }).data("kendoWindow");
+           }
+
+           if(sforce.console.isInConsole()){
+               $("div#backtoRecordDiv").hide();
+           }
+
 
         });
 
@@ -374,7 +446,11 @@
              Subscription = new Object(),
              Product = new Object(),
              isManager = {!Manager},
-             disableEdit = false;
+             disableEdit = false,
+             implemented = false,
+             projectGoLiveDate = '',
+             projectPhaseStatus = '',
+             currentUser = "{!$User.FirstName}" + ' ' + "{!$User.LastName}";
 
         var windowTemplate = kendo.template($("#windowTemplate").html());
 
@@ -392,10 +468,9 @@
                         console.log('object type ==>' + result);
                         if(result.length > 1){
                             if(result == 'Asset'){
-                              disableEdit = {!Asset.FullyImplemented__c};
                               currentObjectType = result;
                               console.log('results =>' + JSON.stringify(result));
-                              $("#subscriptiontAllocationPanel").hide();
+                              $("#subscriptionAllocationDetails").hide();
                               Asset = new Object();
                               Asset.Id = '{!Asset.Id}';
                               Asset.Name = '{!Asset.Name}';
@@ -403,8 +478,12 @@
                               Asset.Budgeted_Hours__c = '{!Asset.Budgeted_Hours__c}';
                               Asset.RemainingQuantity__c = '{!Asset.RemainingQuantity__c}';
                               Asset.Remaning_Percentage__c = '{!Asset.Remaning_Percentage__c}';
-                              Asset.QuantityonHold__c = '{!Asset.QuantityonHold__c}';
                               Asset.QuantityCancelled__c = '{!Asset.QuantityCancelled__c}';
+                              implemented = {!Asset.FullyImplemented__c};
+                              console.log(Asset);
+                              if(implemented && isManager == false ){
+                                  disableEdit = true;
+                              }
                               assetAllocationData(null, '{!currentId}');
 
                               if(disableEdit){
@@ -412,10 +491,9 @@
                               }
                            }
                            else if(result == 'Subscription'){
-                                disableEdit = {!Subscription.FullyImplemented__c};
                                currentObjectType = result;
                                console.log('results =>' + JSON.stringify(result));
-                               $("#assetAllocationPanel").hide();
+                               $("#assetAllocationDetails").hide();
                                 Subscription = new Object();
                               Subscription.Id = '{!Subscription.Id}';
                               Subscription.Name = '{!Subscription.Name}';
@@ -423,8 +501,12 @@
                               Subscription.Budgeted_Hours__c = '{!Subscription.Budgeted_Hours__c}';
                               Subscription.RemainingQuantity__c = '{!Subscription.RemainingQuantity__c}';
                               Subscription.Remaning_Percentage__c = '{!Subscription.Remaning_Percentage__c}';
-                              Subscription.QuantityonHold__c = '{!Subscription.QuantityonHold__c}';
                               Subscription.QuantityCancelled__c = '{!Subscription.QuantityCancelled__c}';
+                              implemented = {!Subscription.FullyImplemented__c};
+                              console.log(Subscription);
+                              if(implemented && isManager == false){
+                                  disableEdit = true;
+                              }
                               subscriptionAllocationData(null, '{!currentId}');
                               if(disableEdit){
                                    $("a.k-grid-add").hide();
@@ -435,16 +517,23 @@
                               Project.Id = '{!Project.Id}';
                               Project.Name = '{!Project.Name}';
                               Project.Project_Phase_Allocation__c = '{!Project.Project_Phase_Allocation__c}';
+                              Project.Status = '{!Project.Phase_Status__c}';
                               subscriptionAllocationData('{!currentId}', null);
                               assetAllocationData('{!currentId}', null);
-                              var projectGoLiveDate = '{!Project.ActualProjectGoLiveDate__c}';
-                              if(projectGoLiveDate != '' && projectGoLiveDate != null){
+                              projectGoLiveDate = '{!Project.ActualProjectGoLiveDate__c}';
+                              projectPhaseStatus = '{!Project.Phase_Status__c}';
+                              if(projectGoLiveDate != '' && projectGoLiveDate != null && isManager == false){
                                    $("a.k-grid-add").hide();
+                              }
+                              if(projectPhaseStatus == 'Cancelled' || ((projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false)){
+                                  $("a.k-grid-add").hide();
                               }
                            }
                     }
                 }
              });
+
+
         }
 
 
@@ -477,6 +566,7 @@
                 backdrop: 'static',
                 keyboard: false
            });
+           reloadModal();
      }
      function hideMessage(){
             $("div.cusotmMessage").hide();
@@ -509,11 +599,142 @@
                 backdrop: 'static',
                 keyboard: false
            });
+            reloadModal();
      }
 
     function closeModal(){
         $('div#ImplementedProducts').modal("hide");
     }
+
+    function showHideAddButton(allocation){
+
+        if(currentObjectType == 'Asset' || currentObjectType == 'Subscription'){
+            if(implemented || (allocation != '' && allocation['Quantity'] == 1 && allocation['RemainingPercentage'] <= 0) ){
+                $("a.k-grid-add").hide();
+            }else{
+                $("a.k-grid-add").show();
+            }
+        }
+
+    }
+
+    function confirmCancelation(){
+         if(((projectGoLiveDate != '' && projectGoLiveDate != null) || (projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended'))&& isManager == false){
+                       displayError('Only Managers can cancel an Implemented Phase.');
+                       return;
+         }
+         if(projectPhaseStatus == 'Cancelled'){
+          displayError('You are not allowed to cancel a cancelled phase.');
+           return;
+         }
+
+        var cancelTemplate = kendo.template($("#cancelWindow").html());
+         cancelKendoWindow.content(cancelTemplate); //send the row data object to the template and render it
+         cancelKendoWindow.center().open();
+    }
+
+
+    function CancelAllocation(){
+           cancelKendoWindow.close();
+           $('#loading').modal({
+                  backdrop: 'static',
+                  keyboard: false
+           });
+           $('#loading').modal('show');
+           AssetSubscriptionAllocationNewController.CancelAllocations(
+               Project.Id,
+               function(result,event){
+                   if (event.status) {
+                      if(result.indexOf('Successfully') > -1){
+
+                           reloadDetails();
+                           $('#loading').modal('hide');
+                           $('#projectMessage').show();
+                           $('#projectMessage').html(result);
+                        }else{
+                         result = result == '' ? "No allocations were found to delete" : result;
+                         displayError(result);
+                         $('#loading').modal('hide');
+                      }
+                   }else{
+                       displayError(event.message);
+                       $('#loading').modal('hide');
+                   }
+               },
+               {escape: false}
+           );
+    }
+
+    function closeCancelWindow(){
+        cancelKendoWindow.close();
+    }
+
+
+
+    function onHoldAllocation(){
+         if(((projectGoLiveDate != '' && projectGoLiveDate != null) || (projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended'))&& isManager == false){
+              displayError('Only Managers can put this phase project on Hold.');
+              return;
+         }
+
+         $('#loading').modal({
+              backdrop: 'static',
+              keyboard: false
+         });
+         $('#loading').modal('show');
+         AssetSubscriptionAllocationNewController.ManageOnHoldAllocations(
+           Project.Id,
+           true,
+           function(result,event){
+               if (event.status) {
+                  if(result.indexOf('Successfully') > -1){
+                       reloadDetails();
+                       $('#loading').modal('hide');
+                       $('#projectMessage').show();
+                       $('#projectMessage').html(result);
+                    }else{
+                        result = result == '' ? "No allocations were found to put on hold" : result;
+                         displayError(result);
+                     $('#loading').modal('hide');
+                  }
+               }else{
+                   displayError(event.message);
+               }
+           },
+           {escape: false}
+         );
+    }
+
+    function releaseHoldAllocation(){
+         $('#loading').modal({
+              backdrop: 'static',
+              keyboard: false
+         });
+         $('#loading').modal('show');
+         AssetSubscriptionAllocationNewController.ManageOnHoldAllocations(
+           Project.Id,
+           false,
+           function(result,event){
+               if (event.status) {
+                  if(result.indexOf('Successfully') > -1){
+                       reloadDetails();
+                       $('#loading').modal('hide');
+                       $('#projectMessage').show();
+                       $('#projectMessage').html(result);
+                    }else{
+                     result = result == '' ? "No allocations were found to release from hold" : result;
+                     displayError(result);
+                     $('#loading').modal('hide');
+                  }
+               }else{
+                   displayError(event.message);
+                   $('#loading').modal('hide');
+               }
+           },
+           {escape: false}
+         );
+    }
+
 
     </script>
     </apex:outputPanel>

@@ -22,9 +22,14 @@ public class AssetSubscriptionAllocationNewModel {
     public decimal Quantity {get;set;}
     public Decimal BudgtedHours {get; set;}
     public Boolean Implemented {get; set;}
+    public Boolean OnHold {get; set;}
     public Decimal QuantityOnHold{get;set;}
     public Decimal QuantityCancelled{get;set;}
     public Decimal RemainingQuantity{get;set;}
+    public Decimal RemainingPercentage{get;set;}
+    public String AssignToId {get;set;}
+    public String AssignToName {get;set;}
+
 
     public AssetSubscriptionAllocationNewModel(){
 
@@ -47,6 +52,10 @@ public class AssetSubscriptionAllocationNewModel {
         this.QuantityOnHold = allocation.Asset__r.QuantityonHold__c;
         this.QuantityCancelled = allocation.Asset__r.QuantityCancelled__c;
         this.RemainingQuantity = allocation.Asset__r.RemainingQuantity__c;
+        this.RemainingPercentage = allocation.Asset__r.Remaning_Percentage__c;
+        this.OnHold = allocation.On_Hold__c;
+        this.AssignToId = allocation.Assigned_User__c;
+        this.AssignToName = allocation.Assigned_User__c == null ? '': allocation.Assigned_User__r.Name;
     }
 
     public AssetSubscriptionAllocationNewModel(Project_Subscription_Allocation__c allocation){
@@ -54,7 +63,7 @@ public class AssetSubscriptionAllocationNewModel {
         this.SubscriptionAllocationId = allocation.Id;
         this.SubscriptionName = allocation.Subscription__r.Name;
         this.SubscriptionAllocationName = allocation.Name;
-        this.ProductName = allocation.Subscription__r.Subscription__r.SBQQ__Product__r.Name;
+        this.ProductName = allocation.Subscription_Name__c;
         this.Product = allocation.Subscription__r.Subscription__r.SBQQ__Product__c;
         this.ProjectNumber = allocation.Project__c;
         this.ProjectName = allocation.Project__r.Name;
@@ -67,7 +76,10 @@ public class AssetSubscriptionAllocationNewModel {
         this.Implemented = allocation.Implemented__c;
         this.QuantityOnHold = allocation.Subscription__r.QuantityonHold__c;
         this.QuantityCancelled = allocation.Subscription__r.QuantityCancelled__c;
+        this.RemainingPercentage = allocation.Subscription__r.Remaning_Percentage__c;
         this.RemainingQuantity = allocation.Subscription__r.RemainingQuantity__c;
-
+        this.OnHold = allocation.On_Hold__c;
+        this.AssignToId = allocation.Assigned_User__c;
+        this.AssignToName = allocation.Assigned_User__c == null ? '': allocation.Assigned_User__r.Name;
     }
 }

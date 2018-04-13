@@ -1,5 +1,9 @@
-<aura:application description="CommunityCaseComments" access="GLOBAL" extends="ltng:outApp">
+<aura:application description="CommunityCaseComments" access="GLOBAL" >
+
     <div class="slds">
-        <!--<c:CommunityCaseComment caseId="5003C0000014T6Y"></c:CommunityCaseComment>-->
+        <c:CSOCaseDetailComponent caseId="5003C000001jGYj"></c:CSOCaseDetailComponent>
     </div>
+    <!--<div class="slds">
+        <c:CommunityCaseComment caseId="5003C000001WQAw"></c:CommunityCaseComment>
+    </div>-->
 </aura:application>

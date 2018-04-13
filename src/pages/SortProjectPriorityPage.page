@@ -1,0 +1,38 @@
+<!--
+ - Created by arnab.karsarkar on 3/10/2017.
+ -->
+
+<apex:page id="SortProjectPriorityPage" sideBar="false" controller="SortProjectPriorityController" standardStylesheets="true" showHeader="true" title="Sort Projects">
+
+    <apex:form >
+
+        <apex:pageBlock mode="detail">
+            <apex:pageMessages id="msg"/>
+            <apex:pageBlockSection collapsible="false" columns="2">
+                <apex:pageBlockSectionItem >
+                        <apex:selectList size="1" value="{!priorityType}" id="sel1" style="width:220px;float: left;" onChange="refreshProjects();" label="Select a Channel">
+                            <apex:selectOptions value="{!filterOptions}"/>
+                        </apex:selectList>
+                    <apex:actionFunction action="{!refreshProjects}" name="refreshProjects" reRender="tableProj"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                   <apex:commandButton value="Sort Projects" action="{!sort}" reRender="msg, tableProj" status="status"/>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:actionStatus startText="Sorting Project..." stopText="" id="status"/>
+
+                <apex:pageBlockTable value="{!ProjectLists}" var="proj" id="tableProj">
+                    <apex:column value="{!proj.BattingOrder__c}"/>
+                    <apex:column value="{!proj.Ops_Backlog_Priority__c}"/>
+                    <apex:column value="{!proj.Name}"/>
+                    <apex:column value="{!proj.Summary__c}"/>
+                </apex:pageBlockTable>
+
+
+
+        </apex:pageBlock>
+
+
+    </apex:form>
+
+</apex:page>

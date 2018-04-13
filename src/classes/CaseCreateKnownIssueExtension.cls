@@ -91,7 +91,7 @@ public with sharing class CaseCreateKnownIssueExtension
             {
                 update c;
 
-                list<Case> listKnownIssues = [select Id,Broken_by_Recent_Release__c from Case where id = :c.KnownIssue__c];
+                list<Case> listKnownIssues = [select Id,Broken_by_Recent_Release__c, Priority from Case where id = :c.KnownIssue__c];
                 KnownIssuesImpactCalcImplementation KIImpactCalc = new KnownIssuesImpactCalcImplementation();
                 KnownIssueImpactCalculationClass KICalc = new KnownIssueImpactCalculationClass(KIImpactCalc);
                 KICalc.CalculateKnownIssueScore(listKnownIssues);
@@ -128,6 +128,7 @@ public with sharing class CaseCreateKnownIssueExtension
             if(createJiraBug){
                 system.debug('User requested to create a JIRA bug for KI - ' + relatedCase.Id);
                 CaseTriggerHandler.createJiraBug = true;
+                relatedCase.JIRA_Key__c = CaseTriggerHandler.JIRA_KEY_TEMP;
                 //need to populate the Description field with concatenated
                 //summary + steps to reproduce + internal notes
                 relatedCase.JIRA_Description__c = getJIRADescription(relatedCase);

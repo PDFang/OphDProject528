@@ -9,16 +9,15 @@ public class SandboxPostCopy_UpdateSiteConfiguration extends SandboxPostCopyTask
     }
 
     public override string task(SandboxContext context){
-        string sandboxOrgId;
-        if(context != null){
-            sandboxOrgId = ((String)context.organizationId()).left(15);
-        }else{
-            sandboxOrgId = UserInfo.getOrganizationId().left(15);
-        }
-        String sandboxName = context != null ? context.sandboxName() : UserInfo.getUserName().substringAfterLast('.');
-        SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(sandboxOrgId);
+
+        String orgId = ((String) (context != null ? context.organizationId() : UserInfo.getOrganizationId())).left(15);
+
+        SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(orgId);
+
         if(siteConfig != null){
-            //siteConfig.Name = ((String)context.sandboxId()).left(15);
+            String sandboxName = context != null ? context.sandboxName() : UserInfo.getUserName().substringAfterLast('.').toUpperCase();
+
+            siteConfig.Name = orgId;
             siteConfig.AutoEventEmails__c = false;
             siteConfig.EventResolvedEmails__c = false;
             siteConfig.DeveloperErrorFromName__c = sandboxName + ' Sandbox';

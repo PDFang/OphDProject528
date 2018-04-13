@@ -6,6 +6,10 @@ public class ContactTriggerHandler extends TriggerHandler{
     private static boolean calloutXMRestPerson = false;
 
 
+    public override void beforeInsert(){
+        callXmPerSonIdAsync((List<Contact>) trigger.new);
+    }
+
     public override void beforeUpdate(){
         dissociatexMattersUid((List<Contact>) trigger.new, (List<Contact>) trigger.old, (Map<Id, Contact>) trigger.oldMap);
     }
@@ -29,24 +33,52 @@ public class ContactTriggerHandler extends TriggerHandler{
         if(oldMap == null)
             return;
         Set<Id> contactIds = new Set<Id>();
-
+        Set<string> contactEmails = new Set<string>();
+        set<Id> dupeContactIds = new set<Id>();
+        //String emailNew = '';
+        String emailOld = '';
+        Boolean isDeactivated = false;
         for(Contact newContact : newList){
-            contactIds.add(newContact.Id);
+            if(newContact.Email != null && newContact.Email != '')
+                    contactIds.add(newContact.Id);
+            //emailNew = newContact.Email;
         }
+        if(contactIds.isEmpty())
+            return;
 
         Map<id, Contact> personMap = new map<id, Contact>([select Id, xmPerson__r.xmPersonUID__c from Contact where Id in: contactIds]);
         for(Contact newContact : newList){
             Contact oldContact = oldMap.get(newContact.Id);
+            isDeactivated = newContact.Deactivated__c;
+            emailOld = oldContact.Email;
             if((newContact.Deactivated__c && oldContact.Deactivated__c == false && newContact.xmPerson__c != null)){
                 newContact.XmattersUid__c = personMap.get(newContact.Id).xmPerson__r.xmPersonUID__c;
                 newContact.xmPerson__c = null;
             }
+            if(!isDeactivated && String.isNotBlank(newContact.Email) && !newContact.email.equalsIgnoreCase(emailOld)){
+                dupeContactIds.add(newContact.Id);
+            }
         }
+        if(dupeContactIds.size() > 0 && !System.isFuture())
+            updateXMPersonId(dupeContactIds);
+
     }
+
+    private static void callXmPerSonIdAsync(List<Contact> newList){
+        Set<Id> contactIds = new Set<Id>();
+        for(Contact newContact : newList){
+            contactIds.add(newContact.Id);
+        }
+
+        if(contactIds.size() > 0 && !System.isFuture())
+            updateXMPersonId(contactIds);
+
+    }
+
+
 
     // validate the contact that is deactivated, disassociated or deleted was the only active contact associated with xMatters person
     private static void validatePersonStatus(List<Contact> newList, List<Contact> oldList, Map<Id, Contact> oldMap){
-
         if(oldMap == null){
             return;
         }
@@ -57,7 +89,7 @@ public class ContactTriggerHandler extends TriggerHandler{
         List<xmChangeRequestHeaderData> requestList = new List<xmChangeRequestHeaderData>();
         list<Contact> deactivatedContacts = new list<Contact>();
         // update
-        if(newList != null){
+        if(trigger.isUpdate){
 
             Set<Id> accountIds = new Set<Id>();
             for(Contact newContact : newList){
@@ -99,7 +131,7 @@ public class ContactTriggerHandler extends TriggerHandler{
 
         }
         // delete
-        else{
+        else if(trigger.isDelete){
 
             for(Contact oldContact : oldList){
 
@@ -215,5 +247,50 @@ public class ContactTriggerHandler extends TriggerHandler{
         }
 
     }
+
+    @Future(callout=true)
+    public static void updateXMPersonId(set<Id> dupeContactIds){
+
+        list<contact> newList = [Select Id, Email,xmPerson__c,  xmPerson__r.xmPersonUID__c, XmattersUid__c From Contact where id in :dupeContactIds];
+
+        if(newList.size() == 0)
+            return;
+
+        set<String> emails = new set<string>();
+
+        for(Contact newContact : newList){
+            emails.add(newContact.Email);
+        }
+
+        if(emails.size() < 1)
+            return;
+
+        map<string, string> contactEmailXmId = new map<string, string>();
+
+
+        for(Contact con : [select Id, Email, xmPerson__c, xmPerson__r.xmPersonUID__c From Contact where Email in : emails and Deactivated__c =: false and xmPerson__c != :null ]){
+            if(con != null && !contactEmailXmId.containsKey(con.Email)){
+                contactEmailXmId.put(con.Email, con.xmPerson__c);
+            }
+        }
+
+        for(Contact newContact : newList){
+            if(contactEmailXmId.containsKey(newContact.Email)){
+                newContact.xmPerson__c = contactEmailXmId.get(newContact.Email);
+	            newContact.XmattersUid__c = null;
+
+
+            }
+            else{
+	            newContact.XmattersUid__c = newContact.xmPerson__r.xmPersonUID__c;
+                newContact.xmPerson__c = null;
+
+            }
+        }
+
+        update newList;
+    }
+
+//	private static void updateGroupSubscriptions()
 
 }

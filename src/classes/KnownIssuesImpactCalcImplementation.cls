@@ -7,53 +7,53 @@ public with sharing class KnownIssuesImpactCalcImplementation implements KnownIs
     // Number of incidents tied to Known Issue
     public Decimal CalculateNumberIncidentsTiedToIssue(integer issueCount,  decimal multiplier) {
         //>10=10, 7-9=7, 4-6=4, 1-3=1, 0=0
-        if (issueCount ==  0 )
-            return 0 ;
-        else if (issueCount <  4 )
+        if (issueCount <  6 )
             return 1 * multiplier;
-        else if (issueCount <  7 )
-            return 4 * multiplier;
-        else if (issueCount <  10 )
-            return 7 * multiplier;
+        else if (issueCount <  11 )
+            return 2 * multiplier;
         else
-                return 10 * multiplier;
+            return 3 * multiplier;
 
     }
 
     //
     public Decimal CalculateDaysIssuePresent(integer numOfDays, decimal multiplier){
         //>10=10, 7-9=7, 4-6=4, 1-3=0.25, 1=0
-        if (numOfDays <=  1)
-            return 0 ;
-        else if (numOfDays <  4 )
-            return 0.25 * multiplier;
-        else if (numOfDays <  7 )
-            return 4 * multiplier;
-        else if (numOfDays <  10 )
-            return 7 * multiplier;
+        if (numOfDays <  14 )
+            return 1 * multiplier;
+        else if (numOfDays <  30 )
+            return 2 * multiplier;
         else
-                return 10 * multiplier;
+            return 3 * multiplier;
     }
 
     //not done
-    public Decimal CalculateDollarAmountTiedToIssue(decimal accountSum,  decimal multiplier) {
+    public Decimal CalculatePriorityScore(string priority,  decimal multiplier) {
         //>=$5M=10, $3M-$5M=7, $2M-$3M=4, $1M-$2M=1, <=$0=0.00
-        if (accountSum < 1 )
-            return 0 ;
-        else if (accountSum <= 2  )
+
+
+        system.debug('Priority: ' + priority + ' Multiplier: ' + multiplier);
+        if (priority == 'p1' )
             return 1 * multiplier;
-        else if (accountSum <=  3 )
-            return 4 * multiplier;
-        else if (accountSum <= 5 )
-            return 7 * multiplier;
+        else if (priority == 'p2')
+            return .5 * multiplier;
         else
-                return 10 * multiplier;
+            return 0;
     }
 
     public Decimal CalculateRecentReleaseBreak(boolean isRecentRelease, decimal multiplier){
         //Yes=10, No=0
         if(isRecentRelease)
-            return 10 * multiplier;
+            return 1 * multiplier;
+        else
+                return 0;
+    }
+
+    public Decimal CalculateSecurityIssue(boolean securityIssue,  decimal multiplier) {
+        //>=$5M=10, $3M-$5M=7, $2M-$3M=4, $1M-$2M=1, <=$0=0.00
+
+        if (securityIssue)
+            return 1 * multiplier;
         else
                 return 0;
     }

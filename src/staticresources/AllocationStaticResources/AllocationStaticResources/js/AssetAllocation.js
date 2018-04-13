@@ -1,3 +1,4 @@
+
     function assetAllocationData(projId, assetId){
                var assetAllocationData = new kendo.data.DataSource({
                     autosync:true,
@@ -12,8 +13,11 @@
                                               if(result != null && result.length > 1){
                                                    options.success(JSON.parse(result));
                                                    console.log('results =>' + JSON.stringify(result));
+                                                   var records = JSON.parse(result);
+                                                   showHideAddButton(records[0]);
                                               }else{
                                                   options.success('');
+                                                  showHideAddButton('');
                                               }
                                           }
                                       },
@@ -100,12 +104,13 @@
                                     type:"number",
                                     nullable: true,
                                     editable:true,
-                                    defaultValue:1,
+                                    defaultValue:0,
                                      validation : {
                                         quantityValidation : function(input){
                                             var parentRow = $(input).parents("tr:first");
                                             var grid = $("#assetAllocationList").data("kendoGrid");
-                                            var rowData = grid.dataItem(parentRow);
+                                            var rowData = grid.dataItem(parentRow),
+                                                allocatedQuantityVal = rowData.AssetAllocationName == '' ? 0 : rowData.AllocatedQuantity;
 
                                              if(!rowData){
                                                  input.attr("data-quantityValidation-msg", "Please select an asset");
@@ -115,8 +120,16 @@
                                                 input.attr("data-quantityValidation-msg", "Allocated Quantity cannot be zero");
                                                 return false;
                                             }
-                                             if(Number(input.val()) > Number(rowData.RemainingQuantity) && input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && (rowData.QuantityOnHold > 0 || rowData.QuantityCancelled > 0)){
-                                                input.attr("data-quantityValidation-msg", 'Cannot allocate more than “Contract Quantity” if there is any quantity on hold or cancelled');
+                                             if(Number(input.val()) > (Number(rowData.RemainingQuantity) + Number(allocatedQuantityVal)) && input.is("[name='AllocatedQuantity']")){
+                                                input.attr("data-quantityValidation-msg", 'Cannot allocate more than “Contract Quantity”');
+                                                return false;
+                                            }
+                                             if(Number(input.val()) > 1 && input.is("[name='AllocatedQuantity']") && rowData.Quantity == 1){
+                                                    input.attr("data-quantityValidation-msg", 'Allocated Quantity cannot be more than 1');
+                                                    return false;
+                                            }
+                                            if(input.is("[name='AllocatedQuantity']") && rowData.Quantity > 1 && Number(input.val()) % 1 != 0){
+                                                 input.attr("data-quantityValidation-msg", 'Decimal values are not allowed if the Asset Quantity is greater than 1');
                                                 return false;
                                             }
                                         return true;
@@ -128,28 +141,7 @@
                                     from: "AllocatedPercentage",
                                     type:"number",
                                     nullable: true,
-                                    editable:true,
-                                    validation : {
-                                        percentageValidation : function(input){
-                                            var parentRow = $(input).parents("tr:first");
-                                            var grid = $("#assetAllocationList").data("kendoGrid");
-                                            var rowData = grid.dataItem(parentRow);
-                                            if(!rowData){
-                                                input.attr("data-quantityValidation-msg", "Please select an asset");
-                                                return false;
-                                            }
-                                            if(input.val() > 100 && input.is("[name='AllocatedPercentage']")){
-                                                input.attr("data-percentageValidation-msg", " Invalid Percentage");
-                                                return false;
-                                            }
-                                             if(input.val() == 0 && input.is("[name='AllocatedPercentage']") && rowData.Quantity == 1){
-                                                input.attr("data-percentageValidation-msg", " Allocated Percentage cannot be zero");
-                                                return false;
-                                            }
-
-                                        return true;
-                                        }
-                                    }
+                                    editable:true
                                 },
                                 AllocatedHours:{from: "AllocatedHours", type:"number",  nullable: true, editable:true, defaultValue:0},
                                 Quantity :{from:"Quantity", type:"number",defaultValue:0},
@@ -157,7 +149,10 @@
                                 Implemented : {from:"Implemented", type:"boolean"},
                                 QuantityOnHold : {from:"QuantityOnHold", type:"number", defaultValue:0},
                                 QuantityCancelled : {from:"QuantityCancelled", type:"number", defaultValue:0},
-                                RemainingQuantity : {from:"RemainingQuantity", type:"number", defaultValue:0}
+                                RemainingQuantity : {from:"RemainingQuantity", type:"number", defaultValue:0},
+                                OnHold : {from:"OnHold", type:"boolean"},
+                                AssignToName:{from :"AssignToName", type:"string"},
+                                AssignToId:{from :"AssignToId", type:"string"}
 
                             }
                         }
@@ -172,18 +167,18 @@
             width: "400px",
             height: "200px",
         }).data("kendoWindow");
-
       $("#assetAllocationList").kendoGrid({
           dataSource: assetAllocationData,
           editable: "inline",
           scrollable:  true,
           noRecords: true,
-          height:300,
+          height:600,
           edit: addDuplicateRowAsset,
           dataBound : gridDataboundAsset,
           detailInit: loadChildGrid,
           cancel : hideChildProjects,
-
+          resizable: true,
+          sortable:true,
           toolbar: [
               {
                   name: "create",
@@ -200,12 +195,14 @@
                     {
                         field:"AssetName",
                         title:"Asset",
+                        width:300,
                         editor:nonEditorAsset,
                         template: '#{ #<a href="/#: data.Asset #" target="_blank" name="AssetName">#= data.AssetName #</a># } #',
                     },
                     {
                         field:"AssetAllocationName",
                         title:"Allocation",
+                        width:150,
                         editor:nonEditorAsset,
                         template: '#{ #<a href="/#: data.Id #" target="_blank" >#= data.AssetAllocationName #</a># } #',
                     },
@@ -219,19 +216,18 @@
                         field:"ProjectPhase",
                         title:"Project Phase",
                         template: '#{ #<a href="/#: data.ProjectNumber #" target="_blank" >#= data.ProjectPhase #</a># } #',
-                         width:300,
+                         width:250,
                         editor:nonEditorAsset
                     },
+
                     {
                         field:"AllocatedQuantity",
                         title:"Allocated Quantity",
-                        format: "{0:n}",
-                        decimal:0,
                         editable:true
                     },
                     {
                         field:"AllocatedPercentage",
-                        title:"Allocated Percentage",
+                        title:"Allocated %",
                         editable:true
                     },
                     {
@@ -240,12 +236,28 @@
                     },
                     {
                         field:"Implemented",
-                        title:"Implemented",
+                        title:"Impl",
+                        sortable:false,
                         template: '<input type="checkbox"  "# if (data.Implemented) { # checked="checked" # } #"  disabled "/>',
-                        width:150
+                        width:75
 
                     },
+                    {
+                        field:"OnHold",
+                        title:"On Hold",
+                        sortable:false,
+                        template: '<input type="checkbox"  "# if (data.OnHold) { # checked="checked" # } #" disabled="true" "/>',
+                        width:75
+
+                    },
+                    {
+                        field:"AssignToName",
+                        title:"Assign To",
+                         width:200,
+                        editor:userSearchDropdownEditor
+                    },
                     {   title:"Action",
+                        sortable:false,
                         command: ["edit",
                         {name: "Delete",
                          click: function(e){  //add a click event listener on the delete button
@@ -268,13 +280,13 @@
                                            function(result,event){
                                                if (event.status) {
                                                   var returnResult = result;
-                                                  if(result != 'Failed'){
+                                                  if(result == 'success'){
                                                        grid.dataSource.remove(data);
                                                        reloadDetails();
                                                        //  getSObjType();
                                                        $('#loading').modal('hide');
                                                     }else{
-                                                    displayError('Delete Unsuccessful.');
+                                                    displayError(result);
                                                      $('#loading').modal('hide');
                                                   }
                                                }else{
@@ -294,19 +306,24 @@
 
                   ]
               });
+
+
+
        }
+
 
     function addDuplicateRowAsset(e){
            var assetGrid = $("#assetAllocationList").data("kendoGrid");
            var dataItems = assetGrid.dataItems();
-           if(e.model.isNew() && !e.model.dirty ){
+            if(e.model.isNew() && !e.model.dirty ){
                if(currentObjectType == 'Asset'){
                    e.model.Asset = Asset.Id;
                    e.model.AssetName =Asset.Name;
                    var firstCell = e.container.contents()[2];
                    $('<a href="/' +  e.model.Asset + '" target="_blank">' + e.model.AssetName +'</a>').appendTo(firstCell);
                    var projectCell = e.container.contents()[5];
-                   $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">Select Projects </a>').appendTo(projectCell);
+                   $('<a style="color:blue;cursor:pointer;" class="projectSelector" onclick="loadDetail(this);">Select Projects </a>').appendTo(projectCell);
+                   loadDetail($("a.projectSelector"));
                    e.model.Quantity = Asset.Quantity;
                    e.model.RemainingQuantity = Asset.RemainingQuantity__c;
                    e.model.QuantityOnHold  = Asset.QuantityonHold__c == '' ? 0 : Asset.QuantityonHold__c;
@@ -320,11 +337,14 @@
                    e.model.ProjectPhase = Project.Project_Phase_Allocation__c;
                    var projectCell = e.container.contents()[5];
                    $('<a href="/' +  e.model.ProjectNumber + '" target="_blank">' + e.model.ProjectPhase +'</a>').appendTo(projectCell);
+                   var implementedCell = e.container.contents()[9];
+                   $(implementedCell).find("input").prop('disabled', true);
 
                    var firstCell = e.container.contents()[2];
-                   $('<a style="color:blue;cursor:pointer;" onClick="loadDetail(this);">Select Assets </a>').appendTo(firstCell);
+                   $('<a style="color:blue;cursor:pointer;"  class="assetSelector" onclick="loadDetail(this);">Select Assets </a>').appendTo(firstCell);
+                   loadDetail($("a.assetSelector"));
                }
-                var buttonCell = e.container.contents()[10];
+                var buttonCell = e.container.contents()[12];
                 $(buttonCell).find("a.k-primary").html('<span class="k-icon k-i-update"></span> Add');
            }else{
                enableAllocation(e.model, e.container);
@@ -333,20 +353,14 @@
     }
 
     function enableAllocation(rowData, row){
-         var allocatedHoursCell =  $(row).children().eq(8);
-        if(rowData.Quantity > 1){
-            var allocatedQPercentageCell =  $(row).children().eq(7);
-            $(allocatedQPercentageCell).find("span.k-numerictextbox").hide();
-            $(allocatedHoursCell).find("input").prop('disabled', false).removeClass("k-state-disabled");
-            $(allocatedHoursCell).find("span.k-select").show();
-        }else if(rowData.Quantity == 1){
-            var allocatedQuantityCell =  $(row).children().eq(6);
-            $(allocatedQuantityCell).find("span.k-numerictextbox").hide();
-             $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
-             $(allocatedHoursCell).find("span.k-select").hide();
-        }
-         var implementedCell =  $(row).children().eq(9);
-          $(implementedCell).find("input").prop('disabled', true);
+        var allocatedHoursCell =  $(row).children().eq(8);
+        var allocatedQPercentageCell =  $(row).children().eq(7);
+        $(allocatedQPercentageCell).find("input").prop('disabled', true).addClass("k-state-disabled");
+        $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
+        $(allocatedHoursCell).find("span.k-select").hide();
+        $(allocatedQPercentageCell).find("span.k-select").hide();
+        var implementedCell =  $(row).children().eq(9);
+        $(implementedCell).find("input").prop('disabled', true);
 
     }
 
@@ -354,33 +368,23 @@
                 var assetGrid = $("#assetAllocationList").data("kendoGrid");;
                 var dataItems = assetGrid.dataItems();
                 var totalQuantity = 0,
-                    totalPercentage = 0;
+                    totalPercentage = 0,
                     allocatedQuantityCell =  $(row).children().eq(6),
                     allocatedQPercentageCell =  $(row).children().eq(7),
                     allocatedHoursCell =  $(row).children().eq(8),
                     hours;
-                if( rowData.Quantity > 1){
-                    //var remainingQuantity = rowData.AllocatedQuantity;
-                    //remainingQuantity = remainingQuantity < 0 ? 0 : remainingQuantity;
-                    $(allocatedQPercentageCell).find("span.k-numerictextbox").hide();
-                    rowData.AllocatedQuantity = rowData.AllocatedQuantity == null ? rowData.RemainingQuantity : rowData.AllocatedQuantity;
-                    $(allocatedQuantityCell).find("span.k-numerictextbox").show();
-                    $(allocatedQuantityCell).find("input").val(rowData.AllocatedQuantity);
-                    hours = rowData.BudgtedHours * (rowData.AllocatedQuantity / rowData.Quantity);
-                    $(allocatedHoursCell).find("input").prop('disabled', false).removeClass("k-state-disabled");
-                    $(allocatedHoursCell).find("span.k-select").show();
 
-                }else if( rowData.Quantity == 1 ){
-                   // var remainingPercentage = 100 -  totalPercentage;
-                    rowData.AllocatedPercentage = rowData.AllocatedPercentage == null ? Asset.Remaning_Percentage__c : rowData.AllocatedPercentage;
-                    $(allocatedQuantityCell).find("span.k-numerictextbox").hide();
-                    $(allocatedQPercentageCell).find("span.k-numerictextbox").show();
-                    $(allocatedQPercentageCell).find("input").val(rowData.AllocatedPercentage);
-                    var hours = rowData.BudgtedHours * (rowData.AllocatedPercentage / 100);
-                    $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
-                    $(allocatedHoursCell).find("span.k-select").hide();
-                }
-                rowData.AllocatedHours = hours.toFixed(2);
+                rowData.AllocatedQuantity = rowData.AllocatedQuantity == null ? rowData.RemainingQuantity : rowData.AllocatedQuantity;
+                $(allocatedQuantityCell).find("span.k-numerictextbox").show();
+                $(allocatedQuantityCell).find("input").val(rowData.AllocatedQuantity);
+                hours = (rowData.BudgtedHours * (rowData.AllocatedQuantity / rowData.Quantity)).toFixed(2);
+                $(allocatedHoursCell).find("input").prop('disabled', true).addClass("k-state-disabled");
+                $(allocatedQPercentageCell).find("input").prop('disabled', true).addClass("k-state-disabled");
+                $(allocatedHoursCell).find("span.k-select").hide();
+                $(allocatedQPercentageCell).find("span.k-select").hide();
+                rowData.AllocatedPercentage = (100 * (rowData.AllocatedQuantity / rowData.Quantity)).toFixed(2);
+                  $(allocatedQPercentageCell).find("input").val(rowData.AllocatedPercentage);
+                rowData.AllocatedHours = hours;
                 $(allocatedHoursCell).find("input").val(rowData.AllocatedHours);
                 var implementedCell =  $(row).children().eq(9);
                 $(implementedCell).find("input").prop('disabled', true);
@@ -393,45 +397,109 @@
 
      function gridDataboundAsset(e){
         $("#assetAllocationList").find(".k-hierarchy-cell, .k-hierarchy-col").hide();
+        var projStatus = '';
+        if(Project)
+            projStatus = Project.Status;
         $("#assetAllocationList tbody tr .k-grid-edit").each(function () {
             var currentDataItem = $("#assetAllocationList").data("kendoGrid").dataItem($(this).closest("tr"));
-            //Check in the current dataItem if the row is editable
-            if (currentDataItem.Implemented == true && isManager == false) {
+            //Check in the current dataItem if the row is editable || projStatus == 'Cancelled' || projStatus == 'Closed' || projStatus == 'Suspended'
+            if ((currentDataItem.Implemented == true && isManager == false) ) {
                 $(this).remove();
+            }
+            else if(projectPhaseStatus == 'Cancelled' || ((projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false)){
+                                $(this).remove();
             }
         });
          //Selects all delete buttons
          $("#assetAllocationList tbody tr a.k-grid-Delete").each(function () {
                 var currentDataItem = $("#assetAllocationList").data("kendoGrid").dataItem($(this).closest("tr"));
-                //Check in the current dataItem if the row is deletable
-                if (currentDataItem.Implemented == true && isManager == false) {
+                if ((currentDataItem.Implemented == true && isManager == false) ) {
                     $(this).remove();
                 }
+                else if(projectPhaseStatus == 'Cancelled' || ((projectPhaseStatus == 'Closed' || projectPhaseStatus == 'Suspended') && isManager == false)){
+                    $(this).remove();
+                }
+
             })
 
+        $("#assetAllocationList").find('div.k-grid-content').css("height", "520px");
      }
 
 
     function calculateBudgetedHours(e){
-            if (e.action === "itemchange" && (e.field == "AllocatedPercentage" || e.field == "AllocatedQuantity")){
-                    var model = e.items[0],
-                        budgtedHours = model.BudgtedHours,
-                        currentValue;
-                        allocatedHoursInput = $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(8)");
-                  if(model.AllocatedPercentage > 0 ){
-                      currentValue = (budgtedHours * (model.AllocatedPercentage / 100)).toFixed(2);
-                      $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', true).addClass("k-state-disabled");
-                       $(allocatedHoursInput).find("span.k-select").hide();
-                  }else if(model.AllocatedQuantity > 0 ){
-                      currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
-                      if( model.Quantity == 0)
-                        currentValue = 0;
-                      $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', false).removeClass("k-state-disabled");
-                      $(allocatedHoursInput).find("span.k-select").show();
-                  }
+            if (e.action === "itemchange" && e.field == "AllocatedQuantity"){
+                  var model = e.items[0],
+                       budgtedHours = model.BudgtedHours,
+                       currentValue;
+                       allocatedHoursInput = $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(8)"),
+                       allocatedQPercentageInput = $("#assetAllocationList").find("tr[data-uid='" + model.uid + "'] td:eq(7)");
+
+                  currentValue = (budgtedHours * (model.AllocatedQuantity / model.Quantity)).toFixed(2);
+                      var percentage = (100*(model.AllocatedQuantity / model.Quantity)).toFixed(2);
+                  if( model.Quantity == 0)
+                    currentValue = 0;
+                  $(allocatedHoursInput).find("input").val(currentValue).prop('disabled', true).addClass("k-state-disabled");
+                  $(allocatedQPercentageInput).find("input").val(percentage).prop('disabled', true).addClass("k-state-disabled");
+                  $(allocatedHoursInput).find("span.k-select").hide();
+                  $(allocatedQPercentageInput).find("span.k-select").hide();
                   model.AllocatedHours = currentValue;
+                  model.AllocatedPercentage = percentage;
             }
      }
+
+    function userSearchDropdownEditor(container, options) {
+            $('<input style="width:95%"  id="AssignToName" name="AssignToName" data-text-field="label" data-value-field="value" data-bind="value:' + options.field + '"/>')
+                    .appendTo(container)
+                    .kendoComboBox({
+                        autobind: false,
+                        dataTextField: "label",
+                        dataValueField: "value",
+                        placeholder: currentUser,
+                        minLength: 2,
+                        filter:"contains",
+                        dataSource: {
+                            serverFiltering:true,
+                            transport:{
+                          read: function(e){
+                                    console.log('came here ==>');
+                                    AssetSubscriptionAllocationNewController.SearchUsers(
+                                          $("#AssignToName").data("kendoComboBox").text(),
+                                          function(result,event)
+                                          {
+
+                                              if (event.status) {
+                                                  if(result != null){
+                                                   console.log('came here success ==> + ' + result);
+                                                   e.success(JSON.parse(result));
+                                                  }else{
+                                                      e.success('');
+                                                  }
+
+                                                } else if (event.type === 'exception') {
+                                                     displayError(event.message);
+                                                } else {
+                                                    displayError(event.message);
+                                                }
+                                          },
+                                          {escape: false}
+                                   );
+                                }
+                            },
+
+                        schema: {
+                            model: {
+                                id: "UserId",
+                                fields: {
+                                    value: {type: "string"},
+                                    label: {type: "string", editable: false, nullable: false, validation: { required: true } }
+                                }
+                            }
+                        }
+                        }
+                    } );
+                    $('<span class="k-invalid-msg" data-for="AssignToName"></span>').appendTo(container);
+                }
+
 
     function loadDetail(obj){
         var row = $(obj).parent().parent();
@@ -485,9 +553,11 @@
                             }
                         }
                     },
-                    scrollable: false,
+                    scrollable: true,
+                    height:400,
                     sortable: true,
                     noRecords: true,
+                    dataBound:onProjDataBound,
                     columns: [
                         { command: { text: "Select", click : selectProject}, title: "Action", width: "60px" },
                         { field: "ProjectNumber", title:"Phase Project Number", width: "110px" },
@@ -497,6 +567,42 @@
 
                     ]
                 });
+    }
+
+     var wrapper, header, parentGrid;
+    function onProjDataBound(){
+            wrapper = this.wrapper,
+            header = wrapper.find(".k-grid-header");
+            parentGrid =  $("#assetAllocationList").find('div.k-grid-content').first();
+            resizeFixed();
+            $(window).resize(resizeFixed);
+            parentGrid.scroll(scrollFixed);
+           $(window).scroll(function(){
+              if($(header).hasClass("fixed-header")){
+                 var headerTop = $("#assetAllocationList").find('div.k-grid-content').first().offset().top - $(window).scrollTop();
+                  header.css("top", headerTop);
+              }
+           });
+    }
+
+     function resizeFixed() {
+      var paddingRight = parseInt(header.css("padding-right"));
+      header.css("width", wrapper.width() - paddingRight);
+    }
+
+    function scrollFixed() {
+      var offset = $(parentGrid).scrollTop() +  $(parentGrid).offset().top,
+          tableOffsetTop = wrapper.offset().top,
+          tableOffsetBottom =  tableOffsetTop + wrapper.height() + 430,
+          headerTop = $(parentGrid).offset().top - $(window).scrollTop();
+      if(offset < tableOffsetTop || offset >= tableOffsetBottom) {
+        header.removeClass("fixed-header");
+        header.css("top", '');
+      } else if(offset >= tableOffsetTop && offset < tableOffsetBottom ) {
+         if(!header.hasClass("fixed"))
+            header.addClass("fixed-header");
+        header.css("top", headerTop);
+      }
     }
 
     function selectProject(e){
@@ -520,7 +626,7 @@
     }
 
     function detailAssets(e) {
-         $("<div id='detailTable'/>").appendTo(e.detailCell).kendoGrid({
+        $("<div id='detailTable'/>").appendTo(e.detailCell).kendoGrid({
                     dataSource: {
                         autosync:true,
                         transport: {
@@ -558,19 +664,157 @@
                             }
                         }
                     },
-                    scrollable: false,
+                    scrollable: true,
+                    height:400,
                     sortable: true,
                     noRecords: true,
+                    dataBound:onAssetDataBound,
+                    toolbar:[
+                        {
+                            template : '<a class="k-button k-primary" href="\\#"  onclick="return updateAllocation();">Allocate Selected</a>'
+                        }
+                    ],
                     columns: [
+                         {
+                            title: 'Select All',
+                            headerTemplate: "<input type='checkbox' id='asset-header-chb' class='k-checkbox header-checkbox'><label class='k-checkbox-label' for='asset-header-chb'>Select All</label>",
+                            template: function (dataItem) {
+                                return "<input type='checkbox' id='" + dataItem.AssetId + "' class='k-checkbox row-checkbox'><label class='k-checkbox-label' for='" + dataItem.AssetId + "'></label>";
+                            },
+                            width: 80
+                        },
                          {command: { text: "Select", click : selectAsset}, title: "Action", width: "60px" },
-                        { field: "AssetName", title:"Asset", width: "110px" },
-                        { field: "RemainingPercentage", title:"Remaining Percentage", width: "200px" },
-                        { field: "RemainingQuantity", title:"Remaining Quantity", width: "110px" },
+                        { field: "AssetName", title:"Asset", width: "300px" },
+                         { field: "RemainingQuantity", title:"Remaining Quantity", width: "110px" },
+                        { field: "RemainingPercentage", title:"Remaining Percentage", width: "110px" },
                         { field: "RemainingHours", title:"Remaining Hours", width: "110px" }
 
                     ]
                 });
+        checkedIds = {};
+        var assetGrid = $("#detailTable").data("kendoGrid");
+        //bind click event to the checkbox
+        assetGrid.table.on("click", ".row-checkbox", selectRow);
+
+        $('#asset-header-chb').change(function (ev) {
+            var checked = ev.target.checked;
+            $('.row-checkbox').each(function (idx, item) {
+                if (checked) {
+                    if (!($(item).closest('tr').is('.k-state-selected'))) {
+                        $(item).click();
+                    }
+                } else {
+                    if ($(item).closest('tr').is('.k-state-selected')) {
+                        $(item).click();
+                    }
+                }
+            });
+        });
+
     }
+
+
+    var checkedIds = {};
+
+    //on click of the checkbox:
+    function selectRow() {
+        var checked = this.checked,
+            row = $(this).closest("tr"),
+            grid = $("#detailTable").data("kendoGrid"),
+            dataItem = grid.dataItem(row);
+
+        checkedIds[dataItem.id] = checked;
+
+        if (checked) {
+            //-select the row
+            row.addClass("k-state-selected");
+
+            var checkHeader = true;
+
+            $.each(grid.items(), function (index, item) {
+                if (!($(item).hasClass("k-state-selected"))) {
+                    checkHeader = false;
+                }
+            });
+
+            $("#asset-header-chb")[0].checked = checkHeader;
+        } else {
+            //-remove selection
+            row.removeClass("k-state-selected");
+            $("#asset-header-chb")[0].checked = false;
+        }
+    }
+
+    function updateAllocation(){
+        $('#loading').modal({
+             backdrop: 'static',
+             keyboard: false
+        });
+        $('#loading').modal('show');
+        var checked = [];
+        for (var i in checkedIds) {
+            if (checkedIds[i]) {
+                checked.push(i);
+            }
+        }
+
+        if(checked.length > 0){
+            AssetSubscriptionAllocationNewController.SaveAllAllocation(
+                  JSON.stringify(checked),
+                  null ,
+                  Project.Id,
+                  function(result,event){
+                    if (event.status) {
+                       //var returnResult = JSON.parse(result);
+                       if(result == 'Success'){
+                            $('#loading').modal('hide');
+                             $("#assetAllocationList").data("kendoGrid").destroy();
+                             reloadDetails();
+                             hideError();
+                            }else{
+                            $('#loading').modal('hide');
+                            displayError(result);
+                          }
+                       }else{
+
+                           $('#loading').modal('hide');
+                           displayError(event.message);
+                       }
+                      },
+                      {escape: false}
+              );
+        }else{
+            $('#loading').modal('hide');
+            displayError('Please check at least one checkbox to add allocation');
+        }
+
+        console.log(checked);
+    }
+
+     function onAssetDataBound(){
+                wrapper = this.wrapper,
+                header = wrapper.find(".k-grid-header");
+                parentGrid =  $("#assetAllocationList").find('div.k-grid-content').first();
+                resizeFixed();
+                $(window).resize(resizeFixed);
+                parentGrid.scroll(scrollFixed);
+                $(window).scroll(function(){
+                  if($(header).hasClass("fixed-header")){
+                     var headerTop = $("#assetAllocationList").find('div.k-grid-content').first().offset().top - $(window).scrollTop();
+                      header.css("top", headerTop);
+                  }
+               });
+
+            var view = this.dataSource.view();
+           for (var i = 0; i < view.length; i++) {
+               if (checkedIds[view[i].id]) {
+                   this.tbody.find("tr[data-uid='" + view[i].uid + "']")
+                       .addClass("k-state-selected")
+                       .find(".k-checkbox")
+                       .attr("checked", "checked");
+               }
+           }
+        }
 
     function selectAsset(e){
           var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
@@ -581,7 +825,7 @@
           if(rowData){
               rowData.Asset = dataItem.AssetId;
               rowData.AssetName = dataItem.AssetName;
-              rowData.AllocatedPercentage = null;
+              rowData.AllocatedPercentage = dataItem.RemainingPercentage;
               rowData.AllocatedQuantity = dataItem.RemainingQuantity;
               rowData.AllocatedHours = 0;
               rowData.Quantity = dataItem.Quantity;
@@ -596,5 +840,7 @@
           }
           grid.collapseRow(parentRow);
     }
+
+
 
 

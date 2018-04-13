@@ -23,6 +23,7 @@ private class CreateMaintNotificationControllerTest {
         insert testAccount;
 
         BMCServiceDesk__Change_Request__c changeRequest = TestUtilities.createRFChangeRequest();
+        changeRequest.RF_Customer_Action__c = 'No action needed';
         insert changeRequest;
 
         //get record type IDs
@@ -82,12 +83,19 @@ private class CreateMaintNotificationControllerTest {
         createMainNotCon.getContactInfo();
         createMainNotCon.goBack();
         createMainNotCon.createMaintenanceRecord();
-        Case c1 = new Case();
-        c1 = [SELECT CaseNumber, Status, Subject, OwnerId, Description, ProductImpacted__c, PlatformsImpacted__c FROM Case WHERE subject = :changeRequest.RF_Summary__c];
+
+        Test.stopTest();
+
+        Case[] cases = [
+                SELECT CaseNumber, Status, Subject, OwnerId, Description, CustomerAction__c, Contingency_Plan__c, ProductImpacted__c, PlatformsImpacted__c
+                FROM Case WHERE RF_Change_Request__c = :changeRequest.Id and subject = :changeRequest.RF_Summary__c
+        ];
 
         system.assertNotEquals(createMainNotCon, null);
-        system.assertNotEquals(c1, null);
-        system.assertEquals(c1.OwnerId, queueIds[0].Id);
-        Test.stopTest();
+        system.assertEquals(1, cases.size());
+        system.assertEquals(changeRequest.RF_Customer_Action__c, cases[0].CustomerAction__c);
+        system.assertEquals(changeRequest.RF_Contingency_Plan__c, cases[0].Contingency_Plan__c);
+        system.assertEquals(cases[0].OwnerId, queueIds[0].Id);
+
     }
 }

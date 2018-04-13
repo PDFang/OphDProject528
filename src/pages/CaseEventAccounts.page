@@ -78,8 +78,25 @@
                         <apex:outputField value="{!Case.ProductImpacted__c}"/>
                         <apex:outputField value="{!Case.PlatformsImpacted__c}"/>
                     </apex:pageBlockSection>
-                </apex:pageBlock>    
+                </apex:pageBlock>
+
+                <apex:pageBlock id="batchBlock" rendered="{!canBatch}">
+                    <apex:actionStatus id="clickStatus">
+                        <apex:facet name="stop">
+                            <apex:commandButton action="{!BatchAssociatedAccounts}" title="BatchAccounts" value="Create Notification Group" status="clickStatus" disabled="{!disableBatchAccount}" reRender="batchBlock"/>
+                        </apex:facet>
+                        <apex:facet name="start">
+                            <apex:commandButton value="Create Notification Group" disabled="true" status="clickStatus"/>
+                        </apex:facet>
+                    </apex:actionStatus>
+                    <span style="white-space: pre"></span>
+                    <apex:outputText value="{!batchStatus}" />
+                    <br />
+                    <apex:outputText value="{!batchMessage}" />
+                    <apex:actionPoller action="{!refreshBatchStatus}" rerender="batchBlock" enabled="{!enablePoller}" interval="60"/>
+                </apex:pageBlock>
             </div>
+
             
         <apex:variable var="positioncount" value=""/>
         

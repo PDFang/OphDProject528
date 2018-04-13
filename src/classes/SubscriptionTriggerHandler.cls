@@ -5,11 +5,11 @@
 public class SubscriptionTriggerHandler extends TriggerHandler{
 
     public static Boolean InSubscriptionCustomTrigger = false;
-    private static Id subscriptionRollupQueueableJobID;
+    private static String subscriptionRollupQueueableJobID;
 
     public override void beforeUpdate()
     {
-        UpdateSubscriptionFromProjectPhase();
+        //UpdateSubscriptionFromProjectPhase();
     }
 
     public override void afterInsert(){
@@ -53,14 +53,47 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
 
         system.debug('**** rollupMRRToPhaseProject(): subscriptionIds - ' + subscriptionIds);
 
-        if(subscriptionIds.size() > 0 && subscriptionRollupQueueableJobID == null){
-            subscriptionRollupQueueableJobID = System.enqueueJob(new SubscriptionRollupQueueable(subscriptionIds));
-            system.debug('**** rollupMRRToPhaseProject(): subscriptionRollupQueueableJobID - ' + subscriptionRollupQueueableJobID);
+        if(subscriptionIds.size() > 0 && subscriptionRollupQueueableJobID == null && RollupUtility.isRollupEnabled){
+            if(limits.getQueueableJobs() < limits.getLimitQueueableJobs()) {
+                subscriptionRollupQueueableJobID = System.enqueueJob(new SubscriptionRollupQueueable(subscriptionIds));
+                system.debug('**** rollupMRRToPhaseProject(): subscriptionRollupQueueableJobID - ' + subscriptionRollupQueueableJobID);
+            }else{
+                subscriptionRollupQueueableJobID = '';
+                scheduleSubscriptionRollup(subscriptionIds);
+            }
         }
 
     }
 
-    // Get associated Project Phase information and update to Subscription
+    @TestVisible
+    private static void scheduleSubscriptionRollup(Set<Id> subscriptionIds){
+
+        try{
+            Datetime nextRun = system.now().addMinutes(1);
+            String dateTimeFormat = '0 {0} {1} {2} {3} ? {4}';
+            String scheduledTime = string.format(
+                    dateTimeFormat,
+                    new String[]{
+                            nextRun.minute().format(),
+                            nextRun.hour().format(),
+                            nextRun.day().format(),
+                            nextRun.month().format(),
+                            nextRun.year().format().remove(',')
+                    }
+            );
+            system.debug('scheduleSubscriptionRollup(): scheduledTime - ' + scheduledTime);
+
+            SubscriptionRollupSchedulable sch = new SubscriptionRollupSchedulable(subscriptionIds);
+            subscriptionRollupQueueableJobID = System.schedule('SubscriptionRollupSchedulable '+ system.now(), scheduledTime, sch);
+
+        } catch (Exception ex){
+            system.debug('**** scheduleSubscriptionRollup(): Exception - ' + ex);
+            inContactBaseClass.SendErrorEmail(ex, subscriptionIds.iterator().next());
+        }
+
+    }
+
+    /*/ Get associated Project Phase information and update to Subscription
     public static void UpdateSubscriptionFromProjectPhase(){
 
         Set<String> subscriptionIds = new Set<String>();
@@ -98,7 +131,7 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
                 }
             }
         }
-    }
+    }*/
 
 
     private static boolean throwExceptionBollean = false;
@@ -158,21 +191,21 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
             if (isUpdate) {
                 lstUpdateSubscriptionReplicas.add(subscriptionReplica);
 
-                // only update implemented product when first time the subscription status set to '4 - Delivered'
+                /*/ only update implemented product when first time the subscription status set to '4 - Delivered'
                 if (subscription.Implemented_Product__c != null && subscription.Install_Date__c != null) {
                     if (subscription.Status__c == '4 - Delivered' && oldSubscription.Status__c != '4 - Delivered') {
                         if (!ImplementationProductDates.containsKey(subscription.Implemented_Product__c)) {
                             ImplementationProductDates.put(subscription.Implemented_Product__c, subscription.Install_Date__c);
                         }
                     }
-                }
+                }*/
 
             }
 
             // update implemenation product
         }
 
-        //update certain fields in Implemented Product table
+        /*/update certain fields in Implemented Product table
         for ( ImplementedProduct__c implementedProduct : [
                 SELECT Id, Status__c, GoLiveDate__c FROM ImplementedProduct__c
                 WHERE Id IN : ImplementationProductDates.keyset()
@@ -185,15 +218,15 @@ public class SubscriptionTriggerHandler extends TriggerHandler{
 
             // add changed implementedProduct to update list
             lstUpdateImplementedProducts.add(implementedProduct);
-        }
+        }*/
 
         if(lstUpdateSubscriptionReplicas.size() > 0){
             update lstUpdateSubscriptionReplicas;
         }
 
-        if(lstUpdateImplementedProducts.size() > 0){
-            update lstUpdateImplementedProducts;
-        }
+        //if(lstUpdateImplementedProducts.size() > 0){
+        //    update lstUpdateImplementedProducts;
+        //}
     }
 
     public class triggerException extends Exception{}

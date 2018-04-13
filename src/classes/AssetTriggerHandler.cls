@@ -1,7 +1,12 @@
 public class AssetTriggerHandler extends TriggerHandler {
 
     @TestVisible
-    private static Id assetRollupQueueableJobID;
+    private static String assetRollupQueueableJobID;
+
+    public override void beforeInsert()
+    {
+        UpdateAssetSalesPrice();
+    }
 
     public override void afterUpdate()
     {
@@ -23,6 +28,27 @@ public class AssetTriggerHandler extends TriggerHandler {
         rollupNRRToPhaseProject();
         ProjectPhaseAssetSummary();
         ProjectParentAssetSummary();
+    }
+
+    //get List Unit Price from the quote line and add it to the asset
+    private static void UpdateAssetSalesPrice(){
+        Set<Id> quoteLineSetIds = new Set<Id>();
+        List<Asset> assets = new List<Asset>();
+
+        for(Asset asst: (List<Asset>)trigger.new){
+            if(asst.SBQQ__QuoteLine__c != null){
+                quoteLineSetIds.add(asst.SBQQ__QuoteLine__c);
+                assets.add(asst);
+            }
+        }
+
+        if(!quoteLineSetIds.isEmpty()){
+            Map<Id, SBQQ__QuoteLine__c> quoteLineMap = new Map<Id, SBQQ__QuoteLine__c>( new List<SBQQ__QuoteLine__c>([SELECT Id, Customer_Net_Unit_Price__c FROM SBQQ__QuoteLine__c WHERE Id IN :quoteLineSetIds]));
+
+            for(Asset asset:assets){
+                asset.Sales_Price__c = quoteLineMap.get(asset.SBQQ__QuoteLine__c).Customer_Net_Unit_Price__c;
+            }
+        }
     }
 
     // roll-up Asset NRR's to related phase project
@@ -48,9 +74,43 @@ public class AssetTriggerHandler extends TriggerHandler {
 
         system.debug('**** rollupNRRToPhaseProject(): assetIdSet - ' + assetIdSet);
 
-        if(assetIdSet.size() > 0 && assetRollupQueueableJobID == null){
-            assetRollupQueueableJobID = System.enqueueJob(new AssetRollupQueueable(assetIdSet));
-            system.debug('**** rollupNRRToPhaseProject(): assetRollupQueueableJobID - ' + assetRollupQueueableJobID);
+        if(assetIdSet.size() > 0 && assetRollupQueueableJobID == null && RollupUtility.isRollupEnabled){
+            if(limits.getQueueableJobs() < limits.getLimitQueueableJobs()) {
+                assetRollupQueueableJobID = System.enqueueJob(new AssetRollupQueueable(assetIdSet));
+                system.debug('**** rollupNRRToPhaseProject(): assetRollupQueueableJobID - ' + assetRollupQueueableJobID);
+            } else{
+                assetRollupQueueableJobID = '';
+                scheduleAssetRollup(assetIdSet);
+            }
+
+        }
+
+    }
+
+    @TestVisible
+    private static void scheduleAssetRollup(Set<Id> assetIdSet){
+
+        try{
+            Datetime nextRun = system.now().addMinutes(1);
+            String dateTimeFormat = '0 {0} {1} {2} {3} ? {4}';
+            String scheduledTime = string.format(
+                    dateTimeFormat,
+                    new String[]{
+                            nextRun.minute().format(),
+                            nextRun.hour().format(),
+                            nextRun.day().format(),
+                            nextRun.month().format(),
+                            nextRun.year().format().remove(',')
+                    }
+            );
+            system.debug('scheduleSubscriptionRollup(): scheduledTime - ' + scheduledTime);
+
+            AssetRollupSchedulable sch = new AssetRollupSchedulable(assetIdSet);
+            assetRollupQueueableJobID = System.schedule('scheduleAssetRollup '+ system.now(), scheduledTime, sch);
+
+        } catch (Exception ex){
+            system.debug('**** scheduleAssetRollup(): Exception - ' + ex);
+            inContactBaseClass.SendErrorEmail(ex, assetIdSet.iterator().next());
         }
 
     }

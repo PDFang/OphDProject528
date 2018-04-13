@@ -27,22 +27,12 @@ public class AccountImpactCalculationImplTests {
         system.assertEquals(0, riskOfLeavingDefault, 'CalculateRiskOfLeavingScore = default calculation is Incorrect');
     }
 
-    public static testMethod void CalculateGYRColor_WillReturnCorrectScore(){
-        AccountImpactCalculationImpl imp = new AccountImpactCalculationImpl();
 
-        Double redGyrColor = imp.CalculateGYRColor('Red');
-        Double yellowGyrColor = imp.CalculateGYRColor('Yellow');
-        Double defaultGyrColor = imp.CalculateGYRColor('Not red or yellow');
-
-        system.assertEquals(1, redGyrColor, 'CalculateGYRColor = Red calculation is Incorrect');
-        system.assertEquals(.5, yellowGyrColor, 'CalculateGYRColor = Yellow   calculation is Incorrect');
-        system.assertEquals(0, defaultGyrColor, 'CalculateGYRColor = default calculation is Incorrect');
-    }
 
     public static testMethod void CalculateStrategicAccountScore_WillReturnCorrectScore(){
         AccountImpactCalculationImpl imp = new AccountImpactCalculationImpl();
 
-        Double stategicScore = imp.CalculateStrategicAccountScore('Strategic', 5);
+        Double stategicScore = imp.CalculateStrategicAccountScore('Enterprise', 5);
         Double defaultScore = imp.CalculateStrategicAccountScore('Not Stategic', 1);
 
         system.assertEquals(5, stategicScore, 'CalculateStrategicAccountScore = Stategic calculation is Incorrect');
@@ -95,7 +85,7 @@ public class AccountImpactCalculationImplTests {
         Double referenceYesScore = imp.CalculateCurrentReferenceScore(true, 5);
         Double defaultScore = imp.CalculateCurrentReferenceScore(false, 1);
 
-        system.assertEquals(5, referenceYesScore, 'CalculateCurrentReferenceScore = true calculation is Incorrect');
-        system.assertEquals(0, defaultScore, 'CalculateCurrentReferenceScore = false calculation is Incorrect');
+        system.assertEquals(0, referenceYesScore, 'CalculateCurrentReferenceScore = true calculation is Incorrect');
+        system.assertEquals(1, defaultScore, 'CalculateCurrentReferenceScore = false calculation is Incorrect');
     }
 }

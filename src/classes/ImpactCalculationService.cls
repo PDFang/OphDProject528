@@ -48,20 +48,10 @@ public class ImpactCalculationService
                     : impactCalculator.CalculateIncidentSeverityScore(caseRecord.Severity__c, GetMultiplierValue('severity'));
             system.debug('CalculateIncidentNetScore(): severityScore - ' + severityScore + ' , Severity__c - ' + caseRecord.Severity__c);
 
-            Double businessImpactScore = caseRecord.Business_Impacted__c == null
+            Double priorityScore = caseRecord.Priority == null
                     ? 0
-                    : impactCalculator.CalculatePercentBusinessImpactedScore(caseRecord.Business_Impacted__c, GetMultiplierValue('business impacted'));
-            system.debug('CalculateIncidentNetScore(): businessImpactScore - ' + businessImpactScore + ' , Business_Impacted__c - ' + caseRecord.Business_Impacted__c);
-
-            Double workaroundScore = caseRecord.Workaround_Available__c == null
-                    ? 0
-                    : impactCalculator.CalculateWorkaroundAvailablePointsScore(caseRecord.Workaround_Available__c, GetMultiplierValue('workaround'));
-            system.debug('CalculateIncidentNetScore(): workaroundScore - ' + workaroundScore + ' , Workaround_Available__c - ' + caseRecord.Workaround_Available__c);
-
-            Double workaroundQualityScore = caseRecord.Quality_of_Workaround__c == null
-                    ? 0
-                    : impactCalculator.CalculateWorkaroundQualityPointsScore(caseRecord.Quality_of_Workaround__c, GetMultiplierValue('workaround quality'));
-            system.debug('CalculateIncidentNetScore(): workaroundQualityScore - ' + workaroundQualityScore + ' , Quality_of_Workaround__c - ' + caseRecord.Quality_of_Workaround__c);
+                    : impactCalculator.CalculateIncidentPriorityScore(caseRecord.Priority, GetMultiplierValue('incident priority'));
+            system.debug('CalculateIncidentNetScore(): priorityScore - ' + priorityScore + ' , Priority - ' + caseRecord.Priority);
 
             Double securityScore = caseRecord.Security_Issue__c == null
                     ? 0
@@ -73,7 +63,12 @@ public class ImpactCalculationService
                     : impactCalculator.CalculateRelatedKnownIssueScore(caseRecord.Related_to_Previous_Known_Issue__c, GetMultiplierValue('is known issue'));
             system.debug('CalculateIncidentNetScore(): knownIssueScore - ' + knownIssueScore + ' , Related_to_Previous_Known_Issue__c ' + caseRecord.Related_to_Previous_Known_Issue__c);
 
-            Double netScore = severityScore + businessImpactScore + workaroundScore + workaroundQualityScore + securityScore + knownIssueScore;
+            Double repeatIssueScore = caseRecord.RepeatIssue__c == null
+                    ? 0
+                    : impactCalculator.CalculateRepeatIssueScore(caseRecord.RepeatIssue__c, GetMultiplierValue('repeat issue'));
+            system.debug('CalculateIncidentNetScore(): repeatIssueScore - ' + repeatIssueScore + ' , Severity__c - ' + caseRecord.RepeatIssue__c);
+
+            Double netScore = severityScore + securityScore + knownIssueScore + priorityScore + repeatIssueScore;
             system.debug('CalculateIncidentNetScore(): netScore - ' + netScore);
             //store the net score
             caseRecord.Incident_Net_Score__c = netScore;
@@ -87,25 +82,11 @@ public class ImpactCalculationService
         for(JBCXM__CustomerInfo__c customerInfoRecord :customInfoList) {
 
             // Calculate the Gainsight Score
-            Double outStandingIncidentScore = customerInfoRecord.JBCXM_OpenCases__c == null
-                    ? 0
-                    : this.gainsightImpactCalculation.CalculateOutstandingIncidentCaseScore((Integer) customerInfoRecord.JBCXM_OpenCases__c, GetMultiplierValue('outstanding incidents'));
-            system.debug('CalculateGainsightNetScore(): outStandingIncidentScore - ' + outStandingIncidentScore + ' , JBCXM_OpenCases__c - ' + customerInfoRecord.JBCXM_OpenCases__c);
 
-            Double incidentsOpenedLastSixMonthsScore = customerInfoRecord.JBCXM_CreatedCases__c == null
+            Double mrrValueScore = customerInfoRecord.JBCXM__MRR__c == null
                     ? 0
-                    : this.gainsightImpactCalculation.CalculateIncidentsOpenedLastSixMonthsScore((Integer) customerInfoRecord.JBCXM_CreatedCases__c, GetMultiplierValue('incidents opened last six months'));
-            system.debug('CalculateGainsightNetScore(): incidentsOpenedLastSixMonthsScore - ' + incidentsOpenedLastSixMonthsScore + ' , 	JBCXM_CreatedCases__c - ' + customerInfoRecord.JBCXM_CreatedCases__c);
-
-            Double mttrIncidentScore = customerInfoRecord.JBCXM_MTTR_IN_Weeks__c == null
-                    ? 0
-                    : this.gainsightImpactCalculation.CalculateMttrIncidentScore((Integer) customerInfoRecord.JBCXM_MTTR_IN_Weeks__c, GetMultiplierValue('mttr last six months'));
-            system.debug('CalculateGainsightNetScore(): mttrIncidentScore - ' + mttrIncidentScore + ' ,JBCXM_MTTR_IN_Weeks__c - ' + customerInfoRecord.JBCXM_MTTR_IN_Weeks__c);
-
-            Double annualContractValueScore = customerInfoRecord.JBCXM__ASV__c == null
-                    ? 0
-                    : this.gainsightImpactCalculation.CalculateAnnualContractValueScore(customerInfoRecord.JBCXM__ASV__c, GetMultiplierValue('annual contract value'));
-            system.debug('CalculateGainsightNetScore(): annualContractValueScore - ' + annualContractValueScore + ' , JBCXM__ASV__c - ' + customerInfoRecord.JBCXM__ASV__c);
+                    : this.gainsightImpactCalculation.CalculateMRRScore(customerInfoRecord.JBCXM__MRR__c, GetMultiplierValue('mrr'));
+            system.debug('CalculateGainsightNetScore(): mrrValueScore - ' + mrrValueScore + ' , JBCXM__MRR__c - ' + customerInfoRecord.JBCXM__MRR__c);
 
             Double creditGivenLastTwelveMonths = customerInfoRecord.JBCXM_Credits__c == null
                     ? 0
@@ -117,7 +98,7 @@ public class ImpactCalculationService
                     : this.gainsightImpactCalculation.CalculateHealthScore((Integer) customerInfoRecord.JBCXM__CurScoreId__r.JBCXM__Score__c, GetMultiplierValue('health score'));
             system.debug('CalculateGainsightNetScore(): healthScore - ' + healthScore + ' , JBCXM__CurScoreId__r.JBCXM__Score__c - ' + customerInfoRecord.JBCXM__CurScoreId__r.JBCXM__Score__c);
 
-            Double netScore = outStandingIncidentScore + incidentsOpenedLastSixMonthsScore + mttrIncidentScore + annualContractValueScore + creditGivenLastTwelveMonths + healthScore;
+            Double netScore = mrrValueScore + creditGivenLastTwelveMonths + healthScore;
             system.debug('CalculateGainsightNetScore(): netScore - ' + netScore);
 
             // Store the Gainsight score on the account record
@@ -166,10 +147,10 @@ public class ImpactCalculationService
                     : this.accountImpactCalculation.CalculateRiskOfLeavingScore(accountRecord.Risk_of_Leaving__c , GetMultiplierValue('risk of leaving'));
             system.debug('CalculateAccountNetScore(): riskOfLeavingScore - ' + riskOfLeavingScore + ' , Risk_of_Leaving__c - ' + accountRecord.Risk_of_Leaving__c);
 
-            Double gyrColor = accountRecord.GYRStatus__c == null
+            /*Double gyrColor = accountRecord.GYRStatus__c == null
                     ? 0
                     : this.accountImpactCalculation.CalculateGYRColor(accountRecord.GYRStatus__c);
-            system.debug('CalculateAccountNetScore(): gyrColor - ' + gyrColor + ' , GYRStatus__c - ' + accountRecord.GYRStatus__c);
+            system.debug('CalculateAccountNetScore(): gyrColor - ' + gyrColor + ' , GYRStatus__c - ' + accountRecord.GYRStatus__c);*/
 
             Double strategicAccountScore = accountRecord.CustomerSegment__c == null
                     ? 0
@@ -201,7 +182,7 @@ public class ImpactCalculationService
                     : this.accountImpactCalculation.CalculateCurrentReferenceScore(accountRecord.Referenceable__c, GetMultiplierValue('currently referenceable'));
             system.debug('CalculateAccountNetScore(): currentReferenceScore - ' + currentReferenceScore + ' , Referenceable__c ' + accountRecord.Referenceable__c);
 
-            Double netScore = ageOfCustomerInMonthsScore + riskOfLeavingScore + gyrColor + strategicAccountScore + partnerAccountScore + brandVisibilityScore + industryLeaderScore  + socialMediaPresenceScore + currentReferenceScore;
+            Double netScore = ageOfCustomerInMonthsScore + riskOfLeavingScore + strategicAccountScore + partnerAccountScore + brandVisibilityScore + industryLeaderScore  + socialMediaPresenceScore + currentReferenceScore;
 
             system.debug('CalculateAccountNetScore(): netScore - ' + netScore);
 

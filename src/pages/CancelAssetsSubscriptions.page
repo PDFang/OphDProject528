@@ -1,0 +1,321 @@
+<!--
+ - Created by arnab.karsarkar on 3/20/2018.
+ -->
+
+<apex:page id="CancelAssetsSubscriptions" sideBar="false" standardController="Project__c" title="Cancel Asset/Subs" extensions="CancelAssetsSubsController" tabStyle="Project__c" standardStylesheets="false" >
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/js/kendo.all.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/bootstrap.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.CancelAllAssetSubsResources, '/Asset.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.CancelAllAssetSubsResources, '/Subscription.js')}"/>
+
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.inContactResource, '/inContactResource/css/bootstrap-theme.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.common.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.mobile.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.default.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.KendoUIGanttChart, '/kendo-UI/styles/kendo.silver.min.css')}"/>
+
+    <apex:form id="myform">
+        <div class="container-fluid" style="font-size:14.14px;">
+            <div id="backtoRecordDiv">
+                <apex:commandLink title="Go Back" value="<< Go Back To Record" action="{!cancel}" immediate="true" style="text-decoration:underline;"/>
+            </div>
+
+           <apex:pageMessages id="errorMessage"/>
+            <apex:outputPanel rendered="{!!isError}">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Please select
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <h4>Departments<span style="color:red">*</span></h4>
+                                <apex:selectList value="{!selectedDepartment}" multiselect="false" size="1" styleClass="form-control topListDept">
+                                    <apex:selectOptions value="{!Departments}"/>
+                                </apex:selectList>
+                            </div>
+                            <div class="col-sm-3">
+                                <h4>Root Cause <span style="color:red">*</span></h4>
+                                <apex:selectList value="{!selectedRootCause}" multiselect="false" size="1" styleClass="form-control topListrootCause">
+                                    <apex:selectOptions value="{!RootCase}"/>
+                                </apex:selectList>
+                            </div>
+                            <div class="col-sm-3">
+                                <h4>Additional Details <span style="color:red">*</span></h4>
+                                <apex:inputTextarea styleClass="form-control topadditionalDetails"/>
+                            </div>
+                            <div class="col-sm-3">
+
+                                <a class="k-button k-button-icontext k-primary" href="#" style="margin-top: 40px;" onclick="return applyToAll();"><span class="k-icon k-i-update"></span> Apply To All</a>
+                                <a class="k-button k-button-icontext k-primary" href="#" style="margin-top: 40px;" onclick="return applyAndCancel();"><span class="k-icon k-i-update"></span> Apply and Cancel</a>
+
+                                <a class="k-button k-button-icontext" href="#" style="margin-top: 40px;" onclick="return clearAll();"><span class="k-icon k-i-cancel"></span>Clear All</a>
+                            </div>
+                        </div>
+                        <span style="color:red">All * marked fields are required.</span>
+                    </div>
+                </div>
+
+
+                <ul class="nav nav-pills mb-4">
+                    <li class="nav-item active applyborder" id="assetDetailsTab"><a href="#assetDetailsblock" class="nav-link" data-toggle="pill" >Assets</a></li>
+
+                    <li class="nav-item applyborder" id="subscriptionDetailsTab"><a class="nav-link" href="#subscriptionBlock"  data-toggle="pill">Subscriptions</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div id="assetDetailsblock" class="tab-pane fade in active" style="border-top: solid 2px #6689cc;">
+                        <div style="float:right;"><a class="k-button k-button-icontext k-primary" href="#">Cancel Assets</a></div>
+                        <div id="assetList" ></div>
+                    </div>
+                    <div id="subscriptionBlock" class="tab-pane fade" style="border-top: solid 2px #6689cc;">
+
+                        <div id="subsList"></div>
+                    </div>
+                </div>
+            </apex:outputPanel>
+            <!-- Confirmation Modal -->
+            <div class="modal fade" id="warning" tabindex="-1" role="dialog" aria-labelledby="warning" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel" style="font-weight:bold">Alert</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body" style="font-size:14px;">
+                            <div id="java-errors" class=" alert alert-danger message-alert" style="margin-left:15px;width:90%; display:none;"></div>
+                            <div id="success" class=" alert alert-success message-alert" style="margin-left:15px;width:90%; display:none;"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn button-cancel" data-dismiss="modal" style="color:black !important;">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- loading Modal -->
+            <div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="info" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content" style="width:40%; top: 182px;">
+                        <div class="modal-body" style="font-size:14px;">
+                            <div class="spinnerClass">Please wait</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--<apex:actionFunction name="reloadDetails" action="{!reloadDetails}" reRender="detailSection,detailSubscription,detailAsset,detailProject, refreshScript, deleteAllocationSection, deleteAllocationSectionSubs" immediate="true"/>-->
+            <!--<apex:actionFunction name="reloadModal" action="{!reloadDetails}" reRender="subsCancSuspPageBlck,cancSuspPageBlck" immediate="true"/>-->
+        </div>
+        <script id="departmentTemplate" type="text/x-kendo-template">
+            <apex:selectList value="{!selectedDepartment}" multiselect="false" size="1" styleClass="form-control departmentList department-#: Id#" style="width:80%">
+                <apex:selectOptions value="{!Departments}"/>
+            </apex:selectList>
+        </script>
+        <script id="rootCauseTemplate" type="text/x-kendo-template">
+            <apex:selectList value="{!selectedRootCause}" multiselect="false" size="1" styleClass="form-control rootCauseList rootCause-#: Id#" style="width:80%">
+                <apex:selectOptions value="{!RootCase}"/>
+            </apex:selectList>
+        </script>
+
+        <script id="departmentTemplateSubs" type="text/x-kendo-template">
+            <apex:selectList value="{!selectedDepartment}" multiselect="false" size="1" styleClass="form-control departmentListSubs department-#: Id#" style="width:80%">
+                <apex:selectOptions value="{!Departments}"/>
+            </apex:selectList>
+        </script>
+        <script id="rootCauseTemplateSubs" type="text/x-kendo-template">
+            <apex:selectList value="{!selectedRootCause}" multiselect="false" size="1" styleClass="form-control rootCauseListSubs rootCause-#: Id#" style="width:80%">
+                <apex:selectOptions value="{!RootCase}"/>
+            </apex:selectList>
+        </script>
+    </apex:form>
+
+    <script type="text/javascript">
+         $(document).ready(function() {
+             if(!{!isError}){
+                 loadAssets("{!ParentProjectId}");
+                 loadSubs("{!ParentProjectId}");
+             }
+
+        });
+
+        function applyToAll(){
+              var dept = $(".topListDept").val(),
+                  rootCause = $(".topListrootCause").val(),
+                  additionalDetails = $(".topadditionalDetails").val();
+              if($("#subscriptionBlock").hasClass('active')){
+                if(dept != '' && rootCause != '' && additionalDetails != '' ){
+                  $("select.departmentListSubs").each(function(e){
+                       $(this).val(dept);
+                  });
+                  $("select.rootCauseListSubs").each(function(e){
+                       $(this).val(rootCause);
+                  });
+                  $("input.additionalDetailsSub").each(function(e){
+                       $(this).val(additionalDetails);
+                  });
+                  $("#subs-header-chb")[0].checked = true;
+                  $('.subs-row-checkbox').each(function (idx, item) {
+                     if (!($(item).closest('tr').is('.k-state-selected'))) {
+                          $(item).click();
+                     }
+                  });
+                }
+              } else {
+                if(dept != '' && rootCause != '' && additionalDetails != '' ){
+                   $("select.departmentList").each(function(e){
+                       $(this).val(dept);
+                  });
+                  $("select.rootCauseList").each(function(e){
+                       $(this).val(rootCause);
+                  });
+                  $("input.additionalDetails").each(function(e){
+                       $(this).val(additionalDetails);
+                  });
+                  $("#asset-header-chb")[0].checked = true;
+                  $('.row-checkbox').each(function (idx, item) {
+                     if (!($(item).closest('tr').is('.k-state-selected'))) {
+                          $(item).click();
+                     }
+                  });
+                }
+              }
+        }
+
+        function applyAndCancel(){
+            applyToAll();
+            if($("#subscriptionBlock").hasClass('active')){
+                  cancelSubs();
+            }else{
+                cancelAssets();
+            }
+
+        }
+        function clearAll(){
+          $(".topListDept").val('');
+          $(".topListrootCause").val('');
+          $(".topadditionalDetails").val('');
+
+          if($("#subscriptionBlock").hasClass('active')){
+              $("select.departmentListSubs").each(function(e){
+              $(this).val('');
+              });
+              $("select.rootCauseListSubs").each(function(e){
+                  $(this).val('');
+              });
+              $("input.additionalDetailsSub").each(function(e){
+                  $(this).val('');
+              });
+              $("#subs-header-chb")[0].checked = false;
+              $('.subs-row-checkbox').each(function (idx, item) {
+                 if (($(item).closest('tr').is('.k-state-selected'))) {
+                      $(item).click();
+                 }
+              });
+          } else{
+               $("select.departmentList").each(function(e){
+              $(this).val('');
+              });
+              $("select.rootCauseList").each(function(e){
+                  $(this).val('');
+              });
+              $("input.additionalDetails").each(function(e){
+                  $(this).val('');
+              });
+              $("#asset-header-chb")[0].checked = false;
+              $('.row-checkbox').each(function (idx, item) {
+                 if (($(item).closest('tr').is('.k-state-selected'))) {
+                      $(item).click();
+                 }
+              });
+          }
+        }
+
+
+
+        function displayError(message){
+             $("div#success").empty();
+             $("div#success").hide();
+             $("div#java-errors").css("display", "block");
+             document.getElementById("java-errors").innerHTML =  message;
+             $('#warning').modal('show');
+             console.log('error =>' + message);
+        }
+
+        function showSuccess(message){
+             $("div#java-errors").empty();
+             $("div#java-errors").hide();
+             $("div#success").css("display", "block");
+             document.getElementById("success").innerHTML =  message;
+             $('#warning').modal('show');
+             console.log('success =>' + message);
+        }
+
+
+
+
+    </script>
+    <style>
+
+
+        .spinnerClass {
+            background:url('../../img/loading32.gif') no-repeat;
+            height:32px;
+            margin:20px;
+            padding-left:40px;
+            padding-top:9px;
+            font-size: 0.75em;
+        }
+        .msgIcon {
+             display: none!important
+        }
+        .customMessage * {
+            color: #fff!important
+        }
+        .customMessage {
+            margin: 5px 0!important;
+            max-width: 1280px;
+
+            width: 100%;
+            font-size: 12px;
+            border: 0px;
+            padding-left: 10px;
+        }
+        .message {
+            opacity: 1.1
+        }
+        .message .messageText h4 {
+           display: none;
+        }
+
+        .nav-tabs>li.active>a, .nav-tabs>li.active>a:focus, .nav-tabs>li.active>a:hover{
+                background-color: #58b6dc;
+                color:white;
+        }
+
+        .fixed-header {
+            position:fixed;
+            width:auto;
+            z-index: 1;
+          }
+
+      .pbBody, .pbBody a, .lbBody a, .lbBodyDescription, .list {
+          color: #337ab7 !important;
+       }
+
+       .applyborder{
+           border: solid 1px #6689cc;
+            border-bottom: 0;
+            border-radius: 6px 6px 2px 2px;
+       }
+
+       .k-state-selected{
+           background-color:#6dbff3 !important;
+       }
+
+
+    </style>
+
+</apex:page>

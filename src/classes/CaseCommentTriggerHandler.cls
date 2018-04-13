@@ -6,6 +6,7 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
 
     private static boolean staticValuesSet = false;
     private static boolean isProxyServiceTurnedOff = false;
+    private static boolean isXMCommentNotificationTurnedOff = false;
     //private static boolean isSetCommentDuringUpdate = false;
 
     public static boolean alreadyCopiedComments = false;
@@ -19,17 +20,30 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
             AppConfiguration__c config = AppConfiguration__c.getInstance();
             if(config != null) {
                 isProxyServiceTurnedOff = config.Turn_Off_Partner_Case_Proxy_Service__c;
+                isXMCommentNotificationTurnedOff = config.XM_Turn_Off_Comment_Notifications__c;
             }
         }
     }
 
     protected override void afterInsert(){
+
+        if(!isXMCommentNotificationTurnedOff){
+            createXMNotification((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
+        }
         if(!isProxyServiceTurnedOff && !bypassProxyService){
             CallPartnerCaseProxyService((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
         }
         if (AllCommentTriggerHelper.hasAlreadyCreatedComments() == false){
             AllCommentTriggerHelper.setAlreadyCreatedComments();
             CopyCustomComments ((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
+        }
+
+    }
+
+    protected override void afterUpdate() {
+
+        if (!isXMCommentNotificationTurnedOff) {
+            createXMNotification((List<CaseComment>) trigger.new, (Map<Id, CaseComment>) trigger.oldMap);
         }
 
     }
@@ -69,8 +83,10 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
         comment.ParentId__c = NewComment.ParentId;
         comment.CommentBody__c = NewComment.CommentBody;
         comment.CommentCreatedDate__c = NewComment.CreatedDate;
-        if (NewComment.CreatedById !=null){
-            comment.CreatorName__c = GetUserById(NewComment.CreatedById);
+        if (NewComment.ConnectionReceivedId != null){
+            comment.CreatorName__c = 'Connection User';
+        } else{
+            comment.CreatorName__c = userInfo.getFirstName() + ' ' + userInfo.getLastName(); //GetUserById(NewComment.CreatedById);
         }
         comment.IsDeleted__c = NewComment.IsDeleted;
         comment.IsPublished__c = newComment.IsPublished;
@@ -124,6 +140,84 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
     private static void CallPartnerCaseProxyServiceFuture(Set<Id> commentIds){
 
         PartnerCaseProxyServiceHelper.PushCaseCommentToProxyService(commentIds);
+    }
+
+    // Create an xmNotification record when new comment is added or existing comment is published
+    private void createXmNotification(List<CaseComment> newList, Map<Id, CaseComment> oldMap){
+
+        Map<Id, CaseComment> processMap = new Map<Id, CaseComment>();
+        Set<Id> caseIdSet = new Set<Id>();
+
+        // new comment is added or existing comment is published
+        for(CaseComment comment : newList) {
+            CaseComment oldComment = (oldMap != null && oldMap.containsKey(comment.Id)) ? oldMap.get(comment.Id) : null;
+            if(comment.IsPublished && (oldComment == null || comment.IsPublished != oldComment.IsPublished) ){
+                processMap.put(comment.Id, comment);
+                caseIdSet.add(comment.ParentId);
+            }
+        }
+
+        system.debug('createXmNotification(): processMap - ' + processMap);
+
+        if(processMap.isEmpty()){
+            return;
+        }
+
+        Map<Id, Case> caseMap = new Map<Id, Case>([
+                Select Id, Priority, RecordTypeId, InternalEvent__c, NonEvent__c, LastPublicCommentDateTime__c from Case
+                where Id IN :caseIdSet and Status IN ('Confirmed', 'Being Worked')
+        ]);
+        system.debug('createXmNotification(): caseMap - ' + caseMap);
+
+        // ignore if the notification was already sent out for a comment
+        for(xmNotification__c notification : [
+                Select Case__c, CommentId__c
+                from xmNotification__c
+                where Case__c IN :caseIdSet and Request_Type__c = :XMNotificationTriggerHandler.REQUEST_TYPE_COMMENT
+                and Status__c IN ('Processed', 'Completed')
+        ]){
+            CaseComment commentIgnored = processMap.containsKey(notification.CommentId__c) ? processMap.remove(notification.CommentId__c) : null;
+            system.debug('createXmNotification(): commentIgnored - ' + commentIgnored);
+        }
+
+        List<xmNotification__c> notificationList = new List<xmNotification__c>();
+
+        CaseTriggerHandler caseHandler = new CaseTriggerHandler();
+
+        for(CaseComment comment : processMap.values()){
+
+            Case parentCase = caseMap.get(comment.ParentId);
+            system.debug('createXmNotification(): parentCase - ' + parentCase);
+
+            // is qualified event?, is the most recently posted public comment on the case?
+            if(parentCase == null || !caseHandler.isQualifiedEvent(parentCase) || comment.CreatedDate < parentCase.LastPublicCommentDateTime__c){
+                continue;
+            }
+            xmNotification__c xmNotification = new xmNotification__c(
+                    Case__c = comment.ParentId,
+                    Request_Date__c = system.now(),
+                    Request_Type__c = XMNotificationTriggerHandler.REQUEST_TYPE_COMMENT,
+                    Public_Comment__c = comment.CommentBody,
+                    CommentId__c = comment.Id
+            );
+            notificationList.add(xmNotification);
+        }
+
+        system.debug('createXmNotification(): notificationList - ' + notificationList);
+
+        if(notificationList.isEmpty())
+            return;
+
+        try{
+            insert notificationList;
+        }catch(Exception ex){
+            system.debug('createXmNotification(): Exception - ' + ex);
+            inContactBaseClass.SendErrorEmail(ex, notificationList[0].CommentId__c + ' - Failed to create xMatters notification request');
+        }finally {
+            // avoid recursion
+            isXMCommentNotificationTurnedOff = true;
+        }
+
     }
 
 }

@@ -126,6 +126,42 @@ public with sharing class XMRestGroup {
         jsonResponse = wrapper.performCallOut(url, 'POST', body);
         return true;
     }
+
+    public XMGroupModel CreateNewGroupWithResponseDetail(string groupName){
+        string body  = '{"recipientType": "GROUP",  "status": "ACTIVE", "allowDuplicates" : false,"useDefaultDevices" : true,"observedByAll" : true, "description": "inContact Product Cluster Group","targetName": "' + groupName +'"}';
+        string url;
+        string jsonResponse;
+        url = this.GroupUrl;
+        System.Debug('body = ' + body);
+        System.Debug(url);
+        XMRestWrapper wrapper = new XMRestWrapper();
+        jsonResponse = wrapper.performCallOut(url, 'POST', body);
+        XMGroupModel newGroup = null;
+        newGroup = (XMGroupModel) JSON.deserialize(jsonResponse, XMGroupModel.class);
+        return newGroup;
+    }
+
+    public boolean AddShiftToGroup(string groupName, string shiftName) {
+        string body = '{ "name": "' + shiftName + '" }';
+        string jsonResponse;
+        String encodedGroupName = EncodingUtil.urlEncode(groupName,'UTF-8');
+
+        String url = GroupUrl + '/' + encodedGroupName + '/shifts';
+
+        System.debug('body = ' + body);
+        System.debug('url = ' + url);
+
+        XMRestWrapper wrapper = new XMRestWrapper();
+        jsonResponse = wrapper.performCallOut(url, 'POST', body);
+
+        if(jsonResponse != null) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
     //Delete a group
     public boolean DeleteAGroup(string groupName){
         string url;

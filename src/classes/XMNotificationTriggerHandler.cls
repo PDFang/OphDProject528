@@ -1,5 +1,9 @@
 public class XMNotificationTriggerHandler extends TriggerHandler{
 
+    Static Integer eventServiceCounter = 0;
+
+    public static final String REQUEST_TYPE_COMMENT = 'Public Comment';
+
     protected override void afterInsert(){
 
         callXMRestEventService(trigger.new);
@@ -78,8 +82,10 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
             if(xmNotification.Status__c == 'New')
                 notificationIdSet.add(xmNotification.Id);
         }
-        if(notificationIdSet.size() > 0)
+        if(notificationIdSet.size() > 0 && eventServiceCounter == 0 && !system.isFuture() && !system.isBatch()){
             callXMRestEventServiceFuture(notificationIdSet);
+            eventServiceCounter++;
+        }
 
     }
 
@@ -87,7 +93,8 @@ public class XMNotificationTriggerHandler extends TriggerHandler{
     private static void callXMRestEventServiceFuture(Set<Id> notificationIdSet){
 
         List<xmNotification__c> notificationList = [
-                Select Id, Case__c, Request_Date__c, Request_Type__c, xMatters_Form__c, Status__c,AddedPlatforms__c
+                Select Id, Case__c, Request_Date__c, Request_Type__c, xMatters_Form__c, Status__c,AddedPlatforms__c,
+                        Notification_Group__r.xmGroupUID__c, Public_Comment__c
                 From xmNotification__c
                 Where Id IN :notificationIdSet
         ];

@@ -883,7 +883,7 @@ public class AccountPartnerTriggerHandler extends TriggerHandler{
     private static Map<String, String> getMetaDataType(Set<String> partnerTypeSet){        
     	Map<String, String> partnerPermissionMap = new Map<String, String>();
         for(Partner_Permission_Sets__c mdt : [
-            Select Permission_Set__c, Partner_Type__c from Partner_Permission_Sets__c where Partner_Type__c IN :partnerTypeSet
+            Select Permission_Set__c, Partner_Type__c from Partner_Permission_Sets__c where Partner_Type__c IN :partnerTypeSet AND ExcludeAccountPartnerAssign__c = false
         ])
         {
             partnerPermissionMap.put(mdt.Partner_Type__c, mdt.Permission_Set__c);

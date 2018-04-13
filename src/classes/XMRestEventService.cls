@@ -27,6 +27,7 @@ public class XMRestEventService {
 
         String caseRecordType = recordTypeMapById.get(eventCase.RecordTypeId).getName();
         Boolean isMaintenance = (caseRecordType == 'Maintenance Notification' || caseRecordType == 'Maintenance Preview');
+        Boolean isMaintenanceForSpecificAccounts = isMaintenance && xmNotificationRecord.Notification_Group__r.xmGroupUID__c != null;
 
         XMEventData xmEventData = new XMEventData();
 
@@ -37,14 +38,24 @@ public class XMRestEventService {
 
         String inboundIntegrationGuid;
         String platformsAffected;
+        String xMattersGroupName;
 
         if(xmNotificationRecord.Request_Type__c == 'Event Platforms Add'){
             platformsAffected = xmNotificationRecord.AddedPlatforms__c;
             inboundIntegrationGuid = (config != null) ? config.XM_Add_Platform_Inbound_GUID__c : null;
+        } else if (isMaintenanceForSpecificAccounts) {
+            platformsAffected = null;
+            inboundIntegrationGuid = (config != null) ? config.XM_Event_Notification_Inbound_GUID__c : null;
+
+            //set a value indicating the xMatters Group for this Maintenance is already created
+            xMattersGroupName = xmNotificationRecord.Notification_Group__r.xmGroupUID__c;
+
+            system.debug('xMatters Group for Specific Accounts Maintenance ==> ' + xMattersGroupName);
         } else if (xmNotificationRecord.Request_Type__c == 'Maintenance Notification'
                 || xmNotificationRecord.Request_Type__c == 'Event Initial Confirmation'
                 || xmNotificationRecord.Request_Type__c == 'Event Resolved'
-                || xmNotificationRecord.Request_Type__c == 'Maintenance Preview'){
+                || xmNotificationRecord.Request_Type__c == 'Maintenance Preview'
+                || xmNotificationRecord.Request_Type__c == XMNotificationTriggerHandler.REQUEST_TYPE_COMMENT){
             platformsAffected = eventCase.PlatformsImpacted__c;
             inboundIntegrationGuid = (config != null) ? config.XM_Event_Notification_Inbound_GUID__c : null;
         }
@@ -56,7 +67,22 @@ public class XMRestEventService {
 
         system.debug('startExternalEventProcessing() ===> inboundIntegrationGuid - ' + inboundIntegrationGuid);
 
-        xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c, isMaintenance);
+        if(!isMaintenanceForSpecificAccounts) {
+            xmeventData.platformGroups = convertProductAndPlatformToGroupName(platformsAffected, eventCase.ProductImpacted__c, isMaintenance);
+        }
+
+        // add internal distribution as default group
+        string MaintenanceNotificationsInternalDistribution = (config != null) ? config.XM_Maintenance_Notifications_Internal__c : null;
+        string EventNotificationsInternalDistribution = (config != null) ? config.XM_Event_Notifications_Internal__c : null;
+        string defaultGroup = (caseRecordType == 'Maintenance Notification') ? MaintenanceNotificationsInternalDistribution : EventNotificationsInternalDistribution;
+        if (xmeventData.platformGroups == null)
+        {
+            xmeventData.platformGroups = new List<string>();
+        }
+        if (defaultGroup != null)
+        {
+            xmeventData.platformGroups.add(defaultGroup);
+        }
 
         // Build the specific event details needed to process the event.
         XMEventData.EventGroupInfo eventGroupInfo = new XMEventData.EventGroupInfo();
@@ -64,9 +90,24 @@ public class XMRestEventService {
         // PartnerPrefix is a place holder to be replaced by the inbound integration
         eventGroupInfo.eventName = ('Event_' + eventCase.CaseNumber + '_{PartnerPrefix}').replace(' ', '');
         eventGroupInfo.salesforceCaseId = eventCase.Id;
-        eventGroupInfo.partnerDetails = getSupportedPartners();
+
         eventGroupInfo.xmNotificationId = xmNotificationRecord.Id;
+        eventGroupInfo.xmGroupName = xMattersGroupName;
         xmEventData.eventGroupInfo = eventGroupInfo;
+
+
+        if(isMaintenanceForSpecificAccounts) {
+            //maintenance events for selected accounts will currently only support 1 partner 'INC'
+            //this will be improved in a future story
+            eventGroupInfo.partnerDetails = new List<XMEventData.PartnerInfo>();
+            XMEventData.PartnerInfo info = new XMEventData.PartnerInfo();
+            info.partnerPrefix = 'INC';
+            info.xmFormId = null;
+            eventGroupInfo.partnerDetails.add(info);
+        }
+        else {
+            eventGroupInfo.partnerDetails = getSupportedPartners();
+        }
 
         // xMatters form ID
         if(isMaintenance){
@@ -106,6 +147,10 @@ public class XMRestEventService {
         // Build the properties needed to fill out the email template in xMatters
         Map<String, String> propertyMap = addAdditionalSalesforceDataToFormProperties(eventCase, isMaintenance);
         propertyMap.put('xmNotificationId', xmNotificationRecord.Id);
+        if(xmNotificationRecord.Request_Type__c == 'Event Platforms Add' || xmNotificationRecord.Request_Type__c == 'Event Initial Confirmation'
+            || xmNotificationRecord.Request_Type__c == XMNotificationTriggerHandler.REQUEST_TYPE_COMMENT){
+            propertyMap.put('comment', xmNotificationRecord.Public_Comment__c);
+        }
         XMEventData.templateProperties = propertyMap;
 
         // Serialize the event information for processing in xMatters Api
@@ -191,8 +236,10 @@ public class XMRestEventService {
         List<String> fieldList = new List<String>(caseFields);
         system.debug('getCaseFromxmNotification() ===> fieldList: ' + fieldList);
 
+        String caseCommentQuery = ', (select CommentBody from CaseComments where IsPublished = true order by createddate desc limit 1) ';
         // Dynamic soql query to get the case object
-        String dynamicCaseQuery = 'SELECT ' + String.join(fieldList, ',') + ' FROM Case Where Id = \'' + xmNotification.Case__c + '\'' ;
+        String dynamicCaseQuery = 'SELECT ' + String.join(fieldList, ',') + caseCommentQuery
+                + ' FROM Case Where Id = \'' + xmNotification.Case__c + '\'' ;
         system.debug('getCaseFromxmNotification() ===> Attempting to run SOQL Query to get Case Record: ' + dynamicCaseQuery);
 
 

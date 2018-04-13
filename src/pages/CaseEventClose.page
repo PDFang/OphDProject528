@@ -1,7 +1,9 @@
 <apex:page StandardController="Case" extensions="CaseEventCloseExtension" >
+    <apex:includeScript value="/support/console/28.0/integration.js"/>
     <apex:form rendered="{!RenderClosePage}" >
-        <div style="color:red"><apex:messages id="msg" /></div>
-        <apex:pageBlock mode="edit" title="Close Event" id="mainPage">
+        <apex:outputPanel id="mainPage" >
+        <apex:pageBlock mode="edit" title="Close Event" rendered="{!IF(Case.Status == 'Closed',false, true)}">
+            <div style="color:red"><apex:messages id="msg" /></div>
             <apex:inputHidden value="{!Case.Status}"/>
             <apex:inputHidden value="{!Case.NonEvent__c}"/>
             <apex:inputHidden value="{!Case.ProductImpacted__c}"/>
@@ -73,10 +75,65 @@
                     <apex:inputField style="{!IF(ecr.Type='textarea','width:60%;height:100px','')}" value="{!rca[ecr.fieldPath]}" required="{!ecr.Required}" />
                 </apex:repeat>
             </apex:pageBlockSection>
-            <apex:pageBlockButtons >
-                <apex:commandButton action="{!Save}" value="Close Event"/>
-                <apex:commandButton action="{!Cancel}" value="Cancel"/>
-            </apex:pageBlockButtons>
+                <apex:pageBlockButtons >
+                <apex:actionStatus id="SaveCase" >
+                    <apex:facet name="stop">
+                        <apex:outputPanel >
+                        <apex:commandButton value="Close Event"  status="SaveCase"  action="{!Save}" reRender="mainPage,closeMessage"/>
+                        <apex:commandButton value="Cancel" onClick="CancelRequest();"/>
+                        <apex:actionFunction action="{!Cancel}" name="GoToCase"/>
+                        </apex:outputPanel>
+                    </apex:facet>
+                    <apex:facet name="start">
+                        <apex:outputPanel >
+                            <apex:image value="/img/loading32.gif" style="height: 15px;"/>
+                            <apex:commandButton value="Closing..." status="SaveCase" disabled="true"/>
+                        </apex:outputPanel>
+                    </apex:facet>
+                </apex:actionStatus>
+                </apex:pageBlockButtons>
         </apex:pageBlock>
+        </apex:outputPanel>
+        <apex:outputPanel id="closeMessage" >
+        <apex:pageBlock mode="edit" title="Close Event" rendered="{!IF(Case.Status == 'Closed',true, false)}" >
+
+            <apex:outputPanel >This case is in closed status. Please click Cancel to refresh the page.</apex:outputPanel>
+            <apex:outputPanel><apex:commandButton value="Cancel" onClick="CancelRequest();return false;"/></apex:outputPanel>
+            <apex:actionFunction action="{!Cancel}" name="GoToCase"/>
+
+        </apex:pageBlock>
+        </apex:outputPanel>
     </apex:form>
+
+    <script type="text/javascript">
+
+
+
+        function CancelRequest(){
+            console.log('sforce.console.isInConsole() ' + sforce.console.isInConsole());
+            if (sforce.console.isInConsole()){
+                doPrimaryTabRefresh();
+            } else{
+                GoToCase();
+            }
+        }
+
+        function currentTab() {
+            //First find the ID of the current tab to close it
+            sforce.console.getEnclosingTabId(refreshPrimaryTab);
+        }
+
+     var refreshPrimaryTab = function showTabId(result) {
+            var tabId = result.id;
+            sforce.console.refreshPrimaryTabById(tabId, true, currentTab);
+        };
+
+    function doPrimaryTabRefresh() {
+            sforce.console.getEnclosingPrimaryTabId(refreshPrimaryTab);
+        }
+
+
+
+    </script>
+
 </apex:page>

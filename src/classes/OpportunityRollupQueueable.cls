@@ -43,7 +43,8 @@ public class OpportunityRollupQueueable implements Queueable{
             Map<Id, Opportunity> opportunityCache = new Map<Id, Opportunity>([
                     Select Id, Original_Forecasted_Initial_Go_Live_Date__c, PM_Estimated_Go_Live__c,
                             Times_Go_Live_Date_Changed__c, PM_Go_Live_Date__c,
-                            Contracted_NRR__c, Actual_NRR__c, Contracted_MRR__c, Actual_MRR__c
+                            Contracted_NRR__c, Actual_NRR__c, Contracted_MRR__c, Actual_MRR__c,
+                            Logged_Hours__c, Allocated_Hours__c
                     from Opportunity
                     where Id IN :opportunityIds and RecordTypeId IN :validOpportunityRecordTypeIds
             ]);
@@ -92,7 +93,7 @@ public class OpportunityRollupQueueable implements Queueable{
         for (AggregateResult ar : [
                 Select min(Original_Forecasted_Initial_Go_Live_Date__c) minForecastedInitialGoLiveDate, sum(Times_All_Phases_Go_Live_Date_Changed__c) noOfTimesPhaseGoLiveDateChanged,
                         min(Estimated_Project_End__c) minEstimatedProjectEndDate, min(ActualProjectGoLiveDate__c) minActualGoLiveDate, min(Actual_Initial_Phase_Go_Live__c) minInitialGoLiveDate,
-                        Opportunity__c
+                        min(Estimated_Project_Initial_Go_Live_Date__c) minEstimatedInitialGoLiveDate, Opportunity__c
                 from Project__c
                 where Opportunity__c IN :opportunityCache.keySet() and RecordTypeId = :psProjectParentSaaSRecordTypeId
                 group by Opportunity__c
@@ -111,7 +112,7 @@ public class OpportunityRollupQueueable implements Queueable{
             }
 
             opp.Original_Forecasted_Initial_Go_Live_Date__c = ar.get('minForecastedInitialGoLiveDate') != null ? (Date) ar.get('minForecastedInitialGoLiveDate') : null;
-            opp.PM_Estimated_Go_Live__c = ar.get('minEstimatedProjectEndDate') != null ? (Date) ar.get('minEstimatedProjectEndDate') : null;
+            opp.PM_Estimated_Go_Live__c = ar.get('minEstimatedInitialGoLiveDate') != null ? (Date) ar.get('minEstimatedInitialGoLiveDate') : null;
             opp.Times_Go_Live_Date_Changed__c = ar.get('noOfTimesPhaseGoLiveDateChanged') != null ? (Decimal) ar.get('noOfTimesPhaseGoLiveDateChanged') : null;
             //opp.PM_Go_Live_Date__c = ar.get('minActualGoLiveDate') != null ? (Date) ar.get('minActualGoLiveDate') : null;
             opp.PM_Go_Live_Date__c = ar.get('minInitialGoLiveDate') != null ? (Date) ar.get('minInitialGoLiveDate') : null;
@@ -140,7 +141,7 @@ public class OpportunityRollupQueueable implements Queueable{
         for (AggregateResult ar : [
                 Select sum(Contracted_NRR__c) totalContractedNRR, sum(Actual_NRR__c) totalActualNRR,
                         sum(Contracted_MRR__c) totalContractedMRR, sum(Actual_MRR__c) totalActualMRR,
-                        Opportunity__c
+                        sum(Parent_Allocated_Hours__c) allocatedHours, sum(Parent_Logged_Hours__c) loggedHours, Opportunity__c
                 from Project__c
                 where Opportunity__c IN :opportunityCache.keySet() and RecordTypeId IN :psProjectParentRecordTypeIds
                 group by Opportunity__c
@@ -160,6 +161,8 @@ public class OpportunityRollupQueueable implements Queueable{
 
             opp.Actual_NRR__c = ar.get('totalActualNRR') != null ? (Decimal)ar.get('totalActualNRR') : 0;
             opp.Contracted_NRR__c = ar.get('totalContractedNRR') != null ? (Decimal)ar.get('totalContractedNRR') : 0;
+            opp.Allocated_Hours__c = ar.get('allocatedHours') != null ? (Decimal)ar.get('allocatedHours') : 0;
+            opp.Logged_Hours__c = ar.get('loggedHours') != null ? (Decimal)ar.get('loggedHours') : 0;
             opp.Actual_MRR__c = ar.get('totalActualMRR') != null ? (Decimal)ar.get('totalActualMRR') : 0;
             opp.Contracted_MRR__c = ar.get('totalContractedMRR') != null ? (Decimal)ar.get('totalContractedMRR') : 0;
 
@@ -169,7 +172,9 @@ public class OpportunityRollupQueueable implements Queueable{
             system.debug('**** rollupFinancials(): opp - ' + oppOld);
 
             if(opp.Contracted_NRR__c != oppOld.Contracted_NRR__c || opp.Actual_NRR__c != oppOld.Actual_NRR__c
-                    || opp.Contracted_MRR__c != oppOld.Contracted_MRR__c || opp.Actual_MRR__c != oppOld.Actual_MRR__c)
+                    || opp.Contracted_MRR__c != oppOld.Contracted_MRR__c || opp.Actual_MRR__c != oppOld.Actual_MRR__c
+                    || opp.Allocated_Hours__c != oppOld.Allocated_Hours__c
+                    || opp.Logged_Hours__c != oppOld.Logged_Hours__c)
             {
                 system.debug('**** rollupFinancials(): one or more fields value have changed');
                 opportunities.put(opp.Id, opp);

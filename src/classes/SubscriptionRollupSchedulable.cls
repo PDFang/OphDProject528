@@ -4,13 +4,21 @@
 
 global class SubscriptionRollupSchedulable implements Schedulable, Database.Batchable<sObject>{
 
-    public Integer batchSize;
-    public String query;
+    private Integer batchSize = 200;
+    private String query;
+    private Set<Id> subscriptionIds;
 
     public SubscriptionRollupSchedulable(Integer recordsPerBatch){
 
         batchSize = recordsPerBatch;
         query = 'Select Id from SBQQ__Subscription__c';
+
+    }
+
+    public SubscriptionRollupSchedulable(Set<Id> subscriptionIdSet){
+
+        subscriptionIds = subscriptionIdSet;
+        query = 'Select Id from SBQQ__Subscription__c where Id IN :subscriptionIds';
 
     }
 
@@ -51,6 +59,12 @@ global class SubscriptionRollupSchedulable implements Schedulable, Database.Batc
     }
 
     global void finish(Database.BatchableContext bc){
+
+        Profile userProfile = [Select Name from Profile where Id = :userinfo.getProfileId()];
+
+        if(userProfile.Name.containsIgnoreCase('System Administrator') == false){
+            return;
+        }
 
         AsyncApexJob a = [
                 SELECT Id, Status, NumberOfErrors, JobItemsProcessed,

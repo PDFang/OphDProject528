@@ -23,6 +23,7 @@ public class CaseTriggerHandler extends TriggerHandler
     public static boolean createJiraBug = false;
     public static boolean bypassProxyService = false;
     private Static Map<String, ETMS_Trouble_Report_State_Status__mdt> etmsTroubleStateStatusMap;
+    private static boolean isInsertCall = false;
 
 
     public CaseTriggerHandler()
@@ -36,7 +37,7 @@ public class CaseTriggerHandler extends TriggerHandler
             if(config != null) {
                 isProxyServiceTurnedOff = config.Turn_Off_Partner_Case_Proxy_Service__c;
                 isxMattersNotificationsTurnedOff = config.XM_Turn_Off_Event_Notifications__c;
-                xmEventNotificationPriorities = config.XM_Event_Notification_Priorities__c;
+                xmEventNotificationPriorities = String.isNotBlank(config.XM_Event_Notification_Priorities__c) ? config.XM_Event_Notification_Priorities__c : xmEventNotificationPriorities;
             }
             etmsTroubleStateStatusMap = new Map<String, ETMS_Trouble_Report_State_Status__mdt>();
             for(ETMS_Trouble_Report_State_Status__mdt mdt : [
@@ -49,7 +50,8 @@ public class CaseTriggerHandler extends TriggerHandler
     }
 
     protected override void beforeInsert(){
-        CalculateIncidentNetScore((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
+        isInsertCall = true;
+        //CalculateIncidentNetScore((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
         setTroubleReportStateStatus((List<Case>) trigger.new, (Map<Id, Case>)trigger.oldMap);
     }
 
@@ -118,7 +120,7 @@ public class CaseTriggerHandler extends TriggerHandler
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
             // Is new incident
-            if(newCase.RecordTypeId == incidentRecordType && (oldCase == null || recalculateScore(newCase, oldCase)) ){
+            if(newCase.RecordTypeId == incidentRecordType && (oldCase == null || recalculateScore(newCase, oldCase) || isInsertCall) ){
                 processList.add(newCase);
             }
         }
@@ -138,11 +140,10 @@ public class CaseTriggerHandler extends TriggerHandler
 
     private boolean recalculateScore(Case newRecord, Case oldRecord){
         return newRecord.Severity__c != oldRecord.Severity__c
-                || newRecord.Business_Impacted__c != oldRecord.Business_Impacted__c
-                || newRecord.Quality_of_Workaround__c != oldRecord.Quality_of_Workaround__c
+                || newRecord.Priority != oldRecord.Priority
+                || newRecord.RepeatIssue__c != oldRecord.RepeatIssue__c
                 || newRecord.Related_to_Previous_Known_Issue__c != oldRecord.Related_to_Previous_Known_Issue__c
-                || newRecord.Security_Issue__c != oldRecord.Security_Issue__c
-                || newRecord.Workaround_Available__c != oldRecord.Workaround_Available__c;
+                || newRecord.Security_Issue__c != oldRecord.Security_Issue__c;
     }
 
     // Create an xmNotification record when an event is confirmed or resolved
@@ -161,16 +162,21 @@ public class CaseTriggerHandler extends TriggerHandler
             }
         }
 
-        //retrieve the newest resolved notification, if there is one, for the cases in the set
-        List<AggregateResult> resolvedNotifications = [Select Case__c
-                                                         from xmNotification__c
-                                                         where Status__c = 'Completed' and Request_Type__c = 'Event Resolved'
-                                                            and Case__c in :caseIds
-                                                         group by Request_Type__c, Case__c];
-        caseIds.clear();
-        for(AggregateResult notification : resolvedNotifications) {
-            caseIds.add((Id)notification.get('Case__c'));
+        if(caseIds.size() > 0){
+            //retrieve the newest resolved notification, if there is one, for the cases in the set
+            List<AggregateResult> resolvedNotifications = [
+                    Select Case__c
+                                from xmNotification__c
+                                where Status__c = 'Completed' and Request_Type__c = 'Event Resolved'
+                                and Case__c in :caseIds
+                                group by Request_Type__c, Case__c
+            ];
+            caseIds.clear();
+            for(AggregateResult notification : resolvedNotifications) {
+                caseIds.add((Id)notification.get('Case__c'));
+            }
         }
+
 
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
@@ -181,15 +187,12 @@ public class CaseTriggerHandler extends TriggerHandler
             //ensure the case is an Event, and it was not just created (oldCase is not null), and
             //that it was not internal
             //and that the non event checkbox is unchecked
-            if(newCase.RecordTypeId == eventRecordType && oldCase != null && !newCase.InternalEvent__c && !newCase.NonEvent__c)
+            //the Priority of the case must be in the list of xmEventNotificationPriorities or don't send
+            if(oldCase != null && isQualifiedEvent(newCase))
             {
-                //the Priority of the case must be in the list of xmEventNotificationPriorities or don't send
-                if(String.isNotBlank(xmEventNotificationPriorities) && !xmEventNotificationPriorities.containsIgnoreCase(newCase.Priority)){
-                    continue;
-                }
 
                 //status is equal to Confirmed or Being Worked and no Event Confirmation notification has been sent
-                if((newCase.Status == 'Confirmed' || newCase.Status == 'Being Worked') //status is Confirmed or Being Worked
+                if((newCase.Status == 'Confirmed' || newCase.Status == 'Being Worked')  //status is Confirmed or Being Worked
                         && !newCase.xmEvent_Notification_Sent__c) { //no notification has been sent
                     System.debug('Initial event');
                     processList.add(newCase);
@@ -233,14 +236,29 @@ public class CaseTriggerHandler extends TriggerHandler
             return;
         }
 
+        Map<Id, CaseComment> caseCommentMap = new Map<Id, CaseComment>();
+
+        for(CaseComment comment : [
+                Select Id, ParentId, CommentBody from CaseComment
+                where ParentId IN :processList and IsPublished = true
+                order by ParentId, createddate
+        ]){
+            caseCommentMap.put(comment.ParentId, comment);
+        }
+
         List<xmNotification__c> notificationList = new List<xmNotification__c>();
 
         for(Case newCase :processList){
+
+            CaseComment lastComment = caseCommentMap.containsKey(newCase.Id) ? caseCommentMap.get(newCase.Id) : null;
+
             xmNotification__c xmNotification = new xmNotification__c(
                     Case__c = newCase.Id,
                     Request_Date__c = system.now(),
                     Request_Type__c = requestType == '' ? getXmNotificationRequestType(newCase) : requestType,
-                    AddedPlatforms__c = platformsAdded
+                    AddedPlatforms__c = platformsAdded,
+                    Public_Comment__c = lastComment != null ? lastComment.CommentBody : null,
+                    CommentId__c = lastComment != null ? lastComment.Id : null
             );
             notificationList.add(xmNotification);
         }
@@ -255,6 +273,14 @@ public class CaseTriggerHandler extends TriggerHandler
             // avoid recursion
             isxMattersNotificationsTurnedOff = true;
         }
+
+    }
+
+    public boolean isQualifiedEvent(Case newCase){
+
+        system.debug('isQualifiedEvent(): eventRecordType - ' + eventRecordType);
+        return newCase.RecordTypeId == eventRecordType && !newCase.InternalEvent__c && !newCase.NonEvent__c
+            && xmEventNotificationPriorities.containsIgnoreCase(newCase.Priority);
 
     }
 
@@ -435,19 +461,19 @@ public class CaseTriggerHandler extends TriggerHandler
     private void createJiraBugForKI(List<Case> newList, Map<Id, Case> oldMap){
 
         system.debug('createJiraBugForKI(): createJiraBug - ' + createJiraBug);
-        system.debug('createJiraBugForKI(): known issues - ' + newList.size());
+        system.debug('createJiraBugForKI(): Cases - ' + newList.size());
 
-        if(createJiraBug == false || newList.size() > 1){
+        if(createJiraBug == false){
             system.debug('createJiraBugForKI(): skipped @future callout');
             return;
         }
 
         createJiraBug = false;
-        List<Id> caseIds = new List<Id>();
+        Set<Id> caseIds = new Set<Id>();
         for(Case newCase : newList){
             Case oldCase = (oldMap != null) ? oldMap.get(newCase.Id) : null;
-            if(newCase.RecordTypeId == knownIssueRecordType && oldCase == null && String.isBlank(newCase.JIRA_Key__c)
-                    || (oldCase != null && oldCase.JIRA_Key__c != newCase.JIRA_Key__c && newCase.JIRA_Key__c == JIRA_KEY_TEMP))
+            if(newCase.RecordTypeId == knownIssueRecordType && oldCase == null && newCase.JIRA_Key__c == JIRA_KEY_TEMP
+                    || (oldCase != null && oldCase.JIRA_Key__c != newCase.JIRA_Key__c && String.isBlank(oldCase.JIRA_Key__c) && newCase.JIRA_Key__c == JIRA_KEY_TEMP))
             {
                 caseIds.add(newCase.Id);
             }
@@ -456,13 +482,13 @@ public class CaseTriggerHandler extends TriggerHandler
         system.debug('createJiraBugForKI(): caseIds - ' + caseIds);
 
         if(caseIds.size() > 0 && !system.isFuture() && !system.isBatch()){
-            createJiraBugForKIFuture(caseIds[0], newList[0].JIRA_Key__c == JIRA_KEY_TEMP);
+            createJiraBugForKIFuture(new List<Id>(caseIds)[0]);
         }
 
     }
 
     @Future(callout=true)
-    private static void createJiraBugForKIFuture(String caseId, boolean isTempKey){
+    private static void createJiraBugForKIFuture(String caseId){
 
         String jiraKey = null;
         try{
@@ -473,7 +499,7 @@ public class CaseTriggerHandler extends TriggerHandler
         }
 
         // clear the TEMP key in case of error
-        if(String.isBlank(jiraKey) && isTempKey){
+        if(String.isBlank(jiraKey)){
             Case knownIssue = new Case(
                     Id = caseId,
                     JIRA_Key__c = null

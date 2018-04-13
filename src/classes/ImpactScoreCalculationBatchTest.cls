@@ -53,8 +53,7 @@ private class ImpactScoreCalculationBatchTest {
                     Industry_Leadership_Vocality__c = 'Yes',
                     Social_Media_Presence__c = 'Yes',
                     Risk_of_Leaving__c = 'Low',
-                    Referenceable__c = false,
-                    GYRStatus__c = 'Green'
+                    Referenceable__c = false
             );
             accountList.add(testAccount);
         }
@@ -82,11 +81,8 @@ private class ImpactScoreCalculationBatchTest {
             JBCXM__CustomerInfo__c customerInfo = new JBCXM__CustomerInfo__c(
                     JBCXM__Account__c = accountList[i].Id,
                     JBCXM__CurScoreId__c = scoringSchemeDefinition.Id,
-                    JBCXM__ASV__c = 1800000,
-                    JBCXM_CreatedCases__c = 15,
-                    JBCXM_OpenCases__c = 20,
                     JBCXM_Credits__c = 2500,
-                    JBCXM_MTTR_IN_Hours__c = 504
+                    JBCXM__MRR__c = 5004
             );
             customerInfoList.add(customerInfo);
         }

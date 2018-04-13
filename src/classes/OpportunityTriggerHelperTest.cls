@@ -31,20 +31,33 @@
 
         createTestData();
         createOpportunity();
+        createParentProjectOnly();
+        // change the phase status to 'Closed'
+
+        testPhase.Phase_Status__c = 'Closed';
+        testPhase.ActualProjectGoLiveDate__c = system.today();
+        test.startTest();
+        update testPhase;
+        system.runAs(impManagementUser){
+            testOpp.HandedOffToCCCS__c = true;
+            Database.SaveResult result = Database.update(testOpp, false);
+            system.assertEquals(true, result.isSuccess(), result.getErrors());
+        }
+        test.stopTest();
+
+    } // end of AvailableForCCHandOffTest()
+
+    // Test the opportunity "Handed off to CC/CS" checkbox cannot be checked unless all related SaaS project phases are complete
+    static testmethod void AvailableForCCHandOffFailedTest(){
+
+        createTestData();
+        createOpportunity();
         createProjects();
         test.startTest();
         system.runAs(impManagementUser){
             testOpp.HandedOffToCCCS__c = true;
             Database.SaveResult result = Database.update(testOpp, false);
             system.assertEquals(false, result.isSuccess(), result.getErrors());
-        }
-        // change the phase status to 'Closed'
-        testPhase.Phase_Status__c = 'Closed';
-        update testPhase;
-        system.runAs(impManagementUser){
-            testOpp.HandedOffToCCCS__c = true;
-            Database.SaveResult result = Database.update(testOpp, false);
-            system.assertEquals(true, result.isSuccess(), result.getErrors());
         }
         test.stopTest();
 
@@ -149,6 +162,49 @@
 
     } //
 
+    // Verify Account Partner is created
+    static testMethod void createAccountPartnerTest() {
+
+        createTestData();
+        testOpp = new Opportunity(
+                Name = 'ProjectTriggerHandlerTest Opp 1',
+                AccountId = accountList[0].Id,
+                iCE_Partner__c = accountList[1].Id,
+                RecordTypeId = recordTypeMap.get(OPPORTUNITY_TYPE_NEW),
+                StageName = OpportunityTriggerHelper.OPPORTUNITY_STAGE_TWO,
+                CloseDate = Date.today(),
+                LeadSource = 'Partner',
+                Partner_Agent_Company__c = 'Startup',
+                Probability = 25,
+                Partner_Deal__c = 'NO',
+                Contract_Type__c = 'New Customer',
+                inContact__c = 'YES',
+                inContact_Setup_Fee__c = 1000,
+                inContact_Seats__c = 1,
+                inContact_MRC_Min__c = 1000,
+                inContact_Ports__c = 1,
+                inContact_MRC_Exp__c = 1000,
+                ECHO__c = 'NO',
+                eLearning__c = 'NO',
+                Hiring__c = 'NO',
+                WFM__c = 'NO',
+                ownerId = impManagementUser.Id
+        );
+        insert testOpp;
+        test.starttest();
+        testOpp.StageName = OpportunityTriggerHelper.OPPORTUNITY_STAGE_CLOSED_WON;
+        update testOpp;
+
+        test.stopTest();
+
+        List<Account_Partner__c> accountPartnerList = [
+                Select Id from Account_Partner__c
+                where Customer__c = :accountList[0].Id
+                and Partner__c = :accountList[1].Id
+        ];
+        system.assertEquals(1, accountPartnerList.size(), 'Account Partner should be added on Closed/Won ICE Partner deals');
+
+    }
 
     /* Create the test data required to execute the tests successfully */
     static void createTestData(){
@@ -258,5 +314,18 @@
         testPhase.Phase_Status__c = 'Open';
         testPhase.ParentProject__c = parentProject.Id;
         insert testPhase;
+    }
+
+    static void createParentProjectOnly(){
+
+        Project__c parentProject = new Project__c();
+        parentProject.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
+        parentProject.Opportunity__c = testOpp.Id;
+        parentProject.Account__c = accountList[0].Id;
+        parentProject.Projected_Deadline__c = system.today().addDays(7);
+        insert parentProject;
+
+        testPhase = [SELECT RecordTypeId, Phase_Status__c, ParentProject__c FROM Project__c WHERE ParentProject__c = :parentProject.Id LIMIT 1];
+
     }
 }

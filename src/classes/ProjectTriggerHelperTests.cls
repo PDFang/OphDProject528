@@ -89,7 +89,7 @@ public class ProjectTriggerHelperTests
         Account accountRecord = InContactBaseClass.CreateAccount('Test Account');
         insert accountRecord;
 
-  
+
         Opportunity opp = new Opportunity(
             Name = 'Test',
             AccountId = accountRecord.Id,
@@ -100,7 +100,7 @@ public class ProjectTriggerHelperTests
             PM_Go_Live_Date__c  = null
         );
 
-        insert opp;     
+        insert opp;
 
         // Parent Project
         Project__c parentProject1 = new Project__c(
@@ -108,29 +108,35 @@ public class ProjectTriggerHelperTests
             Summary__c = 'This is the parent Project 1',
             ProjectType__c = 'CEM',
             Opportunity__c = opp.Id
-            
+
         );
 
         insert parentProject1;
-        
+
          // Parent Project
         Project__c childProject1 = new Project__c(
             RecordTypeId = childRTId,
             Summary__c = 'This is the Child Project 1',
             ProjectType__c = 'CEM',
-            ParentProject__c = parentProject1.Id            
+            ParentProject__c = parentProject1.Id
         );
 
         insert childProject1;
-        
-        
+
+
 
         ImplementedProduct__c ip1 = new ImplementedProduct__c(
             Account__c = accountRecord.Id,
             Opportunity__c = opp.Id
         );
 
+        ImplementedProduct__c ip2 = new ImplementedProduct__c(
+                Account__c = accountRecord.Id,
+                Opportunity__c = opp.Id
+        );
+
         implementedProducts.add(ip1);
+        implementedProducts.add(ip2);
         insert implementedProducts;
 
         Asset asset1 = new Asset(
@@ -139,10 +145,38 @@ public class ProjectTriggerHelperTests
             ImplementedProduct__c = ip1.Id,
             AccountId = accountRecord.Id
         );
-       
+
         assets.add(asset1);
 
         insert assets;
+
+        Project_Asset_Allocation__c assetAllocation = new Project_Asset_Allocation__c(
+                Asset__c = asset1.Id,
+                Project__c = childProject1.Id
+        );
+
+        insert assetAllocation;
+
+        SBQQ__Subscription__c subscription = new SBQQ__Subscription__c(
+                SBQQ__Account__c = accountRecord.Id,
+                SBQQ__Discount__c = 2.05,
+                SBQQ__AdditionalDiscountAmount__c = 2500,
+                SBQQ__Bundled__c = true,
+                SBQQ__ListPrice__c = 50,
+                SBQQ__Quantity__c = 200,
+                Implemented_Product__c = ip2.Id
+        );
+
+        insert subscription;
+
+        SubscriptionReplica__c subscriptionCustom = [SELECT Id FROM SubscriptionReplica__c WHERE Subscription__c = :subscription.Id];
+
+        Project_Subscription_Allocation__c subscriptionAllocation = new Project_Subscription_Allocation__c(
+                Subscription__c = subscriptionCustom.Id,
+                Project__c = childProject1.Id
+        );
+
+        insert subscriptionAllocation;
 
         Test.startTest();
 
@@ -156,7 +190,7 @@ public class ProjectTriggerHelperTests
             System.assertEquals('4 - Delivered', assetRecord.Status);
 
         }
-        
+
         // Check that the implemented products associated to the asset records were updated
         for (ImplementedProduct__c ip: [SELECT Id, Status__c, GoLiveDate__c from ImplementedProduct__c])
         {
@@ -166,6 +200,140 @@ public class ProjectTriggerHelperTests
 
        Test.stopTest();
     }
+
+
+    public static testMethod void testPhaseStatusChange()
+    {
+        CreateTestPhaseProject();
+        Test.startTest();
+            Project__c testProject = [SELECT Id, Phase_Status__c from Project__c where Summary__c = 'This is the Child Project 1' limit 1];
+            testProject.Phase_Status__c = 'Suspended';
+            try {
+                update testProject;
+            }catch (Exception ex){
+                Boolean expectedExceptionThrown =  ex.getMessage().contains('Department Responsible and Root Cause are required') ? true : false;
+	            System.AssertEquals(expectedExceptionThrown, true);
+            }
+        Test.stopTest();
+    }
+
+    public static testMethod void testPhaseStatusChangeSuspended()
+    {
+        CreateTestPhaseProject();
+        Test.startTest();
+        Project__c testProject = [SELECT Id, Phase_Status__c from Project__c where Summary__c = 'This is the Child Project 1' limit 1];
+        testProject.Phase_Status__c = 'Suspended';
+	    testProject.Department_Responsible__c = 'Customer';
+	    testProject.Root_Cause__c = 'Connectivity';
+
+        try {
+            update testProject;
+        }catch (Exception ex){
+	        Boolean expectedExceptionThrown =  ex.getMessage().contains('Please use the Manage Allocations page to put all allocations on Hold before sunpending the phase project.') ? true : false;
+	        System.AssertEquals(expectedExceptionThrown, true);
+        }
+        Test.stopTest();
+    }
+
+    public static testMethod void testPhaseStatusChangeCanceled()
+    {
+        CreateTestPhaseProject();
+        Test.startTest();
+        Project__c testProject = [SELECT Id, Phase_Status__c from Project__c where Summary__c = 'This is the Child Project 1' limit 1];
+        testProject.Phase_Status__c = 'Cancelled';
+        testProject.Department_Responsible__c = 'Customer';
+        testProject.Root_Cause__c = 'Connectivity';
+
+        try {
+            update testProject;
+        }catch (Exception ex){
+            Boolean expectedExceptionThrown =  ex.getMessage().contains('Please remove all the asset/subscription allocations from manage allocations page before cancelling the phase project.') ? true : false;
+        }
+        Test.stopTest();
+    }
+
+
+    // add test data
+    static void CreateTestPhaseProject(){
+
+        List<Asset> assets = new List<Asset>();
+
+        // Create account
+        Account accountRecord = InContactBaseClass.CreateAccount('Test Account');
+        insert accountRecord;
+
+        Opportunity opp = new Opportunity(
+                Name = 'Test',
+                AccountId = accountRecord.Id,
+                StageName = 'Assigned',
+                CloseDate = Date.today(),
+                RecordTypeId = inContactBaseClass.SelectRecordTypeIDByName('Education Request', 'Opportunity'),
+                PM_Estimated_Go_Live__c = system.today(),
+                PM_Go_Live_Date__c  = null
+        );
+
+        insert opp;
+
+        // Parent Project
+        Project__c parentProject1 = new Project__c(
+                RecordTypeId = parentProjectRTId,
+                Summary__c = 'This is the parent Project 1',
+                ProjectType__c = 'CEM',
+                Opportunity__c = opp.Id
+
+        );
+
+        insert parentProject1;
+
+        // Parent Project
+        Project__c childProject1 = new Project__c(
+                RecordTypeId = childRTId,
+                Summary__c = 'This is the Child Project 1',
+                ProjectType__c = 'CEM',
+                ParentProject__c = parentProject1.Id
+        );
+
+        insert childProject1;
+
+
+        Asset asset1 = new Asset(
+                Name = 'Asset asset1',
+                Project_Phase__c = childProject1.Id,
+                AccountId = accountRecord.Id
+        );
+
+        assets.add(asset1);
+
+        insert assets;
+
+        Project_Asset_Allocation__c assetAllocation = new Project_Asset_Allocation__c(
+                Asset__c = asset1.Id,
+                Project__c = childProject1.Id
+        );
+
+        insert assetAllocation;
+
+        SBQQ__Subscription__c subscription = new SBQQ__Subscription__c(
+                SBQQ__Account__c = accountRecord.Id,
+                SBQQ__Discount__c = 2.05,
+                SBQQ__AdditionalDiscountAmount__c = 2500,
+                SBQQ__Bundled__c = true,
+                SBQQ__ListPrice__c = 50,
+                SBQQ__Quantity__c = 200
+        );
+
+        insert subscription;
+
+        SubscriptionReplica__c subscriptionCustom = [SELECT Id FROM SubscriptionReplica__c WHERE Subscription__c = :subscription.Id];
+
+        Project_Subscription_Allocation__c subscriptionAllocation = new Project_Subscription_Allocation__c(
+                Subscription__c = subscriptionCustom.Id,
+                Project__c = childProject1.Id
+        );
+
+        insert subscriptionAllocation;
+    }
+
 
     static testmethod void createProjectTasks(){
 

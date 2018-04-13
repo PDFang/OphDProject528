@@ -41,7 +41,9 @@ global class ContactFieldCleaner implements Database.Batchable<sObject>
 			contact.ADFSGuid__c = null;
 		}
 
+		TriggerHandler.bypass('ContactTriggerHandler');
 		Database.SaveResult[] updateResults = Database.update(scope, false);
+		TriggerHandler.clearBypass('ContactTriggerHandler');
 
 		String[] errorIds = new List<String>();
 
@@ -51,12 +53,13 @@ global class ContactFieldCleaner implements Database.Batchable<sObject>
 			{
 				String errorMessage = String.format('{0} - {1}', new List<String> { scope.get(i).Id, updateResults.get(i).getErrors().get(0).getMessage() });
 				errorIds.Add(errorMessage);
+				system.debug(errorMessage);
 			}
 		}
 
 		if(errorIds.size() > 0)
 		{
-			sendErrorEmail(context, errorIds);
+			sendErrorEmail(errorIds);
 		}
 	}
 
@@ -82,11 +85,11 @@ global class ContactFieldCleaner implements Database.Batchable<sObject>
 		}
 	}
 
-	private void sendErrorEmail(Database.BatchableContext context, List<String> errorIds)
+	@TestVisible
+	private void sendErrorEmail(List<String> errorIds)
 	{
-		AsyncApexJob a = [SELECT Id, CreatedBy.Email FROM AsyncApexJob WHERE Id = :context.getJobId()];
 		Messaging.SingleEmailMessage message = new Messaging.SingleEmailMessage();
-		String[] toAddresses = new String[] { a.CreatedBy.Email };
+		String[] toAddresses = new String[] { userInfo.getUserEmail() };
 		message.setToAddresses(toAddresses);
 		message.setSubject('ContactFieldCleaner Errored on these Contact records');
 

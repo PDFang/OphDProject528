@@ -20,6 +20,8 @@ public class CaseEventNotificationExtension
     public boolean canEdit{public get;private set;}
     public boolean allowNotifications{public get;private set;}
     public string xmSelectedForm{get;set;}
+    public string xmSelectedSendMethod {get; set;}
+    public string batchStatus {get; set;}
 
     // For product eligible for select Customers enable legacy notification otherwise enable xMatters notification
     public boolean enableXmatters{public get;private set;}
@@ -27,6 +29,7 @@ public class CaseEventNotificationExtension
     public List<String> xMattersFieldMapping{get; private set;}
     // list of forms setup in xMatters_Forms__mdt
     public List<SelectOption> xMattersForms{get; private set;}
+    public List<selectOption> SendMethodOptions{get; private set;}
 
     private final List<RecordType> recordTypes;
     private ID selRecordTypeId;
@@ -37,7 +40,6 @@ public class CaseEventNotificationExtension
     public string contactRole{public get;private set;}
     private string recordTypeName;
     public static list<string> clusters;
-
 
     private static boolean isxMattersMaintenanceNotificationsTurnedOff = false;
 
@@ -52,6 +54,7 @@ public class CaseEventNotificationExtension
         string caseType;
 
         initXmattersForms();
+        initSendMethodOptions();
 
         if(clusters == null)
         {
@@ -81,16 +84,9 @@ public class CaseEventNotificationExtension
             }
             System.debug('CaseEventNotificationExtension(): isxMattersMaintenanceNotificationsTurnedOff - ' + isxMattersMaintenanceNotificationsTurnedOff);
 
-            Map<String, ProductEventMap__c> productEventMap = ProductEventMap__c.getAll();
-
-            ProductEventMap__c productEventInfo = productEventMap.get(c.ProductImpacted__c);
-            System.debug('CaseEventNotificationExtension(): productEventInfo - ' + productEventInfo);
-
             // Record Type - Maintenance Notification
-            // Product Impacted - Not for Select Customers
             // xMatters Maintenance Notification turned on
-            if(recordTypeName == 'Maintenance Notification' && productEventInfo != null && !productEventInfo.SelectCustomers__c
-                    && !isxMattersMaintenanceNotificationsTurnedOff)
+            if(recordTypeName == 'Maintenance Notification' && c.ProductImpacted__c != 'Carrier Notification' && !isxMattersMaintenanceNotificationsTurnedOff)
             {
                 enableXmatters = true;
                 xMattersFieldMapping = getxMattersFieldMapping();
@@ -478,6 +474,37 @@ public class CaseEventNotificationExtension
         }
     }
 
+
+    private string getDisplayedBatchStatus()
+    {
+        xmNotificationGroups__c[] xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
+
+        string displayedBatchStatus;
+        if (xmGroup.size() > 0) {
+            if (xmGroup[0].Status__c == 'New') {
+                displayedBatchStatus = 'New';
+            } else if (xmGroup[0].Status__c == 'Failed') {
+                displayedBatchStatus = 'Failed';
+            } else if (xmGroup[0].Status__c == 'Completed') {
+                displayedBatchStatus = 'Ready';
+            } else {
+                displayedBatchStatus = 'Processing';
+            }
+        }
+        else {
+            //no groups created
+            displayedBatchStatus = 'No group created.';
+        }
+
+        return displayedBatchStatus;
+    }
+
+    public PageReference refreshBatchStatus()
+    {
+        initSendMethodOptions();
+        return null;
+    }
+
     public List<selectOption> StandardTextOptions
     {
         get
@@ -493,8 +520,6 @@ public class CaseEventNotificationExtension
             }
             return options;
         }
-
-
     }
 
     public PageReference RefreshPage()
@@ -534,6 +559,20 @@ public class CaseEventNotificationExtension
 
     }
 
+    private void initSendMethodOptions(){
+        xmSelectedSendMethod = '';
+
+        // enable account radio option in certain status
+        boolean disableGroupOption = true;
+        string displayedBatchStatus = getDisplayedBatchStatus();
+        batchStatus = (string.isBlank(displayedBatchStatus)) ? displayedBatchStatus : 'Account Batch Status: ' + displayedBatchStatus;
+        disableGroupOption = (displayedBatchStatus == 'Ready') ? false : true;
+
+        SendMethodOptions = new List<SelectOption>();
+        SendMethodOptions.add(new SelectOption('ByAccounts', 'By Associated Accounts', disableGroupOption));
+        SendMethodOptions.add(new SelectOption('ByProducts', 'By Products / Platforms'));
+    }
+
     public pagereference sendNotificationViaXmatters(){
 
         try{
@@ -541,15 +580,33 @@ public class CaseEventNotificationExtension
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.INFO, 'xMatters Maintenance Notification is disabled. Please contact your administrator.'));
                 return null;
             }
+            if(String.isBlank(xmSelectedSendMethod)){ // safety check
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'You must choose a Send Method before sending the notification.'));
+                return null;
+            }
             if(String.isBlank(xmSelectedForm)){ // safety check
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'You must choose a maintenance template before sending the notification.'));
                 return null;
             }
+
+            // get xmNotificationGroups__c batch id
+            string xmGroupId;
+            if (xmSelectedSendMethod == 'ByAccounts')
+            {
+                xmNotificationGroups__c[] xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
+                if (xmGroup.size() > 0)
+                {
+                    if (xmGroup[0].Status__c == 'Completed')
+                        xmGroupId = xmGroup[0].Id;
+                }
+            }
+
             xmNotification__c xmNotification = new xmNotification__c(
                     Case__c = c.Id,
                     Request_Date__c = system.now(),
                     Request_Type__c = 'Maintenance Notification',
-                    xMatters_Form__c = xmSelectedForm
+                    xMatters_Form__c = xmSelectedForm,
+                    Notification_Group__c = xmGroupId
             );
 
             insert xmNotification;

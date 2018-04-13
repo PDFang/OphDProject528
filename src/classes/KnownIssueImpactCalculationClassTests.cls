@@ -16,8 +16,9 @@ public class KnownIssueImpactCalculationClassTests {
         KnownIssuesImpactCalcStub knownIssueCalculationStub = new KnownIssuesImpactCalcStub();
         knownIssueCalculationStub.NumberIncidentsTiedToIssue = 1;
         knownIssueCalculationStub.DaysIssuePresent = 1;
-        knownIssueCalculationStub.DollarAmountTiedToIssue = 1;
+        knownIssueCalculationStub.Priority = 1;
         knownIssueCalculationStub.RecentReleaseBreak = 1;
+        knownIssueCalculationStub.SecurityIssue = 1;
         // incident
         test.startTest();
         KnownIssueImpactCalculationClass knownIssueImpactCalculation = new KnownIssueImpactCalculationClass(knownIssueCalculationStub);
@@ -31,7 +32,7 @@ public class KnownIssueImpactCalculationClassTests {
         test.stopTest();
         //for(Case KnownIssuCase : knownIssueList){
         Case[] newCase = [Select KIImpactScore__c, Priority from Case where Id = : knownIssueList[0].Id limit 1];
-        system.assertEquals(4.0, newCase[0].KIImpactScore__c);
+        system.assertEquals(6.0, newCase[0].KIImpactScore__c);
         //}
 
     }
@@ -138,14 +139,14 @@ public class KnownIssueImpactCalculationClassTests {
 
         // incident
         test.startTest();
-        string knownIssueQuery = 'select Broken_by_Recent_Release__c,Status, Subject, KIImpactScore__c from Case '
+        string knownIssueQuery = 'select Broken_by_Recent_Release__c,Status, Subject, Priority, KIImpactScore__c from Case '
                 + 'WHERE RecordType.Name = \'Known Issue\' ';
         database.executeBatch(new KnownIssuesImpactScoreCalcBatch(knownIssueQuery), 500);
 
         test.stopTest();
         //for(Case KnownIssuCase : knownIssueList){
         Case[] newCase = [Select KIImpactScore__c, KIImpactScoreHistorical__c from Case where Id = : knownIssueList[0].Id limit 1];
-        system.assertEquals(11.0, newCase[0].KIImpactScore__c);
+        system.assertEquals(12.0, newCase[0].KIImpactScore__c);
         system.assertEquals(1000, newCase[0].KIImpactScoreHistorical__c);
         //}
     }

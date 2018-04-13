@@ -12,8 +12,12 @@ public class CaseEventAccountsExtension
     public string selectedAccount{get;set;}
     public string selectedAccountFromMasterList{get;set;}
     public string selectedExcludedAccount{get;set;}
+    public string batchMessage{get;set;}
+    public string batchStatus{get;set;}
     private Set<Id> accountIds;
     public boolean canEdit{public get;private set;}
+    public boolean canBatch{public get; private set;}
+    public boolean enablePoller {public get; private set;}
     public CaseEventClass cec{public get;private set;}
     public CaseEventClass.AccountIncident[] acctIncidents{
         												get{
@@ -48,9 +52,16 @@ public class CaseEventAccountsExtension
              canEdit = inContactBaseClass.HasEditAccess(c.Id,UserInfo.getUserId());
          
         }
-        
-        
-       
+
+        RecordType r = [Select Name From RecordType where Id = :c.RecordTypeId limit 1];
+        if(r.Name == 'Maintenance Notification'){
+                canBatch = true;
+                enablePoller = true;
+                xmNotificationGroups__c[] xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
+                if (xmGroup.size() > 0) {
+                    enablePoller = (xmGroup[0].Status__c != 'In Progress' && xmGroup[0].Status__c != 'New') ? false : true;
+                }
+        }
     }
     
     public void AccountSearch()
@@ -205,7 +216,125 @@ public class CaseEventAccountsExtension
         AccountIncidentsUpdate();
       return null;
    }
-    
+
+    public void BatchAssociatedAccounts()
+    {
+        // create group in Xmatters
+        string xmGroupName =  'Event_' + c.CaseNumber + '_' + Datetime.now().format('yyyyMMddHHmmssSSS'); // e.g.Event_00830369_12012017225545
+        boolean xmError = false;
+        XMGroupModel xmGroup = null;
+        try {
+            XMRestGroup xm = new XMRestGroup();
+            xmGroup = xm.CreateNewGroupWithResponseDetail(xmGroupName);
+            boolean xmAddShiftToGroup = xm.AddShiftToGroup(xmGroupName, '24x7');
+            xmError = (String.isBlank(xmGroup.id) || !xmAddShiftToGroup) ? true: false;
+        }catch(Exception ex){
+            xmError = true;
+        }
+
+        if (xmError) {
+            batchMessage = 'An error occurred with xMatters when attempting to create the account group. Please try again.';
+        }
+        else
+        {
+            // create Notification Group
+            try{
+                xmNotificationGroups__c xmNotificationGroup = new xmNotificationGroups__c(
+                        Case__c = c.Id,
+                        Name = xmGroup.targetName,
+                        xmGroupUID__c = xmGroup.id,
+                        Status__c = 'New'
+                );
+                insert xmNotificationGroup;
+
+                // queue the Accounts Batch job
+                Id xmNotificationAccountQueueableJobID = System.enqueueJob(new xmNotificationAccountQueueable(xmNotificationGroup));
+
+            }catch(Exception ex){
+                batchMessage = 'An error occurred with Salesforce when attempting to create the account group. Please try again.';
+            }
+        }
+    }
+
+    // Enable/Disable the Accounts Batch button and display status
+    public boolean getDisableBatchAccount() {
+        boolean disableBatchAccountButton = true;
+
+        // enable button in certain status
+        string displayedBatchStatus = getDisplayedBatchStatus();
+        if (!string.isBlank(displayedBatchStatus)){
+            batchStatus = 'Account Batch Status: ' + displayedBatchStatus;
+            enablePoller = ( displayedBatchStatus != 'Processing' && displayedBatchStatus != 'New') ? false : true;
+        }
+        disableBatchAccountButton = (displayedBatchStatus == 'Ready' || displayedBatchStatus == 'Failed' || string.isBlank(displayedBatchStatus)) ? false : true;
+
+        // disable button if exceeds maxium running batches
+        if (!disableBatchAccountButton) {
+            if (getNumOfRunningBatches() == 5) {
+                batchMessage = 'Warning: Max number of account group batches are currently running, please wait until the other account groups are created and try again.';
+                disableBatchAccountButton = true;
+            }
+        }
+
+        return disableBatchAccountButton;
+    }
+
+    private boolean isDefaultGroupChanged()
+    {
+        Set<ID> setAccountIds;
+        boolean isChanged = false;
+        setAccountIds = cec.AddedAccountIds(c.id);
+
+        if (setAccountIds.size() <= 0)
+        {
+            setAccountIds = cec.ExcludedAccountIds(c.id);
+        }
+        if (setAccountIds.size() > 0)
+        {
+            isChanged = true;
+        }
+
+        return isChanged;
+    }
+
+    private string getDisplayedBatchStatus()
+    {
+        xmNotificationGroups__c[] xmGroup = [SELECT Id, Name, Status__c, CreatedDate FROM xmNotificationGroups__c WHERE Case__c = :c.id ORDER BY CreatedDate DESC NULLS LAST LIMIT 1];
+
+        string displayedBatchStatus;
+        if (xmGroup.size() > 0) {
+            if (xmGroup[0].Status__c == 'New') {
+                displayedBatchStatus = 'New';
+            } else if (xmGroup[0].Status__c == 'Failed') {
+                displayedBatchStatus = 'Failed';
+            } else if (xmGroup[0].Status__c == 'Completed') {
+                displayedBatchStatus = 'Ready';
+            } else {
+                displayedBatchStatus = 'Processing';
+            }
+        }
+
+        return displayedBatchStatus;
+    }
+
+    private integer getNumOfRunningBatches()
+    {
+        List<AsyncApexJob> jobList = [
+                SELECT Id, Status
+                FROM AsyncApexJob
+                WHERE Status IN ('Preparing', 'Processing', 'Queued') AND JobType = 'BatchApex'
+                ORDER BY createddate DESC
+                LIMIT 5
+        ];
+
+        return jobList.size();
+    }
+
+    public PageReference refreshBatchStatus()
+    {
+        return null;
+    }
+
     public PageReference Beginning() 
     { //user clicked beginning
       counter = 0;

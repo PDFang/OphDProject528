@@ -12,6 +12,8 @@ public class XMRestEventServiceTests {
         // Create Application Configuration
         AppConfiguration__c appConfig = new AppConfiguration__c();
         appConfig.XM_Event_Notification_Inbound_GUID__c  = 'testGuid';
+        appConfig.XM_Event_Notifications_Internal__c =  'testEvent';
+        appConfig.XM_Maintenance_Notifications_Internal__c =  'testMaintenance';
         insert appconfig;
 
         // Create XMNotificationObject
@@ -20,6 +22,7 @@ public class XMRestEventServiceTests {
         xMattersNotification.Request_Type__c = 'Event Initial Confirmation';
         xMattersNotification.Status__c = 'New';
         xMattersNotification.Request_Date__c = system.today();
+        xMattersNotification.Notification_Group__c = null;
 
         insert xMattersNotification;
 
@@ -58,6 +61,8 @@ public class XMRestEventServiceTests {
         // Create Application Configuration
         AppConfiguration__c appConfig = new AppConfiguration__c();
         appConfig.XM_Add_Platform_Inbound_GUID__c =  'testGuid';
+        appConfig.XM_Event_Notifications_Internal__c =  'testEvent';
+        appConfig.XM_Maintenance_Notifications_Internal__c =  'testMaintenance';
         insert appconfig;
 
         // Create XMNotificationObject
@@ -67,6 +72,7 @@ public class XMRestEventServiceTests {
         xMattersNotification.Status__c = 'New';
         xMattersNotification.Request_Date__c = system.today();
         xMattersNotification.AddedPlatforms__c = 'DIA Circuit';
+        xMattersNotification.Notification_Group__c = null;
 
         insert xMattersNotification;
 
@@ -112,6 +118,7 @@ public class XMRestEventServiceTests {
         xMattersNotification.xMatters_Form__c = xmattersForm.Form_Name__c;
         xMattersNotification.Request_Date__c = system.today();
         xMattersNotification.AddedPlatforms__c = 'DIA Circuit';
+        xMattersNotification.Notification_Group__c = null;
 
         insert xMattersNotification;
 
@@ -147,6 +154,8 @@ public class XMRestEventServiceTests {
         // Create Application Configuration
         AppConfiguration__c appConfig = new AppConfiguration__c();
         appConfig.XM_Add_Platform_Inbound_GUID__c =  'testGuid';
+        appConfig.XM_Event_Notifications_Internal__c =  'testEvent';
+        appConfig.XM_Maintenance_Notifications_Internal__c =  'testMaintenance';
         insert appconfig;
 
         // Create XMNotificationObject
@@ -157,6 +166,7 @@ public class XMRestEventServiceTests {
         xMattersNotification.xMatters_Form__c = xmattersForm.Form_Name__c;
         xMattersNotification.Request_Date__c = system.today();
         xMattersNotification.AddedPlatforms__c = 'DIA Circuit';
+        xMattersNotification.Notification_Group__c = null;
 
         insert xMattersNotification;
 
@@ -198,6 +208,8 @@ public class XMRestEventServiceTests {
         // Create Application Configuration
         AppConfiguration__c appConfig = new AppConfiguration__c();
         appConfig.XM_Add_Platform_Inbound_GUID__c =  'testGuid';
+        appConfig.XM_Event_Notifications_Internal__c =  'testEvent';
+        appConfig.XM_Maintenance_Notifications_Internal__c =  'testMaintenance';
         insert appconfig;
 
         // Create XMNotificationObject
@@ -208,6 +220,7 @@ public class XMRestEventServiceTests {
         xMattersNotification.xMatters_Form__c = 'Invalid Form Name';
         xMattersNotification.Request_Date__c = system.today();
         xMattersNotification.AddedPlatforms__c = 'DIA Circuit';
+        xMattersNotification.Notification_Group__c = null;
 
         insert xMattersNotification;
 

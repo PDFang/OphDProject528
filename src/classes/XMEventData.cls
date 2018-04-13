@@ -19,6 +19,7 @@ public class XMEventData {
         public List<XMEventData.PartnerInfo> partnerDetails {get;set;}
         public string eventType {get;set;}
         public string xmNotificationId {get;set;}
+        public string xmGroupName {get;set;}
     }
 
     public class PartnerInfo {
