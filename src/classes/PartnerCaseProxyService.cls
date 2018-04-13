@@ -6,7 +6,7 @@ public class PartnerCaseProxyService {
         private String[] field_order_type_info = new String[]{};
     }
     public class ArrayOfPartnerCaseUpdate {
-        public PartnerCaseProxyService.PartnerCaseUpdate[] PartnerCaseUpdate;
+        public PartnerCaseProxyService1.PartnerCaseUpdate[] PartnerCaseUpdate;
         private String[] PartnerCaseUpdate_type_info = new String[]{'PartnerCaseUpdate','http://tempuri.org/',null,'0','-1','true'};
         private String[] apex_schema_type_info = new String[]{'http://tempuri.org/','true','false'};
         private String[] field_order_type_info = new String[]{'PartnerCaseUpdate'};
@@ -17,16 +17,18 @@ public class PartnerCaseProxyService {
         public String Comment;
         public Integer TroubleReportStatus;
         public Integer TroubleReportState;
+        public String PreferredPriority;
         private String[] UpdateDateTime_type_info = new String[]{'UpdateDateTime','http://tempuri.org/',null,'1','1','false'};
         private String[] CaseNumber_type_info = new String[]{'CaseNumber','http://tempuri.org/',null,'0','1','false'};
         private String[] Comment_type_info = new String[]{'Comment','http://tempuri.org/',null,'0','1','false'};
         private String[] TroubleReportStatus_type_info = new String[]{'TroubleReportStatus','http://tempuri.org/',null,'1','1','true'};
         private String[] TroubleReportState_type_info = new String[]{'TroubleReportState','http://tempuri.org/',null,'1','1','true'};
+        private String[] PreferredPriority_type_info = new String[]{'PreferredPriority','http://tempuri.org/',null,'0','1','false'};
         private String[] apex_schema_type_info = new String[]{'http://tempuri.org/','true','false'};
-        private String[] field_order_type_info = new String[]{'UpdateDateTime','CaseNumber','Comment','TroubleReportStatus','TroubleReportState'};
+        private String[] field_order_type_info = new String[]{'UpdateDateTime','CaseNumber','Comment','TroubleReportStatus','TroubleReportState','PreferredPriority'};
     }
     public class ArrayOfSalesforceCase {
-        public PartnerCaseProxyService.SalesforceCase[] SalesforceCase;
+        public PartnerCaseProxyService1.SalesforceCase[] SalesforceCase;
         private String[] SalesforceCase_type_info = new String[]{'SalesforceCase','http://tempuri.org/',null,'0','-1','true'};
         private String[] apex_schema_type_info = new String[]{'http://tempuri.org/','true','false'};
         private String[] field_order_type_info = new String[]{'SalesforceCase'};
@@ -36,7 +38,7 @@ public class PartnerCaseProxyService {
         private String[] field_order_type_info = new String[]{};
     }
     public class UpdatePartnerCase_element {
-        public PartnerCaseProxyService.ArrayOfPartnerCaseUpdate caseUpdates;
+        public PartnerCaseProxyService1.ArrayOfPartnerCaseUpdate caseUpdates;
         public String partnerId;
         public Integer retryCount;
         private String[] caseUpdates_type_info = new String[]{'caseUpdates','http://tempuri.org/',null,'0','1','false'};
@@ -46,7 +48,7 @@ public class PartnerCaseProxyService {
         private String[] field_order_type_info = new String[]{'caseUpdates','partnerId','retryCount'};
     }
     public class CreatePartnerCase_element {
-        public PartnerCaseProxyService.ArrayOfSalesforceCase newCases;
+        public PartnerCaseProxyService1.ArrayOfSalesforceCase newCases;
         public String partnerId;
         public Integer retryCount;
         private String[] newCases_type_info = new String[]{'newCases','http://tempuri.org/',null,'0','1','false'};
@@ -106,21 +108,21 @@ public class PartnerCaseProxyService {
         private String[] field_order_type_info = new String[]{'SalesforceId','Number_x','Comment','Description','ContactName','ContactPhone','OwnerName','OwnerPhone','CadebillAccountNumber','EventTime','Country','AccountName','Priority','Product','RequestType','Reason','ReasonDetails','EtmsTroubleType','TroubleTypeDescription','DialFrom','DialTo','NEID','ServiceId'};
     }
     public class PartnerCaseProxySoap {
-        public String endpoint_x = 'https://labproxy.ucn.net/PartnerProxyService/PartnerCaseProxy.asmx';
+        public String endpoint_x = 'http://localhost:32164/PartnerCaseProxy.asmx';
         public Map<String,String> inputHttpHeaders_x;
         public Map<String,String> outputHttpHeaders_x;
         public String clientCertName_x;
         public String clientCert_x;
         public String clientCertPasswd_x;
         public Integer timeout_x;
-        private String[] ns_map_type_info = new String[]{'http://tempuri.org/', 'PartnerCaseProxyService'};
-        public void UpdatePartnerCase(PartnerCaseProxyService.ArrayOfPartnerCaseUpdate caseUpdates,String partnerId,Integer retryCount) {
-            PartnerCaseProxyService.UpdatePartnerCase_element request_x = new PartnerCaseProxyService.UpdatePartnerCase_element();
+        private String[] ns_map_type_info = new String[]{'http://tempuri.org/', 'PartnerCaseProxyService1'};
+        public void UpdatePartnerCase(PartnerCaseProxyService1.ArrayOfPartnerCaseUpdate caseUpdates,String partnerId,Integer retryCount) {
+            PartnerCaseProxyService1.UpdatePartnerCase_element request_x = new PartnerCaseProxyService1.UpdatePartnerCase_element();
             request_x.caseUpdates = caseUpdates;
             request_x.partnerId = partnerId;
             request_x.retryCount = retryCount;
-            PartnerCaseProxyService.UpdatePartnerCaseResponse_element response_x;
-            Map<String, PartnerCaseProxyService.UpdatePartnerCaseResponse_element> response_map_x = new Map<String, PartnerCaseProxyService.UpdatePartnerCaseResponse_element>();
+            PartnerCaseProxyService1.UpdatePartnerCaseResponse_element response_x;
+            Map<String, PartnerCaseProxyService1.UpdatePartnerCaseResponse_element> response_map_x = new Map<String, PartnerCaseProxyService1.UpdatePartnerCaseResponse_element>();
             response_map_x.put('response_x', response_x);
             WebServiceCallout.invoke(
                     this,
@@ -132,17 +134,17 @@ public class PartnerCaseProxyService {
                             'UpdatePartnerCase',
                             'http://tempuri.org/',
                             'UpdatePartnerCaseResponse',
-                            'PartnerCaseProxyService.UpdatePartnerCaseResponse_element'}
+                            'PartnerCaseProxyService1.UpdatePartnerCaseResponse_element'}
             );
             response_x = response_map_x.get('response_x');
         }
-        public void CreatePartnerCase(PartnerCaseProxyService.ArrayOfSalesforceCase newCases,String partnerId,Integer retryCount) {
-            PartnerCaseProxyService.CreatePartnerCase_element request_x = new PartnerCaseProxyService.CreatePartnerCase_element();
+        public void CreatePartnerCase(PartnerCaseProxyService1.ArrayOfSalesforceCase newCases,String partnerId,Integer retryCount) {
+            PartnerCaseProxyService1.CreatePartnerCase_element request_x = new PartnerCaseProxyService1.CreatePartnerCase_element();
             request_x.newCases = newCases;
             request_x.partnerId = partnerId;
             request_x.retryCount = retryCount;
-            PartnerCaseProxyService.CreatePartnerCaseResponse_element response_x;
-            Map<String, PartnerCaseProxyService.CreatePartnerCaseResponse_element> response_map_x = new Map<String, PartnerCaseProxyService.CreatePartnerCaseResponse_element>();
+            PartnerCaseProxyService1.CreatePartnerCaseResponse_element response_x;
+            Map<String, PartnerCaseProxyService1.CreatePartnerCaseResponse_element> response_map_x = new Map<String, PartnerCaseProxyService1.CreatePartnerCaseResponse_element>();
             response_map_x.put('response_x', response_x);
             WebServiceCallout.invoke(
                     this,
@@ -154,7 +156,7 @@ public class PartnerCaseProxyService {
                             'CreatePartnerCase',
                             'http://tempuri.org/',
                             'CreatePartnerCaseResponse',
-                            'PartnerCaseProxyService.CreatePartnerCaseResponse_element'}
+                            'PartnerCaseProxyService1.CreatePartnerCaseResponse_element'}
             );
             response_x = response_map_x.get('response_x');
         }
