@@ -31,21 +31,33 @@
 
         createTestData();
         createOpportunity();
+        createParentProjectOnly();
+        // change the phase status to 'Closed'
+
+        testPhase.Phase_Status__c = 'Closed';
+        testPhase.ActualProjectGoLiveDate__c = system.today();
+        test.startTest();
+        update testPhase;
+        system.runAs(impManagementUser){
+            testOpp.HandedOffToCCCS__c = true;
+            Database.SaveResult result = Database.update(testOpp, false);
+            system.assertEquals(true, result.isSuccess(), result.getErrors());
+        }
+        test.stopTest();
+
+    } // end of AvailableForCCHandOffTest()
+
+    // Test the opportunity "Handed off to CC/CS" checkbox cannot be checked unless all related SaaS project phases are complete
+    static testmethod void AvailableForCCHandOffFailedTest(){
+
+        createTestData();
+        createOpportunity();
         createProjects();
         test.startTest();
         system.runAs(impManagementUser){
             testOpp.HandedOffToCCCS__c = true;
             Database.SaveResult result = Database.update(testOpp, false);
             system.assertEquals(false, result.isSuccess(), result.getErrors());
-        }
-        // change the phase status to 'Closed'
-        testPhase.Phase_Status__c = 'Closed';
-        testPhase.ActualProjectGoLiveDate__c = system.today();
-        update testPhase;
-        system.runAs(impManagementUser){
-            testOpp.HandedOffToCCCS__c = true;
-            Database.SaveResult result = Database.update(testOpp, false);
-            system.assertEquals(true, result.isSuccess(), result.getErrors());
         }
         test.stopTest();
 
@@ -302,5 +314,18 @@
         testPhase.Phase_Status__c = 'Open';
         testPhase.ParentProject__c = parentProject.Id;
         insert testPhase;
+    }
+
+    static void createParentProjectOnly(){
+
+        Project__c parentProject = new Project__c();
+        parentProject.RecordTypeId = recordTypeMap.get(PROJECT_TYPE_PARENT_SAAS);
+        parentProject.Opportunity__c = testOpp.Id;
+        parentProject.Account__c = accountList[0].Id;
+        parentProject.Projected_Deadline__c = system.today().addDays(7);
+        insert parentProject;
+
+        testPhase = [SELECT RecordTypeId, Phase_Status__c, ParentProject__c FROM Project__c WHERE ParentProject__c = :parentProject.Id LIMIT 1];
+
     }
 }
