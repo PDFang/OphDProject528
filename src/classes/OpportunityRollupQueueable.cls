@@ -107,7 +107,7 @@ public class OpportunityRollupQueueable implements Queueable{
 
             if(opp == null){
                 opp = new Opportunity(
-                    Id = opportunityId
+                        Id = opportunityId
                 );
             }
 
@@ -115,17 +115,21 @@ public class OpportunityRollupQueueable implements Queueable{
             opp.PM_Estimated_Go_Live__c = ar.get('minEstimatedInitialGoLiveDate') != null ? (Date) ar.get('minEstimatedInitialGoLiveDate') : null;
             opp.Times_Go_Live_Date_Changed__c = ar.get('noOfTimesPhaseGoLiveDateChanged') != null ? (Decimal) ar.get('noOfTimesPhaseGoLiveDateChanged') : null;
             //opp.PM_Go_Live_Date__c = ar.get('minActualGoLiveDate') != null ? (Date) ar.get('minActualGoLiveDate') : null;
-            opp.PM_Go_Live_Date__c = ar.get('minInitialGoLiveDate') != null ? (Date) ar.get('minInitialGoLiveDate') : null;
 
             system.debug('**** rollupGoLiveDates(): opp - ' + opp);
 
             Opportunity oppOld = opportunityCache.get(opp.Id);
             system.debug('**** rollupGoLiveDates(): opp - ' + oppOld);
 
+
+            if(oppOld.PM_Go_Live_Date__c == null) {
+                opp.PM_Go_Live_Date__c = ar.get('minInitialGoLiveDate') != null ? (Date) ar.get('minInitialGoLiveDate') : null;
+            }
+
             if(opp.Original_Forecasted_Initial_Go_Live_Date__c != oppOld.Original_Forecasted_Initial_Go_Live_Date__c
                     || opp.PM_Estimated_Go_Live__c != oppOld.PM_Estimated_Go_Live__c
                     || opp.Times_Go_Live_Date_Changed__c != oppOld.Times_Go_Live_Date_Changed__c
-                    || opp.PM_Go_Live_Date__c != oppOld.PM_Go_Live_Date__c)
+                    || (oppOld.PM_Go_Live_Date__c == null && opp.PM_Go_Live_Date__c != null))
             {
                 system.debug('**** rollupGoLiveDates(): one or more fields value have changed');
                 opportunities.put(opp.Id, opp);
