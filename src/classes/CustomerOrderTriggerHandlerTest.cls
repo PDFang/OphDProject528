@@ -13,7 +13,8 @@ private class CustomerOrderTriggerHandlerTest {
     static Contact newContact = null;
     static Contact mainContact = null;
     static List<OrderLineGeneralItems__c> OrderLineItemList = null;
-    static List<OrderLineGeneralItems__c> OrderLineItemListComplete = null;       
+    static List<OrderLineGeneralItems__c> OrderLineItemListComplete = null;
+    static OrderLineGeneralItems__c didLineItem = null;
     
     static testMethod void AddCustomerOrder_NoCadebillAccount(){
         //Expecting exception to be thrown
@@ -128,6 +129,7 @@ private class CustomerOrderTriggerHandlerTest {
     static testMethod void OrderStatusNew_CreateLocalDIDsCase(){
         //No Exception should be thrown
         SetupTestData();
+        CreateSpecificDIDItems();
         CustmerOrderTwoProducts.CadebillAccountNumber__c = newAccount.CadebillAccountNo__c;
 
         CustmerOrderTwoProducts.OrderStatus__c ='New';// Update Order Status
@@ -141,9 +143,11 @@ private class CustomerOrderTriggerHandlerTest {
         }
         Test.stopTest();
         List<Case> CaseList = [SELECT Id FROM Case WHERE AccountId = :CustmerOrderTwoProducts.Customer__C];
+        List<CaseComment> commentList = [SELECT CommentBody FROM CaseComment WHERE Parent.CustomerOrder__c = :CustmerOrderTwoProducts.Id];
         System.debug('**** Case List: ' + CaseList);
+        system.debug('***** Comment Body: ' + commentList[0].CommentBody);
         system.assert(CaseList.size()>0);
-
+        system.assert(commentList.size()>0);
     }
 
     static void SetupTestData(){
@@ -231,14 +235,13 @@ private class CustomerOrderTriggerHandlerTest {
        OL3.StartDate__c = system.now();
        OrderLineItemListComplete.add(OL3);
 
-        OrderLineGeneralItems__c DID1 = new  OrderLineGeneralItems__c();
-        DID1.CustomerOrder__c = CustmerOrderTwoProducts.Id;
-        DID1.InstrumentType__c= 90 ;
-        DID1.InstrumentTypeName__c='TEST';
-        DID1.ItemStatus__c='New';
-        DID1.InstrumentType__c = 12554;
-        DID1.StartDate__c = system.now();
-        OrderLineItemList.add(DID1);
+        didLineItem = new  OrderLineGeneralItems__c();
+        didLineItem.CustomerOrder__c = CustmerOrderTwoProducts.Id;
+        didLineItem.InstrumentTypeName__c='TEST';
+        didLineItem.ItemStatus__c='New';
+        didLineItem.InstrumentType__c = 12554;
+        didLineItem.StartDate__c = system.now();
+        OrderLineItemList.add(didLineItem);
 
         OrderLineGeneralItems__c OL4 = new  OrderLineGeneralItems__c();
         OL4.CustomerOrder__c = CustmerOrderTwoProducts.Id;
@@ -286,5 +289,42 @@ private class CustomerOrderTriggerHandlerTest {
         mainContact.Phone='2018859338';        
         mainContact.AccountId = newAccount.Id;   
         insert mainContact;
+    }
+
+    static void CreateSpecificDIDItems(){
+        List<OrderLineSpecificItem__c> specificItems = new List<OrderLineSpecificItem__c>();
+
+        OrderLineSpecificItem__c npa = new OrderLineSpecificItem__c();
+        npa.SpecificItem__c = 'NPA';
+        npa.ItemValue__c = '801';
+        npa.OrderLineGeneralItem__c = didLineItem.Id;
+        specificItems.add(npa);
+
+        OrderLineSpecificItem__c nxx = new OrderLineSpecificItem__c();
+        nxx.SpecificItem__c = 'NXX';
+        nxx.ItemValue__c = '504';
+        nxx.OrderLineGeneralItem__c = didLineItem.Id;
+        specificItems.add(nxx);
+
+        OrderLineSpecificItem__c rateCenter = new OrderLineSpecificItem__c();
+        rateCenter.SpecificItem__c = 'Rate Center';
+        rateCenter.ItemValue__c = '801';
+        rateCenter.OrderLineGeneralItem__c = didLineItem.Id;
+        specificItems.add(rateCenter);
+
+        OrderLineSpecificItem__c state = new OrderLineSpecificItem__c();
+        state.SpecificItem__c = 'State';
+        state.ItemValue__c = 'UT';
+        state.OrderLineGeneralItem__c = didLineItem.Id;
+        specificItems.add(state);
+
+        OrderLineSpecificItem__c quantity = new OrderLineSpecificItem__c();
+        quantity.SpecificItem__c = 'Quantity';
+        quantity.ItemValue__c = '2';
+        quantity.OrderLineGeneralItem__c = didLineItem.Id;
+        specificItems.add(quantity);
+
+        insert specificItems;
+
     }
 }

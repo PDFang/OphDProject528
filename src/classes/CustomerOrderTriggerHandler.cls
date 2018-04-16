@@ -28,12 +28,17 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
         Map<Id, CustomerOrder__c> oldMap = (Map<Id, CustomerOrder__c>)(trigger.oldMap );
         Set<CustomerOrder__c> DIDOrders = new Set<CustomerOrder__c>();
         Set<Id> CustomerOrderIds = new Set <Id>();
+        Map<Id, List<OrderLineGeneralItems__c>> orderGeneralLineItems = new Map<Id, List<OrderLineGeneralItems__c>>();
 
-        for(OrderLineGeneralItems__c OrderLineItem : [SELECT CustomerOrder__c,Name FROM OrderLineGeneralItems__c
+        for(OrderLineGeneralItems__c OrderLineItem : [SELECT CustomerOrder__c,Name, (SELECT SpecificItem__c, ItemValue__c FROM Order_Line_Specific_Items__r WHERE SpecificItem__c IN('NPA','NXX','Rate Center','Quantity', 'State')) FROM OrderLineGeneralItems__c
                                                       WHERE OrderLineGeneralItems__c.CustomerOrder__c IN :newList AND OrderLineGeneralItems__c.InstrumentType__c =: 12554]){
             // Get all Customer Ids
             CustomerOrderIds.add(OrderLineItem.CustomerOrder__c);
-
+            if(orderGeneralLineItems.containsKey(OrderLineItem.CustomerOrder__c)) {
+                orderGeneralLineItems.get(OrderLineItem.CustomerOrder__c).add(OrderLineItem);
+            } else {
+                orderGeneralLineItems.put(OrderLineItem.CustomerOrder__c, new List<OrderLineGeneralItems__c>{OrderLineItem});
+            }
         }
 
         if(CustomerOrderIds.size() > 0){
@@ -47,6 +52,8 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
         Map<String,Schema.RecordTypeInfo> rtMapByName = d.getRecordTypeInfosByName();
         Id workOrderRecordType = rtMapByName.get('Work Orders').getRecordTypeId();
         List<Case> CaseList = new List<Case>();
+        List<CaseComment> CaseCommentList = new List<CaseComment>();
+        Map<Id, String> OrderComments = new Map<Id, String>();
         Map<Id, List<OrderLineGeneralItems__c>> OrderLineItemMap = new Map<Id, List<OrderLineGeneralItems__c>>();
         if(DIDOrders.size() > 0)
         {
@@ -63,8 +70,8 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
                 nCase.Origin = 'CSO';
                 string Description = 'Please review Order ' + CustOrder.Name + ' for local DID Number Requests.' + '\n' + link;
                 nCase.Description = Description;
-                nCase.Request_Type__c= 'Add New';
-                nCase.Product_or_Service__c = 'CSO';
+                nCase.Request_Type__c= 'Add Product/Service';
+                nCase.Product_or_Service__c = 'Local';
                 nCase.SubProductorService__c = 'Domestic DID';
                 nCase.Priority = 'P2';
                 nCase.RecordTypeId = workOrderRecordType;
@@ -75,9 +82,50 @@ public class CustomerOrderTriggerHandler extends TriggerHandler {
                 nCase.setOptions(dmo);
                 CaseList.add(nCase);
 
+
+                string commentBody = 'NPA/NXX, Rate Center, State, Quantity';
+
+                for(OrderLineGeneralItems__c generalItem:orderGeneralLineItems.get(CustOrder.Id)){
+                    string npa;
+                    string nxx;
+                    string rateCenter;
+                    string quantity;
+                    string state;
+
+                    for(OrderLineSpecificItem__c specificItem:generalItem.Order_Line_Specific_Items__r){
+                        if(specificItem.SpecificItem__c == 'NPA'){
+                            npa = specificItem.ItemValue__c;
+                        } else if(specificItem.SpecificItem__c == 'NXX'){
+                            nxx = specificItem.ItemValue__c;
+                        } else if(specificItem.SpecificItem__c == 'Rate Center'){
+                            rateCenter = specificItem.ItemValue__c;
+                        } else if(specificItem.SpecificItem__c == 'quantity'){
+                            quantity = specificItem.ItemValue__c;
+                        } else if(specificItem.SpecificItem__c == 'State'){
+                            state = specificItem.ItemValue__c;
+                        }
+                    }
+
+                    commentBody = commentBody + string.format('\n{0}/{1}, {2}, {3}, {4}', new List<string>{npa, nxx, rateCenter, state, quantity});
+                }
+
+                OrderComments.put(CustOrder.Id, commentBody);
+
             }
+
+            insert CaseList;
+
+            for(Case c:CaseList){
+                CaseComment comment = new CaseComment();
+                comment.IsPublished = false;
+                comment.ParentId = c.Id;
+                comment.CommentBody = OrderComments.get(c.CustomerOrder__c);
+
+                CaseCommentList.add(comment);
+            }
+
+            insert CaseCommentList;
         }
-        insert CaseList;
     }
 
 
