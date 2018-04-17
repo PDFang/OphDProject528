@@ -424,6 +424,52 @@ private class CaseTriggerHandlerTest {
 
     } // end of testPartnerCaseProxyServiceUpdate()
 
+    static testMethod void testPartnerCaseProxyServiceStatusUpdate() {
+
+        Account verizonAccount = [Select Id from Account where Billing_Group__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON LIMIT 1];
+        Contact verizonContact = [Select Id from Contact where AccountId = :verizonAccount.Id LIMIT 1];
+        ETMS_Codes__c[] testEtmsCode = ETMS_Codes__c.getAll().values();
+
+        // create an incident
+        Map<String,Schema.RecordTypeInfo> testIncidentTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
+        Case testIncident = new Case(
+                RecordTypeId = testIncidentTypeMap.get('Incident').getRecordTypeId(),
+                Subject = 'Verizon Test',
+                Status = 'Assigned',
+                AccountId = verizonAccount.Id,
+                Severity__c = 'S2',
+                ContactId = verizonContact.Id,
+                Product_or_Service__c = 'Service Disruption',
+                Request_Type__c = testEtmsCode[0].Request_Type__c,
+                Database__c = testEtmsCode[0].Reason__c,
+                Releases__c = testEtmsCode[0].Reason_Detail__c,
+                X3rdPartyVendorTicket__c = '20170821',
+                Origin = 'Chat'
+        );
+        Database.DMLOptions dmo = new Database.DMLOptions();
+        dmo.AssignmentRuleHeader.useDefaultRule = true;
+        testIncident.setOptions(dmo);
+        insert testIncident;
+
+        test.startTest();
+        Test.setMock(WebServiceMock.class, new PartnerCaseProxyServiceMockTest());
+
+        CaseTriggerHandler.noOfProxyServiceCallouts = 0;
+        testIncident.Severity__c = 'S3';
+        update testIncident;
+
+
+
+        Case incident = [SELECT Status, Priority from Case where Id = :testIncident.Id LIMIT 1];
+        system.assertEquals('P3', incident.Priority, incident);
+
+        test.stopTest();
+
+        // make sure the trigger makes a callout to proxy service
+        system.assertEquals(true, PartnerCaseProxyServiceHelper.isCasePushed);
+
+    } // end of testPartnerCaseProxyServiceUpdate()
+
     static testMethod void testPartnerCaseProxyServiceRetry() {
 
         Account verizonAccount = [Select Id from Account where Billing_Group__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON LIMIT 1];

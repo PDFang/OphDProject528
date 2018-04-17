@@ -99,7 +99,7 @@ public class PartnerCaseProxyServiceHelper {
             };
             for (Case newCase : [
                     Select Id, CaseNumber, X3rdPartyVendorTicket__c, LastModifiedDate,
-                            ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c
+                            ETMS_Trouble_Report_State__c, ETMS_Trouble_Report_Status__c, Priority
                     from Case
                     where Id IN :caseIds
                     and Account.Billing_Group__c = :BILLING_GROUP_VERIZON
@@ -288,6 +288,7 @@ public class PartnerCaseProxyServiceHelper {
         partnerCaseUpdate.TroubleReportStatus = (Integer)sfCase.ETMS_Trouble_Report_Status__c;
         partnerCaseUpdate.UpdateDateTime = sfCase.LastModifiedDate;
         partnerCaseUpdate.CaseNumber = sfCase.CaseNumber;
+        partnerCaseUpdate.PreferredPriority = sfCase.Priority;
 
         //These are hardcoded as of 2/13/18 to look for Closed status updates to Verizon
         if(sfCase.ETMS_Trouble_Report_State__c == 4 && sfCase.ETMS_Trouble_Report_Status__c == 27) {

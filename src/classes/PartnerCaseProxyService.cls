@@ -108,7 +108,7 @@ public class PartnerCaseProxyService {
         private String[] field_order_type_info = new String[]{'SalesforceId','Number_x','Comment','Description','ContactName','ContactPhone','OwnerName','OwnerPhone','CadebillAccountNumber','EventTime','Country','AccountName','Priority','Product','RequestType','Reason','ReasonDetails','EtmsTroubleType','TroubleTypeDescription','DialFrom','DialTo','NEID','ServiceId'};
     }
     public class PartnerCaseProxySoap {
-        public String endpoint_x = 'https://labproxy.ucn.net/PartnerProxyService/PartnerCaseProxy.asmx';
+        public String endpoint_x = 'http://localhost:32164/PartnerCaseProxy.asmx';
         public Map<String,String> inputHttpHeaders_x;
         public Map<String,String> outputHttpHeaders_x;
         public String clientCertName_x;
@@ -125,16 +125,16 @@ public class PartnerCaseProxyService {
             Map<String, PartnerCaseProxyService.UpdatePartnerCaseResponse_element> response_map_x = new Map<String, PartnerCaseProxyService.UpdatePartnerCaseResponse_element>();
             response_map_x.put('response_x', response_x);
             WebServiceCallout.invoke(
-                    this,
-                    request_x,
-                    response_map_x,
-                    new String[]{endpoint_x,
-                            'http://tempuri.org/UpdatePartnerCase',
-                            'http://tempuri.org/',
-                            'UpdatePartnerCase',
-                            'http://tempuri.org/',
-                            'UpdatePartnerCaseResponse',
-                            'PartnerCaseProxyService.UpdatePartnerCaseResponse_element'}
+              this,
+              request_x,
+              response_map_x,
+              new String[]{endpoint_x,
+              'http://tempuri.org/UpdatePartnerCase',
+              'http://tempuri.org/',
+              'UpdatePartnerCase',
+              'http://tempuri.org/',
+              'UpdatePartnerCaseResponse',
+              'PartnerCaseProxyService.UpdatePartnerCaseResponse_element'}
             );
             response_x = response_map_x.get('response_x');
         }
@@ -147,16 +147,16 @@ public class PartnerCaseProxyService {
             Map<String, PartnerCaseProxyService.CreatePartnerCaseResponse_element> response_map_x = new Map<String, PartnerCaseProxyService.CreatePartnerCaseResponse_element>();
             response_map_x.put('response_x', response_x);
             WebServiceCallout.invoke(
-                    this,
-                    request_x,
-                    response_map_x,
-                    new String[]{endpoint_x,
-                            'http://tempuri.org/CreatePartnerCase',
-                            'http://tempuri.org/',
-                            'CreatePartnerCase',
-                            'http://tempuri.org/',
-                            'CreatePartnerCaseResponse',
-                            'PartnerCaseProxyService.CreatePartnerCaseResponse_element'}
+              this,
+              request_x,
+              response_map_x,
+              new String[]{endpoint_x,
+              'http://tempuri.org/CreatePartnerCase',
+              'http://tempuri.org/',
+              'CreatePartnerCase',
+              'http://tempuri.org/',
+              'CreatePartnerCaseResponse',
+              'PartnerCaseProxyService.CreatePartnerCaseResponse_element'}
             );
             response_x = response_map_x.get('response_x');
         }

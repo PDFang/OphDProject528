@@ -378,6 +378,10 @@ public class CaseTriggerHandler extends TriggerHandler
                         + oldCase.ETMS_Trouble_Report_State__c + ' to ' + newCase.ETMS_Trouble_Report_State__c);
 
             }
+            else if(newCase.Priority != oldCase.Priority){
+                system.debug('CallPartnerCaseProxyService(): Case priority changed from '
+                        + oldCase.Priority + ' to ' + newCase.CaseNumber);
+            }
             // Product or Service is changed to 'Toll Free'
             else if(newCase.Product_or_Service__c == PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE && newCase.Product_or_Service__c != oldCase.Product_or_Service__c)
             {
@@ -413,7 +417,8 @@ public class CaseTriggerHandler extends TriggerHandler
                 if(oldMap == null || (oldMap.containsKey(newCase.Id) && newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null) ){
                     createIdSet.add(newCase.Id);
                 } else if(oldMap != null && oldMap.containsKey(newCase.Id) && newCase.X3rdPartyVendorTicket__c != null
-                    && (newCase.ETMS_Trouble_Report_State__c != oldCase.ETMS_Trouble_Report_State__c || newCase.ETMS_Trouble_Report_Status__c != oldCase.ETMS_Trouble_Report_Status__c))
+                    && (newCase.ETMS_Trouble_Report_State__c != oldCase.ETMS_Trouble_Report_State__c || newCase.ETMS_Trouble_Report_Status__c != oldCase.ETMS_Trouble_Report_Status__c
+                        || newCase.Priority != oldCase.Priority))
                 {
                     updateIdSet.add(newCase.Id);
                 }
