@@ -49,7 +49,8 @@ public class ProjectRollupQueueable implements Queueable{
                     Select Id, RecordTypeId, Original_Forecasted_Initial_Go_Live_Date__c, Estimated_Project_Initial_Go_Live_Date__c,
                             Estimated_Project_End__c, Times_All_Phases_Go_Live_Date_Changed__c, Opportunity__c,On_Hold_NRR__c,On_Hold_MRR__c,
                             Actual_Initial_Phase_Go_Live__c, Actual_Latest_Go_Live_Date__c, Number_of_Open_Phases__c,
-                            Contracted_NRR__c, Actual_NRR__c, Contracted_MRR__c, Actual_MRR__c, Parent_Logged_Hours__c, Parent_Allocated_Hours__c
+                            Contracted_NRR__c, Actual_NRR__c, Contracted_MRR__c, Actual_MRR__c, Parent_Logged_Hours__c, Parent_Allocated_Hours__c,
+                            LoggedHours__c
                     from Project__c
                     where Id IN :parentProjectIds and RecordTypeId = :psProjectParentRecordTypeIds
             ]);
@@ -189,7 +190,7 @@ public class ProjectRollupQueueable implements Queueable{
     // roll-up PS Parent SaaS and Premise project MRR's and NRR's to related Parent project
     private void rollupFinancials(Map<Id, Project__c> projectCache, Map<Id, Project__c> parentProjects){
 
-
+        Map<Id, Project__c> projectHours = new Map<Id, Project__c>([SELECT Id, LoggedHours__c FROM Project__c WHERE Id IN :projectCache.keySet()]);
         for (AggregateResult ar : [
                 Select sum(Actual_NRR__c) totalDeliveredNRR, sum(Contracted_NRR__c) totalAllocatedNRR,sum(Actual_MRR__c) totalDeliveredMRR, sum(Contracted_MRR__c) totalAllocatedMRR,sum(On_Hold_NRR__c) totalOnHoldNRR,sum(On_Hold_MRR__c) totalOnHoldMRR,
                         sum(Phase_Allocated_Hours__c) allocatedHours, sum(Phase_Logged_Hours__c) loggedHours, ParentProject__c
@@ -210,9 +211,13 @@ public class ProjectRollupQueueable implements Queueable{
                 );
             }
 
+            decimal phaseHours =  ar.get('loggedHours') != null ? (Decimal)ar.get('loggedHours') : 0;
+            decimal loggedHours = projectHours.get(projectId).LoggedHours__c == null ? 0 : projectHours.get(projectId).LoggedHours__c;
+
             parentProject.Actual_NRR__c = ar.get('totalDeliveredNRR') != null ? (Decimal)ar.get('totalDeliveredNRR') : 0;
             parentProject.Contracted_NRR__c = ar.get('totalAllocatedNRR') != null ? (Decimal)ar.get('totalAllocatedNRR') : 0;
-            parentProject.Parent_Logged_Hours__c = ar.get('loggedHours') != null ? (Decimal)ar.get('loggedHours') : 0;
+            parentProject.PhaseTotalHours__c = phaseHours;
+            parentProject.Parent_Logged_Hours__c = phaseHours + loggedHours;
             parentProject.Parent_Allocated_Hours__c = ar.get('allocatedHours') != null ? (Decimal)ar.get('allocatedHours') : 0;
             parentProject.Actual_MRR__c = ar.get('totalDeliveredMRR') != null ? (Decimal)ar.get('totalDeliveredMRR') : 0;
             parentProject.Contracted_MRR__c = ar.get('totalAllocatedMRR') != null ? (Decimal)ar.get('totalAllocatedMRR') : 0;

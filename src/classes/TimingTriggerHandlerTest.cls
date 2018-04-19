@@ -54,6 +54,7 @@ public class TimingTriggerHandlerTest {
 		Test.stopTest();
 
 		WorkIt2__Timing__c timingTest = [select WorkIt2__Time_In_Hours__c from WorkIt2__Timing__c where Id = : timings[0].Id];
+		WorkIt2__Timing__c timingTest2 = [select WorkIt2__Time_In_Hours__c from WorkIt2__Timing__c where Id = : timings[2].Id];
 
 		Asset testasset= [select Logged_Hours__c from Asset where id = : assetList[0].Id];
 		System.assertEquals(timingTest.WorkIt2__Time_In_Hours__c, testasset.Logged_Hours__c, 'Hours Match');
@@ -62,10 +63,10 @@ public class TimingTriggerHandlerTest {
 		System.assertEquals(timingTest.WorkIt2__Time_In_Hours__c, phaseProject.Phase_Logged_Hours__c, 'Phase Project Hours Match');
 
 		Project__c parentProject= [select Parent_Logged_Hours__c from Project__c where id = : projectList[0].Id];
-		System.assertEquals(timingTest.WorkIt2__Time_In_Hours__c, parentProject.Parent_Logged_Hours__c, 'Parent Project Hours Match');
+		System.assertEquals(timingTest.WorkIt2__Time_In_Hours__c + timingTest2.WorkIt2__Time_In_Hours__c, parentProject.Parent_Logged_Hours__c, 'Parent Project Hours Match');
 
 		Opportunity testOppy= [select Logged_Hours__c from Opportunity where id = : o.Id];
-		System.assertEquals(timingTest.WorkIt2__Time_In_Hours__c, testOppy.Logged_Hours__c, 'Opportunity Hours Match');
+		System.assertEquals(timingTest.WorkIt2__Time_In_Hours__c + timingTest2.WorkIt2__Time_In_Hours__c, testOppy.Logged_Hours__c, 'Opportunity Hours Match');
 
 	}
 
@@ -93,9 +94,6 @@ public class TimingTriggerHandlerTest {
 		SubscriptionReplica__c testSubscription= [select Logged_Hours__c from SubscriptionReplica__c where id = : subscriptionReplica.Id];
 		System.assertEquals(timingTest.WorkIt2__Time_In_Hours__c, testSubscription.Logged_Hours__c, 'Hours Match');
 
-		Project__c phaseProject= [select Phase_Logged_Hours__c from Project__c where id = : projectList[1].Id];
-		System.assertEquals(ar[0].get('loggedHours'), phaseProject.Phase_Logged_Hours__c, 'Phase Project Hours Match');
-
 		Project__c parentProject= [select Parent_Logged_Hours__c from Project__c where id = : projectList[0].Id];
 		System.assertEquals(ar[0].get('loggedHours'), parentProject.Parent_Logged_Hours__c, 'Parent Project Hours Match');
 
@@ -104,6 +102,25 @@ public class TimingTriggerHandlerTest {
 
 
 
+
+	}
+
+	public static testMethod void testProjectTime(){
+
+		ProjectRollupQueueable.doChainJob = false;
+		createTestData();
+
+		Test.startTest();
+		timeEntryList[2].WorkIt2__Force_End__c = System.now();
+		update timeEntryList[2];
+
+
+		Test.stopTest();
+
+		WorkIt2__Timing__c timingTest = [select WorkIt2__Time_In_Hours__c from WorkIt2__Timing__c where Id = : timings[2].Id];
+
+		Project__c parentProject= [select LoggedHours__c from Project__c where id = : projectList[0].Id];
+		System.assertEquals(timingTest.WorkIt2__Time_In_Hours__c, parentProject.LoggedHours__c, 'Parent Project Hours Match');
 
 	}
 
@@ -267,6 +284,12 @@ public class TimingTriggerHandlerTest {
 
 		timings.add(subscription_timing);
 
+		WorkIt2__Timing__c projectTiming = new WorkIt2__Timing__c(
+				Project__c = projectList[0].Id
+		);
+
+		timings.add(projectTiming);
+
 		insert timings;
 
 		timeEntryList = new list<WorkIt2__Time_Entry__c>();
@@ -285,6 +308,16 @@ public class TimingTriggerHandlerTest {
 		);
 
 		timeEntryList.add(time_entry2);
+
+
+
+		WorkIt2__Time_Entry__c time_entry3 = new WorkIt2__Time_Entry__c(
+				WorkIt2__Session_Type__c = session_type.Id,
+				WorkIt2__Start__c = System.now().addHours(-1),
+				WorkIt2__Timing__c = timings[2].Id
+		);
+
+		timeEntryList.add(time_entry3);
 
 		insert timeEntryList;
 
