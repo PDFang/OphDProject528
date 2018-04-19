@@ -302,7 +302,8 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         || newProject.Subscription_Allocated_Hours__c != oldProject.Subscription_Allocated_Hours__c
                         || newProject.Actual_MRR__c != oldProject.Actual_MRR__c
                         || newProject.Contracted_MRR__c != oldProject.Contracted_MRR__c
-                        || newProject.On_Hold_NRR__c != oldProject.On_Hold_NRR__c))
+                        || newProject.On_Hold_NRR__c != oldProject.On_Hold_NRR__c
+                        || newProject.LoggedHours__c != oldProject.LoggedHours__c))
                 {
                     system.debug('**** setParentProjectGoLiveDates(): updated Phase Project ');
                     parentProjectIdSet.add(newProject.ParentProject__c);
