@@ -25,6 +25,33 @@ private class CaseCommentTriggerHandlerTest {
 
     } // end of testCallPartnerCaseProxyService()
 
+    @IsTest static void testSendBulkComments() {
+
+        Case testIncident = [Select Id, ParentId from Case where RecordType.Name = 'Incident' LIMIT 1];
+        // create an event
+        Case testEvent = [Select Id from Case where RecordType.Name = 'Event' LIMIT 1];
+
+        testIncident.ParentId = testEvent.Id;
+        update testIncident;
+
+        // Performing DML Before Mock Callouts to avoid uncommitted work pending error
+        CaseComment testEventComment = new CaseComment(
+                ParentId = testEvent.Id,
+                commentBody = 'New comment added',
+                isPublished = true
+        );
+
+        insert testEventComment;
+
+        test.startTest();
+
+        Test.setMock(WebServiceMock.class, new PartnerCaseProxyServiceMockTest());
+        test.stopTest();
+        // make sure the trigger makes a callout to proxy service
+        system.assertEquals(true, PartnerCaseProxyServiceHelper.isCaseCommentPushed);
+
+    } // end of testCallPartnerCaseProxyService()
+
     // test XMNotification record is created when a public comment is added
     static testMethod void testPublicCommentNotification() {
 

@@ -132,22 +132,33 @@ public class PartnerCaseProxyServiceHelper {
 
         system.debug('PushCaseCommentToProxyService(): commentIds - ' + commentIds);
         try {
-            PartnerCaseProxyService.PartnerCaseUpdate[] caseUpdateArray = new PartnerCaseProxyService.PartnerCaseUpdate[]{
-            };
+            PartnerCaseProxyService.PartnerCaseUpdate[] caseUpdateArray = new PartnerCaseProxyService.PartnerCaseUpdate[]{};
+            Map<Id, CaseComment> events = new Map<Id, CaseComment>();
             for (CaseComment newComment : [
                     Select Id, CommentBody, IsPublished, CreatedDate, CreatorName,
-                            Parent.CaseNumber, Parent.Status, Parent.X3rdPartyVendorTicket__c
+                            Parent.CaseNumber, Parent.Status, Parent.X3rdPartyVendorTicket__c, Parent.RecordType.Name
                     from CaseComment
                     where Id IN :commentIds
-                    and Parent.Account.Billing_Group__c = :BILLING_GROUP_VERIZON
+                    and (Parent.Account.Billing_Group__c = :BILLING_GROUP_VERIZON OR Parent.RecordType.Name = 'Event')
             ]) {
-                PartnerCaseProxyService.PartnerCaseUpdate partnerCaseUpdate = createPartnerCaseUpdate(newComment);
-                caseUpdateArray.add(partnerCaseUpdate);
+                if(newComment.Parent.RecordType.Name == 'Event' && newComment.IsPublished){
+                    events.put(newComment.ParentId, newComment);
+                }else {
+                    PartnerCaseProxyService.PartnerCaseUpdate partnerCaseUpdate = createPartnerCaseUpdate(newComment);
+                    caseUpdateArray.add(partnerCaseUpdate);
+                }
             }
 
             if(caseUpdateArray.size() > 0){
                 callUpdatePartnerCase(caseUpdateArray);
                 if(test.isRunningTest()) isCaseCommentPushed = true;
+            }
+
+            if(!events.isEmpty()){
+                callSendBulkCaseComment(events);
+                if(test.isRunningTest()) {
+                    isCaseCommentPushed = true;
+                }
             }
 
         } catch (system.CalloutException ex) {
@@ -172,6 +183,36 @@ public class PartnerCaseProxyServiceHelper {
         PartnerCaseProxyService.ArrayOfPartnerCaseUpdate caseUpdateRequest = new PartnerCaseProxyService.ArrayOfPartnerCaseUpdate();
         caseUpdateRequest.PartnerCaseUpdate = caseUpdateArray;
         proxy.UpdatePartnerCase(caseUpdateRequest, BILLING_GROUP_VERIZON, noOfRetries);
+
+    }
+
+    private static void callSendBulkCaseComment(Map<Id,CaseComment> eventComment){
+
+
+        Map<Id,String[]> caseList = new Map<Id, String[]>();
+
+        for(Case c:[SELECT Id, CaseNumber, ParentId FROM Case WHERE ParentId IN :eventComment.keySet() AND AccountBillingGroup__c = :BILLING_GROUP_VERIZON AND X3rdPartyVendorTicket__c != null]){
+            if(caseList.containsKey(c.ParentId)){
+                caseList.get(c.ParentId).add(c.CaseNumber);
+            } else {
+                caseList.put(c.ParentId, new String[]{c.CaseNumber});
+            }
+        }
+
+        if(!caseList.isEmpty()) {
+
+            for(Id caseId:caseList.keySet()) {
+                PartnerCaseProxyService.PartnerCaseProxySoap proxy = new PartnerCaseProxyService.PartnerCaseProxySoap();
+                proxy.endpoint_x = 'callout:PartnerCaseProxyService';
+                // callout
+                PartnerCaseProxyService.ArrayOfString caseNumbers = new PartnerCaseProxyService.ArrayOfString();
+                caseNumbers.string_x = caseList.get(caseId);
+
+                CaseComment comment = eventComment.get(caseId);
+                system.debug('callSendBulkCaseComment caseList' + caseNumbers.string_x);
+                proxy.SendBulkUpdateComment(caseNumbers,comment.CommentBody,comment.CreatedDate, noOfRetries);
+            }
+        }
 
     }
 
