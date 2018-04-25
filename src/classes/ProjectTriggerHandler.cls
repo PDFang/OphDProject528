@@ -662,7 +662,7 @@ public class ProjectTriggerHandler extends TriggerHandler{
                         || (newProject.Phase_Status__c != 'Cancelled' && oldMap.get(newProject.Id).Phase_Status__c == 'Cancelled' && !projectStatusUpdate)) {
 
 
-                    if((newProject.Department_Responsible__c == null || newProject.Root_Cause__c == null) && (newProject.Phase_Status__c == 'Suspended' || newProject.Phase_Status__c == 'Cancelled')){
+                    if(newProject.RecordTypeId == recordTypeNameMap.get('PS Project Phase Saas').recordTypeId && (newProject.Department_Responsible__c == null || newProject.Root_Cause__c == null) && (newProject.Phase_Status__c == 'Suspended' || newProject.Phase_Status__c == 'Cancelled')){
                         newProject.addError('Department Responsible and Root Cause are required, when Phase status is Cancelled or Suspended.');
                         return;
                     }
