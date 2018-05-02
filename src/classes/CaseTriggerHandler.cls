@@ -6,7 +6,7 @@ public class CaseTriggerHandler extends TriggerHandler
     private static Integer noOfProxyServiceCallouts = 0;
     private static boolean isxMattersNotificationsTurnedOff = false;
     private static String xmEventNotificationPriorities = 'P1;P2;';
-    private static Id eventRecordType;
+    public static Id eventRecordType;
     private static Id maintenanceRecordType;   
     private static Id knownIssueRecordType;
     private static Id incidentRecordType;
@@ -16,7 +16,7 @@ public class CaseTriggerHandler extends TriggerHandler
     private static Id workOrderRecordType;
     private static Id workOrderUptivityRecordType;
     private static Id helpDeskRCTypeId;
-    private static Set<String> closedStatuses;
+    public static Set<String> closedStatuses;
     private static SiteConfiguration__c siteConfig = SiteConfiguration__c.getInstance(inContactBaseClass.OrgId15Digit);
     public static boolean callActionHub = true;
     public static String JIRA_KEY_TEMP = Label.JIRA_Temporary_Key;
@@ -24,6 +24,15 @@ public class CaseTriggerHandler extends TriggerHandler
     public static boolean bypassProxyService = false;
     private Static Map<String, ETMS_Trouble_Report_State_Status__mdt> etmsTroubleStateStatusMap;
     private static boolean isInsertCall = false;
+    private Set<Id> affectedQueueIDs = new Set<ID>();
+    private Set<Id> affectedUserIDs = new Set<ID>();
+    private Set<Id> parentCaseIds = new Set<Id>();
+    private Set<Id> closedHelpdeskCaseIds = new Set<ID>();
+    private List<Id> closedCasesForEntitlements = new List<ID>();
+    public static Map<ID,Group> allQueues = new Map<ID,Group>();
+    public static Map<ID,SET<ID>> queueUsers = new Map<ID,SET<ID>>();
+    private Map<Id,String> eventCasePriorities = new Map<Id,String>();
+    private static Set<Id> attachedToKnownIssue = new Set<Id>();
 
 
     public CaseTriggerHandler()
@@ -56,9 +65,34 @@ public class CaseTriggerHandler extends TriggerHandler
     }
 
     protected override void beforeUpdate(){
-        CalculateIncidentNetScore((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
-        setCaseStatusFlags((List<Case>) trigger.new, (Map<Id, Case>)trigger.oldMap);
-        setTroubleReportStateStatus((List<Case>) trigger.new, (Map<Id, Case>)trigger.oldMap);
+        Map<Id, Case> oldCases = (Map<Id, Case>)trigger.oldMap;
+        List<Case> newCases = (List<Case>)trigger.new;
+
+        for(Case newCase:newCases){
+            Case oldCase = oldCases.get(newCase.Id);
+            storeQueryValues(newCase);
+        }
+        SetAllQueues();
+        SetEventPriorities();
+
+        for(Case newCase:newCases){
+            Case oldCase = oldCases.get(newCase.Id);
+            setTimestamps(newCase, oldCase);
+            setPriority(newCase);
+            ClosedCases(newCase, oldCase);
+            OwnerAndAssignedToChanged(newCase, oldCase);
+            EventActions(newCase, oldCase);
+            ResolvedCases(newCase, oldCase);
+            GetSurveyCases(newCase, oldCase);
+        }
+
+        CalculateIncidentNetScore(newCases, oldCases);
+        setCaseStatusFlags(newCases, oldCases);
+        setTroubleReportStateStatus(newCases, oldCases);
+        KnownIssueCheck();
+        SendSurveys();
+        CaseOwnershipClass.updateCaseOwnerShip(Trigger.new,allqueues);
+        CloseEntitlements();
     }
 
     protected override void afterInsert(){
@@ -207,7 +241,7 @@ public class CaseTriggerHandler extends TriggerHandler
                         processList.add(newCase);
                     }
                 }
-                else if(newCase.Status == 'Confirmed' &&
+                else if((newCase.Status == 'Confirmed' || newCase.Status == 'Being Worked') &&
                         newCase.PlatformsImpacted__c != oldCase.PlatformsImpacted__c){
                     System.debug('Add event');
                     requestType = 'Event Platforms Add';
@@ -513,4 +547,336 @@ public class CaseTriggerHandler extends TriggerHandler
         }
 
     }
+
+    private void storeQueryValues(Case newCase){
+
+        affectedQueueIDs.add(newCase.OwnerID);
+        //get all the affect User IDs
+        if(newCase.Assigned_To__c != null)
+            affectedUserIDs.add(newCase.Assigned_To__c);
+
+        //get parent cases
+        if(newCase.ParentId != null) parentCaseIds.add(newCase.ParentId);
+    }
+
+    private void SetAllQueues(){
+        allQueues = new Map<ID,Group>([Select g.ID, g.Name, (Select UserOrGroupId From GroupMembers) from Group g Where g.ID IN : affectedQueueIDs ]);
+
+        if(!CaseAssignmentClass.isTest)
+        {
+            system.debug('Allqueue*************'+allQueues);
+            //create a map of affected queues with all their users
+            queueUsers = CaseAssignmentClass.GetValidQueueUsers(allQueues, affectedUserIDs);
+            system.debug('queueUsers*************'+queueUsers);
+        }
+    }
+
+    private void setTimestamps(Case newCase, Case oldCase){
+        if(oldCase.StatusDetails__c != newCase.StatusDetails__c)
+        {
+            newCase.StatusDetailsLastModifiedDateTime__c = system.now();
+        }
+
+        if(!oldCase.FirstResponseViolated__c && newCase.FirstResponseViolated__c)
+        {
+            newCase.FirstResponseViolationQueue__c = allQueues.get(oldCase.OwnerId).Name;
+        }
+
+        if(!oldCase.SLAViolated__c && newCase.SLAViolated__c)
+        {
+            newCase.SLAViolationQueue__c =   allQueues.get(oldCase.OwnerId).Name;
+        }
+    }
+    
+    private void setPriority(Case newCase){
+        if(newCase.RecordTypeId == incidentRecordType || newCase.RecordTypeId == problemRecordType)
+        {
+            if(!eventCasePriorities.isEmpty() && eventCasePriorities.containsKey(newCase.ParentId))
+            {
+                // set to Event priority
+                newCase.Priority = eventCasePriorities.get(newCase.ParentId);
+                if(newCase.Priority != null && newCase.Priority.startsWith('P')){
+                    newCase.Severity__c = newCase.Priority.replace('P','S');
+                }
+            }
+            else
+            {
+                //CaseAssignmentClass.setCasePriority(cn,true);
+                if(newCase.Severity__c != null && newCase.Severity__c.startsWith('S')){
+                    newCase.Priority = newCase.Severity__c.replace('S','P');
+                }
+            }
+        }
+    }
+
+    private void SetEventPriorities(){
+        if(!parentCaseIds.isEmpty())
+        {
+            for(Case event:[SELECT Id, Priority FROM Case WHERE Id IN :parentCaseIds AND RecordTypeId = :eventRecordType])
+            {
+                eventCasePriorities.put(event.Id,event.Priority);
+            }
+        }
+    }
+
+    private void ClosedCases(Case newCase, Case oldCase){
+        if(isNewlyClosed(newCase, oldCase) && Userinfo.getLastName() == '_castiron')
+        {
+            if(newCase.Disposition__c == null)
+            {
+                newCase.Disposition__c = 'Customer Closed';
+            }
+            if(newCase.Reason == null)
+            {
+                newCase.Reason = 'Customer Closed';
+            }
+            if(newCase.Issue_Product__c == null)
+            {
+                newCase.Issue_Product__c = 'Customer Closed';
+            }
+        }
+
+        if(isNewlyClosed(newCase, oldCase)  && (newCase.RecordTypeId == incidentRecordType || newCase.RecordTypeId == incidentUptivityRecordType))
+        {
+            closedCasesForEntitlements.add(newCase.Id);
+            newCase.EntitlementStatus__c = 'Closed';
+        }
+    }
+
+    private void OwnerAndAssignedToChanged(Case newCase, Case oldCase){
+        if(newCase.RecordTypeId != eventRecordType)
+        {
+            //Check if Owner has changed
+            if(oldCase.OwnerId != newCase.OwnerId  && oldCase.OwnerId != UserInfo.getUserId() && newCase.IsClosed == False)
+            {
+                //Set Escalation based on Priority
+                if(newCase.Priority == 'P1' || newCase.Priority == 'P2')
+                    newCase.Escalation_Date_Time__c = System.now().addMinutes(10);
+                else
+                        newCase.Escalation_Date_Time__c = System.now().addMinutes(60);
+
+                //Remove any assignment when the queue changes
+                if(oldCase.Assigned_To__c == newCase.Assigned_To__c)
+                {
+                    newCase.Assigned_To__c = null;
+                }
+
+                //change the case status to Transferred if the owner changes.
+                if(oldCase.Status == 'New')
+                {
+                    if(newCase.RecordTypeId != '01270000000MHOw')//Corp IT
+                    {
+                        if(newCase.RecordTypeId == incidentRecordType && newCase.KnownIssue__c != NULL)
+                        {
+                            newCase.Status = 'Assigned To Known Issue';
+                            newCase.Disposition__c = 'Assigned To Known Issue';
+                            attachedToKnownIssue.add(newCase.KnownIssue__c);
+                        }
+                        else
+                        {
+                            newCase.Status = 'Auto-Assigned';
+                        }
+                    }
+                }
+                else
+                {
+                    newCase.Acknowledge_By__c = System.now().addHours(2);
+                    newCase.Transferred_By__c = UserInfo.getUserId();
+
+                    if(newCase.RecordTypeId != '01270000000MHOw' && newCase.KnownIssue__c == NULL && newCase.Status != 'Case Rejected')//Corp IT
+                    {
+                        newCase.Status = 'Transferred';
+                    }
+                    else if(newCase.KnownIssue__c != NULL && newCase.RecordTypeId == incidentRecordType)
+                    {
+                        newCase.Status = 'Assigned To Known Issue';
+                        newCase.Disposition__c = 'Assigned To Known Issue';
+                        attachedToKnownIssue.add(newCase.KnownIssue__c);
+                    }
+                }
+
+            }
+            else
+            {
+                if(queueUsers.containsKey(newCase.OwnerID))
+                {
+                    if(newCase.Assigned_To__c != null && oldCase.Assigned_To__c != newCase.Assigned_To__c && newCase.IsClosed == False && newCase.Status != 'Case Rejected')
+                    {
+                        if(queueUsers.get(newCase.OwnerID).contains(newCase.Assigned_To__c))
+                        {
+                            if(newCase.RecordTypeId != '01270000000MHOw' && newCase.RecordTypeId != eventRecordType && newCase.KnownIssue__c == NULL)//Corp IT
+                            {
+                                //if the current user is the assigned user then acknowledged
+                                if(newCase.Assigned_To__c == UserInfo.getUserId())
+                                    newCase.Status = 'Acknowledged';
+                                else
+                                        newCase.Status = 'Assigned';
+                            }
+
+                        }
+                        else
+                        {
+                            newCase.AddError('Assigned To user is not assigned to the case owner queue.');
+                        }
+                    }
+                }
+                else
+                {
+                    if(!CaseAssignmentClass.isTest)
+                    {
+                        newCase.AddError('Only a Queue can be the owner of a case.');
+                    }
+                }
+
+                if(newCase.KnownIssue__c != NULL && newCase.RecordTypeId == incidentRecordType && newCase.Status != 'Closed')
+                {
+                    newCase.Status = 'Assigned To Known Issue';
+                    newCase.Disposition__c = 'Assigned To Known Issue';
+                    attachedToKnownIssue.add(newCase.KnownIssue__c);
+                }
+                else if(oldCase.KnownIssue__c != NULL && newCase.KnownIssue__c == NULL)
+                {
+
+                    newCase.Status = 'Transferred';
+                }
+
+                //Check if Priority has increased to a P1 or P2 set escalation times based on priority
+                if((oldCase.Priority == 'P3' || oldCase.Priority == 'P4') && (newCase.Priority == 'P1' || newCase.Priority == 'P2'))
+                    newCase.Escalation_Date_Time__c = System.now().addMinutes(10);
+                else if((oldCase.Priority == 'P1' || oldCase.Priority == 'P2') && (newCase.Priority == 'P3' || newCase.Priority == 'P4'))
+                    newCase.Escalation_Date_Time__c = System.now().addMinutes(60);
+            }
+        }
+    }
+
+
+    private void EventActions(Case newCase, Case oldCase){
+        if(newCase.RecordTypeId == eventRecordType)
+        {
+
+            list<String> listPlatforms = new list<string>();
+            if(siteConfig.AutoEventEmails__c && !newCase.IsClosed)
+            {
+                //RUN FOR EVENTS. Initial communication
+                if((newCase.Priority == 'P1' || newCase.Priority == 'P2') && newCase.Status != 'Resolved')
+                {
+                    if(newCase.EventConfirmedDateTime__c != null && !newCase.EventEmailSent__c && !newCase.InternalEvent__c)
+                    {
+                        NotificationHelperClass.NewEventEmailAsync(newCase.Id, null);
+                        newCase.EventEmailSent__c = true;
+                    }
+                    else if (newCase.EventEmailSent__c && newCase.PlatformsImpacted__c != oldCase.PlatformsImpacted__c && newCase.EventConfirmedDateTime__c != null && !newCase.InternalEvent__c)
+                    {
+                        for(string s : newCase.PlatformsImpacted__c.split(';'))
+                        {
+                            if(!oldCase.PlatformsImpacted__c.contains(s))
+                            {
+                                listPlatforms.add(s);
+                            }
+                        }
+                        if(listPlatforms.size() > 0)
+                        {
+                            system.debug('test lstPlatforms CaseBeforeUpdate => ' + listPlatforms);
+                            NotificationHelperClass.NewEventEmailAsync(newCase.Id, listPlatforms);
+                        }
+                    }
+                }
+
+            }
+
+            Set<string> eventResolvedPriorities = new Set<string>();
+            if(!string.isBlank(siteConfig.EventResolvedPriorities__c))
+            {
+                eventResolvedPriorities = new Set<string>(siteConfig.EventResolvedPriorities__c.split('\\;'));
+            }
+
+            if(siteConfig.EventResolvedEmails__c && newCase.Status == 'Resolved' && !newCase.EventResolvedEmailRequested__c && (eventResolvedPriorities.contains(newCase.Priority) || newCase.SendNotificationEmail__c) && !newCase.InternalEvent__c)
+            {
+                NotificationHelperClass.ResolvedEventEmail(newCase.Id);
+                newCase.EventResolvedEmailRequested__c = true;
+                newCase.SendNotificationEmail__c = false;
+            }
+        }
+    }
+
+    private void ResolvedCases(Case newCase, Case oldCase) {
+        //set resolved date
+        if((!isResolved(oldCase) && isResolved(newCase)) || (!isClosed(oldCase) && isClosed(newCase) && newCase.ResolvedDate__c == null))
+        {
+            newCase.ResolvedDate__c = system.now();
+            newCase.ResolvedBy__c = Userinfo.getUserId();
+        }
+
+        //remove resolved date
+        if((!isResolved(newCase) && !isClosed(newCase) && newCase.ResolvedDate__c != NULL))
+        {
+            newCase.ResolvedDate__c = NULL;
+            newCase.ResolvedBy__c = NULL;
+            newCase.EntitlementStatus__c = 'Reopened';
+        }
+    }
+
+
+    private void GetSurveyCases(Case newCase, Case oldCase) {
+        if(!System.isFuture() && newCase.SystemClosed__c != true && !system.isBatch())//batch soql does not accept @future callouts
+        {
+            if (isNewlyClosed(newCase, oldCase) && newCase.RecordTypeId == helpDeskRCTypeId) { // Get Closed cases for HelpDesk - Arnab (The man)
+                closedHelpdeskCaseIds.add(newCase.Id);
+            }
+        }
+    }
+
+    private void SendSurveys(){
+        if(!System.isFuture() && !system.isBatch())
+        {
+            System.debug('closedHelpdeskCaseIds ==>' + closedHelpdeskCaseIds);
+
+            //if there are closed tech support cases send survey
+            if(!closedHelpdeskCaseIds.isEmpty())
+            {
+                CaseSendSurvey.TechSupportSurveyMain(closedHelpdeskCaseIds);
+            }
+        }
+    }
+
+    private void KnownIssueCheck(){
+        if(!System.isFuture() && !attachedToKnownIssue.isEmpty() && !system.isBatch()){
+            CaseAssignmentClass.KnownIssueClusterCheck(attachedToKnownIssue);
+        }
+    }
+
+    private void CloseEntitlements() {
+        if (!closedCasesForEntitlements.isEmpty()) {
+            //close out any remaining first response milestones first.
+            List<String> entitlementsToClose = new List<String>{
+                    'First Response', 'Status Update', 'SLA'
+            };
+            CaseAssignmentClass.CompleteMilestone(closedCasesForEntitlements, entitlementsToClose, system.now());
+        }
+    }
+
+    private boolean isNewlyClosed(Case newCase, Case oldCase){
+        if(!isClosed(oldCase) && isClosed(newCase)){
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean isClosed(Case caseToCheck){
+        if(closedStatuses.contains(caseToCheck.Status)){
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean isResolved(Case caseToCheck){
+        if(caseToCheck.Status == 'Resolved'){
+            return true;
+        }
+
+        return false;
+    }
+
 }

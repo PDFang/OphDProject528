@@ -5,6 +5,37 @@
 @IsTest
 private class CaseTriggerHandlerTest {
 
+    static testMethod void testByPassTriggerHandler(){
+        TriggerHandler.bypass('CaseTriggerHandler');
+        Account testAccount = [Select Id from Account LIMIT 1]; // from setup method
+        Contact testContact = [Select Id from Contact where AccountId = :testAccount.Id LIMIT 1]; // from setup method
+
+        // create an incident
+        Map<String,Schema.RecordTypeInfo> testIncidentTypeMap = Schema.SObjectType.Case.getRecordTypeInfosByName();
+        Case testIncident = new Case(
+                RecordTypeId = testIncidentTypeMap.get('Incident').getRecordTypeId(),
+                Subject = 'byPassTriggerHandler Test',
+                Description = 'byPassTriggerHandler Test',
+                Status = 'New',
+                AccountId = testAccount.Id,
+                ContactId = testContact.Id,
+                Severity__c = 'S2',
+                Priority = 'P2',
+                Related_to_Previous_Known_Issue__c = 'No',
+                Security_Issue__c = 'No',
+                RepeatIssue__c = 'Yes',
+                Product_or_Service__c = 'Service Disruption',
+                Request_Type__c = 'Dialer'
+        );
+
+        test.startTest();
+        Database.DMLOptions dmo = new Database.DMLOptions();
+        dmo.AssignmentRuleHeader.useDefaultRule = true;
+        testIncident.setOptions(dmo);
+        insert testIncident;
+        test.stopTest();
+    }
+
     // test priority, severity assignment
     static testMethod void testIncidentPriorityAssignment(){
 
