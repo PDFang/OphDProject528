@@ -1,0 +1,116 @@
+<apex:page Controller="psTimesheetController" >
+<apex:stylesheet value="{!URLFOR($Resource.psTimesheetZip, 'psTimesheet.css')}" />
+
+<HTML>
+<head>
+<meta charset="utf-8" ></meta>
+<!-- APEX Controller Functions and Panels -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+
+<apex:form >
+</apex:form>
+
+<script src="{!URLFOR($Resource.psTimesheetZip, 'psTimesheetFunction.js')}"></script>
+<script src="{!URLFOR($Resource.psTimesheetZip, 'utility.js')}"></script>
+<script src="{!URLFOR($Resource.psTimesheetZip, 'psTimesheetListener.js')}"></script>
+
+</head>
+
+<!-- HTML Body -->
+<Body>
+
+    <div id="backgroundDiv"></div>
+
+    <div id="formWrapper">
+        <div id="timeSheetWrapper" class="wrapper">
+            <div id="mask2"></div>
+            <div id="timesheetheaderBox" draggable="false">
+                <div id="hourTrackerTooltip" draggable="false">Click here to see your previous entries!</div>
+                <div id="hourTracker" draggable="false">0.0</div>
+                <div id="weekWrapper" draggable="false">
+                    <div id="weekLabel" draggable="false"></div>
+                    <div id="weekDisplay" draggable="false">
+                        <div id="weekDayContainer" draggable="false"></div>
+                        <div id="tooltipDisplay" draggable="false">
+                            <div id="tooltipDisplayText"></div>
+                        </div>
+                    </div>
+                    <div id="weekSelectLeft" class="buttonHover"><div class="weekSelectLabel">3</div></div>
+                    <div id="weekSelectRight" class="buttonHover"><div class="weekSelectLabel">4</div></div>
+                </div>
+                <div id="submissionLabel"></div>
+                <div id="submitButton" class="buttonHover">
+                    <div id="submitLabel">SUBMIT</div>
+                </div>
+                <div id="areYouSureButton" class="buttonHover">
+                    <div id="areYouSureLabel">Click Again<br/>to Confirm!</div>
+                </div>
+                <div id="submitButtonMask"></div>
+            </div>
+            <div id="timesheetFrame" draggable="false">
+                <div id="pastTimesheetWrapper" data-expand="closed" draggable="false"></div>
+            </div>
+            <div id="dropContainer" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div id="dropBack" draggable="false">
+                    <div id="dropBackText" draggable="false">Drag an Allocation, Project, Case, Risk/Escalation, or Account here!</div>
+                    <img id="dropBackImage" draggable="false" src="{!urlfor($Resource.esDashboardZip, 'Images/esDownload2.png')}" />
+                </div>
+            </div>
+            <div id="debug"></div>
+        </div>
+        <div id="listWrapper" class="wrapper">
+            <div id="mask1"></div>
+            <div id="listHeader">
+                <input id="recordSearch" type="text" placeholder="Record Number ..."></input>
+                <div id="atoButton" onmouseenter="displayTooltip('enter','atoButton')" onmouseout="displayTooltip('exit','')"></div>
+                <div id="pageButton1" class="pageButton buttonHover"><div class="pageButtonLabel">Projects</div></div>
+                <div id="pageButton2" class="pageButton buttonHover"><div class="pageButtonLabel">Cases</div></div>
+                <div id="pageButton3" class="pageButton buttonHover"><div class="pageButtonLabel">Rsk / Esc</div></div>
+                <div id="pageButton4" class="pageButton buttonHover"><div class="pageButtonLabel">Accounts</div></div>
+            </div>
+            <div id="autoCompleteWrapper">
+                <div id="autoCompleteHeader"></div>
+                <a id="cancel" onclick="closeAutoComplete()">&times;</a>
+                <div id="autoCompleteFrame"></div>
+            </div>
+            <div id="page1" class="page"></div>
+            <div id="page2" class="page"></div>
+            <div id="page3" class="page"></div>
+            <div id="page4" class="page"></div>
+        </div>
+    </div>
+
+    <div id="errorCover">
+        <div id="errorTitleBox">WHOOPS!</div>
+        <div id="errorSubTitleBox">Looks like there was a problem...</div>
+        <div id="errorMessageBox"></div>
+        <input type="submit" id="errorAcceptButton" class="fancyButton" value="OK" onclick="errorBoxClose()"></input>
+    </div>
+
+    <div id="deleteCover">
+        <div id="deleteTextBox">Are you sure?</div>
+        <div id="deleteRecordBox"></div>
+        <div id="deleteYesButton" class="buttonHover" onclick="deleteEntry()">
+            <div id="deleteYesLabel">Delete</div>
+        </div>
+        <div id="deleteNoButton" class="buttonHover" onclick="deleteCancel()">
+            <div id="deleteNoLabel">Cancel</div>
+        </div>
+    </div>
+
+    <div id="completeCover">
+        <div id="completeThanksBox"></div>
+        <div id="completeTextBox"></div>
+        <div id="completeRecordBox"></div>
+        <div id="completeDetailsBox"></div>
+        <canvas id="completeCanvas" width="610" height="360"></canvas>
+        <div id="completeButton" class="buttonHover">
+            <div id="completeLabel">AWESOME</div>
+        </div>
+    </div>
+
+</Body>
+</HTML>
+
+<script src="{!URLFOR($Resource.psTimesheetZip, 'psTimesheetStartup.js')}"></script>
+</apex:page>
