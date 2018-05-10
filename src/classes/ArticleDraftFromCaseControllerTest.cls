@@ -4,7 +4,9 @@ public class ArticleDraftFromCaseControllerTest {
 	{
         		string caseSubject = 'Test Articles';
         		string strDesc = 'test description';
-        		string strEnv = 'WFO - Discover' + '<br/>' + 'Fusion Desktop Analytics' + '<br/>' + '';
+        		string strEnv = 'Dialer' + '<br/>' + 'Personal Connection' + '<br/>' + '';
+        		string strRC = 'test root cause';
+        		string strRes = 'test resolution';
         
         		 //set default assignment rule       
                 database.DMLOptions dmo = new database.DMLOptions();
@@ -14,12 +16,15 @@ public class ArticleDraftFromCaseControllerTest {
                 //create test case
                 c.Subject = caseSubject;
                 c.EventType__c = 'Service Disruption';
-                c.Product_or_Service__c = 'WFO - Discover';
+                c.Product_or_Service__c = 'Dialer';
                 c.Status = 'New';
-                c.SubProductorService__c = 'Fusion Desktop Analytics';
+                c.SubProductorService__c = 'Personal Connection';
                 c.Priority = 'P1';
                 c.Description = strDesc;
         		c.setOptions(dmo);
+                c.Root_Cause__c = strRC;
+                c.Resolution__c = strRes;
+
         
         		insert c;
      			String caseId = c.id;
@@ -48,6 +53,8 @@ public class ArticleDraftFromCaseControllerTest {
                 System.assertEquals(caseSubject, Solctl.getRecord().get('title'));
                 System.assertEquals(strDesc, Solctl.getRecord().get('Symptom__c'));
         		System.assertEquals(strEnv, Solctl.getRecord().get('Environment__c'));
+        		System.assertEquals(strRC, Solctl.getRecord().get('Cause__c'));
+        		System.assertEquals(strRes, Solctl.getRecord().get('Resolution__c'));
 	   
     }  
 }
