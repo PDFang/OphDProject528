@@ -1,0 +1,161 @@
+<apex:page lightningStylesheets="true" tabStyle="Contract" standardController="Contract" extensions="NewBusinessUnitRequestExtension" >
+  <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" lang="en">
+    <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <title>New Business Unit Request</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <apex:slds />
+
+        <apex:includeScript value="{!URLFOR($Resource.inContactResource, '/inContactResource/js/jquery-3.1.1.min.js')}"/>
+    <!-- Import the Design System style sheet -->
+
+    </head>
+        <body>
+            <div class="slds-scope container-fluid" >
+                <apex:form id="theForm" >
+                    <nav role="navigation" aria-label="Breadcrumbs">
+                        <ol class="slds-breadcrumb slds-list_horizontal slds-wrap">
+                            <li class="slds-breadcrumb__item slds-text-title_caps" style="padding-left : 9px;"><a href="../{!existingContract.Id}" >{!existingContract.Contract_Name__c}</a></li>
+                            <li class="slds-breadcrumb__item slds-text-title_caps" style="padding-left : 9px;"> New Business Unit Request </li>
+                        </ol>
+                    </nav>
+                    <br/>
+                    <div class="slds-page-header">
+
+                        <div class="slds-grid">
+                            <div class="slds-col slds-has-flexi-truncate">
+                        <div class="slds-media">
+                            <div class="slds-media__body">
+                                <h1 class="slds-page-header__title slds-truncate slds-align-middle" title="New Business Unit Request">Create New BU Account and Qualified Opportunity
+                                </h1>
+                                <p class="slds-text-body_small slds-line-height_reset">From Contract - {!existingContract.Contract_Name__c}</p>
+                            </div>
+                        </div>
+                            </div>
+                        <apex:outputPanel rendered="{!renderForm}">
+                            <div class="slds-col slds-no-flex slds-grid slds-align-top">
+                                <div class="slds-button-group slds-show" role="group">
+                                    <button class="slds-button slds-button_brand" onClick="SaveBURecord(); return false;">Save</button>
+
+                                </div>
+                                <div id="spinner" class="slds-spinner_container slds-is-relative slds-m-top--medium slds-m-right--medium slds-hide" >
+                                    <div role="status" class="slds-spinner slds-spinner--small slds-spinner--brand">
+                                        <div class="slds-spinner__dot-a"></div>
+                                        <div class="slds-spinner__dot-b"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </apex:outputPanel>
+                    </div>
+                        </div>
+                    <br/>
+
+                    <apex:outputPanel id="errorPanel" style="width:100%">
+                        <div class="slds-notify_container slds-is-relative customMessage">
+                            <div class="slds-notify slds-notify_toast slds-theme_error" role="alert">
+                                <span class="slds-assistive-text">error</span>
+                                <span class="slds-icon_container slds-icon-utility-error slds-m-right_small slds-no-flex slds-align-top" title="Description of icon when needed">
+                                <svg class="slds-icon slds-icon_small" aria-hidden="true">
+                                  <use xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#error" />
+                                </svg>
+                              </span>
+                                <div class="slds-notify__content">
+                                    <apex:messages/>
+                                </div>
+                            </div>
+                        </div>
+                    </apex:outputPanel>
+
+                    <apex:outputPanel rendered="{!renderForm}">
+                    <div class="slds-grid slds-wrap">
+                      <div class="slds-size_1-of-2">
+                        <div class="slds-box slds-box_x-small slds-text-align_center slds-m-around_x-small">
+                            <div class="slds-text-title_caps slds-m-bottom_small">Account</div>
+                            <dl class="slds-list_horizontal slds-wrap">
+                              <dt class="slds-item_label slds-text-color_weak slds-truncate slds-text-align_right slds-m-bottom_small" title="Account Name"><abbr class="slds-required" title="required">*</abbr>Account Name:</dt>
+                              <dd class="slds-item_detail slds-truncate slds-text-align_left slds-m-bottom_small" title="{!$ObjectType.Account.fields.Name.inlineHelpText}"><apex:inputText styleClass="slds-input" required="true" value="{!newAccount.Name}"/></dd>
+                              <dt class="slds-item_label slds-text-color_weak slds-truncate slds-text-align_right slds-m-bottom_small" title="Billing Street">Billing Street:</dt>
+                              <dd class="slds-item_detail slds-truncate slds-text-align_left slds-m-bottom_small" title="{!$ObjectType.Account.fields.BillingStreet.inlineHelpText}"><apex:inputField styleClass="slds-input" value="{!newAccount.BillingStreet}"/></dd>
+                              <dt class="slds-item_label slds-text-color_weak slds-truncate slds-text-align_right slds-m-bottom_small" title="Billing City">Billing City:</dt>
+                              <dd class="slds-item_detail slds-truncate slds-text-align_left slds-m-bottom_small" title="{!$ObjectType.Account.fields.BillingCity.inlineHelpText}"><apex:inputField styleClass="slds-input" value="{!newAccount.BillingCity}"/></dd>
+                              <dt class="slds-item_label slds-text-color_weak slds-truncate slds-text-align_right slds-m-bottom_small" title="Billing State/Province">Billing State/Province:</dt>
+                              <dd class="slds-item_detail slds-truncate slds-text-align_left slds-m-bottom_small" title="{!$ObjectType.Account.fields.BillingState.inlineHelpText}"><apex:inputField styleClass="slds-input" value="{!newAccount.BillingState}"/></dd>
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate slds-text-align_right slds-m-bottom_small" title="Billing Zip/Postal Code">Billing Zip/Postal Code:</dt>
+                                <dd class="slds-item_detail slds-truncate slds-text-align_left slds-m-bottom_small" title="{!$ObjectType.Account.fields.BillingPostalCode.inlineHelpText}"><apex:inputField styleClass="slds-input" value="{!newAccount.BillingPostalCode}"/></dd>
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate slds-text-align_right slds-m-bottom_small" title="Billing Country">Billing Country:</dt>
+                                <dd class="slds-item_detail slds-truncate slds-text-align_left slds-m-bottom_small" title="{!$ObjectType.Account.fields.BillingCountry.inlineHelpText}"><apex:inputField styleClass="slds-input" value="{!newAccount.BillingCountry}"/></dd>
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate slds-text-align_right slds-m-bottom_small" title="Geo Code"><abbr class="slds-required" title="required">*</abbr>Geo Code:</dt>
+                                <dd class="slds-item_detail slds-truncate slds-text-align_left slds-m-bottom_small" title="{!$ObjectType.Account.fields.Geo_Code__c.inlineHelpText}"><apex:inputField styleClass="slds-input" required="true" value="{!newAccount.Geo_Code__c}"/></dd>
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate slds-text-align_right slds-m-bottom_small" title="Country Code"><abbr class="slds-required" title="required">*</abbr>Country Code:</dt>
+                                <dd class="slds-item_detail slds-truncate slds-text-align_left slds-m-bottom_small" title="{!$ObjectType.Account.fields.Country_Code__c.inlineHelpText}"><apex:inputField styleClass="slds-input" required="true" value="{!newAccount.Country_Code__c}"/></dd>
+                            </dl>
+                        </div>
+                      </div>
+                      <div class="slds-size_1-of-2">
+                        <div class="slds-box slds-box_x-small slds-text-align_center slds-m-around_x-small">
+                            <div class="slds-text-title_caps slds-m-bottom_small">Opportunity</div>
+
+                            <dl class="slds-list_horizontal slds-wrap">
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate slds-text-align_right slds-m-bottom_small" title="Opportunity Name"><abbr class="slds-required" title="required">*</abbr>Opportunity Name:</dt>
+                                <dd class="slds-item_detail slds-truncate slds-text-align_left slds-m-bottom_small" title="{!$ObjectType.Opportunity.fields.Name.inlineHelpText}"><apex:inputText required="true" styleClass="slds-input" value="{!newOpportunity.Name}"/></dd>
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate slds-text-align_right slds-m-bottom_small" title="Primary Contact"><abbr class="slds-required" title="required">*</abbr>Primary Contact:</dt>
+                                <dd class="slds-item_detail slds-truncate slds-text-align_left slds-m-bottom_small" title="{!$ObjectType.Opportunity.fields.PrimaryContact__c.inlineHelpText}"><apex:inputField styleClass="slds-input" style="width:80%" required="true" value="{!newOpportunity.PrimaryContact__c}"/></dd>
+                            </dl>
+                        </div>
+                      </div>
+
+
+                    </div>
+                    </apex:outputPanel>
+                    <apex:actionFunction name="saveNewBU" action="{!SaveNewBusinessUnit}" reRender="errorMessage, errorPanel" onComplete="showMessage();" />
+                </apex:form>
+            </div>
+        </body>
+    </html>
+    <script>
+
+        $(document).ready(function () {
+
+            if({!renderForm}){
+                hideMessage();
+                }
+        });
+
+        function SaveBURecord(){
+
+            saveNewBU();
+            showSpinner();
+        }
+
+        function hideMessage(){
+            $("div.customMessage").hide();
+        }
+
+        function showMessage(){
+             $("div.customMessage").show();
+             hideSpinner();
+         }
+
+      function showSpinner(){
+    		console.log('test');
+            $('.slds-spinner_container').removeClass('slds-hide');
+            $('.slds-spinner_container').addClass('slds-show');
+            $('.slds-button-group').removeClass('slds-show');
+            $('.slds-button-group').addClass('slds-hide');
+        }
+
+        function hideSpinner(){
+            $('.slds-spinner_container').removeClass('slds-show');
+            $('.slds-spinner_container').addClass('slds-hide');
+            $('.slds-button-group').removeClass('slds-hide');
+            $('.slds-button-group').addClass('slds-show');
+        }
+    </script>
+    <style>
+        a.slds-input{
+            border: 0px !important;
+        }
+    </style>
+</apex:page>
