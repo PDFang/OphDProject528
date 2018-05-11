@@ -107,7 +107,9 @@ public with sharing class CaseEventStatusChangeExtension
 
         if (!childCases.isEmpty())
         {
-            CaseEventClass.SyncChildCases(c.Id);
+            //CaseEventClass.SyncChildCases(c.Id);
+
+            ID jobID = System.enqueueJob(new CaseEventUpdateChildCasesQueueable(c.Id, new Set<Id>()));
         }
 
         success = true;

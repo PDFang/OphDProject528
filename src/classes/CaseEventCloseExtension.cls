@@ -132,7 +132,9 @@ public with sharing class CaseEventCloseExtension
 
             update childCases;
            	*/
-                CaseEventClass.SyncChildCases(c.Id);
+                //CaseEventClass.SyncChildCases(c.Id);
+
+                ID jobID = System.enqueueJob(new CaseEventUpdateChildCasesQueueable(c.Id, new Set<Id>()));
             }
 
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, 'Record was saved successfully. Pleaes click on Cancel to go back'));

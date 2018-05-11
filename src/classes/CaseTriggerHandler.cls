@@ -226,7 +226,7 @@ public class CaseTriggerHandler extends TriggerHandler
             {
 
                 //status is equal to Confirmed or Being Worked and no Event Confirmation notification has been sent
-                if((newCase.Status == 'Confirmed' || newCase.Status == 'Being Worked')  //status is Confirmed or Being Worked
+                if((newCase.Status == 'Confirmed' || newCase.Status == 'Being Worked' || newCase.Status == 'Validation')  //status is Confirmed or Being Worked
                         && !newCase.xmEvent_Notification_Sent__c) { //no notification has been sent
                     System.debug('Initial event');
                     processList.add(newCase);
@@ -241,7 +241,7 @@ public class CaseTriggerHandler extends TriggerHandler
                         processList.add(newCase);
                     }
                 }
-                else if((newCase.Status == 'Confirmed' || newCase.Status == 'Being Worked') &&
+                else if((newCase.Status == 'Confirmed' || newCase.Status == 'Being Worked' || newCase.Status == 'Validation') &&
                         newCase.PlatformsImpacted__c != oldCase.PlatformsImpacted__c){
                     System.debug('Add event');
                     requestType = 'Event Platforms Add';
