@@ -71,6 +71,7 @@ public without sharing class NewBusinessUnitRequestExtension {
             newOpportunity.StageName = OpportunityTriggerHelper.OPPORTUNITY_STAGE_TWO;
             newOpportunity.RecordTypeId = newOpportunityRecordTypeId;
             newOpportunity.CloseDate = system.today()+30;
+            newOpportunity.Sales_Rep__c = UserInfo.getUserId();
             insert newOpportunity;
         }catch (Exception ex){
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, ex.getMessage()));
