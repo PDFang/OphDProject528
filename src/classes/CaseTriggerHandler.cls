@@ -113,6 +113,7 @@ public class CaseTriggerHandler extends TriggerHandler
         for(Case updatedCase : updateList) {
             Case oldCase = (oldMap != null) ? oldMap.get(updatedCase.Id) : null;
             if(updatedCase.RecordTypeId == eventRecordType && !updatedCase.EventHasBeenResolvedOrClosed__c
+                    && updatedCase.xmEvent_Notification_Sent__c
                     &&((updatedCase.Status == 'Resolved' && oldCase.Status != 'Resolved')
                     || (updatedCase.Status == 'Closed' && oldCase.Status != 'Closed'))) {
                 //set the flag showing that the event has been in resolved or closed status
@@ -242,7 +243,7 @@ public class CaseTriggerHandler extends TriggerHandler
                     }
                 }
                 else if((newCase.Status == 'Confirmed' || newCase.Status == 'Being Worked' || newCase.Status == 'Validation') &&
-                        newCase.PlatformsImpacted__c != oldCase.PlatformsImpacted__c){
+                        newCase.PlatformsImpacted__c != oldCase.PlatformsImpacted__c && newCase.xmEvent_Notification_Sent__c){
                     System.debug('Add event');
                     requestType = 'Event Platforms Add';
 
@@ -325,7 +326,7 @@ public class CaseTriggerHandler extends TriggerHandler
 
         if(newCase.RecordTypeId == eventRecordType && newCase.Status == 'Resolved' || newCase.Status == 'Closed'){
             requestType = 'Event Resolved';
-        } else if(newCase.RecordTypeId == eventRecordType && newCase.Status == 'Confirmed' || newCase.Status == 'Being Worked'){
+        } else if(newCase.RecordTypeId == eventRecordType && newCase.Status == 'Confirmed' || newCase.Status == 'Being Worked' || newCase.Status == 'Validation'){
             requestType = 'Event Initial Confirmation';
         }
 
