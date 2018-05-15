@@ -111,9 +111,9 @@ public class CaseCommentTriggerHandler extends TriggerHandler {
         Map<Id, Case> caseMap = new Map<Id, Case>([
                 Select Id, X3rdPartyVendorTicket__c, AccountId, RecordTypeId, Status from Case
                 where Id IN :caseIdSet
-                and ((Account.Billing_Group__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
+                and Account.Billing_Group__c = :PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
                 and RecordType.Name = 'Incident'
-                and X3rdPartyVendorTicket__c != null) OR RecordType.Name = 'Event')
+                and X3rdPartyVendorTicket__c != null
                 //and IsClosed = false
         ]);
         system.debug('CallPartnerCaseProxyService(): caseMap - ' + caseMap);
