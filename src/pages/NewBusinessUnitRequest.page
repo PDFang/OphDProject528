@@ -1,4 +1,4 @@
-<apex:page lightningStylesheets="true" tabStyle="Contract" standardController="Contract" extensions="NewBusinessUnitRequestExtension" >
+<apex:page lightningStylesheets="true" tabStyle="Contract" standardController="Contract" title="New Business Unit" extensions="NewBusinessUnitRequestExtension" >
   <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" lang="en">
     <head>
     <meta charset="utf-8" />
@@ -101,7 +101,11 @@
                                 <dt class="slds-item_label slds-text-color_weak slds-truncate slds-text-align_right slds-m-bottom_small" title="Opportunity Name"><abbr class="slds-required" title="required">*</abbr>Opportunity Name:</dt>
                                 <dd class="slds-item_detail slds-truncate slds-text-align_left slds-m-bottom_small" title="{!$ObjectType.Opportunity.fields.Name.inlineHelpText}"><apex:inputText required="true" styleClass="slds-input" value="{!newOpportunity.Name}"/></dd>
                                 <dt class="slds-item_label slds-text-color_weak slds-truncate slds-text-align_right slds-m-bottom_small" title="Primary Contact"><abbr class="slds-required" title="required">*</abbr>Primary Contact:</dt>
-                                <dd class="slds-item_detail slds-truncate slds-text-align_left slds-m-bottom_small" title="{!$ObjectType.Opportunity.fields.PrimaryContact__c.inlineHelpText}"><apex:inputField styleClass="slds-input" style="width:80%" required="true" value="{!newOpportunity.PrimaryContact__c}"/></dd>
+                                <dd class="slds-item_detail slds-truncate slds-text-align_left slds-m-bottom_small" title="{!$ObjectType.Opportunity.fields.PrimaryContact__c.inlineHelpText}"><apex:inputField styleClass="slds-input" required="true" value="{!newOpportunity.PrimaryContact__c}"/></dd>
+                                <apex:repeat value="{!$ObjectType.Opportunity.FieldSets.New_Business_Unit}" var="f">
+                                    <dt class="slds-item_label slds-text-color_weak slds-truncate slds-text-align_right slds-m-bottom_small" title="{!f.Label}"><apex:outputPanel rendered="{!f.Required}"><abbr class="slds-required" title="required">*</abbr></apex:outputPanel>{!f.Label}:</dt>
+                                    <dd class="slds-item_detail slds-truncate slds-text-align_left slds-m-bottom_small" title="{!$ObjectType.Opportunity.fields.PrimaryContact__c.inlineHelpText}"><apex:inputField styleClass="{!IF(f.Type='reference','ref-input','slds-input')}" required="{!f.Required}" value="{!newOpportunity[f]}"/></dd>
+                                </apex:repeat>
                             </dl>
                         </div>
                       </div>
@@ -121,6 +125,11 @@
             if({!renderForm}){
                 hideMessage();
                 }
+
+            $('.ref-input select').addClass('slds-input');
+            $('.ref-input input').addClass('slds-input');
+            $('input.ref-input').addClass('slds-input');
+            $('input.ref-input').removeClass('ref-input');
         });
 
         function SaveBURecord(){
@@ -156,6 +165,15 @@
     <style>
         a.slds-input{
             border: 0px !important;
+        }
+
+        .lookupInput .slds-input{
+            width:50%;
+        }
+
+
+        .ref-input select{
+            width:30% !important;
         }
     </style>
 </apex:page>
