@@ -1,5 +1,7 @@
 public class AccountHierarchyTestData {
 
+	//test NICE InContact
+
 	public static void createTestHierarchy() {
 		// Create Accounts with Hierarchy
 	
