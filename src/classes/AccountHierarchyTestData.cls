@@ -1,7 +1,5 @@
 public class AccountHierarchyTestData {
 
-	//test InContact
-
 	public static void createTestHierarchy() {
 		// Create Accounts with Hierarchy
 	
