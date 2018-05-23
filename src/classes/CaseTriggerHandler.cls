@@ -1,4 +1,4 @@
-public class CaseTriggerHandler extends TriggerHandler 
+public class CaseTriggerHandler extends TriggerHandler
 {
     private static boolean staticValuesSet = false;
     private static boolean isProxyServiceTurnedOff = false;
@@ -7,7 +7,7 @@ public class CaseTriggerHandler extends TriggerHandler
     private static boolean isxMattersNotificationsTurnedOff = false;
     private static String xmEventNotificationPriorities = 'P1;P2;';
     public static Id eventRecordType;
-    private static Id maintenanceRecordType;   
+    private static Id maintenanceRecordType;
     private static Id knownIssueRecordType;
     private static Id incidentRecordType;
     private static Id problemRecordType;
@@ -41,7 +41,7 @@ public class CaseTriggerHandler extends TriggerHandler
         {
             SetRecordTypeIds();
             GetClosedCaseStatuses();
-        	staticValuesSet = true;
+            staticValuesSet = true;
             AppConfiguration__c config = AppConfiguration__c.getInstance();
             if(config != null) {
                 isProxyServiceTurnedOff = config.Turn_Off_Partner_Case_Proxy_Service__c;
@@ -201,10 +201,10 @@ public class CaseTriggerHandler extends TriggerHandler
             //retrieve the newest resolved notification, if there is one, for the cases in the set
             List<AggregateResult> resolvedNotifications = [
                     Select Case__c
-                                from xmNotification__c
-                                where Status__c = 'Completed' and Request_Type__c = 'Event Resolved'
-                                and Case__c in :caseIds
-                                group by Request_Type__c, Case__c
+                    from xmNotification__c
+                    where Status__c = 'Completed' and Request_Type__c = 'Event Resolved'
+                    and Case__c in :caseIds
+                    group by Request_Type__c, Case__c
             ];
             caseIds.clear();
             for(AggregateResult notification : resolvedNotifications) {
@@ -315,7 +315,7 @@ public class CaseTriggerHandler extends TriggerHandler
 
         system.debug('isQualifiedEvent(): eventRecordType - ' + eventRecordType);
         return newCase.RecordTypeId == eventRecordType && !newCase.InternalEvent__c && !newCase.NonEvent__c
-            && xmEventNotificationPriorities.containsIgnoreCase(newCase.Priority);
+                && xmEventNotificationPriorities.containsIgnoreCase(newCase.Priority);
 
     }
 
@@ -349,7 +349,7 @@ public class CaseTriggerHandler extends TriggerHandler
                 newCase.X3rdPartyVendorTicket__c = null;
             }
             if(newCase.RecordTypeId == incidentRecordType && newCase.AccountBillingGroup__c == PartnerCaseProxyServiceHelper.BILLING_GROUP_VERIZON
-                && oldCase != null && newCase.Status != oldCase.Status){
+                    && oldCase != null && newCase.Status != oldCase.Status){
 
                 String statusLowerCase = newCase.Status.toLowerCase();
                 // 'Waiting on Customer', 'Waiting on Customer - No Auto Close', 'Resolved' and 'Closed' have been mapped
@@ -403,7 +403,7 @@ public class CaseTriggerHandler extends TriggerHandler
             }
             // Case status is changed
             else if(newCase.Status != oldCase.Status && newCase.X3rdPartyVendorTicket__c != null
-                && (newCase.ETMS_Trouble_Report_State__c != oldCase.ETMS_Trouble_Report_State__c || newCase.ETMS_Trouble_Report_Status__c != oldCase.ETMS_Trouble_Report_Status__c) )
+                    && (newCase.ETMS_Trouble_Report_State__c != oldCase.ETMS_Trouble_Report_State__c || newCase.ETMS_Trouble_Report_Status__c != oldCase.ETMS_Trouble_Report_Status__c) )
             {
                 system.debug('CallPartnerCaseProxyService(): Case status changed from '
                         + oldCase.Status + ' to ' + newCase.CaseNumber);
@@ -452,7 +452,7 @@ public class CaseTriggerHandler extends TriggerHandler
                 if(oldMap == null || (oldMap.containsKey(newCase.Id) && newCase.Push_To_Partner__c && newCase.X3rdPartyVendorTicket__c == null) ){
                     createIdSet.add(newCase.Id);
                 } else if(oldMap != null && oldMap.containsKey(newCase.Id) && newCase.X3rdPartyVendorTicket__c != null
-                    && (newCase.ETMS_Trouble_Report_State__c != oldCase.ETMS_Trouble_Report_State__c || newCase.ETMS_Trouble_Report_Status__c != oldCase.ETMS_Trouble_Report_Status__c
+                        && (newCase.ETMS_Trouble_Report_State__c != oldCase.ETMS_Trouble_Report_State__c || newCase.ETMS_Trouble_Report_Status__c != oldCase.ETMS_Trouble_Report_Status__c
                         || newCase.Priority != oldCase.Priority))
                 {
                     updateIdSet.add(newCase.Id);
@@ -460,7 +460,7 @@ public class CaseTriggerHandler extends TriggerHandler
 
                 // create second Verizon ETMS ticket
                 if(oldMap != null && oldMap.containsKey(newCase.Id) && newCase.Product_or_Service__c == PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE
-                    && oldMap.get(newCase.Id).Product_or_Service__c != PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE)
+                        && oldMap.get(newCase.Id).Product_or_Service__c != PartnerCaseProxyServiceHelper.PRODUCT_TOLLFREE)
                 {
                     createIdSet.add(newCase.Id);
                 }
@@ -588,7 +588,7 @@ public class CaseTriggerHandler extends TriggerHandler
             newCase.SLAViolationQueue__c =   allQueues.get(oldCase.OwnerId).Name;
         }
     }
-    
+
     private void setPriority(Case newCase){
         if(newCase.RecordTypeId == incidentRecordType || newCase.RecordTypeId == problemRecordType)
         {
@@ -879,5 +879,202 @@ public class CaseTriggerHandler extends TriggerHandler
 
         return false;
     }
+
+
+    //Originated from after update case trigger
+
+    /**
+     * Name: Transposition of CaseAfterUpdate
+     * Created By: Phil Dennison Fang
+     * Version: 1.0
+     * Date: May 23, 2018
+     */
+
+    /*check insert of this boolean from trigger
+    if(TriggerHandler.isBypassed('CaseTriggerHandler')){
+        system.debug('By passed CaseAfterUpdate trigger');
+        return;
+    }
+    */
+
+    Schema.DescribeSObjectResult desObjRslt = Schema.SObjectType.Case;
+    Map<String,Schema.RecordTypeInfo> recTMapNamCaseUp = desObjRslt.getRecordTypeInfosByName();
+
+    //Get Order management record type id 7:22
+    Id rBllRcType = recTMapNamCaseUp.get('Re-Bill Request').getRecordTypeId();
+    Id ctrAudtRcType = recTMapNamCaseUp.get('Contract Billing Audit').getRecordTypeId();
+    Id knwnIssueRcType = recTMapNamCaseUp.get('Known Issue').getRecordTypeId();
+
+    List<Approval.ProcessSubmitRequest> reqstLst = new List<Approval.ProcessSubmitRequest>();
+    Set<Id> evtMngerChange = new Set<Id>();
+    List<Task> tsk = new List<Task>();
+    List<CaseComment> cscomm = new List<CaseComment>();
+    List<Case> cas = new List<Case>();
+    Set<String> closedStatusesScnd = CaseAssignmentClass.GetClosedStatuses();
+    Set<ID> reOpenCas = new Set<Id>();
+    Set<Id> closKnownIsse = new Set<id>();
+
+    //test add method
+    private case sampleMethodCase (Case caseSample){
+
+        for(integer i=0; i<trigger.new.size(); i++) {
+
+            //Case oldRec = trigger.old[i];
+            //Case newRec = trigger.new[i];
+
+            Case oldRec = new Case();
+            Case newRec = new Case();
+
+            //submit contract audits for approval
+            if(!closedStatusesScnd.contains(oldRec.Status) && closedStatusesScnd.contains(newRec.Status) && newRec.RecordTypeId == ctrAudtRcType)
+            {
+                // Create an approval request for the account
+                Approval.ProcessSubmitRequest appReqst1 = new Approval.ProcessSubmitRequest();
+                appReqst1.setComments('Submitting Contract Audit for approval.');
+                appReqst1.setObjectId(newRec.id);
+
+                // Submit the approval request for the account
+                Approval.ProcessResult appReslt = Approval.process(appReqst1);
+            }
+
+
+            //get closed known issues
+            if(!closedStatusesScnd.contains(oldRec.Status) && closedStatusesScnd.contains(newRec.Status) && newRec.RecordTypeId == knownIssueRecordType)
+            {
+                closKnownIsse.add(newRec.Id);
+            }
+
+            if(oldRec.EventCommander__c != newRec.EventCommander__c)
+            {
+                evtMngerChange.add(newRec.Id);
+            }
+
+            if(newRec.RecordTypeId == rBllRcType)
+            {
+                if(oldRec.Status <> 'Request Review' && newRec.Status == 'Request Review')
+                {
+                    Approval.ProcessSubmitRequest appReqst1 = new Approval.ProcessSubmitRequest();
+                    appReqst1.setComments('Submitting request for approval.');
+                    appReqst1.setObjectId(newRec.id);
+
+                    reqstLst.add(appReqst1);
+
+                }
+
+            }
+
+            if(newRec.WorkDuration__c > 0 || newRec.PublicComment__c != NULL)
+            {
+                Case caseRec = newRec.Clone(true);
+                caseRec.WorkDuration__c = NULL;
+                caseRec.PublicComment__c = NULL;
+                cas.add(caseRec);
+            }
+
+            //check for work duration and public comment
+            if(newRec.WorkDuration__c > 0)
+            {
+                Task tskRec = new Task();
+                tskRec.ActivityDate = date.today();
+                tskRec.WhatId = newRec.Id;
+                tskRec.WorkDuration__c = newRec.WorkDuration__c;
+                tskRec.Subject = 'Log Time on Case ' + String.valueof(newRec.CaseNumber);
+                tskRec.Status = 'Completed';
+                tskRec.Type = 'Time Tracking';
+
+                tsk.add(tskRec);
+            }
+
+            if(newRec.PublicComment__c != NULL)
+            {
+                CaseComment ccmt = new CaseComment();
+                ccmt.CommentBody = newRec.PublicComment__c;
+                ccmt.ParentId = newRec.Id;
+                ccmt.IsPublished = true;
+
+                cscomm.add(ccmt);
+            }
+
+
+            //remove resolved date
+            if((newRec.Status != 'Resolved' && !closedStatuses.contains(newRec.Status) && oldRec.ResolvedDate__c != NULL))
+            {
+                reOpenCas.add(newRec.Id);
+            }
+
+
+            if(oldRec.KnownIssue__c != NULL && newRec.KnownIssue__c == NULL)
+            {
+                //set default assignment rule
+                Case reAssgCas = newRec.clone(true);
+
+                database.DMLOptions dbMo = new database.DMLOptions();
+                dbMo.assignmentRuleHeader.useDefaultRule = true;
+
+                reAssgCas.setOptions(dbMo);
+                cas.add(reAssgCas);
+            }
+
+
+        }
+
+
+        if(!reqstLst.isEmpty())
+        {
+            List<Approval.ProcessResult> appReslt = Approval.process(reqstLst);
+        }
+
+        //create case comments
+        if(!cas.isEmpty())
+        {
+            update cas;
+        }
+
+        //create tasks
+        if(!tsk.isEmpty())
+        {
+            insert tsk;
+        }
+
+        //create case comments
+        if(!cscomm.isEmpty())
+        {
+            insert cscomm;
+        }
+
+
+        if(!evtMngerChange.isEmpty())
+        {
+            List<RCA__c> rcaUpdList = new List<RCA__c>();
+
+            for(RCA__c rcaRecrd :[SELECT Id, EventCommander__c, Event__r.EventCommander__c FROM RCA__c WHERE Event__c IN :evtMngerChange])
+            {
+                rcaRecrd.EventCommander__c = rcaRecrd.Event__r.EventCommander__c;
+
+                rcaUpdList.add(rcaRecrd);
+            }
+
+            update rcaUpdList;
+        }
+
+
+        if(!reOpenCas.isEmpty() && !System.isFuture())
+        {
+            CaseAssignmentClass.ReopenSlaMilestone(reOpenCas);
+        }
+
+        if(!closKnownIsse.isEmpty())
+        {
+            CaseAssignmentClass.KnowIssueClosed(closKnownIsse);
+        }
+
+
+        //test add with test method
+        return caseSample;
+
+    }
+
+
+    //End CaseAfterUpdate transfer
 
 }
