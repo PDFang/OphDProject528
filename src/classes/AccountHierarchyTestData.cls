@@ -2,7 +2,6 @@ public class AccountHierarchyTestData {
 
 	//fourth test NICE InContact - May 23 2018
 
-
 	public static void createTestHierarchy() {
 		// Create Accounts with Hierarchy
 	

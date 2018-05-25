@@ -47,7 +47,7 @@ public class CaseTriggerHandler extends TriggerHandler
     //Get Order management record type
     private static Id rBllRcType;
     private static Id ctrAudtRcType;
-    private static Id knwnIssueRcType;
+    private spush failed authentication intellijtatic Id knwnIssueRcType;
 
     private static List<Approval.ProcessSubmitRequest> reqstLst;
     private static Set<Id> evtMngerChange;
