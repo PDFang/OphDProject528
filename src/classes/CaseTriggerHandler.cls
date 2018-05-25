@@ -34,6 +34,30 @@ public class CaseTriggerHandler extends TriggerHandler
     private Map<Id,String> eventCasePriorities = new Map<Id,String>();
     private static Set<Id> attachedToKnownIssue = new Set<Id>();
 
+    /**
+    * Name: Transposition of CaseAfterUpdate, consolidation of case update functionality
+    * Created By: Phil Dennison Fang
+    * Version: 1.01
+    * Date: May 25, 2018
+    */
+
+    private static Schema.DescribeSObjectResult desObjRslt;
+    private static Map<String,Schema.RecordTypeInfo> recTMapNamCaseUp;
+
+    //Get Order management record type
+    private static Id rBllRcType;
+    private static Id ctrAudtRcType;
+    private static Id knwnIssueRcType;
+
+    private static List<Approval.ProcessSubmitRequest> reqstLst;
+    private static Set<Id> evtMngerChange;
+    private static List<Task> tsk;
+    private static List<CaseComment> cscomm;
+    private static List<Case> cas;
+    private static Set<String> closedStatusesScnd;
+    private static Set<ID> reOpenCas;
+    private static Set<Id> closKnownIsse;
+
 
     public CaseTriggerHandler()
     {
@@ -95,6 +119,7 @@ public class CaseTriggerHandler extends TriggerHandler
         CloseEntitlements();
     }
 
+
     protected override void afterInsert(){
         createJiraBugForKI((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
         if(!isProxyServiceTurnedOff && noOfProxyServiceCallouts == 0 && !bypassProxyService)
@@ -107,6 +132,109 @@ public class CaseTriggerHandler extends TriggerHandler
             createXmNotification((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
         if(!isProxyServiceTurnedOff && noOfProxyServiceCallouts == 0 && !bypassProxyService)
             CallPartnerCaseProxyService((List<Case>) trigger.new, (Map<Id, Case>) trigger.oldMap);
+
+        /** Name: Transposition of CaseAfterUpdate, combining case update logic, created By: Phil Dennison Fang **/
+        desObjRslt = Schema.SObjectType.Case;
+        recTMapNamCaseUp = desObjRslt.getRecordTypeInfosByName();
+
+        rBllRcType = recTMapNamCaseUp.get('Re-Bill Request').getRecordTypeId();
+        ctrAudtRcType = recTMapNamCaseUp.get('Contract Billing Audit').getRecordTypeId();
+        knwnIssueRcType = recTMapNamCaseUp.get('Known Issue').getRecordTypeId();
+
+        reqstLst = new List<Approval.ProcessSubmitRequest>();
+        evtMngerChange = new Set<Id>();
+        tsk = new List<Task>();
+        cscomm = new List<CaseComment>();
+        cas = new List<Case>();
+        closedStatusesScnd = CaseAssignmentClass.GetClosedStatuses();
+        reOpenCas = new Set<Id>();
+        closKnownIsse = new Set<id>();
+
+        for(integer i=0; i<trigger.new.size(); i++) {
+            Case oldRec = (Case)trigger.old[i];
+            Case newRec = (Case)trigger.new[i];
+            //submit contract audits for approval
+            if(!closedStatusesScnd.contains(oldRec.Status) && closedStatusesScnd.contains(newRec.Status) && newRec.RecordTypeId == ctrAudtRcType) {
+                Approval.ProcessSubmitRequest appReqst1 = new Approval.ProcessSubmitRequest();
+                appReqst1.setComments('Submitting Contract Audit for approval.');
+                appReqst1.setObjectId(newRec.id);
+                Approval.ProcessResult appReslt = Approval.process(appReqst1);
+            }
+            if(!closedStatusesScnd.contains(oldRec.Status) && closedStatusesScnd.contains(newRec.Status) && newRec.RecordTypeId == knownIssueRecordType) {
+                closKnownIsse.add(newRec.Id);
+            }
+            if(oldRec.EventCommander__c != newRec.EventCommander__c) {
+                evtMngerChange.add(newRec.Id);
+            }
+            if(newRec.RecordTypeId == rBllRcType) {
+                if(oldRec.Status <> 'Request Review' && newRec.Status == 'Request Review') {
+                    Approval.ProcessSubmitRequest appReqst1 = new Approval.ProcessSubmitRequest();
+                    appReqst1.setComments('Submitting request for approval.');
+                    appReqst1.setObjectId(newRec.id);
+                    reqstLst.add(appReqst1);
+                }
+            }
+            if(newRec.WorkDuration__c > 0 || newRec.PublicComment__c != NULL) {
+                Case caseRec = newRec.Clone(true);
+                caseRec.WorkDuration__c = NULL;
+                caseRec.PublicComment__c = NULL;
+                cas.add(caseRec);
+            }
+            //check for work duration and public comment
+            if(newRec.WorkDuration__c > 0) {
+                Task tskRec = new Task();
+                tskRec.ActivityDate = date.today();
+                tskRec.WhatId = newRec.Id;
+                tskRec.WorkDuration__c = newRec.WorkDuration__c;
+                tskRec.Subject = 'Log Time on Case ' + String.valueof(newRec.CaseNumber);
+                tskRec.Status = 'Completed';
+                tskRec.Type = 'Time Tracking';
+                tsk.add(tskRec);
+            }
+            if(newRec.PublicComment__c != NULL) {
+                CaseComment ccmt = new CaseComment();
+                ccmt.CommentBody = newRec.PublicComment__c;
+                ccmt.ParentId = newRec.Id;
+                ccmt.IsPublished = true;
+                cscomm.add(ccmt);
+            }
+            //remove resolved date
+            if((newRec.Status != 'Resolved' && !closedStatuses.contains(newRec.Status) && oldRec.ResolvedDate__c != NULL)) {
+                reOpenCas.add(newRec.Id);
+            }
+            if(oldRec.KnownIssue__c != NULL && newRec.KnownIssue__c == NULL) {
+                Case reAssgCas = newRec.clone(true); //set default assignment rule
+                database.DMLOptions dbMo = new database.DMLOptions();
+                dbMo.assignmentRuleHeader.useDefaultRule = true;
+                reAssgCas.setOptions(dbMo);
+                cas.add(reAssgCas);
+            }
+        }
+
+        if(!reqstLst.isEmpty())
+            List<Approval.ProcessResult> appReslt = Approval.process(reqstLst);
+        //create case comments
+        if(!cas.isEmpty())
+            update cas;
+        //create tasks
+        if(!tsk.isEmpty())
+            insert tsk;
+        //create case comments
+        if(!cscomm.isEmpty())
+            insert cscomm;
+        if(!evtMngerChange.isEmpty()) {
+            List<RCA__c> rcaUpdList = new List<RCA__c>();
+            for(RCA__c rcaRecrd :[SELECT Id, EventCommander__c, Event__r.EventCommander__c FROM RCA__c WHERE Event__c IN :evtMngerChange]) {
+                rcaRecrd.EventCommander__c = rcaRecrd.Event__r.EventCommander__c;
+                rcaUpdList.add(rcaRecrd);
+            }
+            update rcaUpdList;
+        }
+        if(!reOpenCas.isEmpty() && !System.isFuture())
+            CaseAssignmentClass.ReopenSlaMilestone(reOpenCas);
+        if(!closKnownIsse.isEmpty())
+            CaseAssignmentClass.KnowIssueClosed(closKnownIsse);
+        //case trigger merge --End
     }
 
     private void setCaseStatusFlags(List<Case> updateList, Map<Id, Case> oldMap) {
@@ -881,200 +1009,6 @@ public class CaseTriggerHandler extends TriggerHandler
     }
 
 
-    //Originated from after update case trigger
 
-    /**
-     * Name: Transposition of CaseAfterUpdate, consolidation of case update features
-     * Created By: Phil Dennison Fang
-     * Version: 1.0
-     * Date: May 23, 2018
-     */
-
-    /*check insert of this boolean from trigger
-    if(TriggerHandler.isBypassed('CaseTriggerHandler')){
-        system.debug('By passed CaseAfterUpdate trigger');
-        return;
-    }
-    */
-
-    Schema.DescribeSObjectResult desObjRslt = Schema.SObjectType.Case;
-    Map<String,Schema.RecordTypeInfo> recTMapNamCaseUp = desObjRslt.getRecordTypeInfosByName();
-
-    //Get Order management record type id 7:22
-    Id rBllRcType = recTMapNamCaseUp.get('Re-Bill Request').getRecordTypeId();
-    Id ctrAudtRcType = recTMapNamCaseUp.get('Contract Billing Audit').getRecordTypeId();
-    Id knwnIssueRcType = recTMapNamCaseUp.get('Known Issue').getRecordTypeId();
-
-    List<Approval.ProcessSubmitRequest> reqstLst = new List<Approval.ProcessSubmitRequest>();
-    Set<Id> evtMngerChange = new Set<Id>();
-    List<Task> tsk = new List<Task>();
-    List<CaseComment> cscomm = new List<CaseComment>();
-    List<Case> cas = new List<Case>();
-    Set<String> closedStatusesScnd = CaseAssignmentClass.GetClosedStatuses();
-    Set<ID> reOpenCas = new Set<Id>();
-    Set<Id> closKnownIsse = new Set<id>();
-
-    //test add method
-    private case sampleMethodCase (Case caseSample){
-
-        for(integer i=0; i<trigger.new.size(); i++) {
-
-            //Case oldRec = trigger.old[i];
-            //Case newRec = trigger.new[i];
-
-            Case oldRec = new Case();
-            Case newRec = new Case();
-
-            //submit contract audits for approval
-            if(!closedStatusesScnd.contains(oldRec.Status) && closedStatusesScnd.contains(newRec.Status) && newRec.RecordTypeId == ctrAudtRcType)
-            {
-                // Create an approval request for the account
-                Approval.ProcessSubmitRequest appReqst1 = new Approval.ProcessSubmitRequest();
-                appReqst1.setComments('Submitting Contract Audit for approval.');
-                appReqst1.setObjectId(newRec.id);
-
-                // Submit the approval request for the account
-                Approval.ProcessResult appReslt = Approval.process(appReqst1);
-            }
-
-
-            //get closed known issues
-            if(!closedStatusesScnd.contains(oldRec.Status) && closedStatusesScnd.contains(newRec.Status) && newRec.RecordTypeId == knownIssueRecordType)
-            {
-                closKnownIsse.add(newRec.Id);
-            }
-
-            if(oldRec.EventCommander__c != newRec.EventCommander__c)
-            {
-                evtMngerChange.add(newRec.Id);
-            }
-
-            if(newRec.RecordTypeId == rBllRcType)
-            {
-                if(oldRec.Status <> 'Request Review' && newRec.Status == 'Request Review')
-                {
-                    Approval.ProcessSubmitRequest appReqst1 = new Approval.ProcessSubmitRequest();
-                    appReqst1.setComments('Submitting request for approval.');
-                    appReqst1.setObjectId(newRec.id);
-
-                    reqstLst.add(appReqst1);
-
-                }
-
-            }
-
-            if(newRec.WorkDuration__c > 0 || newRec.PublicComment__c != NULL)
-            {
-                Case caseRec = newRec.Clone(true);
-                caseRec.WorkDuration__c = NULL;
-                caseRec.PublicComment__c = NULL;
-                cas.add(caseRec);
-            }
-
-            //check for work duration and public comment
-            if(newRec.WorkDuration__c > 0)
-            {
-                Task tskRec = new Task();
-                tskRec.ActivityDate = date.today();
-                tskRec.WhatId = newRec.Id;
-                tskRec.WorkDuration__c = newRec.WorkDuration__c;
-                tskRec.Subject = 'Log Time on Case ' + String.valueof(newRec.CaseNumber);
-                tskRec.Status = 'Completed';
-                tskRec.Type = 'Time Tracking';
-
-                tsk.add(tskRec);
-            }
-
-            if(newRec.PublicComment__c != NULL)
-            {
-                CaseComment ccmt = new CaseComment();
-                ccmt.CommentBody = newRec.PublicComment__c;
-                ccmt.ParentId = newRec.Id;
-                ccmt.IsPublished = true;
-
-                cscomm.add(ccmt);
-            }
-
-
-            //remove resolved date
-            if((newRec.Status != 'Resolved' && !closedStatuses.contains(newRec.Status) && oldRec.ResolvedDate__c != NULL))
-            {
-                reOpenCas.add(newRec.Id);
-            }
-
-
-            if(oldRec.KnownIssue__c != NULL && newRec.KnownIssue__c == NULL)
-            {
-                //set default assignment rule
-                Case reAssgCas = newRec.clone(true);
-
-                database.DMLOptions dbMo = new database.DMLOptions();
-                dbMo.assignmentRuleHeader.useDefaultRule = true;
-
-                reAssgCas.setOptions(dbMo);
-                cas.add(reAssgCas);
-            }
-
-
-        }
-
-
-        if(!reqstLst.isEmpty())
-        {
-            List<Approval.ProcessResult> appReslt = Approval.process(reqstLst);
-        }
-
-        //create case comments
-        if(!cas.isEmpty())
-        {
-            update cas;
-        }
-
-        //create tasks
-        if(!tsk.isEmpty())
-        {
-            insert tsk;
-        }
-
-        //create case comments
-        if(!cscomm.isEmpty())
-        {
-            insert cscomm;
-        }
-
-
-        if(!evtMngerChange.isEmpty())
-        {
-            List<RCA__c> rcaUpdList = new List<RCA__c>();
-
-            for(RCA__c rcaRecrd :[SELECT Id, EventCommander__c, Event__r.EventCommander__c FROM RCA__c WHERE Event__c IN :evtMngerChange])
-            {
-                rcaRecrd.EventCommander__c = rcaRecrd.Event__r.EventCommander__c;
-
-                rcaUpdList.add(rcaRecrd);
-            }
-
-            update rcaUpdList;
-        }
-
-
-        if(!reOpenCas.isEmpty() && !System.isFuture())
-        {
-            CaseAssignmentClass.ReopenSlaMilestone(reOpenCas);
-        }
-
-        if(!closKnownIsse.isEmpty())
-        {
-            CaseAssignmentClass.KnowIssueClosed(closKnownIsse);
-        }
-
-
-        //test add with test method
-        return caseSample;
-
-    }
-
-
-    //End CaseAfterUpdate transfer
 
 }
