@@ -37,7 +37,7 @@ public class CaseTriggerHandler extends TriggerHandler
     /**
     * Name: Transposition of CaseAfterUpdate, consolidation of case update functionality
     * Created By: Phil Dennison Fang
-    * Version: 1.1
+    * Version: 1.01
     * Date: May 25, 2018
     */
 
@@ -47,7 +47,7 @@ public class CaseTriggerHandler extends TriggerHandler
     //Get Order management record type
     private static Id rBllRcType;
     private static Id ctrAudtRcType;
-    private spush failed authentication intellijtatic Id knwnIssueRcType;
+    private static Id knwnIssueRcType;
 
     private static List<Approval.ProcessSubmitRequest> reqstLst;
     private static Set<Id> evtMngerChange;
