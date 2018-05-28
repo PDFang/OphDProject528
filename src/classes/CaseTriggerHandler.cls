@@ -37,8 +37,8 @@ public class CaseTriggerHandler extends TriggerHandler
     /**
     * Name: Transposition of CaseAfterUpdate, consolidation of case update functionality
     * Created By: Phil Dennison Fang
-    * Version: 1.01-2
-    * Date: May 25, 2018
+    * Version: 1.01-3
+    * Date: May 28, 2018
     */
 
     private static Schema.DescribeSObjectResult desObjRslt;
