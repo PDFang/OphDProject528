@@ -37,7 +37,7 @@ public class CaseTriggerHandler extends TriggerHandler
     /**
     * Name: Transposition of CaseAfterUpdate, consolidation of case update functionality
     * Created By: Phil Dennison Fang
-    * Version: 1.01
+    * Version: 1.01-1
     * Date: May 25, 2018
     */
 
